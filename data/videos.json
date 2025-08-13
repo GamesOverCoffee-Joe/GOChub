@@ -1,59 +1,30 @@
 [
     {
-        "videoId": "F7jP11e0G4E",
-        "title": "Season 1, Episode 1: The Art of Indie Game Development",
-        "season": 1,
-        "episode": 1,
-        "thumbnailUrl": "https://img.youtube.com/vi/F7jP11e0G4E/maxresdefault.jpg",
-        "channel": "main"
-    },
-    {
-        "videoId": "C4_Ew_L3-7o",
-        "title": "Season 1, Episode 2: Coffee Brewing for Gamers",
-        "season": 1,
-        "episode": 2,
-        "thumbnailUrl": "https://img.youtube.com/vi/C4_Ew_L3-7o/maxresdefault.jpg",
-        "channel": "main"
-    },
-    {
-        "videoId": "aB5F4K8E0Yg",
-        "title": "Monetization Models: Beyond Pay-to-Win",
-        "thumbnailUrl": "https://img.youtube.com/vi/aB5F4K8E0Yg/maxresdefault.jpg",
+        "videoId": "-j7P0pjVakc",
+        "title": "",
+        "thumbnailUrl": "https://img.youtube.com/vi/-j7P0pjVakc/maxresdefault.jpg",
         "channel": "consulting",
-        "subjects": [
-            {
-                "title": "Understanding Free-to-Play Economy",
-                "startTime": 45,
-                "keywords": ["free-to-play", "economy", "monetization", "revenue", "indie dev"]
-            },
-            {
-                "title": "Ethical Monetization Practices",
-                "startTime": 210,
-                "keywords": ["ethical", "monetization", "player trust", "design"]
-            },
-            {
-                "title": "Subscription vs. One-Time Purchase",
-                "startTime": 400,
-                "keywords": ["subscription", "purchase", "business model"]
-            }
-        ]
+        "subjects": []
     },
     {
-        "videoId": "XyZ_C_A1B2C",
-        "title": "Game Design Principles: Iteration and Feedback",
-        "thumbnailUrl": "https://img.youtube.com/vi/XyZ_C_A1B2C/maxresdefault.jpg",
+        "videoId": "44ibpx9vg_c",
+        "title": "",
+        "thumbnailUrl": "https://img.youtube.com/vi/44ibpx9vg_c/maxresdefault.jpg",
         "channel": "consulting",
-        "subjects": [
-            {
-                "title": "The Importance of Rapid Prototyping",
-                "startTime": 90,
-                "keywords": ["prototyping", "iteration", "game design", "development cycle"]
-            },
-            {
-                "title": "Collecting and Actioning Player Feedback",
-                "startTime": 300,
-                "keywords": ["feedback", "playtesting", "player insights", "community"]
-            }
-        ]
+        "subjects": []
+    },
+    {
+        "videoId": "5KidGE7ffVQ",
+        "title": "",
+        "thumbnailUrl": "https://img.youtube.com/vi/5KidGE7ffVQ/maxresdefault.jpg",
+        "channel": "consulting",
+        "subjects": []
+    },
+    {
+        "videoId": "8IH_Qr1WIhY",
+        "title": "",
+        "thumbnailUrl": "https://img.youtube.com/vi/8IH_Qr1WIhY/maxresdefault.jpg",
+        "channel": "consulting",
+        "subjects": []
     }
 ]
