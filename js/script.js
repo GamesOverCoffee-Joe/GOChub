@@ -1,11 +1,11 @@
 // Global variable to store all consulting videos once fetched
 let allConsultingVideos = [];
 
-// Helper function to format time for consulting video links
-const formatTime = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+// Helper function to format time for consulting video links (MM:SS)
+const formatTime = (totalSeconds) => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 };
 
 // Function to load and display videos for the Main Channel
@@ -35,6 +35,8 @@ const loadMainChannelVideos = async () => {
             videoCard.className = 'bg-gray-800 rounded-xl shadow-xl overflow-hidden flex flex-col group transform hover:scale-105 transition-transform duration-300 ease-in-out';
 
             const thumbnailUrl = video.thumbnailUrl || `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`;
+            // Note: autoplay is generally not recommended for user experience unless explicitly requested by a user action.
+            // For inline playback, it's common to start automatically once the user clicks to play.
             const youtubeEmbedUrl = `https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0`;
 
             videoCard.innerHTML = `
@@ -77,21 +79,20 @@ const loadMainChannelVideos = async () => {
                 const loadingSpinner = videoContainer.querySelector('.video-loading-spinner');
 
                 // Show spinner
-                loadingSpinner.classList.remove('hidden');
+                if (loadingSpinner) {
+                    loadingSpinner.classList.remove('hidden');
+                }
 
                 // Replace content with iframe
                 videoContainer.innerHTML = `
                     <iframe
-                        class="w-full h-full"
+                        class="w-full h-full rounded-xl"
                         src="${embedUrl}"
                         frameborder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowfullscreen
                     ></iframe>
                 `;
-                // Spinner will automatically be removed when iframe loads, as it replaces the content.
-                // If you wanted to hide the spinner *after* the iframe loads, you'd need YouTube Iframe API.
-                // For now, replacing the content is sufficient.
             });
         });
 
@@ -101,7 +102,7 @@ const loadMainChannelVideos = async () => {
     }
 };
 
-// Function to load data for the Consulting Channel (only data fetch here)
+// Function to load data for the Consulting Channel and display initial search prompt
 const loadConsultingChannelContent = async () => {
     const consultingSearchResults = document.getElementById('consultingSearchResults');
     consultingSearchResults.innerHTML = '<p class="text-center text-gray-400">Loading consulting data...</p>';
@@ -128,6 +129,79 @@ const loadConsultingChannelContent = async () => {
         console.error('Error loading consulting videos:', error);
         consultingSearchResults.innerHTML = '<p class="text-center text-red-400">Failed to load consulting data. Please try again later. Check console for details.</p>';
     }
+};
+
+// Function to perform the search on consulting videos
+const searchConsultingVideos = (query) => {
+    const consultingSearchResults = document.getElementById('consultingSearchResults');
+    
+    // If the query is empty, show the initial prompt and return early
+    if (!query.trim()) {
+        consultingSearchResults.innerHTML = '<p class="text-center text-gray-400">Enter keywords above to search consulting insights.</p>';
+        return;
+    }
+
+    const lowerCaseQuery = query.toLowerCase();
+    const foundResults = [];
+
+    // Iterate through all consulting videos and their subjects
+    allConsultingVideos.forEach(video => {
+        video.subjects.forEach(subject => {
+            const subjectKeywords = subject.keywords.map(kw => kw.toLowerCase());
+            const subjectTitle = subject.title.toLowerCase();
+
+            // Check if the query matches any keyword or the subject title
+            const keywordMatch = subjectKeywords.some(keyword => keyword.includes(lowerCaseQuery));
+            const titleMatch = subjectTitle.includes(lowerCaseQuery);
+
+            if (keywordMatch || titleMatch) {
+                // Add relevant details to the results array
+                foundResults.push({
+                    videoId: video.videoId,
+                    videoTitle: video.title,
+                    subjectTitle: subject.title,
+                    startTime: subject.startTime
+                });
+            }
+        });
+    });
+
+    // Display message if no results are found
+    if (foundResults.length === 0) {
+        consultingSearchResults.innerHTML = `<p class="text-center text-gray-400">No results found for "${query}". Try different keywords.</p>`;
+        return;
+    }
+
+    // Clear previous results and render new ones
+    consultingSearchResults.innerHTML = '';
+    foundResults.forEach(result => {
+        const resultItem = document.createElement('div');
+        resultItem.className = 'bg-gray-800 rounded-lg shadow-md p-5 flex flex-col sm:flex-row sm:items-center justify-between transition-transform duration-300 hover:scale-[1.02]';
+        resultItem.innerHTML = `
+            <div>
+                <h3 class="text-xl font-semibold mb-1 text-gray-100">${result.videoTitle}</h3>
+                <p class="text-yellow-400 text-lg mt-1 font-medium">${result.subjectTitle}</p>
+            </div>
+            <div class="mt-4 sm:mt-0 sm:ml-4 flex-shrink-0">
+                <button data-video-id="${result.videoId}" data-start-time="${result.startTime}" class="play-consulting-button bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out flex items-center focus:outline-none focus:ring-4 focus:ring-yellow-500 focus:ring-opacity-50">
+                    Watch from ${formatTime(result.startTime)}
+                    <svg class="ml-2 w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </button>
+            </div>
+        `;
+        consultingSearchResults.appendChild(resultItem);
+    });
+
+    // Add event listeners for play buttons in consulting search results
+    document.querySelectorAll('.play-consulting-button').forEach(button => {
+        button.addEventListener('click', (event) => {
+            const videoId = event.currentTarget.dataset.videoId;
+            const startTime = event.currentTarget.dataset.startTime;
+            // Open YouTube video in a new tab with the specified start time
+            const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}&t=${startTime}s`;
+            window.open(youtubeUrl, '_blank');
+        });
+    });
 };
 
 // Function to handle the tab switching logic
@@ -172,28 +246,14 @@ const setupTabs = () => {
 };
 
 // Ensure DOM is fully loaded before running setup functions
-document.addEventListener('DOMContentLoaded', setupTabs);
-
-// Placeholder for consulting search logic - will be implemented in the next step
-const searchConsultingVideos = (query) => {
-    const consultingSearchResults = document.getElementById('consultingSearchResults');
-    if (!query.trim()) {
-        consultingSearchResults.innerHTML = '<p class="text-center text-gray-400">Enter keywords above to search consulting insights.</p>';
-        return;
-    }
-
-    consultingSearchResults.innerHTML = '<p class="text-center text-gray-400">Searching...</p>';
-    // This will be replaced with actual search logic in the next step
-    setTimeout(() => { // Simulate search delay
-        consultingSearchResults.innerHTML = `<p class="text-center text-red-400">Search functionality is not yet fully implemented. Searching for "${query}".</p>`;
-    }, 500);
-};
-
-// Event listener for consulting search input - will trigger the search function
 document.addEventListener('DOMContentLoaded', () => {
+    setupTabs(); // Initialize tab functionality
+
+    // Attach event listener for the consulting search input
     const consultingSearchInput = document.getElementById('consultingSearchInput');
     if (consultingSearchInput) {
-        consultingSearchInput.addEventListener('keyup', (event) => {
+        // Use 'input' event for real-time searching as the user types
+        consultingSearchInput.addEventListener('input', (event) => {
             searchConsultingVideos(event.target.value);
         });
     }
