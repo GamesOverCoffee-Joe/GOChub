@@ -28,20 +28,21 @@
           "context"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "KK9LKA4Y-bM",
     "title": "Avoiding Existential Dread With Game Design | Game Design Consulting for ZomWick",
     "thumbnailUrl": "https://img.youtube.com/vi/KK9LKA4Y-bM/maxresdefault.jpg",
     "channel": "consulting",
-    "tags": [
-      "motivation",
-      "communication",
-      "symbols"
-    ],
     "subjects": [
+      {
+        "title": "Submission Description",
+        "startTime": 0,
+        "keywords": [
+          "submission"
+        ]
+      },
       {
         "title": "Motivation",
         "startTime": 97,
@@ -70,15 +71,15 @@
     "title": "Breaking Down Game Design in a Simple Game | Game Design Consulting for Blimp",
     "thumbnailUrl": "https://img.youtube.com/vi/8IH_Qr1WIhY/maxresdefault.jpg",
     "channel": "consulting",
-    "tags": [
-      "juice"
-    ],
     "subjects": [
       {
-        "title": "Game Juice",
-        "startTime": 901,
+        "title": "Core Mechanics of Simple Games",
+        "startTime": 0,
         "keywords": [
-          "game juice"
+          "game design",
+          "simplicity",
+          "blimp",
+          "mechanics"
         ]
       }
     ]
@@ -116,8 +117,7 @@
           "art direction"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "4mcAB7s-_V4",
@@ -135,8 +135,7 @@
           "clarity"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "YZ9v_Rig43U",
@@ -154,8 +153,7 @@
           "zen"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "TvFJES_ykHU",
@@ -173,8 +171,7 @@
           "multiplayer"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "gZJAy8zFhaA",
@@ -192,8 +189,7 @@
           "fishberman"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "cEF_-Jpb2c8",
@@ -211,8 +207,7 @@
           "tutorial"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "jmO6W3zCqzs",
@@ -230,8 +225,7 @@
           "score-chasing"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "3jtI3dh8JbM",
@@ -249,8 +243,7 @@
           "mechanics"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "FiTF6IPilDk",
@@ -268,8 +261,7 @@
           "caillou"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "hJUvhkBikqI",
@@ -287,8 +279,7 @@
           "rat race"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "vh92tvCHmLk",
@@ -307,8 +298,7 @@
           "moonicorn"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "HES9ppfcPO0",
@@ -327,8 +317,7 @@
           "warp"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "kCcK33V8Ce4",
@@ -346,8 +335,7 @@
           "ciphercell"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "6duVLiS06ws",
@@ -366,8 +354,7 @@
           "kainga"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "QAOwrdlWDj0",
@@ -385,8 +372,7 @@
           "mechanics"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "JVpiRUXYS4w",
@@ -404,8 +390,7 @@
           "risk-reward"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "dKtRzAtJkmM",
@@ -423,8 +408,7 @@
           "mechanics"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "7feTy0Ch9PQ",
@@ -442,8 +426,7 @@
           "simulation"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "P9Nm5lJ-Wzg",
@@ -462,8 +445,7 @@
           "ninja"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "X914fPdRcBY",
@@ -481,8 +463,7 @@
           "development hell"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "hRQnHYAUQ_I",
@@ -501,8 +482,7 @@
           "mechanics"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "yvhrxFeW-0g",
@@ -520,8 +500,7 @@
           "core"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "44ibpx9vg_c",
@@ -539,8 +518,7 @@
           "forest"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "lDm3vikDPog",
@@ -558,8 +536,7 @@
           "ancient information"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "tqsBZyQGY0U",
@@ -578,8 +555,7 @@
           "omegabot"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "fm4OKU8On38",
@@ -598,8 +574,7 @@
           "pit of ascension"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "kt04TDIF2UY",
@@ -617,8 +592,7 @@
           "hiragana"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "gNzLNAkow6k",
@@ -636,8 +610,7 @@
           "ruling"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "GoBKX_pjAhY",
@@ -655,8 +628,7 @@
           "voyager"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "uYUygfAixY0",
@@ -674,8 +646,7 @@
           "witchbane"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "eDVxmdjGqS0",
@@ -693,8 +664,7 @@
           "boombound"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "_i9lHEz0Hzo",
@@ -713,8 +683,7 @@
           "warriors"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "YDj6kS743t8",
@@ -732,8 +701,7 @@
           "customization"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "DwjUujj60pY",
@@ -751,8 +719,7 @@
           "combat"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "SzGk0xSJD98",
@@ -770,8 +737,7 @@
           "strategy"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "Jo3UD_I9gw4",
@@ -789,8 +755,7 @@
           "coaster"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "EFuxG2jyV7c",
@@ -809,8 +774,7 @@
           "rock-paper-scissors"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "rhtwx-Nb9h0",
@@ -829,8 +793,7 @@
           "combat"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "BK0_s0VRCvw",
