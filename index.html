@@ -113,8 +113,9 @@
             <div class="mb-4">
                 <img src="https://placehold.co/100x100/1f1f1f/aac6ce?text=Logo" alt="Games Over Coffee Logo" class="mx-auto rounded-full w-24 h-24 object-cover border-2 border-[var(--color-goc-light-accent)]">
             </div>
-            <h1 class="text-5xl md:text-6xl font-extrabold text-[var(--color-goc-light-accent)] leading-tight">Games Over Coffee Research Center</h1>
-            <p class="text-xl md:text-2xl mt-4 text-[var(--color-goc-main-text)] opacity-80">Empathetic Game Design</p>
+            <h1 class="text-5xl md:text-6xl font-extrabold text-[var(--color-goc-light-accent)] leading-tight">Games Over Coffee Hub</h1>
+            <p class="text-xl md:text-2xl mt-4 text-[var(--color-goc-main-text)] opacity-80">Your centralized source for all things Games Over Coffee.</p>
+            <p class="text-lg md:text-xl mt-2 text-[var(--color-goc-main-text)] opacity-70">Mission: Empathetic Game Design <i class="fas fa-heart ml-2 text-[var(--color-goc-light-accent)]"></i></p>
         </header>
 
         <nav class="mb-10">
@@ -145,25 +146,30 @@
             </section>
 
             <section id="consultingChannelContent" class="channel-content hidden pb-10">
-                <h2 class="text-3xl md:text-4xl font-bold mb-8 text-[var(--color-goc-light-accent)]">Consulting Insights</h2>
+                <h2 class="text-3xl md:text-4xl font-bold mb-8 text-[var(--color-goc-light-accent)]">Games Over Coffee Consulting</h2>
                 <div class="mb-8">
-                    <input type="text" id="consultingSearchInput" placeholder="Search video transcripts, keywords..." class="p-4 w-full rounded-lg bg-[var(--color-goc-dark)] text-[var(--color-goc-main-text)] border border-[var(--color-goc-darkest)] focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-light-accent)] text-lg">
+                    <input type="text" id="consultingSearchInput" placeholder="Search consulting insights by keyword..." class="p-4 w-full rounded-lg bg-[var(--color-goc-dark)] text-[var(--color-goc-main-text)] border border-[var(--color-goc-darkest)] focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-light-accent)] text-lg">
                 </div>
-                <div id="consultingSearchResults" class="space-y-6">
+
+                <div class="bg-[var(--color-goc-dark)] p-4 rounded-lg shadow-md mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex flex-wrap gap-3" id="consultingFilterButtons">
+                        <button data-filter-type="all" class="consulting-filter-button bg-[var(--color-goc-darkest)] text-[var(--color-goc-main-text)] py-2 px-4 rounded-full hover:bg-[var(--color-goc-light-accent)] hover:text-[var(--color-goc-darkest)] transition duration-300 ease-in-out text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-light-accent)] focus:ring-opacity-50">All</button>
+                    </div>
+                    <button id="clearConsultingFilters" class="bg-[var(--color-goc-darkest)] hover:bg-red-700 text-[var(--color-goc-main-text)] py-2 px-4 rounded-full transition duration-300 ease-in-out text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-main-text)] focus:ring-opacity-50 flex items-center justify-center">Clear Filters <i class="fas fa-times ml-1 text-xs"></i></button>
+                </div>
+
+                <div id="consultingGrid" class="grid grid-cols-1 gap-6">
                 </div>
             </section>
 
             <section id="insightsContent" class="channel-content hidden pb-10">
                 <h2 class="text-3xl md:text-4xl font-bold mb-8 text-[var(--color-goc-light-accent)]">Readings / Insights</h2>
-                <div class="mb-8">
-                    <input type="text" id="insightsSearchInput" placeholder="Search insights by title, description or content..." class="p-4 w-full rounded-lg bg-[var(--color-goc-dark)] text-[var(--color-goc-main-text)] border border-[var(--color-goc-darkest)] focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-light-accent)] text-lg">
-                </div>
-
-                <div class="bg-[var(--color-goc-dark)] p-4 rounded-lg shadow-md mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div class="flex flex-wrap gap-3" id="insightsFilterButtons">
-                        <button data-filter-type="all" class="insights-filter-button bg-[var(--color-goc-darkest)] text-[var(--color-goc-main-text)] py-2 px-4 rounded-full hover:bg-[var(--color-goc-light-accent)] hover:text-[var(--color-goc-darkest)] transition duration-300 ease-in-out text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-light-accent)] focus:ring-opacity-50">All</button>
+                <div class="mb-8 flex flex-col md:flex-row md:items-center gap-4">
+                    <input type="text" id="insightsSearchInput" placeholder="Search insights by title, description or content..." class="p-4 w-full md:w-2/3 rounded-lg bg-[var(--color-goc-dark)] text-[var(--color-goc-main-text)] border border-[var(--color-goc-darkest)] focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-light-accent)] text-lg">
+                    <div id="insightsFilterButtons" class="flex flex-wrap gap-3 w-full md:w-1/3 justify-center md:justify-end">
+                        <button data-filter-type="all" class="insights-filter-button bg-[var(--color-goc-dark)] text-[var(--color-goc-main-text)] py-2 px-4 rounded-full hover:bg-[var(--color-goc-light-accent)] hover:text-[var(--color-goc-darkest)] transition duration-300 ease-in-out text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-light-accent)] focus:ring-opacity50">All</button>
                     </div>
-                    <button id="clearInsightsFilters" class="bg-[var(--color-goc-darkest)] hover:bg-red-700 text-[var(--color-goc-main-text)] py-2 px-4 rounded-full transition duration-300 ease-in-out text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-main-text)] focus:ring-opacity-50 flex items-center justify-center">Clear Filters <i class="fas fa-times ml-1 text-xs"></i></button>
+                    <button id="clearInsightsFilters" class="bg-[var(--color-goc-dark)] hover:bg-[var(--color-goc-darkest)] text-[var(--color-goc-main-text)] py-2 px-4 rounded-full transition duration-300 ease-in-out text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-main-text)] focus:ring-opacity-50">Clear Filters <i class="fas fa-times ml-1 text-xs"></i></button>
                 </div>
                 <div id="insightsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 </div>
@@ -197,7 +203,9 @@
             <div class="video-container">
                 <iframe id="videoIframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             </div>
-            <p id="modalVideoTitle" class="text-center text-sm text-[var(--color-goc-main-text)] opacity-70 mt-3"></p>
+            <p id="videoModalTitle" class="text-center text-xl font-semibold text-[var(--color-goc-main-text)] mt-3"></p>
+            <p id="videoModalChannel" class="text-center text-sm text-[var(--color-goc-main-text)] opacity-80 mt-1"></p>
+            <p id="videoModalDescription" class="text-center text-sm text-[var(--color-goc-main-text)] opacity-70 mt-2 line-clamp-3"></p>
         </div>
     </div>
 

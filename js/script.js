@@ -5,6 +5,10 @@ let allReadings = [];
 // Global state for current filters/search for insights
 let currentInsightFilterType = 'all';
 let currentInsightSearchQuery = '';
+// NEW: Global state for current filter for consulting videos
+let currentConsultingFilterType = 'all';
+let currentConsultingSearchQuery = ''; // Keep track of consulting search query
+
 // Global variable to store scroll position when switching tabs
 let lastScrollY = 0;
 
@@ -35,513 +39,509 @@ const modalSourceLink = document.getElementById('modalSourceLink');
 
 const openReadingModal = (reading) => {
     modalTitle.textContent = reading.title;
-    modalContent.innerHTML = reading.content; // Use .innerHTML for potential HTML formatting in content
+    modalContent.innerHTML = reading.content;
     modalSourceLink.href = `https://www.youtube.com/watch?v=${reading.videoId}`;
+    modalSourceLink.textContent = reading.linkText || 'View Source Video'; // Use linkText or default
     readingModal.classList.remove('hidden');
-    document.body.classList.add('overflow-hidden'); // Prevent background scrolling
+    document.body.classList.add('overflow-hidden'); // Prevent scrolling body
 };
 
-const closeReadingModal = () => {
+const closeModal = () => {
     readingModal.classList.add('hidden');
     document.body.classList.remove('overflow-hidden');
-    modalContent.scrollTop = 0; // Reset scroll position
-};
-
-closeModalButton.addEventListener('click', closeReadingModal);
-readingModal.addEventListener('click', (event) => {
-    // Close modal if clicked outside the content area
-    if (event.target === readingModal) {
-        closeReadingModal();
+    // Re-enable body scroll if video modal is also closed
+    if (videoPlaybackModal.classList.contains('hidden')) {
+        document.body.classList.remove('overflow-hidden');
     }
-});
-// --- END READING MODAL FUNCTIONS ---
+};
 
 // --- VIDEO PLAYBACK MODAL FUNCTIONS ---
 const videoPlaybackModal = document.getElementById('videoPlaybackModal');
 const closeVideoModalButton = document.getElementById('closeVideoModal');
 const videoIframe = document.getElementById('videoIframe');
-const modalVideoTitle = document.getElementById('modalVideoTitle');
+// Corrected IDs to match HTML
+const videoModalTitle = document.getElementById('videoModalTitle');
+const videoModalChannel = document.getElementById('videoModalChannel');
+const videoModalDescription = document.getElementById('videoModalDescription');
 
-const openVideoModal = (videoId, videoTitle, startTime = 0) => {
-    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0${startTime ? '&start=' + startTime : ''}`;
+
+const openVideoPlaybackModal = (videoId, title, channel, description = '', startTime = 0) => {
+    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&start=${startTime}`;
     videoIframe.src = embedUrl;
-    modalVideoTitle.textContent = videoTitle;
+    videoModalTitle.textContent = title;
+    videoModalChannel.textContent = `Channel: ${channel}`;
+    videoModalDescription.textContent = description; // Set description
     videoPlaybackModal.classList.remove('hidden');
-    document.body.classList.add('overflow-hidden');
+    document.body.classList.add('overflow-hidden'); // Prevent scrolling body
 };
 
 const closeVideoModal = () => {
     videoIframe.src = ''; // Stop video playback
-    modalVideoTitle.textContent = ''; // Clear title
     videoPlaybackModal.classList.add('hidden');
     document.body.classList.remove('overflow-hidden');
+    // Re-enable body scroll if reading modal is also closed
+    if (readingModal.classList.contains('hidden')) {
+        document.body.classList.remove('overflow-hidden');
+    }
 };
 
-closeVideoModalButton.addEventListener('click', closeVideoModal);
-videoPlaybackModal.addEventListener('click', (event) => {
-    if (event.target === videoPlaybackModal) {
-        closeVideoModal();
-    }
-});
-// --- END VIDEO PLAYBACK MODAL FUNCTIONS ---
-
-
-// Function to load and display videos for the Main Channel
-const loadMainChannelVideos = async () => {
-    const mainVideosGrid = document.getElementById('mainVideosGrid');
-    mainVideosGrid.innerHTML = '<p class="text-[var(--color-goc-main-text)] text-center col-span-full">Loading videos...</p>';
-
+// --- FETCH DATA ---
+const fetchData = async () => {
     try {
-        const response = await fetch('data/videos.json');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const videos = await response.json();
-        const mainChannelVideos = videos.filter(video => video.channel === 'main');
-
-        if (mainChannelVideos.length === 0) {
-            mainVideosGrid.innerHTML = '<p class="text-[var(--color-goc-main-text)] text-center col-span-full">No videos found for this channel yet.</p>';
-            return;
-        }
-
-        mainVideosGrid.innerHTML = ''; // Clear loading message
-
-        mainChannelVideos.forEach(video => {
-            const videoCard = document.createElement('div');
-            videoCard.className = 'bg-[var(--color-goc-dark)] rounded-xl shadow-lg overflow-hidden flex flex-col group transform hover:scale-103 transition-transform duration-300 ease-in-out';
-
-            const thumbnailUrl = video.thumbnailUrl || `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`;
-
-            const relatedReading = findReadingForVideo(video.videoId);
-            const readingLinkHtml = relatedReading ? `
-                <button data-reading-id="${relatedReading.id}" class="read-insight-button text-[var(--color-goc-light-accent)] hover:text-opacity-80 transition-colors duration-200 text-sm font-medium flex items-center mr-4"> <i class="fas fa-book-open text-base mr-2"></i> Read Insight
-                </button>
-            ` : '';
-
-            videoCard.innerHTML = `
-                <div class="relative w-full aspect-video">
-                    <img src="${thumbnailUrl}" alt="${video.title}" class="w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-75">
-                    <button data-video-id="${video.videoId}" data-video-title="${video.title}" class="play-button absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 focus:outline-none focus:ring-4 focus:ring-[var(--color-goc-light-accent)] focus:ring-opacity-50 rounded-xl">
-                        <i class="fas fa-play-circle text-6xl text-[var(--color-goc-light-accent)] transform transition-transform duration-300 group-hover:scale-110"></i>
-                    </button>
-                    <div class="absolute inset-0 flex items-center justify-center bg-[var(--color-goc-darkest)] bg-opacity-75 hidden video-loading-spinner">
-                        <i class="fas fa-spinner fa-spin text-4xl text-[var(--color-goc-light-accent)]"></i>
-                    </div>
-                </div>
-                <div class="p-5 flex-grow flex flex-col justify-between">
-                    <div>
-                        <h3 class="text-xl font-semibold mb-2 text-[var(--color-goc-main-text)]">${video.title}</h3>
-                        <p class="text-[var(--color-goc-main-text)] text-sm opacity-80">Season ${video.season}, Episode ${video.episode}</p>
-                    </div>
-                    <div class="mt-4 pt-4 border-t border-[var(--color-goc-darkest)] flex justify-between items-center">
-                        ${readingLinkHtml}
-                        <a href="https://www.youtube.com/watch?v=${video.videoId}" target="_blank" class="text-[var(--color-goc-light-accent)] hover:text-opacity-80 transition-colors duration-200 text-sm font-medium flex items-center">
-                            Watch on YouTube <i class="fas fa-external-link-alt ml-1 text-xs"></i>
-                        </a>
-                    </div>
-                </div>
-            `;
-            mainVideosGrid.appendChild(videoCard);
-        });
-
-        document.querySelectorAll('.play-button').forEach(button => {
-            button.addEventListener('click', (event) => {
-                const videoId = event.currentTarget.dataset.videoId;
-                const videoTitle = event.currentTarget.dataset.videoTitle;
-                openVideoModal(videoId, videoTitle);
-            });
-        });
-
-        document.querySelectorAll('.read-insight-button').forEach(button => {
-            button.addEventListener('click', (event) => {
-                const readingId = event.currentTarget.dataset.readingId;
-                setupTabs('insightsChannelTab', readingId);
-            });
-        });
-
+        const response = await fetch('data/videos.json'); // Updated path
+        const data = await response.json();
+        allConsultingVideos = data.filter(video => video.channel === 'consulting');
+        return data; // Return all videos
     } catch (error) {
-        console.error('Error loading main channel videos:', error);
-        mainVideosGrid.innerHTML = '<p class="text-center text-red-400 col-span-full">Failed to load videos. Please try again later. Check console for details.</p>';
+        console.error('Error fetching videos.json:', error);
+        return [];
     }
 };
 
-// Function to load data for the Consulting Channel and display its video cards
-const loadConsultingChannelContent = async () => {
-    const consultingSearchResults = document.getElementById('consultingSearchResults');
-    consultingSearchResults.innerHTML = '<p class="text-center text-[var(--color-goc-main-text)] col-span-full">Loading consulting data...</p>';
-
-    try {
-        const response = await fetch('data/videos.json');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const videos = await response.json();
-        allConsultingVideos = videos.filter(video => video.channel === 'consulting');
-
-        if (allConsultingVideos.length === 0) {
-            consultingSearchResults.innerHTML = '<p class="text-center text-[var(--color-goc-main-text)] col-span-full">No consulting videos found yet.</p>';
-            return;
-        }
-
-        consultingSearchResults.innerHTML = '';
-        consultingSearchResults.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6';
-
-        allConsultingVideos.forEach(video => {
-            const videoCard = document.createElement('div');
-            videoCard.className = 'bg-[var(--color-goc-dark)] rounded-xl shadow-lg overflow-hidden flex flex-col group transform hover:scale-103 transition-transform duration-300 ease-in-out';
-
-            const thumbnailUrl = video.thumbnailUrl || `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`;
-
-            const relatedReading = findReadingForVideo(video.videoId);
-            const readingLinkHtml = relatedReading ? `
-                <button data-reading-id="${relatedReading.id}" class="read-insight-button text-[var(--color-goc-light-accent)] hover:text-opacity-80 transition-colors duration-200 text-sm font-medium flex items-center mr-4">
-                    <i class="fas fa-book-open text-base mr-2"></i> Read Insight
-                </button>
-            ` : '';
-
-            videoCard.innerHTML = `
-                <div class="relative w-full aspect-video">
-                    <img src="${thumbnailUrl}" alt="${video.title}" class="w-full h-full object-cover">
-                    <button data-video-id="${video.videoId}" data-video-title="${video.title}" class="play-button absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 focus:outline-none focus:ring-4 focus:ring-[var(--color-goc-light-accent)] focus:ring-opacity-50 rounded-xl">
-                        <i class="fas fa-play-circle text-6xl text-[var(--color-goc-light-accent)] transform transition-transform duration-300 group-hover:scale-110"></i>
-                    </button>
-                </div>
-                <div class="p-5 flex-grow flex flex-col justify-between">
-                    <div>
-                        <h3 class="text-xl font-semibold mb-2 text-[var(--color-goc-main-text)]">${video.title}</h3>
-                    </div>
-                    <div class="mt-4 pt-4 border-t border-[var(--color-goc-darkest)] flex justify-between items-center">
-                         ${readingLinkHtml}
-                        <a href="https://www.youtube.com/watch?v=${video.videoId}" target="_blank" class="text-[var(--color-goc-light-accent)] hover:text-opacity-80 transition-colors duration-200 text-sm font-medium flex items-center">
-                            Watch on YouTube <i class="fas fa-external-link-alt ml-1 text-xs"></i>
-                        </a>
-                    </div>
-                </div>
-            `;
-            consultingSearchResults.appendChild(videoCard);
-        });
-
-        // Event listeners for consulting video card play buttons (open modal)
-        document.querySelectorAll('.play-button').forEach(button => {
-            button.addEventListener('click', (event) => {
-                const videoId = event.currentTarget.dataset.videoId;
-                const videoTitle = event.currentTarget.dataset.videoTitle;
-                openVideoModal(videoId, videoTitle);
-            });
-        });
-
-        document.querySelectorAll('.read-insight-button').forEach(button => {
-            button.addEventListener('click', (event) => {
-                const readingId = event.currentTarget.dataset.readingId;
-                setupTabs('insightsChannelTab', readingId);
-            });
-        });
-
-    } catch (error) {
-        console.error('Error loading consulting videos:', error);
-        consultingSearchResults.innerHTML = '<p class="text-center text-red-400 col-span-full">Failed to load consulting data. Please try again later. Check console for details.</p>';
-    }
-};
-
-// Function to perform the search on consulting videos
-const searchConsultingVideos = (query) => {
-    const consultingSearchResults = document.getElementById('consultingSearchResults');
-
-    if (!query.trim()) {
-        loadConsultingChannelContent(); // Reload all content if query is empty
+// --- MAIN CHANNEL RENDERING ---
+const renderMainChannelContent = (videos) => {
+    const mainGrid = document.getElementById('mainVideosGrid'); // Corrected ID
+    if (!mainGrid) {
+        console.error('mainVideosGrid element not found!');
         return;
     }
+    mainGrid.innerHTML = ''; // Clear existing content
 
-    consultingSearchResults.innerHTML = '<p class="text-center text-[var(--color-goc-main-text)] col-span-full">Searching...</p>';
-    consultingSearchResults.className = 'space-y-6'; // Change layout for search results
+    const mainChannelVideos = videos.filter(video => video.channel === 'main');
 
-    const lowerCaseQuery = query.toLowerCase();
-    const foundResults = [];
+    // Group videos by season
+    const seasons = mainChannelVideos.reduce((acc, video) => {
+        const seasonNum = video.season || 'Unsorted';
+        if (!acc[seasonNum]) {
+            acc[seasonNum] = [];
+        }
+        acc[seasonNum].push(video);
+        return acc;
+    }, {});
 
-    allConsultingVideos.forEach(video => {
-        video.subjects.forEach(subject => {
-            const subjectKeywords = subject.keywords.map(kw => kw.toLowerCase());
-            const subjectTitle = subject.title.toLowerCase();
+    Object.keys(seasons).sort((a, b) => {
+        if (a === 'Unsorted') return 1;
+        if (b === 'Unsorted') return -1;
+        return parseInt(a, 10) - parseInt(b, 10);
+    }).forEach(seasonNum => {
+        const seasonHeader = document.createElement('h3');
+        seasonHeader.className = 'text-2xl md:text-3xl font-bold mb-6 text-[var(--color-goc-light-accent)] col-span-full mt-8';
+        seasonHeader.textContent = seasonNum === 'Unsorted' ? 'Unsorted Episodes' : `Season ${seasonNum}`;
+        mainGrid.appendChild(seasonHeader);
 
-            const keywordMatch = subjectKeywords.some(keyword => keyword.includes(lowerCaseQuery));
-            const titleMatch = subjectTitle.includes(lowerCaseQuery);
-
-            if (keywordMatch || titleMatch) {
-                foundResults.push({
-                    videoId: video.videoId,
-                    videoTitle: video.title,
-                    thumbnailUrl: video.thumbnailUrl || `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`,
-                    subjectTitle: subject.title,
-                    startTime: subject.startTime
-                });
-            }
+        seasons[seasonNum].sort((a, b) => (a.episode || 0) - (b.episode || 0)).forEach(video => {
+            const videoCard = document.createElement('div');
+            // Removed hover effect
+            videoCard.className = 'bg-[var(--color-goc-dark)] rounded-lg shadow-lg overflow-hidden flex flex-col transform transition-transform duration-300';
+            videoCard.innerHTML = `
+                <div class="relative pb-[56.25%] h-0 overflow-hidden">
+                    <img src="${video.thumbnailUrl}" alt="${video.title}" class="absolute top-0 left-0 w-full h-full object-cover">
+                    <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 opacity-0 hover:opacity-100 transition-opacity duration-300">
+                        <button class="play-button bg-[var(--color-goc-light-accent)] text-[var(--color-goc-darkest)] p-4 rounded-full shadow-lg hover:bg-opacity-90 focus:outline-none focus:ring-4 focus:ring-[var(--color-goc-light-accent)] focus:ring-opacity-50"
+                                data-video-id="${video.videoId}" data-video-title="${video.title}" data-channel="${video.channel}">
+                            <i class="fas fa-play text-2xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6 flex flex-col flex-grow">
+                    <h4 class="text-xl font-semibold mb-2 text-[var(--color-goc-main-text)]">${video.title}</h4>
+                    <p class="text-sm text-[var(--color-goc-main-text)] opacity-80 mt-auto">Channel: ${video.channel}</p>
+                </div>
+            `;
+            mainGrid.appendChild(videoCard);
         });
     });
 
-    if (foundResults.length === 0) {
-        consultingSearchResults.innerHTML = `<p class="text-center text-[var(--color-goc-main-text)] col-span-full">No results found for "${query}". Try different keywords.</p>`;
-        return;
-    }
-
-    consultingSearchResults.innerHTML = '';
-    // Restore grid layout for results if desired, or keep as space-y-6 for list view
-    consultingSearchResults.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6';
-
-
-    foundResults.forEach(result => {
-        const resultItem = document.createElement('div');
-        resultItem.className = 'bg-[var(--color-goc-dark)] rounded-lg shadow-md p-5 flex flex-col sm:flex-row sm:items-center justify-between transition-transform duration-300 hover:scale-[1.02]';
-        resultItem.innerHTML = `
-            <div class="flex items-center flex-grow">
-                <img src="${result.thumbnailUrl}" alt="Thumbnail for ${result.videoTitle}" class="w-24 h-16 object-cover rounded-md mr-4 flex-shrink-0">
-                <div>
-                    <h3 class="text-xl font-semibold mb-1 text-[var(--color-goc-main-text)]">${result.videoTitle}</h3>
-                    <p class="text-[var(--color-goc-light-accent)] text-lg mt-1 font-medium">${result.subjectTitle}</p>
-                </div>
-            </div>
-            <div class="mt-4 sm:mt-0 sm:ml-4 flex-shrink-0">
-                <button data-video-id="${result.videoId}" data-video-title="${result.videoTitle}" data-start-time="${result.startTime}" class="play-consulting-button bg-[var(--color-goc-light-accent)] hover:bg-opacity-80 text-[var(--color-goc-darkest)] font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out flex items-center focus:outline-none focus:ring-4 focus:ring-[var(--color-goc-light-accent)] focus:ring-opacity-50">
-                    Watch from ${formatTime(result.startTime)} <i class="fas fa-play ml-2"></i>
-                </button>
-            </div>
-        `;
-        consultingSearchResults.appendChild(resultItem);
-    });
-
-    document.querySelectorAll('.play-consulting-button').forEach(button => {
+    mainGrid.querySelectorAll('.play-button').forEach(button => {
         button.addEventListener('click', (event) => {
             const videoId = event.currentTarget.dataset.videoId;
             const videoTitle = event.currentTarget.dataset.videoTitle;
-            const startTime = event.currentTarget.dataset.startTime;
-            openVideoModal(videoId, videoTitle, startTime);
+            const channel = event.currentTarget.dataset.channel;
+            openVideoPlaybackModal(videoId, videoTitle, channel);
         });
     });
 };
 
-// Function to generate and display filter buttons for insights
-const populateInsightFilterButtons = () => {
-    const insightsFilterButtonsContainer = document.getElementById('insightsFilterButtons');
+// --- CONSULTING CHANNEL RENDERING & SEARCH ---
+
+// NEW: Populate filter buttons for consulting videos
+const populateConsultingFilterButtons = () => {
+    const consultingFilterButtonsContainer = document.getElementById('consultingFilterButtons');
     // Clear existing buttons except 'All'
-    insightsFilterButtonsContainer.querySelectorAll('button:not([data-filter-type="all"])').forEach(button => button.remove());
+    consultingFilterButtonsContainer.querySelectorAll('button:not([data-filter-type="all"])').forEach(button => button.remove());
 
-    const uniqueTypes = new Set(allReadings.map(reading => reading.type));
-
-    uniqueTypes.forEach(type => {
-        const button = document.createElement('button');
-        button.dataset.filterType = type;
-        button.className = 'insights-filter-button bg-[var(--color-goc-dark)] hover:bg-[var(--color-goc-light-accent)] hover:text-[var(--color-goc-darkest)] text-[var(--color-goc-main-text)] py-2 px-4 rounded-full transition duration-300 ease-in-out text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-light-accent)] focus:ring-opacity-50';
-        button.textContent = type;
-        insightsFilterButtonsContainer.appendChild(button);
-    });
-
-    // Add event listeners using delegation on the container
-    insightsFilterButtonsContainer.addEventListener('click', (event) => {
-        const targetButton = event.target.closest('.insights-filter-button');
-        if (targetButton) {
-            currentInsightFilterType = targetButton.dataset.filterType;
-            // Clear search input when a filter button is clicked
-            document.getElementById('insightsSearchInput').value = '';
-            currentInsightSearchQuery = '';
-            loadInsightsContent(); // Re-render content with the new filter
+    const allTags = new Set();
+    allConsultingVideos.forEach(video => {
+        if (video.tags) { // Ensure video.tags exists
+            video.tags.forEach(tag => allTags.add(tag.toLowerCase()));
         }
     });
 
-    // Event listener for Clear Filters button
-    document.getElementById('clearInsightsFilters').addEventListener('click', () => {
-        currentInsightFilterType = 'all';
-        currentInsightSearchQuery = '';
-        document.getElementById('insightsSearchInput').value = ''; // Clear search input
-        loadInsightsContent(); // Re-render content with no filters
+    const sortedTags = Array.from(allTags).sort();
+
+    sortedTags.forEach(tag => {
+        const button = document.createElement('button');
+        button.className = 'consulting-filter-button bg-[var(--color-goc-darkest)] text-[var(--color-goc-main-text)] py-2 px-4 rounded-full hover:bg-[var(--color-goc-light-accent)] hover:text-[var(--color-goc-darkest)] transition duration-300 ease-in-out text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-light-accent)] focus:ring-opacity-50';
+        button.dataset.filterType = tag;
+        button.textContent = tag.charAt(0).toUpperCase() + tag.slice(1); // Capitalize first letter
+        consultingFilterButtonsContainer.appendChild(button);
+    });
+
+    // Add event listeners for filter buttons
+    consultingFilterButtonsContainer.querySelectorAll('.consulting-filter-button').forEach(button => {
+        button.addEventListener('click', (event) => {
+            currentConsultingFilterType = event.target.dataset.filterType;
+            // Remove active class from all buttons
+            consultingFilterButtonsContainer.querySelectorAll('.consulting-filter-button').forEach(btn => {
+                btn.classList.remove('bg-[var(--color-goc-light-accent)]', 'text-[var(--color-goc-darkest)]');
+                btn.classList.add('bg-[var(--color-goc-darkest)]', 'text-[var(--color-goc-main-text)]');
+            });
+            // Add active class to clicked button
+            event.target.classList.remove('bg-[var(--color-goc-darkest)]', 'text-[var(--color-goc-main-text)]');
+            event.target.classList.add('bg-[var(--color-goc-light-accent)]', 'text-[var(--color-goc-darkest)]');
+
+            searchConsultingVideos(currentConsultingSearchQuery); // Re-run search with new filter
+        });
+    });
+
+    // Set 'All' as active initially
+    consultingFilterButtonsContainer.querySelector('[data-filter-type="all"]').classList.remove('bg-[var(--color-goc-darkest)]', 'text-[var(--color-goc-main-text)]');
+    consultingFilterButtonsContainer.querySelector('[data-filter-type="all"]').classList.add('bg-[var(--color-goc-light-accent)]', 'text-[var(--color-goc-darkest)]');
+};
+
+
+const renderConsultingContent = (videosToRender) => {
+    const consultingGrid = document.getElementById('consultingGrid');
+    if (!consultingGrid) {
+        console.error('consultingGrid element not found!');
+        return;
+    }
+    // Set grid classes
+    consultingGrid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'; // Changed to grid layout
+    consultingGrid.innerHTML = ''; // Clear existing content
+
+    if (videosToRender.length === 0) {
+        consultingGrid.innerHTML = '<p class="text-center text-lg text-[var(--color-goc-main-text)] opacity-70 col-span-full">No results found for your search/filters.</p>';
+        return;
+    }
+
+    videosToRender.forEach(video => {
+        const videoCard = document.createElement('div');
+        // Removed hover effect
+        videoCard.className = 'consulting-video-card bg-[var(--color-goc-dark)] rounded-lg shadow-lg overflow-hidden flex flex-col transform transition-transform duration-300';
+        videoCard.innerHTML = `
+            <div class="relative pb-[56.25%] h-0 overflow-hidden">
+                <img src="${video.thumbnailUrl}" alt="${video.title}" class="absolute top-0 left-0 w-full h-full object-cover">
+                <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 opacity-0 hover:opacity-100 transition-opacity duration-300">
+                    <button class="play-button bg-[var(--color-goc-light-accent)] text-[var(--color-goc-darkest)] p-4 rounded-full shadow-lg hover:bg-opacity-90 focus:outline-none focus:ring-4 focus:ring-[var(--color-goc-light-accent)] focus:ring-opacity-50"
+                            data-video-id="${video.videoId}" data-video-title="${video.title}" data-channel="${video.channel}">
+                        <i class="fas fa-play text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6 flex flex-col flex-grow">
+                <h3 class="text-xl font-semibold mb-2 text-[var(--color-goc-main-text)] leading-tight">${video.title}</h3>
+                <div class="flex flex-wrap gap-2 mb-3" id="consultingVideoTags-${video.videoId}">
+                    </div>
+                <div class="mt-auto flex flex-col gap-2">
+                    ${video.subjects.map(subject => `
+                        <button class="flex justify-between items-center bg-[var(--color-goc-darkest)] hover:bg-[var(--color-goc-light-accent)] hover:text-[var(--color-goc-darkest)] text-[var(--color-goc-main-text)] py-2 px-3 rounded-md transition-colors duration-200 text-left text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-light-accent)] focus:ring-opacity-50 subject-button"
+                                data-video-id="${video.videoId}" data-start-time="${subject.startTime}">
+                            <span>${subject.title}</span>
+                            <span class="text-xs opacity-70 ml-2">${formatTime(subject.startTime)}</span>
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+            <div class="px-6 pb-6 flex justify-between items-center mt-auto">
+                <button class="view-reading-button text-[var(--color-goc-light-accent)] hover:text-opacity-80 transition-colors duration-200 text-sm font-medium flex items-center"
+                        data-video-id="${video.videoId}">
+                    View Insight <i class="fas fa-book-open ml-2 text-xs"></i>
+                </button>
+                <button class="play-full-video-button text-[var(--color-goc-light-accent)] hover:text-opacity-80 transition-colors duration-200 text-sm font-medium flex items-center"
+                        data-video-id="${video.videoId}" data-video-title="${video.title}" data-channel="${video.channel}">
+                    Play Full Video <i class="fas fa-external-link-alt ml-2 text-xs"></i>
+                </button>
+            </div>
+        `;
+        consultingGrid.appendChild(videoCard);
+
+        // Inject tags into the card
+        const tagsContainer = document.getElementById(`consultingVideoTags-${video.videoId}`);
+        if (video.tags && tagsContainer) {
+            video.tags.forEach(tag => {
+                const tagSpan = document.createElement('span');
+                tagSpan.className = 'text-xs font-medium bg-blue-700 px-2 py-1 rounded-full text-white opacity-80';
+                tagSpan.textContent = tag.charAt(0).toUpperCase() + tag.slice(1);
+                tagsContainer.appendChild(tagSpan);
+            });
+        }
+    });
+
+    // Add event listeners to subject buttons
+    consultingGrid.querySelectorAll('.subject-button').forEach(button => {
+        button.addEventListener('click', (event) => {
+            const videoId = event.currentTarget.dataset.videoId;
+            const startTime = event.currentTarget.dataset.startTime;
+            const video = allConsultingVideos.find(v => v.videoId === videoId);
+            const videoTitle = video ? video.title : '';
+            openVideoPlaybackModal(videoId, videoTitle, 'consulting', '', startTime); // Pass start time for direct jump
+        });
+    });
+
+    // Add event listeners to "View Insight" buttons
+    consultingGrid.querySelectorAll('.view-reading-button').forEach(button => {
+        button.addEventListener('click', (event) => {
+            const videoId = event.currentTarget.dataset.videoId;
+            const reading = findReadingForVideo(videoId);
+            if (reading) {
+                openReadingModal(reading);
+            } else {
+                alert('No reading found for this video.');
+            }
+        });
+    });
+
+    // Add event listeners to "Play Full Video" buttons on consulting cards
+    consultingGrid.querySelectorAll('.play-button').forEach(button => { // Target the play buttons on consulting cards
+        button.addEventListener('click', (event) => {
+            const videoId = event.currentTarget.dataset.videoId;
+            const videoTitle = event.currentTarget.dataset.videoTitle;
+            const channel = event.currentTarget.dataset.channel;
+            openVideoPlaybackModal(videoId, videoTitle, channel);
+        });
+    });
+
+    consultingGrid.querySelectorAll('.play-full-video-button').forEach(button => {
+        button.addEventListener('click', (event) => {
+            const videoId = event.currentTarget.dataset.videoId;
+            const videoTitle = event.currentTarget.dataset.videoTitle;
+            const channel = event.currentTarget.dataset.channel;
+            openVideoPlaybackModal(videoId, videoTitle, channel);
+        });
     });
 };
 
 
-// New function to load and display insights from readings.json
-const loadInsightsContent = async () => {
-    const insightsGrid = document.getElementById('insightsGrid');
-    insightsGrid.innerHTML = '<p class="text-center text-[var(--color-goc-main-text)] col-span-full">Loading insights...</p>';
+const searchConsultingVideos = (query = '') => {
+    currentConsultingSearchQuery = query.toLowerCase();
+    let filteredVideos = [...allConsultingVideos]; // Start with all consulting videos
 
-    // Ensure allReadings are loaded before filtering
-    if (allReadings.length === 0) {
-        try {
-            const response = await fetch('data/readings.json');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            allReadings = await response.json();
-            console.log("Readings prefetched:", allReadings.length);
-        } catch (error) {
-            console.error('Error pre-fetching readings.json:', error);
-            insightsGrid.innerHTML = '<p class="text-center text-red-400 col-span-full">Failed to load insights data. Please try again later.</p>';
-            return;
-        }
-        // Populate filter buttons after initial load of allReadings
-        populateInsightFilterButtons();
-    }
-
-    let filteredReadings = allReadings;
-
-    // Apply type filter
-    if (currentInsightFilterType !== 'all') {
-        filteredReadings = filteredReadings.filter(reading => reading.type === currentInsightFilterType);
-    }
-
-    // Apply search query filter
-    if (currentInsightSearchQuery) {
-        const lowerCaseQuery = currentInsightSearchQuery.toLowerCase();
-        filteredReadings = filteredReadings.filter(reading =>
-            reading.title.toLowerCase().includes(lowerCaseQuery) ||
-            reading.description.toLowerCase().includes(lowerCaseQuery) ||
-            reading.content.toLowerCase().includes(lowerCaseQuery) // Search in full content as well
+    // 1. Filter by selected tag
+    if (currentConsultingFilterType !== 'all') {
+        filteredVideos = filteredVideos.filter(video =>
+            video.tags && video.tags.includes(currentConsultingFilterType.toLowerCase())
         );
     }
 
-    if (filteredReadings.length === 0) {
-        insightsGrid.innerHTML = '<p class="text-center text-[var(--color-goc-main-text)] col-span-full">No insights found matching your criteria.</p>';
+    // 2. Apply text search if query is not empty
+    if (currentConsultingSearchQuery) {
+        filteredVideos = filteredVideos.filter(video => {
+            const videoTitleMatch = video.title.toLowerCase().includes(currentConsultingSearchQuery);
+            const subjectMatch = video.subjects.some(subject =>
+                subject.title.toLowerCase().includes(currentConsultingSearchQuery) ||
+                (subject.keywords && subject.keywords.some(keyword => keyword.toLowerCase().includes(currentConsultingSearchQuery)))
+            );
+            return videoTitleMatch || subjectMatch;
+        });
+    }
+
+    renderConsultingContent(filteredVideos);
+};
+
+// --- INSIGHTS CHANNEL RENDERING & SEARCH ---
+const renderInsightsContent = (readingsToRender) => {
+    const insightsGrid = document.getElementById('insightsGrid');
+    if (!insightsGrid) {
+        console.error('insightsGrid element not found!');
+        return;
+    }
+    insightsGrid.innerHTML = '';
+
+    if (readingsToRender.length === 0) {
+        insightsGrid.innerHTML = '<p class="text-center text-lg text-[var(--color-goc-main-text)] opacity-70 col-span-full">No insights found for your search/filters.</p>';
         return;
     }
 
-    insightsGrid.innerHTML = '';
-    insightsGrid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6';
-
-    filteredReadings.forEach(reading => {
+    readingsToRender.forEach(reading => {
         const insightCard = document.createElement('div');
-        insightCard.id = `reading-${reading.id}`;
-        insightCard.className = 'bg-[var(--color-goc-dark)] rounded-xl shadow-lg p-6 flex flex-col justify-between transform hover:scale-103 transition-transform duration-300 ease-in-out';
-
+        insightCard.className = 'bg-[var(--color-goc-dark)] rounded-lg shadow-lg overflow-hidden flex flex-col transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl';
         insightCard.innerHTML = `
-            <div>
-                <h3 class="text-xl font-semibold mb-2 text-[var(--color-goc-light-accent)]">${reading.title}</h3>
-                <p class="text-[var(--color-goc-main-text)] text-sm mb-4">Type: <span class="font-medium opacity-90">${reading.type}</span></p>
-                <p class="text-[var(--color-goc-main-text)] text-base leading-relaxed opacity-90">${reading.description}</p>
-            </div>
-            <div class="mt-6 pt-4 border-t border-[var(--color-goc-darkest)] flex flex-col items-start gap-y-2">
-                <button data-reading-id="${reading.id}" class="open-reading-modal-button text-[var(--color-goc-light-accent)] hover:text-opacity-80 transition-colors duration-200 text-sm font-medium flex items-center">
-                    Read Full Insight <i class="fas fa-arrow-right ml-2 text-sm"></i>
-                </button>
-                <a href="https://www.youtube.com/watch?v=${reading.videoId}" target="_blank" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-200 text-sm font-medium flex items-center">
-                    <i class="fab fa-youtube text-base mr-2"></i> View Source
-                </a>
+            <div class="p-6 flex flex-col flex-grow">
+                <h4 class="text-xl font-semibold mb-2 text-[var(--color-goc-main-text)]">${reading.title}</h4>
+                <div class="flex flex-wrap gap-2 mb-3">
+                    <span class="text-xs font-medium bg-purple-700 px-2 py-1 rounded-full text-white opacity-80">${reading.type}</span>
+                    </div>
+                <p class="text-base text-[var(--color-goc-main-text)] opacity-80 mb-4 flex-grow">${reading.description}</p>
+                <div class="mt-auto flex justify-between items-center">
+                    <button class="view-details-button text-[var(--color-goc-light-accent)] hover:text-opacity-80 transition-colors duration-200 text-sm font-medium flex items-center"
+                            data-reading-id="${reading.id}">
+                        Read Full Insight <i class="fas fa-arrow-right ml-2 text-xs"></i>
+                    </button>
+                    <a href="https://www.youtube.com/watch?v=${reading.videoId}" target="_blank" class="text-[var(--color-goc-main-text)] opacity-70 hover:text-[var(--color-goc-light-accent)] transition-colors duration-200 text-sm font-medium flex items-center">
+                        Source Video <i class="fas fa-external-link-alt ml-2 text-xs"></i>
+                    </a>
+                </div>
             </div>
         `;
         insightsGrid.appendChild(insightCard);
     });
 
-    // Event listeners for opening the modal
-    document.querySelectorAll('.open-reading-modal-button').forEach(button => {
+    insightsGrid.querySelectorAll('.view-details-button').forEach(button => {
         button.addEventListener('click', (event) => {
             const readingId = event.currentTarget.dataset.readingId;
-            const selectedReading = allReadings.find(r => r.id === readingId);
-            if (selectedReading) {
-                openReadingModal(selectedReading);
-            } else {
-                console.error("Reading not found for ID:", readingId);
+            const reading = allReadings.find(r => r.id === readingId);
+            if (reading) {
+                openReadingModal(reading);
             }
         });
     });
-
-    // Update active state of filter buttons
-    document.querySelectorAll('.insights-filter-button').forEach(button => {
-        if (button.dataset.filterType === currentInsightFilterType) {
-            button.classList.add('bg-[var(--color-goc-light-accent)]', 'text-[var(--color-goc-darkest)]'); // Active state colors
-            button.classList.remove('bg-[var(--color-goc-dark)]', 'text-[var(--color-goc-main-text)]'); // Inactive state colors
-        } else {
-            button.classList.remove('bg-[var(--color-goc-light-accent)]', 'text-[var(--color-goc-darkest)]'); // Active state colors
-            button.classList.add('bg-[var(--color-goc-dark)]', 'text-[var(--color-goc-main-text)]'); // Inactive state colors
-        }
-    });
 };
 
-// Function to scroll to a specific reading card
-const scrollToReading = (readingId) => {
-    const targetElement = document.getElementById(`reading-${readingId}`);
-    if (targetElement) {
-        console.log(`Attempting to scroll to and highlight reading ID: ${readingId}`, targetElement);
-        setTimeout(() => {
-            targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+const loadInsightsContent = () => {
+    let filteredReadings = [...allReadings];
 
-            targetElement.classList.add('ring-4', 'ring-[var(--color-goc-light-accent)]', 'ring-opacity-70', 'animate-pulse-ring');
-            console.log(`Highlight classes added to:`, targetElement);
-
-            setTimeout(() => {
-                targetElement.classList.remove('ring-4', 'ring-[var(--color-goc-light-accent)]', 'ring-opacity-70', 'animate-pulse-ring');
-                console.log(`Highlight classes removed from:`, targetElement);
-            }, 2000);
-        }, 250);
-    } else {
-        console.warn(`Target reading element with ID 'reading-${readingId}' not found for scrolling.`);
+    // 1. Filter by type
+    if (currentInsightFilterType !== 'all') {
+        filteredReadings = filteredReadings.filter(reading =>
+            reading.type.toLowerCase() === currentInsightFilterType
+        );
     }
+
+    // 2. Apply search query
+    if (currentInsightSearchQuery) {
+        const query = currentInsightSearchQuery.toLowerCase();
+        filteredReadings = filteredReadings.filter(reading =>
+            reading.title.toLowerCase().includes(query) ||
+            reading.description.toLowerCase().includes(query) ||
+            reading.content.toLowerCase().includes(query)
+        );
+    }
+
+    renderInsightsContent(filteredReadings);
 };
 
+const populateInsightFilterButtons = () => {
+    const insightsFilterButtonsContainer = document.getElementById('insightsFilterButtons');
+    // Clear existing buttons except 'All'
+    insightsFilterButtonsContainer.querySelectorAll('button:not([data-filter-type="all"])').forEach(button => button.remove());
 
-// Function to handle the tab switching logic
-const setupTabs = async (targetTabId = 'mainChannelTab', scrollTargetId = null) => {
-    const tabs = {
-        mainChannelTab: {
-            button: document.getElementById('mainChannelTab'),
-            content: document.getElementById('mainChannelContent'),
-            loader: loadMainChannelVideos,
-            resetScroll: true // Main channel resets scroll to top
-        },
-        consultingChannelTab: {
-            button: document.getElementById('consultingChannelTab'),
-            content: document.getElementById('consultingChannelContent'),
-            loader: loadConsultingChannelContent,
-            resetScroll: false // Consulting channel attempts to maintain scroll
-        },
-        insightsChannelTab: {
-            button: document.getElementById('insightsChannelTab'),
-            content: document.getElementById('insightsContent'),
-            loader: loadInsightsContent,
-            resetScroll: false // Insights channel attempts to maintain scroll, unless specific insight is targeted
-        }
-    };
+    const allTypes = new Set();
+    allReadings.forEach(reading => allTypes.add(reading.type.toLowerCase()));
 
-    // Store current scroll position before switching tabs
-    lastScrollY = window.scrollY;
+    const sortedTypes = Array.from(allTypes).sort();
 
-    Object.values(tabs).forEach(tab => {
-        tab.button.classList.remove('border-b-4', 'border-[var(--color-goc-light-accent)]', 'text-[var(--color-goc-light-accent)]');
-        tab.button.classList.add('text-[var(--color-goc-main-text)]');
-        tab.content.classList.add('hidden');
+    sortedTypes.forEach(type => {
+        const button = document.createElement('button');
+        button.className = 'insights-filter-button bg-[var(--color-goc-darkest)] text-[var(--color-goc-main-text)] py-2 px-4 rounded-full hover:bg-[var(--color-goc-light-accent)] hover:text-[var(--color-goc-darkest)] transition duration-300 ease-in-out text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-light-accent)] focus:ring-opacity-50';
+        button.dataset.filterType = type;
+        button.textContent = type.charAt(0).toUpperCase() + type.slice(1); // Capitalize first letter
+        insightsFilterButtonsContainer.appendChild(button);
     });
 
-    const activeTab = tabs[targetTabId];
-    if (activeTab) {
-        activeTab.button.classList.add('border-b-4', 'border-[var(--color-goc-light-accent)]', 'text-[var(--color-goc-light-accent)]');
-        activeTab.button.classList.remove('text-[var(--color-goc-main-text)]');
-        activeTab.content.classList.remove('hidden');
+    // Add event listeners for filter buttons
+    insightsFilterButtonsContainer.querySelectorAll('.insights-filter-button').forEach(button => {
+        button.addEventListener('click', (event) => {
+            currentInsightFilterType = event.target.dataset.filterType;
+            // Remove active class from all buttons
+            insightsFilterButtonsContainer.querySelectorAll('.insights-filter-button').forEach(btn => {
+                btn.classList.remove('bg-[var(--color-goc-light-accent)]', 'text-[var(--color-goc-darkest)]');
+                btn.classList.add('bg-[var(--color-goc-darkest)]', 'text-[var(--color-goc-main-text)]');
+            });
+            // Add active class to clicked button
+            event.target.classList.remove('bg-[var(--color-goc-darkest)]', 'text-[var(--color-goc-main-text)]');
+            event.target.classList.add('bg-[var(--color-goc-light-accent)]', 'text-[var(--color-goc-darkest)]');
 
-        await activeTab.loader(); // Call loader function for the active tab
+            loadInsightsContent(); // Re-render content with new filter
+        });
+    });
 
-        // Restore scroll position unless the tab is explicitly set to reset, or if a specific insight is targeted
-        if (!activeTab.resetScroll && !scrollTargetId) {
-            window.scrollTo(0, lastScrollY);
-        } else if (activeTab.resetScroll) {
-            window.scrollTo(0, 0); // Always scroll to top if resetScroll is true
-        }
+    // Event listener for clear insights filters button
+    document.getElementById('clearInsightsFilters').addEventListener('click', () => {
+        currentInsightFilterType = 'all';
+        currentInsightSearchQuery = '';
+        document.getElementById('insightsSearchInput').value = '';
+        insightsFilterButtonsContainer.querySelector('[data-filter-type="all"]').click(); // Programmatically click "All"
+        loadInsightsContent();
+    });
 
-        if (targetTabId === 'insightsChannelTab' && scrollTargetId) {
-            scrollToReading(scrollTargetId);
-        }
-    }
+    // Set 'All' as active initially
+    insightsFilterButtonsContainer.querySelector('[data-filter-type="all"]').classList.remove('bg-[var(--color-goc-darkest)]', 'text-[var(--color-goc-main-text)]');
+    insightsFilterButtonsContainer.querySelector('[data-filter-type="all"]').classList.add('bg-[var(--color-goc-light-accent)]', 'text-[var(--color-goc-darkest)]');
 };
 
-// Pre-fetches readings.json once on initial load to make data available globally
+// --- TAB MANAGEMENT ---
+const setupTabs = async (activeTabId) => {
+    lastScrollY = window.scrollY; // Save current scroll position
+
+    // Hide all channel content sections
+    document.querySelectorAll('.channel-content').forEach(section => {
+        section.classList.add('hidden');
+    });
+
+    // Deactivate all tabs by reverting their styles
+    document.querySelectorAll('nav button').forEach(button => { // Target nav buttons specifically
+        button.classList.remove('border-[var(--color-goc-light-accent)]', 'text-[var(--color-goc-light-accent)]', 'border-b-4');
+        button.classList.add('hover:border-b-4', 'hover:border-[var(--color-goc-light-accent)]', 'text-[var(--color-goc-main-text)]');
+    });
+
+    // Activate the selected tab and show its content
+    const activeTabButton = document.getElementById(activeTabId);
+    if (activeTabButton) {
+        // Apply active styles
+        activeTabButton.classList.remove('hover:border-b-4', 'hover:border-[var(--color-goc-light-accent)]', 'text-[var(--color-goc-main-text)]');
+        activeTabButton.classList.add('border-b-4', 'border-[var(--color-goc-light-accent)]', 'text-[var(--color-goc-light-accent)]');
+
+        if (activeTabId === 'mainChannelTab') {
+            document.getElementById('mainChannelContent').classList.remove('hidden'); // Corrected ID
+            const allVideos = await fetchData(); // Fetch all videos here
+            renderMainChannelContent(allVideos);
+            // Restore scroll position only if returning to previously visited tab, otherwise scroll to top
+            if (lastScrollY > 0 && document.body.dataset.lastTab === activeTabId) {
+                window.scrollTo(0, lastScrollY);
+            } else {
+                window.scrollTo(0, 0);
+            }
+        } else if (activeTabId === 'consultingChannelTab') {
+            document.getElementById('consultingChannelContent').classList.remove('hidden'); // Corrected ID
+            // Ensure allConsultingVideos is populated from fetchData
+            if (allConsultingVideos.length === 0) {
+                await fetchData(); // This will populate allConsultingVideos
+            }
+            populateConsultingFilterButtons(); // Populate filter buttons for consulting
+            searchConsultingVideos(currentConsultingSearchQuery); // Render initial content (or filtered)
+            // Restore scroll position
+            if (lastScrollY > 0 && document.body.dataset.lastTab === activeTabId) {
+                window.scrollTo(0, lastScrollY);
+            } else {
+                window.scrollTo(0, 0);
+            }
+        } else if (activeTabId === 'insightsChannelTab') {
+            document.getElementById('insightsContent').classList.remove('hidden');
+            // Ensure allReadings is populated
+            if (allReadings.length === 0) {
+                await prefetchReadings();
+            }
+            populateInsightFilterButtons(); // Ensure filter buttons are populated/refreshed
+            loadInsightsContent(); // Load content based on current filters/search
+            // Restore scroll position
+            if (lastScrollY > 0 && document.body.dataset.lastTab === activeTabId) {
+                window.scrollTo(0, lastScrollY);
+            } else {
+                window.scrollTo(0, 0);
+            }
+        }
+    }
+    document.body.dataset.lastTab = activeTabId; // Store the last active tab
+};
+
+// --- Initial Data Fetch & Event Listeners ---
 const prefetchReadings = async () => {
-    // Early return if readings are already loaded
-    if (allReadings.length > 0) {
-        return;
-    }
     try {
-        const response = await fetch('data/readings.json');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        const response = await fetch('data/readings.json'); // Updated path
         allReadings = await response.json();
-        console.log("Readings prefetched:", allReadings.length);
         // Populate filter buttons immediately after prefetching
-        populateInsightFilterButtons();
+        // No longer calling populateInsightFilterButtons here, it's called in setupTabs
     } catch (error) {
         console.error('Error pre-fetching readings.json:', error);
     }
@@ -549,7 +549,9 @@ const prefetchReadings = async () => {
 
 
 document.addEventListener('DOMContentLoaded', async () => {
-    await prefetchReadings(); // Prefetch readings as soon as DOM is ready
+    // Prefetch all data needed globally
+    await prefetchReadings();
+    await fetchData(); // This will populate allConsultingVideos
 
     // Setup initial tab
     setupTabs('mainChannelTab');
@@ -563,9 +565,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const consultingSearchInput = document.getElementById('consultingSearchInput');
     if (consultingSearchInput) {
         consultingSearchInput.addEventListener('input', (event) => {
-            searchConsultingVideos(event.target.value);
+            currentConsultingSearchQuery = event.target.value; // Update global query
+            searchConsultingVideos(currentConsultingSearchQuery);
         });
     }
+
+    // NEW: Event listener for clearing consulting filters
+    document.getElementById('clearConsultingFilters').addEventListener('click', () => {
+        currentConsultingFilterType = 'all';
+        currentConsultingSearchQuery = '';
+        document.getElementById('consultingSearchInput').value = '';
+        document.getElementById('consultingFilterButtons').querySelector('[data-filter-type="all"]').click(); // Programmatically click "All"
+        searchConsultingVideos();
+    });
 
     // Event listener for Insights search input
     const insightsSearchInput = document.getElementById('insightsSearchInput');
@@ -575,4 +587,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadInsightsContent(); // Re-render content with the new search query
         });
     }
+
+    // Modal close buttons
+    closeModalButton.addEventListener('click', closeModal);
+    closeVideoModalButton.addEventListener('click', closeVideoModal);
+
+    // Close modals when clicking outside (on the overlay)
+    readingModal.addEventListener('click', (event) => {
+        if (event.target === readingModal) {
+            closeModal();
+        }
+    });
+    videoPlaybackModal.addEventListener('click', (event) => {
+        if (event.target === videoPlaybackModal) {
+            closeVideoModal();
+        }
+    });
 });
