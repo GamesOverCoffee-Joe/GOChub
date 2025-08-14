@@ -1,0 +1,47 @@
+[
+    {
+        "id": "ai-monetization-strategy",
+        "title": "AI Insight: Monetization Strategies - Key Takeaways",
+        "videoId": "44ibpx9vg_c",
+        "type": "AI Summary",
+        "description": "This AI-reworked summary from the 'Monetization Strategies for Mobile Games' video focuses on the core principles of in-app purchases and ad integration for sustainable revenue. It highlights how to balance player experience with monetization goals, drawing insights from successful mobile titles.",
+        "content":  "<p>This is the **full, much longer content** of the insight. It can include multiple paragraphs, <em>formatted text</em>, and even <a href='#' class='text-[var(--color-goc-light-accent)] hover:text-opacity-80' target='_blank'>links</a>. The modal will display this entire text, allowing for a comprehensive reading experience.</p><p>You can structure this content with HTML tags like &lt;p&gt;, &lt;strong&gt;, &lt;em&gt;, etc., for rich text presentation within the modal.</p><p>Make sure to escape any special characters if this content is directly within a JSON string.</p>",
+        "linkText": "Go to Source Video"
+    },
+    {
+        "id": "ai-combat-design",
+        "title": "AI Insight: Designing Engaging Combat - Core Loops",
+        "videoId": "5KidGE7ffVQ",
+        "type": "AI Analysis",
+        "description": "An AI-generated analysis of the 'Designing Engaging Combat Systems' video, distilling the discussion on effective combat loop design. It covers player agency, feedback mechanisms, and the iterative process of refining combat feel to maximize engagement.",
+        "content": "<p>This is the **full, much longer content** of the insight. It can include multiple paragraphs, <em>formatted text</em>, and even <a href='#' class='text-[var(--color-goc-light-accent)] hover:text-opacity-80' target='_blank'>links</a>. The modal will display this entire text, allowing for a comprehensive reading experience.</p><p>You can structure this content with HTML tags like &lt;p&gt;, &lt;strong&gt;, &lt;em&gt;, etc., for rich text presentation within the modal.</p><p>Make sure to escape any special characters if this content is directly within a JSON string.</p>",
+        "linkText": "Go to Source Video"
+    },
+    {
+        "id": "ai-solo-dev-tools",
+        "title": "AI Insight: Tools for Solo Devs - Essential Software",
+        "videoId": "-j7P0pjVakc",
+        "type": "AI Synopsis",
+        "description": "A synopsis derived from the 'Essential Tools for Solo Game Developers' video, focusing on recommended software for various development stages: from prototyping and asset creation to version control. It emphasizes cost-effective and powerful solutions for indie creators.",
+        "content": "<p>This is the **full, much longer content** of the insight. It can include multiple paragraphs, <em>formatted text</em>, and even <a href='#' class='text-[var(--color-goc-light-accent)] hover:text-opacity-80' target='_blank'>links</a>. The modal will display this entire text, allowing for a comprehensive reading experience.</p><p>You can structure this content with HTML tags like &lt;p&gt;, &lt;strong&gt;, &lt;em&gt;, etc., for rich text presentation within the modal.</p><p>Make sure to escape any special characters if this content is directly within a JSON string.</p>",
+        "linkText": "Go to Source Video"
+    },
+    {
+        "id": "ai-marketing-budget",
+        "title": "AI Insight: Marketing Indie Games - Budget Strategies",
+        "videoId": "8IH_Qr1WIhY",
+        "type": "AI Summary",
+        "description": "This AI-processed summary from the 'Marketing Your Indie Game on a Budget' video provides actionable strategies for indie developers with limited resources. It covers leveraging social media, effective press kit creation, and engaging with influencers for maximum reach.",
+        "content": "<p>This is the **full, much longer content** of the insight. It can include multiple paragraphs, <em>formatted text</em>, and even <a href='#' class='text-[var(--color-goc-light-accent)] hover:text-opacity-80' target='_blank'>links</a>. The modal will display this entire text, allowing for a comprehensive reading experience.</p><p>You can structure this content with HTML tags like &lt;p&gt;, &lt;strong&gt;, &lt;em&gt;, etc., for rich text presentation within the modal.</p><p>Make sure to escape any special characters if this content is directly within a JSON string.</p>",
+        "linkText": "Go to Source Video"
+    },
+    {
+        "id": "ai-narrative-design",
+        "title": "AI Insight: Narrative Design - Player Choice & Lore",
+        "videoId": "8RusGeNA5sM",
+        "type": "AI Analysis",
+        "description": "An AI-derived analysis of the 'Narrative Design: Storytelling in Games' video, exploring techniques for crafting compelling player-driven stories. It delves into branching narratives, integrating lore seamlessly into gameplay, and creating memorable character arcs.",
+        "content": "<p>This is the **full, much longer content** of the insight. It can include multiple paragraphs, <em>formatted text</em>, and even <a href='#' class='text-[var(--color-goc-light-accent)] hover:text-opacity-80' target='_blank'>links</a>. The modal will display this entire text, allowing for a comprehensive reading experience.</p><p>You can structure this content with HTML tags like &lt;p&gt;, &lt;strong&gt;, &lt;em&gt;, etc., for rich text presentation within the modal.</p><p>Make sure to escape any special characters if this content is directly within a JSON string.</p>",
+        "linkText": "Go to Source Video"
+    }
+]

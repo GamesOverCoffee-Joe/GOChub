@@ -4,25 +4,134 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Games Over Coffee Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    </head>
-<body class="bg-gray-900 text-gray-100 font-sans min-h-screen flex flex-col">
+
+    <style>
+        /* Custom CSS Variables for Brand Colors */
+        :root {
+            --color-goc-darkest: #1f1f1f; /* Darkest background */
+            --color-goc-dark: #2b2b2b; /* Card backgrounds, darker accents */
+            --color-goc-light-accent: #aac6ce; /* Main accent color for buttons, highlights */
+            --color-goc-main-text: #ead9ca; /* Primary text color */
+        }
+
+        /* Applying Custom Font */
+        body {
+            font-family: 'Lato', sans-serif; /* Campton or similar. Lato is a good substitute */
+        }
+
+        /* Optional: Subtle animation for ring highlights */
+        @keyframes pulse-ring {
+            0% {
+                box-shadow: 0 0 0 0 hsl(var(--color-goc-light-accent-rgb) / 0.7); /* Using HSL for opacity adjust */
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px hsl(var(--color-goc-light-accent-rgb) / 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 hsl(var(--color-goc-light-accent-rgb) / 0);
+            }
+        }
+
+        .animate-pulse-ring {
+            animation: pulse-ring 2s ease-out;
+        }
+
+        /* Tailwind JIT or custom config for HSL-based ring color */
+        .ring-\[var\(--color-goc-light-accent\)\] {
+            /* RGB values for #aac6ce (170, 198, 206) - used for pulse-ring keyframes if not using HSL directly */
+            --color-goc-light-accent-rgb: 170, 198, 206;
+            --tw-ring-color: var(--color-goc-light-accent); /* Direct use of CSS variable for ring */
+        }
+
+
+        /* General Modal Overlay Styles */
+        .modal {
+            background-color: rgba(0, 0, 0, 0.7); /* Dark overlay */
+            transition: opacity 0.3s ease-in-out;
+            -webkit-backdrop-filter: blur(5px); /* For Safari */
+            backdrop-filter: blur(5px); /* Blur background */
+        }
+
+            .modal.hidden {
+                opacity: 0;
+                pointer-events: none; /* Allows clicks to pass through when hidden */
+            }
+
+        /* Specific Modal Content Sizing */
+        #readingModal .modal-content {
+            max-height: 90vh; /* Limit height to 90% of viewport height */
+            overflow-y: auto; /* Enable scrolling for long content */
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+            /* Hide scrollbar for Webkit browsers */
+            #readingModal .modal-content::-webkit-scrollbar {
+                display: none;
+            }
+
+        /* Adjustments for the video modal iframe to fill its container */
+        #videoPlaybackModal .modal-content {
+            /* Adjusted padding to make space for the close button and title */
+            padding: 1.5rem; /* Base padding */
+            padding-top: 3.5rem; /* More space at top for X button */
+        }
+
+        #videoPlaybackModal .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 0.5rem; /* Matches Tailwind's rounded-lg */
+            background-color: black; /* Ensure black background if iframe doesn't load immediately */
+        }
+
+            #videoPlaybackModal .video-container iframe {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                border: 0;
+            }
+
+        /* Ensure close button is on top */
+        #readingModal .modal-content button,
+        #videoPlaybackModal .modal-content button {
+            z-index: 10; /* Higher than iframe */
+        }
+    </style>
+</head>
+<body class="bg-[var(--color-goc-darkest)] text-[var(--color-goc-main-text)] font-sans min-h-screen flex flex-col">
     <div id="app" class="container mx-auto p-4 flex-grow">
         <header class="text-center mb-10 mt-6">
-            <h1 class="text-5xl md:text-6xl font-extrabold text-yellow-400 leading-tight">Games Over Coffee Hub</h1>
-            <p class="text-xl md:text-2xl mt-4 text-gray-300">Your centralized source for all things Games Over Coffee.</p>
+            <div class="mb-4">
+                <img src="https://placehold.co/100x100/1f1f1f/aac6ce?text=Logo" alt="Games Over Coffee Logo" class="mx-auto rounded-full w-24 h-24 object-cover border-2 border-[var(--color-goc-light-accent)]">
+            </div>
+            <h1 class="text-5xl md:text-6xl font-extrabold text-[var(--color-goc-light-accent)] leading-tight">Games Over Coffee Research Center</h1>
+            <p class="text-xl md:text-2xl mt-4 text-[var(--color-goc-main-text)] opacity-80">Empathetic Game Design</p>
         </header>
 
         <nav class="mb-10">
-            <ul class="flex justify-center border-b-2 border-gray-700">
+            <ul class="flex justify-center border-b-2 border-[var(--color-goc-dark)]">
                 <li class="-mb-px mr-2">
-                    <button id="mainChannelTab" class="inline-block py-3 px-6 text-gray-200 hover:text-yellow-400 hover:border-b-4 hover:border-yellow-400 font-semibold focus:outline-none transition duration-300 ease-in-out text-lg md:text-xl">
-                        Games Over Coffee (Main)
+                    <button id="mainChannelTab" class="inline-block py-3 px-6 text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] hover:border-b-4 hover:border-[var(--color-goc-light-accent)] font-semibold focus:outline-none transition duration-300 ease-in-out text-lg md:text-xl">
+                        Main Channel
+                    </button>
+                </li>
+                <li class="-mb-px mr-2">
+                    <button id="consultingChannelTab" class="inline-block py-3 px-6 text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] hover:border-b-4 hover:border-[var(--color-goc-light-accent)] font-semibold focus:outline-none transition duration-300 ease-in-out text-lg md:text-xl">
+                        Consulting
                     </button>
                 </li>
                 <li class="-mb-px">
-                    <button id="consultingChannelTab" class="inline-block py-3 px-6 text-gray-200 hover:text-yellow-400 hover:border-b-4 hover:border-yellow-400 font-semibold focus:outline-none transition duration-300 ease-in-out text-lg md:text-xl">
-                        Games Over Coffee Consulting
+                    <button id="insightsChannelTab" class="inline-block py-3 px-6 text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] hover:border-b-4 hover:border-[var(--color-goc-light-accent)] font-semibold focus:outline-none transition duration-300 ease-in-out text-lg md:text-xl">
+                        Readings / Insights
                     </button>
                 </li>
             </ul>
@@ -30,22 +139,68 @@
 
         <main>
             <section id="mainChannelContent" class="channel-content pb-10">
-                <h2 class="text-3xl md:text-4xl font-bold mb-8 text-yellow-400">Main Channel Videos</h2>
+                <h2 class="text-3xl md:text-4xl font-bold mb-8 text-[var(--color-goc-light-accent)]">Main Channel Videos</h2>
                 <div id="mainVideosGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    </div>
+                </div>
             </section>
 
             <section id="consultingChannelContent" class="channel-content hidden pb-10">
-                <h2 class="text-3xl md:text-4xl font-bold mb-8 text-yellow-400">Consulting Insights</h2>
+                <h2 class="text-3xl md:text-4xl font-bold mb-8 text-[var(--color-goc-light-accent)]">Consulting Insights</h2>
                 <div class="mb-8">
-                    <input type="text" id="consultingSearchInput" placeholder="Search video transcripts, keywords..." class="p-4 w-full rounded-lg bg-gray-800 text-gray-100 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 text-lg">
+                    <input type="text" id="consultingSearchInput" placeholder="Search video transcripts, keywords..." class="p-4 w-full rounded-lg bg-[var(--color-goc-dark)] text-[var(--color-goc-main-text)] border border-[var(--color-goc-darkest)] focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-light-accent)] text-lg">
                 </div>
                 <div id="consultingSearchResults" class="space-y-6">
+                </div>
+            </section>
+
+            <section id="insightsContent" class="channel-content hidden pb-10">
+                <h2 class="text-3xl md:text-4xl font-bold mb-8 text-[var(--color-goc-light-accent)]">Readings / Insights</h2>
+                <div class="mb-8">
+                    <input type="text" id="insightsSearchInput" placeholder="Search insights by title, description or content..." class="p-4 w-full rounded-lg bg-[var(--color-goc-dark)] text-[var(--color-goc-main-text)] border border-[var(--color-goc-darkest)] focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-light-accent)] text-lg">
+                </div>
+
+                <div class="bg-[var(--color-goc-dark)] p-4 rounded-lg shadow-md mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex flex-wrap gap-3" id="insightsFilterButtons">
+                        <button data-filter-type="all" class="insights-filter-button bg-[var(--color-goc-darkest)] text-[var(--color-goc-main-text)] py-2 px-4 rounded-full hover:bg-[var(--color-goc-light-accent)] hover:text-[var(--color-goc-darkest)] transition duration-300 ease-in-out text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-light-accent)] focus:ring-opacity-50">All</button>
                     </div>
+                    <button id="clearInsightsFilters" class="bg-[var(--color-goc-darkest)] hover:bg-red-700 text-[var(--color-goc-main-text)] py-2 px-4 rounded-full transition duration-300 ease-in-out text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-main-text)] focus:ring-opacity-50 flex items-center justify-center">Clear Filters <i class="fas fa-times ml-1 text-xs"></i></button>
+                </div>
+                <div id="insightsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                </div>
             </section>
         </main>
     </div>
 
-    <script src="script.js"></script>
+    <footer class="text-center py-6 text-[var(--color-goc-dark)] text-sm mt-auto">
+        <p>&copy; 2025 Games Over Coffee Hub. All rights reserved. <i class="fas fa-mug-hot ml-1"></i></p>
+    </footer>
+
+    <div id="readingModal" class="modal fixed inset-0 flex items-center justify-center hidden z-50 p-4">
+        <div class="modal-content bg-[var(--color-goc-dark)] rounded-lg shadow-2xl w-full max-w-3xl p-8 relative border-2 border-[var(--color-goc-darkest)]">
+            <button id="closeModal" class="absolute top-4 right-4 text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] text-3xl leading-none font-bold focus:outline-none z-10">
+                &times;
+            </button>
+            <h3 id="modalTitle" class="text-3xl font-bold mb-4 text-[var(--color-goc-light-accent)]"></h3>
+            <div id="modalContent" class="text-lg leading-relaxed text-[var(--color-goc-main-text)] opacity-90 pb-6">
+            </div>
+            <a id="modalSourceLink" href="#" target="_blank" class="text-[var(--color-goc-light-accent)] hover:text-opacity-80 transition-colors duration-200 text-sm font-medium flex items-center justify-end">
+                View Source Video <i class="fas fa-external-link-alt ml-2 text-xs"></i>
+            </a>
+        </div>
+    </div>
+
+    <div id="videoPlaybackModal" class="modal fixed inset-0 flex items-center justify-center hidden z-50 p-4">
+        <div class="modal-content bg-[var(--color-goc-dark)] rounded-lg shadow-2xl w-full max-w-4xl p-6 relative border-2 border-[var(--color-goc-darkest)]">
+            <button id="closeVideoModal" class="absolute top-4 right-4 text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] text-3xl leading-none font-bold focus:outline-none z-10">
+                &times;
+            </button>
+            <div class="video-container">
+                <iframe id="videoIframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            <p id="modalVideoTitle" class="text-center text-sm text-[var(--color-goc-main-text)] opacity-70 mt-3"></p>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
 </body>
 </html>
