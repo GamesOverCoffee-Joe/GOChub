@@ -190,15 +190,26 @@ const renderMainChannelContent = (videos) => {
     });
 
     sortedSeasonNums.forEach(seasonNum => {
-        // Season Header
-        const seasonHeader = document.createElement('h3');
-        seasonHeader.className = 'text-2xl md:text-3xl font-bold mb-6 text-[var(--color-goc-light-accent)] col-span-full mt-8';
-        seasonHeader.textContent = seasonNum === 'Unsorted' ? 'Unsorted Episodes' : `Season ${seasonNum}`;
-        mainGrid.appendChild(seasonHeader);
+        // NEW: Wrapper for the entire season section (title + filmstrip)
+        const seasonBoxWrapper = document.createElement('div');
+        seasonBoxWrapper.className = 'bg-[var(--color-goc-dark)] rounded-2xl shadow-xl border border-[var(--color-goc-darkest)] col-span-full mt-8 p-4 md:p-6'; // Added subtle border
+        mainGrid.appendChild(seasonBoxWrapper);
 
-        // Wrapper for the filmstrip and navigation arrows
-        const filmstripWrapper = document.createElement('div');
-        filmstripWrapper.className = 'relative col-span-full mb-8'; // relative for absolute children, col-span-full for grid layout
+        // Season Header (now inside seasonBoxWrapper)
+        const seasonHeaderWrapper = document.createElement('div');
+        // Adjusted mb-2 for less space to the filmstrip below
+        seasonHeaderWrapper.className = 'p-4 md:p-8 bg-[var(--color-goc-dark)] rounded-2xl col-span-full mb-4'; // Adjusted mb-4
+        seasonHeaderWrapper.innerHTML = `
+            <h3 class="text-sm font-medium text-[var(--color-goc-light-accent)] opacity-70 mb-2">Games Over Coffee</h3> <h1 class="text-6xl md:text-7xl font-extrabold font-poppins bg-gradient-to-r from-indigo-500 to-purple-500 text-transparent bg-clip-text drop-shadow-lg tracking-tight">
+                ${seasonNum === 'Unsorted' ? 'Unsorted Episodes' : `Season ${seasonNum}`}
+            </h1>
+            <p class="text-md text-[var(--color-goc-main-text)] opacity-80 mt-2">${seasons[seasonNum].length} Episodes</p> `;
+        seasonBoxWrapper.appendChild(seasonHeaderWrapper); // Append to the new box
+
+        // Wrapper for the filmstrip and navigation arrows (now also inside seasonBoxWrapper)
+        const filmstripContainerWrapper = document.createElement('div'); // Renamed for clarity
+        // Changed background to the new much darker variable, removed padding as seasonBoxWrapper has it, removed mb-8 as it's within the box
+        filmstripContainerWrapper.className = 'relative col-span-full p-4 rounded-lg shadow-inner bg-[var(--color-goc-filmstrip-bg)] border border-[var(--color-goc-darkest)]'; // Using new filmstrip background and subtle border
 
         // Container for videos within this season (the actual filmstrip)
         const seasonVideosContainer = document.createElement('div');
@@ -208,7 +219,7 @@ const renderMainChannelContent = (videos) => {
 
         // Left Scroll Button
         const leftArrowButton = document.createElement('button');
-        leftArrowButton.className = 'absolute left-0 top-1/2 -translate-y-1/2 w-16 h-full bg-gradient-to-r from-black via-black/70 to-transparent flex items-center justify-start text-white text-3xl opacity-0 hover:opacity-100 transition-opacity duration-300 z-20 cursor-pointer rounded-l-lg';
+        leftArrowButton.className = 'absolute left-0 top-1/2 -translate-y-1/2 w-16 h-full bg-gradient-to-r from-black/90 via-black/50 to-transparent flex items-center justify-start text-white text-3xl opacity-0 hover:opacity-100 transition-opacity duration-300 z-20 cursor-pointer rounded-l-lg';
         leftArrowButton.innerHTML = '<i class="fas fa-chevron-left ml-2"></i>';
         leftArrowButton.addEventListener('click', () => {
             const scrollContainer = document.getElementById(seasonContainerId);
@@ -219,11 +230,11 @@ const renderMainChannelContent = (videos) => {
                 scrollContainer.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
             }
         });
-        filmstripWrapper.appendChild(leftArrowButton);
+        filmstripContainerWrapper.appendChild(leftArrowButton);
 
         // Right Scroll Button
         const rightArrowButton = document.createElement('button');
-        rightArrowButton.className = 'absolute right-0 top-1/2 -translate-y-1/2 w-16 h-full bg-gradient-to-l from-black via-black/70 to-transparent flex items-center justify-end text-white text-3xl opacity-0 hover:opacity-100 transition-opacity duration-300 z-20 cursor-pointer rounded-r-lg';
+        rightArrowButton.className = 'absolute right-0 top-1/2 -translate-y-1/2 w-16 h-full bg-gradient-to-l from-black/90 via-black/50 to-transparent flex items-center justify-end text-white text-3xl opacity-0 hover:opacity-100 transition-opacity duration-300 z-20 cursor-pointer rounded-r-lg';
         rightArrowButton.innerHTML = '<i class="fas fa-chevron-right mr-2"></i>';
         rightArrowButton.addEventListener('click', () => {
             const scrollContainer = document.getElementById(seasonContainerId);
@@ -234,12 +245,12 @@ const renderMainChannelContent = (videos) => {
                 scrollContainer.scrollBy({ left: scrollAmount, behavior: 'smooth' });
             }
         });
-        filmstripWrapper.appendChild(rightArrowButton);
+        filmstripContainerWrapper.appendChild(rightArrowButton);
 
-        // Append the filmstrip container to the wrapper
-        filmstripWrapper.appendChild(seasonVideosContainer);
-        // Append the wrapper to the mainGrid
-        mainGrid.appendChild(filmstripWrapper);
+        // Append the filmstrip container to its wrapper
+        filmstripContainerWrapper.appendChild(seasonVideosContainer);
+        // Append the whole filmstrip wrapper (including buttons) to the seasonBoxWrapper
+        seasonBoxWrapper.appendChild(filmstripContainerWrapper);
 
 
         // Sort videos within the season in ascending order by episode
@@ -271,7 +282,7 @@ const renderMainChannelContent = (videos) => {
                 <div class="p-6 flex flex-col flex-grow">
                     <h4 class="text-xl font-semibold mb-1 text-[var(--color-goc-main-text)]">${video.title}</h4>
                     ${video.gameTitle ? `<p class="text-sm text-[var(--color-goc-main-text)] opacity-70 mb-2">Game: ${video.gameTitle}</p>` : ''}
-                    <p class="text-sm text-[var(--color-goc-main-text)] opacity-80 mt-auto">Channel: Games Over Coffee</p>
+                    ${video.synopsis ? `<p class="text-sm text-[var(--color-goc-main-text)] opacity-70 mb-3 line-clamp-2">${video.synopsis}</p>` : ''} <p class="text-sm text-[var(--color-goc-main-text)] opacity-80 mt-auto">Channel: Games Over Coffee</p>
                 </div>
             `;
             seasonVideosContainer.appendChild(videoCard);

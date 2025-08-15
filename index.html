@@ -5,17 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Games Over Coffee Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
         :root {
             --color-goc-darkest: #1f1f1f; /* Darkest background */
-            --color-goc-dark: #2b2b2b; /* Card backgrounds, darker accents */
+            --color-goc-dark: #2b2b2b; /* Card backgrounds, darker accents, new season box background */
             --color-goc-light-accent: #aac6ce; /* Main accent color for buttons, highlights */
             --color-goc-main-text: #ead9ca; /* Primary text color */
             /* This variable is used by the pulse-ring animation for HSL values */
             --color-goc-light-accent-hsl-components: 194, 27%, 74%; /* HSL for #aac6ce */
+            --color-goc-dark-accent: #3a3a3a; /* Original darker accent - *Not used for filmstrip background anymore* */
+            --color-goc-filmstrip-bg: #101010; /* NEW: Much darker background for filmstrips */
+            /* NEW: Gradient for Season Title */
+            --gradient-goc-indigo: linear-gradient(to right, #6366f1, #8b5cf6); /* from-indigo-500 to-purple-500 equivalent */
         }
 
         /* Applying Custom Font */
@@ -33,7 +38,7 @@
 
             50% {
                 /* Expand the shadow subtly, making it slightly less opaque than diagnostic version */
-                box-shadow: 0 0 0 16px hsl(var(--color-goc-light-accent-hsl-components) / 0.2); /* Reduced spread for elegance */
+                box-shadow: 0 0 0 16px hsl(var(--color-goc-light-accent-hsl-hsl-components) / 0.2); /* Reduced spread for elegance */
                 transform: scale(1.01); /* Slight scale for a subtle "pop" */
             }
 
@@ -138,7 +143,7 @@
             <ul class="flex justify-center border-b-2 border-[var(--color-goc-dark)]">
                 <li class="-mb-px mr-2">
                     <button id="mainChannelTab" class="inline-block py-3 px-6 text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] hover:border-b-4 hover:border-[var(--color-goc-light-accent)] font-semibold focus:outline-none transition duration-300 ease-in-out text-lg md:text-xl">
-                        Main Channel
+                        Games Over Coffee
                     </button>
                 </li>
                 <li class="-mb-px mr-2">
@@ -156,7 +161,7 @@
 
         <main>
             <section id="mainChannelContent" class="channel-content pb-10">
-                <h2 class="text-3xl md:text-4xl font-bold mb-8 text-[var(--color-goc-light-accent)]">Main Channel Videos</h2>
+                <h2 class="text-3xl md:text-4xl font-bold mb-8 text-[var(--color-goc-light-accent)]">Games Over Coffee Videos</h2>
                 <div id="mainVideosGrid" class="grid grid-cols-1 gap-y-12">
                     </div>
             </section>
@@ -217,7 +222,7 @@
                 &times;
             </button>
             <div class="video-container">
-                <iframe id="videoIframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                <iframe id="videoIframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-ch; gyroscope; picture-in-picture" allowfullscreen></iframe>
             </div>
             <p id="videoModalTitle" class="text-center text-xl font-semibold text-[var(--color-goc-main-text)] mt-3"></p>
             <p id="videoModalChannel" class="text-center text-sm text-[var(--color-goc-main-text)] opacity-80 mt-1"></p>
