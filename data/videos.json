@@ -2,24 +2,27 @@
   {
     "videoId": "R85LpIYeDm0",
     "title": "This Game Doesn't Respect You (And That's a Good Thing)",
-    "thumbnailUrl": "https://img.youtube.com/vi/R85LpIYeDm0/maxresdefault.jpg",
     "channel": "main",
+    "gameTitle": "Goldeneye 007 (N64)",
+    "thumbnailUrl": "https://img.youtube.com/vi/R85LpIYeDm0/maxresdefault.jpg",
     "season": 3,
-    "episode": 3
+    "episode": 11
   },
   {
     "videoId": "73m0oCQbvCQ",
     "title": "What Made N64 Games Better Than Modern Games?",
-    "thumbnailUrl": "https://img.youtube.com/vi/73m0oCQbvCQ/maxresdefault.jpg",
     "channel": "main",
+    "thumbnailUrl": "https://img.youtube.com/vi/73m0oCQbvCQ/maxresdefault.jpg",
     "season": 3,
-    "episode": 2
+    "episode": 10
   },
   {
     "videoId": "VT7SwKko14g",
-    "title": "Adding A Little Context Completely Changes Your Game | Game Design Consulting for Beep",
+    "title": "Adding A Little Context Completely Changes Your Game",
+    "gameTitle": "Beep",
     "thumbnailUrl": "https://img.youtube.com/vi/VT7SwKko14g/maxresdefault.jpg",
     "channel": "consulting",
+    "tags": [],
     "subjects": [
       {
         "title": "Context",
@@ -28,12 +31,12 @@
           "context"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "KK9LKA4Y-bM",
-    "title": "Avoiding Existential Dread With Game Design | Game Design Consulting for ZomWick",
+    "title": "Avoiding Existential Dread With Game Design",
+    "gameTitle": "ZomWick",
     "thumbnailUrl": "https://img.youtube.com/vi/KK9LKA4Y-bM/maxresdefault.jpg",
     "channel": "consulting",
     "tags": [
@@ -67,7 +70,8 @@
   },
   {
     "videoId": "8IH_Qr1WIhY",
-    "title": "Breaking Down Game Design in a Simple Game | Game Design Consulting for Blimp",
+    "title": "Breaking Down Game Design in a Simple Game",
+    "gameTitle": "Blimp",
     "thumbnailUrl": "https://img.youtube.com/vi/8IH_Qr1WIhY/maxresdefault.jpg",
     "channel": "consulting",
     "tags": [
@@ -84,107 +88,138 @@
     ]
   },
   {
-    "videoId": "ZkquFIbPZE8",
-    "title": "Channel Update and Dev Brew Video Giveaway",
-    "thumbnailUrl": "https://img.youtube.com/vi/ZkquFIbPZE8/maxresdefault.jpg",
-    "channel": "main",
+    "videoId": "RPSTaVN16Eg",
+    "title": "Communicating through Design",
+    "gameTitle": "Netherguild",
+    "thumbnailUrl": "https://img.youtube.com/vi/RPSTaVN16Eg/maxresdefault.jpg",
+    "channel": "consulting",
+    "tags": [
+      "netherguild",
+      "game communication",
+      "difficulty curve",
+      "game progression",
+      "graphic design",
+      "visual organization",
+      "ui design"
+    ],
     "subjects": [
       {
-        "title": "Channel News",
-        "startTime": 0,
+        "title": "Player character",
+        "startTime": 35,
         "keywords": [
-          "update",
-          "giveaway",
-          "dev brew"
+          "game design",
+          "communication",
+          "art direction"
         ]
+      },
+      {
+        "title": "Difficulty Curve",
+        "startTime": 211,
+        "keywords": []
+      },
+      {
+        "title": "Graphic Design",
+        "startTime": 514,
+        "keywords": []
       }
     ]
   },
   {
-    "videoId": "RPSTaVN16Eg",
-    "title": "Communicating through Design | Game Design Consulting for Netherguild",
-    "thumbnailUrl": "https://img.youtube.com/vi/RPSTaVN16Eg/maxresdefault.jpg",
-    "channel": "consulting",
-    "subjects": [
-      {
-        "title": "Visual Storytelling",
-        "startTime": 0,
-        "keywords": [
-          "game design",
-          "communication",
-          "netherguild",
-          "art direction"
-        ]
-      }
-    ],
-    "tags": []
-  },
-  {
     "videoId": "4mcAB7s-_V4",
-    "title": "Creating Fast Gameplay That's Still Understandable | Game Design Consulting for Jan Ken Pon",
+    "title": "Creating Fast Gameplay That's Still Understandable",
+    "gameTitle": "Jan Ken Pon",
     "thumbnailUrl": "https://img.youtube.com/vi/4mcAB7s-_V4/maxresdefault.jpg",
     "channel": "consulting",
+    "tags": [],
     "subjects": [
       {
-        "title": "Balancing Speed and Clarity",
-        "startTime": 0,
+        "title": "Building Skill",
+        "startTime": 39,
         "keywords": [
           "game design",
           "fast-paced",
           "jan ken pon",
           "clarity"
         ]
+      },
+      {
+        "title": "Visual Identifiers",
+        "startTime": 322,
+        "keywords": []
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "YZ9v_Rig43U",
-    "title": "Creating a Relaxing Experience | Game Design Consulting for Tiny Tiles",
+    "title": "Creating a Relaxing Experience",
+    "gameTitle": "Tiny Tiles",
     "thumbnailUrl": "https://img.youtube.com/vi/YZ9v_Rig43U/maxresdefault.jpg",
     "channel": "consulting",
+    "tags": [],
     "subjects": [
       {
-        "title": "Calming Game Mechanics",
-        "startTime": 0,
+        "title": "Defining relaxing",
+        "startTime": 106,
         "keywords": [
           "game design",
           "relaxing",
           "tiny tiles",
           "zen"
         ]
+      },
+      {
+        "title": "Tutorial and hints",
+        "startTime": 447,
+        "keywords": []
+      },
+      {
+        "title": "Design Theory: Intuition",
+        "startTime": 629,
+        "keywords": []
+      },
+      {
+        "title": "Completion",
+        "startTime": 873,
+        "keywords": []
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "TvFJES_ykHU",
-    "title": "Designing Cooperative Gameplay | Game Design Consulting for Mouse and Bunny Tetris",
+    "title": "Designing Cooperative Gameplay",
+    "gameTitle": "Mouse and Bunny Tetris",
     "thumbnailUrl": "https://img.youtube.com/vi/TvFJES_ykHU/maxresdefault.jpg",
     "channel": "consulting",
+    "tags": [],
     "subjects": [
       {
-        "title": "Co-op Mechanics",
-        "startTime": 0,
+        "title": "Cooperation",
+        "startTime": 88,
         "keywords": [
           "game design",
           "cooperative",
           "tetris",
           "multiplayer"
         ]
+      },
+      {
+        "title": "Basic Game Design",
+        "startTime": 322,
+        "keywords": []
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "gZJAy8zFhaA",
-    "title": "Designing For Adversity | Game Design Consulting for Fishberman",
+    "title": "Designing For Adversity",
+    "gameTitle": "Fishberman",
     "thumbnailUrl": "https://img.youtube.com/vi/gZJAy8zFhaA/maxresdefault.jpg",
     "channel": "consulting",
+    "tags": [],
     "subjects": [
       {
-        "title": "Implementing Challenges",
-        "startTime": 0,
+        "title": "Adversity",
+        "startTime": 209,
         "keywords": [
           "game design",
           "adversity",
@@ -192,18 +227,19 @@
           "fishberman"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "cEF_-Jpb2c8",
-    "title": "Designing For New Players | Game Design Consulting for Destroy The Frame",
+    "title": "Designing For New Players",
+    "gameTitle": "Destroy The Frame",
     "thumbnailUrl": "https://img.youtube.com/vi/cEF_-Jpb2c8/maxresdefault.jpg",
     "channel": "consulting",
+    "tags": [],
     "subjects": [
       {
-        "title": "Onboarding and Tutorials",
-        "startTime": 0,
+        "title": "Onboarding",
+        "startTime": 39,
         "keywords": [
           "game design",
           "new players",
@@ -211,124 +247,189 @@
           "tutorial"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "jmO6W3zCqzs",
-    "title": "Designing an Arcade Experience | Game Design Consulting for Scrambled Eggs",
+    "title": "Designing an Arcade Experience",
+    "gameTitle": "Scrambled Eggs",
     "thumbnailUrl": "https://img.youtube.com/vi/jmO6W3zCqzs/maxresdefault.jpg",
     "channel": "consulting",
+    "tags": [],
     "subjects": [
       {
         "title": "Arcade Game Principles",
-        "startTime": 0,
+        "startTime": 132,
         "keywords": [
           "game design",
           "arcade",
           "scrambled eggs",
           "score-chasing"
         ]
+      },
+      {
+        "title": "Graphic Design",
+        "startTime": 295,
+        "keywords": []
+      },
+      {
+        "title": "Motivation",
+        "startTime": 568,
+        "keywords": []
+      },
+      {
+        "title": "Pacing in Levels",
+        "startTime": 676,
+        "keywords": []
+      },
+      {
+        "title": "Fail States",
+        "startTime": 802,
+        "keywords": []
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "3jtI3dh8JbM",
-    "title": "Dev Brew Episode 12-2: Gravity Swap Analysis",
+    "title": "Dev Brew Episode 12-2",
+    "gameTitle": "Gravity Swap",
     "thumbnailUrl": "https://img.youtube.com/vi/3jtI3dh8JbM/maxresdefault.jpg",
     "channel": "consulting",
+    "tags": [],
     "subjects": [
       {
-        "title": "Gravity Mechanics Analysis",
-        "startTime": 0,
+        "title": "Mechanical Communication",
+        "startTime": 123,
         "keywords": [
-          "dev brew",
-          "game design",
-          "gravity",
-          "mechanics"
+          "hitbox",
+          "movement",
+          "dying",
+          "fail state"
+        ]
+      },
+      {
+        "title": "Reusing Assets",
+        "startTime": 217,
+        "keywords": []
+      },
+      {
+        "title": "Mindset",
+        "startTime": 269,
+        "keywords": [
+          "teaching",
+          "thinking",
+          "perspective"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "FiTF6IPilDk",
-    "title": "Dev Brew Episode 13: Caillou's Journey Analysis",
+    "title": "Dev Brew Episode 13",
+    "gameTitle": "Caillou's Journey",
     "thumbnailUrl": "https://img.youtube.com/vi/FiTF6IPilDk/maxresdefault.jpg",
     "channel": "consulting",
+    "tags": [],
     "subjects": [
       {
-        "title": "Narrative Progression Analysis",
-        "startTime": 0,
+        "title": "Prompts",
+        "startTime": 236,
         "keywords": [
-          "dev brew",
-          "game design",
-          "narrative",
-          "caillou"
+          "menu prompt",
+          "control prompt"
         ]
+      },
+      {
+        "title": "Dense mechanics",
+        "startTime": 509,
+        "keywords": [
+          "catching fish",
+          "fishing"
+        ]
+      },
+      {
+        "title": "UI UX HUD",
+        "startTime": 1160,
+        "keywords": []
+      },
+      {
+        "title": "Open World Analysis",
+        "startTime": 1818,
+        "keywords": []
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "hJUvhkBikqI",
-    "title": "Dev Brew Episode 14: Rat Race Analysis",
+    "title": "Dev Brew Episode 14",
+    "gameTitle": "Rat Race",
     "thumbnailUrl": "https://img.youtube.com/vi/hJUvhkBikqI/maxresdefault.jpg",
     "channel": "consulting",
+    "tags": [],
     "subjects": [
       {
-        "title": "Competitive Gameplay Analysis",
-        "startTime": 0,
+        "title": "Setting Tone",
+        "startTime": 170,
         "keywords": [
-          "dev brew",
-          "game design",
-          "competitive",
-          "rat race"
+          "title screen"
+        ]
+      },
+      {
+        "title": "Purpose and Implications",
+        "startTime": 545,
+        "keywords": [
+          "realism",
+          "realistic",
+          "rats",
+          "death",
+          "lab",
+          "science"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "vh92tvCHmLk",
-    "title": "Dev Brew Episode 15: Moonicorn's Cookie Quest Analysis",
+    "title": "Dev Brew Episode 15",
+    "gameTitle": "Moonicorn's Cookie Quest",
     "thumbnailUrl": "https://img.youtube.com/vi/vh92tvCHmLk/maxresdefault.jpg",
     "channel": "consulting",
+    "tags": [],
     "subjects": [
       {
-        "title": "Quest Design and Progression",
-        "startTime": 0,
-        "keywords": [
-          "dev brew",
-          "game design",
-          "quest",
-          "progression",
-          "moonicorn"
-        ]
+        "title": "Teaching",
+        "startTime": 152,
+        "keywords": []
+      },
+      {
+        "title": "Simplicity",
+        "startTime": 330,
+        "keywords": []
+      },
+      {
+        "title": "Context",
+        "startTime": 638,
+        "keywords": []
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "HES9ppfcPO0",
-    "title": "Dev Brew Episode 16: Warp Factory Analysis",
+    "title": "Dev Brew Episode 16",
+    "gameTitle": "Warp Factory",
     "thumbnailUrl": "https://img.youtube.com/vi/HES9ppfcPO0/maxresdefault.jpg",
     "channel": "consulting",
+    "tags": [],
     "subjects": [
       {
-        "title": "Factory Building Game Mechanics",
-        "startTime": 0,
+        "title": "Factory Building Game Communication",
+        "startTime": 51,
         "keywords": [
-          "dev brew",
-          "game design",
           "factory",
-          "automation",
-          "warp"
+          "zachlike"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "kCcK33V8Ce4",
@@ -346,8 +447,7 @@
           "ciphercell"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "6duVLiS06ws",
@@ -366,8 +466,7 @@
           "kainga"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "QAOwrdlWDj0",
@@ -385,8 +484,7 @@
           "mechanics"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "JVpiRUXYS4w",
@@ -404,27 +502,32 @@
           "risk-reward"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "dKtRzAtJkmM",
-    "title": "Dev Brew Episode 21: o-CoO Game Design Analysis",
-    "thumbnailUrl": "https://img.youtube.com/vi/dKtRzAtJkmM/maxresdefault.jpg",
+    "title": "Dev Brew Episode 21",
     "channel": "consulting",
+    "gameTitle": "o-CoO",
+    "thumbnailUrl": "https://img.youtube.com/vi/dKtRzAtJkmM/maxresdefault.jpg",
+    "tags": [],
     "subjects": [
       {
-        "title": "Unique Game Mechanics",
-        "startTime": 0,
-        "keywords": [
-          "dev brew",
-          "game design",
-          "o-coo",
-          "mechanics"
-        ]
+        "title": "Purpose",
+        "startTime": 129,
+        "keywords": []
+      },
+      {
+        "title": "Onboarding",
+        "startTime": 446,
+        "keywords": []
+      },
+      {
+        "title": "Communication",
+        "startTime": 719,
+        "keywords": []
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "7feTy0Ch9PQ",
@@ -442,8 +545,7 @@
           "simulation"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "P9Nm5lJ-Wzg",
@@ -462,8 +564,7 @@
           "ninja"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "X914fPdRcBY",
@@ -481,8 +582,7 @@
           "development hell"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "hRQnHYAUQ_I",
@@ -501,8 +601,7 @@
           "mechanics"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "yvhrxFeW-0g",
@@ -520,8 +619,7 @@
           "core"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "44ibpx9vg_c",
@@ -539,8 +637,7 @@
           "forest"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "lDm3vikDPog",
@@ -558,8 +655,7 @@
           "ancient information"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "tqsBZyQGY0U",
@@ -578,8 +674,7 @@
           "omegabot"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "fm4OKU8On38",
@@ -598,8 +693,7 @@
           "pit of ascension"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "kt04TDIF2UY",
@@ -617,8 +711,7 @@
           "hiragana"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "gNzLNAkow6k",
@@ -636,8 +729,7 @@
           "ruling"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "GoBKX_pjAhY",
@@ -655,8 +747,7 @@
           "voyager"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "uYUygfAixY0",
@@ -674,8 +765,7 @@
           "witchbane"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "eDVxmdjGqS0",
@@ -693,8 +783,7 @@
           "boombound"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "_i9lHEz0Hzo",
@@ -713,8 +802,7 @@
           "warriors"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "YDj6kS743t8",
@@ -732,8 +820,7 @@
           "customization"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "DwjUujj60pY",
@@ -751,8 +838,7 @@
           "combat"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "SzGk0xSJD98",
@@ -770,8 +856,7 @@
           "strategy"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "Jo3UD_I9gw4",
@@ -789,8 +874,7 @@
           "coaster"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "EFuxG2jyV7c",
@@ -809,8 +893,7 @@
           "rock-paper-scissors"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "rhtwx-Nb9h0",
@@ -829,15 +912,298 @@
           "combat"
         ]
       }
-    ],
-    "tags": []
+    ]
   },
   {
     "videoId": "BK0_s0VRCvw",
     "title": "Why I Feel Comfortable Critiquing Artsy Games",
-    "thumbnailUrl": "https://img.youtube.com/vi/BK0_s0VRCvw/maxresdefault.jpg",
     "channel": "main",
+    "gameTitle": "Sagebrush",
+    "thumbnailUrl": "https://img.youtube.com/vi/BK0_s0VRCvw/maxresdefault.jpg",
+    "season": 3,
+    "episode": 9
+  },
+  {
+    "videoId": "3wRfP0oLx3Q",
+    "title": "How Actual Sunlight and Depression Quest design their depression",
+    "channel": "main",
+    "gameTitle": "Depression Quest",
+    "thumbnailUrl": "https://i9.ytimg.com/vi_webp/3wRfP0oLx3Q/maxresdefault.webp?v=61b8cb66&sqp=CLyl-8QG&rs=AOn4CLBF9sBbqmdMpM7KqcO8tx0O9iyGwQ",
+    "season": 1,
+    "episode": 1
+  },
+  {
+    "videoId": "8jg7R3NUPy0",
+    "title": "Player Agency: What Remains of Edith Finch vs Gone Home",
+    "channel": "main",
+    "gameTitle": "Gone Home/What Remains of Edith Finch",
+    "thumbnailUrl": "https://i9.ytimg.com/vi_webp/8jg7R3NUPy0/maxresdefault.webp?v=61c34e15&sqp=CLyl-8QG&rs=AOn4CLAnharXVBEH5eYj27b4jqyMo8DfqQ",
+    "season": 1,
+    "episode": 2
+  },
+  {
+    "videoId": "https://youtu.be/ZuS-ZhjdSbI",
+    "title": "Bubsy's game design is focused more on aesthetics than gameplay",
+    "channel": "main",
+    "gameTitle": "Bubsy",
+    "thumbnailUrl": "https://i9.ytimg.com/vi/ZuS-ZhjdSbI/maxresdefault.jpg?v=61ce1df4&sqp=CLyl-8QG&rs=AOn4CLAIzBFw3Jg-t2u0THR8YvjYmkykPg",
+    "season": 1,
+    "episode": 3
+  },
+  {
+    "videoId": "Zf5mDt4ftH4",
+    "title": "The Witness is designed to change the way you see the world.",
+    "channel": "main",
+    "gameTitle": "The Witness",
+    "thumbnailUrl": "https://i.ytimg.com/vi/Zf5mDt4ftH4/maxresdefault.jpg",
+    "season": 1,
+    "episode": 4
+  },
+  {
+    "videoId": "tGRFhTBlLcc",
+    "title": "GRIS has a stunning atmosphere but the mechanics tell a different story",
+    "channel": "main",
+    "gameTitle": "GRIS",
+    "thumbnailUrl": "https://i.ytimg.com/vi/tGRFhTBlLcc/maxresdefault.jpg",
+    "season": 1,
+    "episode": 5
+  },
+  {
+    "videoId": "b74z1zdujfk",
+    "title": "Before Your Eyes uses first person perspective to tell a third person story",
+    "channel": "main",
+    "gameTitle": "Before Your Eyes",
+    "thumbnailUrl": "https://i.ytimg.com/vi/b74z1zdujfk/maxresdefault.jpg",
+    "season": 1,
+    "episode": 6
+  },
+  {
+    "videoId": "QDrBKqLMGuI",
+    "title": "Breaking the fourth wall might be a better way to immerse the player",
+    "channel": "main",
+    "thumbnailUrl": "https://i.ytimg.com/vi/QDrBKqLMGuI/maxresdefault.jpg",
+    "season": 1,
+    "episode": 7
+  },
+  {
+    "videoId": "lcg9chklLAU",
+    "title": "Designing a game to communicate emotions like schadenfreude",
+    "channel": "main",
+    "thumbnailUrl": "https://i.ytimg.com/vi/lcg9chklLAU/maxresdefault.jpg",
+    "season": 1,
+    "episode": 8
+  },
+  {
+    "videoId": "MgDV2B10Pfw",
+    "title": "Using game design to elicit a depressing feeling",
+    "channel": "main",
+    "thumbnailUrl": "https://i.ytimg.com/vi/MgDV2B10Pfw/maxresdefault.jpg",
+    "season": 1,
+    "episode": 9
+  },
+  {
+    "videoId": "oumpWJsyk0I",
+    "title": "I don't think you're supposed to put these emotions into a videogame",
+    "channel": "main",
+    "thumbnailUrl": "https://i.ytimg.com/vi/oumpWJsyk0I/maxresdefault.jpg",
+    "season": 1,
+    "episode": 10
+  },
+  {
+    "videoId": "16dvxg_GpjY",
+    "title": "The Design of Sonic the Hedgehog | Part 1 - Novelty",
+    "channel": "main",
+    "thumbnailUrl": "https://i.ytimg.com/vi/16dvxg_GpjY/maxresdefault.jpg",
+    "season": 1,
+    "episode": 11
+  },
+  {
+    "videoId": "04mAvsJakcU",
+    "title": "The Design of Sonic the Hedgehog | Part 2 - Adaptation",
+    "channel": "main",
+    "thumbnailUrl": "https://i.ytimg.com/vi/04mAvsJakcU/maxresdefault.jpg",
+    "season": 1,
+    "episode": 12
+  },
+  {
+    "videoId": "W_glCc65O4g",
+    "title": "The Design of Sonic the Hedgehog | Part 3 - Intuition",
+    "channel": "main",
+    "thumbnailUrl": "https://i.ytimg.com/vi/W_glCc65O4g/maxresdefault.jpg",
+    "season": 1,
+    "episode": 13
+  },
+  {
+    "videoId": "ZoqDvvvSJN0",
+    "title": "The Design of Sonic the Hedgehog | Part 4 - Velocity",
+    "channel": "main",
+    "thumbnailUrl": "https://i.ytimg.com/vi/ZoqDvvvSJN0/maxresdefault.jpg",
+    "season": 1,
+    "episode": 14
+  },
+  {
+    "videoId": "Q89ji1fGgOM",
+    "title": "The Design of Sonic the Hedgehog | Part 5 - The Evolution of Sonic",
+    "channel": "main",
+    "thumbnailUrl": "https://i.ytimg.com/vi/Q89ji1fGgOM/maxresdefault.jpg",
+    "season": 1,
+    "episode": 15
+  },
+  {
+    "videoId": "wHa34BCMuqM",
+    "title": "Slender: The Eight Pages is not as simple as it seems",
+    "channel": "main",
+    "gameTitle": "Slenderman",
+    "thumbnailUrl": "https://i.ytimg.com/vi/wHa34BCMuqM/maxresdefault.jpg",
+    "season": 2,
+    "episode": 1
+  },
+  {
+    "videoId": "rdfHE6634II",
+    "title": "Zelda Timeline's Biggest Conflict",
+    "channel": "main",
+    "thumbnailUrl": "https://i.ytimg.com/vi/rdfHE6634II/maxresdefault.jpg",
+    "season": 2,
+    "episode": 2
+  },
+  {
+    "videoId": "DTk4a90bAac",
+    "title": "Empathy vs Sympathy: Exploring the Narrative of Sagebrush",
+    "channel": "main",
+    "gameTitle": "Sagebrush",
+    "thumbnailUrl": "https://i.ytimg.com/vi/DTk4a90bAac/maxresdefault.jpg",
+    "season": 2,
+    "episode": 3
+  },
+  {
+    "videoId": "Lkl4RgluvIw",
+    "title": "Why did SUPERHOT Fail to Tell a Story?",
+    "channel": "main",
+    "gameTitle": "SUPERHOT",
+    "thumbnailUrl": "https://i.ytimg.com/vi/Lkl4RgluvIw/maxresdefault.jpg",
+    "season": 2,
+    "episode": 4
+  },
+  {
+    "videoId": "i42Xe5TUB80",
+    "title": "The Beginner's Guide is More Than Just Walking",
+    "channel": "main",
+    "gameTitle": "The Beginner's Guide",
+    "thumbnailUrl": "https://i.ytimg.com/vi/i42Xe5TUB80/maxresdefault.jpg",
+    "season": 2,
+    "episode": 5
+  },
+  {
+    "videoId": "LdWHDMlqn7k",
+    "title": "What does \"immersive\" mean in Iron Lung?",
+    "channel": "main",
+    "gameTitle": "Iron Lung",
+    "thumbnailUrl": "https://i.ytimg.com/vi/LdWHDMlqn7k/maxresdefault.jpg",
+    "season": 2,
+    "episode": 6
+  },
+  {
+    "videoId": "iLHVILf2t2Y",
+    "title": "Does the game How Fish Is Made mean anything?",
+    "channel": "main",
+    "gameTitle": "How Fish Is Made",
+    "thumbnailUrl": "https://i.ytimg.com/vi/iLHVILf2t2Y/maxresdefault.jpg",
+    "season": 2,
+    "episode": 7
+  },
+  {
+    "videoId": "0PmxaZAohEY",
+    "title": "This game was designed to elicit stress",
+    "channel": "main",
+    "gameTitle": "Snapped!",
+    "thumbnailUrl": "https://i.ytimg.com/vi/0PmxaZAohEY/maxresdefault.jpg",
+    "season": 2,
+    "episode": 8
+  },
+  {
+    "videoId": "6WXPuSqF6xA",
+    "title": "Lazy Design is Design Without Thought",
+    "channel": "main",
+    "thumbnailUrl": "https://i.ytimg.com/vi/6WXPuSqF6xA/maxresdefault.jpg",
+    "season": 2,
+    "episode": 9
+  },
+  {
+    "videoId": "PVkLdjgHNZs",
+    "title": "Video Games ARE Empathy Machines",
+    "channel": "main",
+    "thumbnailUrl": "https://i.ytimg.com/vi/PVkLdjgHNZs/maxresdefault.jpg",
+    "season": 2,
+    "episode": 10
+  },
+  {
+    "videoId": "iIo0mmc_omc",
+    "title": "How Do You Have Fun In Dead Cells?",
+    "channel": "main",
+    "gameTitle": "Dead Cells",
+    "thumbnailUrl": "https://i.ytimg.com/vi/iIo0mmc_omc/maxresdefault.jpg",
     "season": 3,
     "episode": 1
+  },
+  {
+    "videoId": "MbPp0FV41ss",
+    "title": "Why is POOLS designed that way?",
+    "channel": "main",
+    "gameTitle": "POOLS",
+    "thumbnailUrl": "https://i.ytimg.com/vi/MbPp0FV41ss/maxresdefault.jpg",
+    "season": 3,
+    "episode": 2
+  },
+  {
+    "videoId": "aTAIJjTkp20",
+    "title": "How Important Is Empathy In Sagebrush?",
+    "channel": "main",
+    "gameTitle": "Sagebrush",
+    "thumbnailUrl": "https://i.ytimg.com/vi/aTAIJjTkp20/maxresdefault.jpg",
+    "season": 3,
+    "episode": 3
+  },
+  {
+    "videoId": "A9x_s_nR0DU",
+    "title": "Katana Zero's Theme Is Brutal",
+    "channel": "main",
+    "gameTitle": "Katana Zero",
+    "thumbnailUrl": "https://i.ytimg.com/vi/A9x_s_nR0DU/maxresdefault.jpg",
+    "season": 3,
+    "episode": 4
+  },
+  {
+    "videoId": "AoaIBXfomIo",
+    "title": "How Does The Witness Tell A Story?",
+    "channel": "main",
+    "gameTitle": "The Witness",
+    "thumbnailUrl": "https://i.ytimg.com/vi/AoaIBXfomIo/maxresdefault.jpg",
+    "season": 3,
+    "episode": 5
+  },
+  {
+    "videoId": "-UA6ZjCwb-g",
+    "title": "Inside and Fear of the Unknown",
+    "channel": "main",
+    "gameTitle": "Inside",
+    "thumbnailUrl": "https://i.ytimg.com/vi/-UA6ZjCwb-g/maxresdefault.jpg",
+    "season": 3,
+    "episode": 6
+  },
+  {
+    "videoId": "O2kVpY8eWfk",
+    "title": "Why Talk About Games At All?",
+    "channel": "main",
+    "thumbnailUrl": "https://i.ytimg.com/vi/O2kVpY8eWfk/maxresdefault.jpg",
+    "season": 3,
+    "episode": 7
+  },
+  {
+    "videoId": "BIyl9S4YpjQ",
+    "title": "There's No Such Thing As A Bad Game Mechanic (part 1)",
+    "channel": "main",
+    "thumbnailUrl": "https://i.ytimg.com/vi/BIyl9S4YpjQ/maxresdefault.jpg",
+    "season": 3,
+    "episode": 8
   }
 ]
