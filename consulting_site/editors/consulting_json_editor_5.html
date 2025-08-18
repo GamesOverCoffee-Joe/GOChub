@@ -365,6 +365,8 @@
                     <p class="text-[var(--color-goc-main-text)] opacity-80">Game: <a id="modalGameLink" href="#" target="_blank" class="text-[var(--color-goc-light-accent)] hover:underline"></a></p>
                 </div>
 
+                <div id="game-links-container" class="flex flex-wrap gap-4 p-4 justify-center"></div>
+
                 <div id="modalChaptersContainer" class="mb-6 hidden">
                     <h3 class="text-xl font-bold text-[var(--color-goc-main-text)] mb-4">Chapters</h3>
                     <ul id="modalChaptersList" class="space-y-3">
@@ -452,8 +454,8 @@
         const modalChaptersList = document.getElementById('modalChaptersList');
         const modalRelatedVideosContainer = document.getElementById('modalRelatedVideosContainer');
         const modalRelatedVideosList = document.getElementById('modalRelatedVideosList');
-        // The gameLinksContainer variable is no longer needed as the dynamic game links are removed from the modal.
-        // const gameLinksContainer = document.getElementById('game-links-container');
+        // New: Game links container in modal
+        const gameLinksContainer = document.getElementById('game-links-container');
 
 
         // Confirmation modal elements
@@ -509,7 +511,7 @@
         /** Fetches video data from the JSON file */
         const fetchVideoData = async () => {
             try {
-                const response = await fetch('data/consult_videos.json');
+                const response = await fetch('consult_videos.json'); // Changed path from data/consult_videos.json
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -523,9 +525,39 @@
             }
         };
 
-        // The previous populateGameLinks function is removed as it was not intended for the per-video modal.
-        // If you need to populate a separate section with ALL game links, that function would need to be re-added
-        // and called appropriately for that specific UI element.
+        // New function to populate game links
+        const populateGameLinks = async () => {
+            if (!gameLinksContainer) {
+                console.error('Game links container not found.');
+                return;
+            }
+
+            try {
+                const response = await fetch('consult_videos.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const games = await response.json();
+
+                games.forEach(game => {
+                    // Only create a link if gameLink exists and is not empty
+                    if (game.gameLink && game.gameLink.trim() !== '') {
+                        const link = document.createElement('a');
+                        link.href = game.gameLink;
+                        link.textContent = game.gameName;
+                        link.target = '_blank'; // Open link in a new tab
+                        link.rel = 'noopener noreferrer'; // Security best practice
+
+                        // Apply Tailwind CSS classes for styling
+                        link.className = 'bg-color-goc-light-accent text-color-goc-darkest hover:bg-opacity-80 py-2 px-4 rounded-lg font-semibold transition-colors duration-200 ease-in-out shadow-lg transform hover:scale-105 flex items-center justify-center text-center';
+
+                        gameLinksContainer.appendChild(link);
+                    }
+                });
+            } catch (error) {
+                console.error('Error fetching or parsing game data for links:', error);
+            }
+        };
 
 
         /** Opens the modal and populates it with video data */
@@ -547,17 +579,14 @@
             // Populate tags - ADDED DEFENSIVE CHECK
             modalTags.innerHTML = (video.tags || []).map(tag => `<span class="bg-[var(--color-goc-darkest)] text-[var(--color-goc-light-accent)] px-3 py-1 rounded-full text-xs font-medium">${tag}</span>`).join('');
 
-            // --- REPLACED LOGIC FOR GAME INFO ---
-            if (video.gameName && video.gameLink) { // Check for both gameName AND gameLink
+            // Handle Game Info (only if gameName exists in video object, otherwise hide)
+            if (video.gameName) {
                 modalGameInfo.classList.remove('hidden');
                 modalGameLink.textContent = video.gameName;
-                modalGameLink.href = video.gameLink; // Use the gameLink directly
-                modalGameLink.target = '_blank'; // Open in new tab
-                modalGameLink.rel = 'noopener noreferrer'; // Security best practice
+                modalGameLink.href = `https://www.google.com/search?q=${encodeURIComponent(video.gameName + ' game')}`;
             } else {
                 modalGameInfo.classList.add('hidden');
             }
-            // --- END REPLACED LOGIC ---
 
             // Populate chapters with collapsible descriptions and "Jump to" buttons - ADDED DEFENSIVE CHECK
             modalChaptersList.innerHTML = (video.chapters || []).map((chapter, index) => `
@@ -916,7 +945,7 @@
         // Initial data fetch and render when the page loads
         document.addEventListener('DOMContentLoaded', () => {
             fetchVideoData();
-            // Removed the call to populateGameLinks() here
+            populateGameLinks(); // Call the new function to populate game links
             toggleBackToTopButton(); // Check initial scroll position on load
         });</script>
 </body>
