@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consult Videos JSON Editor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar for better UX */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans leading-normal tracking-normal p-4 min-h-screen">
+    <div id="app" class="container mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
+        <header class="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 text-white text-center">
+            <h1 class="text-4xl font-bold mb-2">Consult Videos JSON Editor 🎥</h1>
+            <p class="text-blue-100">Load, Edit, and Export Your Video Data</p>
+        </header>
+
+        <div class="flex flex-col lg:flex-row p-6 gap-6">
+            <aside class="w-full lg:w-1/3 bg-gray-100 p-4 rounded-lg shadow-inner">
+                <h2 class="text-2xl font-semibold mb-4 text-gray-800">File Operations & Videos</h2>
+                <div class="mb-6 space-y-4">
+                    <label for="jsonFile" class="block text-gray-700 text-sm font-bold mb-2">
+                        Upload JSON File:
+                    </label>
+                    <input type="file" id="jsonFile" accept=".json" class="block w-full text-sm text-gray-500
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-full file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-blue-50 file:text-blue-700
+                                hover:file:bg-blue-100 cursor-pointer">
+                    <button id="exportJsonBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md shadow transition duration-300 ease-in-out cursor-not-allowed opacity-50" disabled>
+                        Export Edited JSON
+                    </button>
+                    <button id="clearAllRelatedBtn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-md shadow transition duration-300 ease-in-out cursor-not-allowed opacity-50" disabled>
+                        Clear ALL Related Videos
+                    </button>
+                </div>
+
+                <hr class="my-6 border-gray-300">
+
+                <section class="mb-6 space-y-4">
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Category Management</h3>
+                    <div>
+                        <label for="newCategoryInput" class="block text-gray-700 text-sm font-bold mb-1">Add New Category:</label>
+                        <div class="flex space-x-2">
+                            <input type="text" id="newCategoryInput" placeholder="Enter new category name" class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                            <button id="addCategoryBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md shadow transition duration-300 ease-in-out whitespace-nowrap">
+                                Add
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-md font-semibold mb-2 text-gray-700">Current Categories:</h4>
+                        <ul id="categoryList" class="space-y-2 max-h-48 overflow-y-auto pr-2">
+                            </ul>
+                    </div>
+                </section>
+
+                <hr class="my-6 border-gray-300">
+
+                <h3 class="text-xl font-semibold mb-3 text-gray-800">Loaded Videos</h3>
+                <div id="videoList" class="space-y-2 max-h-96 overflow-y-auto pr-2">
+                    <p class="text-gray-500 text-center py-4">Upload a JSON file to see videos here.</p>
+                </div>
+            </aside>
+
+            <main class="w-full lg:w-2/3 bg-white p-4 rounded-lg shadow-md">
+                <h2 class="text-2xl font-semibold mb-4 text-gray-800">Video Editor</h2>
+                <div id="editor" class="hidden">
+                    <section class="mb-8">
+                        <h3 class="text-xl font-semibold mb-3 text-gray-700">General Information</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="videoTitle" class="block text-gray-700 text-sm font-bold mb-1">Title:</label>
+                                <input type="text" id="videoTitle" class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label for="videoCategory" class="block text-gray-700 text-sm font-bold mb-1">Category:</label>
+                                <select id="videoCategory" class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"></select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label for="videoSummary" class="block text-gray-700 text-sm font-bold mb-1">Summary:</label>
+                                <textarea id="videoSummary" rows="3" class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"></textarea>
+                            </div>
+                            <div>
+                                <label for="videoThumbnail" class="block text-gray-700 text-sm font-bold mb-1">Thumbnail URL:</label>
+                                <input type="url" id="videoThumbnail" class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label for="videoUrl" class="block text-gray-700 text-sm font-bold mb-1">Video URL:</label>
+                                <input type="url" id="videoUrl" class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label for="videoGameName" class="block text-gray-700 text-sm font-bold mb-1">Game Name:</label>
+                                <input type="text" id="videoGameName" class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label for="videoTags" class="block text-gray-700 text-sm font-bold mb-1">Tags (comma-separated):</label>
+                                <input type="text" id="videoTags" class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                            </div>
+                            <div class="md:col-span-2 flex items-end space-x-2">
+                                <div class="flex-grow">
+                                    <label for="videoRelated" class="block text-gray-700 text-sm font-bold mb-1">Related Videos (comma-separated titles):</label>
+                                    <input type="text" id="videoRelated" class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                                </div>
+                                <button id="clearRelatedBtn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-md shadow transition duration-300 ease-in-out self-end whitespace-nowrap">
+                                    Clear Related
+                                </button>
+                            </div>
+                            <div class="md:col-span-2">
+                                <button id="deleteVideoBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md shadow transition duration-300 ease-in-out">
+                                    Delete This Video
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <hr class="my-6 border-gray-300">
+
+                    <section>
+                        <h3 class="text-xl font-semibold mb-3 text-gray-700">Chapter Editor</h3>
+                        <div id="player-container" class="aspect-video w-full bg-gray-200 rounded-lg overflow-hidden mb-4">
+                            <div id="player"></div>
+                        </div>
+
+                        <div class="flex items-center space-x-4 mb-4">
+                            <span class="text-lg font-bold text-gray-800">Current Time: <span id="currentTime">00:00</span></span>
+                            <button id="addChapterBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow transition duration-300 ease-in-out">
+                                Add Chapter at Current Time
+                            </button>
+                        </div>
+
+                        <div class="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h4 class="text-md font-semibold mb-2 text-gray-700">Import Chapter Markers</h4>
+                            <p class="text-sm text-gray-600 mb-2">Paste chapter markers in the format "Index. HH:MM:SS - Topic" followed by "purpose: Your purpose text":</p>
+                            <textarea id="chapterImportInput" rows="10" class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent mb-2" placeholder="Example:&#10;A. 00:01:25 - UI Design&#10;purpose: The importance of clear and distinct UI elements to avoid player confusion.&#10;B. 00:02:01 - Initial Level Experience&#10;purpose: Analyzing the first level's design and identifying potential pitfalls for new players."></textarea>
+                            <button id="importChaptersBtn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md shadow transition duration-300 ease-in-out">
+                                Import Chapters
+                            </button>
+                        </div>
+
+
+                        <div id="chapterList" class="space-y-4 max-h-96 overflow-y-auto pr-2">
+                            <p class="text-gray-500 text-center py-4">No chapters yet. Load a video and use "Add Chapter at Current Time" or "Import Chapters".</p>
+                        </div>
+                    </section>
+                </div>
+                <div id="noVideoSelected" class="text-center text-gray-500 py-10">
+                    <p class="text-lg">👈 Please select a video from the left panel to start editing.</p>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const DOM = {
+            jsonFile: document.getElementById('jsonFile'),
+            exportJsonBtn: document.getElementById('exportJsonBtn'),
+            clearAllRelatedBtn: document.getElementById('clearAllRelatedBtn'),
+            videoList: document.getElementById('videoList'),
+            editor: document.getElementById('editor'),
+            noVideoSelected: document.getElementById('noVideoSelected'),
+            videoTitle: document.getElementById('videoTitle'),
+            videoCategory: document.getElementById('videoCategory'), // Now a select element
+            videoSummary: document.getElementById('videoSummary'),
+            videoThumbnail: document.getElementById('videoThumbnail'),
+            videoUrl: document.getElementById('videoUrl'),
+            videoGameName: document.getElementById('videoGameName'),
+            videoTags: document.getElementById('videoTags'),
+            videoRelated: document.getElementById('videoRelated'),
+            player: document.getElementById('player'),
+            currentTime: document.getElementById('currentTime'),
+            addChapterBtn: document.getElementById('addChapterBtn'),
+            chapterList: document.getElementById('chapterList'),
+            deleteVideoBtn: document.getElementById('deleteVideoBtn'),
+            clearRelatedBtn: document.getElementById('clearRelatedBtn'),
+            chapterImportInput: document.getElementById('chapterImportInput'),
+            importChaptersBtn: document.getElementById('importChaptersBtn'),
+            newCategoryInput: document.getElementById('newCategoryInput'), // New
+            addCategoryBtn: document.getElementById('addCategoryBtn'), // New
+            categoryList: document.getElementById('categoryList') // New
+        };
+
+        let consultVideosData = [];
+        let currentVideoIndex = -1;
+        let player; // YouTube Player object
+
+        // Initialize categories with defaults or load from localStorage
+        let videoCategories = JSON.parse(localStorage.getItem('videoCategories')) || [
+            "Gameplay Mechanics & Player Experience",
+            "Narrative & Storytelling",
+            "Design Process & Communication"
+        ];
+
+        // Utility function to convert seconds to MM:SS or HH:MM:SS format
+        const formatTime = (seconds) => {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            const hours = Math.floor(minutes / 60);
+            const displayMinutes = String(minutes % 60).padStart(2, '0');
+            const displaySeconds = String(remainingSeconds).padStart(2, '0');
+
+            if (hours > 0) {
+                return `${String(hours).padStart(2, '0')}:${displayMinutes}:${displaySeconds}`;
+            } else {
+                return `${displayMinutes}:${displaySeconds}`;
+            }
+        };
+
+        // Utility function to convert MM:SS or HH:MM:SS to seconds
+        const timeToSeconds = (timeString) => {
+            const parts = timeString.split(':').map(Number);
+            if (parts.length === 2) { // MM:SS
+                return parts[0] * 60 + parts[1];
+            } else if (parts.length === 3) { // HH:MM:SS
+                return parts[0] * 3600 + parts[1] * 60 + parts[2];
+            }
+            return 0; // Invalid format
+        };
+
+        // Load YouTube IFrame Player API
+        const loadYouTubeAPI = () => {
+            const tag = document.createElement('script');
+            tag.src = "https://www.youtube.com/iframe_api";
+            const firstScriptTag = document.getElementsByTagName('script')[0];
+            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        };
+
+        // This function is called by the YouTube IFrame Player API when the API is ready.
+        window.onYouTubeIframeAPIReady = () => {
+            console.log('YouTube IFrame API is ready.');
+            // Player will be initialized when a video is loaded for editing.
+        };
+
+        // Initialize or update YouTube player
+        const initializePlayer = (videoId) => {
+            if (player) {
+                player.loadVideoById(videoId);
+            } else {
+                player = new YT.Player('player', {
+                    videoId: videoId,
+                    events: {
+                        'onReady': onPlayerReady,
+                        'onStateChange': onPlayerStateChange
+                    }
+                });
+            }
+        };
+
+        const onPlayerReady = (event) => {
+            console.log('YouTube player ready.');
+            setInterval(() => {
+                if (player && typeof player.getCurrentTime === 'function') {
+                    DOM.currentTime.textContent = formatTime(player.getCurrentTime());
+                }
+            }, 1000);
+        };
+
+        const onPlayerStateChange = (event) => {
+            // console.log('Player state changed:', event.data);
+        };
+
+        // Function to load JSON file
+        const loadJSONFile = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    consultVideosData = JSON.parse(e.target.result);
+                    renderVideoList();
+                    DOM.exportJsonBtn.disabled = false;
+                    DOM.exportJsonBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    DOM.clearAllRelatedBtn.disabled = false;
+                    DOM.clearAllRelatedBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                } catch (error) {
+                    alert('Invalid JSON file. Please upload a valid JSON.');
+                    console.error('Error parsing JSON:', error);
+                }
+            };
+            reader.readAsText(file);
+        };
+
+        // Render video list in the left panel
+        const renderVideoList = () => {
+            DOM.videoList.innerHTML = ''; // Clear existing list
+            if (consultVideosData.length === 0) {
+                DOM.videoList.innerHTML = '<p class="text-gray-500 text-center py-4">No videos found in the JSON file.</p>';
+                // Hide editor if no videos are left
+                DOM.editor.classList.add('hidden');
+                DOM.noVideoSelected.classList.remove('hidden');
+                currentVideoIndex = -1;
+                DOM.clearAllRelatedBtn.disabled = true;
+                DOM.clearAllRelatedBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                DOM.exportJsonBtn.disabled = true;
+                DOM.exportJsonBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                return;
+            }
+
+            consultVideosData.forEach((video, index) => {
+                const videoItem = document.createElement('div');
+                videoItem.classList.add('bg-white', 'p-3', 'rounded-md', 'shadow-sm', 'cursor-pointer', 'hover:bg-blue-50', 'transition', 'duration-150', 'ease-in-out', 'flex', 'items-center', 'space-x-3');
+                videoItem.innerHTML = `
+                    <img src="${video.thumbnail || 'https://via.placeholder.com/60x40?text=No+Thumb'}" alt="${video.title}" class="w-16 h-10 object-cover rounded-sm">
+                    <span class="font-medium text-gray-800">${video.title}</span>
+                `;
+                videoItem.addEventListener('click', () => loadVideoForEditing(index));
+                DOM.videoList.appendChild(videoItem);
+            });
+        };
+
+        // Render the category dropdown
+        const renderCategoryDropdown = () => {
+            DOM.videoCategory.innerHTML = ''; // Clear existing options
+
+            // Add a default blank/placeholder option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = "";
+            defaultOption.textContent = "Select a Category";
+            DOM.videoCategory.appendChild(defaultOption);
+
+            videoCategories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                DOM.videoCategory.appendChild(option);
+            });
+        };
+
+        // Render the list of categories for management
+        const renderCategoryManagementList = () => {
+            DOM.categoryList.innerHTML = '';
+            if (videoCategories.length === 0) {
+                DOM.categoryList.innerHTML = '<li class="text-gray-500">No categories added yet.</li>';
+                return;
+            }
+            videoCategories.forEach(category => {
+                const li = document.createElement('li');
+                li.classList.add('flex', 'justify-between', 'items-center', 'bg-white', 'p-2', 'rounded-md', 'shadow-sm', 'text-gray-800');
+                li.innerHTML = `
+                    <span>${category}</span>
+                    <button class="delete-category-btn bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-1 px-2 rounded-md transition duration-150 ease-in-out" data-category="${category}">Delete</button>
+                `;
+                DOM.categoryList.appendChild(li);
+            });
+
+            // Add event listeners to delete buttons
+            DOM.categoryList.querySelectorAll('.delete-category-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => deleteCategory(e.target.dataset.category));
+            });
+        };
+
+        // Load selected video for editing
+        const loadVideoForEditing = (index) => {
+            currentVideoIndex = index;
+            const video = consultVideosData[currentVideoIndex];
+
+            // Show editor, hide "no video selected" message
+            DOM.editor.classList.remove('hidden');
+            DOM.noVideoSelected.classList.add('hidden');
+
+            // Populate general info fields
+            DOM.videoTitle.value = video.title || '';
+            // Set the dropdown value
+            DOM.videoCategory.value = video.category || '';
+            DOM.videoSummary.value = video.summary || '';
+            DOM.videoThumbnail.value = video.thumbnail || '';
+            DOM.videoUrl.value = video.videoUrl || '';
+            DOM.videoGameName.value = video.gameName || '';
+            DOM.videoTags.value = Array.isArray(video.tags) ? video.tags.join(', ') : '';
+            DOM.videoRelated.value = Array.isArray(video.related) ? video.related.join(', ') : '';
+
+            // Extract YouTube Video ID
+            const videoIdMatch = video.videoUrl ? video.videoUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/) : null;
+            const videoId = videoIdMatch && videoIdMatch[1] ? videoIdMatch[1] : '';
+
+            if (videoId) {
+                initializePlayer(videoId);
+            } else {
+                DOM.player.innerHTML = '<p class="text-center text-gray-500 py-10">Invalid YouTube URL or no URL provided.</p>';
+            }
+
+            renderChapters();
+        };
+
+        // Render chapter list for the current video
+        const renderChapters = () => {
+            DOM.chapterList.innerHTML = ''; // Clear existing chapters
+            const video = consultVideosData[currentVideoIndex];
+
+            if (!video || !video.chapters || video.chapters.length === 0) {
+                DOM.chapterList.innerHTML = '<p class="text-gray-500 text-center py-4">No chapters for this video.</p>';
+                return;
+            }
+
+            video.chapters.forEach((chapter, chapterIndex) => {
+                const chapterDiv = document.createElement('div');
+                chapterDiv.classList.add('bg-white', 'p-4', 'rounded-md', 'shadow-sm', 'border', 'border-gray-200', 'space-y-2');
+                chapterDiv.innerHTML = `
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-1">Timestamp:</label>
+                        <input type="text" value="${chapter.timestamp}" data-field="timestamp" class="chapter-input shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-1">Topic:</label>
+                        <input type="text" value="${chapter.topic}" data-field="topic" class="chapter-input shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-1">Purpose:</label>
+                        <input type="text" value="${chapter.purpose || ''}" data-field="purpose" class="chapter-input shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent">
+                    </div>
+                    <div class="flex space-x-2 mt-2">
+                        <button class="update-chapter-btn bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md shadow transition duration-300 ease-in-out" data-index="${chapterIndex}">Update</button>
+                        <button class="delete-chapter-btn bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md shadow transition duration-300 ease-in-out" data-index="${chapterIndex}">Delete</button>
+                        <button class="jump-to-time-btn bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md shadow transition duration-300 ease-in-out" data-time="${chapter.timestamp}">Jump</button>
+                    </div>
+                `;
+                DOM.chapterList.appendChild(chapterDiv);
+            });
+
+            // Add event listeners for update/delete/jump buttons
+            DOM.chapterList.querySelectorAll('.update-chapter-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => updateChapter(parseInt(e.target.dataset.index)));
+            });
+            DOM.chapterList.querySelectorAll('.delete-chapter-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => deleteChapter(parseInt(e.target.dataset.index)));
+            });
+            DOM.chapterList.querySelectorAll('.jump-to-time-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    if (player && typeof player.seekTo === 'function') {
+                        player.seekTo(timeToSeconds(e.target.dataset.time), true);
+                    }
+                });
+            });
+        };
+
+        // Add new chapter at current video time
+        const addChapter = () => {
+            if (currentVideoIndex === -1 || !player || typeof player.getCurrentTime !== 'function') {
+                alert('Please select a video and ensure the player is ready.');
+                return;
+            }
+
+            const currentTime = formatTime(player.getCurrentTime());
+            const topic = prompt('Enter Chapter Topic:');
+            if (topic === null || topic.trim() === '') {
+                 alert('Chapter topic cannot be empty.');
+                 return;
+            }
+
+            const purpose = prompt('Enter Chapter Purpose (optional):');
+
+            const newChapter = {
+                timestamp: currentTime,
+                topic: topic.trim(),
+                purpose: purpose ? purpose.trim() : ''
+            };
+
+            if (!consultVideosData[currentVideoIndex].chapters) {
+                consultVideosData[currentVideoIndex].chapters = [];
+            }
+            consultVideosData[currentVideoIndex].chapters.push(newChapter);
+            renderChapters();
+        };
+
+        // Update a specific chapter
+        const updateChapter = (chapterIndex) => {
+            const chapterDiv = DOM.chapterList.children[chapterIndex];
+            const inputs = chapterDiv.querySelectorAll('.chapter-input');
+            const updatedChapter = {};
+            let isValid = true;
+            inputs.forEach(input => {
+                if (input.dataset.field === 'timestamp') {
+                    const timeValue = input.value.trim();
+                    const isValidTime = /^\d{1,2}:\d{2}(?::\d{2})?$/.test(timeValue);
+                    if (!isValidTime) {
+                        alert('Invalid timestamp format. Please use MM:SS or HH:MM:SS.');
+                        isValid = false;
+                        return;
+                    }
+                    updatedChapter[input.dataset.field] = timeValue;
+                } else {
+                    updatedChapter[input.dataset.field] = input.value.trim();
+                }
+            });
+
+            if (!isValid) return;
+
+            if (Object.keys(updatedChapter).length > 0) {
+                consultVideosData[currentVideoIndex].chapters[chapterIndex] = updatedChapter;
+                alert('Chapter updated!');
+                renderChapters();
+            }
+        };
+
+        // Delete a specific chapter
+        const deleteChapter = (chapterIndex) => {
+            if (!confirm('Are you sure you want to delete this chapter?')) return;
+            consultVideosData[currentVideoIndex].chapters.splice(chapterIndex, 1);
+            renderChapters();
+        };
+
+        // Update general video information
+        const updateGeneralInfo = () => {
+            if (currentVideoIndex === -1) return;
+
+            const video = consultVideosData[currentVideoIndex];
+            video.title = DOM.videoTitle.value.trim();
+            video.category = DOM.videoCategory.value; // Get value from dropdown
+            video.summary = DOM.videoSummary.value.trim();
+            video.thumbnail = DOM.videoThumbnail.value.trim();
+            video.videoUrl = DOM.videoUrl.value.trim();
+            video.gameName = DOM.videoGameName.value.trim();
+            video.tags = DOM.videoTags.value.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
+            video.related = DOM.videoRelated.value.split(',').map(related => related.trim()).filter(related => related !== '');
+
+            // Re-render video list to update title/thumbnail if changed
+            renderVideoList();
+        };
+
+        // Delete the currently selected video
+        const deleteVideo = () => {
+            if (currentVideoIndex === -1) {
+                alert('No video selected to delete.');
+                return;
+            }
+            if (!confirm(`Are you sure you want to delete "${consultVideosData[currentVideoIndex].title}"? This action cannot be undone.`)) {
+                return;
+            }
+
+            consultVideosData.splice(currentVideoIndex, 1);
+            alert('Video deleted successfully!');
+            renderVideoList(); // Re-render the list
+            // Hide editor and show placeholder
+            DOM.editor.classList.add('hidden');
+            DOM.noVideoSelected.classList.remove('hidden');
+            currentVideoIndex = -1; // Reset current video index
+        };
+
+        // Clear all related videos for the current video
+        const clearRelatedVideos = () => {
+            if (currentVideoIndex === -1) {
+                alert('No video selected.');
+                return;
+            }
+            if (!confirm('Are you sure you want to clear all related videos for this entry?')) {
+                return;
+            }
+            consultVideosData[currentVideoIndex].related = [];
+            DOM.videoRelated.value = ''; // Update the input field
+            alert('Related videos cleared.');
+            updateGeneralInfo(); // Trigger a general info update to ensure internal consistency
+        };
+
+        // Clear ALL "related videos" fields across all videos
+        const clearAllRelatedVideos = () => {
+            if (consultVideosData.length === 0) {
+                alert('No videos loaded to clear related fields from.');
+                return;
+            }
+            if (!confirm('Are you absolutely sure you want to clear ALL related video entries for ALL videos? This action cannot be undone.')) {
+                return;
+            }
+
+            consultVideosData.forEach(video => {
+                video.related = [];
+            });
+
+            // If a video is currently selected and visible in the editor, update its field
+            if (currentVideoIndex !== -1) {
+                DOM.videoRelated.value = '';
+            }
+            alert('All related video fields have been cleared for all videos.');
+            renderVideoList(); // Re-render list to ensure consistency, though related isn't directly visible here.
+        };
+
+        // Add a new category to the global list
+        const addCategory = () => {
+            const newCategory = DOM.newCategoryInput.value.trim();
+            if (!newCategory) {
+                alert('Category name cannot be empty.');
+                return;
+            }
+            if (videoCategories.includes(newCategory)) {
+                alert(`Category "${newCategory}" already exists.`);
+                return;
+            }
+            videoCategories.push(newCategory);
+            localStorage.setItem('videoCategories', JSON.stringify(videoCategories)); // Save to local storage
+            DOM.newCategoryInput.value = ''; // Clear input
+            renderCategoryDropdown();
+            renderCategoryManagementList();
+            alert(`Category "${newCategory}" added.`);
+        };
+
+        // Delete a category from the global list
+        const deleteCategory = (categoryToDelete) => {
+            if (!confirm(`Are you sure you want to delete category "${categoryToDelete}"? Videos assigned to this category will have their category cleared.`)) {
+                return;
+            }
+
+            videoCategories = videoCategories.filter(cat => cat !== categoryToDelete);
+            localStorage.setItem('videoCategories', JSON.stringify(videoCategories)); // Save to local storage
+
+            // Iterate through all videos and clear their category if it matches the deleted one
+            consultVideosData.forEach(video => {
+                if (video.category === categoryToDelete) {
+                    video.category = ''; // Set to empty string
+                }
+            });
+
+            // If the currently edited video's category was deleted, update its dropdown
+            if (currentVideoIndex !== -1 && consultVideosData[currentVideoIndex].category === '') {
+                DOM.videoCategory.value = '';
+            }
+
+            renderCategoryDropdown();
+            renderCategoryManagementList();
+            alert(`Category "${categoryToDelete}" deleted. Corresponding video categories have been cleared.`);
+        };
+
+
+        // Import chapter markers from a text area
+        const importChapters = () => {
+            if (currentVideoIndex === -1) {
+                alert("Please select a video first.");
+                return;
+            }
+
+            const chapterText = DOM.chapterImportInput.value;
+            if (!chapterText.trim()) {
+                alert("Please paste chapter markers text to import.");
+                return;
+            }
+
+            const lines = chapterText.split('\n').map(line => line.trim()).filter(line => line !== '');
+            const newChapters = [];
+            const topicLineRegex = /^[A-Z]\.\s+(\d{1,2}:\d{2}(?::\d{2})?)\s*-\s*(.*)/;
+            const purposeLineRegex = /^purpose:\s*(.*)/i;
+
+            let i = 0;
+            let malformedLines = 0;
+            while (i < lines.length) {
+                const topicMatch = lines[i].match(topicLineRegex);
+                if (topicMatch) {
+                    const timestamp = topicMatch[1];
+                    const topic = topicMatch[2].trim();
+                    let purpose = '';
+
+                    // Check the next line for purpose
+                    if (i + 1 < lines.length) {
+                        const purposeMatch = lines[i + 1].match(purposeLineRegex);
+                        if (purposeMatch) {
+                            purpose = purposeMatch[1].trim();
+                            i++; // Consume the purpose line
+                        }
+                    }
+
+                    newChapters.push({
+                        timestamp: timestamp,
+                        topic: topic,
+                        purpose: purpose
+                    });
+                    i++; // Consume the topic line
+                } else {
+                    malformedLines++;
+                    console.warn(`Skipping malformed line during import: ${lines[i]}`);
+                    i++; // Move to the next line even if malformed
+                }
+            }
+
+            if (newChapters.length > 0) {
+                consultVideosData[currentVideoIndex].chapters = newChapters;
+                renderChapters();
+                DOM.chapterImportInput.value = ''; // Clear input after successful import
+                let message = `${newChapters.length} chapters imported successfully!`;
+                if (malformedLines > 0) {
+                    message += ` (${malformedLines} lines skipped due to incorrect format).`;
+                }
+                alert(message);
+            } else {
+                alert("No valid chapters found in the provided text. Please ensure the format is 'Index. HH:MM:SS - Topic' followed by 'purpose: Your purpose text' (optional purpose line).");
+            }
+        };
+
+
+        // Export edited JSON
+        const exportJSON = () => {
+            if (consultVideosData.length === 0) {
+                alert('No data to export. Please load a JSON file first.');
+                return;
+            }
+
+            // Ensure current video's general info is synced before export
+            if (currentVideoIndex !== -1) {
+                updateGeneralInfo();
+            }
+
+            const dataStr = JSON.stringify(consultVideosData, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'edited_consult_videos.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            alert('JSON exported successfully as edited_consult_videos.json!');
+        };
+
+        // Event Listeners
+        DOM.jsonFile.addEventListener('change', loadJSONFile);
+        DOM.exportJsonBtn.addEventListener('click', exportJSON);
+        DOM.addChapterBtn.addEventListener('click', addChapter);
+        DOM.deleteVideoBtn.addEventListener('click', deleteVideo);
+        DOM.clearRelatedBtn.addEventListener('click', clearRelatedVideos);
+        DOM.clearAllRelatedBtn.addEventListener('click', clearAllRelatedVideos);
+        DOM.importChaptersBtn.addEventListener('click', importChapters);
+        DOM.addCategoryBtn.addEventListener('click', addCategory); // New event listener for adding categories
+
+        // Add input event listeners for general info fields to trigger update
+        const generalInfoFields = [
+            DOM.videoTitle, DOM.videoCategory, DOM.videoSummary,
+            DOM.videoThumbnail, DOM.videoUrl, DOM.videoGameName,
+            DOM.videoTags, DOM.videoRelated
+        ];
+        generalInfoFields.forEach(field => {
+            field.addEventListener('input', updateGeneralInfo);
+        });
+
+        // Initial setup calls
+        loadYouTubeAPI();
+        renderCategoryDropdown(); // Render dropdown on load
+        renderCategoryManagementList(); // Render category list on load
+    </script>
+</body>
+</html>
