@@ -679,21 +679,24 @@
         const buildVideoListItem = (video) => {
             const item = document.createElement('div');
             item.id = `video-${video.title.replace(/\s+/g, '-')}`;
-            item.className = "video-item bg-[var(--color-goc-dark)] rounded-xl shadow-lg transition-transform hover:scale-[1.01] duration-300 cursor-pointer mb-4 flex items-center p-4 lg:p-6";
+            // Modified class to stack on small screens and switch to row on large screens
+            item.className = "video-item bg-[var(--color-goc-dark)] rounded-xl shadow-lg transition-transform hover:scale-[1.01] duration-300 cursor-pointer mb-4 flex flex-col lg:flex-row items-center p-4 lg:p-6";
 
             // Add thumbnail
             const thumbnailImg = document.createElement('img');
-            thumbnailImg.className = "w-32 h-auto rounded-md flex-shrink-0 mr-4 lg:mr-6";
+            // Modified class for thumbnail to be centered and have margin-bottom on small screens
+            thumbnailImg.className = "w-32 h-auto rounded-md flex-shrink-0 mx-auto mb-4 lg:mr-6 lg:mb-0 object-cover";
             thumbnailImg.src = video.thumbnail;
             thumbnailImg.alt = `${video.title} thumbnail`;
             item.appendChild(thumbnailImg);
 
             const content = document.createElement('div');
-            content.className = "flex-1";
+            // Added text-center for small screens, reverts to text-left on large
+            content.className = "flex-1 text-center lg:text-left";
             content.innerHTML = `
                                     <h3 class="text-xl font-bold text-[var(--color-goc-main-text)] mb-2">${video.title}</h3>
                                     <p class="text-[var(--color-goc-main-text)] opacity-80 text-sm mb-2">${video.summary}</p>
-                                    <div class="text-xs text-[var(--color-goc-main-text)] opacity-80 flex flex-wrap gap-2">
+                                    <div class="text-xs text-[var(--color-goc-main-text)] opacity-80 flex flex-wrap gap-2 justify-center lg:justify-start">
                                         ${(video.tags || []).map(tag => `<span class="bg-[var(--color-goc-darkest)] text-[var(--color-goc-light-accent)] px-3 py-1 rounded-full text-xs font-medium">${tag}</span>`).join('')}
                                     </div>
                                 `;
@@ -735,6 +738,7 @@
                     groupedVideos[category].forEach(video => {
                         videoList.appendChild(buildVideoListItem(video));
                     });
+                    videoList.className = "space-y-4 flex flex-col items-center lg:items-stretch"; // Added for centering video items on small screens
                     section.appendChild(videoList);
                     videoSectionsContainer.appendChild(section);
                 });
