@@ -19,8 +19,12 @@
             --color-goc-light-accent-hsl-components: 194, 27%, 74%; /* HSL for #aac6ce */
             --color-goc-dark-accent: #3a3a3a; /* Original darker accent - *Not used for filmstrip background anymore* */
             --color-goc-filmstrip-bg: #101010; /* NEW: Much darker background for filmstrips */
-            /* NEW: Gradient for Season Title */
+            /* NEW: Gradient for Season Title / Active Tabs */
             --gradient-goc-indigo: linear-gradient(to right, #6366f1, #8b5cf6); /* from-indigo-500 to-purple-500 equivalent */
+            /* NEW: Slightly desaturated indigo for borders/accents */
+            --color-goc-desaturated-indigo: #4a4d7c; /* A dark, subtle indigo */
+            /* NEW: Very light, subtle indigo for hover states */
+            --color-goc-light-indigo-hover: #3c3f6b;
         }
 
         /* Applying Custom Font */
@@ -38,7 +42,7 @@
 
             50% {
                 /* Expand the shadow subtly, making it slightly less opaque than diagnostic version */
-                box-shadow: 0 0 0 16px hsl(var(--color-goc-light-accent-hsl-hsl-components) / 0.2); /* Reduced spread for elegance */
+                box-shadow: 0 0 0 16px hsl(var(--color-goc-light-accent-hsl-components) / 0.2); /* Reduced spread for elegance */
                 transform: scale(1.01); /* Slight scale for a subtle "pop" */
             }
 
@@ -126,10 +130,91 @@
             -ms-overflow-style: none;  /* IE and Edge */
             scrollbar-width: none;  /* Firefox */
         }
+
+        /* NEW: Browser-like tab container styles */
+        .browser-tab-container {
+            display: flex;
+            justify-content: flex-start; /* Align tabs to the left */
+            margin-bottom: 0; /* Remove margin-bottom to make tabs flush */
+            border-bottom: 2px solid var(--color-goc-desaturated-indigo); /* Line below tabs */
+            padding: 0 1rem; /* Horizontal padding for container */
+            position: relative;
+            z-index: 1; /* Ensure tabs are above content border */
+        }
+
+        /* NEW: Individual browser tab styles */
+        .browser-tab {
+            @apply flex items-center justify-center text-lg font-semibold cursor-pointer relative;
+            background-color: var(--color-goc-dark); /* Inactive tab background */
+            color: var(--color-goc-main-text);
+            padding: 1rem 2rem; /* Make tabs much larger */
+            border-top-left-radius: 0.75rem; /* Rounded corners */
+            border-top-right-radius: 0.75rem;
+            margin-right: 0.25rem; /* Small space between tabs */
+            font-weight: 600;
+            transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out, transform 0.1s ease-out;
+            border: 2px solid var(--color-goc-desaturated-indigo); /* Add border for inactive tabs */
+            border-bottom: none; /* No bottom border for inactive tabs */
+            top: 2px; /* Slight offset to appear above the line */
+        }
+
+        .browser-tab:hover {
+            background-color: var(--color-goc-light-indigo-hover);
+            color: var(--color-goc-light-accent);
+            transform: translateY(-1px); /* Subtle lift on hover */
+        }
+
+        /* NEW: Active browser tab styles */
+        .browser-tab.active-tab {
+            background: var(--gradient-goc-indigo); /* Active tab background */
+            -webkit-background-clip: padding-box; /* Ensures gradient respects border-radius for older browsers */
+            background-clip: padding-box;
+            color: var(--color-goc-main-text);
+            border-color: var(--color-goc-darkest); /* Match background color to hide top border */
+            border-bottom-color: var(--color-goc-darkest); /* Hide bottom border with main content background */
+            z-index: 20; /* Bring active tab more to front */
+            top: 0; /* Align perfectly with content, no offset */
+        }
+
+        /* NEW: Pseudo-elements for the rounded corners effect on active tab */
+        /* These create the 'cut-out' effect for the active tab's bottom corners */
+        .browser-tab.active-tab::before,
+        .browser-tab.active-tab::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            width: 1.5rem; /* Larger curve size */
+            height: 1.5rem; /* Larger curve size */
+            background-color: transparent;
+            pointer-events: none; /* Ensure clicks pass through */
+        }
+
+        .browser-tab.active-tab::before {
+            left: -1.5rem; /* Position to the left */
+            border-bottom-right-radius: 1.5rem; /* Curve matches active tab's bottom-right corner */
+            box-shadow: 0 0 0 9999px var(--color-goc-darkest); /* Fill background around curve */
+            clip-path: inset(0 0 0 100%); /* Hide the box-shadow itself, only showing the curve */
+        }
+
+        .browser-tab.active-tab::after {
+            right: -1.5rem; /* Position to the right */
+            border-bottom-left-radius: 1.5rem; /* Curve matches active tab's bottom-left corner */
+            box-shadow: 0 0 0 9999px var(--color-goc-darkest); /* Fill background around curve */
+            clip-path: inset(0 100% 0 0); /* Hide the box-shadow itself, only showing the curve */
+        }
+
+        /* Ensure main content starts just below the active tab */
+        main {
+            padding-top: 2rem; /* Provide some top padding for content */
+            background-color: var(--color-goc-darkest); /* Ensure content background matches active tab */
+            border-top: 2px solid var(--color-goc-darkest); /* Hide the border under the active tab */
+            position: relative;
+            z-index: 10; /* Keep content below active tab */
+        }
     </style>
 </head>
 <body class="bg-[var(--color-goc-darkest)] text-[var(--color-goc-main-text)] font-sans min-h-screen flex flex-col">
-    <div id="app" class="container mx-auto p-4 flex-grow">
+    <div class="container mx-auto p-4 md:p-8 lg:p-12 max-w-7xl flex-grow">
         <header class="text-center mb-10 mt-6">
             <div class="mb-4">
                 <img src="https://placehold.co/100x100/1f1f1f/aac6ce?text=Logo" alt="Games Over Coffee Logo" class="mx-auto rounded-full w-24 h-24 object-cover border-2 border-[var(--color-goc-light-accent)]">
@@ -139,60 +224,19 @@
             <p class="text-lg md:text-xl mt-2 text-[var(--color-goc-main-text)] opacity-70">Mission: Empathetic Game Design <i class="fas fa-heart ml-2 text-[var(--color-goc-light-accent)]"></i></p>
         </header>
 
-        <nav class="mb-10">
-            <ul class="flex justify-center border-b-2 border-[var(--color-goc-dark)]">
-                <li class="-mb-px mr-2">
-                    <button id="mainChannelTab" class="inline-block py-3 px-6 text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] hover:border-b-4 hover:border-[var(--color-goc-light-accent)] font-semibold focus:outline-none transition duration-300 ease-in-out text-lg md:text-xl">
-                        Games Over Coffee
-                    </button>
-                </li>
-                <li class="-mb-px mr-2">
-                    <button id="consultingChannelTab" class="inline-block py-3 px-6 text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] hover:border-b-4 hover:border-[var(--color-goc-light-accent)] font-semibold focus:outline-none transition duration-300 ease-in-out text-lg md:text-xl">
-                        Consulting
-                    </button>
-                </li>
-                <li class="-mb-px">
-                    <button id="insightsChannelTab" class="inline-block py-3 px-6 text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] hover:border-b-4 hover:border-[var(--color-goc-light-accent)] font-semibold focus:outline-none transition duration-300 ease-in-out text-lg md:text-xl">
-                        Readings / Insights
-                    </button>
-                </li>
-            </ul>
+        <nav class="browser-tab-container">
+            <a href="index.html" id="mainChannelTab" class="browser-tab active-tab">
+                Games Over Coffee
+            </a>
+            <a href="consulting_site/consulting_site.html" class="browser-tab">
+                Consulting
+            </a>
         </nav>
 
         <main>
             <section id="mainChannelContent" class="channel-content pb-10">
                 <h2 class="text-3xl md:text-4xl font-bold mb-8 text-[var(--color-goc-light-accent)]">Games Over Coffee Videos</h2>
                 <div id="mainVideosGrid" class="grid grid-cols-1 gap-y-12">
-                    </div>
-            </section>
-
-            <section id="consultingChannelContent" class="channel-content hidden pb-10">
-                <h2 class="text-3xl md:text-4xl font-bold mb-8 text-[var(--color-goc-light-accent)]">Games Over Coffee Consulting</h2>
-                <div class="mb-8">
-                    <input type="text" id="consultingSearchInput" placeholder="Search consulting insights by keyword..." class="p-4 w-full rounded-lg bg-[var(--color-goc-dark)] text-[var(--color-goc-main-text)] border border-[var(--color-goc-darkest)] focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-light-accent)] text-lg">
-                </div>
-
-                <div class="bg-[var(--color-goc-dark)] p-4 rounded-lg shadow-md mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div class="flex flex-wrap gap-3" id="consultingFilterButtons">
-                        <button data-filter-type="all" class="consulting-filter-button bg-[var(--color-goc-darkest)] text-[var(--color-goc-main-text)] py-2 px-4 rounded-full hover:bg-[var(--color-goc-light-accent)] hover:text-[var(--color-goc-darkest)] transition duration-300 ease-in-out text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-light-accent)] focus:ring-opacity-50">All</button>
-                    </div>
-                    <button id="clearConsultingFilters" class="bg-[var(--color-goc-darkest)] hover:bg-red-700 text-[var(--color-goc-main-text)] py-2 px-4 rounded-full transition duration-300 ease-in-out text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-main-text)] focus:ring-opacity-50 flex items-center justify-center">Clear Filters <i class="fas fa-times ml-1 text-xs"></i></button>
-                </div>
-
-                <div id="consultingGrid" class="grid grid-cols-1 gap-6">
-                </div>
-            </section>
-
-            <section id="insightsContent" class="channel-content hidden pb-10">
-                <h2 class="text-3xl md:text-4xl font-bold mb-8 text-[var(--color-goc-light-accent)]">Readings / Insights</h2>
-                <div class="mb-8 flex flex-col md:flex-row md:items-center gap-4">
-                    <input type="text" id="insightsSearchInput" placeholder="Search insights by title, description or content..." class="p-4 w-full md:w-2/3 rounded-lg bg-[var(--color-goc-dark)] text-[var(--color-goc-main-text)] border border-[var(--color-goc-darkest)] focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-light-accent)] text-lg">
-                    <div id="insightsFilterButtons" class="flex flex-wrap gap-3 w-full md:w-1/3 justify-center md:justify-end">
-                        <button data-filter-type="all" class="insights-filter-button bg-[var(--color-goc-dark)] text-[var(--color-goc-main-text)] py-2 px-4 rounded-full hover:bg-[var(--color-goc-light-accent)] hover:text-[var(--color-goc-darkest)] transition duration-300 ease-in-out text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-light-accent)] focus:ring-opacity50">All</button>
-                    </div>
-                    <button id="clearInsightsFilters" class="bg-[var(--color-goc-dark)] hover:bg-[var(--color-goc-darkest)] text-[var(--color-goc-main-text)] py-2 px-4 rounded-full transition duration-300 ease-in-out text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-goc-main-text)] focus:ring-opacity-50">Clear Filters <i class="fas fa-times ml-1 text-xs"></i></button>
-                </div>
-                <div id="insightsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 </div>
             </section>
         </main>
