@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Games Over Coffee Hub</title>
+    <meta name="description" content="Games Over Coffee Hub is the home of the Games Over Coffee and Consulting YouTube Channels">
+    <meta name="keywords" content="empathetic mechanics, empathy-focused game design, game design, narrative game design, game design consulting, game design guide, game design youtuber">
+    
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://gamesovercoffee-joe.github.io/GOChub/index.html"> <meta property="og:title" content="Games Over Coffee Hub">
+    <meta property="og:description" content="Games Over Coffee Hub is the home of the Games Over Coffee and Consulting YouTube Channels">
+    <meta property="og:image" content="https://gamesovercoffee-joe.github.io/GOChub/index/images/GOClogo.png"> <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://gamesovercoffee-joe.github.io/GOChub/index.html"> <meta property="twitter:title" content="Games Over Coffee Hub">
+    <meta property="twitter:description" content="Games Over Coffee Hub is the home of the Games Over Coffee and Consulting YouTube Channels">
+    <meta property="twitter:image" content="https://gamesovercoffee-joe.github.io/GOChub/index/images/GOClogo.png"> <link rel="icon" type="image/png" href="images/GOClogo.png">
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -215,6 +225,7 @@
 </head>
 <body class="bg-[var(--color-goc-darkest)] text-[var(--color-goc-main-text)] font-sans min-h-screen flex flex-col">
     <div class="container mx-auto p-4 md:p-8 lg:p-12 max-w-7xl flex-grow">
+
         <header class="text-center mb-10 mt-6">
             <div class="mb-4">
                 <img src="images/GOClogo.png" alt="Games Over Coffee Logo" class="mx-auto rounded-full w-24 h-24 object-cover">
@@ -232,18 +243,40 @@
             </a>
         </nav>
 
-        <main>
-            <section id="mainChannelContent" class="channel-content pb-10">
-                <h2 class="text-3xl md:text-4xl font-bold mb-8 text-[var(--color-goc-light-accent)]">Games Over Coffee Videos</h2>
-                <div id="mainVideosGrid" class="grid grid-cols-1 gap-y-12">
+       <main>
+    <section id="mostRecentEpisodeSection" class="bg-[var(--color-goc-dark)] p-6 md:p-8 rounded-lg shadow-xl mb-12 border border-[var(--color-goc-desaturated-indigo)] max-w-5xl mx-auto">
+        <h2 class="text-3xl md:text-4xl font-bold mb-6 text-[var(--color-goc-light-accent)] text-center">Most Recent Episode</h2>
+        <div id="mostRecentVideoContainer" class="flex flex-col md:flex-row items-center justify-center gap-6">
+            <div class="relative w-full md:w-1/2 lg:w-2/5 aspect-video bg-black rounded-lg overflow-hidden group">
+                <img id="mostRecentThumbnail" src="" alt="Latest Video Thumbnail" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-300">
+                <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 group-hover:bg-opacity-20 transition-all duration-300">
+                    <button id="playMostRecentBtn" class="play-button text-[var(--color-goc-light-accent)] text-6xl opacity-80 group-hover:opacity-100 transition-opacity duration-300">
+                        <i class="fas fa-play-circle"></i>
+                    </button>
                 </div>
-            </section>
-        </main>
+            </div>
+            <div class="md:w-1/2 lg:w-3/5 text-center md:text-left">
+                <h3 id="mostRecentTitle" class="text-2xl font-semibold text-[var(--color-goc-main-text)] mb-2">Loading Latest Episode...</h3>
+                <p id="mostRecentDescription" class="text-[var(--color-goc-main-text)] opacity-80 text-sm line-clamp-4">Please wait while the latest episode details are loaded.</p>
+                <button id="watchMostRecentBtn" class="mt-4 px-6 py-2 bg-[var(--color-goc-light-accent)] text-[var(--color-goc-darkest)] rounded-full hover:bg-opacity-80 transition-colors duration-200 text-sm font-semibold">Watch Now</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="mainChannelContent" class="channel-content pb-10">
+        <h2 class="text-3xl md:text-4xl font-bold mb-8 text-[var(--color-goc-light-accent)]">Games Over Coffee Videos</h2>
+        <div id="mainVideosGrid" class="grid grid-cols-1 gap-y-12">
+        </div>
+    </section>
+</main>
     </div>
 
-    <footer class="text-center py-6 text-[var(--color-goc-dark)] text-sm mt-auto">
-        <p>&copy; 2025 Games Over Coffee Hub. All rights reserved. <i class="fas fa-mug-hot ml-1"></i></p>
-    </footer>
+<footer class="bg-[var(--color-goc-darkest)] text-[var(--color-goc-main-text)] py-6 text-center text-sm">
+    <div class="container mx-auto px-4">
+        <p>&copy; 2025 Games Over Coffee Hub. All rights reserved.</p>
+        <p class="mt-2">For inquiries, email: <a href="mailto:info@gamesover.coffee" class="text-[var(--color-goc-light-accent)] hover:underline">info@gamesover.coffee</a></p>
+        </div>
+</footer>
 
     <div id="readingModal" class="modal fixed inset-0 flex items-center justify-center hidden z-50 p-4">
         <div class="modal-content bg-[var(--color-goc-dark)] rounded-lg shadow-2xl w-full max-w-3xl p-8 relative border-2 border-[var(--color-goc-darkest)]">

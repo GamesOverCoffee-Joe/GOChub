@@ -418,6 +418,13 @@
         </svg>
     </button>
 
+                <footer class="bg-[var(--color-goc-darkest)] text-[var(--color-goc-main-text)] py-6 text-center text-sm">
+    <div class="container mx-auto px-4">
+        <p>&copy; 2025 Games Over Coffee Hub. All rights reserved.</p>
+        <p class="mt-2">For inquiries, email: <a href="mailto:info@gamesover.coffee" class="text-[var(--color-goc-light-accent)] hover:underline">info@gamesover.coffee</a></p>
+        </div>
+</footer>
+
 
     <script>let allVideos = [];
         let filteredVideos = [];
@@ -522,10 +529,6 @@
                 videoCountDisplay.textContent = '0 videos'; // Set count to 0 on error
             }
         };
-
-        // The previous populateGameLinks function is removed as it was not intended for the per-video modal.
-        // If you need to populate a separate section with ALL game links, that function would need to be re-added
-        // and called appropriately for that specific UI element.
 
 
         /** Opens the modal and populates it with video data */
@@ -918,6 +921,8 @@
             fetchVideoData();
             // Removed the call to populateGameLinks() here
             toggleBackToTopButton(); // Check initial scroll position on load
+
+
         });</script>
 </body>
 </html>

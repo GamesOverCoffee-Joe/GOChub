@@ -119,7 +119,7 @@ const highlightConsultingVideoCard = (videoId) => {
 // --- Fetch Data ---
 const fetchData = async () => {
     try {
-        const response = await fetch('data/videos.json');
+        const response = await fetch('data/videos.json'); // Ensure this path is correct
         const data = await response.json();
         allConsultingVideos = data.filter(video => video.channel === 'consulting');
         return data; // Return all videos
@@ -252,6 +252,61 @@ const renderMainChannelContent = (videos) => {
     });
 };
 
+// --- Most Recent Episode Logic ---
+const findAndRenderMostRecentVideo = (allVideos) => {
+    const mainChannelVideos = allVideos.filter(video => video.channel === 'main');
+
+    // Sort to find the most recent video by season and then episode
+    const mostRecentVideo = mainChannelVideos.sort((a, b) => {
+        // Handle undefined or non-numeric seasons/episodes gracefully by treating them as lower priority
+        const seasonA = a.season === undefined ? -1 : parseInt(a.season, 10);
+        const seasonB = b.season === undefined ? -1 : parseInt(b.season, 10);
+        const episodeA = a.episode === undefined ? -1 : parseInt(a.episode, 10);
+        const episodeB = b.episode === undefined ? -1 : parseInt(b.episode, 10);
+
+        if (seasonB !== seasonA) {
+            return seasonB - seasonA; // Sort by season descending
+        }
+        return episodeB - episodeA; // Then by episode descending within the same season
+    })[0]; // Get the first element (most recent)
+
+    if (!mostRecentVideo) {
+        console.warn("No main channel videos found to display as most recent.");
+        return;
+    }
+
+    // ? Debugging line: Log the most recent video found ?
+    console.log("Most recent video found:", mostRecentVideo);
+
+    const mostRecentThumbnail = document.getElementById('mostRecentThumbnail');
+    const mostRecentTitle = document.getElementById('mostRecentTitle');
+    const mostRecentDescription = document.getElementById('mostRecentDescription');
+    const playMostRecentBtn = document.getElementById('playMostRecentBtn');
+    const watchMostRecentBtn = document.getElementById('watchMostRecentBtn');
+
+    if (mostRecentThumbnail) mostRecentThumbnail.src = mostRecentVideo.thumbnailUrl;
+    if (mostRecentTitle) mostRecentTitle.textContent = mostRecentVideo.title;
+    if (mostRecentDescription) mostRecentDescription.textContent = mostRecentVideo.synopsis || "No description available.";
+
+    // Add event listeners for the play buttons
+    if (playMostRecentBtn) {
+        playMostRecentBtn.onclick = () => openVideoPlaybackModal(
+            mostRecentVideo.videoId,
+            mostRecentVideo.title,
+            'Games Over Coffee',
+            mostRecentVideo.synopsis
+        );
+    }
+    if (watchMostRecentBtn) {
+        watchMostRecentBtn.onclick = () => openVideoPlaybackModal(
+            mostRecentVideo.videoId,
+            mostRecentVideo.title,
+            'Games Over Coffee',
+            mostRecentVideo.synopsis
+        );
+    }
+};
+
 // --- Initial Data Fetch & Event Listeners ---
 const prefetchReadings = async () => {
     try {
@@ -265,11 +320,13 @@ const prefetchReadings = async () => {
 document.addEventListener('DOMContentLoaded', async () => {
     // Prefetch all data needed globally
     await prefetchReadings();
-    await fetchData(); // This will populate allConsultingVideos
+    const allVideos = await fetchData(); // This will populate allConsultingVideos and return all videos
 
     // Render the main channel content on initial load
-    const allVideos = await fetchData();
     renderMainChannelContent(allVideos);
+
+    // Find and render the most recent video
+    findAndRenderMostRecentVideo(allVideos);
 
     // Modal close buttons
     if (closeModalButton) {
