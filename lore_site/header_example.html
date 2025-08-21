@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Header Template</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        /* Custom scroll behavior for smoother jumps */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Set a custom dark theme using CSS variables - ESSENTIAL for header colors */
+        :root {
+            --color-goc-darkest: #1f1f1f;
+            --color-goc-dark: #2b2b2b;
+            --color-goc-light-accent: #aac6ce;
+            --color-goc-main-text: #ead9ca;
+            --gradient-goc-indigo: linear-gradient(to right, #6366f1, #8b5cf6);
+            --color-goc-desaturated-indigo: #4a4d7c;
+            --color-goc-light-indigo-hover: #3c3f6b;
+            /* Other variables not directly used by header, but kept for a cohesive theme */
+            --color-border-subtle: #3A4452;
+            --color-card-border: #303A45;
+            --color-hover-bg: #35424D;
+            --color-scrollbar-thumb: #50687E;
+            --color-highlight-bg: #3e2f4a;
+            --color-highlight-text: #e0ccff;
+        }
+
+        /* Custom styles to enhance the theme and readability - Base styles affecting header appearance */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-goc-darkest); /* Background color is crucial for header contrast */
+            color: #d1d5db; /* Default text color */
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: white; /* General H1 style, important for header title */
+        }
+
+        /* The following h2 and .text-glow are not directly on header elements but are part of the overall theme */
+        h2 {
+            color: #8183f2;
+        }
+
+        .text-glow {
+            text-shadow: 0 0 8px rgba(99, 102, 241, 0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <header class="p-6 bg-color-goc-dark text-color-goc-main-text shadow-lg">
+        <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center">
+            <h1 class="text-4xl font-extrabold text-color-goc-light-accent font-poppins mb-4 sm:mb-0">Games Over Coffee Lore</h1>
+            <nav class="flex flex-wrap justify-center sm:justify-end gap-3">
+                <a href="index.html" class="px-4 py-2 rounded-lg hover:bg-color-goc-light-indigo-hover transition duration-300">Home</a>
+                <a href="consulting_site.html" class="px-4 py-2 rounded-lg hover:bg-color-goc-light-indigo-hover transition duration-300">Consulting</a>
+                <a href="GOC_lore.html" class="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold transform -translate-y-1 shadow-lg">Lore</a>
+            </nav>
+        </div>
+    </header>
+    <main class="p-8">
+        <h2 class="text-xl text-gray-300">Your page content goes here...</h2>
+    </main>
+
+</body>
+</html>

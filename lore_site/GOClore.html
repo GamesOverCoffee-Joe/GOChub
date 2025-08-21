@@ -313,18 +313,42 @@
 </head>
 <body class="flex flex-col h-screen">
 
-    <header class="p-6 bg-color-goc-dark text-color-goc-main-text shadow-lg">
-        <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center">
-            <h1 class="text-4xl font-extrabold text-color-goc-light-accent font-poppins mb-4 sm:mb-0">Games Over Coffee Lore</h1>
-            <nav class="flex flex-wrap justify-center sm:justify-end gap-3">
-                <a href="index.html" class="px-4 py-2 rounded-lg hover:bg-color-goc-light-indigo-hover transition duration-300">Home</a>
-                <a href="consulting_site.html" class="px-4 py-2 rounded-lg hover:bg-color-goc-light-indigo-hover transition duration-300">Consulting</a>
-                <a href="GOC_lore.html" class="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold transform -translate-y-1 shadow-lg">Lore</a>
+    <header class="fixed top-0 left-0 w-full bg-[var(--color-goc-darkest)] shadow-lg z-40">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <a href="index.html" class="flex items-center space-x-2">
+                    <img src="../images/GOClogo.png" alt="Games Over Coffee Logo" class="h-10 w-10">
+                    <span class="text-2xl font-extrabold font-poppins text-[var(--color-goc-light-accent)] hidden sm:block">Games Over Coffee - Lore</span>
+                </a>
+            </div>
+            <nav class="flex flex-wrap justify-center sm:justify-end gap-x-4 gap-y-2 text-sm md:text-base">
+                <a href="../index.html" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group">
+                    Home
+                    <span class="absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
+                </a>
+                <a href="../consulting_site/consulting_site.html" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group">
+                    Consulting
+                    <span class="absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
+                </a>
+                <a href="../lore_site/GOClore.html" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group">
+                    Lore
+                    <span class="absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
+                </a>
+                <a href="https://www.youtube.com/@GamesOverCoffee" target="_blank" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group hidden md:flex items-center space-x-1">
+                    <i class="fab fa-youtube text-red-500 text-lg"></i>
+                    <span>YouTube</span>
+                    <span class="absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
+                </a>
+                <a href="https://www.youtube.com/@GamesOverCoffeeConsulting" target="_blank" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group hidden md:flex items-center space-x-1">
+                    <i class="fab fa-youtube text-red-500 text-lg"></i>
+                    <span>Consulting YT</span>
+                    <span class="absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
+                </a>
             </nav>
         </div>
     </header>
 
-    <main class="flex-grow flex flex-col md:flex-row p-4 md:p-8 overflow-hidden container mx-auto">
+    <main class="flex-grow flex flex-col md:flex-row p-4 md:p-8 mt-10 overflow-hidden container mx-auto">
 
         <div id="episode-list-window" class="md:w-1/3 lg:w-1/4 bg-window rounded-xl shadow-lg p-4 md:p-6 mb-4 md:mb-0 md:mr-4 flex flex-col overflow-hidden">
             <div class="flex justify-between items-center mb-4 border-b border-gray-600 pb-2">
@@ -476,18 +500,18 @@
                 if (data.synopsis && !isObjectEmpty(data.synopsis)) {
                     infoSynopsisSection.classList.remove('hidden');
                     infoSynopsisSection.innerHTML = `
-                            <div class="content-block">
-                                <h3 class="section-title">Synopsis (Game Design Analysis)</h3>
-                                <ul>
-                                    ${data.synopsis.main ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-file-alt mr-2"></i>Primary concept/theme:</strong> ${data.synopsis.main}</li>` : ''}
-                                    ${data.synopsis.games_analyzed ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-gamepad mr-2"></i>Games analyzed and highlighted aspects:</strong> ${data.synopsis.games_analyzed}</li>` : ''}
-                                    ${data.synopsis.central_argument ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-lightbulb mr-2"></i>Central argument/takeaway:</strong> ${data.synopsis.central_argument}</li>` : ''}
-                                </ul>
-                                <p class="mt-4 text-center">
-                                    <a href="${data.url}" target="_blank" class="inline-block bg-transparent border border-indigo-500 text-indigo-highlight py-2 px-4 rounded-md hover:bg-indigo-900 hover:border-indigo-400 transition-colors duration-200">Watch Episode Here ▶️</a>
-                                </p>
-                            </div>
-                        `;
+                                <div class="content-block">
+                                    <h3 class="section-title">Synopsis (Game Design Analysis)</h3>
+                                    <ul>
+                                        ${data.synopsis.main ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-file-alt mr-2"></i>Primary concept/theme:</strong> ${data.synopsis.main}</li>` : ''}
+                                        ${data.synopsis.games_analyzed ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-gamepad mr-2"></i>Games analyzed and highlighted aspects:</strong> ${data.synopsis.games_analyzed}</li>` : ''}
+                                        ${data.synopsis.central_argument ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-lightbulb mr-2"></i>Central argument/takeaway:</strong> ${data.synopsis.central_argument}</li>` : ''}
+                                    </ul>
+                                    <p class="mt-4 text-center">
+                                        <a href="${data.url}" target="_blank" class="inline-block bg-transparent border border-indigo-500 text-indigo-highlight py-2 px-4 rounded-md hover:bg-indigo-900 hover:border-indigo-400 transition-colors duration-200">Watch Episode Here ▶️</a>
+                                    </p>
+                                </div>
+                            `;
                 }
 
                 // Episode Lore Section
@@ -501,11 +525,11 @@
 
                     if (loreItems) {
                         episodeLoreSection.innerHTML = `
-                                <div class="content-block">
-                                    <h3 class="section-title">Episode Lore/Story (Narrative Elements of the Video Itself)</h3>
-                                    <ul>${loreItems}</ul>
-                                </div>
-                            `;
+                                    <div class="content-block">
+                                        <h3 class="section-title">Episode Lore/Story (Narrative Elements of the Video Itself)</h3>
+                                        <ul>${loreItems}</ul>
+                                    </div>
+                                `;
                     } else {
                         episodeLoreSection.innerHTML = `<div class="content-block"><p class="text-gray-400">No Episode Lore/Story information available for this episode.</p></div>`;
                     }
@@ -522,11 +546,11 @@
 
                     if (easterEggItems) {
                         easterEggsSection.innerHTML = `
-                                <div class="content-block">
-                                    <h3 class="section-title">Easter Eggs</h3>
-                                    <ul>${easterEggItems}</ul>
-                                </div>
-                            `;
+                                    <div class="content-block">
+                                        <h3 class="section-title">Easter Eggs</h3>
+                                        <ul>${easterEggItems}</ul>
+                                    </div>
+                                `;
                     } else {
                         easterEggsSection.innerHTML = `<div class="content-block"><p class="text-gray-400">No Easter Eggs information available for this episode.</p></div>`;
                     }
@@ -536,15 +560,15 @@
                 if (data.production_tidbits && (!isObjectEmpty(data.production_tidbits) || (data.recording_facts && data.recording_facts.toLowerCase() !== 'no'))) {
                     productionTidbitsSection.classList.remove('hidden');
                     let productionTidbitsHtml = `
-                            <div class="content-block">
-                                <h3 class="section-title">Production Tidbits</h3>
-                                <ul>
-                                    ${data.production_tidbits.challenges ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-cogs mr-2"></i>Challenges or interesting aspects in production:</strong> ${data.production_tidbits.challenges}</li>` : ''}
-                                    ${data.production_tidbits.alternative_ideas ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-lightbulb-on mr-2"></i>Alternative ideas or unused concepts:</strong> ${data.production_tidbits.alternative_ideas}</li>` : ''}
-                                    ${data.recording_facts && data.recording_facts.toLowerCase() !== 'no' ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-microphone-alt mr-2"></i>Recording/script/asset creation facts:</strong> ${data.recording_facts}</li>` : ''}
-                                </ul>
-                            </div>
-                        `;
+                                <div class="content-block">
+                                    <h3 class="section-title">Production Tidbits</h3>
+                                    <ul>
+                                        ${data.production_tidbits.challenges ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-cogs mr-2"></i>Challenges or interesting aspects in production:</strong> ${data.production_tidbits.challenges}</li>` : ''}
+                                        ${data.production_tidbits.alternative_ideas ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-lightbulb-on mr-2"></i>Alternative ideas or unused concepts:</strong> ${data.production_tidbits.alternative_ideas}</li>` : ''}
+                                        ${data.recording_facts && data.recording_facts.toLowerCase() !== 'no' ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-microphone-alt mr-2"></i>Recording/script/asset creation facts:</strong> ${data.recording_facts}</li>` : ''}
+                                    </ul>
+                                </div>
+                            `;
                     productionTidbitsSection.innerHTML = productionTidbitsHtml;
                 } else if (data.production_tidbits && isObjectEmpty(data.production_tidbits) && (!data.recording_facts || data.recording_facts.toLowerCase() === 'no')) {
                     productionTidbitsSection.classList.remove('hidden');
@@ -565,25 +589,25 @@
 
                 if (data.thumbnail) {
                     modalContentHtml += `<div class="text-center mb-4">
-                                                                <img src="${data.thumbnail}" alt="Episode Thumbnail" class="thumbnail-style">
-                                                            </div>`;
+                                                                    <img src="${data.thumbnail}" alt="Episode Thumbnail" class="thumbnail-style">
+                                                                </div>`;
                 }
 
                 // Synopsis Section for Modal
                 if (data.synopsis && !isObjectEmpty(data.synopsis)) {
                     modalContentHtml += `
-                            <div class="content-block">
-                                <h3 class="section-title">Synopsis (Game Design Analysis)</h3>
-                                <ul>
-                                    ${data.synopsis.main ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-file-alt mr-2"></i>Primary concept/theme:</strong> ${data.synopsis.main}</li>` : ''}
-                                    ${data.synopsis.games_analyzed ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-gamepad mr-2"></i>Games analyzed and highlighted aspects:</strong> ${data.synopsis.games_analyzed}</li>` : ''}
-                                    ${data.synopsis.central_argument ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-lightbulb mr-2"></i>Central argument/takeaway:</strong> ${data.synopsis.central_argument}</li>` : ''}
-                                </ul>
-                                <p class="mt-4 text-center">
-                                    <a href="${data.url}" target="_blank" class="inline-block bg-transparent border border-indigo-500 text-indigo-highlight py-2 px-4 rounded-md hover:bg-indigo-900 hover:border-indigo-400 transition-colors duration-200">Watch Episode Here ▶️</a>
-                                </p>
-                            </div>
-                        `;
+                                <div class="content-block">
+                                    <h3 class="section-title">Synopsis (Game Design Analysis)</h3>
+                                    <ul>
+                                        ${data.synopsis.main ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-file-alt mr-2"></i>Primary concept/theme:</strong> ${data.synopsis.main}</li>` : ''}
+                                        ${data.synopsis.games_analyzed ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-gamepad mr-2"></i>Games analyzed and highlighted aspects:</strong> ${data.synopsis.games_analyzed}</li>` : ''}
+                                        ${data.synopsis.central_argument ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-lightbulb mr-2"></i>Central argument/takeaway:</strong> ${data.synopsis.central_argument}</li>` : ''}
+                                    </ul>
+                                    <p class="mt-4 text-center">
+                                        <a href="${data.url}" target="_blank" class="inline-block bg-transparent border border-indigo-500 text-indigo-highlight py-2 px-4 rounded-md hover:bg-indigo-900 hover:border-indigo-400 transition-colors duration-200">Watch Episode Here ▶️</a>
+                                    </p>
+                                </div>
+                            `;
                 }
 
                 // Episode Lore Section for Modal
@@ -596,11 +620,11 @@
 
                     if (loreItems) {
                         modalContentHtml += `
-                                <div class="content-block">
-                                    <h3 class="section-title">Episode Lore/Story (Narrative Elements of the Video Itself)</h3>
-                                    <ul>${loreItems}</ul>
-                                </div>
-                            `;
+                                    <div class="content-block">
+                                        <h3 class="section-title">Episode Lore/Story (Narrative Elements of the Video Itself)</h3>
+                                        <ul>${loreItems}</ul>
+                                    </div>
+                                `;
                     } else {
                         modalContentHtml += `<div class="content-block"><p class="text-gray-400">No Episode Lore/Story information available for this episode.</p></div>`;
                     }
@@ -618,11 +642,11 @@
 
                     if (easterEggItems) {
                         modalContentHtml += `
-                                <div class="content-block">
-                                    <h3 class="section-title">Easter Eggs</h3>
-                                    <ul>${easterEggItems}</ul>
-                                </div>
-                            `;
+                                    <div class="content-block">
+                                        <h3 class="section-title">Easter Eggs</h3>
+                                        <ul>${easterEggItems}</ul>
+                                    </div>
+                                `;
                     } else {
                         modalContentHtml += `<div class="content-block"><p class="text-gray-400">No Easter Eggs information available for this episode.</p></div>`;
                     }
@@ -640,11 +664,11 @@
 
                     if (prodTidbitItems) {
                         modalContentHtml += `
-                                <div class="content-block">
-                                    <h3 class="section-title">Production Tidbits</h3>
-                                    <ul>${prodTidbitItems}</ul>
-                                </div>
-                            `;
+                                    <div class="content-block">
+                                        <h3 class="section-title">Production Tidbits</h3>
+                                        <ul>${prodTidbitItems}</ul>
+                                    </div>
+                                `;
                     } else {
                         modalContentHtml += `<div class="content-block"><p class="text-gray-400">No Production Tidbits information available for this episode.</p></div>`;
                     }
@@ -709,15 +733,15 @@
                     const snippet = data.synopsis.main;
 
                     listItem.innerHTML = `
-                            <div class="episode-number-badge">
-                                <div class="font-bold text-xs">${seasonNum}</div>
-                                <div class="font-extrabold text-xl text-indigo-400">${episodeNum}</div>
-                            </div>
-                            <div class="episode-details">
-                                <h3>${actualTitle}</h3>
-                                <p>${snippet}</p>
-                            </div>
-                        `;
+                                <div class="episode-number-badge">
+                                    <div class="font-bold text-xs">${seasonNum}</div>
+                                    <div class="font-extrabold text-xl text-indigo-400">${episodeNum}</div>
+                                </div>
+                                <div class="episode-details">
+                                    <h3>${actualTitle}</h3>
+                                    <p>${snippet}</p>
+                                </div>
+                            `;
 
                     listItem.addEventListener('mouseenter', () => {
                         listItem.querySelector('.episode-number-badge').classList.add('hovered-state');
