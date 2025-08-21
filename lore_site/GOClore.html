@@ -30,6 +30,26 @@
             --color-scrollbar-thumb: #50687E;
             --color-highlight-bg: #3e2f4a;
             --color-highlight-text: #e0ccff;
+            /* New custom colors for sections */
+            --color-synopsis-bg: #222a30; /* Slightly different dark */
+            --color-synopsis-border: #28303a;
+            --color-synopsis-heading: #7cb9e4; /* A soft blue */
+            --color-synopsis-text: #9aa7b3; /* Understated gray */
+
+            --color-lore-bg: #2a2230; /* Slightly different dark */
+            --color-lore-border: #342b3d;
+            --color-lore-heading: #c47ce4; /* A soft purple */
+            --color-lore-bullet: #c47ce4; /* Matching bullet color */
+
+            --color-easter-eggs-bg: #302222; /* Slightly different dark */
+            --color-easter-eggs-border: #3a2b2b;
+            --color-easter-eggs-heading: #e47c7c; /* A soft red */
+            --color-easter-eggs-bullet: #e47c7c; /* Matching bullet color */
+
+            --color-production-bg: #22302a; /* Slightly different dark */
+            --color-production-border: #2b3a34;
+            --color-production-heading: #7ce499; /* A soft green */
+            --color-production-bullet: #7ce499; /* Matching bullet color */
         }
 
         /* Custom styles to enhance the theme and readability */
@@ -125,9 +145,9 @@
             padding-right: 1rem;
         }
 
+        /* Revert section-title to common styling and use inline style for specific colors */
         .section-title {
             font-weight: bold;
-            color: #b1b9c4;
             margin-top: 1.5rem;
             margin-bottom: 0.75rem;
             padding-bottom: 0.5rem;
@@ -154,12 +174,32 @@
                     position: relative;
                 }
 
+                    /* Specific bullet colors for each content block */
                     .content-block ul li::before {
                         content: "•";
-                        color: #8183f2;
                         position: absolute;
                         left: 0;
                     }
+
+        #info-synopsis-section .content-block ul li::before,
+        #modal-body .content-block:has(.text-\[var\(--color-synopsis-heading\)\]) ul li::before {
+            color: var(--color-synopsis-heading); /* Synopsis bullets match heading */
+        }
+
+        #episode-lore-section .content-block ul li::before,
+        #modal-body .content-block:has(.text-\[var\(--color-lore-heading\)\]) ul li::before {
+            color: var(--color-lore-bullet); /* Lore bullets match heading */
+        }
+
+        #easter-eggs-section .content-block ul li::before,
+        #modal-body .content-block:has(.text-\[var\(--color-easter-eggs-heading\)\]) ul li::before {
+            color: var(--color-easter-eggs-bullet); /* Easter Eggs bullets match heading */
+        }
+
+        #production-tidbits-section .content-block ul li::before,
+        #modal-body .content-block:has(.text-\[var\(--color-production-heading\)\]) ul li::before {
+            color: var(--color-production-bullet); /* Production Tidbits bullets match heading */
+        }
 
         .thumbnail-style {
             max-width: 70%;
@@ -500,38 +540,38 @@
                 if (data.synopsis && !isObjectEmpty(data.synopsis)) {
                     infoSynopsisSection.classList.remove('hidden');
                     infoSynopsisSection.innerHTML = `
-                                <div class="content-block">
-                                    <h3 class="section-title">Synopsis (Game Design Analysis)</h3>
-                                    <ul>
-                                        ${data.synopsis.main ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-file-alt mr-2"></i>Primary concept/theme:</strong> ${data.synopsis.main}</li>` : ''}
-                                        ${data.synopsis.games_analyzed ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-gamepad mr-2"></i>Games analyzed and highlighted aspects:</strong> ${data.synopsis.games_analyzed}</li>` : ''}
-                                        ${data.synopsis.central_argument ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-lightbulb mr-2"></i>Central argument/takeaway:</strong> ${data.synopsis.central_argument}</li>` : ''}
-                                    </ul>
-                                    <p class="mt-4 text-center">
-                                        <a href="${data.url}" target="_blank" class="inline-block bg-transparent border border-indigo-500 text-indigo-highlight py-2 px-4 rounded-md hover:bg-indigo-900 hover:border-indigo-400 transition-colors duration-200">Watch Episode Here ▶️</a>
-                                    </p>
-                                </div>
-                            `;
+                                        <div class="content-block bg-[var(--color-synopsis-bg)] border-[var(--color-synopsis-border)]">
+                                            <h3 class="section-title text-[var(--color-synopsis-heading)]">Synopsis (Game Design Analysis)</h3>
+                                            <ul class="text-sm text-[var(--color-synopsis-text)]">
+                                                ${data.synopsis.main ? `<li><i class="fa-solid fa-file-alt mr-2"></i>Primary concept/theme: ${data.synopsis.main}</li>` : ''}
+                                                ${data.synopsis.games_analyzed ? `<li><i class="fa-solid fa-gamepad mr-2"></i>Games analyzed and highlighted aspects: ${data.synopsis.games_analyzed}</li>` : ''}
+                                                ${data.synopsis.central_argument ? `<li><i class="fa-solid fa-lightbulb mr-2"></i>Central argument/takeaway: ${data.synopsis.central_argument}</li>` : ''}
+                                            </ul>
+                                            <p class="mt-4 text-center">
+                                                <a href="${data.url}" target="_blank" class="inline-block bg-transparent border border-indigo-500 text-indigo-highlight py-2 px-4 rounded-md hover:bg-indigo-900 hover:border-indigo-400 transition-colors duration-200">Watch Episode Here ▶️</a>
+                                            </p>
+                                        </div>
+                                    `;
                 }
 
                 // Episode Lore Section
                 if (data.lore && !isObjectEmpty(data.lore)) {
                     episodeLoreSection.classList.remove('hidden');
                     const loreItems = [
-                        data.lore.arc && data.lore.arc.toLowerCase() !== 'no' ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-scroll mr-2"></i>Story/narrative arc:</strong> ${data.lore.arc}</li>` : '',
-                        data.lore.developments && data.lore.developments.toLowerCase() !== 'no' ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-hat-wizard mr-2"></i>Character developments/world-building/motifs:</strong> ${data.lore.developments}</li>` : '',
-                        data.lore.meta_commentary && data.lore.meta_commentary.toLowerCase() !== 'no' ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-comment-dots mr-2"></i>Meta-commentary on themes/content creation:</strong> ${data.lore.meta_commentary}</li>` : ''
+                        data.lore.arc && data.lore.arc.toLowerCase() !== 'no' ? `<li><strong class="text-[var(--color-lore-heading)]"><i class="fa-solid fa-scroll mr-2"></i>Story/narrative arc:</strong> ${data.lore.arc}</li>` : '',
+                        data.lore.developments && data.lore.developments.toLowerCase() !== 'no' ? `<li><strong class="text-[var(--color-lore-heading)]"><i class="fa-solid fa-hat-wizard mr-2"></i>Character developments/world-building/motifs:</strong> ${data.lore.developments}</li>` : '',
+                        data.lore.meta_commentary && data.lore.meta_commentary.toLowerCase() !== 'no' ? `<li><strong class="text-[var(--color-lore-heading)]"><i class="fa-solid fa-comment-dots mr-2"></i>Meta-commentary on themes/content creation:</strong> ${data.lore.meta_commentary}</li>` : ''
                     ].filter(Boolean).join(''); // Filter out empty strings
 
                     if (loreItems) {
                         episodeLoreSection.innerHTML = `
-                                    <div class="content-block">
-                                        <h3 class="section-title">Episode Lore/Story (Narrative Elements of the Video Itself)</h3>
-                                        <ul>${loreItems}</ul>
-                                    </div>
-                                `;
+                                            <div class="content-block bg-[var(--color-lore-bg)] border-[var(--color-lore-border)]">
+                                                <h3 class="section-title text-[var(--color-lore-heading)]">Episode Lore/Story (Narrative Elements of the Video Itself)</h3>
+                                                <ul>${loreItems}</ul>
+                                            </div>
+                                        `;
                     } else {
-                        episodeLoreSection.innerHTML = `<div class="content-block"><p class="text-gray-400">No Episode Lore/Story information available for this episode.</p></div>`;
+                        episodeLoreSection.innerHTML = `<div class="content-block bg-[var(--color-lore-bg)] border-[var(--color-lore-border)]"><p class="text-gray-400">No Episode Lore/Story information available for this episode.</p></div>`;
                     }
                 }
 
@@ -539,20 +579,20 @@
                 if (data.easter_eggs && !isObjectEmpty(data.easter_eggs)) {
                     easterEggsSection.classList.remove('hidden');
                     const easterEggItems = [
-                        data.easter_eggs.visual_audio && data.easter_eggs.visual_audio.toLowerCase() !== 'no' ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-eye mr-2"></i>Visual or audio Easter eggs:</strong> ${data.easter_eggs.visual_audio}</li>` : '',
-                        data.easter_eggs.nods && data.easter_eggs.nods.toLowerCase() !== 'no' ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-hand-peace mr-2"></i>Nods to other episodes or meta-references:</strong> ${data.easter_eggs.nods}</li>` : '',
-                        data.easter_eggs.inside_jokes && data.easter_eggs.inside_jokes.toLowerCase() !== 'no' ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-laugh-squint mr-2"></i>Inside jokes/community references:</strong> ${data.easter_eggs.inside_jokes}</li>` : ''
+                        data.easter_eggs.visual_audio && data.easter_eggs.visual_audio.toLowerCase() !== 'no' ? `<li><strong class="text-[var(--color-easter-eggs-heading)]"><i class="fa-solid fa-eye mr-2"></i>Visual or audio Easter eggs:</strong> ${data.easter_eggs.visual_audio}</li>` : '',
+                        data.easter_eggs.nods && data.easter_eggs.nods.toLowerCase() !== 'no' ? `<li><strong class="text-[var(--color-easter-eggs-heading)]"><i class="fa-solid fa-hand-peace mr-2"></i>Nods to other episodes or meta-references:</strong> ${data.easter_eggs.nods}</li>` : '',
+                        data.easter_eggs.inside_jokes && data.easter_eggs.inside_jokes.toLowerCase() !== 'no' ? `<li><strong class="text-[var(--color-easter-eggs-heading)]"><i class="fa-solid fa-laugh-squint mr-2"></i>Inside jokes/community references:</strong> ${data.easter_eggs.inside_jokes}</li>` : ''
                     ].filter(Boolean).join('');
 
                     if (easterEggItems) {
                         easterEggsSection.innerHTML = `
-                                    <div class="content-block">
-                                        <h3 class="section-title">Easter Eggs</h3>
-                                        <ul>${easterEggItems}</ul>
-                                    </div>
-                                `;
+                                            <div class="content-block bg-[var(--color-easter-eggs-bg)] border-[var(--color-easter-eggs-border)]">
+                                                <h3 class="section-title text-[var(--color-easter-eggs-heading)]">Easter Eggs</h3>
+                                                <ul>${easterEggItems}</ul>
+                                            </div>
+                                        `;
                     } else {
-                        easterEggsSection.innerHTML = `<div class="content-block"><p class="text-gray-400">No Easter Eggs information available for this episode.</p></div>`;
+                        easterEggsSection.innerHTML = `<div class="content-block bg-[var(--color-easter-eggs-bg)] border-[var(--color-easter-eggs-border)]"><p class="text-gray-400">No Easter Eggs information available for this episode.</p></div>`;
                     }
                 }
 
@@ -560,19 +600,19 @@
                 if (data.production_tidbits && (!isObjectEmpty(data.production_tidbits) || (data.recording_facts && data.recording_facts.toLowerCase() !== 'no'))) {
                     productionTidbitsSection.classList.remove('hidden');
                     let productionTidbitsHtml = `
-                                <div class="content-block">
-                                    <h3 class="section-title">Production Tidbits</h3>
-                                    <ul>
-                                        ${data.production_tidbits.challenges ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-cogs mr-2"></i>Challenges or interesting aspects in production:</strong> ${data.production_tidbits.challenges}</li>` : ''}
-                                        ${data.production_tidbits.alternative_ideas ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-lightbulb-on mr-2"></i>Alternative ideas or unused concepts:</strong> ${data.production_tidbits.alternative_ideas}</li>` : ''}
-                                        ${data.recording_facts && data.recording_facts.toLowerCase() !== 'no' ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-microphone-alt mr-2"></i>Recording/script/asset creation facts:</strong> ${data.recording_facts}</li>` : ''}
-                                    </ul>
-                                </div>
-                            `;
+                                        <div class="content-block bg-[var(--color-production-bg)] border-[var(--color-production-border)]">
+                                            <h3 class="section-title text-[var(--color-production-heading)]">Production Tidbits</h3>
+                                            <ul>
+                                                ${data.production_tidbits.challenges ? `<li><strong class="text-[var(--color-production-heading)]"><i class="fa-solid fa-cogs mr-2"></i>Challenges or interesting aspects in production:</strong> ${data.production_tidbits.challenges}</li>` : ''}
+                                                ${data.production_tidbits.alternative_ideas ? `<li><strong class="text-[var(--color-production-heading)]"><i class="fa-solid fa-lightbulb-on mr-2"></i>Alternative ideas or unused concepts:</strong> ${data.production_tidbits.alternative_ideas}</li>` : ''}
+                                                ${data.recording_facts && data.recording_facts.toLowerCase() !== 'no' ? `<li><strong class="text-[var(--color-production-heading)]"><i class="fa-solid fa-microphone-alt mr-2"></i>Recording/script/asset creation facts:</strong> ${data.recording_facts}</li>` : ''}
+                                            </ul>
+                                        </div>
+                                    `;
                     productionTidbitsSection.innerHTML = productionTidbitsHtml;
                 } else if (data.production_tidbits && isObjectEmpty(data.production_tidbits) && (!data.recording_facts || data.recording_facts.toLowerCase() === 'no')) {
                     productionTidbitsSection.classList.remove('hidden');
-                    productionTidbitsSection.innerHTML = `<div class="content-block"><p class="text-gray-400">No Production Tidbits information available for this episode.</p></div>`;
+                    productionTidbitsSection.innerHTML = `<div class="content-block bg-[var(--color-production-bg)] border-[var(--color-production-border)]"><p class="text-gray-400">No Production Tidbits information available for this episode.</p></div>`;
                 }
 
             };
@@ -589,92 +629,92 @@
 
                 if (data.thumbnail) {
                     modalContentHtml += `<div class="text-center mb-4">
-                                                                    <img src="${data.thumbnail}" alt="Episode Thumbnail" class="thumbnail-style">
-                                                                </div>`;
+                                                                            <img src="${data.thumbnail}" alt="Episode Thumbnail" class="thumbnail-style">
+                                                                        </div>`;
                 }
 
                 // Synopsis Section for Modal
                 if (data.synopsis && !isObjectEmpty(data.synopsis)) {
                     modalContentHtml += `
-                                <div class="content-block">
-                                    <h3 class="section-title">Synopsis (Game Design Analysis)</h3>
-                                    <ul>
-                                        ${data.synopsis.main ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-file-alt mr-2"></i>Primary concept/theme:</strong> ${data.synopsis.main}</li>` : ''}
-                                        ${data.synopsis.games_analyzed ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-gamepad mr-2"></i>Games analyzed and highlighted aspects:</strong> ${data.synopsis.games_analyzed}</li>` : ''}
-                                        ${data.synopsis.central_argument ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-lightbulb mr-2"></i>Central argument/takeaway:</strong> ${data.synopsis.central_argument}</li>` : ''}
-                                    </ul>
-                                    <p class="mt-4 text-center">
-                                        <a href="${data.url}" target="_blank" class="inline-block bg-transparent border border-indigo-500 text-indigo-highlight py-2 px-4 rounded-md hover:bg-indigo-900 hover:border-indigo-400 transition-colors duration-200">Watch Episode Here ▶️</a>
-                                    </p>
-                                </div>
-                            `;
+                                        <div class="content-block bg-[var(--color-synopsis-bg)] border-[var(--color-synopsis-border)]">
+                                            <h3 class="section-title text-[var(--color-synopsis-heading)]">Synopsis (Game Design Analysis)</h3>
+                                            <ul class="text-sm text-[var(--color-synopsis-text)]">
+                                                ${data.synopsis.main ? `<li><i class="fa-solid fa-file-alt mr-2"></i>Primary concept/theme: ${data.synopsis.main}</li>` : ''}
+                                                ${data.synopsis.games_analyzed ? `<li><i class="fa-solid fa-gamepad mr-2"></i>Games analyzed and highlighted aspects: ${data.synopsis.games_analyzed}</li>` : ''}
+                                                ${data.synopsis.central_argument ? `<li><i class="fa-solid fa-lightbulb mr-2"></i>Central argument/takeaway: ${data.synopsis.central_argument}</li>` : ''}
+                                            </ul>
+                                            <p class="mt-4 text-center">
+                                                <a href="${data.url}" target="_blank" class="inline-block bg-transparent border border-indigo-500 text-indigo-highlight py-2 px-4 rounded-md hover:bg-indigo-900 hover:border-indigo-400 transition-colors duration-200">Watch Episode Here ▶️</a>
+                                            </p>
+                                        </div>
+                                    `;
                 }
 
                 // Episode Lore Section for Modal
                 if (data.lore && !isObjectEmpty(data.lore)) {
                     const loreItems = [
-                        data.lore.arc && data.lore.arc.toLowerCase() !== 'no' ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-scroll mr-2"></i>Story/narrative arc:</strong> ${data.lore.arc}</li>` : '',
-                        data.lore.developments && data.lore.developments.toLowerCase() !== 'no' ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-hat-wizard mr-2"></i>Character developments/world-building/motifs:</strong> ${data.lore.developments}</li>` : '',
-                        data.lore.meta_commentary && data.lore.meta_commentary.toLowerCase() !== 'no' ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-comment-dots mr-2"></i>Meta-commentary on themes/content creation:</strong> ${data.lore.meta_commentary}</li>` : ''
+                        data.lore.arc && data.lore.arc.toLowerCase() !== 'no' ? `<li><strong class="text-[var(--color-lore-heading)]"><i class="fa-solid fa-scroll mr-2"></i>Story/narrative arc:</strong> ${data.lore.arc}</li>` : '',
+                        data.lore.developments && data.lore.developments.toLowerCase() !== 'no' ? `<li><strong class="text-[var(--color-lore-heading)]"><i class="fa-solid fa-hat-wizard mr-2"></i>Character developments/world-building/motifs:</strong> ${data.lore.developments}</li>` : '',
+                        data.lore.meta_commentary && data.lore.meta_commentary.toLowerCase() !== 'no' ? `<li><strong class="text-[var(--color-lore-heading)]"><i class="fa-solid fa-comment-dots mr-2"></i>Meta-commentary on themes/content creation:</strong> ${data.lore.meta_commentary}</li>` : ''
                     ].filter(Boolean).join('');
 
                     if (loreItems) {
                         modalContentHtml += `
-                                    <div class="content-block">
-                                        <h3 class="section-title">Episode Lore/Story (Narrative Elements of the Video Itself)</h3>
-                                        <ul>${loreItems}</ul>
-                                    </div>
-                                `;
+                                            <div class="content-block bg-[var(--color-lore-bg)] border-[var(--color-lore-border)]">
+                                                <h3 class="section-title text-[var(--color-lore-heading)]">Episode Lore/Story (Narrative Elements of the Video Itself)</h3>
+                                                <ul>${loreItems}</ul>
+                                            </div>
+                                        `;
                     } else {
-                        modalContentHtml += `<div class="content-block"><p class="text-gray-400">No Episode Lore/Story information available for this episode.</p></div>`;
+                        modalContentHtml += `<div class="content-block bg-[var(--color-lore-bg)] border-[var(--color-lore-border)]"><p class="text-gray-400">No Episode Lore/Story information available for this episode.</p></div>`;
                     }
                 } else {
-                    modalContentHtml += `<div class="content-block"><p class="text-gray-400">No Episode Lore/Story information available for this episode.</p></div>`;
+                    modalContentHtml += `<div class="content-block bg-[var(--color-lore-bg)] border-[var(--color-lore-border)]"><p class="text-gray-400">No Episode Lore/Story information available for this episode.</p></div>`;
                 }
 
                 // Easter Eggs Section for Modal
                 if (data.easter_eggs && !isObjectEmpty(data.easter_eggs)) {
                     const easterEggItems = [
-                        data.easter_eggs.visual_audio && data.easter_eggs.visual_audio.toLowerCase() !== 'no' ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-eye mr-2"></i>Visual or audio Easter eggs:</strong> ${data.easter_eggs.visual_audio}</li>` : '',
-                        data.easter_eggs.nods && data.easter_eggs.nods.toLowerCase() !== 'no' ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-hand-peace mr-2"></i>Nods to other episodes or meta-references:</strong> ${data.easter_eggs.nods}</li>` : '',
-                        data.easter_eggs.inside_jokes && data.easter_eggs.inside_jokes.toLowerCase() !== 'no' ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-laugh-squint mr-2"></i>Inside jokes/community references:</strong> ${data.easter_eggs.inside_jokes}</li>` : ''
+                        data.easter_eggs.visual_audio && data.easter_eggs.visual_audio.toLowerCase() !== 'no' ? `<li><strong class="text-[var(--color-easter-eggs-heading)]"><i class="fa-solid fa-eye mr-2"></i>Visual or audio Easter eggs:</strong> ${data.easter_eggs.visual_audio}</li>` : '',
+                        data.easter_eggs.nods && data.easter_eggs.nods.toLowerCase() !== 'no' ? `<li><strong class="text-[var(--color-easter-eggs-heading)]"><i class="fa-solid fa-hand-peace mr-2"></i>Nods to other episodes or meta-references:</strong> ${data.easter_eggs.nods}</li>` : '',
+                        data.easter_eggs.inside_jokes && data.easter_eggs.inside_jokes.toLowerCase() !== 'no' ? `<li><strong class="text-[var(--color-easter-eggs-heading)]"><i class="fa-solid fa-laugh-squint mr-2"></i>Inside jokes/community references:</strong> ${data.easter_eggs.inside_jokes}</li>` : ''
                     ].filter(Boolean).join('');
 
                     if (easterEggItems) {
                         modalContentHtml += `
-                                    <div class="content-block">
-                                        <h3 class="section-title">Easter Eggs</h3>
-                                        <ul>${easterEggItems}</ul>
-                                    </div>
-                                `;
+                                            <div class="content-block bg-[var(--color-easter-eggs-bg)] border-[var(--color-easter-eggs-border)]">
+                                                <h3 class="section-title text-[var(--color-easter-eggs-heading)]">Easter Eggs</h3>
+                                                <ul>${easterEggItems}</ul>
+                                            </div>
+                                        `;
                     } else {
-                        modalContentHtml += `<div class="content-block"><p class="text-gray-400">No Easter Eggs information available for this episode.</p></div>`;
+                        modalContentHtml += `<div class="content-block bg-[var(--color-easter-eggs-bg)] border-[var(--color-easter-eggs-border)]"><p class="text-gray-400">No Easter Eggs information available for this episode.</p></div>`;
                     }
                 } else {
-                    modalContentHtml += `<div class="content-block"><p class="text-gray-400">No Easter Eggs information available for this episode.</p></div>`;
+                    modalContentHtml += `<div class="content-block bg-[var(--color-easter-eggs-bg)] border-[var(--color-easter-eggs-border)]"><p class="text-gray-400">No Easter Eggs information available for this episode.</p></div>`;
                 }
 
                 // Production Tidbits Section for Modal
                 if (data.production_tidbits && (!isObjectEmpty(data.production_tidbits) || (data.recording_facts && data.recording_facts.toLowerCase() !== 'no'))) {
                     const prodTidbitItems = [
-                        data.production_tidbits.challenges ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-cogs mr-2"></i>Challenges or interesting aspects in production:</strong> ${data.production_tidbits.challenges}</li>` : '',
-                        data.production_tidbits.alternative_ideas ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-lightbulb-on mr-2"></i>Alternative ideas or unused concepts:</strong> ${data.production_tidbits.alternative_ideas}</li>` : '',
-                        data.recording_facts && data.recording_facts.toLowerCase() !== 'no' ? `<li><strong class="text-[#8183f2]"><i class="fa-solid fa-microphone-alt mr-2"></i>Recording/script/asset creation facts:</strong> ${data.recording_facts}</li>` : ''
+                        data.production_tidbits.challenges ? `<li><strong class="text-[var(--color-production-heading)]"><i class="fa-solid fa-cogs mr-2"></i>Challenges or interesting aspects in production:</strong> ${data.production_tidbits.challenges}</li>` : '',
+                        data.production_tidbits.alternative_ideas ? `<li><strong class="text-[var(--color-production-heading)]"><i class="fa-solid fa-lightbulb-on mr-2"></i>Alternative ideas or unused concepts:</strong> ${data.production_tidbits.alternative_ideas}</li>` : '',
+                        data.recording_facts && data.recording_facts.toLowerCase() !== 'no' ? `<li><strong class="text-[var(--color-production-heading)]"><i class="fa-solid fa-microphone-alt mr-2"></i>Recording/script/asset creation facts:</strong> ${data.recording_facts}</li>` : ''
                     ].filter(Boolean).join('');
 
                     if (prodTidbitItems) {
                         modalContentHtml += `
-                                    <div class="content-block">
-                                        <h3 class="section-title">Production Tidbits</h3>
-                                        <ul>${prodTidbitItems}</ul>
-                                    </div>
-                                `;
+                                            <div class="content-block bg-[var(--color-production-bg)] border-[var(--color-production-border)]">
+                                                <h3 class="section-title text-[var(--color-production-heading)]">Production Tidbits</h3>
+                                                <ul>${prodTidbitItems}</ul>
+                                            </div>
+                                        `;
                     } else {
-                        modalContentHtml += `<div class="content-block"><p class="text-gray-400">No Production Tidbits information available for this episode.</p></div>`;
+                        modalContentHtml += `<div class="content-block bg-[var(--color-production-bg)] border-[var(--color-production-border)]"><p class="text-gray-400">No Production Tidbits information available for this episode.</p></div>`;
                     }
 
                 } else {
-                    modalContentHtml += `<div class="content-block"><p class="text-gray-400">No Production Tidbits information available for this episode.</p></div>`;
+                    modalContentHtml += `<div class="content-block bg-[var(--color-production-bg)] border-[var(--color-production-border)]"><p class="text-gray-400">No Production Tidbits information available for this episode.</p></div>`;
                 }
 
                 modalBody.innerHTML = modalContentHtml;
@@ -733,15 +773,15 @@
                     const snippet = data.synopsis.main;
 
                     listItem.innerHTML = `
-                                <div class="episode-number-badge">
-                                    <div class="font-bold text-xs">${seasonNum}</div>
-                                    <div class="font-extrabold text-xl text-indigo-400">${episodeNum}</div>
-                                </div>
-                                <div class="episode-details">
-                                    <h3>${actualTitle}</h3>
-                                    <p>${snippet}</p>
-                                </div>
-                            `;
+                                        <div class="episode-number-badge">
+                                            <div class="font-bold text-xs">${seasonNum}</div>
+                                            <div class="font-extrabold text-xl text-indigo-400">${episodeNum}</div>
+                                        </div>
+                                        <div class="episode-details">
+                                            <h3>${actualTitle}</h3>
+                                            <p>${snippet}</p>
+                                        </div>
+                                    `;
 
                     listItem.addEventListener('mouseenter', () => {
                         listItem.querySelector('.episode-number-badge').classList.add('hovered-state');
