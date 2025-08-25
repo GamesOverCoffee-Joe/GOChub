@@ -1,0 +1,182 @@
+[
+    {
+        "question": "How do you create a progression system that feels meaningful?",
+        "answer": "A well-designed progression system should offer a mix of horizontal and vertical growth, giving players both new ways to play and stronger versions of existing abilities. The rewards should be visually distinct and tied directly to the player's effort.",
+        "chapterName": "Progression Loops",
+        "videoLink": "https://www.youtube.com/watch?v=-j7P0pjVakc&t=120s",
+        "iconClass": "fa-solid fa-chart-line",
+        "iconBgColor": "bg-blue-600",
+        "iconTextColor": "text-white"
+    },
+    {
+        "question": "What's the best way to introduce new mechanics to the player?",
+        "answer": "Use a sequence of escalating complexity. Start with a simple, safe environment where the player can experiment with the core mechanic. Introduce a challenge that requires the mechanic, then combine it with a previously learned mechanic to create a more complex puzzle.",
+        "chapterName": "Tutorial Design",
+        "videoLink": "https://www.youtube.com/watch?v=44ibpx9vg_c&t=45s",
+        "iconClass": "fa-solid fa-graduation-cap",
+        "iconBgColor": "bg-indigo-600",
+        "iconTextColor": "text-white"
+    },
+    {
+        "question": "How can you use sound design to improve player feedback?",
+        "answer": "Sound is a powerful tool for conveying information instantly. Ensure critical actions like hitting an enemy, picking up an item, or completing a quest have a satisfying and unique sound effect. This reinforces the action and rewards the player on a subconscious level.",
+        "chapterName": "Audio & Feedback",
+        "videoLink": "https://www.youtube.com/watch?v=5KidGE7ffVQ&t=300s",
+        "iconClass": "fa-solid fa-volume-high",
+        "iconBgColor": "bg-green-600",
+        "iconTextColor": "text-gray-900"
+    },
+    {
+        "question": "What makes a boss fight memorable?",
+        "answer": "A memorable boss fight isn't just about high HP and damage. It should test a combination of skills the player has acquired throughout the game, feature a unique mechanic or weak point, and be accompanied by a dynamic change in music or environment to build tension.",
+        "chapterName": "Memorable Boss Fights",
+        "videoLink": "https://www.youtube.com/watch?v=8IH_Qr1WIhY&t=60s",
+        "iconClass": "fa-solid fa-dragon",
+        "iconBgColor": "bg-red-600",
+        "iconTextColor": "text-white"
+    },
+    {
+        "question": "How do you handle game monetization without alienating players?",
+        "answer": "The key is to offer value. Avoid 'pay-to-win' mechanics that create an unfair advantage. Instead, focus on cosmetic items, quality-of-life improvements, or expansions that enhance the experience without gating core gameplay. Transparency and player choice are crucial.",
+        "chapterName": "Ethical Monetization",
+        "videoLink": "https://www.youtube.com/watch?v=8RusGeNA5sM&t=180s",
+        "iconClass": "fa-solid fa-sack-dollar",
+        "iconBgColor": "bg-teal-600",
+        "iconTextColor": "text-white"
+    },
+    {
+        "question": "What are some common pitfalls in tutorial design?",
+        "answer": "Tutorials that are too long or too restrictive can frustrate players. The best tutorials are integrated into the gameplay, teaching by doing rather than by telling. They should be skippable and allow for player discovery where possible.",
+        "chapterName": "Tutorial Design",
+        "videoLink": "https://www.youtube.com/watch?v=CIxs--VXLGM&t=210s",
+        "iconClass": "fa-solid fa-chalkboard-user",
+        "iconBgColor": "bg-sky-600",
+        "iconTextColor": "text-white"
+    },
+    {
+        "question": "How can you foster a positive community around your game?",
+        "answer": "Start with clear communication. Be open about your development process and listen to player feedback. Create a space for constructive discussion, and actively moderate to prevent toxicity. Rewarding positive behavior can also help shape the community culture.",
+        "chapterName": "Community Management",
+        "videoLink": "https://www.youtube.com/watch?v=DWo2IX7Sck8&t=90s",
+        "iconClass": "fa-solid fa-people-group",
+        "iconBgColor": "bg-purple-600",
+        "iconTextColor": "text-white"
+    },
+    {
+        "question": "What is a good strategy for balancing game difficulty?",
+        "answer": "Difficulty should be a curve, not a wall. Introduce challenges gradually and provide players with the tools and information to overcome them. Offer multiple difficulty settings or adaptive difficulty to cater to a wider range of players.",
+        "chapterName": "Difficulty & Balance",
+        "videoLink": "https://www.youtube.com/watch?v=EfV-8rhjVek&t=150s",
+        "iconClass": "fa-solid fa-scale-balanced",
+        "iconBgColor": "bg-orange-600",
+        "iconTextColor": "text-gray-900"
+    },
+    {
+        "question": "How can you make a game's story feel more immersive?",
+        "answer": "Immersive storytelling goes beyond cutscenes. It involves environmental narrative (using the world itself to tell a story), character interactions that feel authentic, and choices that have a tangible impact on the game's world or plot.",
+        "chapterName": "Narrative Design",
+        "videoLink": "https://www.youtube.com/watch?v=GYJFiU8WHWM&t=240s",
+        "iconClass": "fa-solid fa-book",
+        "iconBgColor": "bg-gray-600",
+        "iconTextColor": "text-white"
+    },
+    {
+        "question": "What's the secret to creating a satisfying 'loop' of gameplay?",
+        "answer": "A satisfying loop involves a clear objective, a process of working toward that objective, a moment of reward, and a new objective that emerges naturally. This cycle should be enjoyable in itself, not just a means to an end.",
+        "chapterName": "Core Gameplay Loop",
+        "videoLink": "https://www.youtube.com/watch?v=GoBKX_pjAhY&t=30s",
+        "iconClass": "fa-solid fa-arrows-rotate",
+        "iconBgColor": "bg-lime-600",
+        "iconTextColor": "text-gray-900"
+    },
+    {
+        "question": "What are the common mistakes in user interface (UI) design?",
+        "answer": "UI should be intuitive and clear. Common mistakes include information overload, inconsistent design, and a lack of visual hierarchy. A good UI guides the player's eye and provides the right information at the right time.",
+        "chapterName": "UI & UX",
+        "videoLink": "https://www.youtube.com/watch?v=IQDbzroiXvE&t=100s",
+        "iconClass": "fa-solid fa-layer-group",
+        "iconBgColor": "bg-fuchsia-600",
+        "iconTextColor": "text-white"
+    },
+    {
+        "question": "How do you balance character abilities in a competitive game?",
+        "answer": "Start with a design that emphasizes 'rock-paper-scissors' relationships. Avoid a single 'best' character. Iterative testing and data analysis are key to identifying overpowered abilities and making small, consistent adjustments over time.",
+        "chapterName": "Character Balancing",
+        "videoLink": "https://www.youtube.com/watch?v=IQc3rVny5nA&t=75s",
+        "iconClass": "fa-solid fa-hand-fist",
+        "iconBgColor": "bg-cyan-600",
+        "iconTextColor": "text-gray-900"
+    },
+    {
+        "question": "What's the best way to handle player-to-player combat in a game?",
+        "answer": "Player vs. Player (PVP) combat should feel fair. This involves strong network code to minimize lag, a matchmaking system that pairs players of similar skill, and clear visual feedback for attacks and damage.",
+        "chapterName": "PVP Mechanics",
+        "videoLink": "https://www.youtube.com/watch?v=KQA1hTLdVRI&t=150s",
+        "iconClass": "fa-solid fa-swords",
+        "iconBgColor": "bg-violet-600",
+        "iconTextColor": "text-white"
+    },
+    {
+        "question": "How can you design a game that encourages replayability?",
+        "answer": "Replayability comes from variable content. This can include procedural generation, multiple story paths or endings, different character classes, or a robust modding community. The goal is to provide a new experience with each playthrough.",
+        "chapterName": "Replayability",
+        "videoLink": "https://www.youtube.com/watch?v=KT-TQnvlpGY&t=220s",
+        "iconClass": "fa-solid fa-shuffle",
+        "iconBgColor": "bg-rose-600",
+        "iconTextColor": "text-white"
+    },
+    {
+        "question": "What are some common mistakes in level design?",
+        "answer": "Poor level design can lead to player frustration. This includes confusing layouts, a lack of visual cues for the next objective, or bottlenecks that lead to repetitive gameplay. Good level design feels natural and guides the player subtly.",
+        "chapterName": "Level Design",
+        "videoLink": "https://www.youtube.com/watch?v=Pmi2KvacNmg&t=80s",
+        "iconClass": "fa-solid fa-compass-drafting",
+        "iconBgColor": "bg-amber-600",
+        "iconTextColor": "text-white"
+    },
+    {
+        "question": "How do you design an effective crafting system?",
+        "answer": "A good crafting system should be easy to understand but offer deep complexity. Provide clear recipes, but also allow for experimentation. The resources should be well-integrated into the gameplay loop, encouraging players to explore.",
+        "chapterName": "Crafting & Resources",
+        "videoLink": "https://www.youtube.com/watch?v=RPSTaVN16Eg&t=160s",
+        "iconClass": "fa-solid fa-hammer",
+        "iconBgColor": "bg-emerald-600",
+        "iconTextColor": "text-white"
+    },
+    {
+        "question": "How do you use music to enhance the player experience?",
+        "answer": "Music should serve a purpose. Use it to build tension in a boss fight, provide a sense of calm in a safe space, or indicate a change in the player's situation. Dynamic soundtracks that change with the action are especially effective.",
+        "chapterName": "Music & Emotion",
+        "videoLink": "https://www.youtube.com/watch?v=W-IVWsMsSho&t=270s",
+        "iconClass": "fa-solid fa-music",
+        "iconBgColor": "bg-blue-600",
+        "iconTextColor": "text-white"
+    },
+    {
+        "question": "What is the secret to creating a game with a strong sense of progression?",
+        "answer": "A strong sense of progression is built on the player's feeling of growth. This can be through unlocks, leveling up, acquiring new abilities, or seeing a change in the game world. The rewards for progression should be meaningful and well-paced.",
+        "chapterName": "Player Progression",
+        "videoLink": "https://www.youtube.com/watch?v=YZ9v_Rig43U&t=90s",
+        "iconClass": "fa-solid fa-person-running",
+        "iconBgColor": "bg-orange-600",
+        "iconTextColor": "text-white"
+    },
+    {
+        "question": "How can you design an economy that feels fair and rewarding?",
+        "answer": "An in-game economy should be a tool for player expression, not a frustration. Ensure prices are balanced, and that resources can be acquired through gameplay, not just real money. A good economy gives players choices and opportunities.",
+        "chapterName": "Game Economy",
+        "videoLink": "https://www.youtube.com/watch?v=ZVXGCChJf0U&t=180s",
+        "iconClass": "fa-solid fa-sack-dollar",
+        "iconBgColor": "bg-lime-600",
+        "iconTextColor": "text-gray-900"
+    },
+    {
+        "question": "What are some of the most overlooked aspects of game design?",
+        "answer": "Many designers focus on the core mechanics and graphics but overlook crucial elements like player onboarding, long-term retention hooks, and the importance of a clear and consistent design philosophy. These elements can make or break a game.",
+        "chapterName": "Overlooked Design Elements",
+        "videoLink": "https://www.youtube.com/watch?v=3jtI3dh8JbM&t=210s",
+        "iconClass": "fa-solid fa-magnifying-glass-chart",
+        "iconBgColor": "bg-slate-600",
+        "iconTextColor": "text-white"
+    }
+]

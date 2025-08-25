@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Play Bar Card</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4B5563;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6B7280;
+        }
+        /* Custom modal for the video player */
+        .modal {
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        /* Style for the triangular marker */
+        .chapter-marker-triangle {
+            width: 0;
+            height: 0;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-top: 15px solid;
+            transform: translateX(-50%);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans flex justify-center items-center min-h-screen p-4">
+
+    <!-- The container now holds multiple cards and is responsive -->
+    <div id="multi-card-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+        <!-- The cards will be dynamically inserted here -->
+    </div>
+
+    <div id="video-modal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="relative w-full max-w-4xl rounded-xl">
+            <button id="close-modal" class="absolute top-2 right-2 text-white text-3xl font-bold p-2 z-50 transition-transform transform hover:scale-110">
+                &times;
+            </button>
+            <div class="relative pt-[56.25%] rounded-xl overflow-hidden shadow-2xl">
+                <iframe id="youtube-iframe" class="absolute top-0 left-0 w-full h-full" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const cardContainer = document.getElementById('multi-card-container');
+        const videoModal = document.getElementById('video-modal');
+        const closeModalBtn = document.getElementById('close-modal');
+        const youtubeIframe = document.getElementById('youtube-iframe');
+        
+        // Data for multiple cards with unique colors and content
+        const insightData = [
+            {
+                "topic": "Design Breakdown",
+                "answer": "Provide detailed feedback on game mechanics and level design, highlighting areas that need improvement.",
+                "videoLink": "https://www.youtube.com/watch?v=-j7P0pjVakc&t=201s",
+                "iconBgColor": "#3b21c7"
+            },
+            {
+                "topic": "Level Design",
+                "answer": "Deep dive into the principles of creating engaging and memorable levels for players.",
+                "videoLink": "https://www.youtube.com/watch?v=-j7P0pjVakc&t=300s",
+                "iconBgColor": "#c73b21"
+            },
+            {
+                "topic": "Monetization",
+                "answer": "Explore different monetization models and strategies to maximize revenue without compromising player experience.",
+                "videoLink": "https://www.youtube.com/watch?v=-j7P0pjVakc&t=450s",
+                "iconBgColor": "#21c73b"
+            },
+            {
+                "topic": "Game Physics",
+                "answer": "Analyze the role of physics engines in creating realistic and fun gameplay experiences.",
+                "videoLink": "https://www.youtube.com/watch?v=-j7P0pjVakc&t=520s",
+                "iconBgColor": "#ff6600"
+            },
+            {
+                "topic": "Narrative Integration",
+                "answer": "Examine how to weave compelling stories into gameplay without disrupting the player's flow.",
+                "videoLink": "https://www.youtube.com/watch?v=-j7P0pjVakc&t=600s",
+                "iconBgColor": "#6a0dad"
+            },
+            {
+                "topic": "UI/UX Best Practices",
+                "answer": "Learn about the most effective ways to design user interfaces that are both beautiful and intuitive.",
+                "videoLink": "https://www.youtube.com/watch?v=-j7P0pjVakc&t=750s",
+                "iconBgColor": "#00aaff"
+            }
+        ];
+
+        const getVideoDetails = (url) => {
+            const urlObj = new URL(url);
+            const videoId = urlObj.searchParams.get('v');
+            const timestamp = urlObj.searchParams.get('t');
+            return { videoId, timestamp: parseInt(timestamp) };
+        };
+        
+        const formatTimecode = (seconds) => {
+            if (isNaN(seconds)) return '';
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        };
+
+        // Function to create the dynamic play bar and marker
+        const createPlayBar = (insight) => {
+            const { timestamp } = getVideoDetails(insight.videoLink);
+            // Updated total video duration to 21 minutes for demonstration.
+            const totalDuration = 1260; // 21 minutes
+            const percentage = (timestamp / totalDuration) * 100;
+            const formattedTimecode = formatTimecode(timestamp);
+            
+            return `
+                <div class="absolute bottom-0 left-0 w-full z-20 flex items-end justify-center px-4 mb-2">
+                    <div class="relative w-full h-1 bg-gray-400 rounded-full">
+                        <!-- Start and end points -->
+                        <div class="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full border-2 border-gray-900"></div>
+                        <div class="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full border-2 border-gray-900"></div>
+                        
+                        <!-- The triangle marker and timecode are now below the bar -->
+                        <div class="absolute -bottom-2 transform -translate-x-1/2 -translate-y-1/2" style="left: ${percentage}%;">
+                            <div class="flex flex-col items-center">
+                                <span class="px-2 py-1 text-base font-bold mb-1 -translate-x-[24%] bg-black rounded-lg text-white">${formattedTimecode}</span>
+                                <div class="chapter-marker-triangle" style="border-top-color: white;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+        
+        const createInsightCard = (insight) => {
+            const { videoId, timestamp } = getVideoDetails(insight.videoLink);
+            const thumbnailURL = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+            
+            // Generate dynamic styles for colors
+            const headingBgStyle = `style="background-color: ${insight.iconBgColor};"`;
+            const gradientStyle = `style="background: linear-gradient(to top, ${insight.iconBgColor}80 0%, ${insight.iconBgColor}4D 100%);"`;
+
+            const uniqueDesignContent = createPlayBar(insight);
+
+            const card = document.createElement('div');
+            card.className = "bg-gray-800 rounded-xl shadow-lg flex flex-col transform transition-transform duration-300 hover:scale-[1.02] cursor-pointer overflow-hidden relative w-full sm:w-auto";
+            card.innerHTML = `
+                <div class="relative w-full pt-[56.25%] overflow-hidden">
+                    <img src="${thumbnailURL}" alt="Video Thumbnail" class="absolute top-0 left-0 w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/480x270/222222/eeeeee?text=Thumbnail%20Unavailable';">
+                    <div class="absolute inset-0" ${gradientStyle}></div>
+                    <!-- Play button icon in the center with a circular background -->
+                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center z-10 w-16 h-16 rounded-full bg-black transition-opacity duration-300 hover:bg-opacity-80">
+                         <i class="fa-solid fa-play text-white text-xl"></i>
+                    </div>
+                    <!-- The unique design content is inserted here -->
+                    ${uniqueDesignContent}
+                </div>
+                <div class="p-6 flex flex-col flex-grow">
+                    <h3 ${headingBgStyle} class="text-xl font-semibold px-4 py-2 mb-2 text-white rounded-lg">${insight.topic}</h3>
+                    <p class="text-gray-400 text-sm flex-grow mb-4">${insight.answer}</p>
+                </div>
+            `;
+            
+            card.addEventListener('click', () => {
+                const { videoId, timestamp } = getVideoDetails(insight.videoLink);
+                const embedURL = `https://www.youtube.com/embed/${videoId}?start=${timestamp}&autoplay=1`;
+                youtubeIframe.src = embedURL;
+                videoModal.classList.remove('hidden');
+            });
+
+            return card;
+        };
+
+        const closeModal = () => {
+            youtubeIframe.src = ''; 
+            videoModal.classList.add('hidden');
+        };
+
+        const initialize = () => {
+            // Loop through the data and create a card for each entry
+            insightData.forEach(insight => {
+                cardContainer.appendChild(createInsightCard(insight));
+            });
+        };
+        
+        closeModalBtn.addEventListener('click', closeModal);
+
+        videoModal.addEventListener('click', (event) => {
+            if (event.target === videoModal) {
+                closeModal();
+            }
+        });
+        
+        window.onload = initialize;
+    </script>
+</body>
+</html>

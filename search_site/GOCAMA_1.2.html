@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Design Insights</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4B5563;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6B7280;
+        }
+        /* Custom modal for the video player */
+        .modal {
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        /* Stronger gradient overlay for the thumbnail */
+        .thumbnail-gradient-overlay {
+            background: linear-gradient(to top, rgba(17, 24, 39, 1) 0%, rgba(17, 24, 39, 0.85) 35%, transparent 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans">
+
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-white mb-2">Game Design Insights</h1>
+            <p class="text-lg text-gray-400">
+                A collection of key takeaways from my game design consulting case studies.
+            </p>
+            <p class="text-md text-gray-500 mt-4">
+                To showcase different card designs, the same video entry is repeated with different timestamps and unique visual treatments.
+            </p>
+        </header>
+
+        <div id="insights-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        </div>
+
+        <div id="loading-indicator" class="text-center py-8 text-gray-500 text-lg hidden">
+            <svg class="animate-spin h-6 w-6 text-gray-400 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.925l3-2.634z"></path>
+            </svg>
+            <p class="mt-2">Loading more insights...</p>
+        </div>
+    </div>
+
+    <div id="video-modal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="relative w-full max-w-4xl rounded-xl">
+            <button id="close-modal" class="absolute top-2 right-2 text-white text-3xl font-bold p-2 z-50 transition-transform transform hover:scale-110">
+                &times;
+            </button>
+            <div class="relative pt-[56.25%] rounded-xl overflow-hidden shadow-2xl">
+                <iframe id="youtube-iframe" class="absolute top-0 left-0 w-full h-full" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DATA_URL = 'feed_1.3.json';
+        const PAGE_SIZE = 9; // Number of cards to load per page
+
+        const insightsGrid = document.getElementById('insights-grid');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const videoModal = document.getElementById('video-modal');
+        const closeModalBtn = document.getElementById('close-modal');
+        const youtubeIframe = document.getElementById('youtube-iframe');
+
+        let isLoading = false;
+        let allInsights = [];
+        let insightsLoaded = 0;
+
+        const getVideoDetails = (url) => {
+            const urlObj = new URL(url);
+            const videoId = urlObj.searchParams.get('v');
+            const timestamp = urlObj.searchParams.get('t');
+            return { videoId, timestamp: parseInt(timestamp) };
+        };
+        
+        const formatTimecode = (seconds) => {
+            if (isNaN(seconds)) return '';
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        };
+
+        // --- NEW CODE START ---
+
+        // Function to create the dynamic play bar and marker
+        const createPlayBar = (insight) => {
+            const { timestamp } = getVideoDetails(insight.videoLink);
+            // Assumed total video duration for demonstration.
+            // In a real-world scenario, you would fetch this via the YouTube API.
+            const totalDuration = 600; // 10 minutes
+            const percentage = (timestamp / totalDuration) * 100;
+            
+            // This is your play bar idea, with a marker.
+            return `
+                <div class="absolute bottom-0 left-0 w-full h-8 z-20 flex items-center px-4">
+                    <div class="relative w-full h-1 bg-gray-400 rounded-full">
+                        <!-- Play Bar Progress -->
+                        <div class="absolute top-0 left-0 h-full bg-red-500 rounded-full" style="width: ${percentage}%;"></div>
+                        <!-- Current Chapter Marker -->
+                        <div class="absolute -top-1/2 -ml-2 w-4 h-4 rounded-full border-2 border-white transform -translate-y-1/2" 
+                             style="left: ${percentage}%; background-color: ${insight.iconBgColor.startsWith('#') ? insight.iconBgColor : 'blue'};">
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+        // Function to create a graphical waveform display
+        const createWaveform = (insight) => {
+            // This is a graphical and abstract representation
+            const waveformPoints = Array.from({length: 20}, (_, i) => {
+                // Generate a unique, but consistent, point based on the timestamp
+                const seed = getVideoDetails(insight.videoLink).timestamp + i;
+                const height = 1 + (Math.sin(seed * 0.5) * 0.5) + (Math.cos(seed * 0.3) * 0.5);
+                const barHeight = Math.min(Math.max(height * 20, 5), 40); // Ensure min/max height
+                return `<div class="w-1/20 h-full flex items-center justify-center">
+                            <div class="w-1.5 rounded-full" style="height: ${barHeight}px; background-color: ${insight.iconBgColor.startsWith('#') ? insight.iconBgColor : 'blue'};"></div>
+                        </div>`;
+            }).join('');
+
+            return `
+                <div class="absolute bottom-0 left-0 w-full h-16 z-20 flex items-end justify-between px-4">
+                    ${waveformPoints}
+                </div>
+            `;
+        };
+        
+        // Function to create a custom SVG icon grid
+        const createIconGrid = (insight) => {
+            // This is an abstract, generative design idea
+            const pattern = getVideoDetails(insight.videoLink).timestamp % 3;
+            let svgContent = '';
+            if (pattern === 0) {
+                // Diagonal lines
+                svgContent = `<path d="M0 40 L40 0 M0 20 L20 0 M20 40 L40 20" stroke="${insight.iconBgColor.startsWith('#') ? insight.iconBgColor : 'blue'}" stroke-width="2" stroke-linecap="round"/>`;
+            } else if (pattern === 1) {
+                // Concentric circles
+                svgContent = `<circle cx="20" cy="20" r="15" stroke="${insight.iconBgColor.startsWith('#') ? insight.iconBgColor : 'blue'}" stroke-width="2" fill="none"/>
+                              <circle cx="20" cy="20" r="10" stroke="${insight.iconBgColor.startsWith('#') ? insight.iconBgColor : 'blue'}" stroke-width="2" fill="none"/>
+                              <circle cx="20" cy="20" r="5" stroke="${insight.iconBgColor.startsWith('#') ? insight.iconBgColor : 'blue'}" stroke-width="2" fill="none"/>`;
+            } else {
+                // Grid of dots
+                svgContent = `<circle cx="10" cy="10" r="2" fill="${insight.iconBgColor.startsWith('#') ? insight.iconBgColor : 'blue'}"/>
+                              <circle cx="30" cy="10" r="2" fill="${insight.iconBgColor.startsWith('#') ? insight.iconBgColor : 'blue'}"/>
+                              <circle cx="10" cy="30" r="2" fill="${insight.iconBgColor.startsWith('#') ? insight.iconBgColor : 'blue'}"/>
+                              <circle cx="30" cy="30" r="2" fill="${insight.iconBgColor.startsWith('#') ? insight.iconBgColor : 'blue'}"/>`;
+            }
+            return `
+                <div class="absolute inset-0 z-20 flex items-center justify-center">
+                    <svg class="w-full h-full opacity-50" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                        ${svgContent}
+                    </svg>
+                </div>
+            `;
+        };
+
+        // --- NEW CODE END ---
+
+        const createInsightCard = (insight, designOption) => {
+            const { videoId, timestamp } = getVideoDetails(insight.videoLink);
+            const formattedTimecode = formatTimecode(timestamp);
+            const thumbnailURL = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+            
+            // Check if the background color is a hex code or Tailwind class
+            const isHexColor = insight.iconBgColor.startsWith('#');
+            const iconBgStyle = isHexColor ? `style="background-color: ${insight.iconBgColor};"` : `class="${insight.iconBgColor}"`;
+            const buttonBgStyle = isHexColor ? `style="background-color: ${insight.iconBgColor};"` : `class="${insight.iconBgColor}"`;
+
+            let uniqueDesignContent = '';
+            // Render the chosen design option
+            if (designOption === 0) {
+                // Your idea: Play bar with a marker
+                uniqueDesignContent = createPlayBar(insight);
+            } else if (designOption === 1) {
+                // Unique idea 1: Abstract waveform
+                uniqueDesignContent = createWaveform(insight);
+            } else if (designOption === 2) {
+                // Unique idea 2: Generative icon grid overlay
+                uniqueDesignContent = createIconGrid(insight);
+            }
+
+            const card = document.createElement('div');
+            card.className = "bg-gray-800 rounded-xl shadow-lg flex flex-col transform transition-transform duration-300 hover:scale-[1.02] cursor-pointer overflow-hidden relative";
+            card.innerHTML = `
+                <div ${iconBgStyle} class="absolute top-4 right-4 z-10 ${insight.iconTextColor} p-3 rounded-full shadow-lg">
+                    <i class="${insight.iconClass} text-xl"></i>
+                </div>
+
+                <div class="relative w-full pt-[56.25%] overflow-hidden">
+                    <img src="${thumbnailURL}" alt="Video Thumbnail" class="absolute top-0 left-0 w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/480x270/222222/eeeeee?text=Thumbnail%20Unavailable';">
+                    <div class="absolute inset-0 thumbnail-gradient-overlay"></div>
+                    <span ${iconBgStyle} class="absolute bottom-4 left-4 text-md font-semibold px-2 py-1 rounded-md bg-black/50 ${insight.iconTextColor}">${insight.topic}</span>
+                    <!-- The unique design content is inserted here -->
+                    ${uniqueDesignContent}
+                </div>
+                <div class="p-6 flex flex-col flex-grow">
+                    <h3 class="text-xl font-semibold text-white mb-2">${insight.topic}</h3>
+                    <p class="text-gray-400 text-sm flex-grow mb-4">${insight.answer}</p>
+                    <div class="flex justify-end">
+                        <span ${buttonBgStyle} class="px-4 py-2 ${insight.iconTextColor} font-medium rounded-lg transition-all duration-200 shadow-md">
+                            Watch Chapter ${formattedTimecode}
+                        </span>
+                    </div>
+                </div>
+            `;
+            
+            card.addEventListener('click', () => {
+                const { videoId, timestamp } = getVideoDetails(insight.videoLink);
+                const embedURL = `https://www.youtube.com/embed/${videoId}?start=${timestamp}&autoplay=1`;
+                youtubeIframe.src = embedURL;
+                videoModal.classList.remove('hidden');
+            });
+
+            return card;
+        };
+
+        const loadMoreInsights = () => {
+            if (isLoading || insightsLoaded >= allInsights.length) return;
+
+            isLoading = true;
+            loadingIndicator.classList.remove('hidden');
+
+            const startIndex = insightsLoaded;
+            const endIndex = Math.min(insightsLoaded + PAGE_SIZE, allInsights.length);
+            const insightsToLoad = allInsights.slice(startIndex, endIndex);
+
+            setTimeout(() => {
+                insightsToLoad.forEach((insight, index) => {
+                    // Use a simple modulo to apply the three different design options in a cycle
+                    insightsGrid.appendChild(createInsightCard(insight, index % 3));
+                });
+
+                insightsLoaded += insightsToLoad.length;
+                isLoading = false;
+
+                if (insightsLoaded >= allInsights.length) {
+                    loadingIndicator.innerHTML = '<p class="mt-2 text-gray-400">You\'ve reached the end for this demo!</p>';
+                } else {
+                    loadingIndicator.classList.add('hidden');
+                }
+            }, 1000);
+        };
+
+        const closeModal = () => {
+            youtubeIframe.src = ''; 
+            videoModal.classList.add('hidden');
+        };
+
+        const initialize = async () => {
+            try {
+                const response = await fetch(DATA_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                allInsights = await response.json();
+                loadMoreInsights();
+            } catch (error) {
+                console.error('Could not load insights data:', error);
+                loadingIndicator.innerHTML = '<p class="mt-2 text-red-400">Failed to load insights. Please try again later.</p>';
+                loadingIndicator.classList.remove('hidden');
+            }
+        };
+        
+        closeModalBtn.addEventListener('click', closeModal);
+
+        videoModal.addEventListener('click', (event) => {
+            if (event.target === videoModal) {
+                closeModal();
+            }
+        });
+
+        window.addEventListener('scroll', () => {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
+                loadMoreInsights();
+            }
+        });
+        
+        window.onload = initialize;
+    </script>
+</body>
+</html>
