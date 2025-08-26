@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOCAMA JSON Editor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4B5563;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6B7280;
+        }
+        /* Custom styles for the editor's live preview window */
+        #preview-card-container {
+            min-height: 200px;
+        }
+        /* Styles for the progress bar */
+        .progress-bar {
+            height: 2px;
+        }
+        .progress-circle {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+        }
+        /* Make heading text stand out a bit more */
+        .text-shadow-md {
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans">
+
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-white mb-2">GOCAMA JSON Editor</h1>
+            <p class="text-lg text-gray-400">
+                Manage and update your video insights data.
+            </p>
+        </header>
+
+        <div class="bg-gray-800 p-6 rounded-xl shadow-lg mb-8">
+            <div class="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4">
+                <div class="flex items-center space-x-2 w-full sm:w-auto">
+                    <label for="json-file" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded cursor-pointer transition-colors duration-200">
+                        Import JSON File
+                    </label>
+                    <input type="file" id="json-file" accept=".json" class="hidden">
+                    <span id="file-name" class="text-gray-400 truncate">No file selected</span>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+                    <button id="generate-colors-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200" disabled>
+                        <i class="fa-solid fa-palette mr-2"></i>Generate Random Colors
+                    </button>
+                    <button id="download-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200" disabled>
+                        <i class="fa-solid fa-download mr-2"></i>Download JSON
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 bg-gray-800 p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-4">Edit Entries</h2>
+                <div class="mb-4">
+                    <label for="entry-select" class="block text-gray-400 mb-2">Select an Entry to Edit:</label>
+                    <select id="entry-select" class="w-full p-2 rounded bg-gray-600 border border-gray-500 text-white focus:outline-none focus:ring focus:ring-indigo-500" disabled>
+                        <option value="">-- Select an entry --</option>
+                    </select>
+                </div>
+                <div id="editor-form" class="space-y-4 hidden">
+                    </div>
+                <p id="empty-state" class="text-center text-gray-400">Please import a JSON file to begin editing.</p>
+            </div>
+
+            <div class="lg:col-span-1">
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg h-full">
+                    <h2 class="text-2xl font-bold mb-4">Live Preview</h2>
+                    <div id="preview-card-container">
+                        <p id="preview-empty-state" class="text-center text-gray-400">Select an entry to preview.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Element References ---
+        const jsonFile = document.getElementById('json-file');
+        const fileNameSpan = document.getElementById('file-name');
+        const generateColorsBtn = document.getElementById('generate-colors-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const entrySelect = document.getElementById('entry-select');
+        const editorForm = document.getElementById('editor-form');
+        const emptyState = document.getElementById('empty-state');
+        const previewCardContainer = document.getElementById('preview-card-container');
+        const previewEmptyState = document.getElementById('preview-empty-state');
+
+        // --- Global State Variables ---
+        let jsonData = [];
+        let selectedIndex = null;
+        let usedColors = new Set();
+        
+        // Default video duration for placeholder calculations
+        const DEFAULT_VIDEO_DURATION_SECONDS = 1260; 
+
+        // Map video IDs to their titles for the source display
+        const VIDEO_TITLES = {
+            'RPSTaVN16Eg': 'Game Design Masterclass',
+            '-j7P0pjVakc': 'Game Dev Series: Prototyping',
+            'W-IVWsMsSho': 'Hidden Object Games: A Deeper Look',
+            '5KidGE7ffVQ': 'How To Write A Game Narrative',
+            '8IH_Qr1WIhY': 'Game Juice Example',
+            '8RusGeNA5sM': 'Games: Teaching How To Think',
+            'CIxs--VXLGM': 'Game Design Masterclass',
+            'DWo2IX7Sck8': 'The Line of Logic',
+            'EfV-8rhjVek': 'Sympathetic Game Design',
+            'GYJFiU8WHWM': 'Structure, Intent, Communication',
+            'GoBKX_pjAhY': 'The Role of Control',
+            'IQDbzroiXvE': 'Defining Narrative & Experience',
+            'IQc3rVny5nA': 'Finding the Hook',
+            'KQA1hTLdVRI': 'Design Critique',
+            'KT-TQnvlpGY': 'Game\'s Purpose & Communication',
+            'Pmi2KvacNmg': 'Adaptation & Player Motivation',
+        };
+
+        // --- Helper Functions ---
+        const hexToRgb = (hex) => {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : null;
+        };
+
+        const getTextColor = (bgColor) => {
+            const { r, g, b } = hexToRgb(bgColor);
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            return luminance > 0.5 ? 'text-black' : 'text-white';
+        };
+
+        const updateDropdownTopic = (index, topic) => {
+            const option = entrySelect.querySelector(`option[value="${index}"]`);
+            if (option) {
+                option.textContent = `Entry #${index + 1}: ${topic || 'New Entry'}`;
+            }
+        };
+
+        const getVideoDetails = (url) => {
+            if (!url) return { videoId: null, timestamp: 0 };
+            try {
+                const urlObj = new URL(url);
+                const videoId = urlObj.searchParams.get('v');
+                const timestamp = urlObj.searchParams.get('t');
+                return { videoId, timestamp: parseInt(timestamp, 10) || 0 };
+            } catch (e) {
+                return { videoId: null, timestamp: 0 };
+            }
+        };
+        
+        const formatTimecode = (seconds) => {
+            if (isNaN(seconds)) return '';
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        };
+
+        const generateUniqueRandomColor = () => {
+            let hex;
+            do {
+                hex = Math.floor(Math.random() * 0xFFFFFF).toString(16).padStart(6, '0');
+            } while (usedColors.has(hex));
+            usedColors.add(hex);
+            return `#${hex}`;
+        };
+
+        // --- UI Rendering Functions ---
+        const renderDropdown = () => {
+            entrySelect.innerHTML = '<option value="">-- Select an entry --</option>';
+            if (jsonData.length === 0) {
+                entrySelect.disabled = true;
+                emptyState.classList.remove('hidden');
+                editorForm.classList.add('hidden');
+                return;
+            }
+            entrySelect.disabled = false;
+            emptyState.classList.add('hidden');
+            jsonData.forEach((insight, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `Entry #${index + 1}: ${insight.topic || 'New Entry'}`;
+                entrySelect.appendChild(option);
+            });
+            // Re-select the correct index if one was previously selected
+            if (selectedIndex !== null) {
+                entrySelect.value = selectedIndex;
+            }
+        };
+
+        const renderEditorForm = (insight, index) => {
+            if (!insight) {
+                editorForm.classList.add('hidden');
+                return;
+            }
+            editorForm.classList.remove('hidden');
+            editorForm.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <label class="block text-gray-400">Background Color:</label>
+                    <input type="color" class="w-12 h-12 rounded-lg" value="${insight.iconBgColor || '#ff6600'}" data-index="${index}">
+                </div>
+                <div>
+                    <label for="topic" class="block text-gray-400 mb-1">Topic</label>
+                    <input type="text" id="topic" class="w-full p-2 rounded bg-gray-600 border border-gray-500 text-white focus:outline-none focus:ring focus:ring-indigo-500" value="${insight.topic || ''}" data-field="topic" data-index="${index}">
+                </div>
+                <div>
+                    <label for="answer" class="block text-gray-400 mb-1">Answer</label>
+                    <textarea id="answer" rows="3" class="w-full p-2 rounded bg-gray-600 border border-gray-500 text-white focus:outline-none focus:ring focus:ring-indigo-500" data-field="answer" data-index="${index}">${insight.answer || ''}</textarea>
+                </div>
+                <div>
+                    <label for="video-link" class="block text-gray-400 mb-1">Video Link</label>
+                    <input type="url" id="video-link" class="w-full p-2 rounded bg-gray-600 border border-gray-500 text-white focus:outline-none focus:ring focus:ring-indigo-500" value="${insight.videoLink || ''}" data-field="videoLink" data-index="${index}">
+                </div>
+                <div>
+                    <label for="duration" class="block text-gray-400 mb-1">Video Duration (seconds)</label>
+                    <input type="number" id="duration" class="w-full p-2 rounded bg-gray-600 border border-gray-500 text-white focus:outline-none focus:ring focus:ring-indigo-500" value="${insight.videoDuration || ''}" data-field="videoDuration" data-index="${index}">
+                </div>
+                <div>
+                    <label for="icon" class="block text-gray-400 mb-1">Icon HTML (<i>' tag')</label>
+                    <input type="text" id="icon" class="w-full p-2 rounded bg-gray-600 border border-gray-500 text-white focus:outline-none focus:ring focus:ring-indigo-500" value="${insight.icon || ''}" data-field="icon" data-index="${index}">
+                </div>
+                <div class="flex justify-between items-center space-x-2">
+                    <button class="w-full bg-sky-600 hover:bg-sky-700 text-white py-2 px-4 rounded transition-colors duration-200 preview-btn" data-index="${index}">Preview Card</button>
+                    <button class="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded transition-colors duration-200 delete-btn" data-index="${index}">Delete Entry</button>
+                </div>
+            `;
+            renderPreviewCard(insight);
+        };
+
+        const renderPreviewCard = (insight) => {
+            if (!insight) {
+                previewEmptyState.classList.remove('hidden');
+                previewCardContainer.innerHTML = '';
+                return;
+            }
+            previewEmptyState.classList.add('hidden');
+            const { videoId, timestamp } = getVideoDetails(insight.videoLink);
+            const formattedTimecode = formatTimecode(timestamp);
+            const thumbnailURL = videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : 'https://placehold.co/480x270/222222/eeeeee?text=Thumbnail%20Unavailable';
+            
+            const iconBgColor = insight.iconBgColor || '#ff6600';
+            const iconHTML = insight.icon || '';
+            const videoDuration = insight.videoDuration || DEFAULT_VIDEO_DURATION_SECONDS;
+            const sourceTitle = VIDEO_TITLES[videoId] || 'Source Video';
+
+            // Calculate progress percentage and clamp it
+            const rawProgressPercentage = (timestamp / videoDuration) * 100;
+            const clampedProgressPercentage = Math.min(Math.max(rawProgressPercentage, 5), 95);
+            const markerPositionStyle = `left: ${clampedProgressPercentage}%;`;
+
+            previewCardContainer.innerHTML = `
+                <div class="bg-gray-800 rounded-xl shadow-lg flex flex-col transform transition-transform duration-300 hover:scale-[1.02] cursor-pointer overflow-hidden relative">
+                    <div class="relative w-full pt-[56.25%] overflow-hidden">
+                        <img src="${thumbnailURL}" alt="Video Thumbnail" class="absolute top-0 left-0 w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/480x270/222222/eeeeee?text=Thumbnail%20Unavailable';">
+                        <div class="absolute inset-0 transition-opacity duration-300" style="background-color: ${iconBgColor}; opacity: 0.75;"></div>
+                        <div class="absolute inset-0 bg-black/65"></div>
+                        
+                        ${iconHTML ? `
+                            <div class="absolute inset-x-0 inset-y-0 z-20 flex flex-col items-center justify-center gap-4">
+                                <div>
+                                    <i class="fa-solid fa-play text-white text-3xl"></i>
+                                </div>
+                                <div class="flex items-center justify-center gap-2 px-6 py-2 rounded-lg bg-gradient-to-r from-transparent via-black/50 to-transparent">
+                                    <span class="text-3xl" style="color: ${iconBgColor};">
+                                        ${iconHTML}
+                                    </span>
+                                    <h3 class="text-xl font-bold text-gray-200 leading-tight text-shadow-md text-center">${insight.topic}</h3>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <p class="bg-gray-700 text-gray-300 text-sm flex-grow p-4 rounded-lg border" style="border-color: ${iconBgColor};">${insight.answer}</p>
+                        
+                        <div class="relative mt-4">
+                            <div class="progress-bar w-full bg-black/50"></div>
+                            
+                            <div class="progress-circle bg-black" style="left: 0; transform: translateY(-50%);"></div>
+                            <div class="progress-circle bg-black" style="right: 0; transform: translateY(-50%);"></div>
+                            <div class="progress-circle z-30" style="background-color: ${iconBgColor}; ${markerPositionStyle} transform: translate(-50%, -50%);"></div>
+
+                            <div class="absolute bottom-0 flex flex-col items-center transform -translate-x-1/2" style="${markerPositionStyle}">
+                                <span class="text-xs font-bold text-white mb-1 bg-black py-0.5 px-2 rounded">${formattedTimecode}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-center items-center gap-2 mt-4">
+                            <img src="${thumbnailURL}" alt="Video Thumbnail" class="w-16 h-9 rounded object-cover">
+                            <span class="text-xs font-semibold text-gray-400">Source: ${sourceTitle}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+        
+        // --- Event Listeners and Handlers ---
+        const setupEventListeners = () => {
+            // Use event delegation for the preview and delete buttons
+            editorForm.addEventListener('click', (e) => {
+                const target = e.target.closest('button');
+                if (!target) return;
+
+                const index = parseInt(target.dataset.index);
+
+                if (target.classList.contains('preview-btn')) {
+                    if (!isNaN(index)) {
+                        renderPreviewCard(jsonData[index]);
+                    }
+                } else if (target.classList.contains('delete-btn')) {
+                    if (index !== -1 && index < jsonData.length) {
+                        jsonData.splice(index, 1);
+                        selectedIndex = null;
+                        renderDropdown();
+                        renderEditorForm(null);
+                        renderPreviewCard(null);
+                    }
+                }
+            });
+
+            // Use event delegation for input and textarea fields
+            editorForm.addEventListener('input', (e) => {
+                const input = e.target.closest('input, textarea');
+                if (!input) return;
+
+                const index = parseInt(input.dataset.index);
+                const field = input.dataset.field;
+                const value = input.value;
+
+                if (field) {
+                    jsonData[index][field] = value;
+                } else if (input.type === 'color') {
+                    jsonData[index].iconBgColor = value;
+                    jsonData[index].iconTextColor = getTextColor(value);
+                }
+
+                if (!isNaN(index)) {
+                    renderPreviewCard(jsonData[index]);
+                    updateDropdownTopic(index, jsonData[index].topic);
+                }
+            });
+        };
+
+        // Call the setup function once to attach all listeners
+        setupEventListeners();
+
+        jsonFile.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            fileNameSpan.textContent = file.name;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    jsonData = JSON.parse(e.target.result);
+                    renderDropdown();
+                    generateColorsBtn.disabled = false;
+                    downloadBtn.disabled = false;
+                } catch (error) {
+                    alert('Invalid JSON file. Please ensure it is correctly formatted.');
+                    console.error('JSON parsing error:', error);
+                    jsonData = [];
+                    fileNameSpan.textContent = 'Invalid file';
+                    generateColorsBtn.disabled = true;
+                    downloadBtn.disabled = true;
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        entrySelect.addEventListener('change', (e) => {
+            const index = parseInt(e.target.value);
+            if (!isNaN(index) && index >= 0 && index < jsonData.length) {
+                selectedIndex = index;
+                renderEditorForm(jsonData[selectedIndex], selectedIndex);
+            } else {
+                selectedIndex = null;
+                renderEditorForm(null);
+            }
+        });
+
+        generateColorsBtn.addEventListener('click', () => {
+            // Clear used colors for this generation run to prevent issues with previous state
+            usedColors.clear();
+            jsonData = jsonData.map(insight => {
+                const newColor = generateUniqueRandomColor();
+                return {
+                    ...insight,
+                    iconBgColor: newColor,
+                    iconTextColor: getTextColor(newColor)
+                };
+            });
+            renderDropdown();
+            if (selectedIndex !== null && jsonData[selectedIndex]) {
+                entrySelect.value = selectedIndex;
+                renderEditorForm(jsonData[selectedIndex], selectedIndex);
+            }
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            const jsonString = JSON.stringify(jsonData, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileNameSpan.textContent.replace('.json', '') + '_edited.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>
