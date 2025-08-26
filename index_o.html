@@ -171,18 +171,42 @@
 <body class="bg-[var(--color-goc-darkest)] text-[var(--color-goc-main-text)] font-sans min-h-screen flex flex-col">
     <div class="container mx-auto p-4 md:p-8 lg:p-12 max-w-7xl flex-grow">
 
-        <header class="p-6 bg-[var(--color-goc-dark)] text-[var(--color-goc-main-text)] shadow-lg">
-            <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center">
-                <h1 class="text-4xl font-extrabold font-poppins mb-4 sm:mb-0 text-[var(--color-goc-light-accent)]">Games Over Coffee Hub</h1>
-                <nav class="flex flex-wrap justify-center sm:justify-end gap-3">
-                    <a href="index.html" class="px-4 py-2 rounded-lg bg-[var(--gradient-goc-indigo)] text-white font-semibold transform -translate-y-1 shadow-lg">Home</a>
-                    <a href="consulting_site/consulting_site.html" class="px-4 py-2 rounded-lg hover:bg-[var(--color-goc-light-indigo-hover)] transition duration-300">Consulting</a>
-                    <a href="lore.html" class="px-4 py-2 rounded-lg hover:bg-[var(--color-goc-light-indigo-hover)] transition duration-300">Lore</a>
+        <header class="fixed top-0 left-0 w-full bg-[var(--color-goc-darkest)] shadow-lg z-40">
+            <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <a href="index.html" class="flex items-center space-x-2">
+                        <img src="images/GOClogo.png" alt="Games Over Coffee Logo" class="h-10 w-10">
+                        <span class="text-2xl font-extrabold font-poppins text-[var(--color-goc-light-accent)] hidden sm:block">Games Over Coffee</span>
+                    </a>
+                </div>
+                <nav class="flex flex-wrap justify-center sm:justify-end gap-x-4 gap-y-2 text-sm md:text-base">
+                    <a href="../index.html" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group">
+                        Home
+                        <span class="absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
+                    </a>
+                    <a href="consulting_site/consulting_site.html" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group">
+                        Consulting
+                        <span class="absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
+                    </a>
+                    <a href="lore_site/GOClore.html" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group">
+                        Lore
+                        <span class="absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
+                    </a>
+                    <a href="https://www.youtube.com/@GamesOverCoffee" target="_blank" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group hidden md:flex items-center space-x-1">
+                        <i class="fab fa-youtube text-red-500 text-lg"></i>
+                        <span>YouTube</span>
+                        <span class="absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
+                    </a>
+                    <a href="https://www.youtube.com/@GamesOverCoffeeConsulting" target="_blank" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group hidden md:flex items-center space-x-1">
+                        <i class="fab fa-youtube text-red-500 text-lg"></i>
+                        <span>Consulting YT</span>
+                        <span class="absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
+                    </a>
                 </nav>
             </div>
         </header>
 
-        <main class="pt-8">
+        <main class="pt-20">
             <section id="mostRecentEpisodeSection" class="bg-[var(--color-goc-dark)] p-6 md:p-8 rounded-lg shadow-xl mb-12 border border-[var(--color-goc-desaturated-indigo)] max-w-5xl mx-auto">
                 <h2 class="text-3xl md:text-4xl font-bold mb-6 text-[var(--color-goc-light-accent)] text-center">Most Recent Episode</h2>
                 <div id="mostRecentVideoContainer" class="flex flex-col md:flex-row items-center justify-center gap-6">

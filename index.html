@@ -24,6 +24,69 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
+        /* Set a custom dark theme using CSS variables from GOClore */
+        :root {
+            --color-goc-darkest: #1f1f1f;
+            --color-goc-dark: #2b2b2b;
+            --color-goc-light-accent: #aac6ce;
+            --color-goc-main-text: #ead9ca;
+            --gradient-goc-indigo: linear-gradient(to right, #6366f1, #8b5cf6);
+            --color-goc-desaturated-indigo: #4a4d7c;
+            --color-goc-light-indigo-hover: #3c3f6b;
+            --color-border-subtle: #3A4452;
+            --color-card-border: #303A45;
+            --color-hover-bg: #35424D;
+            --color-scrollbar-thumb: #50687E;
+            --color-highlight-bg: #3e2f4a;
+            --color-highlight-text: #e0ccff;
+            /* New custom colors for sections */
+            --color-synopsis-bg: #222a30;
+            --color-synopsis-border: #28303a;
+            --color-synopsis-heading: #7cb9e4;
+            --color-synopsis-text: #9aa7b3;
+
+            --color-lore-bg: #2a2230;
+            --color-lore-border: #342b3d;
+            --color-lore-heading: #c47ce4;
+            --color-lore-bullet: #c47ce4;
+
+            --color-easter-eggs-bg: #302222;
+            --color-easter-eggs-border: #3a2b2b;
+            --color-easter-eggs-heading: #e47c7c;
+            --color-easter-eggs-bullet: #e47c7c;
+
+            --color-production-bg: #22302a;
+            --color-production-border: #2b3a34;
+            --color-production-heading: #7ce499;
+            --color-production-bullet: #7ce499;
+        }
+
+        /* New rainbow animation for the Insights button */
+        @keyframes rainbow-text {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .animate-rainbow {
+            background-image: linear-gradient(
+                to right,
+                #FF6347, /* Tomato */
+                #FF8C00, /* DarkOrange */
+                #FFD700, /* Gold */
+                #7CFC00, /* LawnGreen */
+                #00CED1, /* DarkTurquoise */
+                #4169E1, /* RoyalBlue */
+                #9400D3  /* DarkViolet */
+            );
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: rainbow-text 5s linear infinite;
+        }
+    </style>
+    <script src="js/nav_data.js"></script>
+
+    <style>
         /* Custom scroll behavior for smoother jumps */
         html {
             scroll-behavior: smooth;
@@ -171,40 +234,17 @@
 <body class="bg-[var(--color-goc-darkest)] text-[var(--color-goc-main-text)] font-sans min-h-screen flex flex-col">
     <div class="container mx-auto p-4 md:p-8 lg:p-12 max-w-7xl flex-grow">
 
-        <header class="fixed top-0 left-0 w-full bg-[var(--color-goc-darkest)] shadow-lg z-40">
-            <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-                <div class="flex items-center space-x-4">
-                    <a href="index.html" class="flex items-center space-x-2">
-                        <img src="images/GOClogo.png" alt="Games Over Coffee Logo" class="h-10 w-10">
-                        <span class="text-2xl font-extrabold font-poppins text-[var(--color-goc-light-accent)] hidden sm:block">Games Over Coffee</span>
-                    </a>
-                </div>
-                <nav class="flex flex-wrap justify-center sm:justify-end gap-x-4 gap-y-2 text-sm md:text-base">
-                    <a href="../index.html" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group">
-                        Home
-                        <span class="absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
-                    </a>
-                    <a href="consulting_site/consulting_site.html" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group">
-                        Consulting
-                        <span class="absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
-                    </a>
-                    <a href="lore_site/GOClore.html" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group">
-                        Lore
-                        <span class="absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
-                    </a>
-                    <a href="https://www.youtube.com/@GamesOverCoffee" target="_blank" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group hidden md:flex items-center space-x-1">
-                        <i class="fab fa-youtube text-red-500 text-lg"></i>
-                        <span>YouTube</span>
-                        <span class="absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
-                    </a>
-                    <a href="https://www.youtube.com/@GamesOverCoffeeConsulting" target="_blank" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group hidden md:flex items-center space-x-1">
-                        <i class="fab fa-youtube text-red-500 text-lg"></i>
-                        <span>Consulting YT</span>
-                        <span class="absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
-                    </a>
-                </nav>
+<header class="fixed top-0 left-0 w-full bg-[var(--color-goc-darkest)] shadow-lg z-40">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <a href="../index.html" class="flex items-center space-x-2">
+                    <img src="../images/GOClogo.png" alt="Games Over Coffee Logo" class="h-10 w-10">
+                        <span id="header-title" class="text-2xl font-extrabold font-poppins text-[var(--color-goc-light-accent)] hidden sm:block"></span>
+                </a>
             </div>
-        </header>
+            <nav id="dynamic-nav" class="flex flex-wrap justify-center sm:justify-end gap-x-4 gap-y-2 text-sm md:text-base"></nav>
+        </div>
+    </header>
 
         <main class="pt-20">
             <section id="mostRecentEpisodeSection" class="bg-[var(--color-goc-dark)] p-6 md:p-8 rounded-lg shadow-xl mb-12 border border-[var(--color-goc-desaturated-indigo)] max-w-5xl mx-auto">
