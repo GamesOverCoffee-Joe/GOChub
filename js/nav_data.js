@@ -5,25 +5,25 @@
 const navigationLinks = [
     {
         name: 'Home',
-        href: '../index.html',
+        href: '/index.html',
         titleSuffix: '',
         classes: 'text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group'
     },
     {
         name: 'Consulting',
-        href: '../consulting_site/consulting_site_1.1.html',
+        href: '/consulting_site/consulting_site_1.1.html',
         titleSuffix: ' - Consulting',
         classes: 'text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group'
     },
     {
         name: 'Lore',
-        href: '../lore_site/GOClore_1.3.html',
+        href: '/lore_site/GOClore_1.3.html',
         titleSuffix: ' - Lore',
         classes: 'text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group'
     },
     {
         name: 'Insights',
-        href: '../insight_site/GOCAMA_2.1.html',
+        href: '/insight_site/GOCAMA_2.1.html',
         titleSuffix: ' - Insights',
         classes: 'animate-rainbow hover: transition-colors duration-300 relative group'
     },
