@@ -9,6 +9,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+      <script src="js/nav_data_1.1.js"></script>
+    
     <style>
         /* Set a custom dark theme using CSS variables from GOClore */
         :root {
@@ -19,7 +22,7 @@
             --gradient-goc-indigo: linear-gradient(to right, #6366f1, #8b5cf6);
             --color-goc-desaturated-indigo: #4a4d7c;
             --color-goc-light-indigo-hover: #3c3f6b;
-            --color-border-subtle: #6b6b6b;
+            --color-border-subtle: #3A4452;
             --color-card-border: #303A45;
             --color-hover-bg: #35424D;
             --color-scrollbar-thumb: #50687E;
@@ -82,46 +85,42 @@
         .text-shadow-md {
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
         }
+        /* New rainbow animation for the Insights button */
+        @keyframes rainbow-text {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .animate-rainbow {
+            background-image: linear-gradient(
+                to right,
+                #FF6347, /* Tomato */
+                #FF8C00, /* DarkOrange */
+                #FFD700, /* Gold */
+                #7CFC00, /* LawnGreen */
+                #00CED1, /* DarkTurquoise */
+                #4169E1, /* RoyalBlue */
+                #9400D3  /* DarkViolet */
+            );
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: rainbow-text 5s linear infinite;
+        }
     </style>
 </head>
 <body class="bg-[var(--color-goc-darkest)] text-[var(--color-goc-main-text)] font-inter flex flex-col h-screen">
 
-    <header class="fixed top-0 left-0 w-full bg-[var(--color-goc-darkest)] shadow-lg z-40">
+<header class="fixed top-0 left-0 w-full bg-[var(--color-goc-darkest)] shadow-lg z-40">
         <div class="container mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center space-x-4">
                 <a href="../index.html" class="flex items-center space-x-2">
-                    <img src="../images/GOClogo.png" alt="Games Over Coffee Logo" class="h-10 w-10">
-                    <span class="text-2xl font-extrabold font-poppins text-[var(--color-goc-light-accent)] hidden sm:block">Games Over Coffee - Insights</span>
+                    <img src="images/GOClogo.png" alt="Games Over Coffee Logo" class="h-10 w-10">
+                         <span id="header-title" class="text-2xl font-extrabold font-poppins text-[var(--color-goc-light-accent)] hidden sm:block"></span>
+
                 </a>
             </div>
-            <nav class="flex flex-wrap justify-center sm:justify-end gap-x-4 gap-y-2 text-sm md:text-base">
-                <a href="../index.html" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group">
-                    Home
-                    <span class="absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
-                </a>
-                <a href="../consulting_site/consulting_site.html" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group">
-                    Consulting
-                    <span class="absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
-                </a>
-                <a href="../lore_site/GOClore.html" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group">
-                    Lore
-                    <span class="absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
-                </a>
-                <a href="./GOCAMA_1.8.html" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group">
-                    Insights
-                    <span class="absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
-                </a>
-                <a href="https://www.youtube.com/@GamesOverCoffee" target="_blank" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group hidden md:flex items-center space-x-1">
-                    <i class="fab fa-youtube text-red-500 text-lg"></i>
-                    <span>YouTube</span>
-                    <span class="absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
-                </a>
-                <a href="https://www.youtube.com/@GamesOverCoffeeConsulting" target="_blank" class="text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group hidden md:flex items-center space-x-1">
-                    <i class="fab fa-youtube text-red-500 text-lg"></i>
-                    <span>Consulting YT</span>
-                    <span class="absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
-                </a>
-            </nav>
+            <nav id="dynamic-nav" class="flex flex-wrap justify-center sm:justify-end gap-x-4 gap-y-2 text-sm md:text-base"></nav>
         </div>
     </header>
 
@@ -157,7 +156,7 @@
     </div>
 
     <script>
-        const DATA_URL = 'feed_1.9.json';
+        const DATA_URL = 'data/feed_1.9.json';
         const PAGE_SIZE = 9;
         const DEFAULT_VIDEO_DURATION_SECONDS = 1260; 
 
