@@ -83,7 +83,54 @@
             background-clip: text;
             animation: rainbow-text 5s linear infinite;
         }
+
+        /* Custom styling for the main card with a background image and overlay */
+        .card-with-image {
+            position: relative;
+            background-image: url('https://img.itch.zone/aW1hZ2UvMzgwNzY0Ny8yMjY5OTMxOS5qcGc=/original/6qvGce.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* The black-to-transparent gradient overlay for the card */
+        .card-with-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0));
+            border-radius: 0.75rem;
+            /* Match the card's rounded corners */
+            z-index: 1;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        /* All content inside the card needs to be above the overlay */
+        .card-with-image>* {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* A subtle hover effect for the button */
+        .btn-hover-effect:hover {
+            transform: scale(1.05);
+            background-color: rgba(60, 60, 60, 0.8);
+        }
+
+        /* Specific styling for the logo to ensure its readability over the gradient */
+        .logo-container {
+            flex-shrink: 0;
+            margin-right: 1.5rem;
+            position: relative;
+            z-index: 3;
+            /* Ensure the logo is always on top */
+        }
+
+
     </style>
+
     <script src="js/nav_data_1.1.js"></script>
 
     <style>
@@ -246,7 +293,33 @@
         </div>
     </header>
 
-        <main class="pt-20">
+        <main class="pt-8 flex-grow">
+
+                        <div class="w-full max-w-5xl mx-auto py-8 px-6 rounded-xl shadow-lg border border-[#2e2e2e] transition-transform duration-300 hover:scale-[1.01] card-with-image mt-8 mb-8">
+                    <div class="flex items-center justify-between flex-wrap md:flex-nowrap">
+                        <div class="logo-container">
+                            <img src="https://img.itch.zone/aW1nLzIyMDY4NDUzLnBuZw==/original/fRyI4Y.png" alt="The Door Problem Game Logo" class="h-28 w-auto max-w-[200px] object-contain">
+                        </div>
+
+                        <div class="flex-grow flex flex-col items-center text-center mt-4 md:mt-0 md:flex-grow-0 md:mr-6">
+                            <p class="text-white text-base">
+                                The first game from Games Over Coffee
+                            </p>
+                            <p class="text-base font-bold text-red-400">
+                                WARNING: This game is not fun
+                            </p>
+                            <p class="text-xs text-gray-400 mt-2">
+                                price: $0 or more
+                            </p>
+                        </div>
+
+                        <div class="flex-shrink-0 mt-4 md:mt-0 md:ml-6">
+                            <a href="https://gamesovercoffee.itch.io/the-door-problem" target="_blank" class="inline-block w-48 py-3 text-center text-sm md:text-base font-semibold text-white rounded-lg transition-transform duration-200 active:scale-95 bg-gray-800 border border-gray-700 hover:bg-gray-700">
+                                Download on itch.io
+                            </a>
+                        </div>
+                    </div>
+                </div>
             <section id="mostRecentEpisodeSection" class="bg-[var(--color-goc-dark)] p-6 md:p-8 rounded-lg shadow-xl mb-12 border border-[var(--color-goc-desaturated-indigo)] max-w-5xl mx-auto">
                 <h2 class="text-3xl md:text-4xl font-bold mb-6 text-[var(--color-goc-light-accent)] text-center">Most Recent Episode</h2>
                 <div id="mostRecentVideoContainer" class="flex flex-col md:flex-row items-center justify-center gap-6">
@@ -267,7 +340,6 @@
             </section>
 
             <section id="mainChannelContent" class="channel-content pb-10">
-                <h2 class="text-3xl md:text-4xl font-bold mb-8 text-[var(--color-goc-light-accent)]">Games Over Coffee Videos</h2>
                 <div id="mainVideosGrid" class="grid grid-cols-1 gap-y-12">
                 </div>
             </section>
@@ -312,6 +384,6 @@
         </div>
     </div>
 
-    <script src="js/script_1.1.js"></script>
+    <script src="js/script_1.2.js"></script>
 </body>
 </html>

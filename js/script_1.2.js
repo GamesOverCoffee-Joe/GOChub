@@ -159,16 +159,16 @@ const renderMainChannelContent = (videos) => {
 
     sortedSeasonNums.forEach(seasonNum => {
         const seasonBoxWrapper = document.createElement('div');
-        seasonBoxWrapper.className = 'bg-[var(--color-goc-dark)] rounded-2xl shadow-xl border border-[var(--color-goc-darkest)] col-span-full mt-8 p-4 md:p-6';
+        seasonBoxWrapper.className = 'bg-[var(--color-goc-dark)] rounded-2xl shadow-xl border border-[var(--color-goc-darkest)] col-span-full mt-8 p-2 md:p-6';
         mainGrid.appendChild(seasonBoxWrapper);
 
         const seasonHeaderWrapper = document.createElement('div');
-        seasonHeaderWrapper.className = 'p-4 md:p-8 bg-[var(--color-goc-dark)] rounded-2xl col-span-full mb-4';
+        seasonHeaderWrapper.className = 'p-4 md:p-2 bg-[var(--color-goc-dark)] rounded-2xl col-span-full mb-4';
         seasonHeaderWrapper.innerHTML = `
-            <h3 class="text-sm font-medium text-[var(--color-goc-light-accent)] opacity-70 mb-2">Games Over Coffee</h3> <h1 class="text-6xl md:text-7xl font-extrabold font-poppins bg-gradient-to-r from-indigo-500 to-purple-500 text-transparent bg-clip-text drop-shadow-lg tracking-tight">
+            <h3 class="text-sm font-medium text-[var(--color-goc-light-accent)] opacity-70 mb-1">Games Over Coffee</h3> <h1 class="text-6xl md:text-7xl font-extrabold font-poppins bg-gradient-to-r from-indigo-500 to-purple-500 text-transparent bg-clip-text drop-shadow-lg tracking-tight">
                 ${seasonNum === 'Unsorted' ? 'Unsorted Episodes' : `Season ${seasonNum}`}
             </h1>
-            <p class="text-md text-[var(--color-goc-main-text)] opacity-80 mt-2">${seasons[seasonNum].length} Episodes</p> `;
+            <p class="text-md text-[var(--color-goc-main-text)] opacity-80 mt-1">${seasons[seasonNum].length} Episodes</p> `;
         seasonBoxWrapper.appendChild(seasonHeaderWrapper);
 
         const filmstripContainerWrapper = document.createElement('div');
@@ -180,7 +180,7 @@ const renderMainChannelContent = (videos) => {
         seasonVideosContainer.className = 'flex overflow-x-auto gap-6 pb-4 scrollbar-hide snap-x snap-mandatory';
 
         const leftArrowButton = document.createElement('button');
-        leftArrowButton.className = 'absolute left-0 top-1/2 -translate-y-1/2 w-16 h-full bg-gradient-to-r from-black/90 via-black/50 to-transparent flex items-center justify-start text-white text-3xl opacity-0 hover:opacity-100 transition-opacity duration-300 z-20 cursor-pointer rounded-l-lg';
+        leftArrowButton.className = 'absolute left-0 top-1/2 -translate-y-1/2 w-16 h-full bg-gradient-to-r from-black/90 via-black/50 to-transparent flex items-center justify-start text-white text-3xl z-20 cursor-pointer rounded-l-lg';
         leftArrowButton.innerHTML = '<i class="fas fa-chevron-left ml-2"></i>';
         leftArrowButton.addEventListener('click', () => {
             const scrollContainer = document.getElementById(seasonContainerId);
@@ -193,7 +193,7 @@ const renderMainChannelContent = (videos) => {
         filmstripContainerWrapper.appendChild(leftArrowButton);
 
         const rightArrowButton = document.createElement('button');
-        rightArrowButton.className = 'absolute right-0 top-1/2 -translate-y-1/2 w-16 h-full bg-gradient-to-l from-black/90 via-black/50 to-transparent flex items-center justify-end text-white text-3xl opacity-0 hover:opacity-100 transition-opacity duration-300 z-20 cursor-pointer rounded-r-lg';
+        rightArrowButton.className = 'absolute right-0 top-1/2 -translate-y-1/2 w-16 h-full bg-gradient-to-l from-black/90 via-black/50 to-transparent flex items-center justify-end text-white text-3xl z-20 cursor-pointer rounded-r-lg';
         rightArrowButton.innerHTML = '<i class="fas fa-chevron-right mr-2"></i>';
         rightArrowButton.addEventListener('click', () => {
             const scrollContainer = document.getElementById(seasonContainerId);

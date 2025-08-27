@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Door Problem Banner</title>
+    <!-- Use Tailwind CSS for rapid, responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #121212; /* A very dark gray, almost black */
+            color: #E0E0E0; /* Light gray for readability on dark background */
+        }
+        
+        /* Custom styling for the main card with a background image and overlay */
+        .card-with-image {
+            position: relative;
+            background-image: url('https://img.itch.zone/aW1hZ2UvMzgwNzY0Ny8yMjY5OTMxOS5qcGc=/original/6qvGce.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* The semi-transparent black overlay for the card */
+        .card-with-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 0.75rem; /* Match the card's rounded corners */
+            z-index: 1;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        /* A subtle hover effect to make the overlay slightly darker */
+        .card-with-image:hover::before {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        /* All content inside the card needs to be above the overlay */
+        .card-with-image > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* A subtle hover effect for the button */
+        .btn-hover-effect:hover {
+            transform: scale(1.05);
+            background-color: rgba(60, 60, 60, 0.8);
+        }
+
+    </style>
+</head>
+<body class="p-8 flex items-center justify-center min-h-screen">
+
+    <!-- The main card with the background image and overlay -->
+    <div class="w-full max-w-5xl mx-auto py-8 px-6 rounded-xl shadow-lg border border-[#2e2e2e] transition-transform duration-300 hover:scale-[1.01] card-with-image">
+        <div class="flex items-center justify-between">
+            <!-- Game logo on the left, much larger -->
+            <div class="flex-shrink-0 mr-6">
+                <img src="https://img.itch.zone/aW1nLzIyMDY4NDUzLnBuZw==/original/fRyI4Y.png" alt="The Door Problem Game Logo" class="h-28 w-auto max-w-[200px] object-contain">
+            </div>
+            
+            <!-- Text and button on the right -->
+            <div class="flex-grow flex flex-col items-start">
+                <p class="text-sm md:text-base text-white">
+                    An interactive narrative experiment
+                </p>
+                <p class="text-sm md:text-base font-bold text-red-400">
+                    WARNING: This game is not fun
+                </p>
+                <p class="text-xs text-gray-400 mt-2">
+                    price: $0 or more
+                </p>
+            </div>
+
+            <div class="flex-shrink-0 ml-6">
+                <a href="https://gamesovercoffee.itch.io/the-door-problem" target="_blank" class="inline-block w-48 py-3 text-center text-sm md:text-base font-semibold text-white rounded-lg transition-transform duration-200 active:scale-95 bg-gray-800 border border-gray-700 hover:bg-gray-700">
+                    Download Now
+                </a>
+            </div>
+        </div>
+    </div>
+    
+</body>
+</html>
