@@ -374,7 +374,7 @@
             }
         }
     </style>
-    <script src="js/nav_data_1.1.js"></script>
+    <script src="js/nav_data_1.2.js"></script>
     
 </head>
 <body class="flex flex-col h-screen">
@@ -802,7 +802,7 @@
 
             window.addEventListener('resize', handleResize);
 
-            fetch('data/goc_lore.json')
+            fetch('data/goc_lore_3.0.json')
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);

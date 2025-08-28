@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Games Over Coffee Lore Editor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        :root {
+            --color-goc-darkest: #1f1f1f;
+            --color-goc-dark: #2b2b2b;
+            --color-goc-light-accent: #aac6ce;
+            --color-goc-main-text: #ead9ca;
+            --color-border-subtle: #3A4452;
+            --color-card-border: #303A45;
+            --color-hover-bg: #35424D;
+            --color-scrollbar-thumb: #4b5563;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-goc-darkest);
+            color: #d1d5db;
+        }
+
+        .window-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: var(--color-scrollbar-thumb) var(--color-goc-dark);
+        }
+
+            .window-scroll::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            .window-scroll::-webkit-scrollbar-track {
+                background: var(--color-goc-dark);
+            }
+
+            .window-scroll::-webkit-scrollbar-thumb {
+                background-color: var(--color-scrollbar-thumb);
+                border-radius: 20px;
+                border: 2px solid var(--color-goc-dark);
+            }
+
+        .episode-item {
+            transition: all 0.2s ease-in-out;
+            cursor: grab;
+        }
+            .episode-item.dragging {
+                opacity: 0.5;
+                cursor: grabbing;
+                border: 2px dashed #6366f1;
+            }
+
+            .episode-item:hover {
+                background-color: var(--color-hover-bg);
+                transform: scale(1.01);
+            }
+
+            .episode-item.selected {
+                background-color: #2e3048;
+                border-left: 4px solid #6366f1;
+                padding-left: calc(0.75rem - 4px);
+            }
+            .episode-item.dragging {
+                opacity: 0.5;
+            }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+            .control-btn:hover {
+                color: #d1d5db;
+            }
+
+        input[type="text"], textarea, input[type="number"] {
+            background-color: #1a1a1a;
+            border: 1px solid #4a4a4a;
+            color: #d1d5db;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+
+            input[type="text"]:focus, textarea:focus, input[type="number"]:focus {
+                outline: none;
+                border-color: #6366f1;
+            }
+
+        label {
+            color: #b1b9c4;
+            font-weight: 600;
+        }
+        
+        .episode-numbers {
+            display: flex;
+            align-items: center;
+            font-size: 0.875rem;
+            color: #d1d5db;
+        }
+        .episode-numbers input {
+            background-color: transparent;
+            border: 1px solid transparent;
+            color: #d1d5db;
+            width: 3rem;
+            padding: 0.25rem;
+            text-align: center;
+            font-weight: bold;
+        }
+        .episode-numbers input:focus {
+            border: 1px solid #4a4a4a;
+            background-color: #1a1a1a;
+        }
+        .modal {
+            @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300 ease-in-out;
+        }
+        .modal-content {
+            @apply bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-md space-y-4 transform transition-transform duration-300 ease-in-out scale-95;
+        }
+        .modal.is-visible .modal-content {
+            @apply scale-100;
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen">
+
+    <header class="fixed top-0 left-0 w-full bg-[var(--color-goc-darkest)] shadow-lg z-40">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-[var(--color-goc-light-accent)]">Games Over Coffee Lore Editor</h1>
+            <div class="flex items-center space-x-4">
+                <button id="import-json-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200">
+                    <i class="fa-solid fa-file-import mr-2"></i> Import JSON
+                </button>
+                <input type="file" id="json-file-input" accept="application/json" class="hidden">
+                <button id="open-add-modal-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200">
+                    <i class="fa-solid fa-plus mr-2"></i> Add Episodes
+                </button>
+                <button id="export-json-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200">
+                    <i class="fa-solid fa-file-export mr-2"></i> Export JSON
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex flex-col md:flex-row p-4 pt-20 overflow-hidden container mx-auto gap-4">
+
+        <div class="md:w-1/3 lg:w-1/4 bg-[var(--color-goc-dark)] rounded-xl shadow-lg p-4 flex flex-col overflow-hidden">
+            <h2 class="text-xl font-bold mb-4 text-indigo-400">Episode List</h2>
+            <div id="episode-list-container" class="flex-grow overflow-y-auto window-scroll pr-2">
+                <ul id="episode-list" class="space-y-2">
+                </ul>
+            </div>
+        </div>
+
+        <div class="md:w-2/3 lg:w-3/4 bg-[var(--color-goc-dark)] rounded-xl shadow-lg p-6 flex flex-col overflow-hidden">
+            <h2 id="editor-title" class="text-xl font-bold mb-4 text-indigo-400">Select an Episode to Edit</h2>
+            <div id="editor-form-container" class="flex-grow overflow-y-auto window-scroll pr-2">
+                <p id="initial-message" class="text-gray-400 text-center py-10">Choose an episode from the list to start editing its lore data.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="add-episodes-modal" class="modal hidden opacity-0">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold text-white mb-4">Add New Episodes</h3>
+            <div class="space-y-4">
+                <div>
+                    <label for="num-episodes-input" class="block text-sm font-medium text-gray-400 mb-1">Number of Episodes</label>
+                    <input type="number" id="num-episodes-input" min="1" value="1" class="w-full rounded-md bg-gray-800 text-white border border-gray-700 p-2 focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50">
+                </div>
+                <div>
+                    <label for="season-input" class="block text-sm font-medium text-gray-400 mb-1">Season Number</label>
+                    <input type="number" id="season-input" min="1" value="1" class="w-full rounded-md bg-gray-800 text-white border border-gray-700 p-2 focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2 mt-6">
+                <button id="cancel-add-btn" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200">
+                    Cancel
+                </button>
+                <button id="confirm-add-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200">
+                    Add Episodes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state variables
+        const episodeData = [];
+        let selectedEpisodeIndex = -1;
+        let draggedItem = null;
+
+        // DOM element references
+        const episodeListEl = document.getElementById('episode-list');
+        const editorFormContainerEl = document.getElementById('editor-form-container');
+        const editorTitleEl = document.getElementById('editor-title');
+        const exportJsonBtn = document.getElementById('export-json-btn');
+        const importJsonBtn = document.getElementById('import-json-btn');
+        const jsonFileInput = document.getElementById('json-file-input');
+        const initialMessage = document.getElementById('initial-message');
+        const openAddModalBtn = document.getElementById('open-add-modal-btn');
+        const addEpisodesModal = document.getElementById('add-episodes-modal');
+        const numEpisodesInput = document.getElementById('num-episodes-input');
+        const seasonInput = document.getElementById('season-input');
+        const confirmAddBtn = document.getElementById('confirm-add-btn');
+        const cancelAddBtn = document.getElementById('cancel-add-btn');
+
+        // Helper function to create an input element
+        const createInput = (label, id, value) => {
+            const div = document.createElement('div');
+            div.className = 'mb-4';
+            const labelEl = document.createElement('label');
+            labelEl.htmlFor = id;
+            labelEl.className = 'block text-sm font-medium mb-1';
+            labelEl.textContent = label;
+            const inputEl = document.createElement('input');
+            inputEl.type = 'text';
+            inputEl.id = id;
+            inputEl.value = value || '';
+            inputEl.className = 'mt-1 block w-full rounded-md shadow-sm';
+            div.appendChild(labelEl);
+            div.appendChild(inputEl);
+            return div;
+        };
+
+        // Helper function to create a textarea element
+        const createTextarea = (label, id, value) => {
+            const div = document.createElement('div');
+            div.className = 'mb-4';
+            const labelEl = document.createElement('label');
+            labelEl.htmlFor = id;
+            labelEl.className = 'block text-sm font-medium mb-1';
+            labelEl.textContent = label;
+            const textareaEl = document.createElement('textarea');
+            textareaEl.id = id;
+            textareaEl.value = value || '';
+            textareaEl.rows = 4;
+            textareaEl.className = 'mt-1 block w-full rounded-md shadow-sm';
+            div.appendChild(labelEl);
+            div.appendChild(textareaEl);
+            return div;
+        };
+
+        // A comprehensive map of all possible questions for each section
+        const allQuestions = {
+            synopsisQuestions: [
+                "What is the primary game design concept or theme discussed in this episode?",
+                "What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?",
+                "What is the central argument or key takeaway the episode makes about game design?"
+            ],
+            episodeLoreQuestions: [
+                "Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?",
+                "If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?",
+                "Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?"
+            ],
+            easterEggsQuestions: [
+                "Are there any specific visual or audio Easter eggs in this episode (e.g., hidden references in the background, specific props, subtle audio cues)?",
+                "Are there any subtle nods to previous episodes, future content, or meta-references within the series itself?",
+                "Are there an inside jokes or community references integrated into this episode?"
+            ],
+            productionTidbitsQuestions: [
+                "What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?",
+                "Were there any alternative ideas or concepts for this episode that didn't make the final cut?",
+                "Any interesting facts about the recording process, script writing, or asset creation for this particular video?"
+            ]
+        };
+
+        // Helper function to create an accordion section
+        const createAccordion = (title, content, dataSection) => {
+            const div = document.createElement('div');
+            div.className = 'bg-gray-800 p-4 rounded-lg mb-4';
+            div.setAttribute('data-section', dataSection);
+            const header = document.createElement('div');
+            header.className = 'flex items-center justify-between cursor-pointer';
+            const titleEl = document.createElement('h3');
+            titleEl.className = 'text-lg font-bold text-gray-200';
+            titleEl.textContent = title;
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-chevron-down text-gray-400 transform transition-transform duration-200';
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'mt-4 space-y-4 hidden';
+
+            header.appendChild(titleEl);
+            header.appendChild(icon);
+            div.appendChild(header);
+            div.appendChild(contentDiv);
+
+            // Use the hardcoded questions to build the form fields
+            const questions = allQuestions[dataSection] || [];
+            questions.forEach(question => {
+                const value = content && content[question] !== undefined ? content[question] : null;
+                contentDiv.appendChild(createTextarea(question, question, value));
+            });
+
+            header.addEventListener('click', () => {
+                const isHidden = contentDiv.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180', !isHidden);
+            });
+
+            return div;
+        };
+
+        // Updates the editor form with data from the selected episode
+        const updateEditorFields = (data) => {
+            editorFormContainerEl.innerHTML = '';
+            if (!data) {
+                editorTitleEl.textContent = 'Select an Episode to Edit';
+                initialMessage.classList.remove('hidden');
+                return;
+            }
+            initialMessage.classList.add('hidden');
+            editorTitleEl.textContent = data.episodeTitle || 'No Title';
+
+            const episodeDetails = document.createElement('div');
+            episodeDetails.className = 'grid grid-cols-1 md:grid-cols-2 gap-4';
+            episodeDetails.appendChild(createInput('Lore Title', 'lore-title-input', data.loreTitle));
+            episodeDetails.appendChild(createInput('Episode Title', 'episode-title-input', data.episodeTitle));
+            episodeDetails.appendChild(createInput('YouTube URL', 'youtube-url-input', data.youtubeUrl));
+            episodeDetails.appendChild(createInput('Thumbnail URL', 'thumbnail-url-input', data.thumbnail));
+
+            const sections = document.createElement('div');
+            sections.className = 'mt-8';
+            // Pass the data for each section to the createAccordion function
+            sections.appendChild(createAccordion('Synopsis Questions', data.synopsisQuestions, 'synopsisQuestions'));
+            sections.appendChild(createAccordion('Episode Lore Questions', data.episodeLoreQuestions, 'episodeLoreQuestions'));
+            sections.appendChild(createAccordion('Easter Eggs Questions', data.easterEggsQuestions, 'easterEggsQuestions'));
+            sections.appendChild(createAccordion('Production Tidbits Questions', data.productionTidbitsQuestions, 'productionTidbitsQuestions'));
+
+            const recordingFactsTextarea = createTextarea('Recording Facts', 'recording-facts-input', data.recording_facts);
+
+            const saveChangesBtn = document.createElement('button');
+            saveChangesBtn.id = 'save-changes-btn';
+            saveChangesBtn.className = 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200';
+            saveChangesBtn.textContent = 'Save Changes';
+            saveChangesBtn.addEventListener('click', saveChanges);
+
+            const deleteEpisodeBtn = document.createElement('button');
+            deleteEpisodeBtn.id = 'delete-episode-btn';
+            deleteEpisodeBtn.className = 'bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 ml-2';
+            deleteEpisodeBtn.textContent = 'Delete Episode';
+            deleteEpisodeBtn.addEventListener('click', deleteEpisode);
+
+            const controlsDiv = document.createElement('div');
+            controlsDiv.className = 'flex justify-end mt-4';
+            controlsDiv.appendChild(deleteEpisodeBtn);
+            controlsDiv.appendChild(saveChangesBtn);
+
+            editorFormContainerEl.appendChild(episodeDetails);
+            editorFormContainerEl.appendChild(sections);
+            editorFormContainerEl.appendChild(recordingFactsTextarea);
+            editorFormContainerEl.appendChild(controlsDiv);
+        };
+
+        // Selects an episode from the list and updates the editor
+        const selectEpisode = (index) => {
+            selectedEpisodeIndex = index;
+            const episodes = document.querySelectorAll('.episode-item');
+            episodes.forEach((el, i) => {
+                el.classList.toggle('selected', i === index);
+            });
+            updateEditorFields(episodeData[index]);
+        };
+
+        // Populates the episode list UI from the episodeData array
+        const populateEpisodeList = () => {
+            episodeListEl.innerHTML = '';
+            if (episodeData.length === 0) {
+                updateEditorFields(null);
+                return;
+            }
+
+            const selectedEpisode = (selectedEpisodeIndex !== -1) ? episodeData[selectedEpisodeIndex] : null;
+
+            episodeData.forEach((episode, index) => {
+                const li = document.createElement('li');
+                li.className = 'episode-item p-3 rounded-lg cursor-pointer flex justify-between items-center';
+                li.setAttribute('data-index', index);
+                li.setAttribute('draggable', true);
+
+                const match = episode.episodeTitle.match(/Season (\d+), Episode (\d+):/);
+                const seasonNum = match ? match[1] : '';
+                const episodeNum = match ? match[2] : '';
+
+                const titleText = episode.episodeTitle.replace(/Season \d+, Episode \d+: /, '').replace(/["']/g, '');
+
+                li.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-grip-lines text-gray-500 text-lg cursor-grab hover:text-white"></i>
+                        <div class="episode-numbers">
+                            S<input type="number" value="${seasonNum}" min="1" class="season-input w-12 bg-transparent text-white border-none p-0">
+                            E<input type="number" value="${episodeNum}" min="1" class="episode-input w-12 bg-transparent text-white border-none p-0">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                             <div class="text-sm font-bold text-indigo-300 overflow-hidden whitespace-nowrap text-ellipsis">${titleText}</div>
+                            <div class="text-xs text-gray-400 overflow-hidden whitespace-nowrap text-ellipsis">${episode.loreTitle || 'No Title'}</div>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="delete-btn text-red-400 hover:text-red-600 transition-colors duration-200">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+
+                li.addEventListener('click', (e) => {
+                    const deleteBtn = e.target.closest('.delete-btn');
+                    const inputField = e.target.closest('input');
+                    if (!deleteBtn && !inputField) {
+                        selectEpisode(index);
+                    }
+                });
+
+                episodeListEl.appendChild(li);
+            });
+            attachEventListeners();
+        };
+
+        const attachEventListeners = () => {
+             episodeListEl.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const item = e.target.closest('.episode-item');
+                    if (!item) return;
+                    const index = parseInt(item.dataset.index);
+                    if (confirm('Are you sure you want to delete this episode?')) {
+                        episodeData.splice(index, 1);
+                        populateEpisodeList();
+                    }
+                });
+            });
+
+            episodeListEl.querySelectorAll('.season-input, .episode-input').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const item = e.target.closest('.episode-item');
+                    if (!item) return;
+                    const index = parseInt(item.dataset.index);
+                    const seasonInput = item.querySelector('.season-input');
+                    const episodeInput = item.querySelector('.episode-input');
+
+                    const newSeason = parseInt(seasonInput.value) || 1;
+                    const newEpisode = parseInt(episodeInput.value) || 1;
+
+                    const currentTitle = episodeData[index].episodeTitle;
+                    const titlePart = currentTitle.includes(':') ? currentTitle.split(': ')[1] : currentTitle;
+
+                    episodeData[index].episodeTitle = `Season ${newSeason}, Episode ${newEpisode}: ${titlePart}`;
+                    
+                    populateEpisodeList();
+                });
+            });
+        }
+        
+        // Gathers form data from the editor UI
+        const getFormData = () => {
+            const formData = {};
+            const inputIds = ['lore-title-input', 'episode-title-input', 'youtube-url-input', 'thumbnail-url-input'];
+            inputIds.forEach(id => {
+                const input = document.getElementById(id);
+                if (input) {
+                    // Export as empty string instead of null for empty inputs
+                    formData[input.id.replace(/-input$/, '')] = input.value;
+                }
+            });
+
+            const sections = ['synopsisQuestions', 'episodeLoreQuestions', 'easterEggsQuestions', 'productionTidbitsQuestions'];
+            sections.forEach(section => {
+                formData[section] = {};
+                const accordionDiv = editorFormContainerEl.querySelector(`[data-section="${section}"]`);
+                if (accordionDiv) {
+                    accordionDiv.querySelectorAll('textarea').forEach(textarea => {
+                        // Export as empty string instead of null for empty textareas
+                        formData[section][textarea.id] = textarea.value;
+                    });
+                }
+            });
+
+            const recordingFactsInput = document.getElementById('recording-facts-input');
+            if (recordingFactsInput) {
+                // Export as empty string instead of null for empty inputs
+                formData.recording_facts = recordingFactsInput.value;
+            }
+
+            return formData;
+        };
+
+        // Saves changes from the form to the episodeData array
+        const saveChanges = () => {
+            if (selectedEpisodeIndex === -1) return;
+            const updatedData = getFormData();
+            episodeData[selectedEpisodeIndex] = { ...episodeData[selectedEpisodeIndex], ...updatedData };
+            populateEpisodeList();
+            selectEpisode(selectedEpisodeIndex);
+        };
+
+        // Deletes the currently selected episode
+        const deleteEpisode = () => {
+            if (selectedEpisodeIndex === -1) return;
+            if (confirm('Are you sure you want to delete this episode?')) {
+                episodeData.splice(selectedEpisodeIndex, 1);
+                selectedEpisodeIndex = -1;
+                populateEpisodeList();
+            }
+        };
+
+        // Modal functions
+        const openModal = () => {
+            addEpisodesModal.classList.remove('hidden');
+            // Timeout to allow for the opacity transition
+            setTimeout(() => addEpisodesModal.classList.add('is-visible', 'opacity-100'), 10);
+            numEpisodesInput.focus();
+        };
+
+        const closeModal = () => {
+            addEpisodesModal.classList.remove('is-visible', 'opacity-100');
+            // Timeout to allow for the opacity transition before hiding
+            setTimeout(() => addEpisodesModal.classList.add('hidden'), 300);
+            numEpisodesInput.value = '1';
+            seasonInput.value = '1';
+        };
+        
+        // Handles adding episodes from the modal inputs
+        const addEpisodesFromModal = () => {
+            const numToAdd = parseInt(numEpisodesInput.value);
+            const seasonNum = parseInt(seasonInput.value);
+
+            if (isNaN(numToAdd) || numToAdd < 1 || isNaN(seasonNum) || seasonNum < 1) {
+                alert('Please enter a valid number for episodes and season.');
+                return;
+            }
+            
+            // Find the highest existing episode number for the selected season
+            const episodesInSeason = episodeData.filter(e => {
+                const match = e.episodeTitle.match(/Season (\d+), Episode (\d+):/);
+                return match && parseInt(match[1]) === seasonNum;
+            });
+            const lastEpisodeNum = episodesInSeason.length > 0
+                ? episodesInSeason.reduce((max, e) => {
+                    const match = e.episodeTitle.match(/Season (\d+), Episode (\d+):/);
+                    return match ? Math.max(max, parseInt(match[2])) : max;
+                }, 0)
+                : 0;
+
+            const newEpisodeStartIndex = episodeData.length;
+
+            for (let i = 0; i < numToAdd; i++) {
+                const newEpisode = {
+                    "loreTitle": "New Episode Lore",
+                    "episodeTitle": `Season ${seasonNum}, Episode ${lastEpisodeNum + 1 + i}: "New Episode"`,
+                    "youtubeUrl": "https://www.youtube.com/watch?v=",
+                    "thumbnail": "",
+                    "synopsisQuestions": {},
+                    "episodeLoreQuestions": {},
+                    "easterEggsQuestions": {},
+                    "productionTidbitsQuestions": {},
+                    "recording_facts": "No"
+                };
+                episodeData.push(newEpisode);
+            }
+
+            populateEpisodeList();
+            selectEpisode(newEpisodeStartIndex);
+            closeModal();
+        };
+
+        // Exports the current data to a JSON file, ensuring it's valid JSON
+        const exportJson = () => {
+            const filteredData = episodeData.map(({ episodeCharacters, episodeLocations, ...rest }) => rest);
+            const jsonString = JSON.stringify(filteredData, (key, value) => {
+                if (typeof value === 'string') {
+                    // Escape unescaped newlines to prevent invalid JSON
+                    return value.replace(/\n/g, '\\n');
+                }
+                return value;
+            }, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'goc_lore_new.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        };
+
+        // Triggers the file input dialog
+        const importJson = () => {
+            jsonFileInput.click();
+        };
+
+        // Handles the file selection and parsing process
+        const handleFileSelect = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    // Sanitize the raw string content before parsing, removing problematic characters
+                    const sanitizedContent = e.target.result.replace(/[\u00A0\r\n\n\r]/g, "");
+                    const importedData = JSON.parse(sanitizedContent);
+
+                    if (Array.isArray(importedData)) {
+                        episodeData.splice(0, episodeData.length, ...importedData);
+                        selectedEpisodeIndex = 0;
+                        populateEpisodeList();
+                    } else {
+                        alert('Invalid JSON file. Please import a file containing an array of episode objects.');
+                    }
+                } catch (error) {
+                    console.error('Error parsing JSON:', error);
+                    alert('Could not parse the JSON file. Please ensure it is a valid JSON format with escaped newlines (\\n) where required.');
+                }
+            };
+            reader.readAsText(file);
+        };
+
+        // Initializes event listeners and populates the initial list
+        document.addEventListener('DOMContentLoaded', () => {
+            openAddModalBtn.addEventListener('click', openModal);
+            cancelAddBtn.addEventListener('click', closeModal);
+            confirmAddBtn.addEventListener('click', addEpisodesFromModal);
+
+            exportJsonBtn.addEventListener('click', exportJson);
+            importJsonBtn.addEventListener('click', importJson);
+            jsonFileInput.addEventListener('change', handleFileSelect);
+
+            episodeListEl.addEventListener('dragstart', (e) => {
+                const item = e.target.closest('.episode-item');
+                if (!item) return;
+                draggedItem = item;
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', item.dataset.index);
+                setTimeout(() => item.classList.add('dragging'), 0);
+            });
+
+            episodeListEl.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const item = e.target.closest('.episode-item');
+                if (!item || item === draggedItem) return;
+
+                const boundingBox = item.getBoundingClientRect();
+                const offset = boundingBox.y + (boundingBox.height / 2);
+                if (e.clientY - offset > 0) {
+                    item.parentNode.insertBefore(draggedItem, item.nextSibling);
+                } else {
+                    item.parentNode.insertBefore(draggedItem, item);
+                }
+            });
+            
+            episodeListEl.addEventListener('dragend', () => {
+                if (draggedItem) {
+                    draggedItem.classList.remove('dragging');
+                }
+                draggedItem = null;
+                const newOrder = Array.from(episodeListEl.children).map(li => parseInt(li.dataset.index));
+                const reorderedData = newOrder.map(index => episodeData[index]);
+                episodeData.splice(0, episodeData.length, ...reorderedData);
+                populateEpisodeList();
+            });
+
+            fetch('goc_lore_2.3.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    episodeData.push(...data);
+                    populateEpisodeList();
+                })
+                .catch(error => {
+                    console.error('Error fetching episode data:', error);
+                    episodeListEl.innerHTML = `<li class="text-center text-red-400">Failed to load episode data. Please ensure the JSON file is in the same directory.</li>`;
+                });
+        });
+    </script>
+</body>
+</html>
