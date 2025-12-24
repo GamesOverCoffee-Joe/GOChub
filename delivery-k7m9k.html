@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Delivery | Feedback Video</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent-blue: #aac6ce;
+            --accent-beige: #ead9ca;
+            --bg-dark: #1a1a1a;
+            --text-light: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            margin: 0;
+            padding: 0;
+        }
+
+        .accent-border {
+            border-color: var(--accent-blue);
+        }
+
+        .bg-accent-blue { background-color: var(--accent-blue); }
+        .bg-accent-beige { background-color: var(--accent-beige); }
+        .text-accent-blue { color: var(--accent-blue); }
+        
+        .btn-payment {
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            width: 100%;
+        }
+
+        .btn-payment:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Glassmorphism card */
+        .content-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(170, 198, 206, 0.1);
+            border-radius: 16px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center">
+
+    <!-- Header Banner -->
+    <div class="w-full max-w-5xl px-4 mt-6">
+        <div class="w-full h-[200px] md:h-[300px] bg-accent-beige rounded-2xl overflow-hidden relative border-2 accent-border flex items-center justify-center">
+            <img src="images/GOQbanner.jpg" alt="GOQ Banner" class="w-full h-full object-cover" style.display='flex';">
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="w-full max-w-4xl px-6 py-12 flex flex-col gap-12">
+        
+        <!-- Welcome Section -->
+        <section class="text-center">
+            <h1 class="text-3xl md:text-4xl font-light mb-4"><span class="text-accent-blue font-semibold">Enjoy your video!</span></h1>
+            <p class="text-gray-400 max-w-2xl mx-auto leading-relaxed">
+                Thank you for trusting me with your project. Below you'll find the feedback video.
+            </p>
+        </section>
+
+        <!-- Video Player -->
+        <section class="video-container border border-white/10">
+            <!-- The ID is updated by the script below -->
+            <iframe id="video-frame" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        </section>
+
+        <!-- Information & Pay What You Want -->
+        <section class="grid md:grid-cols-2 gap-8">
+            <div class="content-card p-8 flex flex-col justify-center">
+                <h2 class="text-xl font-semibold mb-4 text-accent-blue">Why this delivery method?</h2>
+                <div class="space-y-4 text-gray-300 text-sm leading-relaxed">
+                    <p>
+                        I deliver my feedback videos privately to you before they go live on YouTube. This gives you early access to the insights and a chance to process the critique before it becomes public. Once you give me the go ahead, or if it's been a couple days, I'll publish the video publically.
+                    </p>
+                    <p>
+                        This is a <strong class="text-white">"Pay-What-You-Want"</strong> service. I believe in making high-quality feedback accessible to everyone, regardless of their budget. Whether it's $0 or $500, you decide the value of the time and expertise provided.
+                    </p>
+                    <div class="p-4 bg-accent-blue/10 border-l-4 border-accent-blue rounded">
+                        <p class="text-white font-medium">Recommended Value: $100</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-card p-8">
+                <h2 class="text-xl font-semibold mb-6 text-accent-blue">Contribution Options</h2>
+                <div class="space-y-4">
+                    <a href="https://www.paypal.com/biz/profile/GOCconsulting" class="btn-payment bg-[#0070ba] text-white">
+                        PayPal
+                    </a>
+                    
+                    <a href="https://www.patreon.com/c/gamesoverqualia" class="btn-payment bg-[#f96854] text-white">
+                        Patreon
+                    </a>
+
+                    <a href="https://buymeacoffee.com/gamesovercoffee" class="btn-payment bg-accent-beige text-gray-900">
+                        Buy Me a Coffee
+                    </a>
+                </div>
+                <p class="text-center text-xs text-gray-500 mt-6 italic">Suggested Contributions: $25, $50, $100, $150+</p>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        /**
+         * CHANGE THIS FOR EACH NEW CLIENT PAGE
+         */
+        const YOUTUBE_VIDEO_ID = 'pyiLoTH94ks'; 
+
+        // Apply the ID to the iframe on load
+        window.onload = function() {
+            document.getElementById('video-frame').src = `https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}`;
+        };
+    </script>
+</body>
+</html>
