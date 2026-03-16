@@ -37,7 +37,7 @@ const navigationLinks = [
     },
     {
         name: 'Games Over Qualia',
-        href: 'https://www.youtube.com/@GamesOverCoffeeConsulting',
+        href: 'https://www.youtube.com/@GamesOverQualia',
         target: '_blank',
         titleSuffix: ' - GOQ YouTube',
         classes: 'text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group hidden md:flex items-center space-x-1',
@@ -78,23 +78,16 @@ const generateNav = () => {
 
         fragment.appendChild(a);
     });
-
     navContainer.appendChild(fragment);
 };
 
-// This function dynamically sets the page title.
 const setPageTitle = () => {
     const currentPath = window.location.pathname;
-    
-    // Find the link object that matches the current page's URL.
     const currentPageLink = navigationLinks.find(link => {
         return currentPath.includes(link.href.replace('..', ''));
     });
-    
     const baseTitle = 'Games Over Coffee';
     const headerTitleSpan = document.getElementById('header-title');
-
-    // If a matching link is found, construct the full title and update the elements.
     if (currentPageLink) {
         const fullTitle = baseTitle + currentPageLink.titleSuffix;
         document.title = fullTitle;
@@ -102,7 +95,6 @@ const setPageTitle = () => {
             headerTitleSpan.textContent = fullTitle;
         }
     } else {
-        // Fallback for pages not in the navigation data.
         document.title = baseTitle;
         if (headerTitleSpan) {
             headerTitleSpan.textContent = baseTitle;
@@ -110,7 +102,6 @@ const setPageTitle = () => {
     }
 };
 
-// Call both functions when the page loads.
 window.addEventListener('DOMContentLoaded', () => {
     generateNav();
     setPageTitle();

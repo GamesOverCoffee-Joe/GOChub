@@ -1,0 +1,32 @@
+[
+  {
+    "videoId": "R85LpIYeDm0",
+    "title": "This Game Doesn't Respect You (And That's a Good Thing)",
+    "channel": "main",
+    "gameTitle": "Goldeneye 007 (N64)",
+    "thumbnailUrl": "https://img.youtube.com/vi/R85LpIYeDm0/maxresdefault.jpg",
+    "season": 3,
+    "episode": 11,
+    "synopsis": "DeVaughn and the TV discover the link to Joe"
+  },
+  {
+    "videoId": "a514CH1Z78g",
+    "title": "Turns out I don't enjoy making these videos",
+    "channel": "main",
+    "gameTitle": "",
+    "thumbnailUrl": "https://img.youtube.com/vi/a514CH1Z78g/maxresdefault.jpg",
+    "season": 3,
+    "episode": 12,
+    "synopsis": "D discovers he's not as passionate about making video essays as he thought"
+  },
+  {
+    "videoId": "73m0oCQbvCQ",
+    "title": "What Made N64 Games Better Than Modern Games?",
+    "channel": "main",
+    "thumbnailUrl": "https://img.youtube.com/vi/73m0oCQbvCQ/maxresdefault.jpg",
+    "season": 3,
+    "episode": 10,
+    "synopsis": "DeVaughn opens the box"
+  },
+  // ...existing consulting and other video entries...
+]

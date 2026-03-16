@@ -136,7 +136,7 @@
 
     </style>
 
-    <script src="js/nav_data_1.2.js"></script>
+    <script src="js/nav_data_1.3.js"></script>
 
     <style>
         /* Custom scroll behavior for smoother jumps */
@@ -326,22 +326,23 @@
                 </div>
             </div>
             <section id="mostRecentEpisodeSection" class="bg-[var(--color-goc-dark)] p-6 md:p-8 rounded-lg shadow-xl mb-12 border border-[var(--color-goc-desaturated-indigo)] max-w-5xl mx-auto">
-                <h2 class="text-3xl md:text-4xl font-bold mb-6 text-[var(--color-goc-light-accent)] text-center">Most Recent Episode</h2>
-                <div id="mostRecentVideoContainer" class="flex flex-col md:flex-row items-center justify-center gap-6">
-                    <div class="relative w-full md:w-1/2 lg:w-2/5 aspect-video bg-black rounded-lg overflow-hidden group">
-                        <img id="mostRecentThumbnail" src="" alt="Latest Video Thumbnail" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-300">
-                        <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 group-hover:bg-opacity-20 transition-all duration-300">
-                            <button id="playMostRecentBtn" class="play-button text-[var(--color-goc-light-accent)] text-6xl opacity-80 group-hover:opacity-100 transition-opacity duration-300">
-                                <i class="fas fa-play-circle"></i>
-                            </button>
+                    <h2 class="text-3xl md:text-4xl font-bold mb-6 text-[var(--color-goc-light-accent)] text-center">Most Recent Episode</h2>
+                    <div id="mostRecentVideoContainer" class="flex flex-col md:flex-row items-center justify-center gap-6">
+                        <div class="relative w-full md:w-1/2 lg:w-2/5 aspect-video bg-black rounded-lg overflow-hidden group">
+                            <img id="mostRecentThumbnail" src="https://img.youtube.com/vi/a514CH1Z78g/maxresdefault.jpg" alt="How To Make Games That Actually Change People" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-300">
+                            <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 group-hover:bg-opacity-20 transition-all duration-300">
+                                <a target="_blank" id="playMostRecentBtn" class="play-button text-[var(--color-goc-light-accent)] text-6xl opacity-80 group-hover:opacity-100 transition-opacity duration-300">
+                                    <i class="fas fa-play-circle"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="md:w-1/2 lg:w-3/5 text-center md:text-left">
+                            <h3 id="mostRecentTitle" class="text-2xl font-semibold text-[var(--color-goc-main-text)] mb-2">How To Make Games That Actually Change People</h3>
+                            <p id="mostRecentDescription" class="text-[var(--color-goc-main-text)] opacity-80 text-sm line-clamp-4">Joe reflects on making his first game and the concept of 'reflection-points'.</p>
+                            <br />
+                            <a href="https://youtu.be/a514CH1Z78g" target="_blank" id="watchMostRecentBtn" class="mt-4 px-6 py-2 bg-[var(--color-goc-light-accent)] text-[var(--color-goc-darkest)] rounded-full hover:bg-opacity-80 transition-colors duration-200 text-sm font-semibold">Watch Now</a>
                         </div>
                     </div>
-                    <div class="md:w-1/2 lg:w-3/5 text-center md:text-left">
-                        <h3 id="mostRecentTitle" class="text-2xl font-semibold text-[var(--color-goc-main-text)] mb-2">Loading Latest Episode...</h3>
-                        <p id="mostRecentDescription" class="text-[var(--color-goc-main-text)] opacity-80 text-sm line-clamp-4">Please wait while the latest episode details are loaded.</p>
-                        <button id="watchMostRecentBtn" class="mt-4 px-6 py-2 bg-[var(--color-goc-light-accent)] text-[var(--color-goc-darkest)] rounded-full hover:bg-opacity-80 transition-colors duration-200 text-sm font-semibold">Watch Now</button>
-                    </div>
-                </div>
             </section>
 
             <section id="mainChannelContent" class="channel-content pb-10">
@@ -350,43 +351,6 @@
             </section>
         </main>
     </div>
-
-    <!-- START: NEW Community & Connection Section -->
-    <section id="communityHub" class="bg-[var(--color-goc-dark)] p-6 md:p-8 rounded-lg shadow-xl mt-2 mb-8 border border-[var(--color-goc-desaturated-indigo)] max-w-5xl mx-auto">
-        <h2 class="text-3xl md:text-4xl font-bold mb-8 text-[var(--color-goc-light-accent)] text-center">Join the Community</h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-            <!-- Contact Card: Email -->
-            <div class="p-4 bg-[var(--color-goc-darkest)] rounded-lg text-center border border-[var(--color-goc-desaturated-indigo)] hover:border-[var(--color-goc-light-accent)] transition-colors duration-300">
-                <i class="fas fa-envelope text-3xl mb-3 text-[var(--color-goc-light-accent)]"></i>
-                <h3 class="text-xl font-semibold mb-2">Email</h3>
-                <p class="text-sm opacity-80 mb-3">For business inquiries and deeper chats.</p>
-                <a href="mailto:info@gamesover.coffee" class="text-[var(--color-goc-light-accent)] hover:underline font-medium break-all text-sm md:text-base">info@gamesover.coffee</a>
-            </div>
-
-            <!-- Social Card: Discord -->
-            <div class="p-4 bg-[var(--color-goc-darkest)] rounded-lg text-center border border-[var(--color-goc-desaturated-indigo)] hover:border-[var(--color-goc-light-accent)] transition-colors duration-300">
-                <i class="fab fa-discord text-3xl mb-3 text-indigo-400"></i>
-                <h3 class="text-xl font-semibold mb-2">Discord Server</h3>
-                <p class="text-sm opacity-80 mb-3">Jump in to discuss empathetic game design!</p>
-                <a href="https://discord.gg/mdXeswg7rd" target="_blank" class="px-4 py-1.5 bg-indigo-600 text-white rounded-full text-sm font-semibold hover:bg-indigo-700 transition-colors duration-200">
-                    Join Now
-                </a>
-            </div>
-
-            <!-- Announcement Card: Tidbit -->
-            <div class="p-4 bg-[var(--color-goc-darkest)] rounded-lg text-center border border-[var(--color-goc-desaturated-indigo)] hover:border-[var(--color-goc-light-accent)] transition-colors duration-300">
-                <i class="fas fa-bullhorn text-3xl mb-3 text-red-400"></i>
-                <h3 class="text-xl font-semibold mb-2">What am I doing now?</h3>
-                <p class="text-sm italic opacity-90">"I'm currently making a quick voice-only video about "reflection-points" and what I learned about making my first game: The Door Problem."</p>
-                <p class="text-xs mt-3 opacity-60">Last updated: Oct 2025</p>
-            </div>
-
-        </div>
-    </section>
-    <!-- END: NEW Community & Connection Section -->
-
 
     <footer class="bg-[var(--color-goc-darkest)] text-[var(--color-goc-main-text)] py-6 text-center text-sm">
         <div class="container mx-auto px-4">
