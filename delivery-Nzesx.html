@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Client Delivery | Feedback Video</title>
+    <title>Feedback Video</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
@@ -49,7 +49,7 @@
 
         .video-container {
             position: relative;
-            padding-bottom: 56.25%; /* 16:9 ratio */
+            padding-bottom: 56.25%;
             height: 0;
             overflow: hidden;
             border-radius: 12px;
@@ -64,60 +64,70 @@
             height: 100%;
         }
 
-        /* Glassmorphism card */
         .content-card {
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(170, 198, 206, 0.1);
             border-radius: 16px;
         }
+
+        .personal-note {
+            background: rgba(170, 198, 206, 0.08);
+            border: 1px solid rgba(170, 198, 206, 0.2);
+            border-radius: 16px;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center">
 
-    <!-- Header Banner -->
     <div class="w-full max-w-5xl px-4 mt-6">
-        <div class="w-full h-[200px] md:h-[300px] bg-accent-beige rounded-2xl overflow-hidden relative border-2 accent-border flex items-center justify-center">
-            <img src="images/GOQbanner.jpg" alt="GOQ Banner" class="w-full h-full object-cover" style.display='flex';">
+        <div class="w-full h-[200px] md:h-[300px] bg-accent-beige rounded-2xl overflow-hidden border-2 accent-border flex items-center justify-center">
+            <img src="images/GOQbanner.jpg" alt="Banner" class="w-full h-full object-cover">
         </div>
     </div>
 
-    <!-- Main Content -->
     <main class="w-full max-w-4xl px-6 py-12 flex flex-col gap-12">
-        
-        <!-- Welcome Section -->
+
+        <!-- ================= PERSONAL MESSAGE (EDIT THIS EACH TIME) ================= -->
+        <section class="personal-note p-8 text-center">
+            <h1 class="text-2xl md:text-3xl font-light mb-4 text-accent-blue">
+                Hey duamana/"Someone", here’s my feedback video for Ominoflux!
+            </h1>
+            <p class="text-gray-300 max-w-2xl mx-auto leading-relaxed">
+                You've got such an interesting game here, I really hope my feedback can help. Please don't mind the clickbaity title — I just want to make sure it gets seen by others who could benefit from it as well.
+            </p>
+        </section>
+        <!-- ========================================================================== -->
+
         <section class="text-center">
-            <h1 class="text-3xl md:text-4xl font-light mb-4"><span class="text-accent-blue font-semibold">Enjoy your video!</span></h1>
             <p class="text-gray-400 max-w-2xl mx-auto leading-relaxed">
-                Thank you for trusting me with your project. Below you'll find the feedback video.
+                Below is your full feedback video. I hope it gives you useful perspective and helps you move forward with clarity.
             </p>
         </section>
 
-        <!-- Video Player -->
         <section class="video-container border border-white/10">
-            <!-- The ID is updated by the script below -->
-            <iframe id="video-frame" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            <iframe id="video-frame" src="" frameborder="0" allowfullscreen></iframe>
         </section>
 
-        <!-- Information & Pay What You Want -->
         <section class="grid md:grid-cols-2 gap-8">
+
             <div class="content-card p-8 flex flex-col justify-center">
-                <h2 class="text-xl font-semibold mb-4 text-accent-blue">Why this delivery method?</h2>
+                <h2 class="text-xl font-semibold mb-4 text-accent-blue">About this project</h2>
                 <div class="space-y-4 text-gray-300 text-sm leading-relaxed">
                     <p>
-                        I deliver my feedback videos privately to you before they go live on YouTube. This gives you early access to the insights and a chance to process the critique before it becomes public. Once you give me the go ahead, or if it's been a couple days, I'll publish the video publically.
+                        These videos are part of an ongoing effort to explore game design through real projects. Each one is meant to be useful not just for the developer involved, but for others trying to improve their work as well.
                     </p>
                     <p>
-                        This is a <strong class="text-white">"Pay-What-You-Want"</strong> service. I believe in making high-quality feedback accessible to everyone, regardless of their budget. Whether it's $0 or $500, you decide the value of the time and expertise provided.
+                        This only continues because people choose to support it. If this was valuable to you, you’re welcome to contribute and be part of keeping it going.
                     </p>
                     <div class="p-4 bg-accent-blue/10 border-l-4 border-accent-blue rounded">
-                        <p class="text-white font-medium">Recommended Value: $100</p>
+                        <p class="text-white font-medium">Typical support range: $50–$150</p>
                     </div>
                 </div>
             </div>
 
             <div class="content-card p-8">
-                <h2 class="text-xl font-semibold mb-6 text-accent-blue">Contribution Options</h2>
+                <h2 class="text-xl font-semibold mb-6 text-accent-blue">Support the work</h2>
                 <div class="space-y-4">
                     <a href="https://www.paypal.com/biz/profile/GOCconsulting" class="btn-payment bg-[#0070ba] text-white">
                         PayPal
@@ -131,22 +141,22 @@
                         Buy Me a Coffee
                     </a>
                 </div>
-                <p class="text-center text-xs text-gray-500 mt-6 italic">Suggested Contributions: $25, $50, $100, $150+</p>
+                <p class="text-center text-xs text-gray-500 mt-6 italic">
+                    Completely optional — support if it felt valuable to you
+                </p>
             </div>
+
         </section>
 
     </main>
 
     <script>
-        /**
-         * CHANGE THIS FOR EACH NEW CLIENT PAGE
-         */
-        const YOUTUBE_VIDEO_ID = 'UfPQxJmhC_A'; 
+        const YOUTUBE_VIDEO_ID = 'UfPQxJmhC_A';
 
-        // Apply the ID to the iframe on load
         window.onload = function() {
             document.getElementById('video-frame').src = `https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}`;
         };
     </script>
+
 </body>
 </html>
