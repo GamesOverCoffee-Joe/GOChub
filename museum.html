@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Explore the Games Over Qualia Museum, a small interactive museum game from Games Over Coffee.">
+    <meta name="theme-color" content="#1f1f1f">
+    <title>Games Over Coffee - Museum</title>
+    <link rel="icon" type="image/png" href="images/GOClogo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/nav_data_1.3.js"></script>
+    <style>
+        :root {
+            --color-goc-darkest: #1f1f1f;
+            --color-goc-dark: #2b2b2b;
+            --color-goc-light-accent: #aac6ce;
+            --color-goc-main-text: #ead9ca;
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            background: var(--color-goc-darkest);
+            color: var(--color-goc-main-text);
+        }
+
+        .game-frame {
+            display: block;
+            width: 100%;
+            height: clamp(520px, 76dvh, 900px);
+            border: 1px solid #3a3a3a;
+            background: #1d1317;
+        }
+
+        @media (max-width: 640px) {
+            .game-frame { height: max(520px, 74dvh); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans">
+    <header class="fixed top-0 left-0 w-full bg-[var(--color-goc-darkest)] shadow-lg z-40">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center gap-4">
+            <a href="index.html" class="flex items-center space-x-2 shrink-0" aria-label="Games Over Coffee home">
+                <img src="images/GOClogo.png" alt="Games Over Coffee Logo" class="h-10 w-10">
+                <span id="header-title" class="text-2xl font-extrabold font-poppins text-[var(--color-goc-light-accent)] hidden sm:block"></span>
+            </a>
+            <nav id="dynamic-nav" class="flex flex-wrap justify-center sm:justify-end gap-x-4 gap-y-2 text-sm md:text-base" aria-label="Main navigation"></nav>
+        </div>
+    </header>
+
+    <main class="container mx-auto w-full max-w-7xl flex-grow px-4 md:px-8 pt-24 pb-8">
+        <section class="mx-auto max-w-5xl">
+            <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
+                <div>
+                    <p class="mb-1 text-sm font-bold uppercase text-[var(--color-goc-light-accent)]">Games Over Qualia</p>
+                    <h1 class="font-poppins text-2xl text-[var(--color-goc-main-text)] sm:text-3xl">The Museum</h1>
+                </div>
+                <a href="museum/museum.html" target="_blank" rel="noopener" class="text-sm text-[var(--color-goc-light-accent)] hover:underline">
+                    Open game on its own page <i class="fas fa-up-right-from-square ml-1" aria-hidden="true"></i>
+                </a>
+            </div>
+            <div class="overflow-hidden border border-[#3a3a3a] shadow-xl">
+                <iframe
+                    class="game-frame"
+                    src="museum/museum.html"
+                    title="The GOQ Museum game"
+                    allow="fullscreen; gamepad"
+                    loading="eager">
+                </iframe>
+            </div>
+        </section>
+    </main>
+
+    <footer class="border-t border-[#303030] py-5 text-center text-sm text-[var(--color-goc-main-text)]">
+        <p>&copy; 2026 Games Over Coffee. All rights reserved.</p>
+    </footer>
+</body>
+</html>

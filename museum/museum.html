@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d1317">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GOQ Museum">
+<title>GOQ Museum</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+/* Page chrome matches The Karman Line Theater. Layouts adapt to slab phones, foldables and tablets (see layout() below). */
+:root{
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#1d1317;--surface:#281a1f;--surface-2:#34232a;--line:#4b343b;--text:#f3e5d0;--muted:#b59e8c;
+  --gold:#e8b24a;--on-gold:#2a1a10;--shadow:#0a0507;--stage:#1d1317;
+  --pixel:'Press Start 2P',ui-monospace,monospace;--body:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;
+  --pad:138px;--btn:62px;--hinge:0px;--seg0w:50%;--hingew:0px;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;height:100%;display:flex;flex-direction:column;min-height:100%;background:var(--stage);color:var(--text);
+  font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;touch-action:manipulation}
+body.touch{overscroll-behavior:none;overflow:hidden;padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+[hidden]{display:none !important}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* Header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;flex-wrap:wrap}
+.mark{font-family:var(--pixel);font-size:13px;letter-spacing:.02em;color:var(--gold);margin:0;line-height:1.6;font-weight:normal}
+.mark small{color:var(--muted);font-size:9px;display:block}
+.tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pack{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.88rem;color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4em;min-height:36px;padding:.45em .95em;border:2px solid var(--line);
+  background:var(--surface);color:var(--text);border-radius:3px;cursor:pointer;font:inherit;font-weight:600;font-size:.85rem;white-space:nowrap}
+.btn:hover{background:var(--surface-2)}
+.btn:active{transform:translate(2px,2px)}
+.btn.icon{min-width:44px;min-height:44px;padding:.3em .6em}
+.toast{color:#9fcf7a}.toast.err{color:#f08a6a}
+body.touch .top{padding:6px 10px;gap:8px;flex-wrap:nowrap}
+body.touch .mark{font-size:11px}
+body.touch .mark small,body.touch .pack{display:none}
+
+/* Play area */
+.play{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 12px 12px;gap:10px}
+#stage{box-shadow:0 0 0 4px #34232a,0 0 0 6px #4b343b,0 24px 60px rgba(0,0,0,.55);flex:none}
+.hint{margin:14px auto 0;font-size:.88rem;color:var(--muted);text-align:center;max-width:60ch;padding:0 12px}
+.hint kbd{font-family:var(--body);font-weight:700;color:var(--text);border:1px solid var(--line);border-bottom-width:2px;border-radius:3px;padding:0 .35em;background:var(--surface)}
+body.touch .hint{display:none}
+#ver{font-size:.75rem;margin-top:6px}
+body.touch #ver{display:none}
+body.touch #ver.warn{display:block;position:fixed;left:8px;right:8px;bottom:8px;z-index:20;background:var(--surface);padding:8px;border:2px solid #f08a6a}
+
+/* On-screen controls, sized from --pad and --btn */
+.gt-controls{display:none;justify-content:space-between;align-items:center;gap:24px;touch-action:none;user-select:none;-webkit-user-select:none;color:var(--text)}
+body.touch .gt-controls{display:flex}
+.gt-pad{position:relative;width:var(--pad);height:var(--pad);touch-action:none;flex:none}
+.gt-pad span,.gt-pad i{position:absolute;background:var(--surface-2);border:2px solid var(--muted)}
+.gt-pad .u,.gt-pad .d{left:33.3%;width:33.4%;height:34.8%}
+.gt-pad .u{top:0;border-bottom:0;border-radius:4px 4px 0 0}.gt-pad .d{bottom:0;border-top:0;border-radius:0 0 4px 4px}
+.gt-pad .l,.gt-pad .r{top:33.3%;height:33.4%;width:34.8%}
+.gt-pad .l{left:0;border-right:0;border-radius:4px 0 0 4px}.gt-pad .r{right:0;border-left:0;border-radius:0 4px 4px 0}
+.gt-pad i{left:33.3%;top:33.3%;width:33.4%;height:33.4%;border:0;background:var(--surface-2)}
+.gt-pad[data-dir="up"] .u,.gt-pad[data-dir="down"] .d,.gt-pad[data-dir="left"] .l,.gt-pad[data-dir="right"] .r{background:var(--gold)}
+.gt-btns{display:flex;gap:calc(var(--btn) * .26);align-items:center;transform:rotate(-18deg);flex:none}
+.gt-btn{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;outline:none;touch-action:none;width:var(--btn);height:var(--btn);border-radius:50%;
+  border:2px solid var(--muted);background:var(--surface-2);color:var(--text);font-family:var(--pixel);font-size:calc(var(--btn) * .23);cursor:pointer;box-shadow:3px 3px 0 var(--shadow)}
+.gt-btn-a{color:var(--gold);margin-top:calc(var(--btn) * -.42)}
+.gt-start{align-self:flex-end;margin-bottom:6px;flex:none;-webkit-tap-highlight-color:transparent;touch-action:none;font-family:var(--pixel);font-size:9px;letter-spacing:.06em;
+  padding:7px 12px;border-radius:12px;border:2px solid var(--muted);background:var(--surface-2);color:var(--muted);cursor:pointer;transform:rotate(-18deg)}
+.gt-start.down{background:var(--gold);color:var(--on-gold)}
+body.l-landscape .gt-start{grid-column:3;grid-row:1;align-self:end;margin-bottom:14px}
+body.l-split-h .gt-start{align-self:center}
+.gt-btn.down{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow);background:var(--gold);color:var(--on-gold)}
+
+/* Portrait (slab phones upright, folded cover screens, tablets upright): game on top, controls below */
+body.l-portrait .play{justify-content:flex-start;padding-top:6px}
+body.l-portrait .gt-controls{width:100%;max-width:560px;padding:0 6px;flex:1;align-items:center}
+/* Landscape (phones sideways, unfolded foldables, tablets sideways): D-pad and buttons either side of the screen */
+body.l-landscape .play{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;justify-items:center;padding:4px 8px}
+body.l-landscape #controls{display:contents}
+body.l-landscape #stage{grid-column:2;grid-row:1}
+body.l-landscape .gt-pad{grid-column:1;grid-row:1}
+body.l-landscape .gt-btns{grid-column:3;grid-row:1}
+/* Half-folded with the hinge across the middle (tabletop): game above the fold, controls below it */
+body.l-split-v .play{justify-content:flex-start;padding-top:6px;gap:0}
+body.l-split-v .gt-controls{width:100%;max-width:560px;padding:0 6px;margin-top:var(--hinge);flex:1}
+/* Half-folded like a book (hinge down the middle): game on the left page, controls on the right page */
+body.l-split-h .play{display:grid;grid-template-columns:var(--seg0w) var(--hingew) 1fr;align-items:center;justify-items:center;padding:0}
+body.l-split-h #stage{grid-column:1}
+body.l-split-h .gt-controls{grid-column:3;flex-direction:column;gap:28px}
+
+/* Settings */
+dialog.settings{border:2px solid var(--line);border-radius:6px;background:var(--surface);color:var(--text);padding:0;max-width:min(440px,calc(100vw - 24px));width:100%;
+  max-height:calc(100dvh - 24px);overflow:auto}
+dialog.settings::backdrop{background:rgba(10,5,7,.7)}
+.set-in{padding:18px 18px 16px}
+.set-in h2{font-family:var(--pixel);font-weight:400;font-size:12px;color:var(--gold);margin:0 0 14px;line-height:1.6}
+.set-row{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.set-row:first-of-type{border-top:0;padding-top:0}
+.set-row .txt{flex:1}
+.set-row b{display:block}
+.set-row small{display:block;color:var(--muted);font-size:.85rem;line-height:1.4;margin-top:2px}
+.switch{appearance:none;-webkit-appearance:none;width:52px;height:30px;border-radius:15px;background:var(--surface-2);border:2px solid var(--muted);position:relative;cursor:pointer;flex:none;margin-top:2px}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:transform .15s}
+.switch:checked{background:var(--gold);border-color:var(--gold)}
+.switch:checked::after{transform:translateX(22px);background:var(--on-gold)}
+@media (max-width:420px){.set-row{flex-wrap:wrap}.set-row select{width:100%}}
+.set-row select{font:inherit;color:var(--text);background:var(--surface-2);border:2px solid var(--line);border-radius:3px;padding:6px 8px;min-height:40px;flex:none}
+.set-acts{display:flex;justify-content:flex-end;gap:10px;margin-top:14px;flex-wrap:wrap}
+@media (prefers-reduced-motion: reduce){.switch::after{transition:none}}
+
+/* Game screen */
+.gt-wrap{--s:1;position:relative;width:calc(240px * var(--s));height:calc(160px * var(--s));background:#000;overflow:hidden;
+  font-family:var(--pixel);user-select:none;-webkit-user-select:none;touch-action:none;outline:none;-webkit-tap-highlight-color:transparent}
+.gt-wrap canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+.gt-box{position:absolute;box-sizing:border-box;border-style:solid;border-width:calc(8px * var(--s));border-image-slice:8 fill;border-image-repeat:stretch;
+  background:#f8f8f0;background-clip:padding-box;color:#181820;font-size:calc(8px * var(--s));line-height:calc(16px * var(--s));display:none;image-rendering:pixelated}
+.gt-text{left:0;right:0;bottom:0;height:calc(48px * var(--s));padding:0 calc(2px * var(--s));cursor:pointer;z-index:5}
+.gt-text-body{white-space:pre-wrap;overflow:hidden;height:100%;overflow-wrap:anywhere}
+.gt-more{position:absolute;right:calc(2px * var(--s));bottom:calc(1px * var(--s));width:0;height:0;border-left:calc(3px * var(--s)) solid transparent;
+  border-right:calc(3px * var(--s)) solid transparent;border-top:calc(4px * var(--s)) solid #181820;display:none;animation:gtblink .6s steps(1) infinite}
+@keyframes gtblink{50%{opacity:0}}
+.gt-loc{position:absolute;left:calc(4px * var(--s));top:calc(4px * var(--s));padding:calc(5px * var(--s)) calc(8px * var(--s));background:#181820;color:#f8f8f0;
+  font-size:calc(8px * var(--s));line-height:1.4;border:calc(1px * var(--s)) solid #f8f8f0;box-shadow:0 0 0 calc(1px * var(--s)) #181820;opacity:0;transform:translateY(-120%);
+  transition:transform .25s steps(4),opacity .25s steps(4);pointer-events:none;max-width:70%;z-index:6}
+.gt-loc.on{opacity:1;transform:none}
+/* Close-up of a piece: the art fills the space above the text box. */
+.gt-closeup{position:absolute;left:0;right:0;top:0;height:calc(112px * var(--s));display:none;align-items:center;justify-content:center;
+  background:rgba(24,24,32,.82);cursor:pointer;z-index:4}
+.gt-cu-frame{box-sizing:border-box;width:calc(112px * var(--s));border-style:solid;border-width:calc(8px * var(--s));border-image-slice:8;border-image-repeat:stretch;
+  background:#000;image-rendering:pixelated}
+.gt-cu-frame img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;image-rendering:pixelated;image-rendering:crisp-edges}
+.gt-cu-frame img.photo{image-rendering:auto}
+.gt-cu-links{position:absolute;right:calc(4px * var(--s));bottom:calc(3px * var(--s));display:flex;gap:calc(4px * var(--s));z-index:2}
+.gt-cu-links a{font-family:var(--pixel);font-size:calc(6px * var(--s));line-height:1;padding:calc(3px * var(--s)) calc(4px * var(--s));background:#181820;color:#f8f8f0;
+  border:calc(1px * var(--s)) solid #f8f8f0;text-decoration:none}
+.gt-cu-links a:hover,.gt-cu-links a:focus-visible{background:#e8b24a;color:#181820;outline:none}
+@media (prefers-reduced-motion: reduce){.gt-more{animation:none}.gt-loc{transition:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1 class="mark"><span id="mName">GOQ Museum</span><small>Games Over Qualia, framed <span id="modeTag" hidden>(curator mode)</span></small></h1>
+  <div class="tools">
+    <div class="pack">
+      <span id="packStatus" role="status">Built-in placeholder art</span>
+      <label class="btn" for="packFile">Load museum pack</label>
+      <input id="packFile" class="sr-only" type="file" accept=".json,application/json">
+      <button class="btn" id="resetPack" type="button" hidden>Use built-in art</button>
+    </div>
+    <button class="btn icon" id="fsBtn" type="button" hidden aria-label="Fullscreen" title="Fullscreen">&#x26F6;</button>
+    <button class="btn icon" id="setBtn" type="button" aria-haspopup="dialog" aria-label="Settings" title="Settings">&#x2699;&#xFE0E;</button>
+  </div>
+</header>
+<main class="play" id="area">
+  <div id="stage" aria-label="Game screen. Use arrow keys or WASD to walk, Z or Space to look and talk, X to go back."></div>
+  <div id="controls"></div>
+</main>
+<p class="hint">Walk with <kbd>Arrow keys</kbd> or <kbd>WASD</kbd>, or click to walk if it's on in Settings. Look, talk and tidy with <kbd>Z</kbd> or <kbd>Space</kbd>. <kbd>X</kbd> goes back, or takes a photo of whatever's in front of you. <kbd>Enter</kbd> opens the menu (photos, save, quit). Dust the frames, water the plants, find the curator's mug, and turn out the lights when you leave.</p>
+<p class="hint" id="ver"></p>
+
+<dialog class="settings" id="settings" aria-labelledby="setTitle">
+  <form method="dialog" class="set-in">
+    <h2 id="setTitle">SETTINGS</h2>
+    <div class="set-row">
+      <div class="txt"><b>Tap to walk</b><small>Tap where you want to go. Tap a piece, a person, a prop or a door to walk over and use it. The D-pad and keys always work too.</small></div>
+      <input type="checkbox" class="switch" id="optTap" aria-label="Tap to walk">
+    </div>
+    <div class="set-row">
+      <div class="txt"><b>On-screen controls</b><small>Automatic shows them on touch screens. Hide them if you've connected a keyboard or controller to a tablet.</small></div>
+      <select id="optCtl" aria-label="On-screen controls"><option value="auto">Automatic</option><option value="show">Always show</option><option value="hide">Hide</option></select>
+    </div>
+    <div class="set-row" id="rowBuzz" hidden>
+      <div class="txt"><b>Vibrate on button presses</b><small>A tiny buzz when you press the D-pad, A or B.</small></div>
+      <input type="checkbox" class="switch" id="optBuzz" aria-label="Vibrate on button presses">
+    </div>
+    <div class="set-row" id="rowPack">
+      <div class="txt"><b>Museum pack</b><small id="packStatus2">Built-in placeholder art</small></div>
+      <label class="btn" for="packFile">Load</label>
+    </div>
+    <div class="set-acts"><button class="btn" value="close">Done</button></div>
+  </form>
+</dialog>
+
+<script src="museum-engine.js"></script>
+<script>
+/* ---------- Boot ---------- */
+(function () {
+  const KEY = "goq-museum-pack", PACK_FILE = "museum-pack.json", SET_KEY = "goq-museum-settings";
+  const q = location.search + location.hash, flag = n => new RegExp("[?&#]" + n + "\\b").test(q);
+  const testMode = flag("test");
+  // Curator mode (?curator): pieces waiting for their unveil date sit in crates, ready to hang on camera.
+  const curator = flag("curator");
+  // ?spooky makes the rare creepy moment happen on every closing (for recording).
+  const spooky = flag("spooky");
+  // ?time=day, ?time=sunset or ?time=night pins the time of day (for recording); otherwise it follows the visitor's clock.
+  const time = (location.search.match(/[?&]time=(day|sunset|night)\b/) || [])[1];
+  const coarse = () => matchMedia("(pointer:coarse)").matches;
+  const isPack = j => j && j.format === GOQ.PACK_FORMAT;
+  const stage = document.getElementById("stage"), area = document.getElementById("area");
+  const status = document.getElementById("packStatus"), status2 = document.getElementById("packStatus2"), resetBtn = document.getElementById("resetPack");
+
+  // Settings, remembered in this browser. Tap to walk defaults to on for touch screens and off with a mouse.
+  let set = {}; try { set = JSON.parse(localStorage.getItem(SET_KEY) || "{}") || {}; } catch (e) {}
+  const saveSet = () => { try { localStorage.setItem(SET_KEY, JSON.stringify(set)); } catch (e) {} };
+  const tapWalk = () => (typeof set.tapWalk === "boolean" ? set.tapWalk : coarse());
+
+  let saved = null; try { saved = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) {}
+  const game = new GOQ.Game(stage, saved || undefined, { curator, spooky, time, tapWalk: tapWalk(), haptics: set.haptics !== false,
+    showTestBadge: testMode || curator || location.protocol === "file:" });
+  GOQ.mountControls(game, document.getElementById("controls"));
+  window.goqMuseum = game;
+
+  function describe(p, from) {
+    const n = Object.keys(p.assets).length, k = p.samples ? "sample pieces" : p.pieces.length + " piece" + (p.pieces.length === 1 ? "" : "s");
+    status.className = "toast"; status.textContent = from + ": " + n + " custom art slot" + (n === 1 ? "" : "s") + ", " + k;
+    status2.textContent = status.textContent; resetBtn.hidden = false;
+  }
+  if (saved) describe(GOQ.normalizePack(saved), "Your museum pack");
+  if (curator) document.getElementById("modeTag").hidden = false;
+
+  /* ---------- Layout ----------
+     Picks the arrangement that gives the biggest game screen for this screen, and re-picks whenever it changes
+     (rotating, folding or unfolding, resizing a window). If the browser reports a fold (viewport segments),
+     the game goes on one side of the hinge and the controls on the other. */
+  const root = document.documentElement;
+  function segments() {
+    try {
+      if (window.viewport && window.viewport.segments && window.viewport.segments.length === 2) return window.viewport.segments;
+      if (window.getWindowSegments) { const s = window.getWindowSegments(); if (s && s.length === 2) return s; }
+    } catch (e) {}
+    return null;
+  }
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  function layout() {
+    if (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName) && stage.contains(document.activeElement)) return; // the keyboard is up
+    const ctl = set.controls || "auto", touchUI = ctl === "show" || (ctl === "auto" && coarse());
+    document.body.classList.toggle("touch", touchUI);
+    document.body.classList.remove("l-portrait", "l-landscape", "l-split-v", "l-split-h");
+    // clientWidth, not innerWidth: on phones innerWidth can grow to fit something wider than the screen.
+    const vw = document.documentElement.clientWidth, vh = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+    const top = document.querySelector(".top").offsetHeight;
+    if (!touchUI) { game.fit(area.clientWidth - 24, vh - top - 70); return; }
+    // Control sizes follow the screen's short side: comfortable on phones, bigger on tablets, a bit slimmer at the sides in landscape.
+    const m = Math.min(vw, vh), small = vw < 340;
+    const pad = Math.round(clamp(m * 0.3, small ? 96 : 112, 190)), btn = Math.round(clamp(m * 0.15, small ? 46 : 54, 88));
+    const padL = Math.round(clamp(m * 0.26, 104, 180)), btnL = Math.round(clamp(m * 0.13, 52, 84));
+    const sizes = (p, b) => { root.style.setProperty("--pad", p + "px"); root.style.setProperty("--btn", b + "px"); };
+    sizes(pad, btn);
+    const ctlH = pad + 20, sideW = Math.max(padL, btnL * 2.3) + 24;
+    const seg = segments();
+    if (seg) {
+      const [a, b] = seg;
+      if (b.y >= a.y + a.height - 1) { // stacked: hinge runs across
+        document.body.classList.add("l-split-v");
+        game.fit(vw - 16, a.height - top - 10, true);
+        requestAnimationFrame(() => {
+          const r = stage.getBoundingClientRect();
+          root.style.setProperty("--hinge", Math.max(0, b.y - r.bottom + 8) + "px");
+        });
+        return;
+      }
+      document.body.classList.add("l-split-h"); // side by side: hinge runs down
+      root.style.setProperty("--seg0w", a.width + "px"); root.style.setProperty("--hingew", Math.max(0, b.x - (a.x + a.width)) + "px");
+      game.fit(a.width - 16, vh - top - 12, true);
+      return;
+    }
+    const sPortrait = Math.min((vw - 16) / 240, (vh - top - ctlH - 20) / 160);
+    const sLandscape = Math.min((vw - sideW * 2) / 240, (vh - top - 12) / 160);
+    // Sideways screens (phones, unfolded foldables, tablets) put the controls under your thumbs at the sides,
+    // unless that would make the game much smaller than stacking them below.
+    if (vw / vh >= 1.2 ? sLandscape >= sPortrait * 0.8 : sLandscape > sPortrait * 1.04) { document.body.classList.add("l-landscape"); sizes(padL, btnL); game.fit(vw - sideW * 2, vh - top - 12, true); }
+    else { document.body.classList.add("l-portrait"); game.fit(vw - 16, vh - top - ctlH - 20, true); }
+  }
+  let lt = 0; const relayout = () => { clearTimeout(lt); lt = setTimeout(layout, 60); };
+  window.addEventListener("resize", relayout);
+  window.addEventListener("orientationchange", relayout);
+  if (window.visualViewport) window.visualViewport.addEventListener("resize", relayout);
+  if (window.viewport && window.viewport.addEventListener) try { window.viewport.addEventListener("segmentschange", relayout); } catch (e) {}
+  matchMedia("(pointer:coarse)").addEventListener && matchMedia("(pointer:coarse)").addEventListener("change", relayout);
+  layout();
+  if (document.fonts) document.fonts.ready.then(layout);
+  stage.focus({ preventScroll: true });
+
+  /* ---------- Fullscreen (where the browser allows it; iPhones use Add to Home Screen instead) ---------- */
+  const fsBtn = document.getElementById("fsBtn"), fsEl = document.documentElement;
+  const canFs = !!(fsEl.requestFullscreen || fsEl.webkitRequestFullscreen) && (document.fullscreenEnabled || document.webkitFullscreenEnabled);
+  if (canFs) fsBtn.hidden = false;
+  fsBtn.addEventListener("click", () => {
+    const on = document.fullscreenElement || document.webkitFullscreenElement;
+    if (on) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    else (fsEl.requestFullscreen || fsEl.webkitRequestFullscreen).call(fsEl).catch && (fsEl.requestFullscreen || fsEl.webkitRequestFullscreen).call(fsEl).catch(() => {});
+    setTimeout(() => stage.focus({ preventScroll: true }), 300);
+  });
+  document.addEventListener("fullscreenchange", relayout);
+
+  /* ---------- Settings panel ---------- */
+  const dlg = document.getElementById("settings"), optTap = document.getElementById("optTap"), optCtl = document.getElementById("optCtl"), optBuzz = document.getElementById("optBuzz");
+  if (navigator.vibrate) document.getElementById("rowBuzz").hidden = false;
+  document.getElementById("setBtn").addEventListener("click", () => {
+    optTap.checked = tapWalk(); optCtl.value = set.controls || "auto"; optBuzz.checked = set.haptics !== false;
+    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+  });
+  optTap.addEventListener("change", () => { set.tapWalk = optTap.checked; game.tapWalk = optTap.checked; saveSet(); });
+  optCtl.addEventListener("change", () => { set.controls = optCtl.value; saveSet(); layout(); });
+  optBuzz.addEventListener("change", () => { set.haptics = optBuzz.checked; game.haptics = optBuzz.checked; saveSet(); });
+  dlg.addEventListener("close", () => stage.focus({ preventScroll: true }));
+
+  /* ---------- Museum packs ----------
+     When hosted (GitHub Pages), a museum-pack.json next to this page loads by itself.
+     On the live site the load button hides; add ?test to the address to show it. */
+  if (!saved && /^https?:$/.test(location.protocol)) {
+    fetch(PACK_FILE, { cache: "no-cache" }).then(r => (r.ok ? r.json() : null)).then(j => {
+      if (!isPack(j)) return;
+      game.setPack(j); describe(GOQ.normalizePack(j), "Site pack"); resetBtn.hidden = true;
+      if (!testMode && !curator) { document.querySelector(".pack").hidden = true; document.getElementById("rowPack").hidden = true; }
+    }).catch(() => {});
+  }
+  document.getElementById("packFile").addEventListener("change", async e => {
+    const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+    try {
+      const j = JSON.parse(await f.text());
+      if (!isPack(j)) throw new Error("That file isn't a museum pack. Its \"format\" needs to be \"" + GOQ.PACK_FORMAT + "\".");
+      await game.setPack(j); describe(GOQ.normalizePack(j), "Your museum pack");
+      try { localStorage.setItem(KEY, JSON.stringify(j)); } catch (err) { status.textContent += ". Too large to remember after reload"; status2.textContent = status.textContent; }
+    } catch (err) { status.className = "toast err"; status.textContent = err instanceof SyntaxError ? "That file couldn't be read as JSON." : err.message; status2.textContent = status.textContent; }
+    stage.focus({ preventScroll: true });
+  });
+  resetBtn.addEventListener("click", () => {
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    game.setPack(null); status.className = ""; status.textContent = "Built-in placeholder art"; status2.textContent = status.textContent; resetBtn.hidden = true;
+    stage.focus({ preventScroll: true });
+  });
+})();
+</script>
+<script>
+/* Version check: if this page and museum-engine.js don't match, say so (usually an old copy of the engine file). */
+(function () {
+  const want = "2026-10-02 photos and crowds", have = window.GOQ && GOQ.VERSION, el = document.getElementById("ver");
+  if (!el) return;
+  if (have === want) { el.textContent = "Version: " + have; return; }
+  el.classList.add("warn");
+  el.textContent = "Heads up: this page expects engine version \u201c" + want + "\u201d but loaded " + (have ? "\u201c" + have + "\u201d" : "an older museum-engine.js") +
+    ". Replace museum-engine.js in this folder with the latest one (check your downloads didn't save it as \u201cmuseum-engine (1).js\u201d), then refresh.";
+  el.style.color = "#f08a6a"; el.style.fontWeight = "700";
+})();
+</script>
+</body>
+</html>

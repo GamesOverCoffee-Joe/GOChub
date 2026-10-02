@@ -22,6 +22,12 @@ const navigationLinks = [
         classes: 'text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group'
     },
     {
+        name: 'Museum',
+        href: 'museum.html',
+        titleSuffix: ' - Museum',
+        classes: 'text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group'
+    },
+    {
         name: 'Insights',
         href: 'insights_1.1.html',
         titleSuffix: ' - Insights',

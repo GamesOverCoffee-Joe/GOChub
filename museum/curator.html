@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Curator: GOQ Museum</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+/* Matches the Theater's Asset Studio. */
+:root{
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#f1e4df;--surface:#fffaf7;--surface-2:#f6ebe6;--line:#d9c0b8;--text:#2a171c;--muted:#6d5157;
+  --gold:#8f5a0a;--on-gold:#fff8ec;--warn:#a33a22;--ok:#3f7a2a;--shadow:#d9c0b8;--stage:#1d1317;
+  --pixel:'Press Start 2P',ui-monospace,monospace;--body:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1d1317;--surface:#281a1f;--surface-2:#34232a;--line:#4b343b;--text:#f3e5d0;--muted:#b59e8c;
+  --gold:#e8b24a;--on-gold:#2a1a10;--warn:#f08a6a;--ok:#9fcf7a;--shadow:#0e080a;--stage:#120b0e;color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#1d1317;--surface:#281a1f;--surface-2:#34232a;--line:#4b343b;--text:#f3e5d0;--muted:#b59e8c;
+  --gold:#e8b24a;--on-gold:#2a1a10;--warn:#f08a6a;--ok:#9fcf7a;--shadow:#0e080a;--stage:#120b0e;color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+img{max-width:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+[hidden]{display:none !important}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4em;min-height:40px;padding:.45em .95em;border:2px solid var(--text);
+  background:var(--surface);color:var(--text);border-radius:3px;box-shadow:3px 3px 0 var(--shadow);cursor:pointer;font-weight:700;font-size:.92rem;white-space:nowrap;text-decoration:none}
+.btn:hover{background:var(--surface-2)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow)}
+.btn.primary{background:var(--gold);color:var(--on-gold);border-color:var(--gold)}
+.btn.quiet{border-color:var(--line);box-shadow:none;font-weight:600}
+.btn.small{min-height:34px;font-size:.82rem;padding:.3em .7em}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* Touch controls for the preview */
+.gt-controls{display:none;justify-content:space-between;align-items:center;gap:24px;padding:4px 6px;max-width:420px;margin:0 auto;width:100%;touch-action:none;user-select:none;-webkit-user-select:none;
+  --surface-2:#34232a;--text:#b59e8c;--gold:#e8b24a;--on-gold:#2a1a10;--shadow:#0a0507;color:#f3e5d0}
+@media (pointer:coarse){.gt-controls{display:flex}}
+.gt-pad{position:relative;width:138px;height:138px;touch-action:none;flex:none}
+.gt-pad span,.gt-pad i{position:absolute;background:var(--surface-2);border:2px solid var(--text)}
+.gt-pad .u,.gt-pad .d{left:46px;width:46px;height:48px}
+.gt-pad .u{top:0;border-bottom:0;border-radius:4px 4px 0 0}.gt-pad .d{bottom:0;border-top:0;border-radius:0 0 4px 4px}
+.gt-pad .l,.gt-pad .r{top:46px;height:46px;width:48px}
+.gt-pad .l{left:0;border-right:0;border-radius:4px 0 0 4px}.gt-pad .r{right:0;border-left:0;border-radius:0 4px 4px 0}
+.gt-pad i{left:46px;top:46px;width:46px;height:46px;border:0;background:var(--surface-2)}
+.gt-pad[data-dir="up"] .u,.gt-pad[data-dir="down"] .d,.gt-pad[data-dir="left"] .l,.gt-pad[data-dir="right"] .r{background:var(--gold)}
+.gt-btns{display:flex;gap:16px;align-items:center;transform:rotate(-18deg)}
+.gt-btn{-webkit-tap-highlight-color:transparent;outline:none;touch-action:none;width:62px;height:62px;border-radius:50%;border:2px solid var(--text);background:var(--surface-2);color:#f3e5d0;font-family:var(--pixel);font-size:14px;cursor:pointer;box-shadow:3px 3px 0 var(--shadow)}
+.gt-btn-a{color:var(--gold);margin-top:-26px}
+.gt-start{align-self:flex-end;font-family:var(--pixel);font-size:8px;padding:6px 10px;border-radius:12px;border:2px solid var(--text);background:var(--surface-2);color:var(--text);transform:rotate(-18deg);touch-action:none}
+.gt-start.down{background:var(--gold);color:var(--on-gold)}
+.gt-btn.down{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow);background:var(--gold);color:var(--on-gold)}
+
+/* Game screen (same as museum.html) */
+.gt-wrap{--s:2;position:relative;width:calc(240px * var(--s));height:calc(160px * var(--s));background:#000;overflow:hidden;
+  font-family:var(--pixel);user-select:none;-webkit-user-select:none;touch-action:none;outline:none;-webkit-tap-highlight-color:transparent}
+.gt-wrap canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+.gt-box{position:absolute;box-sizing:border-box;border-style:solid;border-width:calc(8px * var(--s));border-image-slice:8 fill;border-image-repeat:stretch;
+  background:#f8f8f0;background-clip:padding-box;color:#181820;font-size:calc(8px * var(--s));line-height:calc(16px * var(--s));display:none;image-rendering:pixelated}
+.gt-text{left:0;right:0;bottom:0;height:calc(48px * var(--s));padding:0 calc(2px * var(--s));cursor:pointer;z-index:5}
+.gt-text-body{white-space:pre-wrap;overflow:hidden;height:100%;overflow-wrap:anywhere}
+.gt-more{position:absolute;right:calc(2px * var(--s));bottom:calc(1px * var(--s));width:0;height:0;border-left:calc(3px * var(--s)) solid transparent;
+  border-right:calc(3px * var(--s)) solid transparent;border-top:calc(4px * var(--s)) solid #181820;display:none;animation:gtblink .6s steps(1) infinite}
+@keyframes gtblink{50%{opacity:0}}
+.gt-loc{position:absolute;left:calc(4px * var(--s));top:calc(4px * var(--s));padding:calc(5px * var(--s)) calc(8px * var(--s));background:#181820;color:#f8f8f0;
+  font-size:calc(8px * var(--s));line-height:1.4;border:calc(1px * var(--s)) solid #f8f8f0;opacity:0;transform:translateY(-120%);
+  transition:transform .25s steps(4),opacity .25s steps(4);pointer-events:none;max-width:70%;z-index:6}
+.gt-loc.on{opacity:1;transform:none}
+.gt-closeup{position:absolute;left:0;right:0;top:0;height:calc(112px * var(--s));display:none;align-items:center;justify-content:center;background:rgba(24,24,32,.82);cursor:pointer;z-index:4}
+.gt-cu-frame{box-sizing:border-box;width:calc(112px * var(--s));border-style:solid;border-width:calc(8px * var(--s));border-image-slice:8;border-image-repeat:stretch;background:#000;image-rendering:pixelated}
+.gt-cu-frame img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;image-rendering:pixelated;image-rendering:crisp-edges}
+.gt-cu-frame img.photo{image-rendering:auto}
+.gt-cu-links{position:absolute;right:calc(4px * var(--s));bottom:calc(3px * var(--s));display:flex;gap:calc(4px * var(--s));z-index:2}
+.gt-cu-links a{font-family:var(--pixel);font-size:calc(6px * var(--s));line-height:1;padding:calc(3px * var(--s)) calc(4px * var(--s));background:#181820;color:#f8f8f0;
+  border:calc(1px * var(--s)) solid #f8f8f0;text-decoration:none}
+.gt-cu-links a:hover,.gt-cu-links a:focus-visible{background:#e8b24a;color:#181820;outline:none}
+@media (prefers-reduced-motion: reduce){.gt-more{animation:none}.gt-loc{transition:none}}
+
+/* Layout */
+.app{display:grid;grid-template-columns:250px minmax(0,1fr) auto;grid-template-rows:auto minmax(0,1fr);grid-template-areas:"bar bar bar" "slots main preview";height:100%}
+.app.no-side{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"bar bar" "main preview"}
+.app.no-side .slots{display:none}
+.bar{grid-area:bar;display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:12px 18px;border-bottom:2px solid var(--line);background:var(--surface)}
+.brand{display:flex;flex-direction:column;gap:4px;margin-right:auto}
+.brand b{font-family:var(--pixel);font-size:13px;font-weight:400;color:var(--gold);line-height:1.4}
+.brand span{font-size:.82rem;color:var(--muted)}
+.tabs{display:flex;border:2px solid var(--text);border-radius:3px;overflow:hidden}
+.tabs button{border:0;background:var(--surface);padding:.45em 1.1em;cursor:pointer;font-weight:700;min-height:38px}
+.tabs button+button{border-left:2px solid var(--text)}
+.tabs button[aria-selected="true"]{background:var(--text);color:var(--surface)}
+.actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#saved{font-size:.84rem;color:var(--muted);max-width:32ch}
+#saved.err{color:var(--warn)}
+
+.slots{grid-area:slots;overflow:auto;border-right:2px solid var(--line);padding:10px 8px 24px;background:var(--surface-2)}
+.slots h3{font-size:.78rem;color:var(--muted);margin:16px 8px 6px;font-weight:700}
+.slot{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:2px solid transparent;background:none;border-radius:3px;padding:5px 8px;cursor:pointer;font-size:.9rem;line-height:1.25}
+.slot:hover{background:var(--surface)}
+.slot[aria-current="true"]{border-color:var(--text);background:var(--surface);box-shadow:3px 3px 0 var(--shadow)}
+.slot canvas{width:40px;height:40px;flex:none;image-rendering:pixelated;background:var(--bg);border-radius:2px;object-fit:contain}
+.slot .nm{flex:1}
+.slot .tag{font-size:.7rem;font-weight:700;color:var(--ok);border:1.5px solid currentColor;border-radius:2px;padding:0 .35em}
+.slot.atlas{border-color:var(--line);margin-bottom:4px}
+
+main{grid-area:main;overflow:auto;padding:22px 28px 40px;min-width:0}
+.editor{max-width:760px}
+h2.title{font-family:var(--pixel);font-weight:400;font-size:16px;line-height:1.5;margin:0 0 10px}
+.spec{margin:0;font-weight:700}
+.note{margin:4px 0 0;color:var(--muted);max-width:66ch}
+.views{display:flex;gap:18px;flex-wrap:wrap;margin:20px 0}
+.view{margin:0;display:flex;flex-direction:column;gap:8px;min-width:0}
+.view figcaption{font-size:.84rem;color:var(--muted);font-weight:700}
+.view canvas{image-rendering:pixelated;display:block;max-width:100%;border:2px solid var(--line);border-radius:2px;background:repeating-conic-gradient(var(--surface-2) 0 25%,var(--surface) 0 50%) 0 0/16px 16px}
+.drop{border:2px dashed var(--line);border-radius:4px;padding:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--surface)}
+.drop.over{border-color:var(--gold);background:var(--surface-2)}
+.drop p{margin:0;flex:1;min-width:200px}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.msg{margin:14px 0 0;min-height:1.5em;font-size:.92rem}
+.msg.ok{color:var(--ok)}.msg.err{color:var(--warn)}
+ol.steps{margin:14px 0 0;padding-left:1.4em;max-width:66ch}
+ol.steps li{margin:4px 0}
+.atlas-view{margin-top:20px;position:relative;display:inline-block;max-width:100%;overflow:auto;border:2px solid var(--line);border-radius:2px;
+  background:repeating-conic-gradient(var(--surface-2) 0 25%,var(--surface) 0 50%) 0 0/16px 16px}
+.atlas-view canvas{display:block;image-rendering:pixelated}
+.atlas-view canvas+canvas{position:absolute;left:0;top:0}
+label.check{display:inline-flex;align-items:center;gap:8px;font-size:.9rem;margin-top:12px}
+
+.pieces{max-width:920px}
+.pieces>p{color:var(--muted);max-width:66ch;margin:0 0 8px}
+.prow{display:grid;grid-template-columns:168px minmax(0,1fr);gap:16px;padding:14px;border:2px solid var(--line);border-radius:4px;background:var(--surface);margin-top:12px}
+.prow .th{width:168px;aspect-ratio:4/3;object-fit:cover;border-radius:2px;background:#000;display:block;image-rendering:pixelated}
+.prow .th.photo{image-rendering:auto}
+.prow .frame{border:4px solid #c89a2c;border-radius:2px}
+.prow.community .frame{border-color:#8a5a34}
+.spotlbl{font-family:var(--pixel);font-size:9px;line-height:1.6;color:var(--gold);margin-top:8px;display:block}
+.spotlbl.off{color:var(--muted)}
+.side-acts{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fields label{display:flex;flex-direction:column;gap:3px;font-size:.8rem;font-weight:700;color:var(--muted)}
+.fields .wide{grid-column:1/-1}
+.fields small{font-weight:400}
+input[type=text],input[type=url],input[type=date],select,textarea{border:2px solid var(--line);background:var(--surface);border-radius:3px;padding:.45em .6em;min-height:40px;width:100%;font-weight:400;color:var(--text);font-size:.95rem}
+textarea{min-height:72px;resize:vertical;line-height:1.4}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);outline:none}
+.acts{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+.fieldset{display:flex;flex-direction:column;gap:3px}
+.fieldset .flabel{font-size:.8rem;font-weight:700;color:var(--muted)}
+.fieldset small{font-size:.8rem;color:var(--muted)}
+.unveil{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:40px}
+.unveil label.check{margin:0;font-weight:600;color:var(--text)}
+.unveil input[type=date]{width:auto;flex:1;min-width:150px}
+input:invalid{border-color:var(--warn)}
+fieldset.lightroom{border:2px solid var(--line);border-radius:4px;background:var(--surface);padding:12px 16px 16px;margin:18px 0 0;display:grid;gap:10px;max-width:560px}
+fieldset.lightroom legend{font-weight:700;padding:0 6px}
+fieldset.lightroom .btn{justify-self:start}
+label.range{display:grid;grid-template-columns:170px 1fr 48px;align-items:center;gap:12px;font-size:.9rem;font-weight:600}
+label.range output{font-variant-numeric:tabular-nums;color:var(--muted);text-align:right}
+input[type=range]{accent-color:var(--gold);width:100%}
+.guestbook{margin-top:36px;padding-top:20px;border-top:2px solid var(--line)}
+.guestbook textarea{min-height:140px;font-family:var(--body)}
+.empty{padding:20px;border:2px dashed var(--line);border-radius:4px;color:var(--muted);margin-top:12px}
+
+.preview{grid-area:preview;border-left:2px solid var(--line);padding:18px;overflow:auto;background:var(--stage);color:#f3e5d0;display:flex;flex-direction:column;gap:12px;align-items:center}
+.preview h2{font-family:var(--pixel);font-size:11px;font-weight:400;margin:0;color:#e8b24a;align-self:flex-start}
+#stage{box-shadow:0 0 0 3px #34232a,0 0 0 5px #4b343b}
+#stage:focus-visible{outline:3px solid #e8b24a;outline-offset:6px}
+.jump{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.preview .btn{--surface:#281a1f;--surface-2:#34232a;--text:#f3e5d0;--line:#4b343b;--shadow:#0a0507;min-height:34px;font-size:.82rem;padding:.3em .7em}
+.pv-hint{font-size:.84rem;color:#b59e8c;text-align:center;max-width:44ch;margin:0}
+@media (pointer:coarse){.pv-hint{display:none}}
+@media (max-width:980px){
+  .app,.app.no-side{display:block;height:auto}
+  .slots{max-height:260px;border-right:0;border-bottom:2px solid var(--line)}
+  .preview{border-left:0;border-top:2px solid var(--line)}
+}
+
+/* Rooms: the level editor */
+.rooms{max-width:1100px}
+.rhead{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-bottom:10px}
+.rhead select{font:inherit;color:var(--text);background:var(--surface);border:2px solid var(--line);border-radius:3px;padding:6px 8px;min-height:40px}
+.rtools{display:flex;gap:6px;flex-wrap:wrap}
+.btn.on{background:var(--text);color:var(--surface);border-color:var(--text)}
+.rpal{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 8px;align-items:center;-webkit-overflow-scrolling:touch}
+.rpal-t{font-size:.75rem;font-weight:700;color:var(--muted);white-space:nowrap;padding-right:4px}
+.rchip{display:flex;align-items:center;gap:6px;flex:none;border:2px solid var(--line);background:var(--surface);color:var(--text);border-radius:4px;padding:3px 8px 3px 3px;font:inherit;font-size:.82rem;cursor:pointer;min-height:44px}
+.rchip.on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold) inset}
+.rchip canvas{width:32px;height:32px;image-rendering:pixelated;background:var(--surface-2);border-radius:2px}
+.rcanvas{position:relative;height:min(62vh,560px);min-height:300px;border:2px solid var(--line);border-radius:4px;overflow:hidden;background:#120b0e;touch-action:none}
+.rcanvas canvas{display:block;touch-action:none;cursor:crosshair}
+.rhint{margin:8px 0 0}
+.rinsp{margin-top:14px;padding:14px;border:2px solid var(--line);border-radius:4px;background:var(--surface)}
+.rinsp h3{margin:0 0 10px;font-size:1rem}
+.rfield{display:flex;flex-direction:column;gap:3px;font-size:.8rem;font-weight:700;color:var(--muted);margin-bottom:10px;flex:1;min-width:140px}
+.rfield small{font-weight:400}
+.rfield textarea{min-height:80px}
+.rfield input,.rfield select{font:inherit;font-weight:400;color:var(--text);background:var(--surface);border:2px solid var(--line);border-radius:3px;padding:6px 8px;min-height:40px}
+.rrow{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.rissues{margin:8px 0;padding-left:1.2em;color:var(--warn);font-size:.9rem}
+
+.rpick{margin:2px 0 8px}
+.rpick .rchip{min-height:48px}
+.rchg{margin-left:6px;font-size:.78rem;color:var(--gold)}
+dialog.rchooser{border:2px solid var(--line);border-radius:6px;background:var(--surface);color:var(--text);padding:14px 16px 18px;width:min(720px,calc(100vw - 20px));max-height:calc(100dvh - 30px);overflow:auto}
+dialog.rchooser::backdrop{background:rgba(10,5,7,.6)}
+.rch-head{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:-14px;background:var(--surface);padding:4px 0 6px;z-index:1}
+.rch-head h3{margin:0}
+dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
+.rch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.rch-grid .rchip{width:100%}
+.rbody{display:block}
+.rleft{min-width:0}
+.rcanvas{overscroll-behavior:contain}
+.rzoom{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:6px}
+.rzoom .btn{min-width:40px;min-height:40px;font-size:1.1rem;padding:0;box-shadow:none}
+/* Map and inspector side by side whenever the editor column is wide enough (a container query, so the preview's width counts). */
+.rooms{container-type:inline-size}
+@container (min-width:760px){
+  .rbody{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:14px;align-items:start}
+  .rcanvas{height:calc(100vh - 250px);min-height:380px}
+  .rinsp{margin-top:0;max-height:calc(100vh - 210px);overflow:auto}
+}
+@media (min-width:981px){.preview{width:min(520px,38vw)}}
+#pvJump{display:none}
+@media (max-width:980px){#pvJump{display:inline-flex}.tabs{overflow-x:auto;max-width:100%}.bar{gap:10px}}
+@media (pointer:coarse){.rtools .btn{min-height:44px}}
+@media (max-width:620px){.prow{grid-template-columns:1fr}.fields{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="bar">
+    <div class="brand"><b>Curator</b><span>GOQ Museum: art, pieces, and the museum pack</span></div>
+    <div class="tabs" role="tablist" aria-label="Sections">
+      <button role="tab" id="tab-art" aria-selected="true" aria-controls="main">Art</button>
+      <button role="tab" id="tab-pieces" aria-selected="false" aria-controls="main">Pieces</button>
+      <button role="tab" id="tab-staff" aria-selected="false" aria-controls="main">Staff</button>
+      <button role="tab" id="tab-shop" aria-selected="false" aria-controls="main">Shop</button>
+      <button role="tab" id="tab-rooms" aria-selected="false" aria-controls="main">Rooms</button>
+    </div>
+    <div class="actions">
+      <span id="saved" role="status"></span>
+      <label class="btn quiet" for="importFile">Import pack</label>
+      <input id="importFile" class="sr-only" type="file" accept=".json,application/json">
+      <button class="btn primary" id="exportBtn" type="button">Export pack</button>
+      <button class="btn quiet" id="pvJump" type="button">Preview</button>
+    </div>
+  </header>
+  <nav class="slots" id="slots" aria-label="Art slots"></nav>
+  <main id="main"></main>
+  <aside class="preview" aria-label="Live preview">
+    <h2>Live preview</h2>
+    <div id="stage" aria-label="Museum preview. Click it, then walk with arrow keys or WASD, Z or Space to interact, X to go back."></div>
+    <div id="controls"></div>
+    <div class="jump">
+      <button class="btn" type="button" data-go="lobby">Lobby</button>
+      <button class="btn" type="button" data-go="gallery">Gallery</button>
+      <button class="btn" type="button" id="who" aria-pressed="true">Viewing as curator</button>
+      <button class="btn" type="button" id="recrate" title="Put pieces with a future unveil date back in their crates">Repack crates</button>
+      <button class="btn" type="button" id="spooky" aria-pressed="false" title="How often something creepy happens after the lights go out">Spooky: rare</button>
+      <button class="btn" type="button" id="timeBtn" title="Pin the time of day in the preview, or follow the clock">Time: clock</button>
+      <button class="btn" type="button" id="rechore" title="Dust settles, plants get thirsty, the mug goes missing, visitors come back, lights come on">Reset chores</button>
+    </div>
+    <p class="pv-hint" id="ver" style="font-size:.75rem"></p>
+    <p class="pv-hint" id="pvHint">Click the preview, then walk with the arrow keys or WASD. Z or Space to look and hang, X to go back or take a photo, Enter for the menu.</p>
+  </aside>
+</div>
+<script src="museum-engine.js"></script>
+<script>
+(function () {
+"use strict";
+const DRAFT_KEY = "goq-curator-draft", SITE_PACK = "museum-pack.json", MAX_PIECE_W = 480;
+const $ = s => document.querySelector(s);
+const el = (tag, attrs, kids) => {
+  const e = document.createElement(tag);
+  for (const k in attrs || {}) { const v = attrs[k]; if (k === "text") e.textContent = v; else if (k.startsWith("on")) e.addEventListener(k.slice(2), v); else if (v !== false && v != null) e.setAttribute(k, v === true ? "" : v); }
+  (kids || []).forEach(c => c && e.appendChild(c)); return e;
+};
+const uid = () => "piece-" + Math.random().toString(36).slice(2, 9);
+const savedEl = $("#saved");
+function status(text, err) { savedEl.textContent = text; savedEl.className = err ? "err" : ""; }
+
+/* ---------- Draft: the pack being edited ---------- */
+let draft = { assets: {}, pieces: [], guestbook: [], settings: { lighting: {} } };
+function packOut() {
+  return { format: GOQ.PACK_FORMAT, version: 1, assets: draft.assets, settings: draft.settings, guestbook: draft.guestbook, rooms: draft.rooms || {}, pieces: draft.pieces.map(p => {
+    const o = { id: p.id, kind: p.kind, title: p.title, developer: p.developer };
+    if (p.kind === "episode") { o.observation = p.observation; o.intention = p.intention; }
+    else { o.guestWriter = p.guestWriter; o.guestNote = p.guestNote; }
+    if (p.episodeUrl) o.episodeUrl = p.episodeUrl;
+    if (p.gameUrl) o.gameUrl = p.gameUrl;
+    if (p.hint) o.hint = p.hint;
+    if (p.unveil) o.unveil = p.unveil;
+    if (p.image) o.image = p.image; else { o.colors = p.colors; o.style = p.style; }
+    return o;
+  }) };
+}
+function useDraft(raw) {
+  const n = GOQ.normalizePack(raw);
+  draft = { assets: n.assets, pieces: n.pieces, guestbook: n.guestbook, settings: n.settings, rooms: JSON.parse(JSON.stringify(n.rooms || {})) };
+}
+let saveT = 0;
+function changed(opts) {
+  opts = opts || {};
+  clearTimeout(saveT);
+  saveT = setTimeout(() => {
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(packOut())); status("Saved in this browser"); }
+    catch (e) { status("Too large to save in the browser. Export the pack to keep your changes.", true); }
+    refreshPreview();
+  }, opts.now ? 0 : 400);
+}
+
+/* ---------- Live preview ---------- */
+const stage = $("#stage");
+const game = new GOQ.Game(stage, undefined, { curator: true, capture: "focus", saveKey: null, showTestBadge: true });
+GOQ.mountControls(game, $("#controls"));
+game.tapWalk = matchMedia("(pointer:coarse)").matches; // tap to walk in the preview on touch screens
+window.goqCurator = { game, get draft() { return draft; } };
+async function refreshPreview() {
+  await game.setPack(packOut());
+  if (tab === "art") renderSlotList();
+}
+function fitPreview() {
+  const w = window.innerWidth;
+  game.fit(w > 1400 ? 480 : w > 980 ? 360 : Math.min(480, w - 60), 400);
+}
+window.addEventListener("resize", fitPreview); fitPreview();
+document.querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => { game.teleport(b.dataset.go); stage.focus({ preventScroll: true }); }));
+$("#who").addEventListener("click", e => {
+  const on = !game.curator; game.setCurator(on);
+  e.currentTarget.textContent = on ? "Viewing as curator" : "Viewing as a visitor"; e.currentTarget.setAttribute("aria-pressed", on);
+  stage.focus({ preventScroll: true });
+});
+$("#recrate").addEventListener("click", () => { game.resetHangs(); stage.focus({ preventScroll: true }); });
+$("#rechore").addEventListener("click", () => { game.resetProgress(); stage.focus({ preventScroll: true }); });
+// Time: follow the real clock, or pin day, sunset or night to see (and record) the evening details.
+$("#timeBtn").addEventListener("click", e => {
+  const order = [null, "day", "sunset", "night"], next = order[(order.indexOf(game.timeOverride) + 1) % order.length];
+  game.setTime(next); e.currentTarget.textContent = "Time: " + (next || "clock"); stage.focus({ preventScroll: true });
+});
+// Spooky: "always" makes the rare creepy moment happen on every closing, handy for recording an end-card.
+$("#spooky").addEventListener("click", e => {
+  game.forceSpook = !game.forceSpook; game.spook = null;
+  e.currentTarget.textContent = game.forceSpook ? "Spooky: always" : "Spooky: rare"; e.currentTarget.setAttribute("aria-pressed", game.forceSpook);
+  stage.focus({ preventScroll: true });
+});
+// "Reset chores" also reopens the museum: visitors come back and the lights come on.
+
+/* ---------- Tabs ---------- */
+let tab = "art", current = "atlas";
+function setTab(t) {
+  tab = t;
+  ["art", "pieces", "staff", "shop", "rooms"].forEach(k => $("#tab-" + k).setAttribute("aria-selected", t === k));
+  $("#app").classList.toggle("no-side", t !== "art");
+  render();
+}
+$("#tab-art").addEventListener("click", () => setTab("art"));
+$("#tab-pieces").addEventListener("click", () => setTab("pieces"));
+$("#tab-staff").addEventListener("click", () => setTab("staff"));
+$("#tab-shop").addEventListener("click", () => setTab("shop"));
+$("#tab-rooms").addEventListener("click", () => setTab("rooms"));
+// Small screens: the preview sits below the editor; this jumps to it.
+$("#pvJump").addEventListener("click", () => document.querySelector(".preview").scrollIntoView({ behavior: "smooth", block: "start" }));
+function render() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "shop") renderShop(); else if (tab === "rooms") renderRooms(); else renderPieces(); }
+
+/* ---------- Image helpers ---------- */
+function readFile(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error("That file couldn't be read.")); r.readAsDataURL(file); }); }
+function loadImg(src) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error("That file isn't an image this browser can open.")); i.src = src; }); }
+function canvasOf(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d"); x.imageSmoothingEnabled = false; return [c, x]; }
+function download(name, blobOrUrl) {
+  const url = typeof blobOrUrl === "string" ? blobOrUrl : URL.createObjectURL(blobOrUrl);
+  const a = el("a", { href: url, download: name }); document.body.appendChild(a); a.click(); a.remove();
+  if (typeof blobOrUrl !== "string") setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+function sheetSize(key) { const s = GOQ.SLOT[key], g = GOQ.sheetGrid(s); return { w: s.w * g.cols, h: s.h * g.rows }; }
+/* The slot's art as a canvas at exactly its sheet size (custom art is clipped if oversized). */
+function slotCanvas(key) {
+  const { w, h } = sheetSize(key), [c, x] = canvasOf(w, h); x.drawImage(game.sheet(key), 0, 0, w, h, 0, 0, w, h); return c;
+}
+function pixelsMatch(a, b, tol) {
+  for (let i = 0; i < a.length; i += 4) {
+    if (a[i + 3] < 8 && b[i + 3] < 8) continue;
+    if (Math.abs(a[i] - b[i]) > tol || Math.abs(a[i + 1] - b[i + 1]) > tol || Math.abs(a[i + 2] - b[i + 2]) > tol || Math.abs(a[i + 3] - b[i + 3]) > tol) return false;
+  }
+  return true;
+}
+const dataOf = c => c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+
+/* ---------- Slot list ---------- */
+function renderSlotList() {
+  const nav = $("#slots"); nav.innerHTML = "";
+  const thumb = (src, w, h) => { const s = Math.max(w, h), [c, x] = canvasOf(s, s); x.drawImage(src, 0, 0, w, h, (s - w) / 2, (s - h) / 2, w, h); return c; };
+  const atl = el("button", { class: "slot atlas", type: "button", "aria-current": current === "atlas" ? "true" : "false", onclick: () => { current = "atlas"; render(); } });
+  const [ac, ax] = canvasOf(40, 40); ax.fillStyle = "#8f5a0a"; [[4, 4], [20, 4], [4, 20], [20, 20]].forEach(([x, y]) => ax.fillRect(x, y, 14, 14)); atl.appendChild(ac);
+  atl.appendChild(el("span", { class: "nm", text: "Photoshop atlas" })); nav.appendChild(atl);
+  const lit = el("button", { class: "slot atlas", type: "button", "aria-current": current === "lighting" ? "true" : "false", onclick: () => { current = "lighting"; render(); } });
+  const [lc, lx] = canvasOf(40, 40); lx.fillStyle = "#1a1430"; lx.fillRect(0, 0, 40, 40);
+  const lg = lx.createRadialGradient(20, 18, 2, 20, 18, 16); lg.addColorStop(0, "#ffd890"); lg.addColorStop(1, "rgba(255,216,144,0)"); lx.fillStyle = lg; lx.fillRect(0, 0, 40, 40);
+  lc.style.imageRendering = "auto"; lit.appendChild(lc); lit.appendChild(el("span", { class: "nm", text: "Lighting" })); nav.appendChild(lit);
+  let group = "";
+  for (const s of GOQ.SLOTS) {
+    if (s.retired) continue; // kept in the list only so older atlases line up
+    if (s.group !== group) { group = s.group; nav.appendChild(el("h3", { text: group })); }
+    const b = el("button", { class: "slot", type: "button", "aria-current": current === s.key ? "true" : "false", onclick: () => { current = s.key; render(); } });
+    b.appendChild(thumb(game.sheet(s.key), s.w, s.h));
+    b.appendChild(el("span", { class: "nm", text: s.label }));
+    if (draft.assets[s.key]) b.appendChild(el("span", { class: "tag", text: "Custom" }));
+    nav.appendChild(b);
+  }
+}
+
+/* ---------- One slot ---------- */
+function renderSlot() {
+  const main = $("#main"); main.innerHTML = "";
+  if (current === "atlas") return renderAtlas();
+  if (current === "lighting") return renderLighting();
+  const s = GOQ.SLOT[current], { w, h } = sheetSize(current), custom = !!draft.assets[current];
+  const ed = el("section", { class: "editor" }); main.appendChild(ed);
+  ed.appendChild(el("h2", { class: "title", text: s.label }));
+  const frames = s.layout === "char" ? "3 × 4 frames of " + s.w + "×" + s.h : s.frames > 1 ? s.frames + " frames of " + s.w + "×" + s.h : "";
+  ed.appendChild(el("p", { class: "spec", text: w + "×" + h + " pixels" + (frames ? ", " + frames : "") + ". PNG with transparency." }));
+  if (s.note) ed.appendChild(el("p", { class: "note", text: s.note }));
+  const scale = Math.max(2, Math.min(8, Math.floor(256 / Math.max(w, h))));
+  const big = src => { const [c, x] = canvasOf(w * scale, h * scale); x.drawImage(src, 0, 0, w, h, 0, 0, w * scale, h * scale); return c; };
+  ed.appendChild(el("div", { class: "views" }, [
+    el("figure", { class: "view" }, [el("figcaption", { text: "Built-in" }), big(GOQ.placeholder(current))]),
+    el("figure", { class: "view" }, [el("figcaption", { text: custom ? "Yours" : "In use (built-in)" }), big(game.sheet(current))]),
+  ]));
+  const msg = el("p", { class: "msg", role: "status" });
+  const input = el("input", { type: "file", accept: "image/png,image/gif,image/webp", class: "sr-only", id: "slotFile" });
+  const take = async file => {
+    try {
+      const src = await readFile(file), img = await loadImg(src);
+      let out = src;
+      if (img.width !== w || img.height !== h) {
+        const k = img.width / w;
+        if (Number.isInteger(k) && k > 1 && img.height === h * k) { const [c, x] = canvasOf(w, h); x.drawImage(img, 0, 0, w, h); out = c.toDataURL("image/png"); }
+        else throw new Error("This slot needs a " + w + "×" + h + " image. That one is " + img.width + "×" + img.height + ".");
+      }
+      draft.assets[current] = { src: out }; changed({ now: true });
+      await game.setPack(packOut()); render();
+      $(".msg").className = "msg ok"; $(".msg").textContent = "Updated. The preview is using your art.";
+    } catch (e) { msg.className = "msg err"; msg.textContent = e.message; }
+  };
+  input.addEventListener("change", e => { const f = e.target.files[0]; e.target.value = ""; if (f) take(f); });
+  const drop = el("div", { class: "drop" }, [
+    el("p", { text: "Drop a PNG here, or choose one. A clean 2×, 3× or 4× upscale is shrunk back to size." }),
+    el("label", { class: "btn", for: "slotFile", text: "Choose image" }), input,
+  ]);
+  drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("over"); });
+  drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+  drop.addEventListener("drop", e => { e.preventDefault(); drop.classList.remove("over"); const f = e.dataTransfer.files[0]; if (f) take(f); });
+  ed.appendChild(drop);
+  ed.appendChild(el("div", { class: "row" }, [
+    el("button", { class: "btn quiet", type: "button", text: "Download as template", onclick: () => slotCanvas(current).toBlob(b => download(current + ".png", b)) }),
+    custom ? el("button", { class: "btn quiet", type: "button", text: "Use built-in art", onclick: async () => { delete draft.assets[current]; changed({ now: true }); await game.setPack(packOut()); render(); } }) : null,
+  ]));
+  ed.appendChild(msg);
+}
+
+/* ---------- Photoshop atlas ----------
+   Every slot on one sheet, at fixed positions. Slots are placed in SLOTS order in rows,
+   each with a label band above it (empty in the atlas, labeled in the guide). */
+const ATLAS_W = 352, CELL_MIN = 84, BAND = 9, GAP = 6;
+function atlasLayout() {
+  const pos = {}; let x = GAP, y = GAP, rowH = 0;
+  for (const s of GOQ.SLOTS) {
+    const { w, h } = sheetSize(s.key), cw = Math.max(CELL_MIN, w);
+    if (x + cw > ATLAS_W - GAP) { x = GAP; y += rowH + GAP; rowH = 0; }
+    pos[s.key] = { x, y: y + BAND, w, h };
+    x += cw + GAP; rowH = Math.max(rowH, BAND + h);
+  }
+  return { pos, w: ATLAS_W, h: y + rowH + GAP };
+}
+const FONT = {
+  A: ["010","101","111","101","101"], B: ["110","101","110","101","110"], C: ["011","100","100","100","011"], D: ["110","101","101","101","110"],
+  E: ["111","100","110","100","111"], F: ["111","100","110","100","100"], G: ["011","100","101","101","011"], H: ["101","101","111","101","101"],
+  I: ["111","010","010","010","111"], J: ["001","001","001","101","010"], K: ["101","101","110","101","101"], L: ["100","100","100","100","111"],
+  M: ["101","111","111","101","101"], N: ["110","101","101","101","101"], O: ["111","101","101","101","111"], P: ["110","101","110","100","100"],
+  Q: ["010","101","101","110","011"], R: ["110","101","110","101","101"], S: ["011","100","010","001","110"], T: ["111","010","010","010","010"],
+  U: ["101","101","101","101","111"], V: ["101","101","101","101","010"], W: ["101","101","111","111","101"], X: ["101","101","010","101","101"],
+  Y: ["101","101","010","010","010"], Z: ["111","001","010","100","111"],
+};
+function pixText(x, str, px, py) {
+  for (const ch of str) { const g = FONT[ch]; if (g) g.forEach((row, j) => { for (let i = 0; i < 3; i++) if (row[i] === "1") x.fillRect(px + i, py + j, 1, 1); }); px += 4; }
+}
+function makeAtlas() {
+  const L = atlasLayout(), [c, x] = canvasOf(L.w, L.h);
+  for (const s of GOQ.SLOTS) { const p = L.pos[s.key]; x.drawImage(slotCanvas(s.key), p.x, p.y); }
+  return c;
+}
+function makeGuide() {
+  const L = atlasLayout(), [c, x] = canvasOf(L.w, L.h);
+  for (const s of GOQ.SLOTS) {
+    const p = L.pos[s.key], g = GOQ.sheetGrid(s);
+    x.fillStyle = "rgba(0,200,255,.55)";
+    for (let i = 1; i < g.cols; i++) x.fillRect(p.x + i * s.w, p.y, 1, p.h);
+    for (let j = 1; j < g.rows; j++) x.fillRect(p.x, p.y + j * s.h, p.w, 1);
+    x.fillStyle = "#ff00c8";
+    x.fillRect(p.x - 1, p.y - 1, p.w + 2, 1); x.fillRect(p.x - 1, p.y + p.h, p.w + 2, 1);
+    x.fillRect(p.x - 1, p.y - 1, 1, p.h + 2); x.fillRect(p.x + p.w, p.y - 1, 1, p.h + 2);
+    pixText(x, s.key.toUpperCase().replace(/_/g, " "), p.x, p.y - BAND + 1);
+  }
+  return c;
+}
+function renderAtlas() {
+  const main = $("#main"), ed = el("section", { class: "editor" }); main.appendChild(ed);
+  const L = atlasLayout();
+  ed.appendChild(el("h2", { class: "title", text: "Photoshop atlas" }));
+  ed.appendChild(el("p", { class: "note", text: "Every sprite on one " + L.w + "×" + L.h + " sheet, so you can edit them all at once. The atlas includes any custom art you've already added." }));
+  ed.appendChild(el("ol", { class: "steps" }, [
+    "Download the atlas and the guide.",
+    "Open the atlas in Photoshop. Add the guide as the top layer (File, then Place Embedded) and line it up at the top-left corner. Pink boxes mark each slot; blue lines split animation frames.",
+    "Draw inside the pink boxes only. Leave pixels transparent where the game should show through (doors, frames, characters).",
+    "Hide the guide, then save as PNG with transparency (File, then Export, then Export As). Don't crop or resize the canvas.",
+    "Import the edited atlas here. Slots you changed become custom art; untouched slots keep the built-in art.",
+  ].map(t => el("li", { text: t }))));
+  const msg = el("p", { class: "msg", role: "status" });
+  const input = el("input", { type: "file", accept: "image/png", class: "sr-only", id: "atlasFile" });
+  input.addEventListener("change", async e => {
+    const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+    try {
+      const img = await loadImg(await readFile(f));
+      if (img.width !== L.w) throw new Error("This atlas is " + img.width + " pixels wide; it should be " + L.w + ". Make sure the canvas wasn't resized or cropped.");
+      const [full, fx] = canvasOf(img.width, img.height); fx.drawImage(img, 0, 0);
+      let updated = 0, reset = 0, skipped = 0;
+      for (const s of GOQ.SLOTS) {
+        const p = L.pos[s.key];
+        if (p.y + p.h > img.height) { skipped++; continue; } // an older, shorter atlas: newer slots aren't in it
+        const [c, x] = canvasOf(p.w, p.h); x.drawImage(full, p.x, p.y, p.w, p.h, 0, 0, p.w, p.h);
+        const px = dataOf(c);
+        if (pixelsMatch(px, dataOf(slotCanvas(s.key)), 3)) continue;
+        if (pixelsMatch(px, dataOf(GOQ.placeholder(s.key)), 3)) { delete draft.assets[s.key]; reset++; }
+        else { draft.assets[s.key] = { src: c.toDataURL("image/png") }; updated++; }
+      }
+      changed({ now: true }); await game.setPack(packOut()); render();
+      const m = $(".msg");
+      m.className = "msg ok";
+      m.textContent = updated || reset
+        ? "Updated " + updated + " slot" + (updated === 1 ? "" : "s") + (reset ? ", set " + reset + " back to built-in art" : "") + (skipped ? ". " + skipped + " newer slot" + (skipped === 1 ? " wasn't" : "s weren't") + " in this atlas and stayed as they were" : "") + "."
+        : "No changes found in that atlas.";
+    } catch (err) { msg.className = "msg err"; msg.textContent = err.message; }
+  });
+  ed.appendChild(el("div", { class: "row" }, [
+    el("button", { class: "btn primary", type: "button", text: "Download atlas", onclick: () => makeAtlas().toBlob(b => download("museum-atlas.png", b)) }),
+    el("button", { class: "btn", type: "button", text: "Download guide", onclick: () => makeGuide().toBlob(b => download("museum-atlas-guide.png", b)) }),
+    el("label", { class: "btn", for: "atlasFile", text: "Import edited atlas" }), input,
+  ]));
+  ed.appendChild(msg);
+  const view = el("div", { class: "atlas-view" }), scale = 2, a = makeAtlas(), g = makeGuide();
+  [a, g].forEach(c => { c.style.width = c.width * scale + "px"; c.style.height = c.height * scale + "px"; view.appendChild(c); });
+  const show = el("input", { type: "checkbox", checked: true });
+  show.addEventListener("change", () => (g.hidden = !show.checked));
+  ed.appendChild(el("label", { class: "check" }, [show, document.createTextNode("Show the guide")]));
+  ed.appendChild(view);
+}
+
+/* ---------- Lighting ---------- */
+function renderLighting() {
+  const ed = el("section", { class: "editor" }); $("#main").appendChild(ed);
+  ed.appendChild(el("h2", { class: "title", text: "Lighting" }));
+  ed.appendChild(el("p", { class: "note", text: "How dark each room is with the lights on, and how strongly spotlights pick out the pieces. Turning the lights off at closing always goes nearly dark." }));
+  for (const id in GOQ.ROOMS) {
+    const L = draft.settings.lighting[id] || (draft.settings.lighting[id] = Object.assign({}, GOQ.ROOMS[id].light));
+    const slider = (key, label, max, unit) => {
+      const out = el("output", { text: Math.round(L[key] * 100) + "%" });
+      const r = el("input", { type: "range", min: 0, max: max, step: 1, value: Math.round(L[key] * 100), "aria-label": GOQ.ROOMS[id].name + ": " + label });
+      r.addEventListener("input", () => { L[key] = +r.value / 100; out.textContent = r.value + "%"; changed(); });
+      return el("label", { class: "range" }, [el("span", { text: label }), r, out]);
+    };
+    ed.appendChild(el("fieldset", { class: "lightroom" }, [
+      el("legend", { text: GOQ.ROOMS[id].name }),
+      slider("dim", "Room dimness", 80), slider("spots", "Spotlights on pieces", 100),
+      el("button", { class: "btn small quiet", type: "button", text: "Go there in the preview", onclick: () => { game.teleport(id); stage.focus({ preventScroll: true }); } }),
+    ]));
+  }
+  ed.appendChild(el("div", { class: "row" }, [el("button", { class: "btn quiet", type: "button", text: "Back to the default lighting", onclick: () => {
+    for (const id in GOQ.ROOMS) draft.settings.lighting[id] = Object.assign({}, GOQ.ROOMS[id].light); changed({ now: true }); render();
+  } })]));
+}
+
+/* ---------- Staff ---------- */
+function renderStaff() {
+  const main = $("#main"); main.innerHTML = "";
+  const st = draft.settings.staff || (draft.settings.staff = { eotm: { name: "", note: "" }, corkboard: GOQ.DEFAULT_CORKBOARD.slice() });
+  const wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
+  wrap.appendChild(el("h2", { class: "title", text: "Staff" }));
+  wrap.appendChild(el("p", { text: "Patreon members clock in at the staff door with a badge, wear the staff uniform, and their chores count toward a staff tally. Until Phase 8 (Supabase), only the offline test badge works: number 0001, key TEST." }));
+
+  const cat = el("input", { type: "text", value: st.catName || "Pixel", placeholder: "Pixel", maxlength: 30 });
+  cat.addEventListener("input", () => { st.catName = cat.value.trim() || "Pixel"; changed(); });
+  wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
+    el("h3", { text: "The museum cat", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "Naps somewhere different every day: the lobby, the gallery, its bed in the gift shop, or the staff room. Visitors can pet it." }),
+    el("div", { class: "fields", style: "max-width:420px" }, [el("label", {}, [document.createTextNode("Name"), cat])]),
+  ]));
+  const name = el("input", { type: "text", value: st.eotm.name, placeholder: "A patron's display name" });
+  const note = el("input", { type: "text", value: st.eotm.note, placeholder: "Dusted 41 frames in October" });
+  name.addEventListener("input", () => { st.eotm.name = name.value; changed(); });
+  note.addEventListener("input", () => { st.eotm.note = note.value; changed(); });
+  wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
+    el("h3", { text: "Employee of the Month", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "Hangs in the lobby. Leave the name empty for an empty frame (\"Maybe it'll be you\")." }),
+    el("div", { class: "fields" }, [
+      el("label", {}, [document.createTextNode("Name"), name]),
+      el("label", {}, [document.createTextNode("Why they won"), note]),
+    ]),
+  ]));
+
+  const cork = el("textarea", { id: "corkText", style: "min-height:180px" });
+  cork.value = (st.corkboard || []).join("\n\n");
+  cork.addEventListener("input", () => { st.corkboard = cork.value.split(/\n\s*\n/).map(t => t.trim()).filter(Boolean).slice(0, 12); changed(); });
+  wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
+    el("h3", { text: "Staff room corkboard", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "Your unpolished notes for upcoming episodes, read out one at a time. Leave a blank line between notes. Up to 12." }),
+    el("label", { class: "sr-only", for: "corkText", text: "Corkboard notes" }), cork,
+  ]));
+  wrap.appendChild(el("p", { class: "note", style: "margin-top:18px", text: "Tip: in the preview you're the curator, so the staff door opens without a badge. Switch to \"Viewing as a visitor\" to try clocking in." }));
+}
+
+/* ---------- Rooms: the level editor ----------
+   Edit any room or add new ones. Rooms are saved in the museum pack ("rooms"), so the museum and this preview use them.
+   Touch: one finger uses the tool, two fingers pan and pinch-zoom, a long press selects. Mouse: wheel zooms, right-drag pans. */
+const TILE_BRUSHES = [
+  { ch: ".", name: "Floor" }, { ch: "=", name: "Runner" }, { ch: "#", name: "Wall top" }, { ch: "^", name: "Wall, upper" }, { ch: "v", name: "Wall, lower" },
+  { ch: "D", name: "Doorway", pair: "d", note: "Paint on the upper wall row; the lower half is added below." },
+  { ch: "S", name: "Staff door", pair: "s", note: "Paint on the upper wall row; the lower half is added below." },
+  { ch: "B", name: "Door in a bottom wall" }, { ch: "H", name: "Door in a side wall", note: "Paint on the left or right wall." }, { ch: "E", name: "Front doors" },
+];
+const PLACE_GROUPS = [
+  { name: "Display", items: [
+    { kind: "case", name: "Episode case", key: "display_case", note: "Episodes fill cases in Pieces order. Stand it on the floor with room to walk all the way around." },
+    { kind: "spot", name: "Painting spot", key: "wall_frame_wood", note: "Community pieces hang here. Tap the wall; it takes two tiles across both wall rows." },
+  ] },
+  { name: "Furniture", items: ["bench", "plant", "sign_stand", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can"].map(k => ({ kind: "prop", key: k })) },
+  { name: "Shop and café", items: ["item_rack", "shop_counter", "cafe_counter", "bus_tub", "cafe_table", "cafe_stool", "floor_lamp", "postcard_spinner", "basket", "planter", "cat_bed"].map(k => ({ kind: "prop", key: k }))
+    .concat([{ kind: "decal", key: "rug" }]) },
+  { name: "Storage and floors", items: [{ kind: "stairs", key: "stair_up", name: "Stairs up", note: "Step on it to change floors. Select it to choose where it leads." },
+    { kind: "stairs", key: "stair_down", name: "Stairs down", note: "Step on it to change floors. Select it to choose where it leads." }]
+    .concat(["railing", "storage_shelves", "box_stack", "workbench"].map(k => ({ kind: "prop", key: k }))) },
+  { name: "On the wall", items: ["shop_shelves", "shop_posters", "mug_shelf", "cafe_menu"].map(k => ({ kind: "wallArt", key: k })) },
+  { name: "Spots", items: [
+    { kind: "spawn", name: "Start spot", key: "player", note: "Where you appear when the preview jumps here." },
+    { kind: "catSpot", name: "Cat nap spot", key: "cat" }, { kind: "mugSpot", name: "Mug spot", key: "mug" },
+    { kind: "lightSwitch", name: "Light switch", key: "light_switch", note: "On the lower wall row. Rooms with a switch must be dark to close the museum." },
+    { kind: "intercom", name: "Intercom", key: "intercom" },
+  ] },
+  { name: "People", items: ["visitor_a", "visitor_b", "visitor_c", "shop_staff", "guard"].map(k => ({ kind: "visitor", key: k })) },
+];
+const SIT_KEYS = { bench: "up", cafe_stool: "right" };
+const clone = o => JSON.parse(JSON.stringify(o));
+const R = { id: "lobby", tool: "select", brush: TILE_BRUSHES[0], place: null, sel: null, zoom: 0, panX: 0, panY: 0, undo: [], redo: [], img: null, grid: true, linking: null };
+
+function roomIds() { const ids = Object.keys(GOQ.BUILTIN_ROOMS); for (const id in (draft.rooms || {})) if (!ids.includes(id)) ids.push(id); return ids; }
+function roomDef(id) { return (draft.rooms && draft.rooms[id]) || GOQ.BUILTIN_ROOMS[id]; }
+function editable(id) { draft.rooms = draft.rooms || {}; if (!draft.rooms[id]) draft.rooms[id] = clone(GOQ.BUILTIN_ROOMS[id]); return draft.rooms[id]; }
+function W(d) { return d.map[0].length; } function H(d) { return d.map.length; }
+function setCh(d, x, y, ch) { if (y < 0 || y >= H(d) || x < 0 || x >= W(d)) return; d.map[y] = d.map[y].slice(0, x) + ch + d.map[y].slice(x + 1); }
+function getCh(d, x, y) { return (d.map[y] || "")[x] || "#"; }
+function snapshot() { R.undo.push({ id: R.id, def: draft.rooms && draft.rooms[R.id] ? clone(draft.rooms[R.id]) : null }); if (R.undo.length > 60) R.undo.shift(); R.redo = []; }
+function restore(from, to) {
+  const s = from.pop(); if (!s) return;
+  to.push({ id: s.id, def: draft.rooms && draft.rooms[s.id] ? clone(draft.rooms[s.id]) : null });
+  draft.rooms = draft.rooms || {}; if (s.def) draft.rooms[s.id] = s.def; else delete draft.rooms[s.id];
+  R.id = s.id; R.sel = null; roomChanged();
+}
+let roomT = 0;
+function roomChanged(now) {
+  clearTimeout(roomT);
+  roomT = setTimeout(async () => { await game.setPack(packOut()); R.img = game.renderRoomFull(R.id); drawEditor(); renderInspector(); changed(); }, now ? 0 : 90);
+  drawEditor();
+}
+
+/* Everything you can select in a room, as boxes in tile units. Earlier entries win when they overlap. */
+function roomItems(d) {
+  const out = [], sw = k => (GOQ.SLOT[k] ? GOQ.SLOT[k].w / 16 : 1), sh = k => (GOQ.SLOT[k] ? GOQ.SLOT[k].h / 16 : 1);
+  (d.visitors || []).forEach((v, i) => out.push({ type: "visitor", i, x: v.x, y: v.y, w: 1, h: 1, label: "Visitor" }));
+  if (d.spawn) out.push({ type: "spawn", x: d.spawn[0], y: d.spawn[1], w: 1, h: 1, label: "Start spot" });
+  (d.catSpots || []).forEach((p, i) => out.push({ type: "catSpot", i, x: p[0], y: p[1], w: 1, h: 1, label: "Cat nap spot" }));
+  (d.mugSpots || []).forEach((p, i) => out.push({ type: "mugSpot", i, x: p[0], y: p[1], w: 1, h: 1, label: "Mug spot" }));
+  [["lightSwitch", "Light switch", 1, 1], ["intercom", "Intercom", 1, 1], ["timeClock", "Time clock", 1, 1]].forEach(([k, l, w, h]) => { if (d[k]) out.push({ type: "fixed", key: k, x: d[k][0], y: d[k][1], w, h, label: l }); });
+  [["windowAt", "Window"], ["eotmAt", "Employee of the Month"], ["corkboardAt", "Corkboard"]].forEach(([k, l]) => { if (d[k]) out.push({ type: "fixed", key: k, x: d[k][0], y: 1, w: 2, h: 2, label: l }); });
+  if (d.featuredAt) out.push({ type: "fixed", key: "featuredAt", x: d.featuredAt[0], y: d.featuredAt[1] - 1, w: 1, h: 2, label: "Featured item stand" });
+  (d.stairs || []).forEach((st, i) => out.push({ type: "stairs", i, x: st.x, y: st.y, w: 1, h: 1, label: st.kind === "up" ? "Stairs up" : "Stairs down" }));
+  (d.cases || []).forEach((c, i) => out.push({ type: "case", i, x: c[0], y: c[1] - 1, w: 1, h: 2, label: "Episode case " + (i + 1) }));
+  (d.props || []).forEach((p, i) => { const h = sh(p.key); out.push({ type: "prop", i, x: p.x, y: p.y - (h - 1), w: sw(p.key), h, label: (GOQ.SLOT[p.key] || {}).label || p.key }); });
+  (d.lockers || []).forEach((x, i) => out.push({ type: "locker", i, x, y: 1, w: 1, h: 2, label: "Locker" }));
+  (d.spots || []).forEach((x, i) => out.push({ type: "spot", i, x, y: 1, w: 2, h: 2, label: "Painting spot " + (i + 1) }));
+  (d.wallArt || []).forEach((a, i) => out.push({ type: "wallArt", i, x: a.x, y: 1, w: sw(a.key), h: 2, label: (GOQ.SLOT[a.key] || {}).label || a.key }));
+  (d.decals || []).forEach((a, i) => out.push({ type: "decal", i, x: a.x, y: a.y, w: sw(a.key), h: sh(a.key), label: (GOQ.SLOT[a.key] || {}).label || a.key }));
+  return out;
+}
+function itemAt(d, x, y) { return roomItems(d).find(it => x >= it.x && x < it.x + it.w && y >= it.y && y < it.y + it.h) || null; }
+const DOOR_CH = "DdSsBEH";
+function doorTileAt(d, x, y) {
+  const ch = getCh(d, x, y); if (!DOOR_CH.includes(ch)) return null;
+  const ey = ch === "D" || ch === "S" ? y + 1 : y; // the event sits on the lower half
+  return { x, y: ey, ch: getCh(d, x, ey) };
+}
+function doorEvent(d, x, y) { return (d.events || []).find(e => e.x === x && e.y === y && (e.warp || e.frontDoor || e.staffDoor || e.shopDoor || e.elevatorDoor || e.elevatorExit)); }
+function sameSel(a, b) { return a && b && a.type === b.type && a.i === b.i && a.key === b.key && a.x === b.x && a.y === b.y; }
+
+/* ----- the editor screen ----- */
+function renderRooms() {
+  const main = $("#main"); main.innerHTML = "";
+  if (!roomIds().includes(R.id)) R.id = "lobby";
+  const wrap = el("section", { class: "rooms" }); main.appendChild(wrap);
+  const pick = el("select", { "aria-label": "Room" }, roomIds().map(id => el("option", { value: id, text: roomDef(id).name + (draft.rooms && draft.rooms[id] ? (GOQ.BUILTIN_ROOMS[id] ? " (edited)" : " (new)") : "") })));
+  pick.value = R.id; pick.addEventListener("change", () => { R.id = pick.value; R.sel = null; R.zoom = 0; openRoom(); });
+  const tools = el("div", { class: "rtools", role: "toolbar", "aria-label": "Tools" }, [
+    ["select", "Select"], ["paint", "Paint"], ["fill", "Fill"], ["erase", "Erase"], ["place", "Place"],
+  ].map(([t, l]) => el("button", { type: "button", class: "btn small" + (R.tool === t ? " on" : ""), "aria-pressed": R.tool === t, text: l, onclick: () => { R.tool = t; R.linking = null; renderRooms(); } })));
+  wrap.appendChild(el("div", { class: "rhead" }, [
+    pick,
+    el("button", { type: "button", class: "btn small quiet", text: "New room", onclick: newRoom }),
+    tools,
+    el("div", { class: "rtools" }, [
+      el("button", { type: "button", class: "btn small quiet", text: "Undo", disabled: !R.undo.length, onclick: () => { restore(R.undo, R.redo); renderRooms(); } }),
+      el("button", { type: "button", class: "btn small quiet", text: "Redo", disabled: !R.redo.length, onclick: () => { restore(R.redo, R.undo); renderRooms(); } }),
+      el("button", { type: "button", class: "btn small quiet", text: "Fit", onclick: () => { R.zoom = 0; drawEditor(); } }),
+      el("button", { type: "button", class: "btn small quiet", text: R.grid ? "Grid on" : "Grid off", onclick: e => { R.grid = !R.grid; e.currentTarget.textContent = R.grid ? "Grid on" : "Grid off"; drawEditor(); } }),
+      el("button", { type: "button", class: "btn small", text: "Play here", onclick: playHere }),
+    ]),
+  ]));
+  // What you're painting or placing: one compact button that opens a chooser.
+  if (R.tool === "paint" || R.tool === "fill") {
+    if (R.tool === "fill" && R.brush.pair) R.brush = TILE_BRUSHES[0];
+    wrap.appendChild(el("div", { class: "rpick" }, [el("button", { type: "button", class: "rchip on", onclick: () => openChooser("Paint with", [{ name: "Tiles", items: TILE_BRUSHES.filter(b => R.tool === "paint" || !b.pair).map(b => ({ label: b.name, on: R.brush.ch === b.ch, swatch: brushSwatch(b), pick: () => { R.brush = b; } })) }]) },
+      [brushSwatch(R.brush), el("span", { text: R.brush.name }), el("b", { text: "Change", class: "rchg" })])]));
+  }
+  if (R.tool === "place") {
+    const cur = R.place, lbl = it => it.name || (GOQ.SLOT[it.key] || {}).label || it.key;
+    wrap.appendChild(el("div", { class: "rpick" }, [el("button", { type: "button", class: "rchip on", onclick: () => openChooser("Place", PLACE_GROUPS.map(g => ({ name: g.name, items: g.items.map(it => ({ label: lbl(it), on: R.place === it, swatch: slotSwatch(it.key), pick: () => { R.place = it; } })) }))) },
+      [cur ? slotSwatch(cur.key) : null, el("span", { text: cur ? lbl(cur) : "Choose something to place" }), el("b", { text: cur ? "Change" : "Choose", class: "rchg" })])]));
+  }
+  const body = el("div", { class: "rbody" }), left = el("div", { class: "rleft" });
+  const box = el("div", { class: "rcanvas" }); const cv = el("canvas", { "aria-label": "Room map. Use the tools above; two fingers or right-drag to pan, pinch or scroll to zoom." }); box.appendChild(cv);
+  box.appendChild(el("div", { class: "rzoom" }, [
+    el("button", { type: "button", class: "btn small", "aria-label": "Zoom in", text: "+", onclick: () => { const r = cv.getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, 1.25); } }),
+    el("button", { type: "button", class: "btn small", "aria-label": "Zoom out", text: "\u2212", onclick: () => { const r = cv.getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, 0.8); } }),
+  ]));
+  left.appendChild(box); body.appendChild(left); wrap.appendChild(body);
+  R.cv = cv; bindCanvas(cv);
+  const hint = el("p", { class: "note rhint", text: {
+    select: "Tap something to select it; drag to move it. Tap a door to choose where it leads. Tap empty floor for room settings.",
+    paint: "Drag to paint tiles. " + (R.brush.note || ""), fill: "Tap to fill a connected area of the same tile.",
+    erase: "Tap a thing to remove it, or a tile to turn it back into floor.", place: R.place ? "Tap the map to place: " + (R.place.name || (GOQ.SLOT[R.place.key] || {}).label) + ". " + (R.place.note || "") : "Pick something above, then tap the map.",
+  }[R.tool] });
+  left.appendChild(hint);
+  const insp = el("div", { class: "rinsp", id: "rinsp" }); body.appendChild(insp);
+  openRoom(true);
+}
+function openChooser(title, groups) {
+  let dlg = $("#rchooser");
+  if (!dlg) { dlg = el("dialog", { id: "rchooser", class: "rchooser", "aria-label": title }); document.body.appendChild(dlg); dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); }); }
+  dlg.innerHTML = "";
+  dlg.appendChild(el("div", { class: "rch-head" }, [el("h3", { text: title }), el("button", { type: "button", class: "btn small quiet", text: "Close", onclick: () => dlg.close() })]));
+  groups.forEach(g => {
+    dlg.appendChild(el("h4", { text: g.name }));
+    dlg.appendChild(el("div", { class: "rch-grid" }, g.items.map(it => el("button", { type: "button", class: "rchip" + (it.on ? " on" : ""), onclick: () => { it.pick(); dlg.close(); renderRooms(); } }, [it.swatch, el("span", { text: it.label })]))));
+  });
+  if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+}
+function paletteStrip(items, title) {
+  return el("div", { class: "rpal" }, [title ? el("span", { class: "rpal-t", text: title }) : null, ...items.map(it =>
+    el("button", { type: "button", class: "rchip" + (it.on ? " on" : ""), "aria-pressed": !!it.on, onclick: it.pick }, [it.swatch, el("span", { text: it.label })]))]);
+}
+function slotSwatch(key, isChar) {
+  const c = document.createElement("canvas"); c.width = 32; c.height = 32; const x = c.getContext("2d"); x.imageSmoothingEnabled = false;
+  const s = GOQ.SLOT[key]; if (!s) return c;
+  const sh = game.sheet(key), w = s.w, h = s.h, k = Math.min(32 / w, 32 / h);
+  x.drawImage(sh, 0, 0, w, h, (32 - w * k) / 2, (32 - h * k) / 2, w * k, h * k); return c;
+}
+function brushSwatch(b) {
+  const d = roomDef(R.id), art = d.art || {};
+  const key = { ".": art.floor, "=": art.runner || "lobby_runner", "#": art.top, "^": art.upper, "v": art.lower, D: "doorway_upper", S: "staff_door_upper", B: "doorway_bottom", H: "doorway_side", E: "exit_door" }[b.ch];
+  const c = slotSwatch(key || art.floor);
+  if ("DSBEH".includes(b.ch)) { const x = c.getContext("2d"), base = slotSwatch("BEH".includes(b.ch) ? art.top : art.upper); x.globalCompositeOperation = "destination-over"; x.drawImage(base, 0, 0); }
+  return c;
+}
+async function openRoom(keepView) {
+  await game.setPack(packOut()); R.img = game.renderRoomFull(R.id);
+  if (!keepView || R.viewFor !== R.id) R.zoom = 0;
+  R.viewFor = R.id;
+  drawEditor(); renderInspector();
+}
+
+/* ----- drawing the map ----- */
+function drawEditor() {
+  const cv = R.cv; if (!cv || !cv.isConnected) return;
+  const d = roomDef(R.id), box = cv.parentElement, bw = box.clientWidth, bh = box.clientHeight, dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(bw * dpr); cv.height = Math.round(bh * dpr); cv.style.width = bw + "px"; cv.style.height = bh + "px";
+  const x = cv.getContext("2d"); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.imageSmoothingEnabled = false;
+  x.fillStyle = "#120b0e"; x.fillRect(0, 0, bw, bh);
+  const rw = W(d) * 16, rh = H(d) * 16;
+  if (!R.zoom) { R.zoom = Math.max(0.5, Math.min((bw - 16) / rw, (bh - 16) / rh)); R.panX = (bw - rw * R.zoom) / 2; R.panY = (bh - rh * R.zoom) / 2; }
+  const z = R.zoom;
+  x.save(); x.translate(R.panX, R.panY); x.scale(z, z);
+  if (R.img && R.img.width === rw && R.img.height === rh) x.drawImage(R.img, 0, 0);
+  else { x.fillStyle = "#2a1a20"; x.fillRect(0, 0, rw, rh); }
+  if (R.grid) { x.strokeStyle = "rgba(255,255,255,.12)"; x.lineWidth = 1 / z; x.beginPath(); for (let i = 0; i <= W(d); i++) { x.moveTo(i * 16, 0); x.lineTo(i * 16, rh); } for (let j = 0; j <= H(d); j++) { x.moveTo(0, j * 16); x.lineTo(rw, j * 16); } x.stroke(); }
+  // Markers for things you can't otherwise see, and outlines for display places.
+  const tag = (tx, ty, txt, col) => { x.fillStyle = col; x.fillRect(tx * 16 + 2, ty * 16 + 2, 12, 12); x.fillStyle = "#181820"; x.font = "bold 9px sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(txt, tx * 16 + 8, ty * 16 + 8.5); };
+  const outline = (it, col, dash) => { x.strokeStyle = col; x.lineWidth = 2 / z; x.setLineDash(dash ? [4 / z, 3 / z] : []); x.strokeRect(it.x * 16 + 1 / z, it.y * 16 + 1 / z, it.w * 16 - 2 / z, it.h * 16 - 2 / z); x.setLineDash([]); };
+  roomItems(d).forEach(it => {
+    if (it.type === "spawn") tag(it.x, it.y, "S", "#7ad08a");
+    else if (it.type === "catSpot") tag(it.x, it.y, "C", "#f0a050");
+    else if (it.type === "mugSpot") tag(it.x, it.y, "M", "#e8e4dc");
+    else if (it.type === "visitor") outline(it, "#9fcf7a");
+    else if (it.type === "spot") outline(it, "#c8a070", true);
+    else if (it.type === "case") outline(it, "#a8d0e8", true);
+  });
+  for (let ty = 0; ty < H(d); ty++) for (let tx = 0; tx < W(d); tx++) {
+    const ch = getCh(d, tx, ty); if (!"dsBEH".includes(ch)) continue;
+    const ev = doorEvent(d, tx, ty); tag(tx, ty, ev ? "\u2192" : "!", ev ? "#e8b24a" : "#f08a6a");
+  }
+  if (R.sel) { const it = roomItems(d).find(i => sameSel(i, R.sel)) || R.sel; outline(it, "#ffffff"); }
+  if (R.hover) { x.fillStyle = "rgba(232,178,74,.25)"; x.fillRect(R.hover.x * 16, R.hover.y * 16, 16, 16); }
+  x.restore();
+}
+
+/* ----- pointer input: tools, pinch zoom, pan, long press ----- */
+function bindCanvas(cv) {
+  const pts = new Map(); let gesture = null, stroke = null, press = null, lp = 0;
+  const toTile = e => { const r = cv.getBoundingClientRect(); return { x: Math.floor(((e.clientX - r.left) - R.panX) / R.zoom / 16), y: Math.floor(((e.clientY - r.top) - R.panY) / R.zoom / 16) }; };
+  const inRoom = t => { const d = roomDef(R.id); return t.x >= 0 && t.y >= 0 && t.x < W(d) && t.y < H(d); };
+  cv.addEventListener("contextmenu", e => e.preventDefault());
+  cv.addEventListener("wheel", e => { e.preventDefault(); zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.15 : 1 / 1.15); }, { passive: false });
+  cv.addEventListener("pointerdown", e => {
+    cv.setPointerCapture(e.pointerId); pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (gesture && gesture.one) gesture = null; // a second finger turns a one-finger slide into a pinch
+    if (pts.size === 2 || e.button === 2 || e.button === 1) { // pan / pinch
+      clearTimeout(lp); if (stroke && stroke.started) endStroke(); stroke = null; press = null;
+      const [a, b] = [...pts.values()]; gesture = { a: { ...a }, b: b ? { ...b } : null, panX: R.panX, panY: R.panY, zoom: R.zoom, mouse: pts.size === 1 };
+      return;
+    }
+    const t = toTile(e); press = { t, x: e.clientX, y: e.clientY, time: performance.now() };
+    stroke = { t, started: false };
+    lp = setTimeout(() => { if (press && !stroke.started) { const d = roomDef(R.id), it = itemAt(d, press.t.x, press.t.y); R.tool = "select"; selectAt(press.t); press = null; stroke = null; renderRooms(); } }, 520);
+  });
+  cv.addEventListener("pointermove", e => {
+    if (pts.has(e.pointerId)) pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (gesture) {
+      const p = [...pts.values()];
+      if (gesture.mouse && p.length === 1) { R.panX = gesture.panX + p[0].x - gesture.a.x; R.panY = gesture.panY + p[0].y - gesture.a.y; }
+      else if (p.length >= 2 && gesture.b) {
+        const d0 = Math.hypot(gesture.a.x - gesture.b.x, gesture.a.y - gesture.b.y), d1 = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+        const m0 = { x: (gesture.a.x + gesture.b.x) / 2, y: (gesture.a.y + gesture.b.y) / 2 }, m1 = { x: (p[0].x + p[1].x) / 2, y: (p[0].y + p[1].y) / 2 };
+        const r = cv.getBoundingClientRect(), z = Math.max(0.5, Math.min(8, gesture.zoom * d1 / Math.max(1, d0)));
+        const wx = (m0.x - r.left - gesture.panX) / gesture.zoom, wy = (m0.y - r.top - gesture.panY) / gesture.zoom;
+        R.zoom = z; R.panX = m1.x - r.left - wx * z; R.panY = m1.y - r.top - wy * z;
+      }
+      drawEditor(); return;
+    }
+    const t = toTile(e);
+    if (e.pointerType === "mouse" && !press) { R.hover = inRoom(t) ? t : null; drawEditor(); }
+    if (!press || !stroke) return;
+    if (!stroke.started && Math.hypot(e.clientX - press.x, e.clientY - press.y) < 6) return;
+    clearTimeout(lp);
+    if (!stroke.started) {
+      stroke.started = true;
+      const d = roomDef(R.id), onThing = itemAt(d, press.t.x, press.t.y);
+      // Paint paints; Select drags the thing under your finger; otherwise one finger slides the map.
+      if (R.tool === "paint" || (R.tool === "select" && onThing && onThing.type !== "locker")) beginStroke(press.t);
+      else { gesture = { a: { x: press.x, y: press.y }, b: null, panX: R.panX, panY: R.panY, zoom: R.zoom, mouse: true, one: true }; press = null; stroke = null; return; }
+    }
+    moveStroke(t);
+  });
+  const up = e => {
+    pts.delete(e.pointerId); clearTimeout(lp);
+    if (gesture) { if (pts.size === 0) gesture = null; else if (gesture.one) gesture = null; return; }
+    if (press && stroke && !stroke.started && performance.now() - press.time < 520) tapTool(press.t);
+    else if (stroke && stroke.started) endStroke();
+    press = null; stroke = null;
+  };
+  cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+  cv.addEventListener("pointerleave", () => { if (R.hover) { R.hover = null; drawEditor(); } });
+}
+function zoomAt(cx, cy, k) {
+  const r = R.cv.getBoundingClientRect(), z = Math.max(0.5, Math.min(8, R.zoom * k));
+  const wx = (cx - r.left - R.panX) / R.zoom, wy = (cy - r.top - R.panY) / R.zoom;
+  R.zoom = z; R.panX = cx - r.left - wx * z; R.panY = cy - r.top - wy * z; drawEditor();
+}
+let drag = null;
+function beginStroke(t) {
+  const d = roomDef(R.id);
+  if (R.tool === "paint") { snapshot(); paintAt(t); return; }
+  if (R.tool === "select") {
+    const it = itemAt(d, t.x, t.y); if (!it || it.type === "locker") return;
+    R.sel = it; snapshot(); editable(R.id); drag = { start: t, it: clone(it), last: t };
+  }
+}
+function moveStroke(t) {
+  if (R.tool === "paint") { paintAt(t); return; }
+  if (R.tool === "select" && drag) {
+    const dx = t.x - drag.last.x, dy = t.y - drag.last.y; if (!dx && !dy) return;
+    moveItem(editable(R.id), R.sel, dx, dy); R.sel.x += dx; R.sel.y += dy; drag.last = t; roomChanged();
+  }
+}
+function endStroke() { drag = null; roomChanged(true); }
+function tapTool(t) {
+  const d = roomDef(R.id);
+  if (t.x < 0 || t.y < 0 || t.x >= W(d) || t.y >= H(d)) { R.sel = null; drawEditor(); renderInspector(); return; }
+  if (R.linking) { finishLink(t); return; }
+  if (R.tool === "select") { selectAt(t); return; }
+  if (R.tool === "paint") { snapshot(); paintAt(t); roomChanged(true); return; }
+  if (R.tool === "fill") { snapshot(); fillAt(t); return; }
+  if (R.tool === "erase") { snapshot(); eraseAt(t); return; }
+  if (R.tool === "place" && R.place) { snapshot(); placeAt(t); }
+}
+function selectAt(t) {
+  const d = roomDef(R.id), door = doorTileAt(d, t.x, t.y), it = itemAt(d, t.x, t.y);
+  R.sel = it || (door ? { type: "door", x: door.x, y: door.y, w: 1, h: 1, label: "Door" } : null);
+  drawEditor(); renderInspector();
+}
+function paintAt(t) {
+  const d = editable(R.id), b = R.brush;
+  if (t.x < 0 || t.y < 0 || t.x >= W(d) || t.y >= H(d)) return;
+  setCh(d, t.x, t.y, b.ch); if (b.pair) setCh(d, t.x, t.y + 1, b.pair);
+  if ("DSBEH".includes(b.ch)) { R.sel = { type: "door", x: t.x, y: b.pair ? t.y + 1 : t.y, w: 1, h: 1, label: "Door" }; }
+  roomChanged();
+}
+function fillAt(t) {
+  const d = editable(R.id), from = getCh(d, t.x, t.y), to = R.brush.ch; if (from === to || R.brush.pair) return;
+  const q = [[t.x, t.y]], seen = new Set();
+  while (q.length) {
+    const [x, y] = q.pop(), k = x + "," + y; if (seen.has(k) || getCh(d, x, y) !== from || x < 0 || y < 0 || x >= W(d) || y >= H(d)) continue;
+    seen.add(k); setCh(d, x, y, to); q.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+  }
+  roomChanged(true);
+}
+function eraseAt(t) {
+  const d = editable(R.id), it = itemAt(d, t.x, t.y);
+  if (it && it.type !== "spawn" && it.type !== "locker") { removeItem(d, it); R.sel = null; }
+  else if (!it) {
+    const ch = getCh(d, t.x, t.y);
+    if (ch === "D" || ch === "S") { setCh(d, t.x, t.y, "^"); setCh(d, t.x, t.y + 1, "v"); d.events = (d.events || []).filter(e => !(e.x === t.x && e.y === t.y + 1)); }
+    else if (ch === "d" || ch === "s") { setCh(d, t.x, t.y - 1, "^"); setCh(d, t.x, t.y, "v"); d.events = (d.events || []).filter(e => !(e.x === t.x && e.y === t.y)); }
+    else if (ch === "B" || ch === "E" || ch === "H") { setCh(d, t.x, t.y, "#"); d.events = (d.events || []).filter(e => !(e.x === t.x && e.y === t.y)); }
+    else if (t.x > 0 && t.y > 0 && t.x < W(d) - 1 && t.y < H(d) - 1) setCh(d, t.x, t.y, ".");
+  }
+  roomChanged(true);
+}
+function placeAt(t) {
+  const d = editable(R.id), p = R.place, s = GOQ.SLOT[p.key] || { w: 16, h: 16 }, w = s.w / 16, tall = s.h >= 32;
+  if (p.kind === "case") (d.cases = d.cases || []).push([t.x, t.y]);
+  else if (p.kind === "spot") (d.spots = d.spots || []).push(t.x);
+  else if (p.kind === "wallArt") (d.wallArt = d.wallArt || []).push({ key: p.key, x: t.x, say: ["(What it says when someone looks at it.)"] });
+  else if (p.kind === "decal") (d.decals = d.decals || []).push({ key: p.key, x: t.x, y: t.y });
+  else if (p.kind === "spawn") d.spawn = [t.x, t.y, (d.spawn && d.spawn[2]) || "down"];
+  else if (p.kind === "catSpot") (d.catSpots = d.catSpots || []).push([t.x, t.y]);
+  else if (p.kind === "mugSpot") (d.mugSpots = d.mugSpots || []).push([t.x, t.y]);
+  else if (p.kind === "lightSwitch") d.lightSwitch = [t.x, t.y];
+  else if (p.kind === "intercom") d.intercom = [t.x, t.y];
+  else if (p.kind === "visitor") (d.visitors = d.visitors || []).push({ sheet: p.key, x: t.x, y: t.y, dir: "down", lines: [["Hello!"]] });
+  else if (p.kind === "stairs") (d.stairs = d.stairs || []).push({ x: t.x, y: t.y, kind: p.key === "stair_up" ? "up" : "down", to: null });
+  else if (p.kind === "prop") {
+    const prop = { key: p.key, x: t.x, y: t.y };
+    if (tall) prop.tall = true;
+    if (SIT_KEYS[p.key]) prop.sit = SIT_KEYS[p.key];
+    if (p.key === "plant") { prop.plant = "plant-" + Math.random().toString(36).slice(2, 7); prop.name = "plant"; }
+    if (p.key === "item_rack") { prop.rack = (d.props || []).filter(q => q.key === "item_rack").length; prop.blockTop = true; }
+    if (p.key === "collection_cabinet" || p.key === "storage_shelves") prop.blockTop = true;
+    if (p.key === "trash_can") prop.event = { trash: true };
+    if (p.key === "bus_tub") prop.event = { trash: true, tub: true };
+    if (p.key === "workbench") prop.event = { upcoming: true };
+    if (p.key === "shop_counter") prop.event = { shopCounter: true };
+    if (p.key === "cafe_counter") prop.event = { cafe: true };
+    if (p.key === "collection_cabinet") prop.collection = true;
+    if (p.key === "whiteboard") prop.rules = true;
+    if (p.key === "cat_bed") prop.catBed = true;
+    if (!prop.event && !prop.rules && !prop.collection && p.key !== "item_rack" && p.key !== "plant") prop.say = ["(What it says when someone looks at it.)"];
+    (d.props = d.props || []).push(prop);
+  }
+  R.sel = roomItems(d).filter(it => it.x <= t.x && t.x < it.x + it.w && it.y <= t.y && t.y < it.y + it.h).pop() || null;
+  roomChanged(true);
+}
+function removeItem(d, it) {
+  const arr = { visitor: "visitors", catSpot: "catSpots", mugSpot: "mugSpots", case: "cases", prop: "props", spot: "spots", wallArt: "wallArt", decal: "decals", stairs: "stairs" }[it.type];
+  if (arr) d[arr].splice(it.i, 1);
+  else if (it.type === "fixed") delete d[it.key];
+}
+function moveItem(d, it, dx, dy) {
+  const sety = it.type !== "spot" && it.type !== "wallArt" && !(it.type === "fixed" && ["windowAt", "eotmAt", "corkboardAt"].includes(it.key));
+  const mv = o => { o.x += dx; if (sety) o.y += dy; };
+  if (it.type === "visitor") mv(d.visitors[it.i]);
+  else if (it.type === "prop") mv(d.props[it.i]);
+  else if (it.type === "decal") mv(d.decals[it.i]);
+  else if (it.type === "wallArt") d.wallArt[it.i].x += dx;
+  else if (it.type === "spot") d.spots[it.i] += dx;
+  else if (it.type === "case") { d.cases[it.i][0] += dx; d.cases[it.i][1] += dy; }
+  else if (it.type === "stairs") { d.stairs[it.i].x += dx; d.stairs[it.i].y += dy; }
+  else if (it.type === "catSpot") { d.catSpots[it.i][0] += dx; d.catSpots[it.i][1] += dy; }
+  else if (it.type === "mugSpot") { d.mugSpots[it.i][0] += dx; d.mugSpots[it.i][1] += dy; }
+  else if (it.type === "spawn") { d.spawn[0] += dx; d.spawn[1] += dy; }
+  else if (it.type === "fixed") { d[it.key][0] += dx; if (sety) d[it.key][1] += dy; }
+  if (!sety) it.y -= dy; // wall things stay on the wall rows
+}
+
+/* ----- inspector ----- */
+function renderInspector() {
+  const box = $("#rinsp"); if (!box) return; box.innerHTML = "";
+  const d = roomDef(R.id), it = R.sel && (roomItems(d).find(i => sameSel(i, R.sel)) || (R.sel.type === "door" ? R.sel : null));
+  const field = (label, input, hint) => el("label", { class: "rfield" }, [el("span", { text: label }), hint ? el("small", { text: hint }) : null, input]);
+  const linesBox = (get, set, hint) => { const t = el("textarea"); t.value = get(); t.addEventListener("change", () => { snapshot(); set(t.value); roomChanged(true); }); return field("What it says", t, hint || "One page per line."); };
+  const delBtn = () => el("button", { type: "button", class: "btn small quiet", text: "Remove", onclick: () => { snapshot(); removeItem(editable(R.id), it); R.sel = null; roomChanged(true); } });
+  if (!it) return renderRoomSettings(box, d);
+  box.appendChild(el("h3", { text: it.label }));
+  if (it.type === "door") return renderDoor(box, d, it);
+  if (it.type === "prop") {
+    const p = d.props[it.i];
+    if (p.say || (!p.event && !p.rules && !p.collection && p.key !== "item_rack" && !p.plant)) box.appendChild(linesBox(() => (p.say || []).join("\n"), v => { editable(R.id).props[it.i].say = v.split("\n").map(s => s.trim()).filter(Boolean); }));
+    if (p.plant !== undefined) { const n = el("input", { type: "text", value: p.name || "" }); n.addEventListener("change", () => { snapshot(); editable(R.id).props[it.i].name = n.value.trim() || "plant"; roomChanged(true); }); box.appendChild(field("Plant's name", n, "Used in \"You water the ___.\"")); }
+    if (p.key === "item_rack") { const n = el("input", { type: "number", min: 1, max: 9, value: (p.rack || 0) + 1 }); n.addEventListener("change", () => { snapshot(); editable(R.id).props[it.i].rack = Math.max(0, Math.min(8, (+n.value || 1) - 1)); roomChanged(true); }); box.appendChild(field("Rack number", n, "Each rack shows two items, one per shelf: rack 1 has shop items 1 and 2, rack 2 has items 3 and 4, and so on.")); }
+    if (SIT_KEYS[p.key] || p.sit) {
+      const s = el("select", {}, [["", "No"], ["up", "Yes, facing up"], ["down", "Yes, facing down"], ["left", "Yes, facing left"], ["right", "Yes, facing right"]].map(([v, l]) => el("option", { value: v, text: l })));
+      s.value = p.sit || ""; s.addEventListener("change", () => { snapshot(); const q = editable(R.id).props[it.i]; if (s.value) q.sit = s.value; else delete q.sit; roomChanged(true); });
+      box.appendChild(field("Can you sit here?", s));
+    }
+  }
+  if (it.type === "wallArt") box.appendChild(linesBox(() => (d.wallArt[it.i].say || []).join("\n"), v => { editable(R.id).wallArt[it.i].say = v.split("\n").map(s => s.trim()).filter(Boolean); }));
+  if (it.type === "visitor") {
+    const v = d.visitors[it.i];
+    const sheet = el("select", {}, ["visitor_a", "visitor_b", "visitor_c", "shop_staff", "guard", "player_staff"].map(k => el("option", { value: k, text: GOQ.SLOT[k].label })));
+    sheet.value = v.sheet; sheet.addEventListener("change", () => { snapshot(); editable(R.id).visitors[it.i].sheet = sheet.value; roomChanged(true); });
+    const facing = el("select", {}, ["down", "up", "left", "right"].map(dd => el("option", { value: dd, text: "Facing " + dd })));
+    facing.value = v.dir || "down"; facing.addEventListener("change", () => { snapshot(); editable(R.id).visitors[it.i].dir = facing.value; roomChanged(true); });
+    box.appendChild(el("div", { class: "rrow" }, [field("Looks like", sheet), field("Facing", facing)]));
+    const t = el("textarea"); t.value = (v.lines || []).map(c => c.join("\n")).join("\n\n");
+    t.addEventListener("change", () => { snapshot(); editable(R.id).visitors[it.i].lines = t.value.split(/\n\s*\n/).map(c => c.split("\n").map(s => s.trim()).filter(Boolean)).filter(c => c.length); roomChanged(true); });
+    box.appendChild(field("What they say", t, "One page per line. Leave a blank line between conversations; each talk plays the next one."));
+    const beh = el("select", {}, [["wander", "Wanders a little"], ["still", "Stands still"]].map(([a, b]) => el("option", { value: a, text: b })));
+    beh.value = v.still ? "still" : "wander"; beh.addEventListener("change", () => { snapshot(); const q = editable(R.id).visitors[it.i]; if (beh.value === "still") q.still = true; else delete q.still; roomChanged(true); });
+    const when = el("select", {}, [["always", "Always"], ["day", "Daytime only"], ["night", "Night only"]].map(([a, b]) => el("option", { value: a, text: b })));
+    when.value = v.night ? "night" : v.day ? "day" : "always"; when.addEventListener("change", () => { snapshot(); const q = editable(R.id).visitors[it.i]; delete q.day; delete q.night; if (when.value !== "always") q[when.value] = true; roomChanged(true); });
+    const staff = el("input", { type: "checkbox", checked: !!v.staff }); staff.addEventListener("change", () => { snapshot(); const q = editable(R.id).visitors[it.i]; if (staff.checked) q.staff = true; else delete q.staff; roomChanged(true); });
+    box.appendChild(el("div", { class: "rrow" }, [field("Behavior", beh), field("When they're here", when)]));
+    box.appendChild(el("label", { class: "check" }, [staff, document.createTextNode("Works here (stays at closing time)")]));
+  }
+  if (it.type === "stairs") {
+    const st = d.stairs[it.i], to = st.to;
+    box.appendChild(el("p", { class: "note", text: to ? "Leads to " + roomDef(to[0]).name + ", at column " + (to[1] + 1) + ", row " + (to[2] + 1) + ", facing " + to[3] + "." : "These stairs don't lead anywhere yet." }));
+    const rs = el("select", {}, roomIds().filter(id => id !== R.id).map(id => el("option", { value: id, text: roomDef(id).name }))); if (to) rs.value = to[0];
+    const face = el("select", {}, ["up", "down", "left", "right"].map(dd => el("option", { value: dd, text: "Facing " + dd }))); face.value = to ? to[3] : "down";
+    box.appendChild(el("div", { class: "rrow" }, [field("Leads to", rs), field("Arrive", face)]));
+    box.appendChild(el("p", { class: "note", text: "Arrive next to the other floor's stairs, not on them, or you'll bounce straight back." }));
+    box.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small", text: "Pick where you arrive", onclick: () => { R.linking = { from: R.id, stairsI: it.i, face: face.value }; R.id = rs.value; R.sel = null; renderRooms(); status("Now tap the floor where you should arrive in " + roomDef(rs.value).name + "."); } })]));
+  }
+  const notes = { case: "Holds the next episode in Pieces order. The front placard is read from below it, the back from above.", spot: "A painting spot for the next community piece, across both wall rows.",
+    spawn: "Where you appear when jumping to this room.", catSpot: "One of the places the cat might nap today.", mugSpot: "One of the places the curator's mug might turn up.", fixed: "A built-in feature. Drag it to move it.", locker: "Lockers are part of the staff room." };
+  if (notes[it.type]) box.appendChild(el("p", { class: "note", text: notes[it.type] }));
+  if (it.type !== "spawn" && it.type !== "locker") box.appendChild(el("div", { class: "row" }, [delBtn()]));
+}
+function renderDoor(box, d, it) {
+  const ev = doorEvent(d, it.x, it.y), ch = getCh(d, it.x, it.y);
+  if (ev && (ev.elevatorDoor || ev.elevatorExit)) { box.appendChild(el("p", { class: "note", text: ev.elevatorDoor ? "An elevator door. It opens into the elevator; the panel inside picks the floor. Rooms with an elevator stop are listed on the panel." : "The elevator's own door. It lets you out on whichever floor the panel was set to." })); return; }
+  if (ch === "E" || (ev && ev.frontDoor)) { box.appendChild(el("p", { class: "note", text: "The museum's front doors. Leaving through them at closing time shows the CLOSED screen." })); return; }
+  const to = (ev && ev.warp) || null;
+  box.appendChild(el("p", { class: "note", text: to ? "Leads to " + roomDef(to[0]).name + ", at column " + (to[1] + 1) + ", row " + (to[2] + 1) + ", facing " + to[3] + "." : "This door doesn't lead anywhere yet." }));
+  const rs = el("select", {}, roomIds().filter(id => id !== R.id).map(id => el("option", { value: id, text: roomDef(id).name })));
+  if (to) rs.value = to[0];
+  const face = el("select", {}, ["up", "down", "left", "right"].map(dd => el("option", { value: dd, text: "Facing " + dd })));
+  face.value = to ? to[3] : "down";
+  const staff = el("input", { type: "checkbox", checked: !!(ev && ev.staffDoor) });
+  box.appendChild(el("div", { class: "rrow" }, [el("label", { class: "rfield" }, [el("span", { text: "Leads to" }), rs]), el("label", { class: "rfield" }, [el("span", { text: "Arrive" }), face])]));
+  box.appendChild(el("label", { class: "check" }, [staff, document.createTextNode("Staff only (asks for a badge)")]));
+  box.appendChild(el("div", { class: "row" }, [
+    el("button", { type: "button", class: "btn small", text: "Pick where you arrive", onclick: () => { R.linking = { from: R.id, x: it.x, y: it.y, face: face.value, staff: staff.checked }; R.id = rs.value; R.sel = null; renderRooms(); status("Now tap the floor where you should arrive in " + roomDef(rs.value).name + "."); } }),
+    ev ? el("button", { type: "button", class: "btn small quiet", text: "Disconnect", onclick: () => { snapshot(); const dd = editable(R.id); dd.events = dd.events.filter(e => e !== doorEvent(dd, it.x, it.y)); roomChanged(true); } }) : null,
+  ]));
+  staff.addEventListener("change", () => { if (!ev) return; snapshot(); const e = doorEvent(editable(R.id), it.x, it.y); if (staff.checked) e.staffDoor = true; else delete e.staffDoor; roomChanged(true); });
+  face.addEventListener("change", () => { if (!ev || !ev.warp) return; snapshot(); doorEvent(editable(R.id), it.x, it.y).warp[3] = face.value; roomChanged(true); });
+}
+function finishLink(t) {
+  const L = R.linking, target = roomDef(R.id);
+  if (getCh(target, t.x, t.y) !== "." && getCh(target, t.x, t.y) !== "=") { status("Pick a floor tile to arrive on.", true); return; }
+  snapshot();
+  if (L.stairsI !== undefined) {
+    editable(L.from).stairs[L.stairsI].to = [R.id, t.x, t.y, L.face];
+    status("Stairs connected to " + target.name + "."); R.linking = null; R.id = L.from; R.sel = null; roomChanged(true); renderRooms(); return;
+  }
+  const from = editable(L.from); from.events = (from.events || []).filter(e => !(e.x === L.x && e.y === L.y));
+  const ev = { x: L.x, y: L.y, warp: [R.id, t.x, t.y, L.face] }; if (L.staff) ev.staffDoor = true;
+  from.events.push(ev);
+  status("Door connected to " + target.name + ".");
+  R.linking = null; R.id = L.from; R.sel = { type: "door", x: L.x, y: L.y, w: 1, h: 1, label: "Door" }; renderRooms();
+}
+function renderRoomSettings(box, d) {
+  box.appendChild(el("h3", { text: "Room settings" }));
+  const name = el("input", { type: "text", value: d.name }); name.addEventListener("change", () => { snapshot(); editable(R.id).name = name.value.trim() || "Room"; roomChanged(true); renderRooms(); });
+  box.appendChild(el("label", { class: "rfield" }, [el("span", { text: "Name" }), name]));
+  const w = el("input", { type: "number", min: 8, max: 40, value: W(d) }), h = el("input", { type: "number", min: 8, max: 20, value: H(d) });
+  box.appendChild(el("div", { class: "rrow" }, [el("label", { class: "rfield" }, [el("span", { text: "Width" }), w]), el("label", { class: "rfield" }, [el("span", { text: "Height" }), h]),
+    el("button", { type: "button", class: "btn small", text: "Resize", onclick: () => resizeRoom(+w.value, +h.value) })]));
+  const tileSlots = GOQ.SLOTS.filter(s => s.w === 16 && s.h === 16 && /floor|wall|runner/.test(s.key) && !s.retired);
+  const artSel = (part, label, filter) => {
+    const s = el("select", {}, tileSlots.filter(x => filter.test(x.key)).map(x => el("option", { value: x.key, text: x.label })));
+    s.value = (d.art || {})[part] || ""; s.addEventListener("change", () => { snapshot(); const dd = editable(R.id); dd.art = Object.assign({}, dd.art, { [part]: s.value }); roomChanged(true); });
+    return el("label", { class: "rfield" }, [el("span", { text: label }), s]);
+  };
+  box.appendChild(el("div", { class: "rrow" }, [artSel("floor", "Floor art", /floor/), artSel("upper", "Wall art, upper", /upper/), artSel("lower", "Wall art, lower", /lower/), artSel("top", "Wall top art", /top/)]));
+  const bunt = el("input", { type: "checkbox", checked: !!d.bunting }); bunt.addEventListener("change", () => { snapshot(); editable(R.id).bunting = bunt.checked; roomChanged(true); });
+  box.appendChild(el("label", { class: "check" }, [bunt, document.createTextNode("Bunting along the walls")]));
+  const crowd = el("input", { type: "checkbox", checked: !!d.crowd }); crowd.addEventListener("change", () => { snapshot(); editable(R.id).crowd = crowd.checked; roomChanged(true); });
+  box.appendChild(el("label", { class: "check" }, [crowd, document.createTextNode("Extra visitors drop in here on busy days")]));
+  const stop = el("input", { type: "text", value: d.elevatorStop ? d.elevatorStop.label : "", placeholder: "e.g. 3F Gallery Three" });
+  stop.addEventListener("change", () => { snapshot(); const dd = editable(R.id); if (stop.value.trim()) dd.elevatorStop = Object.assign({ order: 5, x: dd.spawn[0], y: dd.spawn[1], dir: dd.spawn[2] }, dd.elevatorStop || {}, { label: stop.value.trim() }); else delete dd.elevatorStop; roomChanged(true); });
+  box.appendChild(el("label", { class: "rfield" }, [el("span", { text: "Elevator stop" }), el("small", { text: "Name it to put this room on the elevator panel (you arrive at the start spot). Leave empty for none. Give the room an elevator door too." }), stop]));
+  box.appendChild(el("p", { class: "note", text: "Lighting for this room is in Art, then Lighting." }));
+  const issues = roomIssues(R.id); if (issues.length) box.appendChild(el("ul", { class: "rissues" }, issues.map(t => el("li", { text: t }))));
+  const builtIn = !!GOQ.BUILTIN_ROOMS[R.id];
+  box.appendChild(el("div", { class: "row" }, [
+    builtIn ? el("button", { type: "button", class: "btn small quiet", text: "Reset to the built-in room", disabled: !(draft.rooms && draft.rooms[R.id]), onclick: () => { if (!confirm("Undo every change to " + d.name + "?")) return; snapshot(); delete draft.rooms[R.id]; R.sel = null; roomChanged(true); renderRooms(); } })
+      : el("button", { type: "button", class: "btn small quiet", text: "Delete this room", onclick: () => { if (!confirm("Delete " + d.name + "? Doors that led here will lead nowhere.")) return; snapshot(); delete draft.rooms[R.id]; R.id = "lobby"; R.sel = null; roomChanged(true); renderRooms(); } }),
+  ]));
+}
+function resizeRoom(w, h) {
+  w = Math.max(8, Math.min(40, w | 0)); h = Math.max(8, Math.min(20, h | 0)); snapshot();
+  const d = editable(R.id), ow = W(d), oh = H(d), map = [];
+  for (let y = 0; y < h; y++) {
+    let row = "";
+    for (let x = 0; x < w; x++) {
+      const edge = x === 0 || y === 0 || x === w - 1 || y === h - 1;
+      if (y < oh - 1 && x < ow - 1 && !(edge && (x === w - 1 || y === h - 1))) row += getCh(d, x, y);
+      else row += edge ? "#" : y === 1 ? "^" : y === 2 ? "v" : ".";
+    }
+    map.push(row);
+  }
+  d.map = map; R.zoom = 0; roomChanged(true); renderRooms();
+}
+function newRoom() {
+  snapshot();
+  const id = "room-" + Math.random().toString(36).slice(2, 7), w = 15, h = 10, map = [];
+  for (let y = 0; y < h; y++) map.push([...Array(w)].map((_, x) => (x === 0 || x === w - 1 || y === 0 || y === h - 1 ? (y === h - 1 && x === 7 ? "B" : "#") : y === 1 ? "^" : y === 2 ? "v" : ".")).join(""));
+  draft.rooms = draft.rooms || {};
+  draft.rooms[id] = { name: "New room", art: Object.assign({}, GOQ.BUILTIN_ROOMS.gallery.art), map, spawn: [7, 8, "up"], props: [], events: [], visitors: [], light: { dim: 0.2, spots: 0.85 }, spots: [], cases: [], exitTo: [7, 8] };
+  R.id = id; R.sel = { type: "door", x: 7, y: 9, w: 1, h: 1, label: "Door" }; R.tool = "select";
+  status("New room added. Connect its door, then add a doorway somewhere else that leads here.");
+  roomChanged(true); renderRooms();
+}
+function roomIssues(id) {
+  const d = roomDef(id), out = [];
+  for (let y = 0; y < H(d); y++) for (let x = 0; x < W(d); x++) if ("dsBH".includes(getCh(d, x, y)) && !doorEvent(d, x, y)) out.push("A door at column " + (x + 1) + ", row " + (y + 1) + " doesn't lead anywhere yet.");
+  if (id !== "lobby" && !roomIds().some(o => o !== id && (roomDef(o).events || []).some(e => e.warp && e.warp[0] === id))) out.push("No door in another room leads here yet, so visitors can't reach it.");
+  (d.events || []).forEach(e => { if (e.warp && !roomIds().includes(e.warp[0])) out.push("A door leads to a room that no longer exists."); });
+  return out;
+}
+function playHere() {
+  const d = roomDef(R.id), s = R.sel && !"case spot wallArt fixed locker".includes(R.sel.type) ? [R.sel.x, R.sel.y + (R.sel.h || 1) - 1 + 1] : null;
+  let [x, y, dir] = d.spawn;
+  if (s && getCh(d, s[0], s[1]) === ".") [x, y] = s;
+  game.closeAll(); game.warp(R.id, x, y, dir);
+  setTimeout(() => stage.focus({ preventScroll: true }), 50);
+  if (window.innerWidth <= 980) document.querySelector(".preview").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+// Phones resize the page when the address bar slides in or out while scrolling, so keep the zoom and pan; just redraw.
+window.addEventListener("resize", () => { if (tab === "rooms") drawEditor(); });
+
+/* ---------- Shop ---------- */
+async function itemImage(file) {
+  const src = await readFile(file), img = await loadImg(src);
+  if (img.width <= 64 && img.height <= 64) return src;
+  const k = 64 / Math.max(img.width, img.height), [c, x] = canvasOf(Math.round(img.width * k), Math.round(img.height * k));
+  x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; x.drawImage(img, 0, 0, c.width, c.height);
+  return c.toDataURL("image/png");
+}
+function renderShop() {
+  const main = $("#main"); main.innerHTML = "";
+  const sh = draft.settings.shop, wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
+  wrap.appendChild(el("h2", { class: "title", text: "Gift shop" }));
+  wrap.appendChild(el("p", { text: "Visitors earn a token for every chore (3 for closing up) and spend them here. Swap items in and out whenever you like; anything already bought stays in that visitor's collection. The featured item sits under the glass dome in the shop." }));
+  const price = el("input", { type: "number", min: 0, max: 99, value: sh.drinkPrice || 0, style: "max-width:120px" });
+  price.addEventListener("input", () => { sh.drinkPrice = Math.max(0, Math.min(99, Math.round(+price.value || 0))); changed(); });
+  wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:10px 0 6px" }, [el("label", {}, [document.createTextNode("Café drinks cost (tokens)"), el("small", { text: "0 means coffee, tea and cocoa are free." }), price])]));
+  if (!sh.items.length) wrap.appendChild(el("p", { class: "empty", text: "No items yet. Add the first one below." }));
+  sh.items.forEach((it, i) => {
+    const icon = el("img", { class: "th", alt: "", style: "aspect-ratio:1/1;width:96px;object-fit:contain;background:var(--surface-2)" });
+    icon.src = it.image || game.itemIcon(it).toDataURL(); if (!it.image) icon.style.imageRendering = "pixelated";
+    const fid = "itemimg-" + it.id, file = el("input", { type: "file", accept: "image/*", class: "sr-only", id: fid });
+    file.addEventListener("change", async e => { const f = e.target.files[0]; e.target.value = ""; if (!f) return; try { it.image = await itemImage(f); changed({ now: true }); renderShop(); } catch (err) { status(err.message, true); } });
+    const text = (k, ph) => { const inp = el("input", { type: "text", value: it[k] || "", placeholder: ph }); inp.addEventListener("input", () => { it[k] = inp.value; changed(); }); return inp; };
+    const cost = el("input", { type: "number", min: 0, max: 999, value: it.price }); cost.addEventListener("input", () => { it.price = Math.max(0, Math.min(999, Math.round(+cost.value || 0))); changed(); });
+    const desc = el("textarea", { placeholder: "One or two sentences." }); desc.value = it.description || ""; desc.addEventListener("input", () => { it.description = desc.value; changed(); });
+    const feat = el("input", { type: "radio", name: "featured", checked: sh.featured === it.id }); feat.addEventListener("change", () => { sh.featured = it.id; changed({ now: true }); });
+    const move = d => { const j = i + d; if (j < 0 || j >= sh.items.length) return; [sh.items[i], sh.items[j]] = [sh.items[j], sh.items[i]]; changed({ now: true }); renderShop(); };
+    wrap.appendChild(el("article", { class: "prow", style: "grid-template-columns:96px minmax(0,1fr)" }, [
+      el("div", {}, [icon, el("div", { class: "side-acts" }, [
+        el("label", { class: "btn small", for: fid, text: it.image ? "Replace" : "Add image" }), file,
+        it.image ? el("button", { class: "btn small quiet", type: "button", text: "Remove", onclick: () => { it.image = null; changed({ now: true }); renderShop(); } }) : null,
+      ])]),
+      el("div", { class: "fields" }, [
+        el("label", {}, [document.createTextNode("Name"), text("name", "Item name")]),
+        el("label", {}, [document.createTextNode("Price (tokens)"), cost]),
+        el("label", { class: "wide" }, [document.createTextNode("Description"), desc]),
+        el("div", { class: "acts" }, [
+          el("label", { class: "check", style: "margin:0 10px 0 0" }, [feat, document.createTextNode("Featured")]),
+          el("button", { class: "btn small quiet", type: "button", text: "Move up", disabled: i === 0, onclick: () => move(-1) }),
+          el("button", { class: "btn small quiet", type: "button", text: "Move down", disabled: i === sh.items.length - 1, onclick: () => move(1) }),
+          el("button", { class: "btn small quiet", type: "button", text: "Remove item", onclick: () => {
+            if (!confirm("Remove \"" + it.name + "\" from the shop? Visitors who bought it keep it.")) return;
+            sh.items.splice(i, 1); if (sh.featured === it.id) sh.featured = sh.items[0] ? sh.items[0].id : ""; changed({ now: true }); renderShop();
+          } }),
+        ]),
+      ]),
+    ]));
+  });
+  wrap.appendChild(el("div", { class: "row" }, [el("button", { class: "btn primary", type: "button", text: "Add an item", onclick: () => {
+    const id = "item-" + Math.random().toString(36).slice(2, 8);
+    sh.items.push({ id, name: "New item", price: 3, description: "", image: null }); if (!sh.featured) sh.featured = id; changed({ now: true }); renderShop();
+  } })]));
+  wrap.appendChild(el("p", { class: "note", style: "margin-top:18px", text: "Item images can be any size; they're shrunk to 64 pixels and shown as small icons. Without one, the shop draws a placeholder icon." }));
+}
+
+/* ---------- Pieces ---------- */
+async function pieceImage(file) {
+  const src = await readFile(file), img = await loadImg(src);
+  if (img.width <= MAX_PIECE_W) return src;
+  const k = MAX_PIECE_W / img.width, [c, x] = canvasOf(MAX_PIECE_W, Math.round(img.height * k));
+  x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high";
+  x.fillStyle = "#000"; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+  return c.toDataURL("image/jpeg", 0.85);
+}
+function renderPieces() {
+  const main = $("#main"); main.innerHTML = "";
+  const spots = GOQ.spotCount(), cases = GOQ.caseCount(), wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
+  wrap.appendChild(el("h2", { class: "title", text: "Pieces" }));
+  wrap.appendChild(el("p", { text: "Episodes go in display cases (" + cases + " in the museum): your observation on the front placard, the developer's intention on the back. Community finds hang on the walls as paintings (" + spots + " wall spots). Each kind fills its places in this order. Add more cases and wall spots in the Rooms tab." }));
+  wrap.appendChild(el("p", { text: "Turn on \"Unveil on a date\" and visitors see the piece under a sheet until that day. In curator mode it waits in a crate, so you can hang it on camera. Links show as small buttons while someone is looking at the piece." }));
+  if (!draft.pieces.length) wrap.appendChild(el("p", { class: "empty", text: "No pieces yet. Add the first one below." }));
+  const idx = { episode: 0, community: 0 };
+  draft.pieces.forEach((p, i) => { const k = p.kind === "episode" ? "episode" : "community"; wrap.appendChild(pieceRow(p, i, k === "episode" ? cases : spots, idx[k]++)); });
+  wrap.appendChild(el("div", { class: "row" }, [el("button", { class: "btn primary", type: "button", text: "Add a piece", onclick: () => {
+    draft.pieces.push(GOQ.normalizePiece({ id: uid(), title: "New piece", developer: "" }, draft.pieces.length)); changed({ now: true }); renderPieces();
+    const rows = document.querySelectorAll(".prow"); const last = rows[rows.length - 1]; if (last) { last.scrollIntoView({ block: "nearest" }); last.querySelector("input").focus(); }
+  } })]));
+  /* Guestbook: entries the front desk reads out, newest last. */
+  const gb = el("textarea", { id: "gbText", placeholder: "Sam: The hallway one got me.\nPriya: Came for the mushrooms, stayed for the mail." });
+  gb.value = draft.guestbook.map(g => (g.name ? g.name + ": " : "") + g.note).join("\n");
+  gb.addEventListener("input", () => {
+    draft.guestbook = gb.value.split("\n").map(l => l.trim()).filter(Boolean).slice(0, 60).map(l => {
+      const m = l.match(/^([^:]{1,40}):\s*(.+)$/); return m ? { name: m[1].trim(), note: m[2].slice(0, 200) } : { name: "", note: l.slice(0, 200) };
+    });
+    changed();
+  });
+  wrap.appendChild(el("section", { class: "guestbook" }, [
+    el("h2", { class: "title", text: "Guestbook" }),
+    el("p", { class: "note", text: "One entry per line, written as Name: note. The front desk reads the newest six, newest first." }),
+    el("label", { class: "sr-only", for: "gbText", text: "Guestbook entries" }), gb,
+  ]));
+}
+function pieceRow(p, i, spots, n) {
+  const row = el("article", { class: "prow" + (p.kind === "community" ? " community" : ""), "aria-label": p.title || "Untitled piece" });
+  const th = el("img", { class: "th", alt: "" });
+  if (p.image) { th.src = p.image; th.classList.add("photo"); } else th.src = GOQ.placeholderPainting(p).toDataURL();
+  const fileId = "img-" + p.id, file = el("input", { type: "file", accept: "image/*", class: "sr-only", id: fileId });
+  file.addEventListener("change", async e => {
+    const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+    try { p.image = await pieceImage(f); changed({ now: true }); renderPieces(); } catch (err) { status(err.message, true); }
+  });
+  const ep = p.kind === "episode", on = n < spots;
+  const spotTxt = on ? (ep ? "CASE " : "WALL SPOT ") + (n + 1) : "NOT ON DISPLAY";
+  const left = el("div", {}, [
+    el("div", { class: "frame" }, [th]),
+    el("span", { class: "spotlbl" + (on ? "" : " off"), text: spotTxt, title: on ? "" : "No free " + (ep ? "case" : "wall spot") + ". Move this piece up, or add more in the Rooms tab." }),
+    el("div", { class: "side-acts" }, [
+      el("label", { class: "btn small", for: fileId, text: p.image ? "Replace image" : "Add image" }), file,
+      p.image ? el("button", { class: "btn small quiet", type: "button", text: "Remove image", onclick: () => { p.image = null; changed({ now: true }); renderPieces(); } }) : null,
+    ]),
+  ]);
+  const f = (label, input, wide, hint) => el("label", { class: wide ? "wide" : "" }, [document.createTextNode(label), hint ? el("small", { text: hint }) : null, input]);
+  const text = (key, ph) => { const inp = el("input", { type: "text", value: p[key] || "", placeholder: ph || "" }); inp.addEventListener("input", () => { p[key] = inp.value; changed(); if (key === "title") row.setAttribute("aria-label", inp.value || "Untitled piece"); }); return inp; };
+  const area = (key, ph) => { const t = el("textarea", { placeholder: ph || "" }); t.value = p[key] || ""; t.addEventListener("input", () => { p[key] = t.value; changed(); }); return t; };
+  const kind = el("select", {}, [el("option", { value: "episode", text: "Episode (display case)" }), el("option", { value: "community", text: "Community find (painting)" })]);
+  kind.value = p.kind; kind.addEventListener("change", () => { p.kind = kind.value; changed({ now: true }); renderPieces(); });
+  const link = (key, ph) => {
+    const inp = el("input", { type: "url", value: p[key] || "", placeholder: ph });
+    inp.addEventListener("input", () => { const v = inp.value.trim(); p[key] = /^https?:\/\/\S+$/i.test(v) ? v : ""; inp.setCustomValidity(v && !p[key] ? "Start the link with https://" : ""); changed(); });
+    return inp;
+  };
+  /* Unveil: a switch, and a date when it's on. Turning it off keeps the date in mind in case you turn it back on. */
+  const dated = el("input", { type: "checkbox", checked: !!p.unveil });
+  const date = el("input", { type: "date", value: p.unveil || p._lastUnveil || "", "aria-label": "Unveil date" });
+  date.hidden = !p.unveil;
+  const soon = () => { const d = new Date(); d.setDate(d.getDate() + 7); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+  dated.addEventListener("change", () => {
+    if (dated.checked) { if (!date.value) date.value = soon(); p.unveil = date.value; }
+    else { p._lastUnveil = p.unveil || date.value; p.unveil = ""; }
+    date.hidden = !dated.checked; changed({ now: true });
+  });
+  date.addEventListener("change", () => { if (dated.checked && date.value) { p.unveil = date.value; changed({ now: true }); } });
+  const unveilBox = el("div", { class: "unveil" }, [el("label", { class: "check" }, [dated, document.createTextNode("Unveil on a date")]), date]);
+  const placard = p.kind === "episode"
+    ? [f("Observation (yours)", area("observation", "What you noticed while playing."), true), f("Intention (the developer's)", area("intention", "What the developer was going for."), true)]
+    : [f("Guest writer", text("guestWriter", "Name (Discord)")), el("span"), f("Guest note", area("guestNote", "The guest writer's note."), true)];
+  const move = (d) => { const j = i + d; if (j < 0 || j >= draft.pieces.length) return; const a = draft.pieces; [a[i], a[j]] = [a[j], a[i]]; changed({ now: true }); renderPieces(); };
+  const fields = el("div", { class: "fields" }, [
+    f("Title", text("title", "Game title")), f("Developer", text("developer", "Who made it")),
+    f("Frame", kind), el("div", { class: "fieldset" }, [el("span", { class: "flabel", text: "Unveiling" }), el("small", { text: "Off: it hangs right away." }), unveilBox]),
+    ...placard,
+    f("How a visitor would describe it", text("hint", "the one where the clock never ran out but I still rushed"), true, "Lost visitors ask for it this way. Keep it to one line, in their words."),
+    f("YouTube episode", link("episodeUrl", "https://youtube.com/watch?v=..."), false, "Shown as \"Watch the episode\""),
+    f("The game", link("gameUrl", "https://store.steampowered.com/... or itch.io"), false, "Shown as \"Play the game\""),
+    el("div", { class: "acts" }, [
+      el("button", { class: "btn small quiet", type: "button", text: "Move up", disabled: i === 0, onclick: () => move(-1) }),
+      el("button", { class: "btn small quiet", type: "button", text: "Move down", disabled: i === draft.pieces.length - 1, onclick: () => move(1) }),
+      el("button", { class: "btn small quiet", type: "button", text: "Remove piece", onclick: () => {
+        if (!confirm("Remove \"" + (p.title || "this piece") + "\" from the museum?")) return;
+        draft.pieces.splice(i, 1); changed({ now: true }); renderPieces();
+      } }),
+    ]),
+  ]);
+  row.appendChild(left); row.appendChild(fields);
+  return row;
+}
+
+/* ---------- Import and export ---------- */
+$("#exportBtn").addEventListener("click", () => {
+  download("museum-pack.json", new Blob([JSON.stringify(packOut())], { type: "application/json" }));
+  status("Exported museum-pack.json. Put it next to museum.html on your site, or load it in the museum.");
+});
+$("#importFile").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try {
+    const j = JSON.parse(await f.text());
+    if (!j || j.format !== GOQ.PACK_FORMAT) throw new Error("That file isn't a museum pack.");
+    if ((Object.keys(draft.assets).length || draft.pieces.length) && !confirm("Replace everything here with this pack? Export first if you want to keep the current one.")) return;
+    useDraft(j); changed({ now: true }); await game.setPack(packOut()); render(); status("Imported " + f.name);
+  } catch (err) { status(err instanceof SyntaxError ? "That file couldn't be read as JSON." : err.message, true); }
+});
+
+/* ---------- Start: this browser's draft, else the site's pack, else the sample pieces ---------- */
+(async function start() {
+  let raw = null;
+  try { raw = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); } catch (e) {}
+  if (raw) status("Restored your draft from this browser");
+  else if (/^https?:$/.test(location.protocol)) {
+    try { const r = await fetch(SITE_PACK, { cache: "no-cache" }); const j = r.ok ? await r.json() : null; if (j && j.format === GOQ.PACK_FORMAT) { raw = j; status("Loaded " + SITE_PACK + " from the site"); } } catch (e) {}
+  }
+  if (!raw) { raw = { pieces: GOQ.SAMPLE_PIECES }; status("Started with the sample pieces"); }
+  useDraft(raw);
+  await game.setPack(packOut());
+  render();
+})();
+})();
+</script>
+
+<script>
+/* Version check: if this page and museum-engine.js don't match, say so (usually an old copy of the engine file). */
+(function () {
+  const want = "2026-10-02 photos and crowds", have = window.GOQ && GOQ.VERSION, el = document.getElementById("ver");
+  if (!el) return;
+  if (have === want) { el.textContent = "Version: " + have; return; }
+  el.textContent = "Heads up: this page expects engine version \u201c" + want + "\u201d but loaded " + (have ? "\u201c" + have + "\u201d" : "an older museum-engine.js") +
+    ". Replace museum-engine.js in this folder with the latest one (check your downloads didn't save it as \u201cmuseum-engine (1).js\u201d), then refresh.";
+  el.style.color = "#f08a6a"; el.style.fontWeight = "700";
+})();
+</script>
+</body>
+</html>
