@@ -21,7 +21,8 @@ const PAL = {
   dust:    ["#e8e0d0", "#b8b0a0"],
   mug:     [null, "#e8e4dc", "#3a2418", "#181820"],
   switchp: ["#f4f0e8", "#e8b24a", "#505068", "#181820"],
-  door:    [null, "#3a2c4c", "#6a5878", "#120c18", "#c8b8a0"],
+  door:    [null, "#3a2c4c", "#6a5878", "#120c18", "#f4d888", "#b88a38"],
+  mat:     [null, "#c85848", "#8a3028", "#2a1010", "#e8b24a"],
   cloth:   ["#f4f0e8", "#d8d0c4", "#a89c8c", "#3a3430"],
   staffrm: ["#eef0e4", "#c4ccb4", "#7c8a6c", "#20261c", "#e2e6d4"],
   locker:  ["#e8eef4", "#9fb4c8", "#5a7088", "#1a2230", "#e8b24a"],
@@ -128,14 +129,14 @@ const GEN = {
   wall_upper: () => fillFn(mk(16, 16), (x, y) => (y === 0 ? 3 : y === 3 ? 2 : y === 4 ? 4 : y === 2 ? 0 : 1)),
   wall_lower: () => fillFn(mk(16, 16), (x, y) => (y === 12 ? 4 : y === 13 ? 0 : y >= 14 ? (y === 15 ? 3 : 2) : 1)),
   // Doors are drawn over the wall, so everything outside the door is see-through.
-  doorway_upper: () => fillFn(mk(16, 16), (x, y) => (y >= 5 && x >= 2 && x <= 13 ? (x === 2 || x === 13 || y === 5 ? 4 : y >= 7 ? 3 : 1) : undefined)),
-  doorway_lower: () => fillFn(mk(16, 16), (x, y) => (x >= 2 && x <= 13 ? (x === 2 || x === 13 ? 4 : y >= 13 ? 1 : 3) : undefined)),
+  doorway_upper: () => fillFn(mk(16, 16), (x, y) => (y >= 4 && x >= 1 && x <= 14 ? (x <= 2 || x >= 13 || y <= 5 ? (x === 1 || x === 14 || y === 4 ? 5 : 4) : y >= 7 ? 3 : 1) : undefined)),
+  doorway_lower: () => fillFn(mk(16, 16), (x, y) => (x >= 1 && x <= 14 ? (x <= 2 || x >= 13 ? (x === 1 || x === 14 ? 5 : 4) : y >= 14 ? 4 : 3) : undefined)),
   staff_upper: () => fillFn(mk(16, 16), (x, y) => (x >= 3 && x <= 12 && y >= 5 ? (x === 3 || x === 12 || y === 5 ? 3 : y === 9 && x >= 5 && x <= 10 ? 0 : 2) : undefined)),
   staff_lower: () => fillFn(mk(16, 16), (x, y) => (x >= 3 && x <= 12 ? (x === 3 || x === 12 || y === 15 ? 3 : x === 10 && (y === 3 || y === 4) ? 0 : 2) : undefined)),
   exit_door: () => fillFn(mk(16, 16), (x, y) => (x >= 2 && x <= 13 && y >= 1 ? (x === 2 || x === 13 || y === 1 || x === 7 || x === 8 ? 2 : (x - y + 32) % 7 === 0 ? 4 : 1) : undefined)),
   // Seen from above, a doorway in a side wall: the frame runs across (top and bottom), the opening goes through the wall.
-  doorway_side: () => fillFn(mk(16, 16), (x, y) => (y >= 2 && y <= 13 ? (y === 2 || y === 13 ? 4 : x <= 1 || x >= 14 ? 1 : 3) : undefined)),
-  doorway_bottom: () => fillFn(mk(16, 16), (x, y) => (x >= 2 && x <= 13 ? (x === 2 || x === 13 ? 4 : y <= 1 ? 1 : 3) : undefined)),
+  doorway_side: () => fillFn(mk(16, 16), (x, y) => (y >= 1 && y <= 14 ? (y <= 2 || y >= 13 ? (y === 1 || y === 14 ? 5 : 4) : x <= 1 || x >= 14 ? 4 : 3) : undefined)),
+  doorway_bottom: () => fillFn(mk(16, 16), (x, y) => (x >= 1 && x <= 14 ? (x <= 2 || x >= 13 ? (x === 1 || x === 14 ? 5 : 4) : y <= 1 ? 4 : 3) : undefined)),
   plant: () => {
     let a = mk(16, 16);
     [[8, 5, 4.2], [4.5, 8, 3.2], [11.5, 8, 3.2], [8, 9, 3]].forEach(([cx, cy, r]) => circ(a, cx, cy, r, 1));
@@ -612,6 +613,7 @@ const GEN = {
     rect(a, 6, 23, 3, 7, 2); rect(a, 23, 23, 3, 7, 2); rect(a, 3, 29, 26, 2, 3);
     return outline(a);
   },
+  doormat: () => fillFn(mk(16, 16), (x, y) => (x >= 2 && x <= 13 && y >= 3 && y <= 12 ? (x === 2 || x === 13 || y === 3 || y === 12 ? 2 : (x + y) % 4 === 0 ? 4 : 1) : undefined)),
   textbox: () => fillFn(mk(24, 24), (x, y) => {
     const d = Math.min(x, y, 23 - x, 23 - y);
     if (Math.min(x, 23 - x) + Math.min(y, 23 - y) < 2) return -1;
@@ -750,6 +752,7 @@ const SLOTS = [
   { key: "fridge", label: "Staff fridge", group: "Staff", w: 16, h: 32, pal: "kitchen", gen: GEN.fridge, note: "Two tiles tall." },
   { key: "microwave_counter", label: "Counter with microwave", group: "Staff", w: 32, h: 16, frames: 2, pal: "kitchen", gen: GEN.microwave_counter, note: "2 frames (64×16): clean, and after the incident." },
   { key: "patron_board", label: "Patron Board", group: "Lobby", w: 32, h: 32, pal: "plaque", gen: GEN.patron_board, note: "A standing board in the lobby that lists every Patreon member. Two tiles wide, two tall." },
+  { key: "doormat", label: "Doormat", group: "Doors", w: 16, h: 16, pal: "mat", gen: GEN.doormat, note: "Drawn on the floor just inside every doorway, so doors are easy to spot. Leave the edges transparent." },
   { key: "closeup_case", label: "Case close-up frame", group: "Pieces", w: 24, h: 24, pal: "glass", gen: GEN.closeup_case, note: "Nine-slice around the art when you look into a case." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
@@ -869,7 +872,10 @@ function normalizePack(p) {
   for (const k in textIn) if (TEXT[k]) { const v = vlist(textIn[k]); if (v && v.length) text[k] = v; }
   const talkIn = (p.settings && p.settings.talk) || {}, talk = {};
   for (const r in TALK_ROLES) talk[r] = Array.isArray(talkIn[r]) ? talkIn[r].map(e => ({ when: (Array.isArray(e && e.when) ? e.when : ["always"]).filter(w => TALK_WHEN[w]).slice(0, 2), v: vlist(e && e.v) || [] })).filter(e => e.v.length) : JSON.parse(JSON.stringify(TALK_DEFAULTS[r]));
-  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk }, samples: !Array.isArray(p.pieces) };
+  const achIn = p.settings && Array.isArray(p.settings.achievements) ? p.settings.achievements : SAMPLE_ACH;
+  const achievements = achIn.slice(0, 100).map((a, i) => ({ id: str(a && a.id, 40) || "ach-" + (i + 1), name: str(a && a.name, 50) || "Achievement", desc: str(a && a.desc, 160),
+    stat: ACH_STATS[a && a.stat] ? a.stat : "dusted", target: Math.max(1, Math.min(9999, Math.round(+(a && a.target) || 1))), secret: !!(a && a.secret) }));
+  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements }, samples: !Array.isArray(p.pieces) };
 }
 function todayISO() { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
 function daysBetween(a, b) { const t = s => { const [y, m, d] = s.split("-").map(Number); return Date.UTC(y, m - 1, d); }; return Math.round((t(b) - t(a)) / 864e5); }
@@ -1174,7 +1180,7 @@ const TEXT = {
   "shirt.tease":       { g: "Secret shirt", l: "The discontinued shirt in the shop menu", v: [["DISCONTINUED. The GOQ shirt. We don't sell these anymore. Don't ask. (People ask.)"]] },
   "shirt.owned":       { g: "Secret shirt", l: "The shirt in the shop menu once you have it", v: [["Yours now. The shopkeeper pretends not to remember giving it to you."]] },
   "shirt.reveal":      { g: "Secret shirt", l: "The shopkeeper hands over the shirt", v: [["...", "You did the whole thing, didn't you. The cocoa. The stool. The trash can. The nap.", "Fine. FINE. Here.", "You got the GOQ shirt! Wear it from the Start menu, under Wardrobe."]] },
-  "stamp.howto":       { g: "Stamp card", l: "Stamp card, not full yet", v: [["Read the placards on art pieces to collect stamps. Each piece stamps once per card. Trade a full card at the gift shop."]] },
+  "stamp.howto":       { g: "Stamp card", l: "Stamp card, not full yet", v: [["Read both sides of a display case (or a painting's note) to collect a stamp. Each piece stamps once per card. Trade a full card at the gift shop."]] },
   "stamp.full":        { g: "Stamp card", l: "Stamp card, full", v: [["Your card is full! Trade it at the gift shop counter for one prize item."]] },
   "stamp.traded":      { g: "Stamp card", l: "After trading a card", v: [["The shopkeeper punches a hole in your card with great ceremony.", "You got {title}! Here's a fresh stamp card."]] },
   "stamp.noPrizes":    { g: "Stamp card", l: "No prizes left to trade for", v: [["You already have every prize. The shopkeeper is impressed and a little worried."]] },
@@ -1214,6 +1220,27 @@ const TALK_DEFAULTS = {
   guard: [{ when: ["shirt"], v: [["Is that... the GOQ shirt?", "I've worked nights here for six years and I've never even SEEN one."], ["Don't mind me. Just guarding the shirt now. I mean the museum."]] }, { when: ["always"], v: [["Evening. Don't mind me, just doing my rounds."], ["Funny thing about this place at night.", "Sometimes the intercom crackles when nobody's touching it."], ["If you see a pair of eyes in the dark...", "That's not me. I'd have said hello."]] }, { when: ["closing"], v: [["Everyone's gone. Just us and the art now."]] }],
 };
 
+/* ---------- Achievements ----------
+   Pure data: each one is a name, a description, one of these stats and a target. The curator's Achievements tab edits them. */
+const ACH_STATS = {
+  dusted: "Frames dusted", straightened: "Frames straightened", watered: "Plants watered", mugs: "Mugs found", wiped: "Cases wiped",
+  helped: "Lost visitors helped", pets: "Times petting the cat", closings: "Times closing the museum", photos: "Photos taken",
+  bothSides: "Cases read on both sides", stamps: "Stamps collected", cards: "Stamp cards traded", items: "Gift shop items owned",
+  drinks: "Drinks ordered", naps: "Bench naps", rooms: "Different rooms visited", microwave: "Microwave incidents", segway: "Segway rides",
+  shirt: "Has the GOQ shirt (1 = yes)", shifts: "Times clocking in",
+};
+const SAMPLE_ACH = [
+  { id: "first-dust", name: "Elbow Grease", desc: "Dust a frame for the first time.", stat: "dusted", target: 1 },
+  { id: "helper", name: "Right This Way", desc: "Help 5 lost visitors find their piece.", stat: "helped", target: 5 },
+  { id: "both-sides", name: "Both Sides Now", desc: "Read both sides of 10 display cases.", stat: "bothSides", target: 10 },
+  { id: "cat", name: "Cat Person", desc: "Pet the cat 10 times.", stat: "pets", target: 10 },
+  { id: "explorer", name: "Wayfinder", desc: "Visit every room in the museum.", stat: "rooms", target: 10 },
+  { id: "closer", name: "Lights Out", desc: "Close the museum for the night.", stat: "closings", target: 1 },
+  { id: "card", name: "Punch Card Pro", desc: "Trade in a full stamp card.", stat: "cards", target: 1 },
+  { id: "resonance", name: "Resonance Cascade", desc: "Use the staff microwave.", stat: "microwave", target: 1, secret: true },
+  { id: "zoom", name: "Up Up Down Down", desc: "Find the Segway.", stat: "segway", target: 1, secret: true },
+  { id: "shirt", name: "The Shirt That Got Away", desc: "Get the discontinued GOQ shirt.", stat: "shirt", target: 1, secret: true },
+];
 /* Things the day's extra visitors say. */
 const SHIRT_STEPS = ["cocoa", "finishOnStool", "lobbyTrash", "water", "catPhoto", "elevatorB1", "pc", "stairsTo2F", "nap2F", "chat", "chat", "chat"];
 const KONAMI = ["up", "up", "down", "down", "left", "right", "left", "right", "b", "a"];
@@ -1318,6 +1345,14 @@ function spotState(p, o) {
 }
 /* Floor tiles where a visitor can stand without being in the way, checked one at a time so that, with everyone placed,
    every open tile can still reach every other. */
+/* Tiles wandering visitors never step on: doorways and stairs, the floor right next to them, and the start spot. */
+function noWanderTiles(id, r, def) {
+  const out = new Set(), add = (x, y) => { out.add(x + "," + y); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) out.add((x + dx) + "," + (y + dy)); };
+  for (const k in r.events) { const e = r.events[k]; if (e.warp || e.bump || e.step || e.elevatorDoor || e.frontDoor) { const [x, y] = k.split(",").map(Number); add(x, y); } }
+  for (const st of r.stairs || []) add(st.x, st.y);
+  add(def.spawn[0], def.spawn[1]);
+  return out;
+}
 function safeSpots(r, def) {
   const W = r.w, H = r.h, avoid = new Set(), key = (x, y) => x + "," + y;
   for (const k in r.events) { const [x, y] = k.split(",").map(Number); for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) avoid.add(key(x + dx, y + dy)); }
@@ -1436,11 +1471,14 @@ function buildRoom(id, pieces, o) {
   // Wandering visitors (not staff) start somewhere random each time: never on a doorway, a case's front or back,
   // in front of a painting, beside the start spot, or anywhere that would cut one part of the room off from another.
   const okSpots = safeSpots(r, def);
-  r.noWander = safeSpots.lastAvoid;
+  r.noWander = noWanderTiles(id, r, def);
+  (def.visitors || []).concat(extra).forEach(v => { delete v._x; delete v._y; });
   (def.visitors || []).concat(extra).forEach(v => {
     if (v.still || v.staff || v.patrol || v.usher || v.role) return;
-    const pick = okSpots.length ? okSpots.splice(Math.floor(Math.random() * okSpots.length), 1)[0] : null;
-    if (pick) { v._x = pick[0]; v._y = pick[1]; r.solid[pick[1]][pick[0]] = true; }
+    const placed = (def.visitors || []).concat(extra).filter(o => o._x !== undefined && o !== v);
+    const spread = okSpots.filter(([x, y]) => placed.every(o => Math.abs(o._x - x) + Math.abs(o._y - y) >= 3));
+    const from = spread.length ? spread : okSpots, pick = from.length ? from[Math.floor(Math.random() * from.length)] : null;
+    if (pick) { okSpots.splice(okSpots.indexOf(pick), 1); v._x = pick[0]; v._y = pick[1]; r.solid[pick[1]][pick[0]] = true; }
   });
   (def.visitors || []).concat(extra).forEach(v => { if (v._x !== undefined) r.solid[v._y][v._x] = false; });
   // The shop: one person frozen in front of a decorative wall shelf, forever deciding; in the café, one sitting on a
@@ -1463,7 +1501,7 @@ function buildRoom(id, pieces, o) {
   const who = (def.visitors || []).concat(extra).filter(v => (!v.day || o.tod !== "night") && (!v.night || o.tod === "night") && (!o.closing || v.staff));
   r.npcs = who.filter(v => !v.random || v._x !== undefined).map(v => ({ sitting: !!v.sitting, still: v.still, staff: v.staff, patrol: v.patrol, usher: v.usher, role: v.role || (v.usher ? "usher" : undefined), slow: v.slow, goRight: true, pause: 0, stuck: 0,
     sheet: v.sheet, x: v._x !== undefined ? v._x : v.x, y: v._y !== undefined ? v._y : v.y, dir: DIRS_LIST.includes(v.dir) ? v.dir : "down", moving: false, prog: 0, step: false, bumpT: 0, timer: 60 + Math.random() * 120, lines: v.lines, lineI: -1,
-    box: { x0: Math.max(1, v.x - 2), y0: 3, x1: Math.min(w - 2, v.x + 2), y1: h - 2 },
+    random: !!v.random, box: { x0: Math.max(1, v.x - 2), y0: 3, x1: Math.min(w - 2, v.x + 2), y1: h - 2 },
   }));
   return r;
 }
@@ -1818,9 +1856,13 @@ class Game {
     }
     el.cu.addEventListener("click", () => this.press("a"));
   }
-  showLoc(name) {
-    const el = this.el.loc; el.textContent = name; el.classList.add("on");
-    clearTimeout(this._locT); this._locT = setTimeout(() => el.classList.remove("on"), 2200);
+  /* Short notices (room names, "Stamp!", "Photo saved"...). They wait while a placard, menu or text box is open,
+     then show one at a time. */
+  showLoc(name) { (this.toastQ = this.toastQ || []).push(name); this.flushToasts(); }
+  flushToasts() {
+    if (!this.toastQ || !this.toastQ.length || this.toastBusy || !(this.mode === "walk" || this.mode === "busy")) return;
+    const el = this.el.loc; el.textContent = this.toastQ.shift(); el.classList.add("on"); this.toastBusy = true;
+    clearTimeout(this._locT); this._locT = setTimeout(() => { el.classList.remove("on"); setTimeout(() => { this.toastBusy = false; this.flushToasts(); }, 300); }, 2000);
   }
   say(pages, done) {
     pages = this.paginate(pages);
@@ -1890,7 +1932,7 @@ class Game {
   stamp(p) {
     const st = this.progress.stamps, size = this.pack.settings.shop.stampSize;
     if (st.includes(p.id) || st.length >= size) return;
-    st.push(p.id); this.saveProgress();
+    st.push(p.id); this.progress.tally.stamps = (this.progress.tally.stamps || 0) + 1; this.saveProgress();
     this.showLoc(st.length >= size ? "Stamp card full! Trade it at the gift shop." : "Stamp! " + st.length + " / " + size);
   }
   showStampCard() {
@@ -1906,12 +1948,11 @@ class Game {
     this.closeShop();
     this.choose("Trade your full stamp card for:", [...prizes.map(it => it.name), "Not yet"], i => {
       const it = prizes[i]; if (!it) return;
-      this.progress.items.push(it.id); this.progress.stamps = []; this.saveProgress();
+      this.progress.items.push(it.id); this.progress.stamps = []; this.progress.tally.cards = (this.progress.tally.cards || 0) + 1; this.saveProgress();
       this.say(this.tx("stamp.traded", { title: it.name }));
     });
   }
-  viewPiece(p, side) {
-    if (side !== "end") this.stamp(p);
+  viewPiece(p, side, stampAfter) {
     const gold = p.kind === "episode", img = this.pieceImgs[p.id], secs = [];
     if (side === "front") { if (p.observation) secs.push({ label: "OBSERVATION", text: p.observation }); secs.push({ label: "", text: this.tx("case.frontNote").join(" ") }); }
     else if (side === "back") { if (p.intention) secs.push({ label: "INTENTION", text: p.intention }); secs.push({ label: "", text: this.tx("case.backNote").join(" ") }); }
@@ -1920,32 +1961,9 @@ class Game {
     else if (p.guestNote) secs.push({ label: p.guestWriter ? "GUEST NOTE BY " + p.guestWriter.toUpperCase() : "GUEST NOTE", text: p.guestNote });
     this.read({ img: img ? p.image : this.pieceArt(p).toDataURL(), imgClass: img && img.naturalWidth > 160 ? "photo" : "", title: p.title.toUpperCase(), sub: "By " + p.developer,
       sections: secs, links: [[p.episodeUrl, "Watch the episode"], [p.gameUrl, "Play the game"]] }, () => {
-      if (this.bothSides) { this.showLoc("Seen from both sides"); this.bothSides = null; }
+      if (stampAfter) this.stamp(p);
     });
   }
-  viewPieceOld(p, side) {
-    const gold = p.kind === "episode", img = this.pieceImgs[p.id];
-    this.el.cuFrame.style.borderImageSource = `url("${this.src(side ? "closeup_case" : gold ? "closeup_gold" : "closeup_wood")}")`;
-    this.el.cuImg.src = img ? p.image : this.pieceArt(p).toDataURL(); this.el.cuImg.alt = p.title;
-    this.el.cuImg.classList.toggle("photo", !!img && (img.naturalWidth > 160));
-    this.el.cu.style.display = "flex";
-    this.el.cuLinks.innerHTML = "";
-    [[p.episodeUrl, "Watch the episode"], [p.gameUrl, "Play the game"]].forEach(([href, label]) => {
-      if (!href) return;
-      const a = document.createElement("a"); a.href = href; a.target = "_blank"; a.rel = "noopener"; a.textContent = label; this.el.cuLinks.appendChild(a);
-    });
-    const pages = [p.title.toUpperCase() + "\nBy " + p.developer];
-    if (side === "front") { if (p.observation) pages.push("OBSERVATION: " + p.observation); pages.push(...this.tx("case.frontNote")); }
-    else if (side === "back") { if (p.intention) pages.push("INTENTION: " + p.intention); pages.push(...this.tx("case.backNote")); }
-    else if (side === "end") pages.push(...this.tx("case.ends"));
-    else if (gold) { if (p.observation) pages.push("OBSERVATION: " + p.observation); if (p.intention) pages.push("INTENTION: " + p.intention); }
-    else if (p.guestNote) pages.push((p.guestWriter ? "GUEST NOTE BY " + p.guestWriter.toUpperCase() : "GUEST NOTE") + ": " + p.guestNote);
-    this.say(pages, () => {
-      this.el.cu.style.display = "none";
-      if (this.bothSides) { this.showLoc("Seen from both sides"); this.bothSides = null; }
-    });
-  }
-
   /* Episode cases have two placards. From the front (standing below it, facing up) you read the curator's observation;
      walk around to the back (facing down) for the developer's intention. From the ends, you're told to walk around. */
   useCase(c) {
@@ -1959,12 +1977,10 @@ class Game {
     }
     const d = this.player.dir, side = d === "up" ? "front" : d === "down" ? "back" : null;
     if (!side) { this.say(this.tx("case.ends")); return; }
-    this.viewPiece(c.piece, side);
-    if (side) {
-      const seen = this.progress.sides || (this.progress.sides = {}), k = seen[c.piece.id] || (seen[c.piece.id] = {});
-      const before = k.front && k.back; k[side] = 1; this.saveProgress();
-      if (!before && k.front && k.back) this.bothSides = c.piece.title;
-    }
+    // Reading both sides of a case stamps your card (after the placard closes).
+    const seen = this.progress.sides || (this.progress.sides = {}), k = seen[c.piece.id] || (seen[c.piece.id] = {});
+    k[side] = 1; this.saveProgress();
+    this.viewPiece(c.piece, side, !!(k.front && k.back));
   }
   /* Curator mode: lift a new piece out of its crate onto the wall, with sparkles, then read its placard. */
   hang(spot) {
@@ -1989,9 +2005,33 @@ class Game {
       staff: p.staff && p.staff.badge ? p.staff : null,   // who is clocked in on this browser (never the key)
       staffTally: p.staffTally || {}, lastBadge: p.lastBadge || null,
       tokens: typeof p.tokens === "number" ? p.tokens : 0, items: Array.isArray(p.items) ? p.items : [], shirt: !!p.shirt, wearShirt: !!p.wearShirt, quest: p.quest || 0,
+      ach: p.ach || {}, visited: Array.isArray(p.visited) ? p.visited : [],
       photos: Array.isArray(p.photos) ? p.photos : [], stamps: Array.isArray(p.stamps) ? p.stamps : [], where: p.where || null, sides: p.sides || {}, wiped: p.wiped || {} };                    // chores counted per badge while clocked in
   }
-  saveProgress() { try { if (this.saveKey) localStorage.setItem(this.saveKey, JSON.stringify(this.progress)); } catch (e) {} }
+  saveProgress() { this.checkAchievements(); try { if (this.saveKey) localStorage.setItem(this.saveKey, JSON.stringify(this.progress)); } catch (e) {} }
+  /* ----- achievements ----- */
+  stat(k) {
+    const p = this.progress, t = p.tally || {};
+    if (k === "photos") return t.photos || 0;
+    if (k === "bothSides") return Object.values(p.sides || {}).filter(v => v.front && v.back).length;
+    if (k === "items") return (p.items || []).length;
+    if (k === "rooms") return (p.visited || []).length;
+    if (k === "shirt") return p.shirt ? 1 : 0;
+    return t[k] || 0;
+  }
+  checkAchievements() {
+    if (!this.pack || !this.progress) return;
+    const got = this.progress.ach || (this.progress.ach = {});
+    for (const a of this.pack.settings.achievements) if (!got[a.id] && this.stat(a.stat) >= a.target) {
+      got[a.id] = todayISO(); this.showLoc("Achievement: " + a.name);
+    }
+  }
+  showAchievements() {
+    const list = this.pack.settings.achievements, got = this.progress.ach || {}, n = list.filter(a => got[a.id]).length;
+    const lines = list.map(a => got[a.id] ? "\u2605 " + a.name.toUpperCase() + ": " + a.desc
+      : a.secret ? "\u2606 ???  (a secret)" : "\u2606 " + a.name + ": " + a.desc + " (" + Math.min(this.stat(a.stat), a.target) + "/" + a.target + ")");
+    this.read({ title: "ACHIEVEMENTS", sub: n + " of " + list.length + " unlocked", sections: [{ label: "", text: lines.join("\n") }] });
+  }
   resetProgress() { try { if (this.saveKey) localStorage.removeItem(this.saveKey); } catch (e) {} this.progress = this.loadProgress(); this.lightsOff.clear(); this.closing = false; this.closed = false; this.dayStart = Object.assign({}, this.progress.tally); this.spook = null; this.figure = null; this.hideEnd(); this.updateHud(); this.rebuild(); }
   /* Dust settles back over a few real days. A piece that's never been dusted starts dusty about half the time. */
   isDusty(p) { const d = this.progress.dusted[p.id]; return d ? daysBetween(d, todayISO()) >= 3 : strSeed(p.id) % 2 === 0; }
@@ -2255,7 +2295,7 @@ class Game {
     const f = this.el.badgeForm, who = await this.checkBadge(f.badge.value, f.key.value);
     if (!who) { f.querySelector(".gt-badge-err").textContent = "That badge didn't work. Check the number and key."; return; }
     this.progress.staff = who; this.shift = {}; this.saveProgress();
-    this.progress.lastBadge = who; this.saveProgress();
+    this.progress.lastBadge = who; this.progress.tally.shifts = (this.progress.tally.shifts || 0) + 1; this.saveProgress();
     this.closeBadge(); this.updateHud(); this.showLoc("Clocked in: " + who.name);
     const to = this.staffTo || ["staff", 7, 8, "up"];
     if (this.room.id !== to[0]) this.warp(...to);
@@ -2524,20 +2564,6 @@ class Game {
     };
     show(0);
   }
-  browseRackOld(i) {
-    const items = this.rackContents(i).filter(c => c.item).map(c => c.item);
-    if (!items.length) { this.say(["A rack of little knickknacks.", "Nothing on this one is for sale. They're just here to keep you company."]); return; }
-    const owned = this.progress.items;
-    this.choose("A rack of souvenirs. You have " + (this.progress.tokens || 0) + " T.", [...items.map(it => it.name + (owned.includes(it.id) ? " (owned)" : " " + it.price + " T")), "Just looking"], k => {
-      const it = items[k]; if (!it) return;
-      if (owned.includes(it.id)) { this.say([it.name + ". You already have this one."]); return; }
-      const t = this.progress.tokens || 0;
-      this.say([it.name.toUpperCase() + (it.description ? ": " + it.description : "")], () => {
-        if (t < it.price) { this.say(["It's " + it.price + " tokens. You need " + (it.price - t) + " more. Chores earn tokens."]); return; }
-        this.choose("Buy " + it.name + " for " + it.price + " T?", ["Buy it", "Not now"], b => { if (b === 0) this.buy(it); });
-      });
-    });
-  }
   buy(it) {
     this.progress.tokens = (this.progress.tokens || 0) - it.price; this.progress.items.push(it.id); this.saveProgress(); this.updateHud();
     this.say(["You bought " + it.name + "!", this.staff ? "It'll be waiting in the collection cabinet in the staff room." : "It's in your collection. Staff keep theirs in the staff room's collection cabinet."]);
@@ -2596,6 +2622,7 @@ class Game {
       if (price) { this.progress.tokens -= price; this.saveProgress(); this.updateHud(); }
       this.drink = { kind: i, name: DRINKS[i].name, sips: 0 };
       if (DRINKS[i].id === "cocoa") this.quest("cocoa");
+      this.progress.tally.drinks = (this.progress.tally.drinks || 0) + 1; this.saveProgress();
       this.say(this.tx("drink.served"));
     });
   }
@@ -2607,7 +2634,7 @@ class Game {
   }
   /* The elevator: one little room. The panel picks the floor; the door lets you out there. */
   elevatorPanel() {
-    const stops = Object.keys(ROOMS).filter(id => ROOMS[id].elevatorStop).sort((a, b) => (ROOMS[a].elevatorStop.order || 0) - (ROOMS[b].elevatorStop.order || 0));
+    const stops = Object.keys(ROOMS).filter(id => ROOMS[id].elevatorStop).sort((a, b) => (ROOMS[b].elevatorStop.order || 0) - (ROOMS[a].elevatorStop.order || 0)); // top floor first
     const here = ROOMS[this.elevatorAt] && ROOMS[this.elevatorAt].elevatorStop ? this.elevatorAt : (stops.find(id => ROOMS[id].elevatorStop.order === 1) || stops[0]);
     this.elevatorAt = here;
     this.choose("Which floor? (You're on " + ROOMS[here].elevatorStop.label.replace(/\s+/g, " ") + ".)", [...stops.map(id => ROOMS[id].elevatorStop.label.replace(/\s+/g, " ")), "Stay here"], i => {
@@ -2706,6 +2733,7 @@ class Game {
     const sub = this.photoSubject(), ph = this.progress.photos || (this.progress.photos = []);
     ph.unshift({ desc: sub.desc, piece: sub.piece || null, room: this.room.name.replace(/\s+/g, " "), thumb: sub.thumb || null, tod: this.tod() });
     if (ph.length > 40) ph.length = 40;
+    this.progress.tally.photos = (this.progress.tally.photos || 0) + 1;
     this.saveProgress(); this.phoneT = 34; this.showLoc("Photo saved");
     if (/napping/.test(sub.desc)) this.quest("catPhoto");
   }
@@ -2718,7 +2746,8 @@ class Game {
   openMenu() {
     const n = (this.progress.photos || []).length;
     const sc = this.progress.stamps.length + "/" + this.pack.settings.shop.stampSize;
-    const opts = ["Photos (" + n + ")", "Stamp card (" + sc + ")", ...(this.progress.shirt ? ["Wardrobe"] : []), "Respawn", "Save", "Save and quit", "Back"];
+    const an = Object.keys(this.progress.ach || {}).length + "/" + this.pack.settings.achievements.length;
+    const opts = ["Photos (" + n + ")", "Stamp card (" + sc + ")", "Achievements (" + an + ")", ...(this.progress.shirt ? ["Wardrobe"] : []), "Respawn", "Save", "Save and quit", "Back"];
     this.choose("PAUSED", opts, k => {
       const o = opts[k];
       if (o === "Wardrobe") {
@@ -2728,6 +2757,7 @@ class Game {
         return;
       }
       if (o.startsWith("Stamp card")) { this.showStampCard(); return; }
+      if (o.startsWith("Achievements")) { this.showAchievements(); return; }
       if (o === "Respawn") { this.respawn(); return; }
       const i = o.startsWith("Photos") ? 0 : o === "Save" ? 1 : o === "Save and quit" ? 2 : 3;
       if (i === 0) {
@@ -2855,7 +2885,7 @@ class Game {
     this.choose(this.tx("microwave.ask").join(" "), ["Start it", "Better not"], i => {
       if (i !== 0) return;
       this.mode = "busy"; this.showLoc("*mmmmmmmmm*");
-      setTimeout(() => { this.microwaved = true; this.shakeT = 14; this.boomT = 30; this.mode = "walk"; this.say(this.tx("microwave.boom", null, true)); }, 1000);
+      setTimeout(() => { this.microwaved = true; this.progress.tally.microwave = (this.progress.tally.microwave || 0) + 1; this.saveProgress(); this.shakeT = 14; this.boomT = 30; this.mode = "walk"; this.say(this.tx("microwave.boom", null, true)); }, 1000);
     });
   }
   /* Respawn: back to this room's start spot (or the lobby's), with a little fourth-wall remark. Not after closing. */
@@ -2869,21 +2899,6 @@ class Game {
   saveWhere() { const p = this.player; this.progress.where = { room: this.room.id, x: p.x, y: p.y, dir: p.dir }; this.saveProgress(); }
   /* The usher talks to visitors like visitors and to staff like coworkers. */
   usherTalk() { this.staffTalk("usher"); }
-  usherTalkOld() {
-    const crowd = this.crowdToday(), reveal = this.pack.pieces.some(p => p.unveil === todayISO()), s = this.staff;
-    const catRoom = Object.values(this.rooms).find(r => r.cat), catName = this.pack.settings.staff.catName;
-    if (this.closing) { this.say(["We're closed for the night. Goodnight!"]); return; }
-    this.usherI = (this.usherI || 0) + 1;
-    if (s) {
-      const busy = reveal ? "It's reveal day. We're slammed!" : { heavy: "Packed today. Hope you brought your walking shoes.", medium: "Steady crowd today. Good energy.", slow: "Quiet one today. Enjoy it." }[crowd];
-      const tips = [catRoom ? catName + " is napping in " + catRoom.name.replace(/\s+/g, " ") + " today." : catName + " is hiding somewhere today.", "Someone left fingerprints on every case again.", "Don't forget to clock out before you head home."];
-      this.say(["Hey, " + s.name + "! " + busy, tips[this.usherI % tips.length]]);
-      return;
-    }
-    const busy = reveal ? "Big day today: something new is being unveiled!" : { heavy: "We're busy today. Take your time.", medium: "A nice steady crowd today.", slow: "It's quiet today. You've got the place to yourself." }[crowd];
-    const tips = ["The elevator and the stairs are through Gallery One.", "The gift shop and café are through the door on the right.", "Read both sides of the glass cases. It's worth it.", "If you see someone who looks lost, they might need a hand."];
-    this.say(["Welcome to the GOQ Museum! " + busy, tips[this.usherI % tips.length]]);
-  }
   talkTo(npc) {
     if (npc.usher) { this.usherTalk(); return; }
     if (npc.role) { this.staffTalk(npc.role); return; }
@@ -2966,6 +2981,7 @@ class Game {
   }
   enterRoom(id, x, y, dir, quiet) {
     if (!this.rooms[id]) { id = "lobby"; [x, y, dir] = ROOMS.lobby.spawn; }
+    if (this.progress && this.saveKey !== undefined && !this.full) { const v = this.progress.visited || (this.progress.visited = []); if (!v.includes(id)) { v.push(id); this.saveProgress(); } }
     this.room = this.rooms[id]; const p = this.player;
     p.x = x; p.y = y; p.dir = dir; p.moving = false; p.prog = 0; p.sitting = false; this.sip = null; this.path = null; this.pathAct = null;
     this.updateHud();
@@ -2983,7 +2999,7 @@ class Game {
       const s = e.spot;
       if (s.state === "covered") this.say(this.tx("painting.covered", { date: niceDate(s.piece.unveil), title: s.piece.title }));
       else if (s.state === "crate") this.hang(s);
-      else if (!this.tidy(s)) this.viewPiece(s.piece);
+      else if (!this.tidy(s)) this.viewPiece(s.piece, undefined, true); // a painting has one side: one read stamps it
     }
     else if (e.plant) {
       if (!this.isThirsty(e.plant)) { this.say(this.tx("plant.done", { room: e.name })); return; }
@@ -3066,7 +3082,7 @@ class Game {
     // Up, up, down, down, left, right, left, right, B, A: a Segway. Enter it again to park it.
     if (this.mode === "walk") for (const k of q) if (KONAMI.includes(k)) {
       (this.kbuf = this.kbuf || []).push(k); if (this.kbuf.length > 10) this.kbuf.shift();
-      if (this.kbuf.join() === KONAMI.join()) { this.kbuf = []; this.segway = !this.segway; this.konamiNow = true; this.showLoc(this.segway ? "SEGWAY UNLOCKED. Zoom zoom." : "Segway parked."); }
+      if (this.kbuf.join() === KONAMI.join()) { this.kbuf = []; this.segway = !this.segway; if (this.segway) { this.progress.tally.segway = (this.progress.tally.segway || 0) + 1; this.saveProgress(); } this.konamiNow = true; this.showLoc(this.segway ? "SEGWAY UNLOCKED. Zoom zoom." : "Segway parked."); }
     }
     const has = k => q.includes(k);
     if (this.trans) {
@@ -3078,6 +3094,7 @@ class Game {
     }
     this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping();
     if (this.petT > 0) this.petT--;
+    if (this.t % 20 === 0) this.flushToasts();
     if (this.flickerT > 0) this.flickerT--;
     if (this.boomT > 0) this.boomT--;
     if (this.shakeT > 0) this.shakeT--;
@@ -3160,7 +3177,7 @@ class Game {
       if (p.bench && !d && !pressA && !awake && !this.sip) {
         this.sitIdle++;
         if (this.sitIdle === 420) this.showLoc("You're getting comfortable...");
-        if (this.sitIdle > 720) { this.asleep = true; this.showLoc("Zzz..."); if (this.room.id === "gallery2") this.quest("nap2F"); return; }
+        if (this.sitIdle > 720) { this.asleep = true; this.progress.tally.naps = (this.progress.tally.naps || 0) + 1; this.saveProgress(); this.showLoc("Zzz..."); if (this.room.id === "gallery2") this.quest("nap2F"); return; }
       }
       if (d || pressA) this.sitIdle = 0;
       if (!d) this.inputLock = false;
@@ -3202,18 +3219,49 @@ class Game {
       if (n.still) continue;
       if (n.patrol) { this.patrol(n); continue; }
       if (n.bumpT > 0) n.bumpT--;
-      if (this.mode !== "walk" || --n.timer > 0) continue;
-      n.timer = 80 + Math.random() * 200;
-      const d = Object.keys(DIRS)[(Math.random() * 4) | 0], [dx, dy] = DIRS[d], nx = n.x + dx, ny = n.y + dy, b = n.box;
-      n.dir = d;
-      const noGo = this.room.noWander && this.room.noWander.has(nx + "," + ny);
-      if (Math.random() < 0.6 && !noGo && nx >= b.x0 && nx <= b.x1 && ny >= b.y0 && ny <= b.y1) this.tryMove(n, d);
+      if (this.mode !== "walk") continue;
+      this.stroll(n);
       // Lingering next to a case leaves fingerprints.
       const near = this.room.cases.find(c => c.piece && c.state === "wall" && Math.abs(c.x - n.x) + Math.abs(c.y - n.y) === 1);
       if (near && Math.random() < 0.25 * this.pack.settings.staff.fingerprints) { const xp = this.extraPrints || (this.extraPrints = {}); xp[near.piece.id] = Math.min(3, (xp[near.piece.id] || 0) + 1); }
     }
   }
 
+  /* Visitors stroll: pick somewhere open in the room, walk there, look around for a while, then pick somewhere else.
+     They never step onto doorways, stairs, or the tiles where people arrive. */
+  stroll(n) {
+    if (n.timer > 0) { n.timer--; if (n.timer % 90 === 0 && Math.random() < 0.5) n.dir = DIRS_LIST[(Math.random() * 4) | 0]; return; }
+    const r = this.room, noGo = (x, y) => r.noWander && r.noWander.has(x + "," + y);
+    if (!n.route || !n.route.length) {
+      const opts = [];
+      for (let y = 3; y < r.h - 1; y++) for (let x = 1; x < r.w - 1; x++) if (!r.solid[y][x] && !noGo(x, y) && Math.abs(x - n.x) + Math.abs(y - n.y) > 2) opts.push([x, y]);
+      const t = opts[(Math.random() * opts.length) | 0];
+      n.route = t ? this.npcPath(n, t[0], t[1]) : null;
+      if (!n.route || !n.route.length) { n.timer = 60 + Math.random() * 120; n.route = null; return; }
+    }
+    const d = n.route[0], [dx, dy] = DIRS[d];
+    if (noGo(n.x + dx, n.y + dy) || !this.tryMove(n, d)) { n.route = null; n.timer = 30 + Math.random() * 60; n.dir = d; return; }
+    n.route.shift();
+    if (!n.route.length) n.timer = 180 + Math.random() * 300; // arrived: stay a while
+  }
+  /* Shortest route for a visitor, around walls, furniture, people and no-go tiles (at most 40 steps). */
+  npcPath(n, tx, ty) {
+    const r = this.room, W = r.w, prev = new Map(), start = n.y * W + n.x, goal = ty * W + tx, q = [start];
+    prev.set(start, -1);
+    while (q.length) {
+      const c = q.shift(); if (c === goal) break;
+      const cx = c % W, cy = (c / W) | 0;
+      for (const [dx, dy] of Object.values(DIRS)) {
+        const nx = cx + dx, ny = cy + dy, k = ny * W + nx;
+        if (nx < 1 || ny < 3 || nx >= W - 1 || ny >= r.h - 1 || prev.has(k) || this.blocked(nx, ny, n) || (r.noWander && r.noWander.has(nx + "," + ny))) continue;
+        prev.set(k, c); q.push(k);
+      }
+    }
+    if (!prev.has(goal)) return null;
+    const out = []; let c = goal;
+    while (prev.get(c) !== -1) { const pc = prev.get(c), dx = (c % W) - (pc % W), dy = ((c / W) | 0) - ((pc / W) | 0); out.unshift(dx > 0 ? "right" : dx < 0 ? "left" : dy > 0 ? "down" : "up"); c = pc; }
+    return out.slice(0, 40);
+  }
   /* The night guard walks the length of the room and back, pausing at each end. */
   patrol(n) {
     if (n.pause > 0) { n.pause--; return; }
@@ -3369,6 +3417,17 @@ class Game {
     this.drawSlot("cups", k, 0, sx + x, sy + y);
     if (up || (c.sitting && this.t % 90 < 40)) this.drawSlot("steam", Math.floor(this.t / 8) % 3, 0, sx + x, sy + y - 7);
   }
+  /* The floor tile just inside each doorway, for its mat. */
+  doorMats(r) {
+    if (r._mats) return r._mats;
+    const out = [];
+    for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) {
+      const o = r.over[y][x]; if (!o) continue;
+      const at = /doorway_lower|staff_door_lower/.test(o) ? [x, y + 1] : /doorway_bottom|exit_door/.test(o) ? [x, y - 1] : o === "doorway_side" ? [x === 0 ? 1 : x - 1, y] : null;
+      if (at && r.solid[at[1]] && !r.solid[at[1]][at[0]]) out.push(at);
+    }
+    return (r._mats = out);
+  }
   doorTiles(r) {
     if (r._doors) return r._doors;
     const out = [];
@@ -3377,11 +3436,11 @@ class Game {
   }
   pos(c) { const [dx, dy] = DIRS[c.dir]; return { x: c.x * T + dx * c.prog, y: c.y * T + dy * c.prog }; }
   /* Draw one whole room, edge to edge, onto a new canvas: no player, no lighting. The level editor uses this. */
-  renderRoomFull(id) {
+  renderRoomFull(id, noPeople) {
     const r = this.rooms[id]; if (!r) return null;
     const c = document.createElement("canvas"); c.width = r.w * T; c.height = r.h * T;
     const save = [this.ctx, this.room, this.full, this.camX, this.camY];
-    this.ctx = c.getContext("2d"); this.ctx.imageSmoothingEnabled = false; this.room = r; this.full = { w: c.width, h: c.height };
+    this.ctx = c.getContext("2d"); this.ctx.imageSmoothingEnabled = false; this.room = r; this.full = { w: c.width, h: c.height, noPeople: !!noPeople };
     try { this.draw(); } finally { [this.ctx, this.room, this.full, this.camX, this.camY] = save; }
     return c;
   }
@@ -3448,6 +3507,7 @@ class Game {
     if (r.intercomAt) this.drawSlot("intercom", 0, 0, r.intercomAt.x * T - cx, r.intercomAt.y * T - cy);
     if (r.panelAt) this.drawSlot("elevator_panel", 0, 0, r.panelAt.x * T - cx, r.panelAt.y * T - cy);
     for (const d of r.decals) this.drawSlot(d.key, 0, 0, d.x * T - cx, d.y * T - cy);
+    for (const [mx, my] of this.doorMats(r)) this.drawSlot("doormat", 0, 0, mx * T - cx, my * T - cy);
     for (const st of r.stairs) this.drawSlot(st.kind === "up" ? "stair_up" : "stair_down", 0, 0, st.x * T - cx, st.y * T - cy);
     for (const c of r.cases) this.drawCase(c, cx, cy);
     for (const p of r.props) this.drawProp(p, cx, cy);
@@ -3461,7 +3521,7 @@ class Game {
     if (r.featuredAt) this.drawFeatured(r, cx, cy);
     const shelf = r.props.find(p => p.mugShelf);
     if (shelf && this.progress.mug === todayISO()) this.drawSlot("mug", 0, 0, (shelf.x + 1) * T + 2 - cx, shelf.y * T - 9 - cy);
-    const chars = (full ? r.npcs.slice() : [this.player, ...r.npcs]).sort((a, b) => this.pos(a).y - this.pos(b).y);
+    const chars = (full ? (full.noPeople ? [] : r.npcs.slice()) : [this.player, ...r.npcs]).sort((a, b) => this.pos(a).y - this.pos(b).y);
     for (const c of chars) {
       const p = this.pos(c), prog = c.moving ? c.prog : c.bumpT > 0 ? 16 - c.bumpT : -1;
       const col = prog >= 0 && prog < 8 ? (c.step ? 1 : 2) : 0;
@@ -3540,8 +3600,8 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-06 patrons";
-window.GOQ = { archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
+const VERSION = "2026-10-07 achievements";
+window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
   spotRooms: () => Object.keys(ROOMS).filter(id => (ROOMS[id].spots || []).length).map(id => ({ id, name: ROOMS[id].name, n: ROOMS[id].spots.length })),

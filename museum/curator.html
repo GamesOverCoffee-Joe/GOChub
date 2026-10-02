@@ -207,6 +207,32 @@ input[type=range]{accent-color:var(--gold);width:100%}
 .rissues{margin:8px 0;padding-left:1.2em;color:var(--warn);font-size:.9rem}
 
 .wtitle{margin:26px 0 6px;font-size:1.05rem}
+.wsearch{width:100%;max-width:480px;margin:6px 0 12px}
+.wgroup{border:2px solid var(--line);border-radius:4px;background:var(--surface);margin:8px 0}
+.wgroup>summary{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 14px;cursor:pointer;font-weight:700;list-style:none}
+.wgroup>summary::-webkit-details-marker{display:none}
+.wgroup>summary::before{content:"\25B8";margin-right:8px;color:var(--muted)}
+.wgroup[open]>summary::before{content:"\25BE"}
+.wgroup>summary span{flex:1}
+.wgroup>summary small{color:var(--muted);font-weight:400}
+.wbody{padding:4px 14px 12px}
+.wentry{border-top:1px solid var(--line)}
+.wentry>summary{display:flex;gap:10px;align-items:baseline;padding:8px 0;cursor:pointer;list-style:none;min-width:0}
+.wentry>summary::-webkit-details-marker{display:none}
+.wentry>summary b{flex:none;max-width:45%;font-size:.88rem}
+.wentry>summary .wprev{flex:1;color:var(--muted);font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wentry>summary em{font-style:normal;font-size:.72rem;font-weight:700;color:var(--ok);border:1.5px solid currentColor;border-radius:2px;padding:0 .3em}
+.wentry .wbody{padding:0 0 10px}
+.wentry textarea{width:100%;min-height:70px;margin-bottom:6px}
+.applyb{position:relative}
+.applyb .dot{position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:#e8b24a;box-shadow:0 0 0 2px #120b0e}
+#goRoom{font:inherit;font-weight:600;font-size:.82rem;min-height:34px;padding:.3em .5em}
+.pvmore,.rmore{position:relative}
+.pvmore>summary,.rmore>summary{list-style:none;cursor:pointer}
+.pvmore>summary::-webkit-details-marker,.rmore>summary::-webkit-details-marker{display:none}
+.pvmenu,.rmenu{position:absolute;right:0;top:calc(100% + 6px);display:flex;flex-direction:column;gap:6px;padding:8px;border:2px solid var(--line);border-radius:4px;background:var(--surface);z-index:20;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.pvmenu{background:#281a1f;border-color:#4b343b}
+.rmenu .btn{justify-content:flex-start}
 .wrow{margin:10px 0 14px}
 .wrow textarea,.wtalk textarea{width:100%;min-height:64px;margin-top:4px}
 .wtalk{border-top:1px solid var(--line);padding-top:10px;margin:10px 0}
@@ -250,6 +276,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
       <button role="tab" id="tab-shop" aria-selected="false" aria-controls="main">Shop</button>
       <button role="tab" id="tab-rooms" aria-selected="false" aria-controls="main">Rooms</button>
       <button role="tab" id="tab-words" aria-selected="false" aria-controls="main">Words</button>
+      <button role="tab" id="tab-ach" aria-selected="false" aria-controls="main">Achievements</button>
     </div>
     <div class="actions">
       <span id="saved" role="status"></span>
@@ -266,13 +293,19 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
     <div id="stage" aria-label="Museum preview. Click it, then walk with arrow keys or WASD, Z or Space to interact, X to go back."></div>
     <div id="controls"></div>
     <div class="jump">
-      <button class="btn" type="button" data-go="lobby">Lobby</button>
-      <button class="btn" type="button" data-go="gallery">Gallery</button>
-      <button class="btn" type="button" id="who" aria-pressed="true">Viewing as curator</button>
-      <button class="btn" type="button" id="recrate" title="Put pieces with a future unveil date back in their crates">Repack crates</button>
-      <button class="btn" type="button" id="spooky" aria-pressed="false" title="How often something creepy happens after the lights go out">Spooky: rare</button>
-      <button class="btn" type="button" id="timeBtn" title="Pin the time of day in the preview, or follow the clock">Time: clock</button>
-      <button class="btn" type="button" id="rechore" title="Dust settles, plants get thirsty, the mug goes missing, visitors come back, lights come on">Reset chores</button>
+      <button class="btn applyb" type="button" id="applyBtn" title="Load your latest changes into the preview">Apply to preview<span class="dot" id="applyDot" hidden></span></button>
+      <label class="sr-only" for="goRoom">Go to room</label>
+      <select id="goRoom" class="btn" aria-label="Go to room"></select>
+      <details class="pvmore">
+        <summary class="btn">Preview options</summary>
+        <div class="pvmenu">
+          <button class="btn" type="button" id="who" aria-pressed="true">Viewing as curator</button>
+          <button class="btn" type="button" id="timeBtn" title="Pin the time of day in the preview, or follow the clock">Time: clock</button>
+          <button class="btn" type="button" id="spooky" aria-pressed="false" title="How often something creepy happens after the lights go out">Spooky: rare</button>
+          <button class="btn" type="button" id="recrate" title="Put pieces with a future unveil date back in their crates">Repack crates</button>
+          <button class="btn" type="button" id="rechore" title="Dust settles, plants get thirsty, the mug goes missing, visitors come back, lights come on">Reset chores</button>
+        </div>
+      </details>
     </div>
     <p class="pv-hint" id="ver" style="font-size:.75rem"></p>
     <p class="pv-hint" id="pvHint">Click the preview, then walk with the arrow keys or WASD. Z or Space to look and hang, X to go back or take a photo, Enter for the menu.</p>
@@ -282,7 +315,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-06 patrons";
+window.GOQ_WANT = "2026-10-07 achievements";
 (function load(retry) {
   const s = document.createElement("script");
   s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry ? "&r=" + Date.now() : "");
@@ -334,9 +367,12 @@ function changed(opts) {
   saveT = setTimeout(() => {
     try { localStorage.setItem(DRAFT_KEY, JSON.stringify(packOut())); status("Saved in this browser"); }
     catch (e) { status("Too large to save in the browser. Export the pack to keep your changes.", true); }
-    refreshPreview();
+    markPending();
   }, opts.now ? 0 : 400);
 }
+/* The preview only reloads when you press Apply (so it doesn't reshuffle with every keystroke or drag). */
+let pending = false;
+function markPending() { pending = true; const d = $("#applyDot"); if (d) d.hidden = false; }
 
 /* ---------- Live preview ---------- */
 const stage = $("#stage");
@@ -346,14 +382,26 @@ game.tapWalk = matchMedia("(pointer:coarse)").matches; // tap to walk in the pre
 window.goqCurator = { game, get draft() { return draft; } };
 async function refreshPreview() {
   await game.setPack(packOut());
+  pending = false; $("#applyDot").hidden = true; fillRoomPicker();
   if (tab === "art") renderSlotList();
 }
+function fillRoomPicker() {
+  const sel = $("#goRoom"), cur = sel.value; sel.innerHTML = "";
+  sel.appendChild(el("option", { value: "", text: "Go to room..." }));
+  Object.keys(GOQ.ROOMS).forEach(id => sel.appendChild(el("option", { value: id, text: GOQ.ROOMS[id].name.replace(/\s+/g, " ") })));
+  sel.value = "";
+}
+$("#applyBtn").addEventListener("click", async () => { await refreshPreview(); status("Preview updated"); stage.focus({ preventScroll: true }); });
+$("#goRoom").addEventListener("change", e => { const id = e.target.value; if (!id) return; game.teleport(id); e.target.value = ""; stage.focus({ preventScroll: true }); });
+// A second, hidden copy of the engine draws the Rooms editor's map, so editing never disturbs the live preview.
+const edWrap = el("div", { style: "position:absolute;left:-9999px;top:0;width:10px;height:10px;overflow:hidden", "aria-hidden": "true" }); document.body.appendChild(edWrap);
+const edGame = new GOQ.Game(edWrap, undefined, { curator: true, capture: "focus", saveKey: null });
 function fitPreview() {
   const w = window.innerWidth;
   game.fit(w > 1400 ? 480 : w > 980 ? 360 : Math.min(480, w - 60), 400);
 }
 window.addEventListener("resize", fitPreview); fitPreview();
-document.querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => { game.teleport(b.dataset.go); stage.focus({ preventScroll: true }); }));
+fillRoomPicker();
 $("#who").addEventListener("click", e => {
   const on = !game.curator; game.setCurator(on);
   e.currentTarget.textContent = on ? "Viewing as curator" : "Viewing as a visitor"; e.currentTarget.setAttribute("aria-pressed", on);
@@ -378,7 +426,7 @@ $("#spooky").addEventListener("click", e => {
 let tab = "art", current = "atlas";
 function setTab(t) {
   tab = t;
-  ["art", "pieces", "staff", "shop", "rooms", "words"].forEach(k => $("#tab-" + k).setAttribute("aria-selected", t === k));
+  ["art", "pieces", "staff", "shop", "rooms", "words", "ach"].forEach(k => $("#tab-" + k).setAttribute("aria-selected", t === k));
   $("#app").classList.toggle("no-side", t !== "art");
   render();
 }
@@ -388,9 +436,10 @@ $("#tab-staff").addEventListener("click", () => setTab("staff"));
 $("#tab-shop").addEventListener("click", () => setTab("shop"));
 $("#tab-rooms").addEventListener("click", () => setTab("rooms"));
 $("#tab-words").addEventListener("click", () => setTab("words"));
+$("#tab-ach").addEventListener("click", () => setTab("ach"));
 // Small screens: the preview sits below the editor; this jumps to it.
 $("#pvJump").addEventListener("click", () => document.querySelector(".preview").scrollIntoView({ behavior: "smooth", block: "start" }));
-function render() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "shop") renderShop(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else renderPieces(); }
+function render() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "shop") renderShop(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else renderPieces(); }
 
 /* ---------- Image helpers ---------- */
 function readFile(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error("That file couldn't be read.")); r.readAsDataURL(file); }); }
@@ -718,7 +767,7 @@ function restore(from, to) {
 let roomT = 0;
 function roomChanged(now) {
   clearTimeout(roomT);
-  roomT = setTimeout(async () => { await game.setPack(packOut()); R.img = game.renderRoomFull(R.id); drawEditor(); renderInspector(); changed(); }, now ? 0 : 90);
+  roomT = setTimeout(async () => { await edGame.setPack(packOut()); R.img = edGame.renderRoomFull(R.id, true); drawEditor(); renderInspector(); changed(); }, now ? 0 : 90);
   drawEditor();
 }
 
@@ -764,13 +813,17 @@ function renderRooms() {
   ].map(([t, l]) => el("button", { type: "button", class: "btn small" + (R.tool === t ? " on" : ""), "aria-pressed": R.tool === t, text: l, onclick: () => { R.tool = t; R.linking = null; renderRooms(); } })));
   wrap.appendChild(el("div", { class: "rhead" }, [
     pick,
-    el("button", { type: "button", class: "btn small quiet", text: "New room", onclick: newRoom }),
+
     tools,
     el("div", { class: "rtools" }, [
       el("button", { type: "button", class: "btn small quiet", text: "Undo", disabled: !R.undo.length, onclick: () => { restore(R.undo, R.redo); renderRooms(); } }),
       el("button", { type: "button", class: "btn small quiet", text: "Redo", disabled: !R.redo.length, onclick: () => { restore(R.redo, R.undo); renderRooms(); } }),
-      el("button", { type: "button", class: "btn small quiet", text: "Fit", onclick: () => { R.zoom = 0; drawEditor(); } }),
-      el("button", { type: "button", class: "btn small quiet", text: R.grid ? "Grid on" : "Grid off", onclick: e => { R.grid = !R.grid; e.currentTarget.textContent = R.grid ? "Grid on" : "Grid off"; drawEditor(); } }),
+
+      (() => { const m = el("details", { class: "rmore" }, [el("summary", { class: "btn small quiet", text: "More" }), el("div", { class: "rmenu" }, [
+        el("button", { type: "button", class: "btn small quiet", text: "New room", onclick: newRoom }),
+        el("button", { type: "button", class: "btn small quiet", text: "Fit the map", onclick: () => { R.zoom = 0; drawEditor(); m.open = false; } }),
+        el("button", { type: "button", class: "btn small quiet", text: R.grid ? "Hide the grid" : "Show the grid", onclick: () => { R.grid = !R.grid; renderRooms(); } }),
+      ])]); return m; })(),
       el("button", { type: "button", class: "btn small", text: "Play here", onclick: playHere }),
     ]),
   ]));
@@ -831,7 +884,7 @@ function brushSwatch(b) {
   return c;
 }
 async function openRoom(keepView) {
-  await game.setPack(packOut()); R.img = game.renderRoomFull(R.id);
+  await edGame.setPack(packOut()); R.img = edGame.renderRoomFull(R.id, true);
   if (!keepView || R.viewFor !== R.id) R.zoom = 0;
   R.viewFor = R.id;
   drawEditor(); renderInspector();
@@ -859,7 +912,7 @@ function drawEditor() {
     else if (it.type === "catSpot") tag(it.x, it.y, "C", "#f0a050");
     else if (it.type === "mugSpot") tag(it.x, it.y, "M", "#e8e4dc");
     else if (it.type === "glow") { x.fillStyle = "rgba(255,200,120,.35)"; x.beginPath(); x.arc(it.x * 16 + 8, it.y * 16 + 4, 14, 0, Math.PI * 2); x.fill(); tag(it.x, it.y, "L", "#ffd890"); }
-    else if (it.type === "visitor") outline(it, "#9fcf7a");
+    else if (it.type === "visitor") { const v = d.visitors[it.i], sh = edGame.sheet(v.sheet); if (sh) x.drawImage(sh, 0, ({ down: 0, up: 1, left: 2, right: 3 }[v.dir] || 0) * 16, 16, 16, it.x * 16, it.y * 16 - 4, 16, 16); outline(it, "#9fcf7a"); }
     else if (it.type === "spot") outline(it, "#c8a070", true);
     else if (it.type === "case") outline(it, "#a8d0e8", true);
   });
@@ -1214,7 +1267,8 @@ function playHere() {
   const d = roomDef(R.id), s = R.sel && !"case spot wallArt fixed locker".includes(R.sel.type) ? [R.sel.x, R.sel.y + (R.sel.h || 1) - 1 + 1] : null;
   let [x, y, dir] = d.spawn;
   if (s && getCh(d, s[0], s[1]) === ".") [x, y] = s;
-  game.closeAll(); game.warp(R.id, x, y, dir);
+  // Play here applies your changes first, then drops you in.
+  refreshPreview().then(() => { game.closeAll(); game.warp(R.id, x, y, dir); });
   setTimeout(() => stage.focus({ preventScroll: true }), 50);
   if (window.innerWidth <= 980) document.querySelector(".preview").scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -1224,45 +1278,94 @@ window.addEventListener("resize", () => { if (tab === "rooms") drawEditor(); });
 /* ---------- Words: every line the museum says, and what staff say when you chat ---------- */
 const toText = v => v.map(pg => pg.join("\n")).join("\n\n");
 const fromText = t => t.split(/\n\s*\n/).map(b => b.split("\n").map(x => x.trim()).filter(Boolean)).filter(b => b.length);
+let wordsQuery = "", wordsOpen = new Set();
 function renderWords() {
   const main = $("#main"); main.innerHTML = "";
   const st = draft.settings; st.text = st.text || {}; st.talk = st.talk || JSON.parse(JSON.stringify(GOQ.TALK_DEFAULTS));
   const wrap = el("section", { class: "pieces words" }); main.appendChild(wrap);
   wrap.appendChild(el("h2", { class: "title", text: "Words" }));
-  wrap.appendChild(el("p", { text: "Everything the museum says that isn't part of a piece, a room or a shop item. One page per line. Leave a blank line between versions: versions take turns (stairwell oddities are picked at random). Placeholders like {name}, {cat} or {drink} are filled in for you." }));
-  wrap.appendChild(el("p", { class: "note", text: "Signs, props, visitors and doors are edited in the Rooms tab. Pieces, the guestbook, the shop and Employee of the Month have their own tabs." }));
-  // Staff chat lines with conditions
-  wrap.appendChild(el("h3", { text: "Chatting with staff", class: "wtitle" }));
-  wrap.appendChild(el("p", { class: "note", text: "Each line can have up to two conditions. When you chat, the museum uses the most specific lines that fit right now (two conditions beat one, one beats \"any time\"), taking turns." }));
-  for (const role in GOQ.TALK_ROLES) {
-    const list = st.talk[role] = st.talk[role] || [];
-    const sec = el("section", { class: "prow", style: "display:block" });
-    sec.appendChild(el("div", { class: "rrow", style: "justify-content:space-between;align-items:center" }, [el("h4", { text: GOQ.TALK_ROLES[role], style: "margin:0" }),
-      el("button", { type: "button", class: "btn small quiet", text: "Reset to the samples", onclick: () => { if (!confirm("Replace these lines with the sample lines?")) return; st.talk[role] = JSON.parse(JSON.stringify(GOQ.TALK_DEFAULTS[role])); changed(); renderWords(); } })]));
-    list.forEach((e, i) => {
-      const cond = k => { const sel = el("select", { "aria-label": "Condition " + (k + 1) }, [k ? el("option", { value: "", text: "(no second condition)" }) : null, ...Object.entries(GOQ.TALK_WHEN).map(([v, l]) => el("option", { value: v, text: l }))]);
-        sel.value = e.when[k] || (k ? "" : "always"); sel.addEventListener("change", () => { const w = [c0.value, c1.value].filter(Boolean); e.when = w.length ? w : ["always"]; changed(); }); return sel; };
-      const c0 = cond(0), c1 = cond(1);
-      const t = el("textarea", { "aria-label": GOQ.TALK_ROLES[role] + " lines " + (i + 1) }); t.value = toText(e.v);
-      t.addEventListener("input", () => { e.v = fromText(t.value); changed(); });
-      sec.appendChild(el("div", { class: "wtalk" }, [el("div", { class: "rrow" }, [el("label", { class: "rfield" }, [el("span", { text: "When" }), c0]), el("label", { class: "rfield" }, [el("span", { text: "And" }), c1]),
-        el("button", { type: "button", class: "btn small quiet", text: "Remove", onclick: () => { list.splice(i, 1); changed(); renderWords(); } })]), t]));
-    });
-    sec.appendChild(el("button", { type: "button", class: "btn small", text: "Add lines", onclick: () => { list.push({ when: ["always"], v: [["..."]] }); changed(); renderWords(); } }));
-    wrap.appendChild(sec);
+  wrap.appendChild(el("p", { class: "note", text: "Everything the museum says that isn't part of a piece, room or shop item. One page per line; a blank line separates versions, which take turns. Placeholders like {name}, {cat} or {drink} are filled in for you." }));
+  const q = el("input", { type: "search", value: wordsQuery, placeholder: "Search the words, e.g. microwave", "aria-label": "Search the words", class: "wsearch" });
+  q.addEventListener("input", () => { wordsQuery = q.value; renderList(); });
+  wrap.appendChild(q);
+  const list = el("div", { class: "wlist" }); wrap.appendChild(list);
+  const match = (...ts) => !wordsQuery || ts.join(" ").toLowerCase().includes(wordsQuery.toLowerCase());
+  const group = (key, title, count, build) => {
+    const d = el("details", { class: "wgroup" }); d.open = wordsOpen.has(key) || !!wordsQuery;
+    d.addEventListener("toggle", () => { if (d.open) wordsOpen.add(key); else wordsOpen.delete(key); });
+    d.appendChild(el("summary", {}, [el("span", { text: title }), el("small", { text: count })]));
+    const body = el("div", { class: "wbody" }); d.appendChild(body); build(body); return d;
+  };
+  function renderList() {
+    list.innerHTML = "";
+    // Staff chat, one folding group per role
+    for (const role in GOQ.TALK_ROLES) {
+      const lines = st.talk[role] = st.talk[role] || [];
+      if (!match(GOQ.TALK_ROLES[role], ...lines.map(e => toText(e.v)))) continue;
+      list.appendChild(group("talk:" + role, "Chat: " + GOQ.TALK_ROLES[role], lines.length + " sets of lines", body => {
+        lines.forEach((e, i) => {
+          const cond = k => { const sel = el("select", { "aria-label": "Condition " + (k + 1) }, [k ? el("option", { value: "", text: "(no second condition)" }) : null, ...Object.entries(GOQ.TALK_WHEN).map(([v, l]) => el("option", { value: v, text: l }))]);
+            sel.value = e.when[k] || (k ? "" : "always"); sel.addEventListener("change", () => { const w = [c0.value, c1.value].filter(Boolean); e.when = w.length ? w : ["always"]; changed(); }); return sel; };
+          const c0 = cond(0), c1 = cond(1), t = el("textarea", { "aria-label": GOQ.TALK_ROLES[role] + " lines " + (i + 1) }); t.value = toText(e.v);
+          t.addEventListener("input", () => { e.v = fromText(t.value); changed(); });
+          body.appendChild(el("div", { class: "wtalk" }, [el("div", { class: "rrow" }, [el("label", { class: "rfield" }, [el("span", { text: "When" }), c0]), el("label", { class: "rfield" }, [el("span", { text: "And" }), c1]),
+            el("button", { type: "button", class: "btn small quiet", text: "Remove", onclick: () => { lines.splice(i, 1); changed(); renderList(); } })]), t]));
+        });
+        body.appendChild(el("div", { class: "row" }, [
+          el("button", { type: "button", class: "btn small", text: "Add lines", onclick: () => { lines.push({ when: ["always"], v: [["..."]] }); changed(); renderList(); } }),
+          el("button", { type: "button", class: "btn small quiet", text: "Reset to the samples", onclick: () => { if (!confirm("Replace these lines with the sample lines?")) return; st.talk[role] = JSON.parse(JSON.stringify(GOQ.TALK_DEFAULTS[role])); changed(); renderList(); } }),
+        ]));
+      }));
+    }
+    // Everything else, by area; each line is a one-row summary that opens into its editor
+    const groups = {};
+    for (const k in GOQ.TEXT) (groups[GOQ.TEXT[k].g] = groups[GOQ.TEXT[k].g] || []).push(k);
+    for (const g in groups) {
+      const keys = groups[g].filter(k => match(g, GOQ.TEXT[k].l, toText(st.text[k] || GOQ.TEXT[k].v)));
+      if (!keys.length) continue;
+      const edited = keys.filter(k => st.text[k]).length;
+      list.appendChild(group("g:" + g, g, keys.length + " lines" + (edited ? ", " + edited + " edited" : ""), body => keys.forEach(k => {
+        const def = GOQ.TEXT[k], cur = st.text[k] || def.v, row = el("details", { class: "wentry" });
+        row.appendChild(el("summary", {}, [el("b", { text: def.l }), el("span", { class: "wprev", text: cur[0] ? cur[0][0] : "" }), st.text[k] ? el("em", { text: "edited" }) : null]));
+        const t = el("textarea", { "aria-label": def.l }); t.value = toText(cur);
+        const reset = el("button", { type: "button", class: "btn small quiet", text: "Reset to the original", disabled: !st.text[k], onclick: () => { delete st.text[k]; changed(); renderList(); } });
+        t.addEventListener("input", () => { const v = fromText(t.value); if (v.length && toText(v) !== toText(def.v)) st.text[k] = v; else delete st.text[k]; reset.disabled = !st.text[k]; changed(); });
+        row.appendChild(el("div", { class: "wbody" }, [t, reset]));
+        body.appendChild(row);
+      })));
+    }
+    if (!list.children.length) list.appendChild(el("p", { class: "note", text: "Nothing matches \"" + wordsQuery + "\"." }));
   }
-  // Everything else, grouped
-  const groups = {};
-  for (const k in GOQ.TEXT) (groups[GOQ.TEXT[k].g] = groups[GOQ.TEXT[k].g] || []).push(k);
-  for (const g in groups) {
-    wrap.appendChild(el("h3", { text: g, class: "wtitle" }));
-    groups[g].forEach(k => {
-      const def = GOQ.TEXT[k], t = el("textarea", { "aria-label": def.l }); t.value = toText(st.text[k] || def.v);
-      const reset = el("button", { type: "button", class: "btn small quiet", text: "Reset", disabled: !st.text[k], onclick: () => { delete st.text[k]; changed(); renderWords(); } });
-      t.addEventListener("input", () => { const v = fromText(t.value); if (v.length && toText(v) !== toText(def.v)) st.text[k] = v; else delete st.text[k]; reset.disabled = !st.text[k]; changed(); });
-      wrap.appendChild(el("div", { class: "wrow" }, [el("div", { class: "rrow", style: "justify-content:space-between;align-items:center" }, [el("b", { text: def.l }), reset]), t]));
-    });
-  }
+  renderList();
+}
+
+/* ---------- Achievements ---------- */
+function renderAchievements() {
+  const main = $("#main"); main.innerHTML = "";
+  const st = draft.settings, list = st.achievements = st.achievements || JSON.parse(JSON.stringify(GOQ.SAMPLE_ACH));
+  const wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
+  wrap.appendChild(el("h2", { class: "title", text: "Achievements" }));
+  wrap.appendChild(el("p", { class: "note", text: "Each achievement unlocks when one of the museum's counts reaches its target. Players see them under Start, then Achievements. Secret ones show as ??? until unlocked." }));
+  list.forEach((a, i) => {
+    const text = (k, ph) => { const inp = el("input", { type: "text", value: a[k] || "", placeholder: ph }); inp.addEventListener("input", () => { a[k] = inp.value; changed(); }); return inp; };
+    const stat = el("select", {}, Object.entries(GOQ.ACH_STATS).map(([v, l]) => el("option", { value: v, text: l }))); stat.value = a.stat;
+    stat.addEventListener("change", () => { a.stat = stat.value; changed(); });
+    const target = el("input", { type: "number", min: 1, max: 9999, value: a.target }); target.addEventListener("input", () => { a.target = Math.max(1, Math.round(+target.value || 1)); changed(); });
+    const secret = el("input", { type: "checkbox", checked: !!a.secret }); secret.addEventListener("change", () => { a.secret = secret.checked; changed(); });
+    wrap.appendChild(el("article", { class: "prow", style: "display:block" }, [el("div", { class: "fields" }, [
+      el("label", {}, [document.createTextNode("Name"), text("name", "Elbow Grease")]),
+      el("label", {}, [document.createTextNode("Description"), text("desc", "Dust a frame for the first time.")]),
+      el("label", {}, [document.createTextNode("Counts"), stat]),
+      el("label", {}, [document.createTextNode("Target"), target]),
+      el("div", { class: "acts" }, [el("label", { class: "check", style: "margin:0 10px 0 0" }, [secret, document.createTextNode("Secret")]),
+        el("button", { type: "button", class: "btn small quiet", text: "Move up", disabled: i === 0, onclick: () => { [list[i - 1], list[i]] = [list[i], list[i - 1]]; changed(); renderAchievements(); } }),
+        el("button", { type: "button", class: "btn small quiet", text: "Remove", onclick: () => { if (!confirm("Remove \"" + (a.name || "this achievement") + "\"?")) return; list.splice(i, 1); changed(); renderAchievements(); } })]),
+    ])]));
+  });
+  wrap.appendChild(el("div", { class: "row" }, [
+    el("button", { type: "button", class: "btn primary", text: "Add an achievement", onclick: () => { list.push({ id: "ach-" + Math.random().toString(36).slice(2, 8), name: "New achievement", desc: "", stat: "dusted", target: 1 }); changed(); renderAchievements(); } }),
+    el("button", { type: "button", class: "btn quiet", text: "Reset to the samples", onclick: () => { if (!confirm("Replace all achievements with the samples?")) return; st.achievements = JSON.parse(JSON.stringify(GOQ.SAMPLE_ACH)); changed(); renderAchievements(); } }),
+  ]));
 }
 
 /* ---------- Shop ---------- */
