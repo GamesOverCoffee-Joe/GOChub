@@ -22,6 +22,13 @@ const navigationLinks = [
         classes: 'text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group'
     },
     {
+        name: 'Coming soon',
+        href: 'museum.html',
+        disabled: true,
+        titleSuffix: ' - Museum',
+        classes: 'text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group'
+    },
+    {
         name: 'Insights',
         href: 'insights_1.1.html',
         titleSuffix: ' - Insights',
@@ -54,8 +61,12 @@ const generateNav = () => {
     const fragment = document.createDocumentFragment();
 
     navigationLinks.forEach(link => {
-        const a = document.createElement('a');
-        a.href = link.href;
+        const a = document.createElement(link.disabled ? 'span' : 'a');
+        if (!link.disabled) {
+            a.href = link.href;
+        } else {
+            a.setAttribute('aria-disabled', 'true');
+        }
         a.className = link.classes;
         if (link.target) {
             a.target = link.target;

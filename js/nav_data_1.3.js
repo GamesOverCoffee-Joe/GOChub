@@ -22,11 +22,11 @@ const navigationLinks = [
         classes: 'text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group'
     },
     {
-        name: 'Museum',
+        name: 'Coming soon',
         href: 'museum.html',
         disabled: true,
         titleSuffix: ' - Museum',
-        classes: 'text-[var(--color-goc-main-text)] opacity-60 cursor-default relative'
+        classes: 'text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group cursor-default'
     },
     {
         name: 'Insights',
@@ -83,11 +83,9 @@ const generateNav = () => {
         }
         
         // Add the animated bottom bar span
-        if (!link.disabled) {
-            const span = document.createElement('span');
-            span.className = 'absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100';
-            a.appendChild(span);
-        }
+        const span = document.createElement('span');
+        span.className = 'absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100';
+        a.appendChild(span);
 
         fragment.appendChild(a);
     });
