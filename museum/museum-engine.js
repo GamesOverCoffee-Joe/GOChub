@@ -852,6 +852,7 @@ function normalizePack(p) {
   const staff = {
     catName: str(sin.catName, 30) || "Pixel",
     fingerprints: typeof sin.fingerprints === "number" && isFinite(sin.fingerprints) ? Math.max(0, Math.min(1, sin.fingerprints)) : 0.15,
+    patronSpeed: typeof sin.patronSpeed === "number" && isFinite(sin.patronSpeed) ? Math.max(0.2, Math.min(1, sin.patronSpeed)) : 0.45,
     eotm: { name: str(eo.name, 40), note: str(eo.note, 200) },
     // Patreon members: they visit the museum as named visitors, and are all listed on the Patron Board.
     members: (Array.isArray(sin.members) ? sin.members : []).slice(0, 1000).map(m => ({ name: str(m && m.name, 32), badge: str(m && m.badge, 12).replace(/\D/g, "") })).filter(m => m.name),
@@ -956,7 +957,7 @@ const ROOMS = {
     visitors: [{ sheet: "visitor_a", x: 4, y: 6, lines: [["I came in for the gift shop.", "Is it through there?"]] },
       { sheet: "usher", x: 3, y: 3, still: true, usher: true, lines: [["Welcome!"]] }],
   },
-  gallery: {"name": "Gallery One", "art": {"top": "gallery_wall_top", "upper": "gallery_wall_upper", "lower": "gallery_wall_lower", "floor": "gallery_floor"}, "map": ["###########################", "#^^^^^^^^^^^^^^^^^^^^^^^^^#", "#vvvvvvvvvvvvvvvvvvvvvvvvv#", "#.........................#", "#.........................#", "#.........................#", "#.........................#", "#.........................#", "H.........................H", "#.........................#", "#.........................#", "#.........................#", "#.........................#", "#############B#############"], "spawn": [13, 12, "up"], "spots": [2, 5, 8, 11, 14, 17, 20, 23], "cases": [[3, 6], [5, 6], [7, 6], [9, 6], [11, 6], [15, 6], [17, 6], [19, 6], [21, 6], [23, 6], [9, 10], [11, 10], [13, 10], [15, 10], [17, 10]], "stairs": [{"x": 25, "y": 3, "kind": "up", "to": ["stairwell2", 1, 8, "right"]}], "lightSwitch": [1, 2], "exitTo": [13, 12], "crowd": true, "floorSign": "1F", "elevatorStop": {"label": "1F  Gallery One", "order": 1, "x": 1, "y": 8, "dir": "right"}, "props": [{"key": "bench", "x": 3, "y": 10, "sit": "up", "say": ["A bench facing the first group of cases."]}, {"key": "bench", "x": 22, "y": 10, "sit": "up", "say": ["A bench facing the second group of cases."]}, {"key": "plant", "plant": "g1-plant-a", "name": "fiddle-leaf fig", "x": 1, "y": 12}, {"key": "plant", "plant": "g1-plant-b", "name": "snake plant", "x": 25, "y": 12}, {"key": "sign_stand", "x": 1, "y": 9, "say": ["ELEVATOR", "Down to Storage, up to Galleries Two and Three."]}, {"key": "sign_stand", "x": 25, "y": 9, "say": ["STAIRWELL A", "Through this door: down to Storage, up to Gallery Two."]}, {"key": "sign_stand", "x": 24, "y": 4, "say": ["STAIRWELL B", "These stairs go up to the second stairwell. It keeps going to Gallery Three."]}, {"key": "sign_stand", "x": 12, "y": 12, "say": ["Glass cases hold Games Over Qualia episodes. Read the front, then walk around to the back.", "Paintings on the walls are community finds, with notes from guest writers."]}], "events": [{"x": 13, "y": 13, "warp": ["lobby", 7, 3, "down"]}, {"x": 0, "y": 8, "elevatorDoor": true, "bump": true}, {"x": 26, "y": 8, "warp": ["stairwell", 4, 8, "up"]}], "light": {"dim": 0.3, "spots": 0.85}, "catSpots": [[1, 11], [25, 11], [13, 8]], "mugSpots": [[12, 8], [2, 4], [20, 12]], "visitors": [{"sheet": "visitor_b", "x": 6, "y": 8, "lines": [["Walk all the way around the cases. The back is a whole different story."], ["I keep coming back to this floor."]]}, {"sheet": "visitor_c", "x": 19, "y": 8, "day": true, "lines": [["The wood frames are the community picks.", "I want mine up there someday."]]}, {"sheet": "guard", "x": 2, "y": 8, "night": true, "staff": true, "slow": true, "role": "guard", "patrol": [2, 24], "lines": [["Evening. Don't mind me, just doing my rounds."]]}]},
+  gallery: {"name": "Gallery One", "art": {"top": "gallery_wall_top", "upper": "gallery_wall_upper", "lower": "gallery_wall_lower", "floor": "gallery_floor"}, "map": ["###########################", "#^^^^^^^^^^^^^^^^^^^^^^^^^#", "#vvvvvvvvvvvvvvvvvvvvvvvvv#", "#.........................#", "#.........................#", "#.........................#", "#.........................#", "#.........................#", "H.........................H", "#.........................#", "#.........................#", "#.........................#", "#.........................#", "#############B#############"], "spawn": [13, 12, "up"], "spots": [2, 5, 8, 11, 14, 17, 20, 23], "cases": [[3, 6], [5, 6], [7, 6], [9, 6], [11, 6], [15, 6], [17, 6], [19, 6], [21, 6], [23, 6], [9, 10], [11, 10], [13, 10], [15, 10], [17, 10]], "stairs": [], "lightSwitch": [1, 2], "exitTo": [13, 12], "crowd": true, "floorSign": "1F", "elevatorStop": {"label": "1F  Gallery One", "order": 1, "x": 1, "y": 8, "dir": "right"}, "props": [{"key": "bench", "x": 3, "y": 10, "sit": "up", "say": ["A bench facing the first group of cases."]}, {"key": "bench", "x": 22, "y": 10, "sit": "up", "say": ["A bench facing the second group of cases."]}, {"key": "plant", "plant": "g1-plant-a", "name": "fiddle-leaf fig", "x": 1, "y": 12}, {"key": "plant", "plant": "g1-plant-b", "name": "snake plant", "x": 25, "y": 12}, {"key": "sign_stand", "x": 1, "y": 9, "say": ["ELEVATOR", "Down to Storage, up to Galleries Two and Three."]}, {"key": "sign_stand", "x": 25, "y": 9, "say": ["STAIRWELL 1F", "Through this door: stairs up to Galleries Two and Three, and down to Storage."]}, {"key": "sign_stand", "x": 12, "y": 12, "say": ["Glass cases hold Games Over Qualia episodes. Read the front, then walk around to the back.", "Paintings on the walls are community finds, with notes from guest writers."]}], "events": [{"x": 13, "y": 13, "warp": ["lobby", 7, 3, "down"]}, {"x": 0, "y": 8, "elevatorDoor": true, "bump": true}, {"x": 26, "y": 8, "warp": ["stairwell", 4, 8, "up"]}], "light": {"dim": 0.3, "spots": 0.85}, "catSpots": [[1, 11], [25, 11], [13, 8]], "mugSpots": [[12, 8], [2, 4], [20, 12]], "visitors": [{"sheet": "visitor_b", "x": 6, "y": 8, "lines": [["Walk all the way around the cases. The back is a whole different story."], ["I keep coming back to this floor."]]}, {"sheet": "visitor_c", "x": 19, "y": 8, "day": true, "lines": [["The wood frames are the community picks.", "I want mine up there someday."]]}, {"sheet": "guard", "x": 2, "y": 8, "night": true, "staff": true, "slow": true, "role": "guard", "patrol": [2, 24], "lines": [["Evening. Don't mind me, just doing my rounds."]]}]},
   shop: {
     name: "Gift Shop and Café", art: { top: "shop_wall_top", upper: "shop_wall_upper", lower: "shop_wall_lower", floor: "shop_floor" },
     map: [
@@ -980,7 +981,7 @@ const ROOMS = {
       { key: "shop_posters", x: 6, say: ["Posters for games that don't exist yet. You'd play all of them."] },
       { key: "shop_shelves", x: 9, say: ["More knickknacks. Somebody organized these by vibe."] },
       { key: "shop_shelves", x: 11, say: ["A shelf of snow globes. Each one has a tiny museum inside."] },
-      { key: "cafe_menu", x: 15, cafe: true }, { key: "mug_shelf", x: 17, cafe: true }, { key: "shop_posters", x: 19, say: ["A poster that just says \"WAIT, WHY?\" in big friendly letters."] },
+      { key: "cafe_menu", x: 15, say: ["The café menu. Coffee, tea, cocoa, and something called a \"Qualia Fog.\""] }, { key: "mug_shelf", x: 17, cafe: true }, { key: "shop_posters", x: 19, say: ["A poster that just says \"WAIT, WHY?\" in big friendly letters."] },
     ],
     decals: [{ key: "rug", x: 4, y: 6 }, { key: "rug", x: 15, y: 6 }],
     featuredAt: [8, 9],
@@ -1017,10 +1018,12 @@ const ROOMS = {
       { sheet: "shop_staff", x: 17, y: 3, still: true, role: "barista", lines: [["Coffee, tea, or cocoa? Step up to the counter."]] },
     ],
   },
-  gallery2: {"name": "Gallery Two", "art": {"top": "g2_wall_top", "upper": "g2_wall_upper", "lower": "g2_wall_lower", "floor": "g2_floor"}, "map": ["#########################", "#^^^^^^^^^^^^^^^^^^^^^^^#", "#vvvvvvvvvvvvvvvvvvvvvvv#", "#.......................#", "#.......................#", "#.......................#", "H.......................H", "#.......................#", "#.......................#", "#.......................#", "#.......................#", "#.......................#", "#.......................#", "#.......................#", "#.......................#", "#.......................#", "#########################"], "spawn": [1, 6, "right"], "spots": [1, 4, 7, 10, 13, 16, 19, 22], "cases": [[7, 5], [9, 5], [11, 5], [13, 5], [15, 5], [17, 5], [8, 13], [10, 13], [12, 13], [14, 13], [16, 13], [4, 8], [4, 11], [20, 8], [20, 11]], "stairs": [{"x": 23, "y": 15, "kind": "down", "to": ["stairwell", 1, 3, "right"]}], "lightSwitch": [12, 2], "exitTo": [1, 6], "crowd": true, "elevatorStop": {"label": "2F  Gallery Two", "order": 2, "x": 1, "y": 6, "dir": "right"}, "decals": [{"key": "rug", "x": 10, "y": 8}], "props": [{"key": "bench", "x": 10, "y": 10, "sit": "up", "say": ["A bench in the middle of everything."]}, {"key": "bench", "x": 13, "y": 8, "sit": "down", "say": ["A bench facing the other way. A different view."]}, {"key": "plant", "plant": "g2-plant-a", "name": "big monstera", "x": 12, "y": 9}, {"key": "plant", "plant": "g2-plant-b", "name": "trailing pothos", "x": 1, "y": 15}, {"key": "sign_stand", "x": 1, "y": 7, "say": ["ELEVATOR", "Down to Gallery One and Storage, up to Gallery Three."]}, {"key": "sign_stand", "x": 23, "y": 7, "say": ["STAIRWELL B", "Through this door: down to Gallery One, up to Gallery Three."]}, {"key": "sign_stand", "x": 22, "y": 14, "say": ["STAIRWELL A", "These stairs go down to the first stairwell: Gallery One and Storage."]}], "events": [{"x": 0, "y": 6, "elevatorDoor": true, "bump": true}, {"x": 24, "y": 6, "warp": ["stairwell2", 4, 8, "up"]}], "light": {"dim": 0.25, "spots": 0.85}, "catSpots": [[2, 15], [12, 11]], "mugSpots": [[6, 10], [18, 10], [12, 7]], "visitors": [{"sheet": "visitor_a", "x": 7, "y": 9, "lines": [["I like sitting in the middle and just looking around."]]}, {"sheet": "visitor_b", "x": 17, "y": 10, "day": true, "lines": [["Walk all the way around the cases. The back is a whole different story."], ["I keep coming back to this floor."]]}]},
-  gallery3: {"name": "Gallery Three", "art": {"top": "g3_wall_top", "upper": "g3_wall_upper", "lower": "g3_wall_lower", "floor": "g3_floor"}, "map": ["#############################", "#^^^^^^^^^^^^^^^^^^^^^^^^^^^#", "#vvvvvvvvvvvvvvvvvvvvvvvvvvv#", "#...........................#", "#...........................#", "#...........................#", "#...........................#", "#...........................#", "#...........................#", "#...........................#", "#...........................#", "H...........................#", "#...........................#", "#############################"], "spawn": [1, 11, "right"], "spots": [2, 5, 8, 11, 14, 17, 20, 23], "cases": [[2, 5], [4, 5], [3, 9], [7, 5], [9, 5], [8, 9], [12, 5], [14, 5], [13, 9], [17, 5], [19, 5], [18, 9], [22, 5], [24, 5], [23, 9]], "stairs": [{"x": 27, "y": 12, "kind": "down", "to": ["stairwell2", 7, 3, "left"]}], "lightSwitch": [26, 2], "exitTo": [1, 11], "crowd": true, "elevatorStop": {"label": "3F  Gallery Three", "order": 3, "x": 1, "y": 11, "dir": "right"}, "props": [{"key": "planter", "x": 5, "y": 4}, {"key": "planter", "x": 5, "y": 5}, {"key": "planter", "x": 5, "y": 6}, {"key": "planter", "x": 5, "y": 7}, {"key": "planter", "x": 5, "y": 8}, {"key": "planter", "x": 5, "y": 9}, {"key": "planter", "x": 10, "y": 4}, {"key": "planter", "x": 10, "y": 5}, {"key": "planter", "x": 10, "y": 6}, {"key": "planter", "x": 10, "y": 7}, {"key": "planter", "x": 10, "y": 8}, {"key": "planter", "x": 10, "y": 9}, {"key": "planter", "x": 15, "y": 4}, {"key": "planter", "x": 15, "y": 5}, {"key": "planter", "x": 15, "y": 6}, {"key": "planter", "x": 15, "y": 7}, {"key": "planter", "x": 15, "y": 8}, {"key": "planter", "x": 15, "y": 9}, {"key": "planter", "x": 20, "y": 4}, {"key": "planter", "x": 20, "y": 5}, {"key": "planter", "x": 20, "y": 6}, {"key": "planter", "x": 20, "y": 7}, {"key": "planter", "x": 20, "y": 8}, {"key": "planter", "x": 20, "y": 9}, {"key": "planter", "x": 25, "y": 4}, {"key": "planter", "x": 25, "y": 5}, {"key": "planter", "x": 25, "y": 6}, {"key": "planter", "x": 25, "y": 7}, {"key": "planter", "x": 25, "y": 8}, {"key": "planter", "x": 25, "y": 9}, {"key": "bench", "x": 8, "y": 12, "sit": "up", "say": ["A bench in the quiet loft."]}, {"key": "bench", "x": 18, "y": 12, "sit": "up", "say": ["Someone left a folded note here. It just says: \"stay a while.\""]}, {"key": "sign_stand", "x": 1, "y": 12, "say": ["ELEVATOR", "Back down to the other floors."]}, {"key": "sign_stand", "x": 26, "y": 11, "say": ["STAIRWELL B", "These stairs go down to the second stairwell."]}], "events": [{"x": 0, "y": 11, "elevatorDoor": true, "bump": true}], "light": {"dim": 0.38, "spots": 0.9}, "catSpots": [[27, 4], [13, 12]], "mugSpots": [[3, 11], [23, 11]], "visitors": [{"sheet": "visitor_c", "x": 13, "y": 11, "lines": [["It's so quiet up here.", "I can hear myself think about the games."]]}]},
-  stairwell: {"name": "Stairwell A", "art": {"top": "staff_wall_top", "upper": "staff_wall_upper", "lower": "staff_wall_lower", "floor": "staff_floor"}, "map": ["#########", "#^^^^^^^#", "#vvvvvvv#", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "####B####"], "spawn": [4, 8, "up"], "floorSign": "1F", "stairwell": true, "glows": [[4, 3]], "stairs": [{"x": 1, "y": 3, "kind": "up", "to": ["gallery2", 23, 15, "up"]}, {"x": 7, "y": 8, "kind": "down", "to": ["storage", 7, 3, "down"]}], "props": [{"key": "railing", "x": 1, "y": 4}, {"key": "railing", "x": 2, "y": 4}, {"key": "railing", "x": 3, "y": 4}, {"key": "railing", "x": 4, "y": 4}, {"key": "railing", "x": 5, "y": 4}, {"key": "railing", "x": 3, "y": 6}, {"key": "railing", "x": 4, "y": 6}, {"key": "railing", "x": 5, "y": 6}, {"key": "railing", "x": 6, "y": 6}, {"key": "railing", "x": 7, "y": 6}], "events": [{"x": 4, "y": 9, "warp": ["gallery", 25, 8, "left"]}], "light": {"dim": 0.35, "spots": 0}, "visitors": []},
-  stairwell2: {"name": "Stairwell B", "art": {"top": "staff_wall_top", "upper": "staff_wall_upper", "lower": "staff_wall_lower", "floor": "staff_floor"}, "map": ["#########", "#^^^^^^^#", "#vvvvvvv#", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "####B####"], "spawn": [4, 8, "up"], "floorSign": "2F", "stairwell": true, "glows": [[4, 3]], "stairs": [{"x": 7, "y": 3, "kind": "up", "to": ["gallery3", 27, 12, "up"]}, {"x": 1, "y": 8, "kind": "down", "to": ["gallery", 25, 3, "down"]}], "props": [{"key": "railing", "x": 3, "y": 4}, {"key": "railing", "x": 4, "y": 4}, {"key": "railing", "x": 5, "y": 4}, {"key": "railing", "x": 6, "y": 4}, {"key": "railing", "x": 7, "y": 4}, {"key": "railing", "x": 1, "y": 6}, {"key": "railing", "x": 2, "y": 6}, {"key": "railing", "x": 3, "y": 6}, {"key": "railing", "x": 4, "y": 6}, {"key": "railing", "x": 5, "y": 6}], "events": [{"x": 4, "y": 9, "warp": ["gallery2", 23, 6, "left"]}], "light": {"dim": 0.35, "spots": 0}, "visitors": []},
+  gallery2: {"name": "Gallery Two", "art": {"top": "g2_wall_top", "upper": "g2_wall_upper", "lower": "g2_wall_lower", "floor": "g2_floor"}, "map": ["#########################", "#^^^^^^^^^^^^^^^^^^^^^^^#", "#vvvvvvvvvvvvvvvvvvvvvvv#", "#.......................#", "#.......................#", "#.......................#", "H.......................H", "#.......................#", "#.......................#", "#.......................#", "#.......................#", "#.......................#", "#.......................#", "#.......................#", "#.......................#", "#.......................#", "#########################"], "spawn": [1, 6, "right"], "spots": [1, 4, 7, 10, 13, 16, 19, 22], "cases": [[7, 5], [9, 5], [11, 5], [13, 5], [15, 5], [17, 5], [8, 13], [10, 13], [12, 13], [14, 13], [16, 13], [4, 8], [4, 11], [20, 8], [20, 11]], "stairs": [], "lightSwitch": [12, 2], "exitTo": [1, 6], "crowd": true, "elevatorStop": {"label": "2F  Gallery Two", "order": 2, "x": 1, "y": 6, "dir": "right"}, "decals": [{"key": "rug", "x": 10, "y": 8}], "props": [{"key": "bench", "x": 10, "y": 10, "sit": "up", "say": ["A bench in the middle of everything."]}, {"key": "bench", "x": 13, "y": 8, "sit": "down", "say": ["A bench facing the other way. A different view."]}, {"key": "plant", "plant": "g2-plant-a", "name": "big monstera", "x": 12, "y": 9}, {"key": "plant", "plant": "g2-plant-b", "name": "trailing pothos", "x": 1, "y": 15}, {"key": "sign_stand", "x": 1, "y": 7, "say": ["ELEVATOR", "Down to Gallery One and Storage, up to Gallery Three."]}, {"key": "sign_stand", "x": 23, "y": 7, "say": ["STAIRWELL 2F", "Through this door: stairs up to Gallery Three, and down to Gallery One and Storage."]}], "events": [{"x": 0, "y": 6, "elevatorDoor": true, "bump": true}, {"x": 24, "y": 6, "warp": ["stairwell2", 4, 8, "up"]}], "light": {"dim": 0.25, "spots": 0.85}, "catSpots": [[2, 15], [12, 11]], "mugSpots": [[6, 10], [18, 10], [12, 7]], "visitors": [{"sheet": "visitor_a", "x": 7, "y": 9, "lines": [["I like sitting in the middle and just looking around."]]}, {"sheet": "visitor_b", "x": 17, "y": 10, "day": true, "lines": [["Walk all the way around the cases. The back is a whole different story."], ["I keep coming back to this floor."]]}]},
+  gallery3: {"name": "Gallery Three", "art": {"top": "g3_wall_top", "upper": "g3_wall_upper", "lower": "g3_wall_lower", "floor": "g3_floor"}, "map": ["#############################", "#^^^^^^^^^^^^^^^^^^^^^^^^^^^#", "#vvvvvvvvvvvvvvvvvvvvvvvvvvv#", "#...........................#", "#...........................#", "#...........................#", "#...........................#", "#...........................#", "#...........................#", "#...........................#", "#...........................#", "H...........................H", "#...........................#", "#############################"], "spawn": [1, 11, "right"], "spots": [2, 5, 8, 11, 14, 17, 20, 23], "cases": [[2, 5], [4, 5], [3, 9], [7, 5], [9, 5], [8, 9], [12, 5], [14, 5], [13, 9], [17, 5], [19, 5], [18, 9], [22, 5], [24, 5], [23, 9]], "stairs": [], "lightSwitch": [26, 2], "exitTo": [1, 11], "crowd": true, "elevatorStop": {"label": "3F  Gallery Three", "order": 3, "x": 1, "y": 11, "dir": "right"}, "props": [{"key": "planter", "x": 5, "y": 4}, {"key": "planter", "x": 5, "y": 5}, {"key": "planter", "x": 5, "y": 6}, {"key": "planter", "x": 5, "y": 7}, {"key": "planter", "x": 5, "y": 8}, {"key": "planter", "x": 5, "y": 9}, {"key": "planter", "x": 10, "y": 4}, {"key": "planter", "x": 10, "y": 5}, {"key": "planter", "x": 10, "y": 6}, {"key": "planter", "x": 10, "y": 7}, {"key": "planter", "x": 10, "y": 8}, {"key": "planter", "x": 10, "y": 9}, {"key": "planter", "x": 15, "y": 4}, {"key": "planter", "x": 15, "y": 5}, {"key": "planter", "x": 15, "y": 6}, {"key": "planter", "x": 15, "y": 7}, {"key": "planter", "x": 15, "y": 8}, {"key": "planter", "x": 15, "y": 9}, {"key": "planter", "x": 20, "y": 4}, {"key": "planter", "x": 20, "y": 5}, {"key": "planter", "x": 20, "y": 6}, {"key": "planter", "x": 20, "y": 7}, {"key": "planter", "x": 20, "y": 8}, {"key": "planter", "x": 20, "y": 9}, {"key": "planter", "x": 25, "y": 4}, {"key": "planter", "x": 25, "y": 5}, {"key": "planter", "x": 25, "y": 6}, {"key": "planter", "x": 25, "y": 7}, {"key": "planter", "x": 25, "y": 8}, {"key": "planter", "x": 25, "y": 9}, {"key": "bench", "x": 8, "y": 12, "sit": "up", "say": ["A bench in the quiet loft."]}, {"key": "bench", "x": 18, "y": 12, "sit": "up", "say": ["Someone left a folded note here. It just says: \"stay a while.\""]}, {"key": "sign_stand", "x": 1, "y": 12, "say": ["ELEVATOR", "Back down to the other floors."]}, {"key": "sign_stand", "x": 26, "y": 11, "say": ["STAIRWELL 3F", "Through this door: stairs down to the other floors."]}], "events": [{"x": 0, "y": 11, "elevatorDoor": true, "bump": true}, {"x": 28, "y": 11, "warp": ["stairwell3", 4, 8, "up"]}], "light": {"dim": 0.38, "spots": 0.9}, "catSpots": [[27, 4], [13, 12]], "mugSpots": [[3, 11], [23, 11]], "visitors": [{"sheet": "visitor_c", "x": 13, "y": 11, "lines": [["It's so quiet up here.", "I can hear myself think about the games."]]}]},
+  stairwell: {"name": "Stairwell 1F", "art": {"top": "staff_wall_top", "upper": "staff_wall_upper", "lower": "staff_wall_lower", "floor": "staff_floor"}, "map": ["#########", "#^^^^^^^#", "#vvvvvvv#", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "####B####"], "spawn": [4, 8, "up"], "floorSign": "1F", "stairwell": true, "glows": [[4, 3]], "stairs": [{"x": 1, "y": 3, "kind": "up", "to": ["stairwell2", 1, 8, "right"]}, {"x": 7, "y": 8, "kind": "down", "to": ["stairwellB1", 7, 3, "left"]}], "props": [{"key": "railing", "x": 1, "y": 4}, {"key": "railing", "x": 2, "y": 4}, {"key": "railing", "x": 3, "y": 4}, {"key": "railing", "x": 4, "y": 4}, {"key": "railing", "x": 5, "y": 4}, {"key": "railing", "x": 3, "y": 6}, {"key": "railing", "x": 4, "y": 6}, {"key": "railing", "x": 5, "y": 6}, {"key": "railing", "x": 6, "y": 6}, {"key": "railing", "x": 7, "y": 6}], "events": [{"x": 4, "y": 9, "warp": ["gallery", 25, 8, "left"]}], "light": {"dim": 0.35, "spots": 0}, "visitors": []},
+  stairwell2: {"name": "Stairwell 2F", "art": {"top": "staff_wall_top", "upper": "staff_wall_upper", "lower": "staff_wall_lower", "floor": "staff_floor"}, "map": ["#########", "#^^^^^^^#", "#vvvvvvv#", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "####B####"], "spawn": [4, 8, "up"], "floorSign": "2F", "stairwell": true, "glows": [[4, 3]], "stairs": [{"x": 7, "y": 3, "kind": "up", "to": ["stairwell3", 7, 8, "left"]}, {"x": 1, "y": 8, "kind": "down", "to": ["stairwell", 1, 3, "right"]}], "props": [{"key": "railing", "x": 3, "y": 4}, {"key": "railing", "x": 4, "y": 4}, {"key": "railing", "x": 5, "y": 4}, {"key": "railing", "x": 6, "y": 4}, {"key": "railing", "x": 7, "y": 4}, {"key": "railing", "x": 1, "y": 6}, {"key": "railing", "x": 2, "y": 6}, {"key": "railing", "x": 3, "y": 6}, {"key": "railing", "x": 4, "y": 6}, {"key": "railing", "x": 5, "y": 6}], "events": [{"x": 4, "y": 9, "warp": ["gallery2", 23, 6, "left"]}], "light": {"dim": 0.35, "spots": 0}, "visitors": []},
+  stairwell3: {"name": "Stairwell 3F", "art": {"top": "staff_wall_top", "upper": "staff_wall_upper", "lower": "staff_wall_lower", "floor": "staff_floor"}, "map": ["#########", "#^^^^^^^#", "#vvvvvvv#", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "####B####"], "spawn": [4, 8, "up"], "floorSign": "3F", "stairwell": true, "glows": [[4, 3]], "stairs": [{"x": 1, "y": 3, "kind": "up", "roof": true}, {"x": 7, "y": 8, "kind": "down", "to": ["stairwell2", 7, 3, "left"]}], "props": [{"key": "railing", "x": 1, "y": 4}, {"key": "railing", "x": 2, "y": 4}, {"key": "railing", "x": 3, "y": 4}, {"key": "railing", "x": 4, "y": 4}, {"key": "railing", "x": 5, "y": 4}, {"key": "railing", "x": 3, "y": 6}, {"key": "railing", "x": 4, "y": 6}, {"key": "railing", "x": 5, "y": 6}, {"key": "railing", "x": 6, "y": 6}, {"key": "railing", "x": 7, "y": 6}], "events": [{"x": 4, "y": 9, "warp": ["gallery3", 27, 11, "left"]}], "light": {"dim": 0.35, "spots": 0}, "visitors": []},
+  stairwellB1: {"name": "Stairwell B1", "art": {"top": "staff_wall_top", "upper": "staff_wall_upper", "lower": "staff_wall_lower", "floor": "staff_floor"}, "map": ["#########", "#^^^^^^^#", "#vvvvvvv#", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "####B####"], "spawn": [4, 8, "up"], "floorSign": "B1", "stairwell": true, "glows": [[4, 3]], "stairs": [{"x": 7, "y": 3, "kind": "up", "to": ["stairwell", 7, 8, "left"]}], "props": [{"key": "railing", "x": 3, "y": 4}, {"key": "railing", "x": 4, "y": 4}, {"key": "railing", "x": 5, "y": 4}, {"key": "railing", "x": 6, "y": 4}, {"key": "railing", "x": 7, "y": 4}], "events": [{"x": 4, "y": 9, "warp": ["storage", 13, 5, "left"]}], "light": {"dim": 0.35, "spots": 0}, "visitors": []},
   storage: {
     name: "B1  Storage", art: { top: "staff_wall_top", upper: "staff_wall_upper", lower: "staff_wall_lower", floor: "staff_floor" },
     map: [
@@ -1029,14 +1032,14 @@ const ROOMS = {
       "#vvvvvvvvvvvvv#",
       "#.............#",
       "#.............#",
-      "H.............#",
+      "H.............H",
       "#.............#",
       "#.............#",
       "#.............#",
       "###############",
     ],
     spawn: [7, 4, "down"],
-    stairs: [{ x: 7, y: 3, kind: "up", to: ["stairwell", 7, 8, "left"] }],
+    stairs: [],
     elevatorStop: { label: "B1  Storage", order: 0, x: 1, y: 5, dir: "right" },
     glows: [[6, 5]],
     props: [
@@ -1050,7 +1053,7 @@ const ROOMS = {
       { key: "trash_can", x: 4, y: 3, event: { trash: true } },
       { key: "someones_pc", x: 12, y: 3, event: { pc: true } },
     ],
-    events: [{ x: 0, y: 5, elevatorDoor: true, bump: true }],
+    events: [{ x: 0, y: 5, elevatorDoor: true, bump: true }, { x: 14, y: 5, warp: ["stairwellB1", 4, 8, "up"] }],
     light: { dim: 0.35, spots: 0 },
     catSpots: [[12, 6]],
     visitors: [{ sheet: "shop_staff", x: 7, y: 7, still: true, staff: true, role: "conservator", lines: [
@@ -1127,6 +1130,10 @@ const TEXT = {
   "door.open":         { g: "Closing up", l: "Front doors while open", v: [["The museum just opened.", "Stay a while."]] },
   "door.lockUp":       { g: "Closing up", l: "Front doors with lights still on ({rooms} lists them)", v: [["The lights are still on in: {rooms}.", "Turn them off before you lock up."]] },
   "spooky.intercom":   { g: "Closing up", l: "The intercom crackles by itself", v: [["*krrsh*", "...ding......\n.........dong...", "*krrsh*"]] },
+  "stairs.roof":       { g: "Floors", l: "Roof stairs in the top stairwell", v: [["I don't need to go to the roof."]] },
+  "move.ok":           { g: "Visitors", l: "A visitor stepping aside when you ask (one at random)", v: [["Oh! Sorry, go ahead."], ["My bad. All yours."], ["Oops, didn't see you there."]] },
+  "move.stuck":        { g: "Visitors", l: "A boxed-in visitor, before they teleport (one at random)", v: [["Oh, I'd love to, but I'm a little stuck..."], ["Move? Where? There's nowhere to... oh."]] },
+  "move.teleport":     { g: "Visitors", l: "You, after a boxed-in visitor teleports away (one at random)", v: [["...Did they just teleport?", "I'm going to pretend I didn't see that."], ["They're gone. Just gone.", "I should ask the curator what's in the coffee here."], ["*blink*", "Okay. Sure. People can just do that here, apparently."], ["Huh. I've played games with worse pathfinding."]] },
   "stairwell":         { g: "Floors", l: "Stairwell oddities (one at random)", v: [["You hear footsteps one floor up.", "Nobody's there."], ["A paper airplane is sitting on the landing.", "Written on the wing: WAIT, WHY?"], ["The light flickers twice.", "Politely."], ["Someone drew a tiny door on the wall in pencil.", "It's slightly ajar."], ["Faint elevator music is coming from... the stairwell?"], ["A pigeon. Inside.", "It looks at you like you're the strange one."], ["There's a sticky note on the railing: \"Count the steps going up. Then going down.\""], ["For a second, you could swear there was one more floor."]] },
   "elevator.ride":     { g: "Floors", l: "Elevator arriving", v: [["*whirrrr*", "*ding* {floor}."]] },
   "workbench.empty":   { g: "Floors", l: "Workbench with nothing coming", v: [["The conservation workbench. Tools, gloves, a magnifying lamp.", "Nothing new in the pipeline... yet."]] },
@@ -1251,7 +1258,7 @@ const CROWD_LINES = [["What a nice museum."], ["I come here on my lunch break."]
   ["My friend told me about this place."], ["Honestly, I'm mostly here for the café."], ["Is it me, or is it busy today?"], ["I didn't know games could go in museums."],
   ["I've been standing here a while.", "I think I get it now. Maybe."], ["The elevator music is a choice."]];
 /* Extra dimness per room after dark, on top of the room's own lighting. */
-const NIGHT_DIM = { lobby: 0.2, gallery: 0.12, shop: 0.15, staff: 0.08, gallery2: 0.15, gallery3: 0.15, stairwell: 0.1, stairwell2: 0.1, storage: 0.05, elevator: 0 };
+const NIGHT_DIM = { lobby: 0.2, gallery: 0.12, shop: 0.15, staff: 0.08, gallery2: 0.15, gallery3: 0.15, stairwell: 0.1, stairwell2: 0.1, stairwell3: 0.1, stairwellB1: 0.1, storage: 0.05, elevator: 0 };
 /* A pristine copy of the built-in rooms. A pack's "rooms" replaces any of these or adds new ones;
    the level editor in curator.html writes them. Rooms are plain data, so a deep copy is enough. */
 const BUILTIN_ROOMS = JSON.parse(JSON.stringify(ROOMS));
@@ -1279,8 +1286,8 @@ function normalizeRoom(id, d) {
 const DIRS_LIST = ["up", "down", "left", "right"];
 /* ---------- The museum grows ----------
    When there are more episodes than cases, or more community pieces than painting spots, extra gallery floors are added
-   above Gallery Two: Gallery Three, Four, and so on. Each has 8 cases and 6 painting spots, an elevator stop, and stairs
-   down to the floor below and up to the one above. Edit one in the Rooms tab and it's saved like any other room. */
+   above Gallery Two: Gallery Three, Four, and so on. Each has 8 cases and 6 painting spots and an elevator stop (stairs
+   live only in the stairwells). Edit one in the Rooms tab and it's saved like any other room. */
 const FLOOR_WORDS = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve"];
 function galleryFloor(n) {
   const w = 21, h = 12, map = [];
@@ -1289,8 +1296,8 @@ function galleryFloor(n) {
     name: "Gallery " + FLOOR_WORDS[n], art: { top: "gallery_wall_top", upper: "gallery_wall_upper", lower: "gallery_wall_lower", floor: "gallery_floor" }, map,
     spawn: [1, 4, "right"], spots: [2, 5, 8, 11, 14, 17], cases: [[4, 6], [8, 6], [12, 6], [16, 6], [4, 9], [8, 9], [12, 9], [16, 9]],
     elevatorStop: { label: n + "F  Gallery " + FLOOR_WORDS[n], order: n, x: 1, y: 4, dir: "right" }, crowd: true, exitTo: [1, 4],
-    stairs: [{ x: 19, y: 3, kind: "down", to: null }],
-    props: [{ key: "plant", plant: "g" + n + "-plant", name: "potted palm", x: 19, y: 7 }, { key: "sign_stand", x: 18, y: 5, say: ["STAIRS", "Down to the floor below" + (n > 3 ? "." : ", or keep going.")] }],
+    stairs: [],
+    props: [{ key: "plant", plant: "g" + n + "-plant", name: "potted palm", x: 19, y: 7 }],
     events: [{ x: 0, y: 4, elevatorDoor: true, bump: true }],
     light: { dim: 0.3, spots: 0.85 }, catSpots: [[18, 7]], mugSpots: [[2, 10], [18, 8]],
     visitors: [{ sheet: ["visitor_a", "visitor_b", "visitor_c"][n % 3], x: 10, y: 4, lines: [["I didn't know the museum went up this high."]] }],
@@ -1308,19 +1315,12 @@ function archiveSplit(pieces) {
 function growMuseum(pieces, edited) {
   const eps = pieces.filter(p => p.kind === "episode").length, com = pieces.length - eps;
   const count = k => Object.values(ROOMS).reduce((a, r) => a + (r[k] || []).length, 0);
-  let n = 3, below = "gallery2", belowUp = [12, 7];
+  let n = 3;
   while (n <= 12 && (count("cases") < eps || count("spots") < com || ROOMS["gallery" + n])) {
     const id = "gallery" + n;
     if (!ROOMS[id]) ROOMS[id] = galleryFloor(n);
     const r = ROOMS[id];
-    // Link the stairs between this floor and the one below, unless you've edited those rooms yourself.
-    if (!edited[id] && r.stairs && r.stairs[0] && ROOMS[below]) r.stairs[0].to = [below, belowUp[0], belowUp[1], "left"];
-    if (ROOMS[below] && !edited[below]) {
-      const b = ROOMS[below]; b.stairs = (b.stairs || []).filter(st => st.kind !== "up" || (st.to && st.to[0] !== id));
-      const at = below === "gallery2" ? [13, 7] : [19, 10];
-      if (!b.stairs.some(st => st.x === at[0] && st.y === at[1])) b.stairs.push({ x: at[0], y: at[1], kind: "up", to: [id, 19, 4, "down"] });
-    }
-    below = id; belowUp = [18, 10]; n++;
+    n++;
   }
 }
 function applyRooms(rooms) {
@@ -1421,7 +1421,7 @@ function buildRoom(id, pieces, o) {
   if (def.intercom) { const [x, y] = def.intercom; r.intercomAt = { x, y }; r.events[x + "," + y] = { announce: true }; }
   if (def.wallArt) {
     r.wallArt = def.wallArt;
-    def.wallArt.forEach(w => { for (let i = 0; i < SLOT[w.key].w / T; i++) r.events[(w.x + i) + ",2"] = w.cafe ? { cafe: true } : { say: w.say }; });
+    def.wallArt.forEach(w => { for (let i = 0; i < SLOT[w.key].w / T; i++) r.events[(w.x + i) + ",2"] = w.cafe && w.key !== "cafe_menu" ? { cafe: true } : { say: w.say || ["The café menu."] }; });
   }
   r.decals = def.decals || []; r.glows = def.glows || []; r.bunting = !!def.bunting;
   if (def.catSpots && o.catRoom === id) {
@@ -1454,7 +1454,8 @@ function buildRoom(id, pieces, o) {
   (def.stairs || []).forEach(st => {
     if (!r.solid[st.y]) return;
     r.stairs.push(st); r.solid[st.y][st.x] = false;
-    if (st.to) r.events[st.x + "," + st.y] = { warp: st.to, step: true };
+    if (st.roof) { r.solid[st.y][st.x] = true; r.events[st.x + "," + st.y] = { roofStairs: true, bump: true }; }
+    else if (st.to) r.events[st.x + "," + st.y] = { warp: st.to, step: true };
   });
   // A crowd: extra visitors on medium and heavy days (more on reveal days, fewer at night), placed on free floor.
   const extra = [];
@@ -1784,11 +1785,15 @@ class Game {
 .gt-rd-head img{width:calc(40px * var(--s));height:calc(30px * var(--s));object-fit:cover;image-rendering:pixelated;border:calc(1px * var(--s)) solid #181820;flex:none;background:#000}
 .gt-rd-head img.photo{image-rendering:auto}
 .gt-rd-head img.item{object-fit:contain;background:#f8f4ec}
-.gt-rd-t{font-size:calc(7px * var(--s));line-height:1.35;color:#181820}
+.gt-rd-links{display:flex;flex-direction:column;gap:calc(2px * var(--s));flex:none;margin-left:auto}
+.gt-rd-links a{display:block;text-align:center;font-family:var(--pixel, monospace);font-size:calc(5px * var(--s));line-height:1;color:#fff8ec;text-decoration:none;padding:calc(3px * var(--s)) calc(4px * var(--s));border:calc(1px * var(--s)) solid #181820;border-radius:calc(1px * var(--s));box-shadow:0 calc(1px * var(--s)) 0 #181820;white-space:nowrap;cursor:pointer}
+.gt-rd-links a.watch{background:#b8382c}.gt-rd-links a.play{background:#2f6f3a}
+.gt-rd-links a:hover,.gt-rd-links a:focus-visible{filter:brightness(1.15);outline:calc(1px * var(--s)) solid #fff8ec}
+.gt-rd-t{flex:1;min-width:0;font-size:calc(7px * var(--s));line-height:1.35;color:#181820}
 .gt-rd-t small{display:block;font-size:calc(5.5px * var(--s));color:#505068;margin-top:calc(1px * var(--s))}
 .gt-rd-body{font-family:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;font-size:calc(7.5px * var(--s));line-height:1.42;color:#202030;height:calc(76px * var(--s));overflow:hidden;margin-top:calc(3px * var(--s));white-space:pre-wrap}
 .gt-rd-body b{display:block;font-family:var(--pixel, monospace);font-weight:normal;font-size:calc(5.5px * var(--s));color:#7c5a0c;letter-spacing:.04em;margin-bottom:calc(2px * var(--s))}
-.gt-rd-foot{display:flex;justify-content:space-between;align-items:center;font-size:calc(5.5px * var(--s));color:#505068;border-top:calc(1px * var(--s)) solid #b0b0c0;padding-top:calc(2px * var(--s))}
+.gt-rd-foot{display:flex;justify-content:flex-end;align-items:center;font-size:calc(5.5px * var(--s));color:#505068;border-top:calc(1px * var(--s)) solid #b0b0c0;padding-top:calc(2px * var(--s))}
 .gt-rd-foot a{color:#181820;margin-right:calc(5px * var(--s))}
 .gt-album-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:calc(4px * var(--s));max-height:calc(86px * var(--s));overflow:auto;padding:calc(2px * var(--s))}
 .gt-polaroid{background:#fffef8;border:calc(1px * var(--s)) solid #b0b0c0;padding:calc(2px * var(--s)) calc(2px * var(--s)) calc(5px * var(--s));cursor:pointer;transform:rotate(-1.5deg)}
@@ -1901,11 +1906,15 @@ class Game {
      Long text (placards, magazines) in big paragraphs you page through: A or right for the next page, left to go back, B to close. */
   read(spec, done) {
     const box = this.el.reader; box.style.display = "block"; this.mode = "read";
-    box.innerHTML = '<div class="gt-rd-head"></div><div class="gt-rd-body"></div><div class="gt-rd-foot"><span class="gt-rd-links"></span><span class="gt-rd-n"></span></div>';
+    box.innerHTML = '<div class="gt-rd-head"></div><div class="gt-rd-body"></div><div class="gt-rd-foot"><span class="gt-rd-n"></span></div>';
     const head = box.querySelector(".gt-rd-head"), body = box.querySelector(".gt-rd-body");
     if (spec.img) { const im = document.createElement("img"); im.src = spec.img; im.alt = ""; if (spec.imgClass) im.className = spec.imgClass; head.appendChild(im); }
     const t = document.createElement("div"); t.className = "gt-rd-t"; t.textContent = spec.title || ""; if (spec.sub) { const sm = document.createElement("small"); sm.textContent = spec.sub; t.appendChild(sm); } head.appendChild(t);
-    (spec.links || []).forEach(([href, label]) => { if (!href) return; const a = document.createElement("a"); a.href = href; a.target = "_blank"; a.rel = "noopener"; a.textContent = label; box.querySelector(".gt-rd-links").appendChild(a); });
+    const links = (spec.links || []).filter(l => l[0]);
+    if (links.length) {
+      const lw = document.createElement("div"); lw.className = "gt-rd-links"; head.appendChild(lw);
+      links.forEach(([href, label, short]) => { const a = document.createElement("a"); a.href = href; a.target = "_blank"; a.rel = "noopener"; a.textContent = (short || label) + " \u2197"; a.setAttribute("aria-label", label + " (opens in a new tab)"); a.title = label + " (opens in a new tab)"; a.className = /watch/i.test(label) ? "watch" : "play"; a.addEventListener("click", e => e.stopPropagation()); lw.appendChild(a); });
+    }
     // Break each section into pages that fit the box, a word at a time.
     const pages = [], fits = () => body.scrollHeight <= body.clientHeight + 1;
     const put = (label, words) => { body.innerHTML = ""; if (label) { const b = document.createElement("b"); b.textContent = label; body.appendChild(b); } body.appendChild(document.createTextNode(words)); };
@@ -1960,7 +1969,7 @@ class Game {
     else if (gold) { if (p.observation) secs.push({ label: "OBSERVATION", text: p.observation }); if (p.intention) secs.push({ label: "INTENTION", text: p.intention }); }
     else if (p.guestNote) secs.push({ label: p.guestWriter ? "GUEST NOTE BY " + p.guestWriter.toUpperCase() : "GUEST NOTE", text: p.guestNote });
     this.read({ img: img ? p.image : this.pieceArt(p).toDataURL(), imgClass: img && img.naturalWidth > 160 ? "photo" : "", title: p.title.toUpperCase(), sub: "By " + p.developer,
-      sections: secs, links: [[p.episodeUrl, "Watch the episode"], [p.gameUrl, "Play the game"]] }, () => {
+      sections: secs, links: [[p.episodeUrl, "Watch the episode", "WATCH"], [p.gameUrl, "Play the game", "PLAY"]] }, () => {
       if (stampAfter) this.stamp(p);
     });
   }
@@ -2530,24 +2539,9 @@ class Game {
   /* Each rack has two shelves, and each shelf holds one item (three of it). Items fill racks in menu order: rack 1 gets items 1 and 2, and so on.
      A shelf without an item gets a row of trinkets. */
   /* Shelving units hold six stacks each: items fill them in Shop-tab order (unit 1 has items 1 to 6). */
-  unitGoods(u) { const items = this.pack.settings.shop.items, out = []; for (let k = 0; k < 6; k++) { const it = items[u * 6 + k]; out.push(it ? { item: it } : { trinket: hash(u, k) % 8 }); } return out; }
-  browseUnit(u) {
-    const items = this.unitGoods(u).filter(g => g.item).map(g => g.item);
-    if (!items.length) { this.say(this.tx("rack.empty")); return; }
-    this.choose("A shelf of souvenirs. Take a closer look?", [...items.map(it => it.name), "Just looking"], k => {
-      const it = items[k]; if (!it) return;
-      const img = this.itemImgs[it.id], owned = this.progress.items.includes(it.id);
-      const note = this.closing ? this.tx("shop.closed")[0] : owned ? "You already have one of these." : this.tx("rack.available", { n: it.price }).join(" ");
-      this.read({ img: img ? it.image : this.itemIcon(it).toDataURL(), imgClass: "item", title: it.name.toUpperCase(), sub: it.price + " tokens",
-        sections: [{ label: "", text: it.description || "" }, { label: "", text: note }] }, () => this.browseUnit(u));
-    });
-  }
+  unitGoods(u) { const it = this.pack.settings.shop.items[u], out = []; for (let k = 0; k < 6; k++) out.push(it ? { item: it } : { trinket: hash(u, k) % 8 }); return out; } // one item per stand, in menu order
   rackItems(i) { const items = this.pack.settings.shop.items; return [items[i] || null]; } // one item per stand, in menu order
-  rackContents(i) {
-    const [a, b] = this.rackItems(i), out = [];
-    for (let j = 0; j < 6; j++) { const it = j < 3 ? a : b; out.push(it ? { item: it } : { trinket: hash(i, j) % 8 }); }
-    return out;
-  }
+  browseUnit(u) { this.browseRack(u); } // each stand shows its one item, same as a rack
   browseRack(i) {
     const items = this.rackItems(i).filter(Boolean);
     if (!items.length) { this.say(this.tx("rack.empty")); return; }
@@ -2652,13 +2646,14 @@ class Game {
   stairwellOddity() {
     if (Math.random() > 0.3) return;
     if (Math.random() < 0.4) { setTimeout(() => { if (this.room.id === "stairwell" || ROOMS[this.room.id].stairwell) this.flickerT = 64; }, 500); return; }
-    setTimeout(() => { if (this.mode === "walk" && this.room.id === "stairwell") this.say(this.tx("stairwell", null, true)); }, 700);
+    setTimeout(() => { if (this.mode === "walk" && ROOMS[this.room.id] && ROOMS[this.room.id].stairwell) this.say(this.tx("stairwell", null, true)); }, 700);
   }
   /* Fingerprints on cases: they build up a little each day, and visitors who linger by a case leave more. */
   prints(p) {
     // amount (0 to 1, set in the curator) is roughly the chance a case has picked up a smudge on a given day.
     const amt = this.pack.settings.staff.fingerprints, t = todayISO(), w = (this.progress.wiped || {})[p.id];
     const base = amt <= 0 ? 0 : w ? Math.min(3, Math.floor(daysBetween(w, t) * amt * 1.5)) : (strSeed(p.id + t) % 100 < amt * 100 ? 1 : 0);
+    if (amt <= 0) return 0;
     return Math.min(3, base + ((this.extraPrints || {})[p.id] || 0));
   }
   /* ----- helping visitors find a piece -----
@@ -2696,16 +2691,16 @@ class Game {
   }
   giveRequests() {
     const all = this.displayed(); if (!all.length) return;
-    // At most two lost visitors at a time, each looking for a different piece.
-    let open = Object.values(this.rooms).reduce((k, r) => k + r.npcs.filter(n => n.req).length, 0);
-    const taken = new Set();
+    // At most one lost visitor per gallery floor, each looking for a different piece on their floor.
+    const openIn = {}, taken = new Set();
+    for (const id in this.rooms) { openIn[id] = this.rooms[id].npcs.filter(n => n.req).length; this.rooms[id].npcs.forEach(n => { if (n.req) taken.add(n.req.piece.id); }); }
     for (const id in this.rooms) this.rooms[id].npcs.forEach((n, i) => {
       if (!(this.rooms[id].cases.length || this.rooms[id].hung.length)) return; // only gallery visitors get lost
-      if (open >= 1 || n.still || n.staff || n.patrol || n.req || Math.random() < 0.6) return;
+      if (openIn[id] >= 1 || n.still || n.staff || n.patrol || n.req || n.helped || Math.random() < 0.6) return;
       const pool = all.filter(a => !taken.has(a.piece.id) && a.room === id), away = pool.filter(a => a.room !== id || Math.abs(a.x - n.x) + Math.abs(a.y - n.y) > 6);
       const from = away.length ? away : pool; if (!from.length) return;
       const pick = from[Math.floor(Math.random() * from.length)];
-      taken.add(pick.piece.id); open++;
+      taken.add(pick.piece.id); openIn[id]++;
       n.req = { piece: pick.piece, room: pick.room, x: pick.x, y: pick.y, asked: false };
     });
   }
@@ -2906,7 +2901,14 @@ class Game {
     if (r && photos.length) opts.push("Show a photo");
     if (r) opts.push(r.asked ? "What was it again?" : "Can I help?");
     const named = pages => (npc.member ? pages.map((p, k) => (k === 0 ? npc.member + ": " + p : p)) : pages);
-    if (!opts.length) { npc.lineI = (npc.lineI + 1) % npc.lines.length; this.say(named(npc.lines[npc.lineI])); return; }
+    const MOVE = "Could I get by?", canMove = !npc.sitting;
+    if (!opts.length) {
+      const chat = () => { npc.lineI = (npc.lineI + 1) % npc.lines.length; this.say(named(npc.lines[npc.lineI])); };
+      if (!canMove) { chat(); return; }
+      this.choose(npc.member ? npc.member + " smiles." : "They glance over.", ["Say hi", MOVE], i => { if (i === 0) chat(); else if (i === 1) this.askToMove(npc, named); });
+      return;
+    }
+    if (canMove) opts.push(MOVE);
     opts.push("Just saying hi");
     this.choose(r.asked ? (npc.member ? npc.member + ": " : "") + "Any luck finding it?" : (npc.member || "They") + (npc.member ? " looks" : " look") + " a little lost.", opts, i => {
       const o = opts[i], hint = r.piece.hint || ("a piece called " + r.piece.title);
@@ -2918,13 +2920,14 @@ class Game {
             this.say(this.tx("help.right", { title: r.piece.title }), () => this.sendTo(npc, r));
           } else this.say(this.tx("help.wrong", { hint }));
         });
-      } else if (o === "Just saying hi") { npc.lineI = (npc.lineI + 1) % npc.lines.length; this.say(named(npc.lines[npc.lineI])); }
+      } else if (o === MOVE) this.askToMove(npc, named);
+      else if (o === "Just saying hi") { npc.lineI = (npc.lineI + 1) % npc.lines.length; this.say(named(npc.lines[npc.lineI])); }
       else { r.asked = true; this.say(this.tx("help.ask", { hint })); }
     });
   }
   sendTo(n, r) {
     if (r.room !== this.room.id) { n.leaving = true; n.leaveT = 0; n.alpha = 1; return; }
-    n.goal = [r.x, r.y]; n.still = false;
+    n.goal = [r.x, r.y]; n.still = false; n.helped = true; n.baseLines = n.baseLines || n.lines;
     n.lines = this.pack.settings.text["help.after"] || TEXT["help.after"].v; n.lineI = -1;
   }
   walkTo(n) {
@@ -2936,6 +2939,7 @@ class Game {
     if (n.best === undefined || dist < n.best) { n.best = dist; n.stall = 0; } else n.stall = (n.stall || 0) + 1;
     if (dist === 0 || (dist <= 2 && this.blocked(gx, gy, n)) || n.stall > 10 || n.leaveT > 600) {
       n.goal = null; n.still = true; n.leaveT = undefined; n.best = undefined;
+      if (n.helped) n.admireT = 1200 + Math.random() * 1200; // 20 to 40 seconds with their piece
       n.dir = gy < n.y ? "up" : gy > n.y ? "down" : gx < n.x ? "left" : gx > n.x ? "right" : "up"; return;
     }
     const dx = Math.sign(gx - n.x), dy = Math.sign(gy - n.y), tries = Math.abs(gx - n.x) >= Math.abs(gy - n.y) ? [[dx, 0], [0, dy]] : [[0, dy], [dx, 0]];
@@ -2985,7 +2989,7 @@ class Game {
     this.room = this.rooms[id]; const p = this.player;
     p.x = x; p.y = y; p.dir = dir; p.moving = false; p.prog = 0; p.sitting = false; this.sip = null; this.path = null; this.pathAct = null;
     this.updateHud();
-    if (!quiet) this.showLoc(this.room.name.replace(/\s+/g, " ") + (ROOMS[id] && ROOMS[id].stairwell && ROOMS[id].floorSign ? " (" + ROOMS[id].floorSign + ")" : ""));
+    if (!quiet) this.showLoc(this.room.name.replace(/\s+/g, " ") + (ROOMS[id] && ROOMS[id].stairwell && ROOMS[id].floorSign && !this.room.name.includes(ROOMS[id].floorSign) ? " (" + ROOMS[id].floorSign + ")" : ""));
     if (ROOMS[id] && ROOMS[id].stairwell && !quiet) this.stairwellOddity();
   }
   warp(to, x, y, dir, after) { this.mode = "busy"; this.trans = { t: 0, dur: 14, switched: false, fn: () => this.enterRoom(to, x, y, dir), after }; }
@@ -3043,6 +3047,7 @@ class Game {
     else if (e.collection) this.viewCollection();
     else if (e.cat) this.petCat();
     else if (e.guestbook) this.readGuestbook();
+    else if (e.roofStairs) this.say(this.tx("stairs.roof"), () => { const p = this.player; p.dir = OPP[p.dir]; });
     else if (e.say) this.say(e.say);
   }
   occupied(x, y, self) {
@@ -3065,12 +3070,13 @@ class Game {
     if (c.bumpT > 0) c.bumpT--;
     if (!c.moving) return false;
     if (c.slow && (this.t & 1)) return false; // the night guard strolls at half speed
+    if (c !== this.player && !c.slow) { c.spd = (c.spd || 0) + this.pack.settings.staff.patronSpeed; if (c.spd < 1) return false; c.spd -= 1; } // patrons: slower than you
     if ((c.prog += c === this.player && this.segway ? 2 : 1) >= T) {
       c.x += DIRS[c.dir][0]; c.y += DIRS[c.dir][1]; c.prog = 0; c.moving = false;
       if (c === this.player) {
         this.stepInDark();
         const e = this.room.events[c.x + "," + c.y];
-        if (e && e.step && !this.trans) { this.path = null; this.pathAct = null; c.walking = false; if (this.room.id === "stairwell" && e.warp[0] === "gallery2") this.quest("stairsTo2F"); this.runEvent(e); }
+        if (e && e.step && !this.trans) { this.path = null; this.pathAct = null; c.walking = false; if (this.room.id === "stairwell" && e.warp[0] === "stairwell2") this.quest("stairsTo2F"); this.runEvent(e); }
       }
       return true;
     }
@@ -3099,7 +3105,7 @@ class Game {
     if (this.boomT > 0) this.boomT--;
     if (this.shakeT > 0) this.shakeT--;
     if (this.phoneT > 0) this.phoneT--;
-    if (this.t % 2700 === 0 && !this.closing && !Object.values(this.rooms).some(r => r.npcs.some(n => n.req))) { this.reqRound = (this.reqRound || 0) + 1; this.giveRequests(); }
+    if (this.t % 2700 === 0 && !this.closing) { this.reqRound = (this.reqRound || 0) + 1; this.giveRequests(); }
     if (this.t % 600 === 0 && this.mode === "walk") {
       const t = this.tod(); if (this.lastTod && t !== this.lastTod) this.rebuild(); this.lastTod = t;
       const b = this.catBucket(); if (this.lastCat !== undefined && b !== this.lastCat) this.moveCat(); this.lastCat = b;
@@ -3216,20 +3222,62 @@ class Game {
       if (n.leaving) { this.walkOut(n, def.exitTo || ROOMS[this.room.id].spawn); continue; }
       if (n.goal) { this.walkTo(n); continue; }
       if (n.moving) { this.advance(n); continue; }
+      if (n.aside) { this.stepAside(n); continue; }
+      if (n.admireT > 0) {
+        if (this.mode === "walk" && --n.admireT <= 0) { n.still = false; n.helped = false; n.lines = n.baseLines || n.lines; n.baseLines = null; n.lineI = -1; n.timer = 60 + Math.random() * 120; n.route = null; }
+        continue;
+      }
       if (n.still) continue;
       if (n.patrol) { this.patrol(n); continue; }
       if (n.bumpT > 0) n.bumpT--;
       if (this.mode !== "walk") continue;
       this.stroll(n);
-      // Lingering next to a case leaves fingerprints.
-      const near = this.room.cases.find(c => c.piece && c.state === "wall" && Math.abs(c.x - n.x) + Math.abs(c.y - n.y) === 1);
-      if (near && Math.random() < 0.25 * this.pack.settings.staff.fingerprints) { const xp = this.extraPrints || (this.extraPrints = {}); xp[near.piece.id] = Math.min(3, (xp[near.piece.id] || 0) + 1); }
     }
   }
 
+  /* "Could I get by?": step to the nearest open tile that isn't straight ahead of you. Boxed in? They teleport. */
+  askToMove(n, named) {
+    const p = this.player, r = this.room, W = r.w, [fx, fy] = DIRS[p.dir], ahead = new Set();
+    for (let k = 0; k <= 3; k++) ahead.add((p.x + fx * k) + "," + (p.y + fy * k));
+    const prev = new Map([[n.y * W + n.x, -1]]), q = [[n.x, n.y, 0]]; let goal = null;
+    const noGo = (x, y) => r.noWander && r.noWander.has(x + "," + y);
+    while (q.length) {
+      const [x, y, d] = q.shift();
+      if (d > 0 && !ahead.has(x + "," + y) && !noGo(x, y)) { goal = y * W + x; break; }
+      if (d >= 6) continue;
+      for (const [dx, dy] of Object.values(DIRS)) {
+        const nx = x + dx, ny = y + dy, k = ny * W + nx;
+        if (nx < 1 || ny < 3 || nx >= W - 1 || ny >= r.h - 1 || prev.has(k) || this.blocked(nx, ny, n)) continue;
+        prev.set(k, y * W + x); q.push([nx, ny, d + 1]);
+      }
+    }
+    if (goal !== null) {
+      const out = []; let c = goal;
+      while (prev.get(c) !== -1) { const pc = prev.get(c), dx = (c % W) - (pc % W), dy = ((c / W) | 0) - ((pc / W) | 0); out.unshift(dx > 0 ? "right" : dx < 0 ? "left" : dy > 0 ? "down" : "up"); c = pc; }
+      this.say(named(this.tx("move.ok", null, true)), () => { n.route = null; n.goal = null; n.aside = out; n.stepWait = 0; });
+      return;
+    }
+    // Nowhere to step: somewhere open in this room, away from you.
+    const spots = [];
+    for (let y = 3; y < r.h - 1; y++) for (let x = 1; x < W - 1; x++) if (!this.blocked(x, y, n) && !noGo(x, y) && Math.abs(x - p.x) + Math.abs(y - p.y) >= 4) spots.push([x, y]);
+    const to = spots[(Math.random() * spots.length) | 0];
+    if (!to) { this.say(named(this.tx("move.stuck", null, true))); return; }
+    this.say(named(this.tx("move.stuck", null, true)), () => {
+      n.x = to[0]; n.y = to[1]; n.moving = false; n.prog = 0; n.route = null; n.aside = null; n.goal = null; n.timer = 240;
+      this.flickerT = 16; this.say(this.tx("move.teleport", null, true));
+    });
+  }
+  stepAside(n) {
+    if (n.stepWait > 0) { n.stepWait--; return; }
+    const d = n.aside.shift();
+    if (!d || !this.tryMove(n, d)) { n.aside = null; return; }
+    n.stepWait = 3;
+    if (!n.aside.length) { n.aside = null; n.timer = 300; n.dir = OPP[this.player.dir] === d ? d : n.dir; }
+  }
   /* Visitors stroll: pick somewhere open in the room, walk there, look around for a while, then pick somewhere else.
      They never step onto doorways, stairs, or the tiles where people arrive. */
   stroll(n) {
+    if (n.stepWait > 0) { n.stepWait--; return; }
     if (n.timer > 0) { n.timer--; if (n.timer % 90 === 0 && Math.random() < 0.5) n.dir = DIRS_LIST[(Math.random() * 4) | 0]; return; }
     const r = this.room, noGo = (x, y) => r.noWander && r.noWander.has(x + "," + y);
     if (!n.route || !n.route.length) {
@@ -3242,7 +3290,12 @@ class Game {
     const d = n.route[0], [dx, dy] = DIRS[d];
     if (noGo(n.x + dx, n.y + dy) || !this.tryMove(n, d)) { n.route = null; n.timer = 30 + Math.random() * 60; n.dir = d; return; }
     n.route.shift();
-    if (!n.route.length) n.timer = 180 + Math.random() * 300; // arrived: stay a while
+    if (n.route.length) { n.stepWait = Math.round(8 * (1 - this.pack.settings.staff.patronSpeed) / this.pack.settings.staff.patronSpeed); return; }
+    n.timer = 180 + Math.random() * 300; // arrived: stay a while
+    // Stopping right next to a case now and then leaves a fingerprint (not every time).
+    const ax = n.x + dx, ay = n.y + dy, amt = this.pack.settings.staff.fingerprints;
+    const near = this.room.cases.find(c => c.piece && c.state === "wall" && Math.abs(c.x - ax) + Math.abs(c.y - ay) === 1);
+    if (near && amt > 0 && Math.random() < amt * 0.5) { const xp = this.extraPrints || (this.extraPrints = {}); xp[near.piece.id] = Math.min(3, (xp[near.piece.id] || 0) + 1); }
   }
   /* Shortest route for a visitor, around walls, furniture, people and no-go tiles (at most 40 steps). */
   npcPath(n, tx, ty) {
@@ -3600,7 +3653,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-07 achievements";
+const VERSION = "2026-10-09 stairwells";
 window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

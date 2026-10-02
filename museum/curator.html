@@ -280,6 +280,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
     </div>
     <div class="actions">
       <span id="saved" role="status"></span>
+      <a class="btn quiet" href="batch-fill.html" title="Add many pieces at once from YouTube and image files, and crop them to fit">Batch fill</a>
       <label class="btn quiet" for="importFile">Import pack</label>
       <input id="importFile" class="sr-only" type="file" accept=".json,application/json">
       <button class="btn primary" id="exportBtn" type="button">Export pack</button>
@@ -315,7 +316,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-07 achievements";
+window.GOQ_WANT = "2026-10-09 stairwells";
 (function load(retry) {
   const s = document.createElement("script");
   s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry ? "&r=" + Date.now() : "");
@@ -373,6 +374,15 @@ function changed(opts) {
 /* The preview only reloads when you press Apply (so it doesn't reshuffle with every keystroke or drag). */
 let pending = false;
 function markPending() { pending = true; const d = $("#applyDot"); if (d) d.hidden = false; }
+
+/* Batch fill (batch-fill.html) writes the same draft. If this tab is open when it sends, load what it sent. */
+window.addEventListener("storage", async e => {
+  if (e.key !== DRAFT_KEY || !e.newValue) return;
+  try {
+    const j = JSON.parse(e.newValue); if (!j || j.format !== GOQ.PACK_FORMAT) return;
+    clearTimeout(saveT); useDraft(j); await game.setPack(packOut()); render(); status("Loaded the pieces sent from Batch fill");
+  } catch (err) {}
+});
 
 /* ---------- Live preview ---------- */
 const stage = $("#stage");
@@ -690,8 +700,16 @@ function renderStaff() {
   fp.addEventListener("input", () => { st.fingerprints = +fp.value / 100; fpOut.textContent = fp.value + "%"; changed(); });
   wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
     el("h3", { text: "Fingerprints on cases", style: "margin:0 0 4px" }),
-    el("p", { class: "note", style: "margin:0 0 12px", text: "Roughly the chance a case has a smudge on a given day, and how often lingering visitors leave new ones. 0% turns fingerprints off." }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "Roughly the chance a case has a smudge on a given day. Visitors who stop next to a case now and then leave one more. 0% turns fingerprints off and clears them." }),
     el("label", { class: "range" }, [el("span", { text: "Amount" }), fp, fpOut]),
+  ]));
+  const ps = el("input", { type: "range", min: 20, max: 100, step: 5, value: Math.round((st.patronSpeed === undefined ? 0.45 : st.patronSpeed) * 100), "aria-label": "Visitor walking speed" });
+  const psOut = el("output", { text: ps.value + "%" });
+  ps.addEventListener("input", () => { st.patronSpeed = +ps.value / 100; psOut.textContent = ps.value + "%"; changed(); });
+  wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
+    el("h3", { text: "Visitor walking speed", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "How fast visitors stroll, compared with your own walking speed. 100% is as fast as you." }),
+    el("label", { class: "range" }, [el("span", { text: "Speed" }), ps, psOut]),
   ]));
   const name = el("input", { type: "text", value: st.eotm.name, placeholder: "A patron's display name" });
   const note = el("input", { type: "text", value: st.eotm.note, placeholder: "Dusted 41 frames in October" });
