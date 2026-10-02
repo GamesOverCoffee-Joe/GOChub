@@ -206,6 +206,10 @@ input[type=range]{accent-color:var(--gold);width:100%}
 .rrow{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
 .rissues{margin:8px 0;padding-left:1.2em;color:var(--warn);font-size:.9rem}
 
+.wtitle{margin:26px 0 6px;font-size:1.05rem}
+.wrow{margin:10px 0 14px}
+.wrow textarea,.wtalk textarea{width:100%;min-height:64px;margin-top:4px}
+.wtalk{border-top:1px solid var(--line);padding-top:10px;margin:10px 0}
 .rpick{margin:2px 0 8px}
 .rpick .rchip{min-height:48px}
 .rchg{margin-left:6px;font-size:.78rem;color:var(--gold)}
@@ -245,6 +249,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
       <button role="tab" id="tab-staff" aria-selected="false" aria-controls="main">Staff</button>
       <button role="tab" id="tab-shop" aria-selected="false" aria-controls="main">Shop</button>
       <button role="tab" id="tab-rooms" aria-selected="false" aria-controls="main">Rooms</button>
+      <button role="tab" id="tab-words" aria-selected="false" aria-controls="main">Words</button>
     </div>
     <div class="actions">
       <span id="saved" role="status"></span>
@@ -358,7 +363,7 @@ $("#spooky").addEventListener("click", e => {
 let tab = "art", current = "atlas";
 function setTab(t) {
   tab = t;
-  ["art", "pieces", "staff", "shop", "rooms"].forEach(k => $("#tab-" + k).setAttribute("aria-selected", t === k));
+  ["art", "pieces", "staff", "shop", "rooms", "words"].forEach(k => $("#tab-" + k).setAttribute("aria-selected", t === k));
   $("#app").classList.toggle("no-side", t !== "art");
   render();
 }
@@ -367,9 +372,10 @@ $("#tab-pieces").addEventListener("click", () => setTab("pieces"));
 $("#tab-staff").addEventListener("click", () => setTab("staff"));
 $("#tab-shop").addEventListener("click", () => setTab("shop"));
 $("#tab-rooms").addEventListener("click", () => setTab("rooms"));
+$("#tab-words").addEventListener("click", () => setTab("words"));
 // Small screens: the preview sits below the editor; this jumps to it.
 $("#pvJump").addEventListener("click", () => document.querySelector(".preview").scrollIntoView({ behavior: "smooth", block: "start" }));
-function render() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "shop") renderShop(); else if (tab === "rooms") renderRooms(); else renderPieces(); }
+function render() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "shop") renderShop(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else renderPieces(); }
 
 /* ---------- Image helpers ---------- */
 function readFile(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error("That file couldn't be read.")); r.readAsDataURL(file); }); }
@@ -686,7 +692,7 @@ function roomItems(d) {
   if (d.spawn) out.push({ type: "spawn", x: d.spawn[0], y: d.spawn[1], w: 1, h: 1, label: "Start spot" });
   (d.catSpots || []).forEach((p, i) => out.push({ type: "catSpot", i, x: p[0], y: p[1], w: 1, h: 1, label: "Cat nap spot" }));
   (d.mugSpots || []).forEach((p, i) => out.push({ type: "mugSpot", i, x: p[0], y: p[1], w: 1, h: 1, label: "Mug spot" }));
-  [["lightSwitch", "Light switch", 1, 1], ["intercom", "Intercom", 1, 1], ["timeClock", "Time clock", 1, 1]].forEach(([k, l, w, h]) => { if (d[k]) out.push({ type: "fixed", key: k, x: d[k][0], y: d[k][1], w, h, label: l }); });
+  [["lightSwitch", "Light switch", 1, 1], ["intercom", "Intercom", 1, 1], ["timeClock", "Time clock", 1, 1], ["elevatorPanel", "Elevator panel", 1, 1]].forEach(([k, l, w, h]) => { if (d[k]) out.push({ type: "fixed", key: k, x: d[k][0], y: d[k][1], w, h, label: l }); });
   [["windowAt", "Window"], ["eotmAt", "Employee of the Month"], ["corkboardAt", "Corkboard"]].forEach(([k, l]) => { if (d[k]) out.push({ type: "fixed", key: k, x: d[k][0], y: 1, w: 2, h: 2, label: l }); });
   if (d.featuredAt) out.push({ type: "fixed", key: "featuredAt", x: d.featuredAt[0], y: d.featuredAt[1] - 1, w: 1, h: 2, label: "Featured item stand" });
   (d.stairs || []).forEach((st, i) => out.push({ type: "stairs", i, x: st.x, y: st.y, w: 1, h: 1, label: st.kind === "up" ? "Stairs up" : "Stairs down" }));
@@ -1019,7 +1025,7 @@ function renderInspector() {
     const p = d.props[it.i];
     if (p.say || (!p.event && !p.rules && !p.collection && p.key !== "item_rack" && !p.plant)) box.appendChild(linesBox(() => (p.say || []).join("\n"), v => { editable(R.id).props[it.i].say = v.split("\n").map(s => s.trim()).filter(Boolean); }));
     if (p.plant !== undefined) { const n = el("input", { type: "text", value: p.name || "" }); n.addEventListener("change", () => { snapshot(); editable(R.id).props[it.i].name = n.value.trim() || "plant"; roomChanged(true); }); box.appendChild(field("Plant's name", n, "Used in \"You water the ___.\"")); }
-    if (p.key === "item_rack") { const n = el("input", { type: "number", min: 1, max: 9, value: (p.rack || 0) + 1 }); n.addEventListener("change", () => { snapshot(); editable(R.id).props[it.i].rack = Math.max(0, Math.min(8, (+n.value || 1) - 1)); roomChanged(true); }); box.appendChild(field("Rack number", n, "Each rack shows two items, one per shelf: rack 1 has shop items 1 and 2, rack 2 has items 3 and 4, and so on.")); }
+    if (p.key === "item_rack") { const n = el("input", { type: "number", min: 1, max: 9, value: (p.rack || 0) + 1 }); n.addEventListener("change", () => { snapshot(); editable(R.id).props[it.i].rack = Math.max(0, Math.min(8, (+n.value || 1) - 1)); roomChanged(true); }); box.appendChild(field("Stand number", n, "Each stand shows one shop item: stand 1 has the first item in the Shop tab, stand 2 the second, and so on.")); }
     if (SIT_KEYS[p.key] || p.sit) {
       const s = el("select", {}, [["", "No"], ["up", "Yes, facing up"], ["down", "Yes, facing down"], ["left", "Yes, facing left"], ["right", "Yes, facing right"]].map(([v, l]) => el("option", { value: v, text: l })));
       s.value = p.sit || ""; s.addEventListener("change", () => { snapshot(); const q = editable(R.id).props[it.i]; if (s.value) q.sit = s.value; else delete q.sit; roomChanged(true); });
@@ -1163,6 +1169,50 @@ function playHere() {
 }
 // Phones resize the page when the address bar slides in or out while scrolling, so keep the zoom and pan; just redraw.
 window.addEventListener("resize", () => { if (tab === "rooms") drawEditor(); });
+
+/* ---------- Words: every line the museum says, and what staff say when you chat ---------- */
+const toText = v => v.map(pg => pg.join("\n")).join("\n\n");
+const fromText = t => t.split(/\n\s*\n/).map(b => b.split("\n").map(x => x.trim()).filter(Boolean)).filter(b => b.length);
+function renderWords() {
+  const main = $("#main"); main.innerHTML = "";
+  const st = draft.settings; st.text = st.text || {}; st.talk = st.talk || JSON.parse(JSON.stringify(GOQ.TALK_DEFAULTS));
+  const wrap = el("section", { class: "pieces words" }); main.appendChild(wrap);
+  wrap.appendChild(el("h2", { class: "title", text: "Words" }));
+  wrap.appendChild(el("p", { text: "Everything the museum says that isn't part of a piece, a room or a shop item. One page per line. Leave a blank line between versions: versions take turns (stairwell oddities are picked at random). Placeholders like {name}, {cat} or {drink} are filled in for you." }));
+  wrap.appendChild(el("p", { class: "note", text: "Signs, props, visitors and doors are edited in the Rooms tab. Pieces, the guestbook, the shop and Employee of the Month have their own tabs." }));
+  // Staff chat lines with conditions
+  wrap.appendChild(el("h3", { text: "Chatting with staff", class: "wtitle" }));
+  wrap.appendChild(el("p", { class: "note", text: "Each line can have up to two conditions. When you chat, the museum uses the most specific lines that fit right now (two conditions beat one, one beats \"any time\"), taking turns." }));
+  for (const role in GOQ.TALK_ROLES) {
+    const list = st.talk[role] = st.talk[role] || [];
+    const sec = el("section", { class: "prow", style: "display:block" });
+    sec.appendChild(el("div", { class: "rrow", style: "justify-content:space-between;align-items:center" }, [el("h4", { text: GOQ.TALK_ROLES[role], style: "margin:0" }),
+      el("button", { type: "button", class: "btn small quiet", text: "Reset to the samples", onclick: () => { if (!confirm("Replace these lines with the sample lines?")) return; st.talk[role] = JSON.parse(JSON.stringify(GOQ.TALK_DEFAULTS[role])); changed(); renderWords(); } })]));
+    list.forEach((e, i) => {
+      const cond = k => { const sel = el("select", { "aria-label": "Condition " + (k + 1) }, [k ? el("option", { value: "", text: "(no second condition)" }) : null, ...Object.entries(GOQ.TALK_WHEN).map(([v, l]) => el("option", { value: v, text: l }))]);
+        sel.value = e.when[k] || (k ? "" : "always"); sel.addEventListener("change", () => { const w = [c0.value, c1.value].filter(Boolean); e.when = w.length ? w : ["always"]; changed(); }); return sel; };
+      const c0 = cond(0), c1 = cond(1);
+      const t = el("textarea", { "aria-label": GOQ.TALK_ROLES[role] + " lines " + (i + 1) }); t.value = toText(e.v);
+      t.addEventListener("input", () => { e.v = fromText(t.value); changed(); });
+      sec.appendChild(el("div", { class: "wtalk" }, [el("div", { class: "rrow" }, [el("label", { class: "rfield" }, [el("span", { text: "When" }), c0]), el("label", { class: "rfield" }, [el("span", { text: "And" }), c1]),
+        el("button", { type: "button", class: "btn small quiet", text: "Remove", onclick: () => { list.splice(i, 1); changed(); renderWords(); } })]), t]));
+    });
+    sec.appendChild(el("button", { type: "button", class: "btn small", text: "Add lines", onclick: () => { list.push({ when: ["always"], v: [["..."]] }); changed(); renderWords(); } }));
+    wrap.appendChild(sec);
+  }
+  // Everything else, grouped
+  const groups = {};
+  for (const k in GOQ.TEXT) (groups[GOQ.TEXT[k].g] = groups[GOQ.TEXT[k].g] || []).push(k);
+  for (const g in groups) {
+    wrap.appendChild(el("h3", { text: g, class: "wtitle" }));
+    groups[g].forEach(k => {
+      const def = GOQ.TEXT[k], t = el("textarea", { "aria-label": def.l }); t.value = toText(st.text[k] || def.v);
+      const reset = el("button", { type: "button", class: "btn small quiet", text: "Reset", disabled: !st.text[k], onclick: () => { delete st.text[k]; changed(); renderWords(); } });
+      t.addEventListener("input", () => { const v = fromText(t.value); if (v.length && toText(v) !== toText(def.v)) st.text[k] = v; else delete st.text[k]; reset.disabled = !st.text[k]; changed(); });
+      wrap.appendChild(el("div", { class: "wrow" }, [el("div", { class: "rrow", style: "justify-content:space-between;align-items:center" }, [el("b", { text: def.l }), reset]), t]));
+    });
+  }
+}
 
 /* ---------- Shop ---------- */
 async function itemImage(file) {
@@ -1355,7 +1405,7 @@ $("#importFile").addEventListener("change", async e => {
 <script>
 /* Version check: if this page and museum-engine.js don't match, say so (usually an old copy of the engine file). */
 (function () {
-  const want = "2026-10-02 photos and crowds", have = window.GOQ && GOQ.VERSION, el = document.getElementById("ver");
+  const want = "2026-10-03 album", have = window.GOQ && GOQ.VERSION, el = document.getElementById("ver");
   if (!el) return;
   if (have === want) { el.textContent = "Version: " + have; return; }
   el.textContent = "Heads up: this page expects engine version \u201c" + want + "\u201d but loaded " + (have ? "\u201c" + have + "\u201d" : "an older museum-engine.js") +
