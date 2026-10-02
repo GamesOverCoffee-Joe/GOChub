@@ -646,7 +646,7 @@ const PLACE_GROUPS = [
     { kind: "case", name: "Episode case", key: "display_case", note: "Episodes fill cases in Pieces order. Stand it on the floor with room to walk all the way around." },
     { kind: "spot", name: "Painting spot", key: "wall_frame_wood", note: "Community pieces hang here. Tap the wall; it takes two tiles across both wall rows." },
   ] },
-  { name: "Furniture", items: ["bench", "plant", "sign_stand", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can"].map(k => ({ kind: "prop", key: k })) },
+  { name: "Furniture", items: ["bench", "plant", "sign_stand", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc"].map(k => ({ kind: "prop", key: k })) },
   { name: "Shop and café", items: ["item_rack", "shop_counter", "cafe_counter", "bus_tub", "cafe_table", "cafe_stool", "floor_lamp", "postcard_spinner", "basket", "planter", "cat_bed"].map(k => ({ kind: "prop", key: k }))
     .concat([{ kind: "decal", key: "rug" }]) },
   { name: "Storage and floors", items: [{ kind: "stairs", key: "stair_up", name: "Stairs up", note: "Step on it to change floors. Select it to choose where it leads." },
@@ -666,7 +666,7 @@ const clone = o => JSON.parse(JSON.stringify(o));
 const R = { id: "lobby", tool: "select", brush: TILE_BRUSHES[0], place: null, sel: null, zoom: 0, panX: 0, panY: 0, undo: [], redo: [], img: null, grid: true, linking: null };
 
 function roomIds() { const ids = Object.keys(GOQ.BUILTIN_ROOMS); for (const id in (draft.rooms || {})) if (!ids.includes(id)) ids.push(id); return ids; }
-function roomDef(id) { return (draft.rooms && draft.rooms[id]) || GOQ.BUILTIN_ROOMS[id]; }
+function roomDef(id) { return (draft.rooms && draft.rooms[id]) || GOQ.BUILTIN_ROOMS[id] || GOQ.ROOMS[id]; }
 function editable(id) { draft.rooms = draft.rooms || {}; if (!draft.rooms[id]) draft.rooms[id] = clone(GOQ.BUILTIN_ROOMS[id]); return draft.rooms[id]; }
 function W(d) { return d.map[0].length; } function H(d) { return d.map.length; }
 function setCh(d, x, y, ch) { if (y < 0 || y >= H(d) || x < 0 || x >= W(d)) return; d.map[y] = d.map[y].slice(0, x) + ch + d.map[y].slice(x + 1); }
@@ -978,6 +978,7 @@ function placeAt(t) {
     if (p.key === "trash_can") prop.event = { trash: true };
     if (p.key === "bus_tub") prop.event = { trash: true, tub: true };
     if (p.key === "workbench") prop.event = { upcoming: true };
+    if (p.key === "someones_pc") prop.event = { pc: true };
     if (p.key === "shop_counter") prop.event = { shopCounter: true };
     if (p.key === "cafe_counter") prop.event = { cafe: true };
     if (p.key === "collection_cabinet") prop.collection = true;
@@ -1057,7 +1058,7 @@ function renderInspector() {
     const rs = el("select", {}, roomIds().filter(id => id !== R.id).map(id => el("option", { value: id, text: roomDef(id).name }))); if (to) rs.value = to[0];
     const face = el("select", {}, ["up", "down", "left", "right"].map(dd => el("option", { value: dd, text: "Facing " + dd }))); face.value = to ? to[3] : "down";
     box.appendChild(el("div", { class: "rrow" }, [field("Leads to", rs), field("Arrive", face)]));
-    box.appendChild(el("p", { class: "note", text: "Arrive next to the other floor's stairs, not on them, or you'll bounce straight back." }));
+    box.appendChild(el("p", { class: "note", text: "Tap the other floor's matching stairs: you arrive standing on them, facing the way you'll step off (pick the facing above)." }));
     box.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small", text: "Pick where you arrive", onclick: () => { R.linking = { from: R.id, stairsI: it.i, face: face.value }; R.id = rs.value; R.sel = null; renderRooms(); status("Now tap the floor where you should arrive in " + roomDef(rs.value).name + "."); } })]));
   }
   const notes = { case: "Holds the next episode in Pieces order. The front placard is read from below it, the back from above.", spot: "A painting spot for the next community piece, across both wall rows.",
@@ -1087,7 +1088,7 @@ function renderDoor(box, d, it) {
 }
 function finishLink(t) {
   const L = R.linking, target = roomDef(R.id);
-  if (getCh(target, t.x, t.y) !== "." && getCh(target, t.x, t.y) !== "=") { status("Pick a floor tile to arrive on.", true); return; }
+  if (getCh(target, t.x, t.y) !== "." && getCh(target, t.x, t.y) !== "=") { status("Pick a floor tile (or the other floor's stairs) to arrive on.", true); return; }
   snapshot();
   if (L.stairsI !== undefined) {
     editable(L.from).stairs[L.stairsI].to = [R.id, t.x, t.y, L.face];
@@ -1119,6 +1120,9 @@ function renderRoomSettings(box, d) {
   box.appendChild(el("label", { class: "check" }, [crowd, document.createTextNode("Extra visitors drop in here on busy days")]));
   const stop = el("input", { type: "text", value: d.elevatorStop ? d.elevatorStop.label : "", placeholder: "e.g. 3F Gallery Three" });
   stop.addEventListener("change", () => { snapshot(); const dd = editable(R.id); if (stop.value.trim()) dd.elevatorStop = Object.assign({ order: 5, x: dd.spawn[0], y: dd.spawn[1], dir: dd.spawn[2] }, dd.elevatorStop || {}, { label: stop.value.trim() }); else delete dd.elevatorStop; roomChanged(true); });
+  const fsel = el("select", {}, [["", "None"], ["B1", "B1"], ["1F", "1F"], ["2F", "2F"], ["3F", "3F"], ["4F", "4F"], ["5F", "5F"]].map(([v, l]) => el("option", { value: v, text: l })));
+  fsel.value = d.floorSign || ""; fsel.addEventListener("change", () => { snapshot(); const dd = editable(R.id); if (fsel.value) dd.floorSign = fsel.value; else delete dd.floorSign; roomChanged(true); });
+  box.appendChild(el("label", { class: "rfield" }, [el("span", { text: "Floor painted on the wall (stairwells)" }), fsel]));
   box.appendChild(el("label", { class: "rfield" }, [el("span", { text: "Elevator stop" }), el("small", { text: "Name it to put this room on the elevator panel (you arrive at the start spot). Leave empty for none. Give the room an elevator door too." }), stop]));
   box.appendChild(el("p", { class: "note", text: "Lighting for this room is in Art, then Lighting." }));
   const issues = roomIssues(R.id); if (issues.length) box.appendChild(el("ul", { class: "rissues" }, issues.map(t => el("li", { text: t }))));
@@ -1282,11 +1286,18 @@ function renderPieces() {
   const main = $("#main"); main.innerHTML = "";
   const spots = GOQ.spotCount(), cases = GOQ.caseCount(), wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
   wrap.appendChild(el("h2", { class: "title", text: "Pieces" }));
+  wrap.appendChild(el("p", { class: "note", text: "When there are more pieces than places, the oldest (highest in this list) move to the archive on Someone's PC in Storage, and the newest stay on display. Add new pieces at the bottom." }));
   wrap.appendChild(el("p", { text: "Episodes go in display cases (" + cases + " in the museum): your observation on the front placard, the developer's intention on the back. Community finds hang on the walls as paintings (" + spots + " wall spots). Each kind fills its places in this order. Add more cases and wall spots in the Rooms tab." }));
   wrap.appendChild(el("p", { text: "Turn on \"Unveil on a date\" and visitors see the piece under a sheet until that day. In curator mode it waits in a crate, so you can hang it on camera. Links show as small buttons while someone is looking at the piece." }));
   if (!draft.pieces.length) wrap.appendChild(el("p", { class: "empty", text: "No pieces yet. Add the first one below." }));
+  // Where each piece is: which gallery and case or wall spot, or archived on Someone's PC (the oldest go first).
+  const where = {}, nE = draft.pieces.filter(p => p.kind === "episode").length, nC = draft.pieces.length - nE;
+  const oldE = Math.max(0, nE - cases), oldC = Math.max(0, nC - spots), places = { episode: [], community: [] };
+  Object.keys(GOQ.ROOMS).forEach(id => { const r = GOQ.ROOMS[id], fl = r.elevatorStop ? r.elevatorStop.label.split(/\s+/)[0] + " " : "";
+    (r.cases || []).forEach((_, i) => places.episode.push(fl + "CASE " + (i + 1))); (r.spots || []).forEach((_, i) => places.community.push(fl + "WALL " + (i + 1))); });
   const idx = { episode: 0, community: 0 };
-  draft.pieces.forEach((p, i) => { const k = p.kind === "episode" ? "episode" : "community"; wrap.appendChild(pieceRow(p, i, k === "episode" ? cases : spots, idx[k]++)); });
+  draft.pieces.forEach((p, i) => { const k = p.kind === "episode" ? "episode" : "community", n = idx[k]++, old = k === "episode" ? oldE : oldC;
+    wrap.appendChild(pieceRow(p, i, n < old ? "ARCHIVED (SOMEONE'S PC)" : places[k][n - old])); });
   wrap.appendChild(el("div", { class: "row" }, [el("button", { class: "btn primary", type: "button", text: "Add a piece", onclick: () => {
     draft.pieces.push(GOQ.normalizePiece({ id: uid(), title: "New piece", developer: "" }, draft.pieces.length)); changed({ now: true }); renderPieces();
     const rows = document.querySelectorAll(".prow"); const last = rows[rows.length - 1]; if (last) { last.scrollIntoView({ block: "nearest" }); last.querySelector("input").focus(); }
@@ -1306,7 +1317,7 @@ function renderPieces() {
     el("label", { class: "sr-only", for: "gbText", text: "Guestbook entries" }), gb,
   ]));
 }
-function pieceRow(p, i, spots, n) {
+function pieceRow(p, i, place) {
   const row = el("article", { class: "prow" + (p.kind === "community" ? " community" : ""), "aria-label": p.title || "Untitled piece" });
   const th = el("img", { class: "th", alt: "" });
   if (p.image) { th.src = p.image; th.classList.add("photo"); } else th.src = GOQ.placeholderPainting(p).toDataURL();
@@ -1315,11 +1326,11 @@ function pieceRow(p, i, spots, n) {
     const f = e.target.files[0]; e.target.value = ""; if (!f) return;
     try { p.image = await pieceImage(f); changed({ now: true }); renderPieces(); } catch (err) { status(err.message, true); }
   });
-  const ep = p.kind === "episode", on = n < spots;
-  const spotTxt = on ? (ep ? "CASE " : "WALL SPOT ") + (n + 1) : "NOT ON DISPLAY";
+  const ep = p.kind === "episode", on = !!place && !/^ARCHIVED/.test(place);
+  const spotTxt = place || "NOT ON DISPLAY";
   const left = el("div", {}, [
     el("div", { class: "frame" }, [th]),
-    el("span", { class: "spotlbl" + (on ? "" : " off"), text: spotTxt, title: on ? "" : "No free " + (ep ? "case" : "wall spot") + ". Move this piece up, or add more in the Rooms tab." }),
+    el("span", { class: "spotlbl" + (on ? "" : " off"), text: spotTxt, title: on ? "" : "Archived: it's on Someone's PC in Storage. Move it lower in the list to put it back on display." }),
     el("div", { class: "side-acts" }, [
       el("label", { class: "btn small", for: fileId, text: p.image ? "Replace image" : "Add image" }), file,
       p.image ? el("button", { class: "btn small quiet", type: "button", text: "Remove image", onclick: () => { p.image = null; changed({ now: true }); renderPieces(); } }) : null,
@@ -1405,7 +1416,7 @@ $("#importFile").addEventListener("change", async e => {
 <script>
 /* Version check: if this page and museum-engine.js don't match, say so (usually an old copy of the engine file). */
 (function () {
-  const want = "2026-10-03 album", have = window.GOQ && GOQ.VERSION, el = document.getElementById("ver");
+  const want = "2026-10-04 three galleries", have = window.GOQ && GOQ.VERSION, el = document.getElementById("ver");
   if (!el) return;
   if (have === want) { el.textContent = "Version: " + have; return; }
   el.textContent = "Heads up: this page expects engine version \u201c" + want + "\u201d but loaded " + (have ? "\u201c" + have + "\u201d" : "an older museum-engine.js") +
