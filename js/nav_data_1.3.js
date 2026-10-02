@@ -24,8 +24,9 @@ const navigationLinks = [
     {
         name: 'Museum',
         href: 'museum.html',
+        disabled: true,
         titleSuffix: ' - Museum',
-        classes: 'text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group'
+        classes: 'text-[var(--color-goc-main-text)] opacity-60 cursor-default relative'
     },
     {
         name: 'Insights',
@@ -60,8 +61,12 @@ const generateNav = () => {
     const fragment = document.createDocumentFragment();
 
     navigationLinks.forEach(link => {
-        const a = document.createElement('a');
-        a.href = link.href;
+        const a = document.createElement(link.disabled ? 'span' : 'a');
+        if (!link.disabled) {
+            a.href = link.href;
+        } else {
+            a.setAttribute('aria-disabled', 'true');
+        }
         a.className = link.classes;
         if (link.target) {
             a.target = link.target;
@@ -78,9 +83,11 @@ const generateNav = () => {
         }
         
         // Add the animated bottom bar span
-        const span = document.createElement('span');
-        span.className = 'absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100';
-        a.appendChild(span);
+        if (!link.disabled) {
+            const span = document.createElement('span');
+            span.className = 'absolute left-0 bottom-0 w-full h-0.5 bg-[var(--color-goc-light-accent)] origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100';
+            a.appendChild(span);
+        }
 
         fragment.appendChild(a);
     });
