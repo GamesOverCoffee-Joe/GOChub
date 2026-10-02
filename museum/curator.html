@@ -278,9 +278,24 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
     <p class="pv-hint" id="pvHint">Click the preview, then walk with the arrow keys or WASD. Z or Space to look and hang, X to go back or take a photo, Enter for the menu.</p>
   </aside>
 </div>
-<script src="museum-engine.js"></script>
 <script>
-(function () {
+/* Which engine this page expects. Bump it with every release (it's also shown as the version line).
+   The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
+   instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
+window.GOQ_WANT = "2026-10-06 patrons";
+(function load(retry) {
+  const s = document.createElement("script");
+  s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry ? "&r=" + Date.now() : "");
+  s.onload = () => {
+    if ((!window.GOQ || GOQ.VERSION !== window.GOQ_WANT) && !retry) { load(true); return; }
+    window.goqStart(); window.goqCheck();
+  };
+  s.onerror = () => { if (!retry) load(true); else { window.goqStart && window.GOQ && window.goqStart(); window.goqCheck(); } };
+  document.head.appendChild(s);
+})(false);
+</script>
+<script>
+window.goqStart = function () {
 "use strict";
 const DRAFT_KEY = "goq-curator-draft", SITE_PACK = "museum-pack.json", MAX_PIECE_W = 480;
 const $ = s => document.querySelector(s);
@@ -601,12 +616,33 @@ function renderStaff() {
   wrap.appendChild(el("h2", { class: "title", text: "Staff" }));
   wrap.appendChild(el("p", { text: "Patreon members clock in at the staff door with a badge, wear the staff uniform, and their chores count toward a staff tally. Until Phase 8 (Supabase), only the offline test badge works: number 0001, key TEST." }));
 
+  // Patreon members: they show up as named visitors (a fresh mix each day) and are all listed on the Patron Board.
+  st.members = st.members || [];
+  const mem = el("textarea", { id: "memText", style: "min-height:140px", placeholder: "Sam, 0002\nPriya, 0003\nAlex" });
+  mem.value = st.members.map(m => m.name + (m.badge ? ", " + m.badge : "")).join("\n");
+  const memCount = el("p", { class: "note", style: "margin:8px 0 0" });
+  const showCount = () => { const n = st.members.length; memCount.textContent = n + " member" + (n === 1 ? "" : "s") + ". Up to about 19 visit on a busy day (12 on a medium day); with more members than that, a different group visits each day. Everyone is always on the Patron Board in the lobby."; };
+  mem.addEventListener("input", () => { st.members = mem.value.split("\n").map(l => l.trim()).filter(Boolean).map(l => { const m = l.match(/^(.*?)(?:\s*,\s*(\d+))?$/); return { name: m[1].trim().slice(0, 32), badge: m[2] || "" }; }).filter(m => m.name); showCount(); changed(); });
+  showCount();
+  wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
+    el("h3", { text: "Patreon members", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "One per line: their name, then a comma and their badge number if they have one. When a member clocks in with their badge, their visitor version leaves the museum, since they're the one playing. Names are public on your site, so use the names members are happy to show." }),
+    el("label", { class: "sr-only", for: "memText", text: "Patreon members" }), mem, memCount,
+  ]));
   const cat = el("input", { type: "text", value: st.catName || "Pixel", placeholder: "Pixel", maxlength: 30 });
   cat.addEventListener("input", () => { st.catName = cat.value.trim() || "Pixel"; changed(); });
   wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
     el("h3", { text: "The museum cat", style: "margin:0 0 4px" }),
     el("p", { class: "note", style: "margin:0 0 12px", text: "Naps somewhere different every day: the lobby, the gallery, its bed in the gift shop, or the staff room. Visitors can pet it." }),
     el("div", { class: "fields", style: "max-width:420px" }, [el("label", {}, [document.createTextNode("Name"), cat])]),
+  ]));
+  const fp = el("input", { type: "range", min: 0, max: 100, step: 1, value: Math.round((st.fingerprints === undefined ? 0.15 : st.fingerprints) * 100), "aria-label": "Fingerprints on cases" });
+  const fpOut = el("output", { text: fp.value + "%" });
+  fp.addEventListener("input", () => { st.fingerprints = +fp.value / 100; fpOut.textContent = fp.value + "%"; changed(); });
+  wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
+    el("h3", { text: "Fingerprints on cases", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "Roughly the chance a case has a smudge on a given day, and how often lingering visitors leave new ones. 0% turns fingerprints off." }),
+    el("label", { class: "range" }, [el("span", { text: "Amount" }), fp, fpOut]),
   ]));
   const name = el("input", { type: "text", value: st.eotm.name, placeholder: "A patron's display name" });
   const note = el("input", { type: "text", value: st.eotm.note, placeholder: "Dusted 41 frames in October" });
@@ -646,8 +682,8 @@ const PLACE_GROUPS = [
     { kind: "case", name: "Episode case", key: "display_case", note: "Episodes fill cases in Pieces order. Stand it on the floor with room to walk all the way around." },
     { kind: "spot", name: "Painting spot", key: "wall_frame_wood", note: "Community pieces hang here. Tap the wall; it takes two tiles across both wall rows." },
   ] },
-  { name: "Furniture", items: ["bench", "plant", "sign_stand", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc"].map(k => ({ kind: "prop", key: k })) },
-  { name: "Shop and café", items: ["item_rack", "shop_counter", "cafe_counter", "bus_tub", "cafe_table", "cafe_stool", "floor_lamp", "postcard_spinner", "basket", "planter", "cat_bed"].map(k => ({ kind: "prop", key: k }))
+  { name: "Furniture", items: ["bench", "plant", "sign_stand", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board"].map(k => ({ kind: "prop", key: k })) },
+  { name: "Shop and café", items: ["shelf_unit", "magazine_rack", "item_rack", "shop_counter", "cafe_counter", "bus_tub", "cafe_table", "cafe_stool", "floor_lamp", "postcard_spinner", "basket", "planter", "cat_bed"].map(k => ({ kind: "prop", key: k }))
     .concat([{ kind: "decal", key: "rug" }]) },
   { name: "Storage and floors", items: [{ kind: "stairs", key: "stair_up", name: "Stairs up", note: "Step on it to change floors. Select it to choose where it leads." },
     { kind: "stairs", key: "stair_down", name: "Stairs down", note: "Step on it to change floors. Select it to choose where it leads." }]
@@ -658,6 +694,7 @@ const PLACE_GROUPS = [
     { kind: "catSpot", name: "Cat nap spot", key: "cat" }, { kind: "mugSpot", name: "Mug spot", key: "mug" },
     { kind: "lightSwitch", name: "Light switch", key: "light_switch", note: "On the lower wall row. Rooms with a switch must be dark to close the museum." },
     { kind: "intercom", name: "Intercom", key: "intercom" },
+    { kind: "glow", name: "Light", key: "floor_lamp", note: "A warm pool of light. Pieces get their own spotlights automatically; these are for lamps and corners." },
   ] },
   { name: "People", items: ["visitor_a", "visitor_b", "visitor_c", "shop_staff", "guard"].map(k => ({ kind: "visitor", key: k })) },
 ];
@@ -691,6 +728,7 @@ function roomItems(d) {
   (d.visitors || []).forEach((v, i) => out.push({ type: "visitor", i, x: v.x, y: v.y, w: 1, h: 1, label: "Visitor" }));
   if (d.spawn) out.push({ type: "spawn", x: d.spawn[0], y: d.spawn[1], w: 1, h: 1, label: "Start spot" });
   (d.catSpots || []).forEach((p, i) => out.push({ type: "catSpot", i, x: p[0], y: p[1], w: 1, h: 1, label: "Cat nap spot" }));
+  (d.glows || []).forEach((p, i) => out.push({ type: "glow", i, x: p[0], y: p[1], w: 1, h: 1, label: "Light" }));
   (d.mugSpots || []).forEach((p, i) => out.push({ type: "mugSpot", i, x: p[0], y: p[1], w: 1, h: 1, label: "Mug spot" }));
   [["lightSwitch", "Light switch", 1, 1], ["intercom", "Intercom", 1, 1], ["timeClock", "Time clock", 1, 1], ["elevatorPanel", "Elevator panel", 1, 1]].forEach(([k, l, w, h]) => { if (d[k]) out.push({ type: "fixed", key: k, x: d[k][0], y: d[k][1], w, h, label: l }); });
   [["windowAt", "Window"], ["eotmAt", "Employee of the Month"], ["corkboardAt", "Corkboard"]].forEach(([k, l]) => { if (d[k]) out.push({ type: "fixed", key: k, x: d[k][0], y: 1, w: 2, h: 2, label: l }); });
@@ -820,6 +858,7 @@ function drawEditor() {
     if (it.type === "spawn") tag(it.x, it.y, "S", "#7ad08a");
     else if (it.type === "catSpot") tag(it.x, it.y, "C", "#f0a050");
     else if (it.type === "mugSpot") tag(it.x, it.y, "M", "#e8e4dc");
+    else if (it.type === "glow") { x.fillStyle = "rgba(255,200,120,.35)"; x.beginPath(); x.arc(it.x * 16 + 8, it.y * 16 + 4, 14, 0, Math.PI * 2); x.fill(); tag(it.x, it.y, "L", "#ffd890"); }
     else if (it.type === "visitor") outline(it, "#9fcf7a");
     else if (it.type === "spot") outline(it, "#c8a070", true);
     else if (it.type === "case") outline(it, "#a8d0e8", true);
@@ -966,6 +1005,7 @@ function placeAt(t) {
   else if (p.kind === "mugSpot") (d.mugSpots = d.mugSpots || []).push([t.x, t.y]);
   else if (p.kind === "lightSwitch") d.lightSwitch = [t.x, t.y];
   else if (p.kind === "intercom") d.intercom = [t.x, t.y];
+  else if (p.kind === "glow") (d.glows = d.glows || []).push([t.x, t.y]);
   else if (p.kind === "visitor") (d.visitors = d.visitors || []).push({ sheet: p.key, x: t.x, y: t.y, dir: "down", lines: [["Hello!"]] });
   else if (p.kind === "stairs") (d.stairs = d.stairs || []).push({ x: t.x, y: t.y, kind: p.key === "stair_up" ? "up" : "down", to: null });
   else if (p.kind === "prop") {
@@ -974,24 +1014,29 @@ function placeAt(t) {
     if (SIT_KEYS[p.key]) prop.sit = SIT_KEYS[p.key];
     if (p.key === "plant") { prop.plant = "plant-" + Math.random().toString(36).slice(2, 7); prop.name = "plant"; }
     if (p.key === "item_rack") { prop.rack = (d.props || []).filter(q => q.key === "item_rack").length; prop.blockTop = true; }
+    if (p.key === "shelf_unit") { prop.unit = (d.props || []).filter(q => q.key === "shelf_unit").length; prop.blockTop = true; }
+    if (p.key === "magazine_rack") { prop.blockTop = true; prop.event = { magazines: true }; }
     if (p.key === "collection_cabinet" || p.key === "storage_shelves") prop.blockTop = true;
     if (p.key === "trash_can") prop.event = { trash: true };
     if (p.key === "bus_tub") prop.event = { trash: true, tub: true };
     if (p.key === "workbench") prop.event = { upcoming: true };
     if (p.key === "someones_pc") prop.event = { pc: true };
+    if (p.key === "fridge") { prop.blockTop = true; prop.event = { fridge: true }; }
+    if (p.key === "microwave_counter") prop.event = { microwave: true };
+    if (p.key === "patron_board") { prop.blockTop = true; prop.event = { patronBoard: true }; }
     if (p.key === "shop_counter") prop.event = { shopCounter: true };
     if (p.key === "cafe_counter") prop.event = { cafe: true };
     if (p.key === "collection_cabinet") prop.collection = true;
     if (p.key === "whiteboard") prop.rules = true;
     if (p.key === "cat_bed") prop.catBed = true;
-    if (!prop.event && !prop.rules && !prop.collection && p.key !== "item_rack" && p.key !== "plant") prop.say = ["(What it says when someone looks at it.)"];
+    if (!prop.event && !prop.rules && !prop.collection && p.key !== "item_rack" && p.key !== "shelf_unit" && p.key !== "plant") prop.say = ["(What it says when someone looks at it.)"];
     (d.props = d.props || []).push(prop);
   }
   R.sel = roomItems(d).filter(it => it.x <= t.x && t.x < it.x + it.w && it.y <= t.y && t.y < it.y + it.h).pop() || null;
   roomChanged(true);
 }
 function removeItem(d, it) {
-  const arr = { visitor: "visitors", catSpot: "catSpots", mugSpot: "mugSpots", case: "cases", prop: "props", spot: "spots", wallArt: "wallArt", decal: "decals", stairs: "stairs" }[it.type];
+  const arr = { glow: "glows", visitor: "visitors", catSpot: "catSpots", mugSpot: "mugSpots", case: "cases", prop: "props", spot: "spots", wallArt: "wallArt", decal: "decals", stairs: "stairs" }[it.type];
   if (arr) d[arr].splice(it.i, 1);
   else if (it.type === "fixed") delete d[it.key];
 }
@@ -1007,6 +1052,7 @@ function moveItem(d, it, dx, dy) {
   else if (it.type === "stairs") { d.stairs[it.i].x += dx; d.stairs[it.i].y += dy; }
   else if (it.type === "catSpot") { d.catSpots[it.i][0] += dx; d.catSpots[it.i][1] += dy; }
   else if (it.type === "mugSpot") { d.mugSpots[it.i][0] += dx; d.mugSpots[it.i][1] += dy; }
+  else if (it.type === "glow") { d.glows[it.i][0] += dx; d.glows[it.i][1] += dy; }
   else if (it.type === "spawn") { d.spawn[0] += dx; d.spawn[1] += dy; }
   else if (it.type === "fixed") { d[it.key][0] += dx; if (sety) d[it.key][1] += dy; }
   if (!sety) it.y -= dy; // wall things stay on the wall rows
@@ -1024,8 +1070,9 @@ function renderInspector() {
   if (it.type === "door") return renderDoor(box, d, it);
   if (it.type === "prop") {
     const p = d.props[it.i];
-    if (p.say || (!p.event && !p.rules && !p.collection && p.key !== "item_rack" && !p.plant)) box.appendChild(linesBox(() => (p.say || []).join("\n"), v => { editable(R.id).props[it.i].say = v.split("\n").map(s => s.trim()).filter(Boolean); }));
+    if (p.say || (!p.event && !p.rules && !p.collection && p.key !== "item_rack" && p.key !== "shelf_unit" && !p.plant)) box.appendChild(linesBox(() => (p.say || []).join("\n"), v => { editable(R.id).props[it.i].say = v.split("\n").map(s => s.trim()).filter(Boolean); }));
     if (p.plant !== undefined) { const n = el("input", { type: "text", value: p.name || "" }); n.addEventListener("change", () => { snapshot(); editable(R.id).props[it.i].name = n.value.trim() || "plant"; roomChanged(true); }); box.appendChild(field("Plant's name", n, "Used in \"You water the ___.\"")); }
+    if (p.key === "shelf_unit") { const n = el("input", { type: "number", min: 1, max: 9, value: (p.unit || 0) + 1 }); n.addEventListener("change", () => { snapshot(); editable(R.id).props[it.i].unit = Math.max(0, Math.min(8, (+n.value || 1) - 1)); roomChanged(true); }); box.appendChild(field("Unit number", n, "Each unit holds six shop items: unit 1 has items 1 to 6 from the Shop tab, unit 2 has items 7 to 12, and so on.")); }
     if (p.key === "item_rack") { const n = el("input", { type: "number", min: 1, max: 9, value: (p.rack || 0) + 1 }); n.addEventListener("change", () => { snapshot(); editable(R.id).props[it.i].rack = Math.max(0, Math.min(8, (+n.value || 1) - 1)); roomChanged(true); }); box.appendChild(field("Stand number", n, "Each stand shows one shop item: stand 1 has the first item in the Shop tab, stand 2 the second, and so on.")); }
     if (SIT_KEYS[p.key] || p.sit) {
       const s = el("select", {}, [["", "No"], ["up", "Yes, facing up"], ["down", "Yes, facing down"], ["left", "Yes, facing left"], ["right", "Yes, facing right"]].map(([v, l]) => el("option", { value: v, text: l })));
@@ -1061,7 +1108,7 @@ function renderInspector() {
     box.appendChild(el("p", { class: "note", text: "Tap the other floor's matching stairs: you arrive standing on them, facing the way you'll step off (pick the facing above)." }));
     box.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small", text: "Pick where you arrive", onclick: () => { R.linking = { from: R.id, stairsI: it.i, face: face.value }; R.id = rs.value; R.sel = null; renderRooms(); status("Now tap the floor where you should arrive in " + roomDef(rs.value).name + "."); } })]));
   }
-  const notes = { case: "Holds the next episode in Pieces order. The front placard is read from below it, the back from above.", spot: "A painting spot for the next community piece, across both wall rows.",
+  const notes = { glow: "A warm pool of light, shown even when the room's lights are on. Drag it to move it.", case: "Holds the next episode in Pieces order. The front placard is read from below it, the back from above.", spot: "A painting spot for the next community piece, across both wall rows.",
     spawn: "Where you appear when jumping to this room.", catSpot: "One of the places the cat might nap today.", mugSpot: "One of the places the curator's mug might turn up.", fixed: "A built-in feature. Drag it to move it.", locker: "Lockers are part of the staff room." };
   if (notes[it.type]) box.appendChild(el("p", { class: "note", text: notes[it.type] }));
   if (it.type !== "spawn" && it.type !== "locker") box.appendChild(el("div", { class: "row" }, [delBtn()]));
@@ -1234,6 +1281,11 @@ function renderShop() {
   const price = el("input", { type: "number", min: 0, max: 99, value: sh.drinkPrice || 0, style: "max-width:120px" });
   price.addEventListener("input", () => { sh.drinkPrice = Math.max(0, Math.min(99, Math.round(+price.value || 0))); changed(); });
   wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:10px 0 6px" }, [el("label", {}, [document.createTextNode("Café drinks cost (tokens)"), el("small", { text: "0 means coffee, tea and cocoa are free." }), price])]));
+  // Stamp card: reading a piece's placard stamps it; a full card trades for one prize item (ticked below).
+  sh.stampItems = sh.stampItems || [];
+  const ssize = el("input", { type: "number", min: 3, max: 40, value: sh.stampSize || 10, style: "max-width:120px" });
+  ssize.addEventListener("input", () => { sh.stampSize = Math.max(3, Math.min(40, Math.round(+ssize.value || 10))); changed(); });
+  wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:6px 0 6px" }, [el("label", {}, [document.createTextNode("Stamps on a full stamp card"), el("small", { text: "Visitors get a stamp for each piece whose placard they read. A full card trades for one item marked \"Stamp card prize\" below." }), ssize])]));
   if (!sh.items.length) wrap.appendChild(el("p", { class: "empty", text: "No items yet. Add the first one below." }));
   sh.items.forEach((it, i) => {
     const icon = el("img", { class: "th", alt: "", style: "aspect-ratio:1/1;width:96px;object-fit:contain;background:var(--surface-2)" });
@@ -1256,6 +1308,7 @@ function renderShop() {
         el("label", { class: "wide" }, [document.createTextNode("Description"), desc]),
         el("div", { class: "acts" }, [
           el("label", { class: "check", style: "margin:0 10px 0 0" }, [feat, document.createTextNode("Featured")]),
+          (() => { const cb = el("input", { type: "checkbox", checked: sh.stampItems.includes(it.id) }); cb.addEventListener("change", () => { sh.stampItems = sh.stampItems.filter(x => x !== it.id); if (cb.checked) sh.stampItems.push(it.id); changed(); }); return el("label", { class: "check", style: "margin:0 10px 0 0" }, [cb, document.createTextNode("Stamp card prize")]); })(),
           el("button", { class: "btn small quiet", type: "button", text: "Move up", disabled: i === 0, onclick: () => move(-1) }),
           el("button", { class: "btn small quiet", type: "button", text: "Move down", disabled: i === sh.items.length - 1, onclick: () => move(1) }),
           el("button", { class: "btn small quiet", type: "button", text: "Remove item", onclick: () => {
@@ -1410,19 +1463,19 @@ $("#importFile").addEventListener("change", async e => {
   await game.setPack(packOut());
   render();
 })();
-})();
+};
 </script>
 
 <script>
 /* Version check: if this page and museum-engine.js don't match, say so (usually an old copy of the engine file). */
-(function () {
-  const want = "2026-10-04 three galleries", have = window.GOQ && GOQ.VERSION, el = document.getElementById("ver");
+window.goqCheck = function () {
+  const want = window.GOQ_WANT, have = window.GOQ && GOQ.VERSION, el = document.getElementById("ver");
   if (!el) return;
   if (have === want) { el.textContent = "Version: " + have; return; }
   el.textContent = "Heads up: this page expects engine version \u201c" + want + "\u201d but loaded " + (have ? "\u201c" + have + "\u201d" : "an older museum-engine.js") +
     ". Replace museum-engine.js in this folder with the latest one (check your downloads didn't save it as \u201cmuseum-engine (1).js\u201d), then refresh.";
   el.style.color = "#f08a6a"; el.style.fontWeight = "700";
-})();
+};
 </script>
 </body>
 </html>

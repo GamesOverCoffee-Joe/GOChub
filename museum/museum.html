@@ -189,10 +189,25 @@ dialog.settings::backdrop{background:rgba(10,5,7,.7)}
   </form>
 </dialog>
 
-<script src="museum-engine.js"></script>
+<script>
+/* Which engine this page expects. Bump it with every release (it's also shown as the version line).
+   The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
+   instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
+window.GOQ_WANT = "2026-10-06 patrons";
+(function load(retry) {
+  const s = document.createElement("script");
+  s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry ? "&r=" + Date.now() : "");
+  s.onload = () => {
+    if ((!window.GOQ || GOQ.VERSION !== window.GOQ_WANT) && !retry) { load(true); return; }
+    window.goqStart(); window.goqCheck();
+  };
+  s.onerror = () => { if (!retry) load(true); else { window.goqStart && window.GOQ && window.goqStart(); window.goqCheck(); } };
+  document.head.appendChild(s);
+})(false);
+</script>
 <script>
 /* ---------- Boot ---------- */
-(function () {
+window.goqStart = function () {
   const KEY = "goq-museum-pack", PACK_FILE = "museum-pack.json", SET_KEY = "goq-museum-settings";
   const q = location.search + location.hash, flag = n => new RegExp("[?&#]" + n + "\\b").test(q);
   const testMode = flag("test");
@@ -338,19 +353,19 @@ dialog.settings::backdrop{background:rgba(10,5,7,.7)}
     game.setPack(null); status.className = ""; status.textContent = "Built-in placeholder art"; status2.textContent = status.textContent; resetBtn.hidden = true;
     stage.focus({ preventScroll: true });
   });
-})();
+};
 </script>
 <script>
 /* Version check: if this page and museum-engine.js don't match, say so (usually an old copy of the engine file). */
-(function () {
-  const want = "2026-10-04 three galleries", have = window.GOQ && GOQ.VERSION, el = document.getElementById("ver");
+window.goqCheck = function () {
+  const want = window.GOQ_WANT, have = window.GOQ && GOQ.VERSION, el = document.getElementById("ver");
   if (!el) return;
   if (have === want) { el.textContent = "Version: " + have; return; }
   el.classList.add("warn");
   el.textContent = "Heads up: this page expects engine version \u201c" + want + "\u201d but loaded " + (have ? "\u201c" + have + "\u201d" : "an older museum-engine.js") +
     ". Replace museum-engine.js in this folder with the latest one (check your downloads didn't save it as \u201cmuseum-engine (1).js\u201d), then refresh.";
   el.style.color = "#f08a6a"; el.style.fontWeight = "700";
-})();
+};
 </script>
 </body>
 </html>

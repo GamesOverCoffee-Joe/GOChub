@@ -47,6 +47,12 @@ const PAL = {
   g3:      ["#f4ece0", "#d8c4a4", "#9a7e5a", "#2a2018", "#e8dcc4"],
   g3fl:    ["#c89868", "#a87848", "#7a5030", "#2a1a0e", "#dcb080"],
   pc:      [null, "#d8d8d0", "#909098", "#303038", "#68a8d8", "#c8f0ff"],
+  shelf:   [null, "#e8e4dc", "#7c7c80", "#181820", "#fbf6ea"],
+  mags:    [null, "#f8f0e0", "#8a5a38", "#2a160c", "#e05050", "#5878c8", "#f0c040", "#58a868"],
+  segway:  [null, "#f8f8f0", "#b0b0c0", "#181820"],
+  goqshirt:[null, "#f8e0c0", "#2a2030", "#181820", "#e8b24a"],
+  kitchen: [null, "#e8eef4", "#9fb4c8", "#1a2230", "#e05050", "#58a868", "#d8a050"],
+  plaque:  [null, "#e8c870", "#7a4a28", "#2a160c", "#f8f0c0"],
   ui:      ["#f8f8f0", "#b0b0c0", "#505068", "#181820"],
   player:  [null, "#f8e0c0", "#3878c8", "#181820"],
   visitorA:[null, "#e8c098", "#c83838", "#181820"],
@@ -306,17 +312,11 @@ const GEN = {
       .forEach(([x, y, w, h, c]) => rect(a, x, y, w, h, c));
     return outline(a);
   },
+  // A plain pedestal; the featured item sits on top of it (drawn at 2,2 to 13,13).
   featured_stand: () => {
     const a = mk(16, 32);
-    rect(a, 3, 18, 10, 13, 2); rect(a, 3, 18, 10, 2, 1); rect(a, 2, 29, 12, 3, 3);
-    // glass dome (the featured item is drawn inside it)
-    fillFn(a, (x, y) => {
-      if (y < 4 || y > 17 || x < 2 || x > 13) return;
-      const r2 = (x - 7.5) ** 2 + (y - 10) ** 2;
-      if (y <= 9 && r2 > 36) return;
-      return x === 2 || x === 13 || (y <= 9 && r2 > 26) ? 7 : undefined;
-    });
-    px(a, 4, 7, 6); px(a, 4, 8, 6);
+    rect(a, 2, 14, 12, 3, 1); rect(a, 2, 14, 12, 1, 0); rect(a, 3, 17, 10, 12, 2); rect(a, 4, 17, 1, 12, 1); rect(a, 2, 29, 12, 3, 3);
+    rect(a, 6, 22, 4, 2, 4);
     return outline(a);
   },
   cafe_counter: () => {
@@ -573,6 +573,45 @@ const GEN = {
     rect(a, 6, 7, 4, 2, 2); rect(a, 4, 11, 8, 2, 1); px(a, 13, 12, 4); // stand, keyboard, power light
     return outline(a, 3);
   },
+  // A shop shelving unit: two shelves, three stacks of goods on each (the goods are drawn on top).
+  shelf_unit: () => {
+    const a = mk(48, 32);
+    rect(a, 0, 0, 48, 32, 3); rect(a, 1, 1, 46, 3, 0); rect(a, 1, 4, 46, 11, 4); rect(a, 1, 18, 46, 11, 4);
+    rect(a, 1, 13, 46, 2, 1); rect(a, 1, 15, 46, 3, 2); rect(a, 1, 27, 46, 2, 1); rect(a, 1, 29, 46, 2, 2);
+    rect(a, 2, 5, 1, 9, 1); rect(a, 45, 5, 1, 9, 1);
+    return a;
+  },
+  magazine_rack: () => {
+    const a = mk(16, 32);
+    rect(a, 2, 4, 12, 26, 2); rect(a, 2, 30, 12, 2, 3);
+    [[3, 5, 5], [8, 6, 6], [3, 13, 7], [8, 12, 1], [3, 21, 6], [8, 20, 5]].forEach(([x, y, c]) => { rect(a, x, y, 5, 7, c); rect(a, x + 1, y + 1, 3, 1, 0); });
+    for (const y of [11, 19, 27]) rect(a, 2, y, 12, 1, 3);
+    return outline(a);
+  },
+  segway: () => { const a = mk(16, 16); rect(a, 7, 2, 2, 10, 3); rect(a, 5, 1, 6, 2, 3); rect(a, 2, 12, 12, 2, 2); circ(a, 3.5, 13.5, 2, 3); circ(a, 12.5, 13.5, 2, 3); px(a, 3, 13, 0); px(a, 12, 13, 0); return a; },
+  fridge: () => {
+    const a = mk(16, 32);
+    rect(a, 1, 1, 14, 30, 0); rect(a, 1, 11, 14, 1, 2); rect(a, 12, 4, 1, 5, 2); rect(a, 12, 14, 1, 8, 2);
+    rect(a, 3, 15, 4, 4, 4); rect(a, 4, 3, 3, 3, 5); px(a, 8, 17, 6); // a drawing and a magnet
+    rect(a, 2, 29, 12, 2, 2);
+    return outline(a, 3);
+  },
+  microwave_counter: f => {
+    const a = mk(32, 16);
+    rect(a, 0, 6, 32, 10, 2); rect(a, 0, 6, 32, 2, 1); rect(a, 0, 6, 32, 1, 0);
+    rect(a, 2, 0, 17, 7, 1); rect(a, 3, 1, 11, 5, f ? 6 : 3); rect(a, 15, 1, 3, 5, 2); px(a, 16, 2, 4); px(a, 16, 4, 0);
+    if (f) { px(a, 4, 2, 4); px(a, 7, 3, 5); px(a, 10, 2, 4); px(a, 12, 4, 5); px(a, 5, 5, 5); } // the aftermath
+    rect(a, 23, 2, 6, 5, 4); rect(a, 24, 1, 4, 1, 4); // a lunchbox waiting its turn
+    for (let x = 4; x < 30; x += 8) rect(a, x, 10, 5, 5, 1);
+    return outline(a, 3);
+  },
+  patron_board: () => {
+    const a = mk(32, 32);
+    rect(a, 1, 1, 30, 22, 3); rect(a, 2, 2, 28, 20, 2); rect(a, 4, 3, 24, 3, 4);
+    for (let y = 8; y < 21; y += 4) for (let x = 4; x < 28; x += 8) rect(a, x, y, 6, 2, 1); // name plates
+    rect(a, 6, 23, 3, 7, 2); rect(a, 23, 23, 3, 7, 2); rect(a, 3, 29, 26, 2, 3);
+    return outline(a);
+  },
   textbox: () => fillFn(mk(24, 24), (x, y) => {
     const d = Math.min(x, y, 23 - x, 23 - y);
     if (Math.min(x, 23 - x) + Math.min(y, 23 - y) < 2) return -1;
@@ -704,6 +743,13 @@ const SLOTS = [
   { key: "g3_wall_lower", label: "Gallery Three wall, lower row", group: "Gallery Three", w: 16, h: 16, pal: "g3", gen: GEN.wall_lower },
   { key: "floor_sign", label: "Floor number on a stairwell wall", group: "Floors", w: 32, h: 16, frames: 6, pal: "staffrm", gen: GEN.floor_sign, note: "6 frames side by side (192×16): B1, 1F, 2F, 3F, 4F, 5F. Painted on the upper wall row, in the middle." },
   { key: "someones_pc", label: "Someone's PC", group: "Floors", w: 16, h: 16, pal: "pc", gen: GEN.someones_pc, note: "In Storage. Holds the archive of pieces no longer on display." },
+  { key: "shelf_unit", label: "Shop shelving unit", group: "Gift shop and café", w: 48, h: 32, pal: "shelf", gen: GEN.shelf_unit, note: "Two shelves, three stacks of goods per shelf. Goods are drawn on top: stacks centered at x 9, 24 and 39, shelves at y 4 and 18." },
+  { key: "magazine_rack", label: "Magazine stand", group: "Gift shop and café", w: 16, h: 32, pal: "mags", gen: GEN.magazine_rack, note: "In the café. Two tiles tall." },
+  { key: "segway", label: "Segway (secret)", group: "People", w: 16, h: 16, pal: "segway", gen: GEN.segway, note: "Drawn under you when you've entered a certain famous code." },
+  { key: "player_goq_shirt", label: "Player in the GOQ shirt (secret)", group: "People", w: 16, h: 16, layout: "char", pal: "goqshirt", gen: GEN.staff_uniform, note: "Worn after unlocking the discontinued GOQ shirt. " + CHAR_NOTE },
+  { key: "fridge", label: "Staff fridge", group: "Staff", w: 16, h: 32, pal: "kitchen", gen: GEN.fridge, note: "Two tiles tall." },
+  { key: "microwave_counter", label: "Counter with microwave", group: "Staff", w: 32, h: 16, frames: 2, pal: "kitchen", gen: GEN.microwave_counter, note: "2 frames (64×16): clean, and after the incident." },
+  { key: "patron_board", label: "Patron Board", group: "Lobby", w: 32, h: 32, pal: "plaque", gen: GEN.patron_board, note: "A standing board in the lobby that lists every Patreon member. Two tiles wide, two tall." },
   { key: "closeup_case", label: "Case close-up frame", group: "Pieces", w: 24, h: 24, pal: "glass", gen: GEN.closeup_case, note: "Nine-slice around the art when you look into a case." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
@@ -802,7 +848,10 @@ function normalizePack(p) {
   const sin = (p.settings && p.settings.staff) || {}, eo = sin.eotm || {};
   const staff = {
     catName: str(sin.catName, 30) || "Pixel",
+    fingerprints: typeof sin.fingerprints === "number" && isFinite(sin.fingerprints) ? Math.max(0, Math.min(1, sin.fingerprints)) : 0.15,
     eotm: { name: str(eo.name, 40), note: str(eo.note, 200) },
+    // Patreon members: they visit the museum as named visitors, and are all listed on the Patron Board.
+    members: (Array.isArray(sin.members) ? sin.members : []).slice(0, 1000).map(m => ({ name: str(m && m.name, 32), badge: str(m && m.badge, 12).replace(/\D/g, "") })).filter(m => m.name),
     corkboard: (Array.isArray(sin.corkboard) ? sin.corkboard : DEFAULT_CORKBOARD).map(n => str(n, 300)).filter(Boolean).slice(0, 12),
   };
   const shin = (p.settings && p.settings.shop) || {};
@@ -810,7 +859,9 @@ function normalizePack(p) {
     id: str(it && it.id, 60) || "item-" + (i + 1), name: str(it && it.name, 60) || "Untitled item",
     price: Math.max(0, Math.min(999, Math.round(+(it && it.price) || 0))), description: str(it && it.description, 240), image: str(it && it.image, 2000000) || null,
   }));
-  const shop = { items, featured: items.some(it => it.id === shin.featured) ? shin.featured : (items[0] ? items[0].id : ""),
+  const stampSize = Math.max(3, Math.min(40, Math.round(+shin.stampSize || 10)));
+  const stampItems = (Array.isArray(shin.stampItems) ? shin.stampItems : []).filter(id => items.some(it => it.id === id));
+  const shop = { items, stampSize, stampItems, featured: items.some(it => it.id === shin.featured) ? shin.featured : (items[0] ? items[0].id : ""),
     drinkPrice: Math.max(0, Math.min(99, Math.round(+shin.drinkPrice || 0))) };
   const rooms = p.rooms && typeof p.rooms === "object" ? p.rooms : {};
   const vlist = v => (Array.isArray(v) ? v.filter(Array.isArray).map(pg => pg.map(x => str(x, 400)).filter(Boolean)).filter(pg => pg.length).slice(0, 30) : null);
@@ -873,6 +924,7 @@ const ROOMS = {
     props: [
       { key: "sign_stand", x: 13, y: 6, say: ["GIFT SHOP AND CAFE", "Right through this door. Souvenirs, coffee, and somewhere to sit."] },
       { key: "trash_can", x: 13, y: 4, event: { trash: true } },
+      { key: "patron_board", x: 4, y: 8, tall: true, blockTop: true, event: { patronBoard: true } },
       { key: "front_desk", x: 2, y: 4, say: ["A guestbook lies open on the front desk.", "The first page is still blank."] },
       { key: "sign_stand", x: 9, y: 3, say: ["DIRECTORY", "North: Gallery One. Games Over Qualia episodes and community finds."] },
       { key: "plant", plant: "fern-left", name: "fern", x: 1, y: 3 },
@@ -928,8 +980,9 @@ const ROOMS = {
     featuredAt: [8, 9],
     glows: [[1, 3], [12, 3], [20, 9], [16, 4]],
     props: [
-      { key: "item_rack", x: 2, y: 5, rack: 0, tall: true, blockTop: true }, { key: "item_rack", x: 6, y: 5, rack: 1, tall: true, blockTop: true }, { key: "item_rack", x: 10, y: 5, rack: 2, tall: true, blockTop: true },
-      { key: "item_rack", x: 6, y: 8, rack: 3, tall: true, blockTop: true }, { key: "item_rack", x: 10, y: 8, rack: 4, tall: true, blockTop: true },
+      { key: "shelf_unit", x: 2, y: 5, unit: 0, tall: true, blockTop: true }, { key: "shelf_unit", x: 7, y: 5, unit: 1, tall: true, blockTop: true },
+      { key: "shelf_unit", x: 4, y: 8, unit: 2, tall: true, blockTop: true },
+      { key: "magazine_rack", x: 20, y: 7, tall: true, blockTop: true, event: { magazines: true } },
       { key: "shop_counter", x: 1, y: 9, event: { shopCounter: true } },
       { key: "floor_lamp", x: 1, y: 4, tall: true, say: ["A floor lamp with a fringed shade. Very warm, very cozy."] },
       { key: "postcard_spinner", x: 12, y: 4, tall: true, say: ["A squeaky postcard spinner. Every card is a different game."] },
@@ -1036,7 +1089,9 @@ const ROOMS = {
     props: [
       { key: "whiteboard", x: 6, y: 6, rules: true },
       { key: "break_table", x: 2, y: 6, say: ["The break table. Someone left a half-finished crossword."] },
-      { key: "coffee_counter", x: 11, y: 4, say: ["The staff coffee maker. It makes one cup at a time, slowly."], mugShelf: true },
+      { key: "coffee_counter", x: 9, y: 4, say: ["The staff coffee maker. It makes one cup at a time, slowly."], mugShelf: true },
+      { key: "microwave_counter", x: 11, y: 4, event: { microwave: true } },
+      { key: "fridge", x: 13, y: 4, tall: true, blockTop: true, event: { fridge: true } },
       { key: "collection_cabinet", x: 9, y: 7, tall: true, collection: true, blockTop: true },
       { key: "plant", plant: "staff-plant", name: "staff room spider plant", x: 13, y: 8 },
     ],
@@ -1111,6 +1166,26 @@ const TEXT = {
   "help.after":        { g: "Lost visitors", l: "Talking to them at their piece", v: [["I'm so glad I found this one."], ["Thanks again for helping me find it."]] },
   "pc.on":             { g: "Floors", l: "Turning on Someone's PC", v: [["You turned on Someone's PC.", "Accessed the museum archive."]] },
   "pc.empty":          { g: "Floors", l: "The archive is empty", v: [["The archive is empty.", "Every piece is on display right now."]] },
+  "mag.1":             { g: "Magazines", l: "Magazine 1 (first line is the title; each line after is a paragraph)", v: [["Pixel Monthly", "This month: why every menu in a cozy game should make a little sound when you open it. We asked twelve players. Eleven said yes. The twelfth asked what a menu was.", "Also inside: the case for walking slower. Games that let you stroll tend to get remembered as places, not as tasks. Something to think about next time a game hands you a sprint button."]] },
+  "mag.2":             { g: "Magazines", l: "Magazine 2", v: [["Curator's Digest", "Ten things museum staff wish visitors knew. Number one: the backs of the display cases are not the boring side. Number four: the cat is not an exhibit, but she does accept compliments.", "Letters page: a reader asks whether there are bad mechanics. Our editor replies that there are only mechanics in the wrong game, and then goes back to wiping fingerprints off the glass."]] },
+  "mag.3":             { g: "Magazines", l: "Magazine 3 (holds the secret shirt riddle)", v: [["Thread Count Quarterly", "FASHION: THE SHIRT THAT GOT AWAY. Years ago the museum shop sold a GOQ shirt. Then, one day, it didn't. The shopkeeper won't say why. But the shopkeeper still has one, and rumor says it goes to whoever proves they've lived the full museum day, in order:", "First, something sweet and brown from the café. Drink it all, sitting on a stool, not a bench. Throw the cup out by the front doors, not in the tub. Give a plant a drink of its own. Photograph the cat. Ride the elevator all the way down, and wake up the old PC. Climb the first stairwell to the second floor. Sleep on a bench up there. Then visit the shopkeeper and just chat. Three times. In a row.", "Do it out of order, and you'll have to start over. The shopkeeper notices everything."]] },
+  "mag.4":             { g: "Magazines", l: "Magazine 4", v: [["Café Society", "A field guide to museum café seating. The stool by the lamp is for people who are about to have an idea. The stool by the window is for people who already had one. The bench in the gallery is for people who need a nap first.", "Recipe corner: cocoa, but you stare at a painting while it cools."]] },
+  "mag.intro":         { g: "Magazines", l: "Magazine stand question", v: [["A rack of magazines. Read one?"]] },
+  "shirt.tease":       { g: "Secret shirt", l: "The discontinued shirt in the shop menu", v: [["DISCONTINUED. The GOQ shirt. We don't sell these anymore. Don't ask. (People ask.)"]] },
+  "shirt.owned":       { g: "Secret shirt", l: "The shirt in the shop menu once you have it", v: [["Yours now. The shopkeeper pretends not to remember giving it to you."]] },
+  "shirt.reveal":      { g: "Secret shirt", l: "The shopkeeper hands over the shirt", v: [["...", "You did the whole thing, didn't you. The cocoa. The stool. The trash can. The nap.", "Fine. FINE. Here.", "You got the GOQ shirt! Wear it from the Start menu, under Wardrobe."]] },
+  "stamp.howto":       { g: "Stamp card", l: "Stamp card, not full yet", v: [["Read the placards on art pieces to collect stamps. Each piece stamps once per card. Trade a full card at the gift shop."]] },
+  "stamp.full":        { g: "Stamp card", l: "Stamp card, full", v: [["Your card is full! Trade it at the gift shop counter for one prize item."]] },
+  "stamp.traded":      { g: "Stamp card", l: "After trading a card", v: [["The shopkeeper punches a hole in your card with great ceremony.", "You got {title}! Here's a fresh stamp card."]] },
+  "stamp.noPrizes":    { g: "Stamp card", l: "No prizes left to trade for", v: [["You already have every prize. The shopkeeper is impressed and a little worried."]] },
+  "respawn.quip":      { g: "Menu", l: "After respawning (one at random)", v: [["*bzzt*", "...Did you see that? I just teleported.", "Let's not tell the curator."], ["Okay, so, I can do that now, apparently.", "Don't think about it too hard. I'm not going to."], ["Whoa. Head rush.", "If anyone asks, I took the stairs."]] },
+  "respawn.no":        { g: "Menu", l: "Respawn after closing", v: [["Teleporting around an empty, dark museum? Hard pass."]] },
+  "fridge":            { g: "Staff", l: "The staff fridge (one at random)", v: [["A note on the fridge: LABEL YOUR FOOD.", "Below it, a yogurt labeled NOT YOURS. Underlined twice."], ["Inside: three condiments, one sad lemon, and a sandwich older than some of the exhibits."], ["A drawing on the fridge door: the cat, rendered lovingly in crayon."]] },
+  "microwave.ask":     { g: "Staff", l: "Microwave question", v: [["The staff microwave. Heat up someone's lunch?"]] },
+  "microwave.boom":    { g: "Staff", l: "The microwave goes off (one at random)", v: [["*mmmm-mm-BWOMP*", "Whatever was in there has achieved a resonance cascade.", "The door is still closed. Nobody needs to know."], ["*BANG*", "That was a burrito. It is now a burrito-shaped memory.", "Someone, somewhere, felt that."]] },
+  "microwave.after":   { g: "Staff", l: "Microwave after the incident", v: [["The inside of the microwave is a crime scene.", "Nobody is going to clean that today."]] },
+  "patrons.intro":     { g: "Lobby", l: "Patron Board, before the names", v: [["Games Over Qualia is made possible by these wonderful people. Some of them are probably in the museum right now."]] },
+  "patrons.empty":     { g: "Lobby", l: "Patron Board with no names yet", v: [["The Patron Board. The name plates are polished and waiting."]] },
   "photos.none":       { g: "Menu", l: "Photo album, empty", v: [["No photos yet.", "Press B to take a photo of whatever's in front of you."]] },
   "menu.saved":        { g: "Menu", l: "After saving", v: [["Saved. You'll pick up right here next time."]] },
 };
@@ -1119,9 +1194,10 @@ const TEXT = {
 const TALK_ROLES = { usher: "Usher (front desk)", shopkeeper: "Shopkeeper", barista: "Barista", conservator: "Conservator (storage)", guard: "Night guard" };
 const TALK_WHEN = { always: "Any time", visitor: "You're a visitor (not clocked in)", staff: "You're on shift", day: "Daytime", sunset: "Sunset", night: "Night",
   slow: "Slow day", medium: "Medium day", heavy: "Busy day", reveal: "Reveal day", closing: "After the closing announcement", drink: "You're holding a drink",
-  photos: "You've taken photos", helped: "You've helped a lost visitor", cat: "The cat is in this room" };
+  photos: "You've taken photos", helped: "You've helped a lost visitor", cat: "The cat is in this room", shirt: "You're wearing the GOQ shirt (always wins)" };
 const TALK_DEFAULTS = {
   usher: [
+    { when: ["shirt"], v: [["Welcome to the GOQ... oh my gosh. Is that THE shirt?", "Can I... can I touch the sleeve? No. Sorry. Professionalism."], ["Everyone on staff has been talking about your shirt.", "Some of us are not handling it well."]] },
     { when: ["visitor", "slow"], v: [["Welcome to the GOQ Museum! It's quiet today. You've got the place to yourself."]] },
     { when: ["visitor", "medium"], v: [["Welcome to the GOQ Museum! A nice steady crowd today."]] },
     { when: ["visitor", "heavy"], v: [["Welcome to the GOQ Museum! We're busy today. Take your time."]] },
@@ -1132,13 +1208,18 @@ const TALK_DEFAULTS = {
     { when: ["staff", "reveal"], v: [["It's reveal day. We're slammed!"]] },
     { when: ["closing"], v: [["We're closed for the night. Goodnight!"]] },
   ],
-  shopkeeper: [{ when: ["always"], v: [["Everything on the stands is one of a kind. Well, one of a few."], ["The featured item? The curator picks it. Don't ask me why."]] }, { when: ["staff"], v: [["Staff discount? Nice try, {name}."]] }],
-  barista: [{ when: ["always"], v: [["The curator? Always leaving their mug around. It's one of ours, you know."], ["Best seat's by the lamp. Don't tell anyone."]] }, { when: ["drink"], v: [["How's the {drink}?"]] }],
-  conservator: [{ when: ["always"], v: [["I'm the conservator. These games came in without instructions.", "I'm figuring out what they wanted to be."], ["The boxes over there? Abandoned mechanics.", "There are no bad mechanics. Just ones that haven't found the right game yet."]] }],
-  guard: [{ when: ["always"], v: [["Evening. Don't mind me, just doing my rounds."], ["Funny thing about this place at night.", "Sometimes the intercom crackles when nobody's touching it."], ["If you see a pair of eyes in the dark...", "That's not me. I'd have said hello."]] }, { when: ["closing"], v: [["Everyone's gone. Just us and the art now."]] }],
+  shopkeeper: [{ when: ["shirt"], v: [["Oh. You're wearing it. In MY shop.", "I'm fine. This is fine."], ["People keep coming in asking where you got that.", "I tell them we're out. Because we are. Because of you."]] }, { when: ["always"], v: [["Everything on the shelves is one of a kind. Well, one of a few."], ["The featured item? The curator picks it. Don't ask me why."], ["The GOQ shirt? We don't sell those anymore.", "...Who told you about the shirt?"]] }, { when: ["staff"], v: [["Staff discount? Nice try, {name}."]] }],
+  barista: [{ when: ["shirt"], v: [["Hold on, I'm going to write your name on the cup in really nice handwriting.", "For the shirt."], ["I'd trade every espresso machine in this building for that shirt.", "Don't tell the espresso machine."]] }, { when: ["always"], v: [["The curator? Always leaving their mug around. It's one of ours, you know."], ["Best seat's by the lamp. Don't tell anyone."]] }, { when: ["drink"], v: [["How's the {drink}?"]] }],
+  conservator: [{ when: ["shirt"], v: [["A first-run GOQ shirt. In the wild.", "Please never wash it. I'm begging you, from a preservation standpoint."]] }, { when: ["always"], v: [["I'm the conservator. These games came in without instructions.", "I'm figuring out what they wanted to be."], ["The boxes over there? Abandoned mechanics.", "There are no bad mechanics. Just ones that haven't found the right game yet."]] }],
+  guard: [{ when: ["shirt"], v: [["Is that... the GOQ shirt?", "I've worked nights here for six years and I've never even SEEN one."], ["Don't mind me. Just guarding the shirt now. I mean the museum."]] }, { when: ["always"], v: [["Evening. Don't mind me, just doing my rounds."], ["Funny thing about this place at night.", "Sometimes the intercom crackles when nobody's touching it."], ["If you see a pair of eyes in the dark...", "That's not me. I'd have said hello."]] }, { when: ["closing"], v: [["Everyone's gone. Just us and the art now."]] }],
 };
 
 /* Things the day's extra visitors say. */
+const SHIRT_STEPS = ["cocoa", "finishOnStool", "lobbyTrash", "water", "catPhoto", "elevatorB1", "pc", "stairsTo2F", "nap2F", "chat", "chat", "chat"];
+const KONAMI = ["up", "up", "down", "down", "left", "right", "left", "right", "b", "a"];
+const REDUCED_MOTION = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+const BROWSE_LINES = [["Hmm. Hmm hmm hmm."], ["Should I get the mug? I should get the mug.", "...Or the tote."], ["I've been standing here a while.", "I'm very close to deciding."], ["Don't rush me. This is a big decision."]];
+const SIT_LINES = [["Best seat in the house."], ["I come here for the café. The art is a bonus."], ["Shh. I'm people-watching."]];
 const CROWD_LINES = [["What a nice museum."], ["I come here on my lunch break."], ["Have you seen the cat today?"], ["I always read both sides of the cases."],
   ["My friend told me about this place."], ["Honestly, I'm mostly here for the café."], ["Is it me, or is it busy today?"], ["I didn't know games could go in museums."],
   ["I've been standing here a while.", "I think I get it now. Maybe."], ["The elevator music is a choice."]];
@@ -1235,6 +1316,41 @@ function spotState(p, o) {
   if (o.curator && o.hung.has(p.id)) return "wall";
   return o.curator ? "crate" : "covered";
 }
+/* Floor tiles where a visitor can stand without being in the way, checked one at a time so that, with everyone placed,
+   every open tile can still reach every other. */
+function safeSpots(r, def) {
+  const W = r.w, H = r.h, avoid = new Set(), key = (x, y) => x + "," + y;
+  for (const k in r.events) { const [x, y] = k.split(",").map(Number); for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) avoid.add(key(x + dx, y + dy)); }
+  for (const c of r.cases || []) { avoid.add(key(c.x, c.y - 1)); avoid.add(key(c.x, c.y + 1)); }
+  for (const h of r.hung || []) { avoid.add(key(h.x, 3)); avoid.add(key(h.x + 1, 3)); }
+  for (let dx = -2; dx <= 2; dx++) for (let dy = -2; dy <= 2; dy++) avoid.add(key(def.spawn[0] + dx, def.spawn[1] + dy));
+  for (const st of r.stairs || []) for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) avoid.add(key(st.x + dx, st.y + dy));
+  // Staff who stand still count as obstacles while checking.
+  const fixed = (def.visitors || []).filter(v => (v.still || v.usher || v.role) && !v.patrol && r.solid[v.y] && !r.solid[v.y][v.x]);
+  fixed.forEach(v => (r.solid[v.y][v.x] = true));
+  safeSpots.lastAvoid = avoid;
+  const cands = [];
+  for (let y = 3; y < H - 1; y++) for (let x = 1; x < W - 1; x++) if (!r.solid[y][x] && !avoid.has(key(x, y))) cands.push([x, y]);
+  // Keep a spot only if blocking it leaves all remaining open floor connected.
+  const connected = () => {
+    let start = null, total = 0;
+    for (let y = 3; y < H - 1; y++) for (let x = 1; x < W - 1; x++) if (!r.solid[y][x]) { total++; if (!start) start = [x, y]; }
+    if (!start) return true;
+    const seen = new Set([key(...start)]), q = [start];
+    while (q.length) { const [x, y] = q.pop(); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy, k = key(nx, ny); if (ny >= 3 && ny < H - 1 && nx >= 1 && nx < W - 1 && !r.solid[ny][nx] && !seen.has(k)) { seen.add(k); q.push([nx, ny]); } } }
+    return seen.size === total;
+  };
+  const out = [];
+  for (let i = cands.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [cands[i], cands[j]] = [cands[j], cands[i]]; }
+  for (const [x, y] of cands) {
+    if (out.length >= 40) break;
+    r.solid[y][x] = true;
+    if (connected()) out.push([x, y]); else r.solid[y][x] = false;
+  }
+  for (const [x, y] of out) r.solid[y][x] = false;
+  fixed.forEach(v => (r.solid[v.y][v.x] = false));
+  return out;
+}
 function buildRoom(id, pieces, o) {
   const def = ROOMS[id], h = def.map.length, w = def.map[0].length;
   const r = { id, name: def.name, w, h, tiles: mk(w, h, null), over: mk(w, h, null), solid: mk(w, h, false), events: {}, props: [], hung: [], npcs: [] };
@@ -1244,12 +1360,12 @@ function buildRoom(id, pieces, o) {
     r.solid[y][x] = ch !== "." && ch !== "=";
   }
   (def.props || []).forEach(p => {
-    r.props.push({ key: p.key, x: p.x, y: p.y, plant: p.plant, mugShelf: p.mugShelf, sit: p.sit, rack: p.rack, collection: p.collection, catBed: p.catBed, tall: p.tall });
+    r.props.push({ key: p.key, x: p.x, y: p.y, plant: p.plant, mugShelf: p.mugShelf, sit: p.sit, rack: p.rack, unit: p.unit, collection: p.collection, catBed: p.catBed, tall: p.tall });
     for (let i = 0; i < SLOT[p.key].w / T; i++) {
       r.solid[p.y][p.x + i] = true;
       // Tall things: you can walk behind the top row (and are hidden by it) unless it's marked blockTop, like racks and cabinets.
       if (p.tall && p.blockTop) { r.solid[p.y - 1][p.x + i] = true; }
-      const ev = p.rack !== undefined ? { rack: p.rack } : p.collection ? { collection: true } : null;
+      const ev = p.unit !== undefined ? { unit: p.unit } : p.rack !== undefined ? { rack: p.rack } : p.collection ? { collection: true } : null;
       if (ev) { r.events[(p.x + i) + "," + p.y] = ev; if (p.tall && p.blockTop) r.events[(p.x + i) + "," + (p.y - 1)] = ev; continue; }
       if (p.tall && p.blockTop && p.say) r.events[(p.x + i) + "," + (p.y - 1)] = { say: p.say };
       if (p.plant) r.events[(p.x + i) + "," + p.y] = { plant: p.plant, name: p.name };
@@ -1257,7 +1373,7 @@ function buildRoom(id, pieces, o) {
       else if (p.rules) r.events[(p.x + i) + "," + p.y] = { rules: true };
       else if (p.sit) r.events[(p.x + i) + "," + p.y] = { sit: p.sit, x: p.x + i, y: p.y, say: p.say, bench: p.key === "bench" };
       else if (p.key === "front_desk" && i === 1) r.events[(p.x + i) + "," + p.y] = { usher: true };
-      else if (p.event) r.events[(p.x + i) + "," + p.y] = Object.assign({}, p.event);
+      else if (p.event) { r.events[(p.x + i) + "," + p.y] = Object.assign({}, p.event); if (p.tall && p.blockTop) r.events[(p.x + i) + "," + (p.y - 1)] = Object.assign({}, p.event); }
       else if (p.say) r.events[(p.x + i) + "," + p.y] = { say: p.say };
     }
   });
@@ -1307,19 +1423,46 @@ function buildRoom(id, pieces, o) {
   });
   // A crowd: extra visitors on medium and heavy days (more on reveal days, fewer at night), placed on free floor.
   const extra = [];
-  if (def.crowd && !o.closing) {
-    let k = { slow: 0, medium: 1 + (strSeed(o.today + id) % 2), heavy: 3 + (strSeed(id + o.today) % 2) }[o.crowd] || 0;
-    if (o.tod === "night") k = Math.floor(k / 2);
-    const free = [];
-    for (let y = 3; y < r.h - 1; y++) for (let x = 1; x < r.w - 1; x++) if (!r.solid[y][x] && !r.events[x + "," + y] && !(def.visitors || []).some(v => v.x === x && v.y === y) && Math.abs(x - def.spawn[0]) + Math.abs(y - def.spawn[1]) > 2) free.push([x, y]);
-    for (let i = 0; i < k && free.length; i++) {
-      const j = strSeed(o.today + id + "v" + i) % free.length, [x, y] = free.splice(j, 1)[0];
-      extra.push({ sheet: ["visitor_a", "visitor_b", "visitor_c"][strSeed(id + i + o.today) % 3], x, y, lines: [CROWD_LINES[strSeed(o.today + i + id) % CROWD_LINES.length]] });
+  // How many people: a gallery holds at most 5 (3 on medium days), the lobby at most 1, counting visitors placed in the editor.
+  // The shop is special (below). Nights are quieter.
+  const wanderers = (def.visitors || []).filter(v => !(v.still || v.staff || v.patrol || v.usher || v.role) && (!v.day || o.tod !== "night") && (!v.night || o.tod === "night")).length;
+  const isGallery = (def.cases || []).length || (def.spots || []).length, isShop = (def.props || []).some(p => p.key === "shop_counter" || p.key === "cafe_counter");
+  const someone = () => ({ sheet: ["visitor_a", "visitor_b", "visitor_c"][Math.floor(Math.random() * 3)], x: 0, y: 0, random: true, lines: [CROWD_LINES[Math.floor(Math.random() * CROWD_LINES.length)]] });
+  if (def.crowd && !o.closing && !isShop) {
+    let cap = isGallery ? (o.crowd === "heavy" ? 5 : 3) : 1;
+    if (o.tod === "night") cap = Math.ceil(cap / 2);
+    for (let i = 0; i < cap - wanderers; i++) extra.push(someone());
+  }
+  // Wandering visitors (not staff) start somewhere random each time: never on a doorway, a case's front or back,
+  // in front of a painting, beside the start spot, or anywhere that would cut one part of the room off from another.
+  const okSpots = safeSpots(r, def);
+  r.noWander = safeSpots.lastAvoid;
+  (def.visitors || []).concat(extra).forEach(v => {
+    if (v.still || v.staff || v.patrol || v.usher || v.role) return;
+    const pick = okSpots.length ? okSpots.splice(Math.floor(Math.random() * okSpots.length), 1)[0] : null;
+    if (pick) { v._x = pick[0]; v._y = pick[1]; r.solid[pick[1]][pick[0]] = true; }
+  });
+  (def.visitors || []).concat(extra).forEach(v => { if (v._x !== undefined) r.solid[v._y][v._x] = false; });
+  // The shop: one person frozen in front of a decorative wall shelf, forever deciding; in the café, one sitting on a
+  // random stool and (on busy days) one wandering near the café.
+  if (def.crowd && !o.closing && isShop && o.tod !== "night") {
+    const free = (x, y) => r.solid[y] && !r.solid[y][x] && !r.events[x + "," + y] && !extra.some(v => v._x === x && v._y === y);
+    const cafeX = Math.min(...(def.props || []).filter(p => /^cafe_/.test(p.key)).map(p => p.x).concat([r.w]));
+    const shelves = (def.wallArt || []).filter(w => w.key === "shop_shelves" && w.x < cafeX - 2), spots = [];
+    shelves.forEach(w => { for (let i = 0; i < SLOT[w.key].w / T; i++) if (free(w.x + i, 3)) spots.push([w.x + i, 3]); });
+    if (spots.length) { const [x, y] = spots[Math.floor(Math.random() * spots.length)]; extra.push(Object.assign(someone(), { _x: x, _y: y, still: true, dir: "up", lines: BROWSE_LINES })); }
+    const stools = (def.props || []).filter(p => p.key === "cafe_stool" && p.sit);
+    if (stools.length) { const st = stools[Math.floor(Math.random() * stools.length)]; extra.push(Object.assign(someone(), { _x: st.x, _y: st.y, still: true, sitting: true, dir: st.sit, lines: SIT_LINES })); }
+    if (o.crowd === "heavy") {
+      let cands = okSpots.filter(([x]) => x >= cafeX - 1);
+      if (!cands.length) for (let y = 3; y < r.h - 1; y++) for (let x = cafeX - 1; x < r.w - 1; x++) if (free(x, y) && !(r.noWander && r.noWander.has(x + "," + y))) cands.push([x, y]);
+      if (!cands.length) for (let y = 3; y < r.h - 1; y++) for (let x = cafeX - 1; x < r.w - 1; x++) if (free(x, y)) cands.push([x, y]);
+      if (cands.length) { const [x, y] = cands[Math.floor(Math.random() * cands.length)]; extra.push(Object.assign(someone(), { _x: x, _y: y })); }
     }
   }
   const who = (def.visitors || []).concat(extra).filter(v => (!v.day || o.tod !== "night") && (!v.night || o.tod === "night") && (!o.closing || v.staff));
-  r.npcs = who.map(v => ({ still: v.still, staff: v.staff, patrol: v.patrol, usher: v.usher, role: v.role || (v.usher ? "usher" : undefined), slow: v.slow, goRight: true, pause: 0, stuck: 0,
-    sheet: v.sheet, x: v.x, y: v.y, dir: DIRS_LIST.includes(v.dir) ? v.dir : "down", moving: false, prog: 0, step: false, bumpT: 0, timer: 60 + Math.random() * 120, lines: v.lines, lineI: -1,
+  r.npcs = who.filter(v => !v.random || v._x !== undefined).map(v => ({ sitting: !!v.sitting, still: v.still, staff: v.staff, patrol: v.patrol, usher: v.usher, role: v.role || (v.usher ? "usher" : undefined), slow: v.slow, goRight: true, pause: 0, stuck: 0,
+    sheet: v.sheet, x: v._x !== undefined ? v._x : v.x, y: v._y !== undefined ? v._y : v.y, dir: DIRS_LIST.includes(v.dir) ? v.dir : "down", moving: false, prog: 0, step: false, bumpT: 0, timer: 60 + Math.random() * 120, lines: v.lines, lineI: -1,
     box: { x0: Math.max(1, v.x - 2), y0: 3, x1: Math.min(w - 2, v.x + 2), y1: h - 2 },
   }));
   return r;
@@ -1385,7 +1528,7 @@ class Game {
     this.pack = pack; this.overrides = ov; this.pieceImgs = pi; this.cache = {};
     this.rebuild();
     const tb = `url("${this.src("textbox")}")`;
-    [this.el.text, this.el.choice, this.el.badgeForm, this.el.shop, this.el.album].forEach(e => (e.style.borderImageSource = tb));
+    [this.el.text, this.el.choice, this.el.badgeForm, this.el.shop, this.el.album, this.el.reader].forEach(e => (e.style.borderImageSource = tb));
   }
   rebuild() {
     const where = this.room ? [this.room.id, this.player.x, this.player.y, this.player.dir] : null;
@@ -1537,6 +1680,8 @@ class Game {
     el.hud = h("gt-shift");
     el.shop = h("gt-box gt-shop");
     el.album = h("gt-box gt-shop gt-album");
+    el.reader = h("gt-box gt-reader");
+    el.reader.addEventListener("click", e => { if (e.target.tagName === "A") return; e.stopPropagation(); this.press("a"); });
     el.badgeWrap = h("gt-badgewrap");
     el.badgeForm = h("gt-box gt-badge", el.badgeWrap, "form");
     el.badgeForm.innerHTML = '<div class="gt-badge-main"><p class="gt-badge-title">STAFF ENTRANCE</p>' +
@@ -1596,6 +1741,17 @@ class Game {
 .gt-shop-row .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gt-shop-row .pr{color:#505068}
 .gt-album{padding-top:calc(3px * var(--s)) !important}
+.gt-reader{left:calc(6px * var(--s));right:calc(6px * var(--s));top:calc(4px * var(--s));bottom:calc(4px * var(--s));padding:0 calc(4px * var(--s));z-index:7;display:none;overflow:hidden}
+.gt-rd-head{display:flex;gap:calc(5px * var(--s));align-items:center;padding-bottom:calc(3px * var(--s));border-bottom:calc(1px * var(--s)) solid #b0b0c0}
+.gt-rd-head img{width:calc(40px * var(--s));height:calc(30px * var(--s));object-fit:cover;image-rendering:pixelated;border:calc(1px * var(--s)) solid #181820;flex:none;background:#000}
+.gt-rd-head img.photo{image-rendering:auto}
+.gt-rd-head img.item{object-fit:contain;background:#f8f4ec}
+.gt-rd-t{font-size:calc(7px * var(--s));line-height:1.35;color:#181820}
+.gt-rd-t small{display:block;font-size:calc(5.5px * var(--s));color:#505068;margin-top:calc(1px * var(--s))}
+.gt-rd-body{font-family:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;font-size:calc(7.5px * var(--s));line-height:1.42;color:#202030;height:calc(76px * var(--s));overflow:hidden;margin-top:calc(3px * var(--s));white-space:pre-wrap}
+.gt-rd-body b{display:block;font-family:var(--pixel, monospace);font-weight:normal;font-size:calc(5.5px * var(--s));color:#7c5a0c;letter-spacing:.04em;margin-bottom:calc(2px * var(--s))}
+.gt-rd-foot{display:flex;justify-content:space-between;align-items:center;font-size:calc(5.5px * var(--s));color:#505068;border-top:calc(1px * var(--s)) solid #b0b0c0;padding-top:calc(2px * var(--s))}
+.gt-rd-foot a{color:#181820;margin-right:calc(5px * var(--s))}
 .gt-album-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:calc(4px * var(--s));max-height:calc(86px * var(--s));overflow:auto;padding:calc(2px * var(--s))}
 .gt-polaroid{background:#fffef8;border:calc(1px * var(--s)) solid #b0b0c0;padding:calc(2px * var(--s)) calc(2px * var(--s)) calc(5px * var(--s));cursor:pointer;transform:rotate(-1.5deg)}
 .gt-polaroid:nth-child(2n){transform:rotate(1.5deg)}
@@ -1699,7 +1855,75 @@ class Game {
     this.mode = "walk"; this.inputLock = true; if (d) d();
   }
   /* Look at a piece: the art fills the top of the screen while its placard reads out below. */
+  /* ----- the reading panel -----
+     Long text (placards, magazines) in big paragraphs you page through: A or right for the next page, left to go back, B to close. */
+  read(spec, done) {
+    const box = this.el.reader; box.style.display = "block"; this.mode = "read";
+    box.innerHTML = '<div class="gt-rd-head"></div><div class="gt-rd-body"></div><div class="gt-rd-foot"><span class="gt-rd-links"></span><span class="gt-rd-n"></span></div>';
+    const head = box.querySelector(".gt-rd-head"), body = box.querySelector(".gt-rd-body");
+    if (spec.img) { const im = document.createElement("img"); im.src = spec.img; im.alt = ""; if (spec.imgClass) im.className = spec.imgClass; head.appendChild(im); }
+    const t = document.createElement("div"); t.className = "gt-rd-t"; t.textContent = spec.title || ""; if (spec.sub) { const sm = document.createElement("small"); sm.textContent = spec.sub; t.appendChild(sm); } head.appendChild(t);
+    (spec.links || []).forEach(([href, label]) => { if (!href) return; const a = document.createElement("a"); a.href = href; a.target = "_blank"; a.rel = "noopener"; a.textContent = label; box.querySelector(".gt-rd-links").appendChild(a); });
+    // Break each section into pages that fit the box, a word at a time.
+    const pages = [], fits = () => body.scrollHeight <= body.clientHeight + 1;
+    const put = (label, words) => { body.innerHTML = ""; if (label) { const b = document.createElement("b"); b.textContent = label; body.appendChild(b); } body.appendChild(document.createTextNode(words)); };
+    for (const sec of spec.sections || []) {
+      const words = String(sec.text || "").split(/(\s+)/); let cur = "", first = true;
+      for (const w of words) {
+        put(first ? sec.label : (sec.label ? sec.label + " (CONTINUED)" : ""), cur + w);
+        if (!fits() && cur.trim()) { pages.push({ label: first ? sec.label : (sec.label ? sec.label + " (CONTINUED)" : ""), text: cur.trim() }); first = false; cur = w.trimStart(); }
+        else cur += w;
+      }
+      if (cur.trim()) pages.push({ label: first ? sec.label : (sec.label ? sec.label + " (CONTINUED)" : ""), text: cur.trim() });
+    }
+    if (!pages.length) pages.push({ label: "", text: "" });
+    this.rd = { pages, i: 0, done };
+    this.renderRead();
+  }
+  renderRead() {
+    const r = this.rd, pg = r.pages[r.i], body = this.el.reader.querySelector(".gt-rd-body");
+    body.innerHTML = ""; if (pg.label) { const b = document.createElement("b"); b.textContent = pg.label; body.appendChild(b); } body.appendChild(document.createTextNode(pg.text));
+    this.el.reader.querySelector(".gt-rd-n").textContent = (r.pages.length > 1 ? (r.i + 1) + " / " + r.pages.length + "   " : "") + (r.i < r.pages.length - 1 ? "A: next" : "A: done") + "   B: close";
+  }
+  closeRead() { this.el.reader.style.display = "none"; const d = this.rd && this.rd.done; this.rd = null; this.mode = "walk"; this.inputLock = true; if (d) d(); }
+  /* The stamp card: each piece you read stamps it once per card. A full card trades for one prize item at the shop counter. */
+  stamp(p) {
+    const st = this.progress.stamps, size = this.pack.settings.shop.stampSize;
+    if (st.includes(p.id) || st.length >= size) return;
+    st.push(p.id); this.saveProgress();
+    this.showLoc(st.length >= size ? "Stamp card full! Trade it at the gift shop." : "Stamp! " + st.length + " / " + size);
+  }
+  showStampCard() {
+    const st = this.progress.stamps, size = this.pack.settings.shop.stampSize, full = st.length >= size;
+    const titles = st.map(id => (this.pack.pieces.find(p => p.id === id) || { title: "a retired piece" }).title);
+    const row = Array.from({ length: size }, (_, i) => (i < st.length ? "\u25CF" : "\u25CB")).join(" ");
+    this.read({ title: "STAMP CARD", sub: st.length + " of " + size + " stamps",
+      sections: [{ label: "", text: row }, { label: "", text: this.tx(full ? "stamp.full" : "stamp.howto").join(" ") }, ...(titles.length ? [{ label: "STAMPED", text: titles.join(", ") }] : [])] });
+  }
+  tradeStampCard() {
+    const sh = this.pack.settings.shop, prizes = sh.items.filter(it => sh.stampItems.includes(it.id) && !this.progress.items.includes(it.id));
+    if (!prizes.length) { this.shopMsg = this.tx("stamp.noPrizes").join(" "); this.renderShop(); return; }
+    this.closeShop();
+    this.choose("Trade your full stamp card for:", [...prizes.map(it => it.name), "Not yet"], i => {
+      const it = prizes[i]; if (!it) return;
+      this.progress.items.push(it.id); this.progress.stamps = []; this.saveProgress();
+      this.say(this.tx("stamp.traded", { title: it.name }));
+    });
+  }
   viewPiece(p, side) {
+    if (side !== "end") this.stamp(p);
+    const gold = p.kind === "episode", img = this.pieceImgs[p.id], secs = [];
+    if (side === "front") { if (p.observation) secs.push({ label: "OBSERVATION", text: p.observation }); secs.push({ label: "", text: this.tx("case.frontNote").join(" ") }); }
+    else if (side === "back") { if (p.intention) secs.push({ label: "INTENTION", text: p.intention }); secs.push({ label: "", text: this.tx("case.backNote").join(" ") }); }
+    else if (side === "end") secs.push({ label: "", text: this.tx("case.ends").join(" ") });
+    else if (gold) { if (p.observation) secs.push({ label: "OBSERVATION", text: p.observation }); if (p.intention) secs.push({ label: "INTENTION", text: p.intention }); }
+    else if (p.guestNote) secs.push({ label: p.guestWriter ? "GUEST NOTE BY " + p.guestWriter.toUpperCase() : "GUEST NOTE", text: p.guestNote });
+    this.read({ img: img ? p.image : this.pieceArt(p).toDataURL(), imgClass: img && img.naturalWidth > 160 ? "photo" : "", title: p.title.toUpperCase(), sub: "By " + p.developer,
+      sections: secs, links: [[p.episodeUrl, "Watch the episode"], [p.gameUrl, "Play the game"]] }, () => {
+      if (this.bothSides) { this.showLoc("Seen from both sides"); this.bothSides = null; }
+    });
+  }
+  viewPieceOld(p, side) {
     const gold = p.kind === "episode", img = this.pieceImgs[p.id];
     this.el.cuFrame.style.borderImageSource = `url("${this.src(side ? "closeup_case" : gold ? "closeup_gold" : "closeup_wood")}")`;
     this.el.cuImg.src = img ? p.image : this.pieceArt(p).toDataURL(); this.el.cuImg.alt = p.title;
@@ -1734,7 +1958,8 @@ class Game {
       this.mode = "busy"; this.chore = { spot: c, t: 0, kind: "wipe" }; this.showLoc("Wiped the glass"); return;
     }
     const d = this.player.dir, side = d === "up" ? "front" : d === "down" ? "back" : null;
-    this.viewPiece(c.piece, side || "end");
+    if (!side) { this.say(this.tx("case.ends")); return; }
+    this.viewPiece(c.piece, side);
     if (side) {
       const seen = this.progress.sides || (this.progress.sides = {}), k = seen[c.piece.id] || (seen[c.piece.id] = {});
       const before = k.front && k.back; k[side] = 1; this.saveProgress();
@@ -1763,8 +1988,8 @@ class Game {
       tally: Object.assign({ dusted: 0, straightened: 0, watered: 0, mugs: 0, closings: 0 }, p.tally || {}),
       staff: p.staff && p.staff.badge ? p.staff : null,   // who is clocked in on this browser (never the key)
       staffTally: p.staffTally || {}, lastBadge: p.lastBadge || null,
-      tokens: typeof p.tokens === "number" ? p.tokens : 0, items: Array.isArray(p.items) ? p.items : [],
-      photos: Array.isArray(p.photos) ? p.photos : [], where: p.where || null, sides: p.sides || {}, wiped: p.wiped || {} };                    // chores counted per badge while clocked in
+      tokens: typeof p.tokens === "number" ? p.tokens : 0, items: Array.isArray(p.items) ? p.items : [], shirt: !!p.shirt, wearShirt: !!p.wearShirt, quest: p.quest || 0,
+      photos: Array.isArray(p.photos) ? p.photos : [], stamps: Array.isArray(p.stamps) ? p.stamps : [], where: p.where || null, sides: p.sides || {}, wiped: p.wiped || {} };                    // chores counted per badge while clocked in
   }
   saveProgress() { try { if (this.saveKey) localStorage.setItem(this.saveKey, JSON.stringify(this.progress)); } catch (e) {} }
   resetProgress() { try { if (this.saveKey) localStorage.removeItem(this.saveKey); } catch (e) {} this.progress = this.loadProgress(); this.lightsOff.clear(); this.closing = false; this.closed = false; this.dayStart = Object.assign({}, this.progress.tally); this.spook = null; this.figure = null; this.hideEnd(); this.updateHud(); this.rebuild(); }
@@ -1898,7 +2123,7 @@ class Game {
   /* Open again without reloading: visitors return, lights come on, you start at the front doors. */
   reopen() {
     this.lightsOff.clear(); this.closing = false; this.closed = false; this.dayStart = Object.assign({}, this.progress.tally);
-    this.spook = null; this.figure = null; this.hideEnd(); this.trans = null; this.fade = 0; this.mode = "walk";
+    this.spook = null; this.figure = null; this.hideEnd(); this.trans = null; this.fade = 0; this.mode = "walk"; this.microwaved = false;
     this.rebuild();
     const w = this.endKind === "brb" && this.progress.where;
     if (w && this.rooms[w.room]) this.enterRoom(w.room, w.x, w.y, w.dir); else { const sp = ROOMS.lobby.spawn; this.enterRoom("lobby", sp[0], sp[1], sp[2]); }
@@ -1910,6 +2135,9 @@ class Game {
   get staff() { return this.progress.staff; }
   /* The on-shift tag in the corner: who's clocked in and how many chores this shift. */
   updateHud(pulse) {
+    // Someone clocked in or out: refresh who's visiting, so the person playing isn't also in the crowd.
+    const sk = this.staff ? this.staff.badge + "|" + this.staff.name : "";
+    if (this.rooms && this.lastStaffKey !== undefined && sk !== this.lastStaffKey) this.assignMembers();
     const h = this.el.hud, s = this.staff; if (!h) return;
     const tokens = this.progress.tokens || 0;
     h.innerHTML = "";
@@ -2119,10 +2347,12 @@ class Game {
     const c = this.crowdToday(), tod = this.tod();
     return { always: true, visitor: !this.staff, staff: !!this.staff, day: tod === "day", sunset: tod === "sunset", night: tod === "night", slow: c === "slow", medium: c === "medium",
       heavy: c === "heavy", reveal: this.pack.pieces.some(p => p.unveil === todayISO()), closing: this.closing, drink: !!this.drink, photos: !!(this.progress.photos || []).length,
-      helped: !!this.progress.tally.helped, cat: !!(this.room && this.room.cat) }[w];
+      helped: !!this.progress.tally.helped, cat: !!(this.room && this.room.cat), shirt: !!this.progress.wearShirt && !this.staff }[w];
   }
   staffTalk(role, then) {
-    const entries = (this.pack.settings.talk[role] || []).filter(e => (e.when.length ? e.when : ["always"]).every(w => this.talkWhen(w)));
+    let entries = (this.pack.settings.talk[role] || []).filter(e => (e.when.length ? e.when : ["always"]).every(w => this.talkWhen(w)));
+    // Wearing the GOQ shirt overrides everything: staff can only talk about the shirt.
+    if (entries.some(e => e.when.includes("shirt"))) entries = entries.filter(e => e.when.includes("shirt"));
     // Prefer the most specific lines: those with the most conditions that hold.
     const best = entries.length ? Math.max(...entries.map(e => e.when.filter(w => w !== "always").length)) : 0;
     const pool = []; entries.filter(e => e.when.filter(w => w !== "always").length >= Math.min(best, 1)).forEach(e => e.v.forEach(pg => pool.push(pg)));
@@ -2143,7 +2373,7 @@ class Game {
     const t = todayISO();
     if (this.pack && this.pack.pieces.some(p => p.unveil === t)) return "heavy";
     const r = strSeed("crowd" + t) % 10;
-    return r < 4 ? "slow" : r < 8 ? "medium" : "heavy";
+    return r < 5 ? "medium" : "heavy";
   }
   setTime(t) { this.timeOverride = t || null; this.lastTod = this.tod(); this.rebuild(); }
   lookOutWindow() {
@@ -2159,7 +2389,14 @@ class Game {
   shopCounter() {
     if (this.closing) { this.say(this.tx("shop.closed")); return; }
     if (this.room.npcs.some(n => n.role === "shopkeeper")) {
-      this.choose("Welcome in! What can I do for you?", ["Browse the shop", "Just chatting", "Never mind"], i => { if (i === 0) this.openShop(); else if (i === 1) this.staffTalk("shopkeeper"); });
+      this.choose("Welcome in! What can I do for you?", ["Browse the shop", "Just chatting", "Never mind"], i => {
+        if (i === 0) this.openShop();
+        else if (i === 1) {
+          this.quest("chat");
+          if (!this.progress.shirt && (this.progress.quest || 0) >= SHIRT_STEPS.length) { this.progress.shirt = true; this.progress.quest = 0; this.saveProgress(); this.say(this.tx("shirt.reveal")); }
+          else this.staffTalk("shopkeeper");
+        }
+      });
       return;
     }
     this.openShop();
@@ -2193,7 +2430,8 @@ class Game {
   shopRows() {
     const sh = this.pack.settings.shop;
     const items = sh.items.slice().sort((a, b) => (b.id === sh.featured) - (a.id === sh.featured));
-    return [...items.map(it => ({ item: it })), { collection: true }, { leave: true }];
+    const full = this.progress.stamps.length >= sh.stampSize && sh.stampItems.length;
+    return [...(full ? [{ trade: true }] : []), ...items.map(it => ({ item: it })), { shirt: true }, { collection: true }, { leave: true }];
   }
   renderShop() {
     const box = this.el.shop, rows = this.shopRows(), sh = this.pack.settings.shop, owned = this.progress.items;
@@ -2209,20 +2447,28 @@ class Game {
       if (r.item) {
         const img = document.createElement("img"); img.src = this.itemIcon(r.item).toDataURL(); img.alt = ""; row.appendChild(img);
         const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = (r.item.id === sh.featured ? "* " : "") + r.item.name; row.appendChild(nm);
-        const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = owned.includes(r.item.id) ? "OWNED" : r.item.price + " T"; row.appendChild(pr);
+        const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = owned.includes(r.item.id) ? "OWNED" : r.item.price + " T" + (sh.stampItems.includes(r.item.id) ? " or card" : ""); row.appendChild(pr);
+      } else if (r.trade) {
+        const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = "Trade your full stamp card"; row.appendChild(nm);
+        const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = "FREE"; row.appendChild(pr);
+      } else if (r.shirt) {
+        const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = "GOQ shirt"; row.appendChild(nm);
+        const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = this.progress.shirt ? "YOURS" : "DISCONTINUED"; row.appendChild(pr);
       } else { const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = r.collection ? "Your collection" : "Leave"; row.appendChild(nm); }
       row.addEventListener("click", e => { e.stopPropagation(); if (this.shopSel === i) this.shopSelect(); else { this.shopSel = i; this.shopConfirm = null; this.shopMsg = ""; this.renderShop(); } });
       list.appendChild(row);
     });
     const r = rows[this.shopSel], det = document.createElement("p"); det.className = "gt-shop-detail";
     det.textContent = this.shopMsg || (r.item ? (r.item.id === sh.featured ? "FEATURED. " : "") + (r.item.description || "") :
-      r.collection ? "See what you've bought." : "Head back out.");
+      r.trade ? "Pick one prize item, on the house." : r.shirt ? this.tx(this.progress.shirt ? "shirt.owned" : "shirt.tease").join(" ") : r.collection ? "See what you've bought." : "Head back out.");
     box.appendChild(det);
     const sel = list.children[this.shopSel]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: "nearest" });
   }
   shopSelect() {
     const r = this.shopRows()[this.shopSel], t = this.progress.tokens || 0;
     if (r.leave) { this.closeShop(); this.say(this.tx("shop.bye")); return; }
+    if (r.shirt) { this.shopMsg = this.tx(this.progress.shirt ? "shirt.owned" : "shirt.tease").join(" "); this.renderShop(); return; }
+    if (r.trade) { this.tradeStampCard(); return; }
     if (r.collection) {
       const names = this.pack.settings.shop.items.filter(it => this.progress.items.includes(it.id)).map(it => it.name);
       const gone = this.progress.items.length - names.length;
@@ -2243,6 +2489,19 @@ class Game {
   /* Items on sale fill the racks in menu order, six per rack; spare spots get trinkets. */
   /* Each rack has two shelves, and each shelf holds one item (three of it). Items fill racks in menu order: rack 1 gets items 1 and 2, and so on.
      A shelf without an item gets a row of trinkets. */
+  /* Shelving units hold six stacks each: items fill them in Shop-tab order (unit 1 has items 1 to 6). */
+  unitGoods(u) { const items = this.pack.settings.shop.items, out = []; for (let k = 0; k < 6; k++) { const it = items[u * 6 + k]; out.push(it ? { item: it } : { trinket: hash(u, k) % 8 }); } return out; }
+  browseUnit(u) {
+    const items = this.unitGoods(u).filter(g => g.item).map(g => g.item);
+    if (!items.length) { this.say(this.tx("rack.empty")); return; }
+    this.choose("A shelf of souvenirs. Take a closer look?", [...items.map(it => it.name), "Just looking"], k => {
+      const it = items[k]; if (!it) return;
+      const img = this.itemImgs[it.id], owned = this.progress.items.includes(it.id);
+      const note = this.closing ? this.tx("shop.closed")[0] : owned ? "You already have one of these." : this.tx("rack.available", { n: it.price }).join(" ");
+      this.read({ img: img ? it.image : this.itemIcon(it).toDataURL(), imgClass: "item", title: it.name.toUpperCase(), sub: it.price + " tokens",
+        sections: [{ label: "", text: it.description || "" }, { label: "", text: note }] }, () => this.browseUnit(u));
+    });
+  }
   rackItems(i) { const items = this.pack.settings.shop.items; return [items[i] || null]; } // one item per stand, in menu order
   rackContents(i) {
     const [a, b] = this.rackItems(i), out = [];
@@ -2336,12 +2595,13 @@ class Game {
       if (price && (this.progress.tokens || 0) < price) { this.say(["That's " + price + " token" + (price > 1 ? "s" : "") + ". Chores earn tokens."]); return; }
       if (price) { this.progress.tokens -= price; this.saveProgress(); this.updateHud(); }
       this.drink = { kind: i, name: DRINKS[i].name, sips: 0 };
+      if (DRINKS[i].id === "cocoa") this.quest("cocoa");
       this.say(this.tx("drink.served"));
     });
   }
   /* Empty cups go in the bus tub or a trash can. */
   bin(e) {
-    if (this.drink && this.drink.empty) { this.drink = null; this.say(this.tx(e.tub ? "bin.tub" : "bin.trash")); return; }
+    if (this.drink && this.drink.empty) { this.drink = null; if (!e.tub && this.room.id === "lobby") this.quest("lobbyTrash"); else this.quest("otherBin"); this.say(this.tx(e.tub ? "bin.tub" : "bin.trash")); return; }
     if (this.drink) { this.say(this.tx("bin.full")); return; }
     this.say(this.tx(e.tub ? "bin.lookTub" : "bin.lookTrash"));
   }
@@ -2369,7 +2629,9 @@ class Game {
   }
   /* Fingerprints on cases: they build up a little each day, and visitors who linger by a case leave more. */
   prints(p) {
-    const w = (this.progress.wiped || {})[p.id], base = w ? Math.min(3, daysBetween(w, todayISO())) : 1;
+    // amount (0 to 1, set in the curator) is roughly the chance a case has picked up a smudge on a given day.
+    const amt = this.pack.settings.staff.fingerprints, t = todayISO(), w = (this.progress.wiped || {})[p.id];
+    const base = amt <= 0 ? 0 : w ? Math.min(3, Math.floor(daysBetween(w, t) * amt * 1.5)) : (strSeed(p.id + t) % 100 < amt * 100 ? 1 : 0);
     return Math.min(3, base + ((this.extraPrints || {})[p.id] || 0));
   }
   /* ----- helping visitors find a piece -----
@@ -2384,6 +2646,27 @@ class Game {
     }
     return out;
   }
+  /* Patreon members, shuffled fresh each day, become the day's visitors in room order. With more members than visitors,
+     a different group comes each day. Whoever is clocked in right now is playing, so they don't also wander around. */
+  assignMembers() {
+    const all = (this.pack.settings.staff.members || []).filter(m => !this.staff || (m.badge ? m.badge !== this.staff.badge : m.name.toLowerCase() !== this.staff.name.toLowerCase()));
+    const seed = strSeed("members" + todayISO()), list = all.map((m, i) => ({ m, k: hash(seed, i) })).sort((a, b) => a.k - b.k).map(x => x.m);
+    let i = 0;
+    for (const id of Object.keys(this.rooms)) for (const n of this.rooms[id].npcs) {
+      if (n.staff || n.role || n.usher || n.patrol) continue;
+      n.member = list[i] ? list[i].name : null; i++;
+    }
+    this.lastStaffKey = this.staff ? this.staff.badge + "|" + this.staff.name : "";
+  }
+  /* The Patron Board: every member, always, whether or not they're visiting today. */
+  readPatronBoard() {
+    const names = (this.pack.settings.staff.members || []).map(m => m.name);
+    if (!names.length) { this.say(this.tx("patrons.empty")); return; }
+    const here = Object.values(this.rooms).flatMap(r => r.npcs.filter(n => n.member).map(n => n.member));
+    this.read({ title: "THANK YOU, PATRONS", sub: names.length + " supporter" + (names.length === 1 ? "" : "s"),
+      sections: [{ label: "", text: this.tx("patrons.intro").join(" ") }, { label: "OUR PATRONS", text: names.join(" \u00B7 ") },
+        ...(here.length ? [{ label: "VISITING TODAY", text: here.join(", ") }] : [])] });
+  }
   giveRequests() {
     const all = this.displayed(); if (!all.length) return;
     // At most two lost visitors at a time, each looking for a different piece.
@@ -2391,10 +2674,10 @@ class Game {
     const taken = new Set();
     for (const id in this.rooms) this.rooms[id].npcs.forEach((n, i) => {
       if (!(this.rooms[id].cases.length || this.rooms[id].hung.length)) return; // only gallery visitors get lost
-      if (open >= 1 || n.still || n.staff || n.patrol || n.req || strSeed(todayISO() + id + i + (this.reqRound || 0)) % 3 === 0) return;
+      if (open >= 1 || n.still || n.staff || n.patrol || n.req || Math.random() < 0.6) return;
       const pool = all.filter(a => !taken.has(a.piece.id) && a.room === id), away = pool.filter(a => a.room !== id || Math.abs(a.x - n.x) + Math.abs(a.y - n.y) > 6);
       const from = away.length ? away : pool; if (!from.length) return;
-      const pick = from[strSeed(id + i + todayISO() + (this.reqRound || 0)) % from.length];
+      const pick = from[Math.floor(Math.random() * from.length)];
       taken.add(pick.piece.id); open++;
       n.req = { piece: pick.piece, room: pick.room, x: pick.x, y: pick.y, asked: false };
     });
@@ -2406,6 +2689,7 @@ class Game {
     const p = this.player, [dx, dy] = DIRS[p.dir], fx = p.x + dx, fy = p.y + dy, r = this.room, art = ROOMS[r.id].art || {};
     const e = r.events[fx + "," + fy] || r.events[fx + "," + (fy + 1)], dark = this.lightsOff.has(r.id) ? " It's very dark." : "", dk = !!dark;
     const npc = r.npcs.find(n => n.x === fx && n.y === fy);
+    if (npc && npc.member) return { desc: npc.member + (npc.req ? ", looking a little lost." : npc.sitting ? ", relaxing at the café." : npc.still ? ", deep in thought about a purchase." : ", enjoying the museum.") + dark, thumb: { slot: npc.sheet, bg: art.floor, dark: dk } };
     if (npc) return { desc: (npc.patrol ? "The night guard, mid-rounds. They gave a little wave." : npc.usher ? "The usher at the front desk, smiling politely." : npc.still && npc.staff ? "The conservator, busy with something delicate." : npc.req ? "A visitor who looks a little lost." : "A visitor admiring the museum.") + dark, thumb: { slot: npc.sheet, bg: art.floor, dark: dk } };
     if (r.cat && r.cat.x === fx && r.cat.y === fy) return { desc: this.pack.settings.staff.catName + ", napping. Adorable." + dark, thumb: { slot: "cat", bg: art.floor, dark: dk } };
     if (r.mug && r.mug.x === fx && r.mug.y === fy) return { desc: "The curator's coffee mug, abandoned again." + dark, thumb: { slot: "mug", bg: art.floor, dark: dk } };
@@ -2423,6 +2707,7 @@ class Game {
     ph.unshift({ desc: sub.desc, piece: sub.piece || null, room: this.room.name.replace(/\s+/g, " "), thumb: sub.thumb || null, tod: this.tod() });
     if (ph.length > 40) ph.length = 40;
     this.saveProgress(); this.phoneT = 34; this.showLoc("Photo saved");
+    if (/napping/.test(sub.desc)) this.quest("catPhoto");
   }
   photoPieces() {
     const seen = new Set(), out = [];
@@ -2432,7 +2717,19 @@ class Game {
   /* ----- the Start menu: photos, save, save and quit ----- */
   openMenu() {
     const n = (this.progress.photos || []).length;
-    this.choose("PAUSED", ["Photos (" + n + ")", "Save", "Save and quit", "Back"], i => {
+    const sc = this.progress.stamps.length + "/" + this.pack.settings.shop.stampSize;
+    const opts = ["Photos (" + n + ")", "Stamp card (" + sc + ")", ...(this.progress.shirt ? ["Wardrobe"] : []), "Respawn", "Save", "Save and quit", "Back"];
+    this.choose("PAUSED", opts, k => {
+      const o = opts[k];
+      if (o === "Wardrobe") {
+        this.choose("Wardrobe", [this.progress.wearShirt ? "Take off the GOQ shirt" : "Wear the GOQ shirt", "Back"], j => {
+          if (j === 0) { this.progress.wearShirt = !this.progress.wearShirt; this.saveProgress(); this.showLoc(this.progress.wearShirt ? "Looking sharp." : "Back to the usual."); }
+        });
+        return;
+      }
+      if (o.startsWith("Stamp card")) { this.showStampCard(); return; }
+      if (o === "Respawn") { this.respawn(); return; }
+      const i = o.startsWith("Photos") ? 0 : o === "Save" ? 1 : o === "Save and quit" ? 2 : 3;
       if (i === 0) {
         const ph = this.progress.photos || [];
         if (!ph.length) { this.say(this.tx("photos.none")); return; }
@@ -2507,16 +2804,33 @@ class Game {
   }
   /* Someone's PC: a list of every archived piece. Pick one to see its art and placards; LOG OFF to leave. */
   someonesPC() {
-    const list = this.archived || [];
+    const list = this.archived || []; this.quest("pc");
     this.say(this.tx("pc.on"), () => {
       if (!list.length) { this.say(this.tx("pc.empty")); return; }
       const show = () => this.openList("SOMEONE'S PC: ARCHIVE", [...list.map(p => p.title), "LOG OFF"], i => {
         const p = list[i]; if (!p) return;
-        this.viewPiece(p); const done = this.txt && this.txt.done;
-        this.txt.done = () => { if (done) done(); show(); };
+        this.viewPiece(p); const done = this.rd && this.rd.done;
+        this.rd.done = () => { if (done) done(); show(); };
       });
       show();
     });
+  }
+  /* The magazine stand: pick a magazine, read it in the reading panel. Magazines are in the Words tab. */
+  magazines() {
+    const keys = Object.keys(TEXT).filter(k => /^mag\.\d+$/.test(k)), mags = keys.map(k => (this.pack.settings.text[k] || TEXT[k].v)[0]).filter(m => m && m.length);
+    this.choose(this.tx("mag.intro").join(" "), [...mags.map(m => m[0]), "Not now"], i => {
+      const m = mags[i]; if (!m) return;
+      this.read({ title: m[0].toUpperCase(), sub: "Magazine", sections: m.slice(1).map(p => ({ label: "", text: p })) }, () => this.magazines());
+    });
+  }
+  /* ----- the secret GOQ shirt -----
+     A very specific museum day, in order (see the third magazine). Anything on the list done out of order starts it over. */
+  quest(step) {
+    if (this.progress.shirt) return;
+    const i = this.progress.quest || 0;
+    if (SHIRT_STEPS[i] === step) this.progress.quest = i + 1;
+    else this.progress.quest = SHIRT_STEPS[0] === step ? 1 : 0;
+    this.saveProgress();
   }
   /* A simple list in the menu box: arrows to choose, A to pick, B to leave. */
   openList(title, rows, pick) {
@@ -2535,6 +2849,23 @@ class Game {
     const sel = wrap.children[L.i]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: "nearest" });
   }
   listPick() { const L = this.list; this.el.album.style.display = "none"; this.mode = "walk"; this.inputLock = true; this.list = null; L.pick(L.i); }
+  /* The microwave runs once per opened museum. It does not go well. */
+  microwave() {
+    if (this.microwaved) { this.say(this.tx("microwave.after")); return; }
+    this.choose(this.tx("microwave.ask").join(" "), ["Start it", "Better not"], i => {
+      if (i !== 0) return;
+      this.mode = "busy"; this.showLoc("*mmmmmmmmm*");
+      setTimeout(() => { this.microwaved = true; this.shakeT = 14; this.boomT = 30; this.mode = "walk"; this.say(this.tx("microwave.boom", null, true)); }, 1000);
+    });
+  }
+  /* Respawn: back to this room's start spot (or the lobby's), with a little fourth-wall remark. Not after closing. */
+  respawn() {
+    if (this.closing) { this.say(this.tx("respawn.no")); return; }
+    const r = ROOMS[this.room.id], [x, y, d] = r.spawn, free = !this.rooms[this.room.id].solid[y][x] && !this.occupied(x, y);
+    const p = this.player; p.sitting = false; this.asleep = false; this.path = null;
+    this.mode = "busy"; this.trans = { t: 0, dur: 10, switched: false, fn: () => { if (free) this.enterRoom(this.room.id, x, y, d, true); else { const s = ROOMS.lobby.spawn; this.enterRoom("lobby", s[0], s[1], s[2], true); } },
+      after: () => this.say(this.tx("respawn.quip", null, true)) };
+  }
   saveWhere() { const p = this.player; this.progress.where = { room: this.room.id, x: p.x, y: p.y, dir: p.dir }; this.saveProgress(); }
   /* The usher talks to visitors like visitors and to staff like coworkers. */
   usherTalk() { this.staffTalk("usher"); }
@@ -2559,9 +2890,10 @@ class Game {
     const r = npc.req, opts = [], photos = r ? this.photoPieces() : [];
     if (r && photos.length) opts.push("Show a photo");
     if (r) opts.push(r.asked ? "What was it again?" : "Can I help?");
-    if (!opts.length) { npc.lineI = (npc.lineI + 1) % npc.lines.length; this.say(npc.lines[npc.lineI]); return; }
+    const named = pages => (npc.member ? pages.map((p, k) => (k === 0 ? npc.member + ": " + p : p)) : pages);
+    if (!opts.length) { npc.lineI = (npc.lineI + 1) % npc.lines.length; this.say(named(npc.lines[npc.lineI])); return; }
     opts.push("Just saying hi");
-    this.choose(r.asked ? "Any luck finding it?" : "They look a little lost.", opts, i => {
+    this.choose(r.asked ? (npc.member ? npc.member + ": " : "") + "Any luck finding it?" : (npc.member || "They") + (npc.member ? " looks" : " look") + " a little lost.", opts, i => {
       const o = opts[i], hint = r.piece.hint || ("a piece called " + r.piece.title);
       if (o === "Show a photo") {
         this.choose("Which photo?", [...photos.map(p => p.title), "Never mind"], k => {
@@ -2571,7 +2903,7 @@ class Game {
             this.say(this.tx("help.right", { title: r.piece.title }), () => this.sendTo(npc, r));
           } else this.say(this.tx("help.wrong", { hint }));
         });
-      } else if (o === "Just saying hi") { npc.lineI = (npc.lineI + 1) % npc.lines.length; this.say(npc.lines[npc.lineI]); }
+      } else if (o === "Just saying hi") { npc.lineI = (npc.lineI + 1) % npc.lines.length; this.say(named(npc.lines[npc.lineI])); }
       else { r.asked = true; this.say(this.tx("help.ask", { hint })); }
     });
   }
@@ -2597,6 +2929,7 @@ class Game {
   }
   /* Sitting: on a café stool or a bench. Any direction stands you back up. With a drink, you sip now and then. */
   sit(e) {
+    if (this.room.npcs.some(n => n.x === e.x && n.y === e.y)) { this.say(["Someone's already sitting there."]); return; }
     const p = this.player;
     p.sitFrom = [p.x, p.y]; p.x = e.x; p.y = e.y; p.dir = e.sit; p.sitting = true; p.moving = false; this.sipClock = 60; this.inputLock = true;
     p.bench = !!e.bench; this.sitIdle = 0; this.asleep = false;
@@ -2610,7 +2943,7 @@ class Game {
     if (this.sip) {
       if (++this.sip.t >= 44) {
         this.sip = null;
-        if (this.drink && ++this.drink.sips >= 4) { const n = this.drink.name.toLowerCase(); this.drink.empty = true; this.say(this.tx("drink.finished", { drink: n })); }
+        if (this.drink && ++this.drink.sips >= 4) { const n = this.drink.name.toLowerCase(); this.drink.empty = true; if (this.drink.name === "Cocoa" && this.player.sitting && !this.player.bench) this.quest("finishOnStool"); this.say(this.tx("drink.finished", { drink: n })); }
       }
       return;
     }
@@ -2629,6 +2962,7 @@ class Game {
     o.episodes = split.episodes; o.community = split.community; this.archived = split.archived;
     this.rooms = {}; Object.keys(ROOMS).forEach(id => (this.rooms[id] = buildRoom(id, this.pack.pieces, o)));
     if (!this.closing) this.giveRequests();
+    this.assignMembers();
   }
   enterRoom(id, x, y, dir, quiet) {
     if (!this.rooms[id]) { id = "lobby"; [x, y, dir] = ROOMS.lobby.spawn; }
@@ -2654,6 +2988,7 @@ class Game {
     else if (e.plant) {
       if (!this.isThirsty(e.plant)) { this.say(this.tx("plant.done", { room: e.name })); return; }
       this.progress.watered[e.plant] = todayISO(); this.count("watered"); this.saveProgress();
+      this.quest("water");
       this.say(this.tx("plant.water", { room: e.name }));
     }
     else if (e.mug) {
@@ -2677,13 +3012,18 @@ class Game {
     else if (e.cafe) this.cafe();
     else if (e.trash) this.bin(e);
     else if (e.elevatorDoor) { this.elevatorAt = this.room.id; this.warp("elevator", 3, 5, "up"); }
-    else if (e.elevatorExit) { const id = ROOMS[this.elevatorAt] && ROOMS[this.elevatorAt].elevatorStop ? this.elevatorAt : (Object.keys(ROOMS).find(k => ROOMS[k].elevatorStop) || "lobby"), st = ROOMS[id].elevatorStop || { x: ROOMS[id].spawn[0], y: ROOMS[id].spawn[1], dir: ROOMS[id].spawn[2] }; this.warp(id, st.x, st.y, st.dir); }
+    else if (e.elevatorExit) { if (ROOMS[this.elevatorAt] && this.elevatorAt === "storage") this.quest("elevatorB1"); const id = ROOMS[this.elevatorAt] && ROOMS[this.elevatorAt].elevatorStop ? this.elevatorAt : (Object.keys(ROOMS).find(k => ROOMS[k].elevatorStop) || "lobby"), st = ROOMS[id].elevatorStop || { x: ROOMS[id].spawn[0], y: ROOMS[id].spawn[1], dir: ROOMS[id].spawn[2] }; this.warp(id, st.x, st.y, st.dir); }
     else if (e.elevatorPanel) this.elevatorPanel();
     else if (e.upcoming) this.workbench();
     else if (e.pc) this.someonesPC();
+    else if (e.patronBoard) this.readPatronBoard();
+    else if (e.fridge) this.say(this.tx("fridge", null, true));
+    else if (e.microwave) this.microwave();
     else if (e.featured) this.readFeatured();
     else if (e.sit) this.sit(e);
     else if (e.rack !== undefined) this.browseRack(e.rack);
+    else if (e.unit !== undefined) this.browseUnit(e.unit);
+    else if (e.magazines) this.magazines();
     else if (e.collection) this.viewCollection();
     else if (e.cat) this.petCat();
     else if (e.guestbook) this.readGuestbook();
@@ -2709,12 +3049,12 @@ class Game {
     if (c.bumpT > 0) c.bumpT--;
     if (!c.moving) return false;
     if (c.slow && (this.t & 1)) return false; // the night guard strolls at half speed
-    if (++c.prog >= T) {
+    if ((c.prog += c === this.player && this.segway ? 2 : 1) >= T) {
       c.x += DIRS[c.dir][0]; c.y += DIRS[c.dir][1]; c.prog = 0; c.moving = false;
       if (c === this.player) {
         this.stepInDark();
         const e = this.room.events[c.x + "," + c.y];
-        if (e && e.step && !this.trans) { this.path = null; this.pathAct = null; c.walking = false; this.runEvent(e); }
+        if (e && e.step && !this.trans) { this.path = null; this.pathAct = null; c.walking = false; if (this.room.id === "stairwell" && e.warp[0] === "gallery2") this.quest("stairsTo2F"); this.runEvent(e); }
       }
       return true;
     }
@@ -2723,6 +3063,11 @@ class Game {
   update() {
     this.t++;
     const q = this.queue; this.queue = [];
+    // Up, up, down, down, left, right, left, right, B, A: a Segway. Enter it again to park it.
+    if (this.mode === "walk") for (const k of q) if (KONAMI.includes(k)) {
+      (this.kbuf = this.kbuf || []).push(k); if (this.kbuf.length > 10) this.kbuf.shift();
+      if (this.kbuf.join() === KONAMI.join()) { this.kbuf = []; this.segway = !this.segway; this.konamiNow = true; this.showLoc(this.segway ? "SEGWAY UNLOCKED. Zoom zoom." : "Segway parked."); }
+    }
     const has = k => q.includes(k);
     if (this.trans) {
       const tr = this.trans; tr.t++;
@@ -2734,11 +3079,20 @@ class Game {
     this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping();
     if (this.petT > 0) this.petT--;
     if (this.flickerT > 0) this.flickerT--;
+    if (this.boomT > 0) this.boomT--;
+    if (this.shakeT > 0) this.shakeT--;
     if (this.phoneT > 0) this.phoneT--;
     if (this.t % 2700 === 0 && !this.closing && !Object.values(this.rooms).some(r => r.npcs.some(n => n.req))) { this.reqRound = (this.reqRound || 0) + 1; this.giveRequests(); }
     if (this.t % 600 === 0 && this.mode === "walk") {
       const t = this.tod(); if (this.lastTod && t !== this.lastTod) this.rebuild(); this.lastTod = t;
       const b = this.catBucket(); if (this.lastCat !== undefined && b !== this.lastCat) this.moveCat(); this.lastCat = b;
+    }
+    if (this.mode === "read") {
+      const r = this.rd;
+      if (has("left") && r.i > 0) { r.i--; this.renderRead(); }
+      else if (has("a") || has("right")) { if (r.i < r.pages.length - 1) { r.i++; this.renderRead(); } else this.closeRead(); }
+      else if (has("b") || has("start")) this.closeRead();
+      return;
     }
     if (this.mode === "list") {
       const L = this.list, n = L.rows.length;
@@ -2786,7 +3140,9 @@ class Game {
       this.renderText();
     } else if (this.mode === "walk") {
       if (has("start") && !this.player.moving) { this.openMenu(); return; }
-      if (has("b") && !this.player.moving && !this.asleep) { this.takePhoto(); return; }
+      const codeB = this.kbuf && this.kbuf.slice(-9).join() === KONAMI.slice(0, 9).join(); // the B in the code isn't a photo
+      if (this.konamiNow) { this.konamiNow = false; return; }
+      if (has("b") && !codeB && !this.player.moving && !this.asleep) { this.takePhoto(); return; }
       this.updatePlayer(has("a"));
     }
     else if (this.mode === "ended" && (has("a") || has("start"))) this.reopen();
@@ -2804,7 +3160,7 @@ class Game {
       if (p.bench && !d && !pressA && !awake && !this.sip) {
         this.sitIdle++;
         if (this.sitIdle === 420) this.showLoc("You're getting comfortable...");
-        if (this.sitIdle > 720) { this.asleep = true; this.showLoc("Zzz..."); return; }
+        if (this.sitIdle > 720) { this.asleep = true; this.showLoc("Zzz..."); if (this.room.id === "gallery2") this.quest("nap2F"); return; }
       }
       if (d || pressA) this.sitIdle = 0;
       if (!d) this.inputLock = false;
@@ -2850,10 +3206,11 @@ class Game {
       n.timer = 80 + Math.random() * 200;
       const d = Object.keys(DIRS)[(Math.random() * 4) | 0], [dx, dy] = DIRS[d], nx = n.x + dx, ny = n.y + dy, b = n.box;
       n.dir = d;
-      if (Math.random() < 0.6 && nx >= b.x0 && nx <= b.x1 && ny >= b.y0 && ny <= b.y1) this.tryMove(n, d);
+      const noGo = this.room.noWander && this.room.noWander.has(nx + "," + ny);
+      if (Math.random() < 0.6 && !noGo && nx >= b.x0 && nx <= b.x1 && ny >= b.y0 && ny <= b.y1) this.tryMove(n, d);
       // Lingering next to a case leaves fingerprints.
       const near = this.room.cases.find(c => c.piece && c.state === "wall" && Math.abs(c.x - n.x) + Math.abs(c.y - n.y) === 1);
-      if (near && Math.random() < 0.25) { const xp = this.extraPrints || (this.extraPrints = {}); xp[near.piece.id] = Math.min(3, (xp[near.piece.id] || 0) + 1); }
+      if (near && Math.random() < 0.25 * this.pack.settings.staff.fingerprints) { const xp = this.extraPrints || (this.extraPrints = {}); xp[near.piece.id] = Math.min(3, (xp[near.piece.id] || 0) + 1); }
     }
   }
 
@@ -2973,7 +3330,14 @@ class Game {
   drawProp(p, cx, cy) {
     const ctx = this.ctx, k = p.plant && this.isThirsty(p.plant) ? "plant_thirsty" : p.key;
     const px0 = p.x * T - cx, py0 = p.y * T - (SLOT[k].h - T) - cy;
-    this.drawSlot(k, this.frame(k), 0, px0, py0);
+    this.drawSlot(k, k === "microwave_counter" ? (this.microwaved ? 1 : 0) : this.frame(k), 0, px0, py0);
+    if (k === "microwave_counter" && this.boomT > 0) { const f = Math.floor((30 - this.boomT) / 5); if (f < 4) { this.drawSlot("sparkle", f, 0, px0 + 2, py0 - 8); this.drawSlot("sparkle", (f + 1) % 4, 0, px0 + 10, py0 - 4); } }
+    if (p.unit !== undefined) this.unitGoods(p.unit).forEach((it, k) => {
+      const cxs = px0 + [9, 24, 39][k % 3], top = py0 + (k < 3 ? 4 : 18);
+      for (const [dx, dy] of [[-6, 2], [0, 0], [-3, 3], [3, 2]]) { // a little stack of the same thing
+        if (it.item) ctx.drawImage(this.itemIcon(it.item), cxs - 5 + dx, top + dy, 10, 10); else this.drawSlot("trinkets", it.trinket, 0, cxs - 4 + dx, top + 1 + dy);
+      }
+    });
     if (p.rack !== undefined) {
       const it = this.rackItems(p.rack)[0];
       if (it) ctx.drawImage(this.itemIcon(it), px0 + 4, py0 + 3, 24, 24); // one item, big enough to fill both shelves
@@ -2985,7 +3349,9 @@ class Game {
   }
   drawFeatured(r, cx, cy) {
     const x = r.featuredAt.x * T - cx, y = r.featuredAt.y * T - T - cy, sh = this.pack.settings.shop, it = sh.items.find(i => i.id === sh.featured);
-    if (it) this.ctx.drawImage(this.itemIcon(it), x + 4, y + 8, 8, 8);
+    this.drawSlot("featured_stand", 0, 0, x, y);
+    if (it) this.ctx.drawImage(this.itemIcon(it), x + 2, y + 2, 12, 12);
+    return;
     this.drawSlot("featured_stand", 0, 0, x, y);
   }
   /* People walking behind something tall are hidden by its top: redraw the part above each tall thing's base after the people. */
@@ -3021,6 +3387,7 @@ class Game {
   }
   draw() {
     const ctx = this.ctx, r = this.room, pp = this.pos(this.player), full = this.full;
+    if (!full && this.shakeT > 0 && !this.shaking && !REDUCED_MOTION) { this.shaking = true; ctx.save(); ctx.translate(this.shakeT % 4 < 2 ? 1 : -1, 0); this.draw(); ctx.restore(); this.shaking = false; return; }
     const VWp = full ? full.w : SW, VHp = full ? full.h : SH;
     ctx.fillStyle = "#000"; ctx.fillRect(0, 0, VWp, VHp);
     const rw = r.w * T, rh = r.h * T;
@@ -3099,8 +3466,9 @@ class Game {
       const p = this.pos(c), prog = c.moving ? c.prog : c.bumpT > 0 ? 16 - c.bumpT : -1;
       const col = prog >= 0 && prog < 8 ? (c.step ? 1 : 2) : 0;
       if (c.alpha !== undefined) ctx.globalAlpha = Math.max(0, c.alpha);
-      const sheet = c === this.player && this.staff ? "player_staff" : c.sheet;
-      const sx = Math.round(p.x - cx), sy = Math.round(p.y - cy - 4) + (c.sitting ? 2 : 0);
+      const sheet = c === this.player ? (this.staff ? "player_staff" : this.progress.wearShirt ? "player_goq_shirt" : c.sheet) : c.sheet;
+      if (c === this.player && this.segway && !c.sitting) { const pp3 = this.pos(c); this.drawSlot("segway", 0, 0, Math.round(pp3.x - cx), Math.round(pp3.y - cy - 1)); }
+      const sx = Math.round(p.x - cx), sy = Math.round(p.y - cy - 4) + (c.sitting ? 2 : 0) - (c === this.player && this.segway && !c.sitting ? 4 : 0);
       const cupFirst = c === this.player && this.drink && c.dir === "up";
       if (cupFirst) this.drawCup(sx, sy, c);
       this.drawSlot(sheet, c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
@@ -3110,6 +3478,10 @@ class Game {
         const ox = { down: 4, up: 4, left: 0, right: 8 }[c.dir]; if (c.dir !== "up") this.drawSlot("phone", 0, 0, sx + ox, sy + 4);
       }
       if (c === this.player && this.asleep && this.t % 120 < 90) { const zy = Math.floor((this.t % 120) / 30); ctx.fillStyle = "#f8f8f0"; ctx.font = "6px monospace"; ctx.fillText("z", sx + 12 + zy, sy - zy * 3); }
+      if (c.member && !c.leaving && !this.full && Math.abs(c.x - this.player.x) + Math.abs(c.y - this.player.y) <= 2) {
+        ctx.font = "6px monospace"; const w = Math.ceil(ctx.measureText(c.member).width) + 4, nx = Math.round(sx + 8 - w / 2), ny = sy - (c.req ? 18 : 8);
+        ctx.fillStyle = "rgba(24,24,32,.85)"; ctx.fillRect(nx, ny, w, 8); ctx.fillStyle = "#f8f0c0"; ctx.textBaseline = "top"; ctx.fillText(c.member, nx + 2, ny + 1);
+      }
       if (c.req && !c.leaving) this.drawSlot("bubble", c.req.asked ? 1 : 0, 0, sx + 4, sy - 9 + (Math.floor(this.t / 20) % 2));
       ctx.globalAlpha = 1;
     }
@@ -3127,8 +3499,14 @@ class Game {
         ctx.fillRect(bx, by + (sy < 0 ? 3 : 0), 4, 1); ctx.fillRect(bx + (sx < 0 ? 3 : 0), by, 1, 4);
       });
     }
-    if (this.flickerT > 0 && (this.flickerT % 14 < 5 || (this.flickerT > 40 && this.flickerT < 46))) { ctx.fillStyle = "rgba(6,4,14,0.88)"; ctx.fillRect(0, 0, SW, SH); } // the light stutters
-    if (this.flash > 0) { ctx.globalAlpha = this.flash / 8; ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, SW, SH); ctx.globalAlpha = 1; this.flash--; } // camera flash
+    // The light dims softly twice, like a tired bulb (no strobing; skipped entirely with reduced motion).
+    if (this.flickerT > 0 && !REDUCED_MOTION) { const k = this.flickerT, d = Math.max(0, 1 - Math.abs(k - 48) / 8, 1 - Math.abs(k - 22) / 8); if (d > 0) { ctx.fillStyle = "rgba(6,4,14," + (0.32 * d).toFixed(3) + ")"; ctx.fillRect(0, 0, SW, SH); } }
+    // Camera flash: a small, soft glow in front of you rather than the whole screen.
+    if (this.flash > 0) {
+      const pp2 = this.pos(this.player), [fx, fy] = DIRS[this.player.dir], x0 = pp2.x + 8 + fx * 14 - cx, y0 = pp2.y + 4 + fy * 12 - cy, g = ctx.createRadialGradient(x0, y0, 1, x0, y0, 30);
+      g.addColorStop(0, "rgba(255,255,240," + (0.45 * this.flash / 6).toFixed(3) + ")"); g.addColorStop(1, "rgba(255,255,240,0)");
+      ctx.fillStyle = g; ctx.fillRect(x0 - 30, y0 - 30, 60, 60); this.flash--;
+    }
     if (this.fade > 0) { ctx.globalAlpha = Math.min(1, this.fade); ctx.fillStyle = "#000"; ctx.fillRect(0, 0, SW, SH); ctx.globalAlpha = 1; }
   }
 }
@@ -3162,7 +3540,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-04 three galleries";
+const VERSION = "2026-10-06 patrons";
 window.GOQ = { archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
