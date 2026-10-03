@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#1d1317">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -50,6 +50,13 @@ body.touch .mark small,body.touch .pack{display:none}
 /* Play area */
 .play{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 12px 12px;gap:10px}
 #stage{box-shadow:0 0 0 4px #34232a,0 0 0 6px #4b343b,0 24px 60px rgba(0,0,0,.55);flex:none}
+#area,#stage,#controls{touch-action:none}
+.touch-tip{position:fixed;left:50%;top:calc(env(safe-area-inset-top, 0px) + 8px);transform:translateX(-50%);z-index:20;display:flex;align-items:center;gap:8px;
+  max-width:min(80vw,360px);padding:4px 4px 4px 12px;border-radius:999px;background:color-mix(in srgb, var(--surface) 92%, transparent);border:1px solid var(--line);
+  color:var(--text);font-size:.74rem;line-height:1.25;box-shadow:0 2px 10px rgba(0,0,0,.25);pointer-events:none;transition:opacity .4s}
+.touch-tip.gone{opacity:0}
+.touch-tip button{pointer-events:auto;flex:none;width:24px;height:24px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:1rem;line-height:1;cursor:pointer}
+@media (prefers-reduced-motion:reduce){.touch-tip{transition:none}}
 .hint{margin:14px auto 0;font-size:.88rem;color:var(--muted);text-align:center;max-width:60ch;padding:0 12px}
 .hint kbd{font-family:var(--body);font-weight:700;color:var(--text);border:1px solid var(--line);border-bottom-width:2px;border-radius:3px;padding:0 .35em;background:var(--surface)}
 body.touch .hint{display:none}
@@ -159,6 +166,7 @@ dialog.settings::backdrop{background:rgba(10,5,7,.7)}
     <button class="btn icon" id="setBtn" type="button" aria-haspopup="dialog" aria-label="Settings" title="Settings">&#x2699;&#xFE0E;</button>
   </div>
 </header>
+<div class="touch-tip" id="touchTip" role="status" hidden><span id="touchTipText"></span><button type="button" id="touchTipX" aria-label="Dismiss tip">&times;</button></div>
 <main class="play" id="area">
   <div id="stage" aria-label="Game screen. Use arrow keys or WASD to walk, Z or Space to look and talk, X to go back."></div>
   <div id="controls"></div>
@@ -193,15 +201,20 @@ dialog.settings::backdrop{background:rgba(10,5,7,.7)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-09 stairwells";
+window.GOQ_WANT = "2026-10-02 staff";
 (function load(retry) {
   const s = document.createElement("script");
   s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry ? "&r=" + Date.now() : "");
+  /* A cached engine can finish loading before the rest of this page is read, so wait for the page if needed. */
+  const go = () => {
+    const run = () => { if (window.GOQ && window.goqStart) window.goqStart(); if (window.goqCheck) window.goqCheck(); };
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run, { once: true }); else run();
+  };
   s.onload = () => {
     if ((!window.GOQ || GOQ.VERSION !== window.GOQ_WANT) && !retry) { load(true); return; }
-    window.goqStart(); window.goqCheck();
+    go();
   };
-  s.onerror = () => { if (!retry) load(true); else { window.goqStart && window.GOQ && window.goqStart(); window.goqCheck(); } };
+  s.onerror = () => { if (!retry) load(true); else go(); };
   document.head.appendChild(s);
 })(false);
 </script>
@@ -211,6 +224,8 @@ window.goqStart = function () {
   const KEY = "goq-museum-pack", PACK_FILE = "museum-pack.json", SET_KEY = "goq-museum-settings";
   const q = location.search + location.hash, flag = n => new RegExp("[?&#]" + n + "\\b").test(q);
   const testMode = flag("test");
+  // Running on your own computer (file:// or localhost) rather than the live site.
+  const isLocal = !/^https?:$/.test(location.protocol) || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
   // Curator mode (?curator): pieces waiting for their unveil date sit in crates, ready to hang on camera.
   const curator = flag("curator");
   // ?spooky makes the rare creepy moment happen on every closing (for recording).
@@ -229,7 +244,7 @@ window.goqStart = function () {
 
   let saved = null; try { saved = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) {}
   const game = new GOQ.Game(stage, saved || undefined, { curator, spooky, time, tapWalk: tapWalk(), haptics: set.haptics !== false,
-    showTestBadge: testMode || curator || location.protocol === "file:" });
+    showTestBadge: testMode || curator || isLocal });
   GOQ.mountControls(game, document.getElementById("controls"));
   window.goqMuseum = game;
 
@@ -324,14 +339,34 @@ window.goqStart = function () {
     if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
   });
   optTap.addEventListener("change", () => { set.tapWalk = optTap.checked; game.tapWalk = optTap.checked; saveSet(); });
+
+  /* Phones and tablets: no accidental pinch or double-tap zoom on the game, even where the browser ignores the viewport setting. */
+  const playArea = document.getElementById("area");
+  ["gesturestart", "gesturechange"].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
+  playArea.addEventListener("touchmove", e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+
+  /* A small tip on touch screens: tap to walk, and turn sideways for a bigger screen. Shown on the first few visits, easy to dismiss. */
+  (function touchTip() {
+    if (!coarse() || (set.tipSeen || 0) >= 3) return;
+    const tip = document.getElementById("touchTip"), bits = [];
+    bits.push(tapWalk() ? "Tap anywhere to walk." : "Tap to walk is in Settings.");
+    if (matchMedia("(orientation:portrait)").matches) bits.push("Turn sideways for a bigger view.");
+    document.getElementById("touchTipText").textContent = bits.join(" ");
+    tip.hidden = false; set.tipSeen = (set.tipSeen || 0) + 1; saveSet();
+    const hide = () => { tip.classList.add("gone"); setTimeout(() => { tip.hidden = true; }, 450); };
+    document.getElementById("touchTipX").addEventListener("click", () => { set.tipSeen = 3; saveSet(); hide(); });
+    setTimeout(hide, 9000);
+  })();
   optCtl.addEventListener("change", () => { set.controls = optCtl.value; saveSet(); layout(); });
   optBuzz.addEventListener("change", () => { set.haptics = optBuzz.checked; game.haptics = optBuzz.checked; saveSet(); });
   dlg.addEventListener("close", () => stage.focus({ preventScroll: true }));
 
   /* ---------- Museum packs ----------
      When hosted (GitHub Pages), a museum-pack.json next to this page loads by itself.
-     On the live site the load button hides; add ?test to the address to show it. */
-  if (!saved && /^https?:$/.test(location.protocol)) {
+     On the live site the load button hides; add ?test to the address to show it.
+     The pack file next to the page always wins over a pack saved in this browser, so new pieces show up.
+     With ?test, a pack you loaded by hand stays in charge instead. */
+  if (/^https?:$/.test(location.protocol) && !(saved && testMode)) {
     fetch(PACK_FILE, { cache: "no-cache" }).then(r => (r.ok ? r.json() : null)).then(j => {
       if (!isPack(j)) return;
       game.setPack(j); describe(GOQ.normalizePack(j), "Site pack"); resetBtn.hidden = true;

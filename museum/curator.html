@@ -280,7 +280,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
     </div>
     <div class="actions">
       <span id="saved" role="status"></span>
-      <a class="btn quiet" href="batch-fill.html" title="Add many pieces at once from YouTube and image files, and crop them to fit">Batch fill</a>
+      <a class="btn quiet" id="batchBtn" href="batch-fill.html" title="Add many pieces at once from YouTube and image files, and crop them to fit">Batch fill</a>
       <label class="btn quiet" for="importFile">Import pack</label>
       <input id="importFile" class="sr-only" type="file" accept=".json,application/json">
       <button class="btn primary" id="exportBtn" type="button">Export pack</button>
@@ -316,15 +316,20 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-09 stairwells";
+window.GOQ_WANT = "2026-10-02 staff";
 (function load(retry) {
   const s = document.createElement("script");
   s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry ? "&r=" + Date.now() : "");
+  /* A cached engine can finish loading before the rest of this page is read, so wait for the page if needed. */
+  const go = () => {
+    const run = () => { if (window.GOQ && window.goqStart) window.goqStart(); if (window.goqCheck) window.goqCheck(); };
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run, { once: true }); else run();
+  };
   s.onload = () => {
     if ((!window.GOQ || GOQ.VERSION !== window.GOQ_WANT) && !retry) { load(true); return; }
-    window.goqStart(); window.goqCheck();
+    go();
   };
-  s.onerror = () => { if (!retry) load(true); else { window.goqStart && window.GOQ && window.goqStart(); window.goqCheck(); } };
+  s.onerror = () => { if (!retry) load(true); else go(); };
   document.head.appendChild(s);
 })(false);
 </script>
@@ -375,6 +380,10 @@ function changed(opts) {
 let pending = false;
 function markPending() { pending = true; const d = $("#applyDot"); if (d) d.hidden = false; }
 
+/* Batch fill only runs on your own computer (it needs localhost for Google sign-in), so hide its button on the live site. */
+if (/^https?:$/.test(location.protocol) && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) {
+  const bb = document.getElementById("batchBtn"); if (bb) bb.hidden = true;
+}
 /* Batch fill (batch-fill.html) writes the same draft. If this tab is open when it sends, load what it sent. */
 window.addEventListener("storage", async e => {
   if (e.key !== DRAFT_KEY || !e.newValue) return;
@@ -673,7 +682,7 @@ function renderStaff() {
   const st = draft.settings.staff || (draft.settings.staff = { eotm: { name: "", note: "" }, corkboard: GOQ.DEFAULT_CORKBOARD.slice() });
   const wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
   wrap.appendChild(el("h2", { class: "title", text: "Staff" }));
-  wrap.appendChild(el("p", { text: "Patreon members clock in at the staff door with a badge, wear the staff uniform, and their chores count toward a staff tally. Until Phase 8 (Supabase), only the offline test badge works: number 0001, key TEST." }));
+  wrap.appendChild(el("p", { text: "Patreon members clock in at the staff door with a badge, wear the staff uniform, and their chores count toward a staff tally. Real badges live in Supabase (set it up below). The offline test badge, number 0001 and key QQQ-QQQ, works on your own computer and in this preview; its points stay in that browser." }));
 
   // Patreon members: they show up as named visitors (a fresh mix each day) and are all listed on the Patron Board.
   st.members = st.members || [];
@@ -711,13 +720,51 @@ function renderStaff() {
     el("p", { class: "note", style: "margin:0 0 12px", text: "How fast visitors stroll, compared with your own walking speed. 100% is as fast as you." }),
     el("label", { class: "range" }, [el("span", { text: "Speed" }), ps, psOut]),
   ]));
-  const name = el("input", { type: "text", value: st.eotm.name, placeholder: "A patron's display name" });
+  // Online staff (Supabase): where badges are checked and chores are counted. Both values are public by design.
+  const on = draft.settings.online || (draft.settings.online = { url: "", key: "" });
+  const ourl = el("input", { type: "url", value: on.url || "", placeholder: "https://abcdefgh.supabase.co", spellcheck: "false", autocomplete: "off" });
+  const okey = el("input", { type: "text", value: on.key || "", placeholder: "sb_publishable_...", spellcheck: "false", autocomplete: "off" });
+  const ostat = el("p", { class: "note", style: "margin:10px 0 0", role: "status" });
+  ourl.addEventListener("input", () => { on.url = ourl.value.trim().replace(/\/+$/, ""); changed(); });
+  okey.addEventListener("input", () => { on.key = okey.value.replace(/\s/g, ""); changed(); });
+  const otest = el("button", { class: "btn", type: "button", text: "Test connection" });
+  otest.addEventListener("click", async () => {
+    const url = (on.url || "").replace(/\/+$/, ""), key = on.key || "";
+    if (!/^https:\/\/[^\s/]+$/i.test(url) || !key) { ostat.textContent = "Fill in both boxes first. The address looks like https://abcdefgh.supabase.co (nothing after .co)."; return; }
+    ostat.textContent = "Checking...";
+    try {
+      const headers = { "Content-Type": "application/json", apikey: key }; if (/^eyJ/.test(key)) headers.Authorization = "Bearer " + key;
+      const res = await fetch(url + "/rest/v1/rpc/get_leaderboard", { method: "POST", headers, body: "{}", cache: "no-store" });
+      const j = await res.json().catch(() => null);
+      if (!res.ok) {
+        const msg = j && (j.message || j.hint) || ("error " + res.status);
+        ostat.textContent = res.status === 401 || res.status === 403 ? "Supabase refused the key (" + msg + "). Copy the publishable key again from Project Settings, API Keys."
+          : res.status === 404 ? "Connected, but the museum's functions aren't there yet (" + msg + "). Run supabase-setup.sql in the SQL Editor."
+          : "Supabase answered with an error: " + msg;
+        return;
+      }
+      const top = (j && j.top) || [], ee = j && j.eotm;
+      ostat.textContent = "Connected. " + (j.month || "This month") + ": " + (top.length ? top.map((r, i) => (i + 1) + ". " + r.name + " (" + r.points + ")").join(", ") : "no points yet") + "." +
+        (ee ? " Employee of the Month would be " + ee.name + (ee.sofar ? " (so far)" : "") + "." : "");
+    } catch (err) { ostat.textContent = "Couldn't reach that address. Check it, and check that the project isn't paused in the Supabase dashboard."; }
+  });
+  wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
+    el("h3", { text: "Online staff (Supabase)", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "Where real badges are checked and chores are counted. Paste your project's address and its publishable key (both are safe to share; the database only lets the museum clock in, log chores and read names and points). Leave both empty to stay offline. Saved in the pack, so export it afterwards." }),
+    el("div", { class: "fields" }, [
+      el("label", { class: "wide" }, [document.createTextNode("Project address"), ourl]),
+      el("label", { class: "wide" }, [document.createTextNode("Publishable key"), okey]),
+    ]),
+    el("div", { style: "margin-top:10px" }, [otest]), ostat,
+  ]));
+
+  const name = el("input", { type: "text", value: st.eotm.name, placeholder: "Leave empty to pick automatically" });
   const note = el("input", { type: "text", value: st.eotm.note, placeholder: "Dusted 41 frames in October" });
   name.addEventListener("input", () => { st.eotm.name = name.value; changed(); });
   note.addEventListener("input", () => { st.eotm.note = note.value; changed(); });
   wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
     el("h3", { text: "Employee of the Month", style: "margin:0 0 4px" }),
-    el("p", { class: "note", style: "margin:0 0 12px", text: "Hangs in the lobby. Leave the name empty for an empty frame (\"Maybe it'll be you\")." }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "Hangs in the lobby. Leave the name empty to pick automatically from Supabase: last month's top patron, or this month's leader until there is one (an empty frame when offline). Type a name to override it." }),
     el("div", { class: "fields" }, [
       el("label", {}, [document.createTextNode("Name"), name]),
       el("label", {}, [document.createTextNode("Why they won"), note]),
@@ -798,7 +845,7 @@ function roomItems(d) {
   (d.glows || []).forEach((p, i) => out.push({ type: "glow", i, x: p[0], y: p[1], w: 1, h: 1, label: "Light" }));
   (d.mugSpots || []).forEach((p, i) => out.push({ type: "mugSpot", i, x: p[0], y: p[1], w: 1, h: 1, label: "Mug spot" }));
   [["lightSwitch", "Light switch", 1, 1], ["intercom", "Intercom", 1, 1], ["timeClock", "Time clock", 1, 1], ["elevatorPanel", "Elevator panel", 1, 1]].forEach(([k, l, w, h]) => { if (d[k]) out.push({ type: "fixed", key: k, x: d[k][0], y: d[k][1], w, h, label: l }); });
-  [["windowAt", "Window"], ["eotmAt", "Employee of the Month"], ["corkboardAt", "Corkboard"]].forEach(([k, l]) => { if (d[k]) out.push({ type: "fixed", key: k, x: d[k][0], y: 1, w: 2, h: 2, label: l }); });
+  [["windowAt", "Window"], ["eotmAt", "Employee of the Month"], ["corkboardAt", "Corkboard"], ["leaderboardAt", "Staff leaderboard"]].forEach(([k, l]) => { if (d[k]) out.push({ type: "fixed", key: k, x: d[k][0], y: 1, w: 2, h: 2, label: l }); });
   if (d.featuredAt) out.push({ type: "fixed", key: "featuredAt", x: d.featuredAt[0], y: d.featuredAt[1] - 1, w: 1, h: 2, label: "Featured item stand" });
   (d.stairs || []).forEach((st, i) => out.push({ type: "stairs", i, x: st.x, y: st.y, w: 1, h: 1, label: st.kind === "up" ? "Stairs up" : "Stairs down" }));
   (d.cases || []).forEach((c, i) => out.push({ type: "case", i, x: c[0], y: c[1] - 1, w: 1, h: 2, label: "Episode case " + (i + 1) }));
@@ -1112,7 +1159,7 @@ function removeItem(d, it) {
   else if (it.type === "fixed") delete d[it.key];
 }
 function moveItem(d, it, dx, dy) {
-  const sety = it.type !== "spot" && it.type !== "wallArt" && !(it.type === "fixed" && ["windowAt", "eotmAt", "corkboardAt"].includes(it.key));
+  const sety = it.type !== "spot" && it.type !== "wallArt" && !(it.type === "fixed" && ["windowAt", "eotmAt", "corkboardAt", "leaderboardAt"].includes(it.key));
   const mv = o => { o.x += dx; if (sety) o.y += dy; };
   if (it.type === "visitor") mv(d.visitors[it.i]);
   else if (it.type === "prop") mv(d.props[it.i]);

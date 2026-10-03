@@ -26,6 +26,7 @@ const PAL = {
   cloth:   ["#f4f0e8", "#d8d0c4", "#a89c8c", "#3a3430"],
   staffrm: ["#eef0e4", "#c4ccb4", "#7c8a6c", "#20261c", "#e2e6d4"],
   locker:  ["#e8eef4", "#9fb4c8", "#5a7088", "#1a2230", "#e8b24a"],
+  chalk:   ["#eef2e6", "#2e5a44", "#7a4a28", "#1a120c", "#f0d050", "#c8d8c8"],
   cork:    ["#f8f0d8", "#c89860", "#8a5a30", "#2a1a10", "#e05050", "#5080c8", "#f0d050"],
   staff:   [null, "#f8e0c0", "#2f6b4f", "#181820", "#f8f0c0"],
   shadow:  [null, "#e8f0ff", "#06040c"],
@@ -252,6 +253,14 @@ const GEN = {
     rect(a, 16, 8, 9, 6, 6); rect(a, 17, 10, 7, 1, 2); px(a, 20, 8, 5);
     rect(a, 9, 16, 10, 7, 0); rect(a, 10, 18, 8, 1, 2); rect(a, 10, 20, 6, 1, 2); px(a, 14, 16, 4);
     rect(a, 21, 16, 5, 5, 4);
+    return outline(a);
+  },
+  leaderboard: () => {
+    const a = mk(32, 32);
+    rect(a, 1, 3, 30, 24, 2); rect(a, 3, 5, 26, 20, 1);
+    rect(a, 7, 7, 18, 1, 0); px(a, 26, 6, 4); px(a, 25, 7, 4); px(a, 27, 7, 4); px(a, 26, 8, 4);
+    [16, 13, 11, 9].forEach((w, i) => { const y = 11 + i * 3; rect(a, 6, y, 2, 2, i === 0 ? 4 : 5); rect(a, 10, y, w, 1, 0); });
+    rect(a, 8, 27, 16, 2, 2);
     return outline(a);
   },
   time_clock: () => {
@@ -754,6 +763,7 @@ const SLOTS = [
   { key: "patron_board", label: "Patron Board", group: "Lobby", w: 32, h: 32, pal: "plaque", gen: GEN.patron_board, note: "A standing board in the lobby that lists every Patreon member. Two tiles wide, two tall." },
   { key: "doormat", label: "Doormat", group: "Doors", w: 16, h: 16, pal: "mat", gen: GEN.doormat, note: "Drawn on the floor just inside every doorway, so doors are easy to spot. Leave the edges transparent." },
   { key: "closeup_case", label: "Case close-up frame", group: "Pieces", w: 24, h: 24, pal: "glass", gen: GEN.closeup_case, note: "Nine-slice around the art when you look into a case." },
+  { key: "leaderboard", label: "Staff leaderboard", group: "Staff", w: 32, h: 32, pal: "chalk", gen: GEN.leaderboard, note: "Hangs across both wall rows in the staff room. Lists this month's top staff." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
 const SLOT = {}; SLOTS.forEach(s => { s.frames = s.frames || 1; s.fps = s.fps || 0; SLOT[s.key] = s; });
@@ -808,10 +818,14 @@ const SAMPLE_ITEMS = [
   { id: "postcards", name: "Gallery postcard set", price: 4, description: "Every piece in Gallery One, small enough to mail." },
 ];
 const DRINKS = [{ id: "coffee", name: "Coffee" }, { id: "tea", name: "Tea" }, { id: "cocoa", name: "Cocoa" }];
-/* Offline staff badges. Only this test badge works until Phase 8, when Supabase checks real badges.
+/* Offline staff badge for testing. Real badges live in Supabase (see supabase-setup.sql).
    Never put real badge keys in this file or in a museum pack: both are public on the site. */
+/* Chores that count toward staff points (helping a visitor is worth 3). */
+const pts = n => n + " point" + (n === 1 ? "" : "s");
+const POINT_KINDS = ["dusted", "straightened", "watered", "mugs", "wiped", "helped"];
 const TEST_BADGES = [{ badge: "0001", key: "QQQQQQ", name: "Test Staff" }];
-/* Badge keys are six characters from an alphabet without look-alikes (no O/0, no I/1), shown as KM4-7RX.
+/* The test badge only works where its hint is shown (showTestBadge): locally, with ?test, or in the curator. */
+/* Badge keys are six characters from an alphabet without look-alikes (no O/0, no I/1), shown as QQQ-QQQ.
    Typed keys are normalized: uppercase, dashes and spaces dropped. */
 const KEY_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const normKey = k => String(k || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
@@ -876,7 +890,10 @@ function normalizePack(p) {
   const achIn = p.settings && Array.isArray(p.settings.achievements) ? p.settings.achievements : SAMPLE_ACH;
   const achievements = achIn.slice(0, 100).map((a, i) => ({ id: str(a && a.id, 40) || "ach-" + (i + 1), name: str(a && a.name, 50) || "Achievement", desc: str(a && a.desc, 160),
     stat: ACH_STATS[a && a.stat] ? a.stat : "dusted", target: Math.max(1, Math.min(9999, Math.round(+(a && a.target) || 1))), secret: !!(a && a.secret) }));
-  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements }, samples: !Array.isArray(p.pieces) };
+  // Online staff (Supabase): the project address and its public key. Both are meant to be public.
+  const oin = (p.settings && p.settings.online) || {}, ourl = str(oin.url, 200).replace(/\/+$/, "");
+  const online = { url: /^https:\/\/[^\s/]+$/i.test(ourl) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(ourl) ? ourl : "", key: str(oin.key, 400).replace(/\s/g, "") };
+  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online }, samples: !Array.isArray(p.pieces) };
 }
 function todayISO() { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
 function daysBetween(a, b) { const t = s => { const [y, m, d] = s.split("-").map(Number); return Date.UTC(y, m - 1, d); }; return Math.round((t(b) - t(a)) / 864e5); }
@@ -1094,7 +1111,7 @@ const ROOMS = {
     spawn: [7, 8, "up"],
     lockers: [1, 2, 3, 4, 5, 6],
     catSpots: [[13, 3], [4, 8]],
-    corkboardAt: [9, 1], timeClock: [12, 2],
+    corkboardAt: [9, 1], leaderboardAt: [7, 1], timeClock: [12, 2],
     props: [
       { key: "whiteboard", x: 6, y: 6, rules: true },
       { key: "break_table", x: 2, y: 6, say: ["The break table. Someone left a half-finished crossword."] },
@@ -1145,8 +1162,21 @@ const TEXT = {
   "guestbook.intro":   { g: "Lobby", l: "Guestbook, before the entries", v: [["A guestbook lies open on the front desk."]] },
   "eotm.empty":        { g: "Staff", l: "Employee of the Month, no winner", v: [["EMPLOYEE OF THE MONTH", "The frame is empty. Maybe it'll be you."]] },
   "cork.intro":        { g: "Staff", l: "Corkboard, before the notes", v: [["The corkboard. Notes for upcoming episodes, in the curator's handwriting."]] },
+  "board.title":       { g: "Staff", l: "Staff leaderboard, heading ({month})", v: [["STAFF LEADERBOARD: {month}"]] },
+  "board.empty":       { g: "Staff", l: "Staff leaderboard, nobody yet", v: [["Nobody has any points this month yet.", "Clock in and do a chore to get on the board."]] },
+  "board.offline":     { g: "Staff", l: "Staff leaderboard, staff office not set up", v: [["The board is blank. The staff office isn't open yet, so only this browser keeps a tally."]] },
+  "board.down":        { g: "Staff", l: "Staff leaderboard, can't reach the staff office", v: [["The board is blank today. The staff office must be closed.", "Chores won't count toward the board until it opens again."]] },
+  "board.you":         { g: "Staff", l: "Staff leaderboard, your place ({rank}, {points})", v: [["You're number {rank} with {points} points."]] },
+  "eotm.auto":         { g: "Staff", l: "Employee of the Month, picked from last month ({name}, {points}, {month})", v: [["EMPLOYEE OF THE MONTH", "{name}. Top of the staff in {month} with {points} points."]] },
+  "eotm.sofar":        { g: "Staff", l: "Employee of the Month, nobody last month ({name}, {points}, {month})", v: [["EMPLOYEE OF THE MONTH", "{name}, leading {month} so far with {points} points."]] },
+  "badge.wrong":       { g: "Staff", l: "Badge number or key not right", v: [["That badge didn't work. Check the number and key."]] },
+  "badge.locked":      { g: "Staff", l: "Badge locked after too many tries", v: [["Too many tries with that badge. Wait 15 minutes, then try again."]] },
+  "badge.inactive":    { g: "Staff", l: "Badge turned off", v: [["That badge has been turned off. Ask the curator if that's a mistake."]] },
+  "badge.down":        { g: "Staff", l: "Can't reach the staff office to check a badge", v: [["Couldn't reach the staff office. Check your connection, or try again later."]] },
+  "badge.expired":     { g: "Staff", l: "Clocked out because the badge stopped working", v: [["The staff office didn't recognize your badge anymore, so you've been clocked out.", "Clock in again with your badge number and key."]] },
+  "net.down":          { g: "Staff", l: "Notice: chores can't reach the staff office", v: [["Staff office unreachable: chores won't count for now"]] },
   "cork.empty":        { g: "Staff", l: "Corkboard with no notes", v: [["The corkboard is bare. Just pins."]] },
-  "rules":             { g: "Staff", l: "Staff rules whiteboard", v: [["STAFF RULES", "1. Clock in at the staff door or the time clock. The ON SHIFT tag means you're working.", "2. On shift, every chore counts: dusting, straightening, watering, finding the mug, wiping cases, helping visitors, closing up.", "3. Chores earn tokens for the gift shop, and staff tallies decide Employee of the Month.", "4. Clock out at the time clock. Leaving at closing clocks you out too.", "5. Do not touch anyone's yogurt."]] },
+  "rules":             { g: "Staff", l: "Staff rules whiteboard", v: [["STAFF RULES", "1. Clock in at the staff door or the time clock. The ON SHIFT tag means you're working.", "2. On shift, every chore is a point: dusting, straightening, watering, finding the mug, wiping cases. Helping a lost visitor is worth 3.", "3. Chores earn tokens for the gift shop, and staff tallies decide Employee of the Month.", "4. Clock out at the time clock. Leaving at closing clocks you out too.", "5. Do not touch anyone's yogurt."]] },
   "locker.mine":       { g: "Staff", l: "Your locker", v: [["Locker {locker}: {name}.", "Just your coat in here. Your gift shop finds are on display in the collection cabinet."]] },
   "locker.others":     { g: "Staff", l: "Other lockers (one per locker, in order)", v: [["A sticky note: \"Do not touch my yogurt.\""], ["Locked. It hums faintly."], ["Someone taped a pixel-art cat to this one."], ["Empty. It smells like old coffee."], ["A note in big letters: \"WAIT. WHY DID THAT HAPPEN?\""], ["Locked. There's a dent shaped like a controller."]] },
   "clock.out":         { g: "Staff", l: "Clocking out", v: [["You clock out. See you next shift, {name}.", "Chores won't count toward your staff tally until you clock in again."]] },
@@ -1263,7 +1293,7 @@ const NIGHT_DIM = { lobby: 0.2, gallery: 0.12, shop: 0.15, staff: 0.08, gallery2
    the level editor in curator.html writes them. Rooms are plain data, so a deep copy is enough. */
 const BUILTIN_ROOMS = JSON.parse(JSON.stringify(ROOMS));
 const ROOM_KEYS = ["name", "art", "map", "spawn", "props", "events", "visitors", "light", "spots", "cases", "elevatorStop", "elevatorPanel", "stairwell", "stairs", "crowd", "floorSign", "windowAt", "intercom", "lightSwitch", "eotmAt",
-  "lockers", "corkboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo"];
+  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo"];
 /* Light checks so a hand-edited or damaged pack can't break the game: rectangular map, sane size, a spawn on the map. */
 function normalizeRoom(id, d) {
   if (!d || typeof d !== "object" || !Array.isArray(d.map) || !d.map.length) return null;
@@ -1284,26 +1314,6 @@ function normalizeRoom(id, d) {
   return out;
 }
 const DIRS_LIST = ["up", "down", "left", "right"];
-/* ---------- The museum grows ----------
-   When there are more episodes than cases, or more community pieces than painting spots, extra gallery floors are added
-   above Gallery Two: Gallery Three, Four, and so on. Each has 8 cases and 6 painting spots and an elevator stop (stairs
-   live only in the stairwells). Edit one in the Rooms tab and it's saved like any other room. */
-const FLOOR_WORDS = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve"];
-function galleryFloor(n) {
-  const w = 21, h = 12, map = [];
-  for (let y = 0; y < h; y++) map.push([...Array(w)].map((_, x) => (y === 0 || y === h - 1 || x === w - 1 ? "#" : x === 0 ? (y === 4 ? "H" : "#") : y === 1 ? "^" : y === 2 ? "v" : ".")).join(""));
-  return {
-    name: "Gallery " + FLOOR_WORDS[n], art: { top: "gallery_wall_top", upper: "gallery_wall_upper", lower: "gallery_wall_lower", floor: "gallery_floor" }, map,
-    spawn: [1, 4, "right"], spots: [2, 5, 8, 11, 14, 17], cases: [[4, 6], [8, 6], [12, 6], [16, 6], [4, 9], [8, 9], [12, 9], [16, 9]],
-    elevatorStop: { label: n + "F  Gallery " + FLOOR_WORDS[n], order: n, x: 1, y: 4, dir: "right" }, crowd: true, exitTo: [1, 4],
-    stairs: [],
-    props: [{ key: "plant", plant: "g" + n + "-plant", name: "potted palm", x: 19, y: 7 }],
-    events: [{ x: 0, y: 4, elevatorDoor: true, bump: true }],
-    light: { dim: 0.3, spots: 0.85 }, catSpots: [[18, 7]], mugSpots: [[2, 10], [18, 8]],
-    visitors: [{ sheet: ["visitor_a", "visitor_b", "visitor_c"][n % 3], x: 10, y: 4, lines: [["I didn't know the museum went up this high."]] }],
-    generated: true,
-  };
-}
 /* The newest pieces are on display; when there are more than the museum has places for, the oldest (highest in the
    Pieces list) move to the archive on Someone's PC. Episodes and community pieces are counted separately. */
 function archiveSplit(pieces) {
@@ -1311,17 +1321,6 @@ function archiveSplit(pieces) {
   const eps = pieces.filter(p => p.kind === "episode"), com = pieces.filter(p => p.kind !== "episode");
   const oldE = Math.max(0, eps.length - caps.cases), oldC = Math.max(0, com.length - caps.spots);
   return { episodes: eps.slice(oldE), community: com.slice(oldC), archived: [...eps.slice(0, oldE), ...com.slice(0, oldC)], caps };
-}
-function growMuseum(pieces, edited) {
-  const eps = pieces.filter(p => p.kind === "episode").length, com = pieces.length - eps;
-  const count = k => Object.values(ROOMS).reduce((a, r) => a + (r[k] || []).length, 0);
-  let n = 3;
-  while (n <= 12 && (count("cases") < eps || count("spots") < com || ROOMS["gallery" + n])) {
-    const id = "gallery" + n;
-    if (!ROOMS[id]) ROOMS[id] = galleryFloor(n);
-    const r = ROOMS[id];
-    n++;
-  }
 }
 function applyRooms(rooms) {
   for (const id of Object.keys(ROOMS)) delete ROOMS[id];
@@ -1415,6 +1414,7 @@ function buildRoom(id, pieces, o) {
   if (def.lightSwitch) { const [x, y] = def.lightSwitch; r.switchAt = { x, y }; r.events[x + "," + y] = { lights: true }; }
   if (def.lockers) def.lockers.forEach((x, i) => { r.events[x + ",2"] = { locker: i }; });
   if (def.corkboardAt) { const [x] = def.corkboardAt; r.corkAt = { x, y: 1 }; r.events[x + ",2"] = r.events[(x + 1) + ",2"] = { corkboard: true }; }
+  if (def.leaderboardAt) { const [x] = def.leaderboardAt; r.boardAt = { x, y: 1 }; r.events[x + ",2"] = r.events[(x + 1) + ",2"] = { leaderboard: true }; }
   if (def.timeClock) { const [x, y] = def.timeClock; r.clockAt = { x, y }; r.events[x + "," + y] = { timeClock: true }; }
   if (def.eotmAt) r.eotmAt = { x: def.eotmAt[0], y: def.eotmAt[1] };
   if (def.elevatorPanel) { const [x, y] = def.elevatorPanel; r.panelAt = { x, y }; r.events[x + "," + y] = { elevatorPanel: true }; }
@@ -1523,6 +1523,7 @@ class Game {
     this.tapWalk = !!opts.tapWalk; this.path = null; this.pathAct = null; this.camX = 0; this.camY = 0; this.haptics = opts.haptics !== false;
     this.timeOverride = ["day", "sunset", "night"].includes(opts.time) ? opts.time : null; this.lastTod = null; this.drink = null; this.sip = null;
     this.showTestBadge = !!opts.showTestBadge;
+    this.board = null; this.boardAt = 0; this.boardErr = false; this.netWarned = false;
     this.dayStart = Object.assign({}, this.progress.tally); // what this visit added, for the ending screen
     this.wrap = wrap; wrap.classList.add("gt-wrap"); wrap.tabIndex = 0;
     this.canvas = document.createElement("canvas"); this.canvas.width = SW; this.canvas.height = SH; wrap.appendChild(this.canvas);
@@ -1565,7 +1566,7 @@ class Game {
     this.itemImgs = ii;
     if (token !== this.packToken) return;
     this.pack = pack; this.overrides = ov; this.pieceImgs = pi; this.cache = {};
-    this.rebuild();
+    this.rebuild(); this.refreshBoard(true);
     const tb = `url("${this.src("textbox")}")`;
     [this.el.text, this.el.choice, this.el.badgeForm, this.el.shop, this.el.album, this.el.reader].forEach(e => (e.style.borderImageSource = tb));
   }
@@ -1981,7 +1982,7 @@ class Game {
     if (c.state === "crate") { this.hang(c); return; }
     if (this.prints(c.piece) > 0) {
       (this.progress.wiped || (this.progress.wiped = {}))[c.piece.id] = todayISO(); (this.extraPrints || (this.extraPrints = {}))[c.piece.id] = 0;
-      this.count("wiped"); this.saveProgress();
+      this.count("wiped", c.piece.id); this.saveProgress();
       this.mode = "busy"; this.chore = { spot: c, t: 0, kind: "wipe" }; this.showLoc("Wiped the glass"); return;
     }
     const d = this.player.dir, side = d === "up" ? "front" : d === "down" ? "back" : null;
@@ -2054,8 +2055,8 @@ class Game {
   tidy(spot) {
     const p = spot.piece, t = todayISO();
     let kind = null;
-    if (this.isDusty(p)) { kind = "dust"; this.progress.dusted[p.id] = t; this.count("dusted"); }
-    else if (this.isCrooked(p)) { this.forcedCrooked.delete(p.id); kind = "straighten"; this.progress.straightened[p.id] = t; this.count("straightened"); }
+    if (this.isDusty(p)) { kind = "dust"; this.progress.dusted[p.id] = t; this.count("dusted", p.id); }
+    else if (this.isCrooked(p)) { this.forcedCrooked.delete(p.id); kind = "straighten"; this.progress.straightened[p.id] = t; this.count("straightened", p.id); }
     if (!kind) return false;
     this.saveProgress();
     this.mode = "busy"; this.chore = { spot, t: 0, kind };
@@ -2076,7 +2077,7 @@ class Game {
     this.say(this.tx("intercom.announce"), () => {
       this.closing = true;
       for (const id in this.rooms) if (this.rooms[id] !== this.room) this.rooms[id].npcs = this.rooms[id].npcs.filter(n => n.staff);
-      this.room.npcs.filter(n => !n.staff).forEach((n, i) => { n.leaving = true; n.leaveT = -i * 20; n.alpha = 1; n.timer = 0; });
+      this.room.npcs.filter(n => !n.staff).forEach((n, i) => { n.leaving = true; n.leaveT = -i * 6; n.alpha = 1; n.timer = 0; n.route = null; n.aside = null; });
     });
   }
   toggleLights() {
@@ -2179,7 +2180,7 @@ class Game {
     this.wrap.focus({ preventScroll: true });
   }
   /* ----- staff -----
-     Clocking in uses a badge number and key. Offline, only the test badge works; Phase 8 asks Supabase instead.
+     Clocking in uses a badge number and key: the offline test badge (locally), or a real badge checked by Supabase.
      Chores done while clocked in also count toward that badge's staff tally. */
   get staff() { return this.progress.staff; }
   /* The on-shift tag in the corner: who's clocked in and how many chores this shift. */
@@ -2193,7 +2194,7 @@ class Game {
     if (s) {
       const n = this.staffChores(), c = document.createElement("span"); c.className = "chip shift";
       const b = document.createElement("b"); b.textContent = "ON SHIFT"; c.appendChild(b);
-      c.appendChild(document.createTextNode(n + " chore" + (n === 1 ? "" : "s"))); c.title = s.name + " is on shift"; h.appendChild(c);
+      c.appendChild(document.createTextNode(n + " pt" + (n === 1 ? "" : "s"))); c.title = s.name + " is on shift" + (s.token ? "" : " (offline test badge: points stay in this browser)"); h.appendChild(c);
     }
     if (tokens > 0 || (this.room && this.room.id === "shop")) {
       const c = document.createElement("span"); c.className = "chip tok" + (pulse ? " pulse" : ""); c.textContent = tokens + " T"; c.title = tokens + " gift shop tokens"; h.appendChild(c);
@@ -2203,21 +2204,85 @@ class Game {
   /* Chores on this badge's tally. Kept in the browser, so closing up and reopening never resets it. */
   staffChores() {
     const s = this.staff, t = s && this.progress.staffTally[s.badge]; if (!t) return 0;
-    return ["dusted", "straightened", "watered", "mugs", "wiped", "helped"].reduce((a, k) => a + (t[k] || 0), 0);
+    return POINT_KINDS.reduce((a, k) => a + (t[k] || 0) * (k === "helped" ? 3 : 1), 0);
   }
-  count(kind) {
+  count(kind, target) {
     this.progress.tally[kind] = (this.progress.tally[kind] || 0) + 1;
     this.earn(kind === "closings" ? 3 : 1);
     const s = this.staff; if (!s) return;
     const t = this.progress.staffTally[s.badge] || (this.progress.staffTally[s.badge] = { name: s.name });
     t[kind] = (t[kind] || 0) + 1; t.name = s.name;
     this.shift[kind] = (this.shift[kind] || 0) + 1;
+    if (POINT_KINDS.includes(kind)) this.sendDuty(kind, target);
     this.updateHud();
   }
-  checkBadge(badge, key) {
+  /* Returns { badge, name, token? } when the badge works, or { error: "badge.wrong" | "badge.locked" | ... }.
+     The offline test badge is checked first (where it's allowed); everything else asks the staff office (Supabase). */
+  async checkBadge(badge, key) {
     badge = String(badge || "").replace(/\D/g, ""); key = normKey(key);
-    const b = TEST_BADGES.find(t => t.badge === badge && t.key === key);
-    return Promise.resolve(b ? { badge: b.badge, name: b.name } : null);
+    const b = this.showTestBadge ? TEST_BADGES.find(t => t.badge === badge && t.key === key) : null;
+    if (b) return { badge: b.badge, name: b.name };
+    if (!this.online()) return { error: "badge.wrong" };
+    try {
+      const r = await this.rpc("clock_in", { p_badge: badge, p_key: key });
+      if (r && r.ok && r.token) return { badge: r.badge, name: r.name, token: r.token };
+      return { error: r && r.reason === "locked" ? "badge.locked" : r && r.reason === "inactive" ? "badge.inactive" : "badge.wrong" };
+    } catch (err) { return { error: "badge.down" }; }
+  }
+  /* ----- the staff office (Supabase) -----
+     Set up in the curator's Staff tab: the project address and its public key, saved in the pack. Nothing private lives here:
+     the database only lets the page clock in, log a chore, and read names and points. */
+  online() { const o = this.pack && this.pack.settings.online; return o && o.url && o.key ? o : null; }
+  async rpc(name, body) {
+    const o = this.online(); if (!o) throw new Error("offline");
+    const headers = { "Content-Type": "application/json", apikey: o.key };
+    if (/^eyJ/.test(o.key)) headers.Authorization = "Bearer " + o.key; // older "anon" keys also go here; new publishable keys don't
+    const ctl = typeof AbortController === "function" ? new AbortController() : null, tm = ctl && setTimeout(() => ctl.abort(), 9000);
+    try {
+      const res = await fetch(o.url + "/rest/v1/rpc/" + name, { method: "POST", headers, body: JSON.stringify(body || {}), signal: ctl && ctl.signal, cache: "no-store" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return await res.json();
+    } finally { if (tm) clearTimeout(tm); }
+  }
+  /* The leaderboard and Employee of the Month: fetched on load and when you walk into the lobby or staff room (at most every 5 minutes). */
+  refreshBoard(force) {
+    if (!this.online()) { this.board = null; this.boardErr = false; return; }
+    const now = Date.now(); if (this.boardBusy || (!force && now - this.boardAt < 300000)) return;
+    this.boardBusy = true; this.boardAt = now;
+    this.rpc("get_leaderboard").then(b => { this.board = b && Array.isArray(b.top) ? b : null; this.boardErr = !this.board; })
+      .catch(() => { this.boardErr = true; }).finally(() => { this.boardBusy = false; });
+  }
+  /* Who's in the Employee of the Month frame: the name typed in the curator wins; otherwise it's picked from the board. */
+  eotmInfo() {
+    const e = this.pack.settings.staff.eotm;
+    if (e.name) return { pages: [["EMPLOYEE OF THE MONTH", e.name + (e.note ? ". " + e.note : ".")]] };
+    const a = this.board && this.board.eotm;
+    if (a && a.name) return { pages: [this.tx(a.sofar ? "eotm.sofar" : "eotm.auto", { name: a.name, points: a.points, month: a.month })] };
+    return null;
+  }
+  /* Send one chore to the staff office. If it can't be reached, say so once; if the badge stopped working, clock out. */
+  sendDuty(kind, target) {
+    const s = this.staff; if (!s || !s.token || !this.online()) return;
+    this.rpc("log_duty", { p_token: s.token, p_duty: kind, p_target: String(target || "").slice(0, 60) }).then(r => {
+      if (r && r.ok === false && (r.reason === "session" || r.reason === "inactive")) {
+        if (this.staff && this.staff.token === s.token) { this.progress.staff = null; this.progress.lastBadge = null; this.saveProgress(); this.updateHud(); }
+        const show = () => (this.mode === "walk" ? this.say(this.tx("badge.expired")) : setTimeout(show, 500)); show();
+      } else if (r && r.counted) this.boardAt = 0;
+    }).catch(() => { if (!this.netWarned) { this.netWarned = true; this.showLoc(this.tx("net.down")[0]); } });
+  }
+  readLeaderboard() {
+    if (!this.online()) {
+      const rows = Object.values(this.progress.staffTally || {}).map(t => ({ name: t.name, points: POINT_KINDS.reduce((a, k) => a + (t[k] || 0) * (k === "helped" ? 3 : 1), 0) })).filter(r => r.points > 0).sort((a, b) => b.points - a.points);
+      this.say([...this.tx("board.offline"), ...rows.slice(0, 10).map((r, i) => (i + 1) + ". " + r.name + ", " + pts(r.points) + ".")]);
+      return;
+    }
+    if (!this.board) { this.refreshBoard(true); this.say(this.tx("board.down")); return; }
+    const b = this.board, top = b.top || [], pages = [...this.tx("board.title", { month: String(b.month || "").toUpperCase() })];
+    if (!top.length) { this.say([...pages, ...this.tx("board.empty")]); this.refreshBoard(); return; }
+    for (let i = 0; i < top.length; i += 2) pages.push(top.slice(i, i + 2).map((r, j) => (i + j + 1) + ". " + r.name + ", " + pts(r.points) + ".").join("  "));
+    const s = this.staff, at = s && s.token ? top.findIndex(r => r.name === s.name) : -1;
+    if (at >= 0) pages.push(...this.tx("board.you", { rank: at + 1, points: top[at].points }));
+    this.say(pages); this.refreshBoard();
   }
   staffDoor(e) {
     const to = (e && e.warp) || ["staff", 7, 8, "up"];
@@ -2301,8 +2366,10 @@ class Game {
   }
   closeBadge() { this.el.badgeWrap.style.display = "none"; this.mode = "walk"; this.inputLock = true; this.wrap.focus({ preventScroll: true }); }
   async submitBadge() {
-    const f = this.el.badgeForm, who = await this.checkBadge(f.badge.value, f.key.value);
-    if (!who) { f.querySelector(".gt-badge-err").textContent = "That badge didn't work. Check the number and key."; return; }
+    const f = this.el.badgeForm, err = f.querySelector(".gt-badge-err");
+    if (this.badgeBusy) return; this.badgeBusy = true; err.textContent = this.online() ? "Checking your badge..." : "";
+    let who; try { who = await this.checkBadge(f.badge.value, f.key.value); } finally { this.badgeBusy = false; }
+    if (!who || who.error) { err.textContent = this.tx((who && who.error) || "badge.wrong")[0]; return; }
     this.progress.staff = who; this.shift = {}; this.saveProgress();
     this.progress.lastBadge = who; this.progress.tally.shifts = (this.progress.tally.shifts || 0) + 1; this.saveProgress();
     this.closeBadge(); this.updateHud(); this.showLoc("Clocked in: " + who.name);
@@ -2321,7 +2388,7 @@ class Game {
       return;
     }
     const n = this.staffChores();
-    this.choose("On shift as " + this.staff.name + ". " + n + " chore" + (n === 1 ? "" : "s") + " on your tally. Clock out?",
+    this.choose("On shift as " + this.staff.name + ". " + n + " point" + (n === 1 ? "" : "s") + " on your tally. Clock out?",
       ["Clock out", "Keep working"], i => {
         if (i !== 0) return;
         const name = this.staff.name; this.progress.staff = null; this.saveProgress(); this.updateHud();
@@ -2347,12 +2414,12 @@ class Game {
     this.say(notes.length ? [...this.tx("cork.intro"), ...notes] : this.tx("cork.empty"));
   }
   readEotm() {
-    const e = this.pack.settings.staff.eotm;
-    this.say(e.name ? ["EMPLOYEE OF THE MONTH", e.name + (e.note ? ". " + e.note : ".")] : this.tx("eotm.empty"));
+    const e = this.eotmInfo();
+    this.say(e ? e.pages[0] : this.tx("eotm.empty"));
   }
   /* A yes/no style choice: the question in the text box, options in a small box above it. */
-  choose(question, options, done) {
-    this.mode = "choice"; this.ch = { options, i: 0, done };
+  choose(question, options, done, cancelTo) {
+    this.mode = "choice"; this.ch = { options, i: 0, done, cancelTo }; // cancelTo: what B picks (-1 = nothing); default the last option
     this.el.text.style.display = "block"; this.el.textBody.textContent = question; this.el.more.style.display = "none";
     this.el.choice.style.display = "block"; this.renderChoice();
   }
@@ -2368,7 +2435,7 @@ class Game {
     const c = this.ch; this.ch = null;
     this.el.choice.style.display = "none"; this.el.text.style.display = "none";
     this.mode = "walk"; this.inputLock = true;
-    c.done(cancel ? c.options.length - 1 : c.i);
+    c.done(cancel ? (c.cancelTo !== undefined ? c.cancelTo : c.options.length - 1) : c.i);
   }
   readGuestbook() {
     const g = this.pack.guestbook;
@@ -2905,25 +2972,26 @@ class Game {
     if (!opts.length) {
       const chat = () => { npc.lineI = (npc.lineI + 1) % npc.lines.length; this.say(named(npc.lines[npc.lineI])); };
       if (!canMove) { chat(); return; }
-      this.choose(npc.member ? npc.member + " smiles." : "They glance over.", ["Say hi", MOVE], i => { if (i === 0) chat(); else if (i === 1) this.askToMove(npc, named); });
+      this.choose(npc.member ? npc.member + " smiles." : "They glance over.", ["Say hi", MOVE], i => { if (i === 0) chat(); else if (i === 1) this.askToMove(npc, named); }, -1);
       return;
     }
     if (canMove) opts.push(MOVE);
     opts.push("Just saying hi");
     this.choose(r.asked ? (npc.member ? npc.member + ": " : "") + "Any luck finding it?" : (npc.member || "They") + (npc.member ? " looks" : " look") + " a little lost.", opts, i => {
+      if (i < 0) return; // B: just walk away
       const o = opts[i], hint = r.piece.hint || ("a piece called " + r.piece.title);
       if (o === "Show a photo") {
         this.choose("Which photo?", [...photos.map(p => p.title), "Never mind"], k => {
           const p = photos[k]; if (!p) return;
           if (p.id === r.piece.id) {
-            npc.req = null; this.count("helped"); this.updateHud();
+            npc.req = null; this.count("helped", r.piece.id); this.updateHud();
             this.say(this.tx("help.right", { title: r.piece.title }), () => this.sendTo(npc, r));
           } else this.say(this.tx("help.wrong", { hint }));
         });
       } else if (o === MOVE) this.askToMove(npc, named);
       else if (o === "Just saying hi") { npc.lineI = (npc.lineI + 1) % npc.lines.length; this.say(named(npc.lines[npc.lineI])); }
       else { r.asked = true; this.say(this.tx("help.ask", { hint })); }
-    });
+    }, -1);
   }
   sendTo(n, r) {
     if (r.room !== this.room.id) { n.leaving = true; n.leaveT = 0; n.alpha = 1; return; }
@@ -2933,7 +3001,7 @@ class Game {
   walkTo(n) {
     if (n.moving) { this.advance(n); return; }
     if (n.leaveT === undefined) n.leaveT = 0;
-    if (++n.leaveT % 4) return;
+    if (++n.leaveT % 2) return;
     const [gx, gy] = n.goal, dist = Math.abs(gx - n.x) + Math.abs(gy - n.y);
     // Close enough, someone's already standing there, or no progress for a while: stop and look.
     if (n.best === undefined || dist < n.best) { n.best = dist; n.stall = 0; } else n.stall = (n.stall || 0) + 1;
@@ -2987,6 +3055,7 @@ class Game {
     if (!this.rooms[id]) { id = "lobby"; [x, y, dir] = ROOMS.lobby.spawn; }
     if (this.progress && this.saveKey !== undefined && !this.full) { const v = this.progress.visited || (this.progress.visited = []); if (!v.includes(id)) { v.push(id); this.saveProgress(); } }
     this.room = this.rooms[id]; const p = this.player;
+    if (id === "lobby" || id === "staff") this.refreshBoard();
     p.x = x; p.y = y; p.dir = dir; p.moving = false; p.prog = 0; p.sitting = false; this.sip = null; this.path = null; this.pathAct = null;
     this.updateHud();
     if (!quiet) this.showLoc(this.room.name.replace(/\s+/g, " ") + (ROOMS[id] && ROOMS[id].stairwell && ROOMS[id].floorSign && !this.room.name.includes(ROOMS[id].floorSign) ? " (" + ROOMS[id].floorSign + ")" : ""));
@@ -3007,7 +3076,7 @@ class Game {
     }
     else if (e.plant) {
       if (!this.isThirsty(e.plant)) { this.say(this.tx("plant.done", { room: e.name })); return; }
-      this.progress.watered[e.plant] = todayISO(); this.count("watered"); this.saveProgress();
+      this.progress.watered[e.plant] = todayISO(); this.count("watered", this.room.id + ":" + e.plant); this.saveProgress();
       this.quest("water");
       this.say(this.tx("plant.water", { room: e.name }));
     }
@@ -3023,6 +3092,7 @@ class Game {
     else if (e.timeClock) this.timeClock();
     else if (e.locker !== undefined) this.locker(e.locker);
     else if (e.corkboard) this.readCorkboard();
+    else if (e.leaderboard) this.readLeaderboard();
     else if (e.eotm) this.readEotm();
     else if (e.rules) this.readRules();
     else if (e.usher) { const u = this.room.npcs.find(n => n.usher); if (u) this.usherTalk(); else this.readGuestbook(); }
@@ -3070,7 +3140,7 @@ class Game {
     if (c.bumpT > 0) c.bumpT--;
     if (!c.moving) return false;
     if (c.slow && (this.t & 1)) return false; // the night guard strolls at half speed
-    if (c !== this.player && !c.slow) { c.spd = (c.spd || 0) + this.pack.settings.staff.patronSpeed; if (c.spd < 1) return false; c.spd -= 1; } // patrons: slower than you
+    if (c !== this.player && !c.slow && !c.goal && !c.leaving) { c.spd = (c.spd || 0) + this.pack.settings.staff.patronSpeed; if (c.spd < 1) return false; c.spd -= 1; } // patrons: slower than you
     if ((c.prog += c === this.player && this.segway ? 2 : 1) >= T) {
       c.x += DIRS[c.dir][0]; c.y += DIRS[c.dir][1]; c.prog = 0; c.moving = false;
       if (c === this.player) {
@@ -3212,7 +3282,13 @@ class Game {
   }
   interact() {
     const p = this.player, [dx, dy] = DIRS[p.dir], fx = p.x + dx, fy = p.y + dy;
-    const npc = this.room.npcs.find(n => n.x === fx && n.y === fy && !n.moving);
+    let npc = this.room.npcs.find(n => n.x === fx && n.y === fy && !n.moving);
+    if (!npc) { // someone mid-step: stepping onto the tile you face finishes the step; stepping off it, they stay put
+      const into = this.room.npcs.find(n => n.moving && !n.leaving && n.x + DIRS[n.dir][0] === fx && n.y + DIRS[n.dir][1] === fy && !(fx === p.x && fy === p.y));
+      const out = this.room.npcs.find(n => n.moving && !n.leaving && n.x === fx && n.y === fy);
+      if (into) { into.x = fx; into.y = fy; into.moving = false; into.prog = 0; into.route = null; npc = into; }
+      else if (out) { out.moving = false; out.prog = 0; out.route = null; npc = out; }
+    }
     if (npc) { npc.timer = 180; if (!npc.still || npc.req) npc.dir = OPP[p.dir]; if (npc.patrol) npc.pause = 120; this.talkTo(npc); return; }
     const e = this.room.events[fx + "," + fy]; if (e) this.runEvent(e);
   }
@@ -3278,6 +3354,7 @@ class Game {
      They never step onto doorways, stairs, or the tiles where people arrive. */
   stroll(n) {
     if (n.stepWait > 0) { n.stepWait--; return; }
+    { const p = this.player, [fx, fy] = DIRS[p.dir]; if (!p.moving && p.x + fx === n.x && p.y + fy === n.y) { n.route = null; return; } } // you're facing them: they wait
     if (n.timer > 0) { n.timer--; if (n.timer % 90 === 0 && Math.random() < 0.5) n.dir = DIRS_LIST[(Math.random() * 4) | 0]; return; }
     const r = this.room, noGo = (x, y) => r.noWander && r.noWander.has(x + "," + y);
     if (!n.route || !n.route.length) {
@@ -3331,7 +3408,7 @@ class Game {
     n.leaveT++;
     if (n.fading) { n.alpha -= 1 / 24; if (n.alpha <= 0) this.room.npcs = this.room.npcs.filter(m => m !== n); return; }
     if (n.moving) { this.advance(n); return; }
-    if (n.leaveT < 0 || n.leaveT % 4) return;
+    if (n.leaveT < 0 || n.leaveT % 2) return;
     const dx = Math.sign(to[0] - n.x), dy = Math.sign(to[1] - n.y);
     if ((!dx && !dy) || n.leaveT > 360) { n.fading = true; n.dir = "down"; return; }
     const tries = Math.abs(to[0] - n.x) >= Math.abs(to[1] - n.y) ? [[dx, 0], [0, dy]] : [[0, dy], [dx, 0]];
@@ -3541,11 +3618,12 @@ class Game {
     const def = ROOMS[r.id];
     if (def.lockers) def.lockers.forEach(x => this.drawSlot("lockers", 0, 0, x * T - cx, T - cy));
     if (r.corkAt) this.drawSlot("corkboard", 0, 0, r.corkAt.x * T - cx, T - cy);
+    if (r.boardAt) this.drawSlot("leaderboard", 0, 0, r.boardAt.x * T - cx, T - cy);
     if (r.clockAt) this.drawSlot("time_clock", 0, 0, r.clockAt.x * T - cx, r.clockAt.y * T - cy);
     if (r.eotmAt) {
       const x = r.eotmAt.x * T - cx, y = r.eotmAt.y * T - cy;
       this.drawSlot("eotm_frame", 0, 0, x, y);
-      if (this.pack.settings.staff.eotm.name) this.drawSlot("player_staff", 0, 0, x + 8, y + 6);
+      if (this.eotmInfo()) this.drawSlot("player_staff", 0, 0, x + 8, y + 6);
     }
     const tod = this.tod();
     if (r.windowAt) {
@@ -3653,7 +3731,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-09 stairwells";
+const VERSION = "2026-10-02 staff";
 window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
