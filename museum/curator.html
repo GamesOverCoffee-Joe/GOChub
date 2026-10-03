@@ -143,6 +143,8 @@ label.check{display:inline-flex;align-items:center;gap:8px;font-size:.9rem;margi
 .prow.community .frame{border-color:#8a5a34}
 .spotlbl{font-family:var(--pixel);font-size:9px;line-height:1.6;color:var(--gold);margin-top:8px;display:block}
 .spotlbl.off{color:var(--muted)}
+.spotlbl.pick{color:#e07040}
+.spotlbl.pick::before{content:"\1F3C5  "}
 .side-acts{display:flex;flex-direction:column;gap:6px;margin-top:10px}
 .fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .fields label{display:flex;flex-direction:column;gap:3px;font-size:.8rem;font-weight:700;color:var(--muted)}
@@ -316,7 +318,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-02 staff";
+window.GOQ_WANT = "2026-10-03 picks";
 (function load(retry) {
   const s = document.createElement("script");
   s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry ? "&r=" + Date.now() : "");
@@ -358,6 +360,7 @@ function packOut() {
     if (p.gameUrl) o.gameUrl = p.gameUrl;
     if (p.hint) o.hint = p.hint;
     if (p.unveil) o.unveil = p.unveil;
+    if (p.pick) o.pick = true;
     if (p.image) o.image = p.image; else { o.colors = p.colors; o.style = p.style; }
     return o;
   }) };
@@ -1547,10 +1550,15 @@ function pieceRow(p, i, place) {
     const f = e.target.files[0]; e.target.value = ""; if (!f) return;
     try { p.image = await pieceImage(f); changed({ now: true }); renderPieces(); } catch (err) { status(err.message, true); }
   });
+  /* Curator's pick: a medal pinned to the piece, and a tag in its placard and in the archive. */
+  const pickBox = el("input", { type: "checkbox", checked: !!p.pick });
+  const pickLbl = el("span", { class: "spotlbl pick", text: "CURATOR'S PICK", hidden: !p.pick });
+  pickBox.addEventListener("change", () => { p.pick = pickBox.checked; pickLbl.hidden = !p.pick; changed({ now: true }); });
   const ep = p.kind === "episode", on = !!place && !/^ARCHIVED/.test(place);
   const spotTxt = place || "NOT ON DISPLAY";
   const left = el("div", {}, [
     el("div", { class: "frame" }, [th]),
+    pickLbl,
     el("span", { class: "spotlbl" + (on ? "" : " off"), text: spotTxt, title: on ? "" : "Archived: it's on Someone's PC in Storage. Move it lower in the list to put it back on display." }),
     el("div", { class: "side-acts" }, [
       el("label", { class: "btn small", for: fileId, text: p.image ? "Replace image" : "Add image" }), file,
@@ -1586,6 +1594,7 @@ function pieceRow(p, i, place) {
   const fields = el("div", { class: "fields" }, [
     f("Title", text("title", "Game title")), f("Developer", text("developer", "Who made it")),
     f("Frame", kind), el("div", { class: "fieldset" }, [el("span", { class: "flabel", text: "Unveiling" }), el("small", { text: "Off: it hangs right away." }), unveilBox]),
+    el("div", { class: "fieldset wide" }, [el("span", { class: "flabel", text: "Curator's pick" }), el("small", { text: "Pins a medal to the piece and tags its placard." }), el("div", { class: "unveil" }, [el("label", { class: "check" }, [pickBox, document.createTextNode("This is one of my picks")])])]),
     ...placard,
     f("How a visitor would describe it", text("hint", "the one where the clock never ran out but I still rushed"), true, "Lost visitors ask for it this way. Keep it to one line, in their words."),
     f("YouTube episode", link("episodeUrl", "https://youtube.com/watch?v=..."), false, "Shown as \"Watch the episode\""),

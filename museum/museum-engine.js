@@ -26,6 +26,7 @@ const PAL = {
   cloth:   ["#f4f0e8", "#d8d0c4", "#a89c8c", "#3a3430"],
   staffrm: ["#eef0e4", "#c4ccb4", "#7c8a6c", "#20261c", "#e2e6d4"],
   locker:  ["#e8eef4", "#9fb4c8", "#5a7088", "#1a2230", "#e8b24a"],
+  medal:   ["#d84040", "#902828", "#f0c840", "#b07818", "#2a1408", "#fff4c0"],
   chalk:   ["#eef2e6", "#2e5a44", "#7a4a28", "#1a120c", "#f0d050", "#c8d8c8"],
   cork:    ["#f8f0d8", "#c89860", "#8a5a30", "#2a1a10", "#e05050", "#5080c8", "#f0d050"],
   staff:   [null, "#f8e0c0", "#2f6b4f", "#181820", "#f8f0c0"],
@@ -254,6 +255,13 @@ const GEN = {
     rect(a, 9, 16, 10, 7, 0); rect(a, 10, 18, 8, 1, 2); rect(a, 10, 20, 6, 1, 2); px(a, 14, 16, 4);
     rect(a, 21, 16, 5, 5, 4);
     return outline(a);
+  },
+  pick_medal: () => {
+    const a = mk(8, 12);
+    rect(a, 0, 5, 4, 6, 4); rect(a, 4, 5, 4, 6, 4); rect(a, 1, 5, 2, 5, 0); rect(a, 5, 5, 2, 5, 0); rect(a, 2, 5, 1, 5, 1); rect(a, 5, 5, 1, 5, 1);
+    px(a, 0, 11, 4); px(a, 3, 11, 4); px(a, 4, 11, 4); px(a, 7, 11, 4); px(a, 1, 10, 0); px(a, 6, 10, 0);
+    circ(a, 3.5, 3.2, 3.4, 4); circ(a, 3.5, 3.2, 2.5, 2); circ(a, 3.5, 3.2, 1.2, 3); px(a, 2, 2, 5); px(a, 3, 1, 5);
+    return a;
   },
   leaderboard: () => {
     const a = mk(32, 32);
@@ -763,6 +771,7 @@ const SLOTS = [
   { key: "patron_board", label: "Patron Board", group: "Lobby", w: 32, h: 32, pal: "plaque", gen: GEN.patron_board, note: "A standing board in the lobby that lists every Patreon member. Two tiles wide, two tall." },
   { key: "doormat", label: "Doormat", group: "Doors", w: 16, h: 16, pal: "mat", gen: GEN.doormat, note: "Drawn on the floor just inside every doorway, so doors are easy to spot. Leave the edges transparent." },
   { key: "closeup_case", label: "Case close-up frame", group: "Pieces", w: 24, h: 24, pal: "glass", gen: GEN.closeup_case, note: "Nine-slice around the art when you look into a case." },
+  { key: "pick_medal", label: "Curator's pick medal", group: "Pieces", w: 8, h: 12, pal: "medal", gen: GEN.pick_medal, note: "A ribbon rosette pinned to the front corner of a curator's pick (cases and paintings), and shown by its title in the placard panel and the archive. Leave the background transparent." },
   { key: "leaderboard", label: "Staff leaderboard", group: "Staff", w: 32, h: 32, pal: "chalk", gen: GEN.leaderboard, note: "Hangs across both wall rows in the staff room. Lists this month's top staff." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
@@ -840,7 +849,7 @@ function normalizePiece(p, i) {
     observation: str(p.observation), intention: str(p.intention), guestWriter: str(p.guestWriter, 80), guestNote: str(p.guestNote),
     episodeUrl: safeUrl(p.episodeUrl), gameUrl: safeUrl(p.gameUrl), image: str(p.image, 20000000) || null,
     unveil: /^\d{4}-\d{2}-\d{2}$/.test(p.unveil || "") ? p.unveil : "",
-    hint: str(p.hint, 160),
+    hint: str(p.hint, 160), pick: !!p.pick,
     colors: colors.length >= 2 ? colors : ["#f0ecf8", "#a898d0", "#584a88", "#1a1430"],
     style: STYLES.includes(p.style) ? p.style : STYLES[strSeed(str(p.title, 80) || String(i)) % STYLES.length],
   };
@@ -1604,6 +1613,7 @@ class Game {
     x.imageSmoothingEnabled = false;
     const fk = p.kind === "episode" ? "wall_frame_gold" : "wall_frame_wood", f = this.sheet(fk);
     x.drawImage(f, 0, 0, 32, 32, 0, 0, 32, 32);
+    if (p.pick) x.drawImage(this.sheet("pick_medal"), 0, 0, 8, 12, 24, 15, 8, 12); // curator's pick: pinned to the frame's front corner
     return (this.cache[ck] = c);
   }
 
@@ -1791,6 +1801,9 @@ class Game {
 .gt-rd-links a.watch{background:#b8382c}.gt-rd-links a.play{background:#2f6f3a}
 .gt-rd-links a:hover,.gt-rd-links a:focus-visible{filter:brightness(1.15);outline:calc(1px * var(--s)) solid #fff8ec}
 .gt-rd-t{flex:1;min-width:0;font-size:calc(7px * var(--s));line-height:1.35;color:#181820}
+.gt-pick{display:inline-flex;align-items:center;gap:calc(2px * var(--s));margin-top:calc(1.5px * var(--s));font-family:var(--pixel, monospace);font-size:calc(4.5px * var(--s));line-height:1;color:#9a5a10}
+.gt-pick img{width:calc(5px * var(--s));height:calc(7.5px * var(--s));image-rendering:pixelated;flex:none}
+.gt-shop-row .gt-pick.sm{margin:0 0 0 calc(2px * var(--s));flex:none}
 .gt-rd-t small{display:block;font-size:calc(5.5px * var(--s));color:#505068;margin-top:calc(1px * var(--s))}
 .gt-rd-body{font-family:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;font-size:calc(7.5px * var(--s));line-height:1.42;color:#202030;height:calc(76px * var(--s));overflow:hidden;margin-top:calc(3px * var(--s));white-space:pre-wrap}
 .gt-rd-body b{display:block;font-family:var(--pixel, monospace);font-weight:normal;font-size:calc(5.5px * var(--s));color:#7c5a0c;letter-spacing:.04em;margin-bottom:calc(2px * var(--s))}
@@ -1910,7 +1923,8 @@ class Game {
     box.innerHTML = '<div class="gt-rd-head"></div><div class="gt-rd-body"></div><div class="gt-rd-foot"><span class="gt-rd-n"></span></div>';
     const head = box.querySelector(".gt-rd-head"), body = box.querySelector(".gt-rd-body");
     if (spec.img) { const im = document.createElement("img"); im.src = spec.img; im.alt = ""; if (spec.imgClass) im.className = spec.imgClass; head.appendChild(im); }
-    const t = document.createElement("div"); t.className = "gt-rd-t"; t.textContent = spec.title || ""; if (spec.sub) { const sm = document.createElement("small"); sm.textContent = spec.sub; t.appendChild(sm); } head.appendChild(t);
+    const t = document.createElement("div"); t.className = "gt-rd-t"; t.textContent = spec.title || ""; if (spec.sub) { const sm = document.createElement("small"); sm.textContent = spec.sub; t.appendChild(sm); }
+    if (spec.pick) t.appendChild(this.pickTag()); head.appendChild(t);
     const links = (spec.links || []).filter(l => l[0]);
     if (links.length) {
       const lw = document.createElement("div"); lw.className = "gt-rd-links"; head.appendChild(lw);
@@ -1970,7 +1984,7 @@ class Game {
     else if (gold) { if (p.observation) secs.push({ label: "OBSERVATION", text: p.observation }); if (p.intention) secs.push({ label: "INTENTION", text: p.intention }); }
     else if (p.guestNote) secs.push({ label: p.guestWriter ? "GUEST NOTE BY " + p.guestWriter.toUpperCase() : "GUEST NOTE", text: p.guestNote });
     this.read({ img: img ? p.image : this.pieceArt(p).toDataURL(), imgClass: img && img.naturalWidth > 160 ? "photo" : "", title: p.title.toUpperCase(), sub: "By " + p.developer,
-      sections: secs, links: [[p.episodeUrl, "Watch the episode", "WATCH"], [p.gameUrl, "Play the game", "PLAY"]] }, () => {
+      sections: secs, pick: p.pick, links: [[p.episodeUrl, "Watch the episode", "WATCH"], [p.gameUrl, "Play the game", "PLAY"]] }, () => {
       if (stampAfter) this.stamp(p);
     });
   }
@@ -2899,7 +2913,7 @@ class Game {
     const list = this.archived || []; this.quest("pc");
     this.say(this.tx("pc.on"), () => {
       if (!list.length) { this.say(this.tx("pc.empty")); return; }
-      const show = () => this.openList("SOMEONE'S PC: ARCHIVE", [...list.map(p => p.title), "LOG OFF"], i => {
+      const show = () => this.openList("SOMEONE'S PC: ARCHIVE", [...list.map(p => (p.pick ? { text: p.title, pick: true } : p.title)), "LOG OFF"], i => {
         const p = list[i]; if (!p) return;
         this.viewPiece(p); const done = this.rd && this.rd.done;
         this.rd.done = () => { if (done) done(); show(); };
@@ -2925,6 +2939,13 @@ class Game {
     this.saveProgress();
   }
   /* A simple list in the menu box: arrows to choose, A to pick, B to leave. */
+  /* The curator's pick tag: the medal, plus the words unless it's squeezed into a list row. */
+  pickTag(small) {
+    const s = document.createElement("span"); s.className = "gt-pick" + (small ? " sm" : ""); s.title = "Curator's pick";
+    const im = document.createElement("img"); im.src = this.src("pick_medal"); im.alt = small ? "Curator's pick" : ""; s.appendChild(im);
+    if (!small) s.appendChild(document.createTextNode("CURATOR'S PICK"));
+    return s;
+  }
   openList(title, rows, pick) {
     this.mode = "list"; this.list = { title, rows, pick, i: 0 }; this.el.album.style.display = "block"; this.renderList();
   }
@@ -2934,7 +2955,8 @@ class Game {
     const wrap = document.createElement("div"); wrap.className = "gt-shop-list"; wrap.style.maxHeight = "calc(112px * var(--s))"; box.appendChild(wrap);
     L.rows.forEach((r, i) => {
       const row = document.createElement("div"); row.className = "gt-shop-row" + (i === L.i ? " on" : "");
-      const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = r; row.appendChild(nm);
+      const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = typeof r === "object" ? r.text : r; row.appendChild(nm);
+      if (r && r.pick) row.appendChild(this.pickTag(true));
       row.addEventListener("click", e => { e.stopPropagation(); if (L.i === i) this.listPick(); else { L.i = i; this.renderList(); } });
       wrap.appendChild(row);
     });
@@ -3496,6 +3518,7 @@ class Game {
     if (c.piece && c.state === "wall") {
       const lv = this.chore && this.chore.spot === c ? 0 : this.prints(c.piece);
       if (lv > 0) this.drawSlot("fingerprints", lv - 1, 0, x, y);
+      if (c.piece.pick) this.drawSlot("pick_medal", 0, 0, x + 9, y + 9); // curator's pick: pinned to the front corner of the glass
       if (this.chore && this.chore.spot === c && this.chore.t > 4) { const f = Math.floor((this.chore.t - 4) / 4); if (f < 4) { this.drawSlot("sparkle", f, 0, x - 4, y - 2); this.drawSlot("sparkle", (f + 2) % 4, 0, x + 6, y + 6); } }
     }
     if (c.state === "covered") ctx.drawImage(this.sheet("sheet_cover"), 0, 0, 32, 28, x, y, 16, 15);
@@ -3731,7 +3754,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-02 staff";
+const VERSION = "2026-10-03 picks";
 window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
