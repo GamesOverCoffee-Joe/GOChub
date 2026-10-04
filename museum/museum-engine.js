@@ -880,6 +880,7 @@ const KEY_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const normKey = k => String(k || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 const safeUrl = v => (typeof v === "string" && /^https?:\/\/\S+$/i.test(v.trim()) ? v.trim().slice(0, 400) : "");
 const str = (v, max) => (typeof v === "string" ? v.trim().slice(0, max || 600) : "");
+function shuffled(list) { const a = list.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function normalizeMinds(list) {
   const lines = v => (Array.isArray(v) ? v : []).map(x => str(x, 240)).filter(Boolean).slice(0, 8), seen = new Set();
   return (Array.isArray(list) ? list : SAMPLE_MINDS).slice(0, 16).map((m, i) => {
@@ -2879,15 +2880,17 @@ class Game {
   curiousPlan() {
     const t = todayISO(), cv = this.progress.curious || (this.progress.curious = { day: "", list: [], back: [] });
     if (cv.day === t) return cv;
-    const minds = this.pack.settings.mindsets.filter(m => m.ask.length), per = this.pack.settings.curious.perDay, seed = strSeed("curious" + t);
-    const carry = cv.list.filter(v => v.state !== "recommended").slice(0, per).map(v => Object.assign(v, { state: "waiting", room: null }));
-    const used = new Set([...carry, ...cv.back].map(v => v.name)), list = carry.slice();
-    for (let i = 0; list.length < per && minds.length && i < 80; i++) {
-      const name = VISITOR_NAMES[hash(seed, i) % VISITOR_NAMES.length]; if (used.has(name)) continue;
-      used.add(name);
-      const m = minds[hash(seed, i + 101) % minds.length], others = minds.filter(x => x !== m);
-      const m2 = others.length && hash(seed, i + 7) % 3 ? others[hash(seed, i + 13) % others.length].id : ""; // two in three mention a second thing they like
-      list.push({ id: "v" + t.replace(/-/g, "") + i, name, sheet: ["visitor_a", "visitor_b", "visitor_c"][hash(seed, i + 3) % 3], mind: m.id, mind2: m2, state: "waiting", room: null });
+    // Random for every player and every day. Mindsets are dealt from a shuffled deck, so one day's visitors want different things.
+    const minds = this.pack.settings.mindsets.filter(m => m.ask.length), per = this.pack.settings.curious.perDay, pick = a => a[Math.floor(Math.random() * a.length)];
+    // Visitors you talked to but didn't get to show a game come back; the rest of the day's faces are new.
+    const carry = cv.list.filter(v => v.met && v.state !== "recommended").slice(0, per).map(v => Object.assign(v, { state: "waiting", room: null }));
+    const names = shuffled(VISITOR_NAMES.filter(n => ![...carry, ...cv.back].some(v => v.name === n))), list = carry.slice();
+    let deck = shuffled(minds.filter(m => !carry.some(v => v.mind === m.id)));
+    while (list.length < per && minds.length && names.length) {
+      if (!deck.length) deck = shuffled(minds);
+      const m = deck.pop(), others = minds.filter(x => x !== m);
+      const m2 = others.length && Math.random() < 2 / 3 ? pick(others).id : ""; // two in three mention a second thing they like
+      list.push({ id: "v" + t.replace(/-/g, "") + Math.random().toString(36).slice(2, 8), name: names.pop(), sheet: pick(["visitor_a", "visitor_b", "visitor_c"]), mind: m.id, mind2: m2, state: "waiting", room: null });
     }
     cv.day = t; cv.list = list; this.saveProgress();
     return cv;
@@ -2926,7 +2929,8 @@ class Game {
     return out.length ? out[Math.floor(Math.random() * out.length)] : null;
   }
   curiousTalk(n) {
-    const v = n.cur, m = this.mind(v.mind), m2 = this.mind(v.mind2), low = t => (/^I\b/.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1));
+    const v = n.cur; v.met = true;
+    const m = this.mind(v.mind), m2 = this.mind(v.mind2), low = t => (/^I\b/.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1));
     const named = ps => ps.map(p => v.name + ": " + p), hello = named(this.tx("cur.hello", { name: v.name })), q = hello.pop();
     this.say(hello, () => this.choose(q, ["Do you need help?", "Can I get by you?", "Never mind"], i => {
       if (i === 1) { this.askToMove(n, named); return; }
@@ -4080,7 +4084,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-06 life 3";
+const VERSION = "2026-10-06 life 4";
 window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

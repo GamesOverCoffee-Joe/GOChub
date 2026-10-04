@@ -322,7 +322,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-06 life 3";
+window.GOQ_WANT = "2026-10-06 life 4";
 (function load(retry) {
   const s = document.createElement("script");
   s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry ? "&r=" + Date.now() : "");
@@ -1485,7 +1485,7 @@ function renderVisitors() {
   wrap.appendChild(el("p", { text: "Curious visitors wander the galleries with a \"?\" over their heads. Talk to one and they say how they like to play, then follow you, even between floors, until you look at a piece and recommend it. The next day they come back to the lobby with a \"!\" and tell you how it went: they love it if the game has their mindset ticked (Pieces tab), like it if it has the second thing they mentioned, and otherwise it wasn't for them. A loved recommendation is worth 3 staff points." }));
   const per = el("input", { type: "number", min: 0, max: 10, value: st.curious.perDay, style: "max-width:120px" });
   per.addEventListener("input", () => { st.curious.perDay = Math.max(0, Math.min(10, Math.round(+per.value || 0))); changed(); });
-  wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:10px 0 14px" }, [el("label", {}, [document.createTextNode("Curious visitors a day"), el("small", { text: "Anyone you didn't get to comes back the next day. 0 turns curious visitors off." }), per])]));
+  wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:10px 0 14px" }, [el("label", {}, [document.createTextNode("Curious visitors a day"), el("small", { text: "Anyone you talked to but didn't get to show a game comes back the next day; the rest are new faces. 0 turns curious visitors off." }), per])]));
   // Museum life: how often visitors have a drink, carry a shop bag, or photograph a piece.
   st.life = st.life || { drinks: 30, bags: 20, photos: 8 };
   const pctIn = (k, label, hint) => {
