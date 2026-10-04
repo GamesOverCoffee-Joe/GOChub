@@ -340,10 +340,25 @@ window.goqStart = function () {
   });
   optTap.addEventListener("change", () => { set.tapWalk = optTap.checked; game.tapWalk = optTap.checked; saveSet(); });
 
-  /* Phones and tablets: no accidental pinch or double-tap zoom on the game, even where the browser ignores the viewport setting. */
-  const playArea = document.getElementById("area");
-  ["gesturestart", "gesturechange"].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
-  playArea.addEventListener("touchmove", e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+  /* Phones and tablets: no accidental pinch or double-tap zoom anywhere on the page, even where the browser ignores the viewport
+     setting (iOS Safari does). If it zooms anyway, pinching back out is allowed, and the page snaps back to normal on its own. */
+  const playArea = document.getElementById("area"), vpMeta = document.querySelector('meta[name="viewport"]'), vpBase = vpMeta.content;
+  const zoomed = () => !!window.visualViewport && window.visualViewport.scale > 1.01;
+  ["gesturestart", "gesturechange"].forEach(t => document.addEventListener(t, e => { if (!zoomed()) e.preventDefault(); }, { passive: false }));
+  document.addEventListener("touchmove", e => { if (e.touches.length > 1 && !zoomed()) e.preventDefault(); }, { passive: false });
+  let lastTouchEnd = 0; // a quick second tap outside the game (which handles its own taps) would double-tap zoom
+  document.addEventListener("touchend", e => {
+    if (e.timeStamp - lastTouchEnd < 350 && !playArea.contains(e.target) && !/^(INPUT|TEXTAREA|SELECT|LABEL)$/.test(e.target.tagName)) e.preventDefault();
+    lastTouchEnd = e.timeStamp;
+    if (zoomed() && !e.touches.length) setTimeout(unzoom, 250);
+  }, { passive: false });
+  // Rewriting the viewport setting makes Safari drop back to normal size.
+  function unzoom() {
+    if (!zoomed()) return;
+    vpMeta.content = "width=device-width, initial-scale=1.0001, maximum-scale=1.0001, user-scalable=no, viewport-fit=cover";
+    setTimeout(() => { vpMeta.content = vpBase; window.scrollTo(0, 0); relayout(); }, 60);
+  }
+  if (window.visualViewport) window.visualViewport.addEventListener("resize", () => { clearTimeout(unzoom.t); unzoom.t = setTimeout(unzoom, 600); });
 
   /* A small tip on touch screens: tap to walk, and turn sideways for a bigger screen. Shown on the first few visits, easy to dismiss. */
   (function touchTip() {
