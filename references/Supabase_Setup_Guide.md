@@ -1,5 +1,15 @@
 # GOQ Museum: Supabase setup, step by step
 
+> **[UPDATE, October 2026] WHAT YOU NEED TO DO**
+>
+> You already set Supabase up, so you don't need to redo the steps below. Just do this once:
+>
+> 1. Open your project on supabase.com, then **SQL Editor**, then **New query**.
+> 2. Paste the whole updated `supabase-setup.sql` (from the `references` folder) and click **Run**. If it warns about "destructive operations", click **Run this query**. It's safe to run again: your badges, keys and points stay as they are.
+> 3. That's it. Closing up the museum now counts toward the leaderboard. Until you run it, closing only counts in the player's own browser.
+>
+> Everything marked **[UPDATE, October 2026]** below is new or changed.
+
 This connects the museum's staff door to a free Supabase database. Real badges get checked, chores done on shift count toward points, and Employee of the Month picks itself. It takes about 20 minutes, and it all works from `http://localhost:8000`, so you don't need a website yet.
 
 You'll need two files from this update: `supabase-setup.sql`, and the new `museum-pack.json` (or your own pack, re-imported in the curator).
@@ -31,6 +41,8 @@ You'll need two files from this update: `supabase-setup.sql`, and the new `museu
 The script is safe to run again later, for example after an update.
 
 ## Step 3. Make the badges
+
+> **[UPDATE, October 2026]** Badge numbers matter a little more now: two or three Patreon members are on shift in the staff room each day, and the one who's clocked in is never also in the room. The game matches people by the badge number in the curator's Staff tab, so keep those numbers the same as the ones here.
 
 1. Click **New query** again and paste this. It makes a badge for every Patreon member in your Staff tab, plus one for you to test with.
 
@@ -104,8 +116,9 @@ Making a new key or turning a badge off also logs that person out on every devic
 ## How points work
 
 - **1 point each:** dusting, straightening, watering, finding the mug, wiping a case.
-- **3 points:** helping a lost visitor.
-- **Fair limits:** each frame, case or plant counts once a day per person. There's also a daily cap per chore (for example, 10 helped visitors and 1 mug a day). The day changes at midnight UTC.
+- **3 points:** a curious visitor comes back and loved the game you recommended. **[UPDATE, October 2026]** This replaces helping a lost visitor, which is gone from the game. It uses the same chore name in the database (`helped`), so you don't need to change anything for it. The point counts when the visitor comes back (usually the next day), for whoever is clocked in then.
+- **3 points:** closing up the museum (making the announcement and turning off every light). **[UPDATE, October 2026]** New. This needs the updated `supabase-setup.sql` (see the top of this guide).
+- **Fair limits:** each frame, case or plant counts once a day per person. There's also a daily cap per chore (for example, 10 loved recommendations, 1 mug and 1 closing a day). The day changes at midnight UTC. **[UPDATE, October 2026]** Closing added here: reopening and closing again still earns tokens in the game, but only the first closing each day counts on the leaderboard.
 - **Wrong keys:** after 8 wrong tries, a badge is locked for 15 minutes.
 - **The offline test badge** (0001 / QQQ-QQQ) still works on your own computer, but its points stay in that browser and never reach Supabase.
 

@@ -45,7 +45,7 @@ create table if not exists goq.duties (
   day    date not null default (now() at time zone 'utc')::date,
   at     timestamptz not null default now()
 );
--- Fair limit: each frame, case or plant counts once per day per badge. (Helping visitors can repeat.)
+-- Fair limit: each frame, case or plant counts once per day per badge. (Loved recommendations can repeat.)
 create unique index if not exists duties_once_a_day on goq.duties (badge, duty, target, day) where duty <> 'helped';
 create index if not exists duties_by_day on goq.duties (day, badge);
 
@@ -60,11 +60,15 @@ do $$ begin
 end $$;
 
 -- ---------- What each duty is worth, and how many count per day ----------
+-- [UPDATE, October 2026] Added 'closings' (closing up the museum): 3 points, once a day per badge.
+-- [UPDATE, October 2026] 'helped' now means a visitor came back and loved the game you recommended (it used to be helping
+--                        a lost visitor). Same name, points and daily cap, so nothing else changes for it.
 create or replace function goq.duty_rule(p_duty text, out points int, out daily_cap int)
 language sql immutable set search_path = '' as $$
   select r.points, r.daily_cap from (values
     ('dusted', 1, 40), ('straightened', 1, 20), ('wiped', 1, 45),
-    ('watered', 1, 10), ('mugs', 1, 1), ('helped', 3, 10)
+    ('watered', 1, 10), ('mugs', 1, 1), ('helped', 3, 10),
+    ('closings', 3, 1)
   ) as r(duty, points, daily_cap) where r.duty = p_duty;
 $$;
 
