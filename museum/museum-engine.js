@@ -14,7 +14,6 @@ const PACK_FORMAT = "goq-museum-pack";
 const PAL = {
   lobby:   ["#f6eedc", "#d8c8a4", "#9c7c58", "#2e2218", "#fffaf0"],
   gallery: ["#ece8f4", "#8c7cc0", "#4a3c7c", "#1a1430", "#b4a8dc"],
-  rug:     ["#f0d0b8", "#c05848", "#802830", "#2a1014"],
   wood:    ["#f0dcc0", "#c08858", "#784830", "#2c1810", "#a06c44"],
   gold:    ["#fff6cc", "#f0c040", "#b07818", "#3c2408", "#c8d8e8", "#a8bcd0"],
   plant:   [null, "#9ccc68", "#4c8c3c", "#1e2418", "#c8784c", "#8a4428", "#a89048"],
@@ -829,9 +828,10 @@ const SAMPLE_ITEMS = [
 const DRINKS = [{ id: "coffee", name: "Coffee" }, { id: "tea", name: "Tea" }, { id: "cocoa", name: "Cocoa" }];
 /* Offline staff badge for testing. Real badges live in Supabase (see supabase-setup.sql).
    Never put real badge keys in this file or in a museum pack: both are public on the site. */
-/* Chores that count toward staff points (helping a visitor is worth 3). */
+/* Chores that count toward staff points (helping a visitor and closing up are worth 3). */
 const pts = n => n + " point" + (n === 1 ? "" : "s");
-const POINT_KINDS = ["dusted", "straightened", "watered", "mugs", "wiped", "helped"];
+const POINT_KINDS = ["dusted", "straightened", "watered", "mugs", "wiped", "helped", "closings"];
+const chorePoints = k => (k === "helped" || k === "closings" ? 3 : 1);
 const TEST_BADGES = [{ badge: "0001", key: "QQQQQQ", name: "Test Staff" }];
 /* The test badge only works where its hint is shown (showTestBadge): locally, with ?test, or in the curator. */
 /* Badge keys are six characters from an alphabet without look-alikes (no O/0, no I/1), shown as QQQ-QQQ.
@@ -895,7 +895,7 @@ function normalizePack(p) {
   const textIn = (p.settings && p.settings.text) || {}, text = {};
   for (const k in textIn) if (TEXT[k]) { const v = vlist(textIn[k]); if (v && v.length) text[k] = v; }
   const talkIn = (p.settings && p.settings.talk) || {}, talk = {};
-  for (const r in TALK_ROLES) talk[r] = Array.isArray(talkIn[r]) ? talkIn[r].map(e => ({ when: (Array.isArray(e && e.when) ? e.when : ["always"]).filter(w => TALK_WHEN[w]).slice(0, 2), v: vlist(e && e.v) || [] })).filter(e => e.v.length) : JSON.parse(JSON.stringify(TALK_DEFAULTS[r]));
+  for (const r in TALK_ROLES) talk[r] = Array.isArray(talkIn[r]) ? talkIn[r].filter(e => (Array.isArray(e && e.when) ? e.when : []).every(w => TALK_WHEN[w])).map(e => ({ when: (Array.isArray(e && e.when) ? e.when : ["always"]).slice(0, 2), v: vlist(e && e.v) || [] })).filter(e => e.v.length) : JSON.parse(JSON.stringify(TALK_DEFAULTS[r]));
   const achIn = p.settings && Array.isArray(p.settings.achievements) ? p.settings.achievements : SAMPLE_ACH;
   const achievements = achIn.slice(0, 100).map((a, i) => ({ id: str(a && a.id, 40) || "ach-" + (i + 1), name: str(a && a.name, 50) || "Achievement", desc: str(a && a.desc, 160),
     stat: ACH_STATS[a && a.stat] ? a.stat : "dusted", target: Math.max(1, Math.min(9999, Math.round(+(a && a.target) || 1))), secret: !!(a && a.secret) }));
@@ -1185,7 +1185,7 @@ const TEXT = {
   "badge.expired":     { g: "Staff", l: "Clocked out because the badge stopped working", v: [["The staff office didn't recognize your badge anymore, so you've been clocked out.", "Clock in again with your badge number and key."]] },
   "net.down":          { g: "Staff", l: "Notice: chores can't reach the staff office", v: [["Staff office unreachable: chores won't count for now"]] },
   "cork.empty":        { g: "Staff", l: "Corkboard with no notes", v: [["The corkboard is bare. Just pins."]] },
-  "rules":             { g: "Staff", l: "Staff rules whiteboard", v: [["STAFF RULES", "1. Clock in at the staff door or the time clock. The ON SHIFT tag means you're working.", "2. On shift, every chore is a point: dusting, straightening, watering, finding the mug, wiping cases. Helping a lost visitor is worth 3.", "3. Chores earn tokens for the gift shop, and staff tallies decide Employee of the Month.", "4. Clock out at the time clock. Leaving at closing clocks you out too.", "5. Do not touch anyone's yogurt."]] },
+  "rules":             { g: "Staff", l: "Staff rules whiteboard", v: [["STAFF RULES", "1. Clock in at the staff door or the time clock. The ON SHIFT tag means you're working.", "2. On shift, every chore is a point: dusting, straightening, watering, finding the mug, wiping cases. Helping a lost visitor and closing up are worth 3.", "3. Chores earn tokens for the gift shop, and staff tallies decide Employee of the Month.", "4. Clock out at the time clock. Leaving at closing clocks you out too.", "5. Do not touch anyone's yogurt."]] },
   "locker.mine":       { g: "Staff", l: "Your locker", v: [["Locker {locker}: {name}.", "Just your coat in here. Your gift shop finds are on display in the collection cabinet."]] },
   "locker.others":     { g: "Staff", l: "Other lockers (one per locker, in order)", v: [["A sticky note: \"Do not touch my yogurt.\""], ["Locked. It hums faintly."], ["Someone taped a pixel-art cat to this one."], ["Empty. It smells like old coffee."], ["A note in big letters: \"WAIT. WHY DID THAT HAPPEN?\""], ["Locked. There's a dent shaped like a controller."]] },
   "clock.out":         { g: "Staff", l: "Clocking out", v: [["You clock out. See you next shift, {name}.", "Chores won't count toward your staff tally until you clock in again."]] },
@@ -1245,12 +1245,11 @@ const TEXT = {
    The curator's Words tab edits these. */
 const TALK_ROLES = { usher: "Usher (front desk)", shopkeeper: "Shopkeeper", barista: "Barista", conservator: "Conservator (storage)", guard: "Night guard" };
 const TALK_WHEN = { always: "Any time", visitor: "You're a visitor (not clocked in)", staff: "You're on shift", day: "Daytime", sunset: "Sunset", night: "Night",
-  slow: "Slow day", medium: "Medium day", heavy: "Busy day", reveal: "Reveal day", closing: "After the closing announcement", drink: "You're holding a drink",
+  medium: "Medium day", heavy: "Busy day", reveal: "Reveal day", closing: "After the closing announcement", drink: "You're holding a drink",
   photos: "You've taken photos", helped: "You've helped a lost visitor", cat: "The cat is in this room", shirt: "You're wearing the GOQ shirt (always wins)" };
 const TALK_DEFAULTS = {
   usher: [
     { when: ["shirt"], v: [["Welcome to the GOQ... oh my gosh. Is that THE shirt?", "Can I... can I touch the sleeve? No. Sorry. Professionalism."], ["Everyone on staff has been talking about your shirt.", "Some of us are not handling it well."]] },
-    { when: ["visitor", "slow"], v: [["Welcome to the GOQ Museum! It's quiet today. You've got the place to yourself."]] },
     { when: ["visitor", "medium"], v: [["Welcome to the GOQ Museum! A nice steady crowd today."]] },
     { when: ["visitor", "heavy"], v: [["Welcome to the GOQ Museum! We're busy today. Take your time."]] },
     { when: ["visitor", "reveal"], v: [["Welcome! Big day today: something new is being unveiled!"]] },
@@ -1287,7 +1286,7 @@ const SAMPLE_ACH = [
   { id: "zoom", name: "Up Up Down Down", desc: "Find the Segway.", stat: "segway", target: 1, secret: true },
   { id: "shirt", name: "The Shirt That Got Away", desc: "Get the discontinued GOQ shirt.", stat: "shirt", target: 1, secret: true },
 ];
-/* Things the day's extra visitors say. */
+/* The secret shirt: the museum day from the third magazine, in order. */
 const SHIRT_STEPS = ["cocoa", "finishOnStool", "lobbyTrash", "water", "catPhoto", "elevatorB1", "pc", "stairsTo2F", "nap2F", "chat", "chat", "chat"];
 const KONAMI = ["up", "up", "down", "down", "left", "right", "left", "right", "b", "a"];
 const REDUCED_MOTION = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1415,7 +1414,6 @@ function buildRoom(id, pieces, o) {
       else if (p.key === "front_desk") r.events[(p.x + i) + "," + p.y] = i === 1 ? { usher: true } : { guestbook: true };
       else if (p.rules) r.events[(p.x + i) + "," + p.y] = { rules: true };
       else if (p.sit) r.events[(p.x + i) + "," + p.y] = { sit: p.sit, x: p.x + i, y: p.y, say: p.say, bench: p.key === "bench" };
-      else if (p.key === "front_desk" && i === 1) r.events[(p.x + i) + "," + p.y] = { usher: true };
       else if (p.event) { r.events[(p.x + i) + "," + p.y] = Object.assign({}, p.event); if (p.tall && p.blockTop) r.events[(p.x + i) + "," + (p.y - 1)] = Object.assign({}, p.event); }
       else if (p.say) r.events[(p.x + i) + "," + p.y] = { say: p.say };
     }
@@ -1511,7 +1509,7 @@ function buildRoom(id, pieces, o) {
   const who = (def.visitors || []).concat(extra).filter(v => (!v.day || o.tod !== "night") && (!v.night || o.tod === "night") && (!o.closing || v.staff));
   r.npcs = who.filter(v => !v.random || v._x !== undefined).map(v => ({ sitting: !!v.sitting, still: v.still, staff: v.staff, patrol: v.patrol, usher: v.usher, role: v.role || (v.usher ? "usher" : undefined), slow: v.slow, goRight: true, pause: 0, stuck: 0,
     sheet: v.sheet, x: v._x !== undefined ? v._x : v.x, y: v._y !== undefined ? v._y : v.y, dir: DIRS_LIST.includes(v.dir) ? v.dir : "down", moving: false, prog: 0, step: false, bumpT: 0, timer: 60 + Math.random() * 120, lines: v.lines, lineI: -1,
-    random: !!v.random, box: { x0: Math.max(1, v.x - 2), y0: 3, x1: Math.min(w - 2, v.x + 2), y1: h - 2 },
+    random: !!v.random,
   }));
   return r;
 }
@@ -1966,8 +1964,10 @@ class Game {
     this.read({ title: "STAMP CARD", sub: st.length + " of " + size + " stamps",
       sections: [{ label: "", text: row }, { label: "", text: this.tx(full ? "stamp.full" : "stamp.howto").join(" ") }, ...(titles.length ? [{ label: "STAMPED", text: titles.join(", ") }] : [])] });
   }
+  /* Items a full stamp card trades for: the ones ticked "Stamp card prize" in the curator, or any item when none are ticked. */
+  stampPrize(it) { const sh = this.pack.settings.shop; return !sh.stampItems.length || sh.stampItems.includes(it.id); }
   tradeStampCard() {
-    const sh = this.pack.settings.shop, prizes = sh.items.filter(it => sh.stampItems.includes(it.id) && !this.progress.items.includes(it.id));
+    const sh = this.pack.settings.shop, prizes = sh.items.filter(it => this.stampPrize(it) && !this.progress.items.includes(it.id));
     if (!prizes.length) { this.shopMsg = this.tx("stamp.noPrizes").join(" "); this.renderShop(); return; }
     this.closeShop();
     this.choose("Trade your full stamp card for:", [...prizes.map(it => it.name), "Not yet"], i => {
@@ -2019,7 +2019,7 @@ class Game {
 
   /* ----- cozy loop -----
      Progress is kept in this browser only: when each frame was dusted or straightened, when each plant was watered,
-     whether today's mug was found, and running tallies. Phase 5 adds staff badges on top of these tallies. */
+     whether today's mug was found, and running tallies. Staff badges add a per-badge tally on top (see count()). */
   loadProgress() {
     let p = null;
     try { if (this.saveKey) p = JSON.parse(localStorage.getItem(this.saveKey) || "null"); } catch (e) {}
@@ -2056,7 +2056,7 @@ class Game {
       : a.secret ? "\u2606 ???  (a secret)" : "\u2606 " + a.name + ": " + a.desc + " (" + Math.min(this.stat(a.stat), a.target) + "/" + a.target + ")");
     this.read({ title: "ACHIEVEMENTS", sub: n + " of " + list.length + " unlocked", sections: [{ label: "", text: lines.join("\n") }] });
   }
-  resetProgress() { try { if (this.saveKey) localStorage.removeItem(this.saveKey); } catch (e) {} this.progress = this.loadProgress(); this.lightsOff.clear(); this.closing = false; this.closed = false; this.dayStart = Object.assign({}, this.progress.tally); this.spook = null; this.figure = null; this.hideEnd(); this.updateHud(); this.rebuild(); }
+  resetProgress() { try { if (this.saveKey) localStorage.removeItem(this.saveKey); } catch (e) {} this.progress = this.loadProgress(); this.lightsOff.clear(); this.closing = false; this.closed = false; this.closingPaid = false; this.dayStart = Object.assign({}, this.progress.tally); this.spook = null; this.figure = null; this.hideEnd(); this.updateHud(); this.rebuild(); }
   /* Dust settles back over a few real days. A piece that's never been dusted starts dusty about half the time. */
   isDusty(p) { const d = this.progress.dusted[p.id]; return d ? daysBetween(d, todayISO()) >= 3 : strSeed(p.id) % 2 === 0; }
   /* Each day, roughly one piece in five hangs a little crooked until someone nudges it level. */
@@ -2107,7 +2107,8 @@ class Game {
     this.lightsOff.add(id); this.showLoc("Lights off");
     if (!this.spook) this.spook = { armed: this.forceSpook || Math.random() < 0.2, steps: 0, need: 10 + Math.floor(Math.random() * 12), done: false };
     if (Object.keys(ROOMS).every(r => !ROOMS[r].lightSwitch || this.lightsOff.has(r))) {
-      this.count("closings"); this.saveProgress();
+      // Closing up pays once per opening: flicking a light back on and off again doesn't count twice.
+      if (!this.closingPaid) { this.closingPaid = true; this.count("closings"); this.saveProgress(); }
       this.closed = true;
       setTimeout(() => this.say(this.tx("lights.closed")), 500);
     }
@@ -2186,7 +2187,7 @@ class Game {
   hideEnd() { if (this.el.endWrap) this.el.endWrap.style.display = "none"; }
   /* Open again without reloading: visitors return, lights come on, you start at the front doors. */
   reopen() {
-    this.lightsOff.clear(); this.closing = false; this.closed = false; this.dayStart = Object.assign({}, this.progress.tally);
+    this.lightsOff.clear(); this.closing = false; this.closed = false; this.closingPaid = false; this.dayStart = Object.assign({}, this.progress.tally);
     this.spook = null; this.figure = null; this.hideEnd(); this.trans = null; this.fade = 0; this.mode = "walk"; this.microwaved = false;
     this.rebuild();
     const w = this.endKind === "brb" && this.progress.where;
@@ -2218,7 +2219,7 @@ class Game {
   /* Chores on this badge's tally. Kept in the browser, so closing up and reopening never resets it. */
   staffChores() {
     const s = this.staff, t = s && this.progress.staffTally[s.badge]; if (!t) return 0;
-    return POINT_KINDS.reduce((a, k) => a + (t[k] || 0) * (k === "helped" ? 3 : 1), 0);
+    return POINT_KINDS.reduce((a, k) => a + (t[k] || 0) * chorePoints(k), 0);
   }
   count(kind, target) {
     this.progress.tally[kind] = (this.progress.tally[kind] || 0) + 1;
@@ -2286,7 +2287,7 @@ class Game {
   }
   readLeaderboard() {
     if (!this.online()) {
-      const rows = Object.values(this.progress.staffTally || {}).map(t => ({ name: t.name, points: POINT_KINDS.reduce((a, k) => a + (t[k] || 0) * (k === "helped" ? 3 : 1), 0) })).filter(r => r.points > 0).sort((a, b) => b.points - a.points);
+      const rows = Object.values(this.progress.staffTally || {}).map(t => ({ name: t.name, points: POINT_KINDS.reduce((a, k) => a + (t[k] || 0) * chorePoints(k), 0) })).filter(r => r.points > 0).sort((a, b) => b.points - a.points);
       this.say([...this.tx("board.offline"), ...rows.slice(0, 10).map((r, i) => (i + 1) + ". " + r.name + ", " + pts(r.points) + ".")]);
       return;
     }
@@ -2475,7 +2476,7 @@ class Game {
   /* Chatting with staff: pick a line whose conditions all hold, taking turns. */
   talkWhen(w) {
     const c = this.crowdToday(), tod = this.tod();
-    return { always: true, visitor: !this.staff, staff: !!this.staff, day: tod === "day", sunset: tod === "sunset", night: tod === "night", slow: c === "slow", medium: c === "medium",
+    return { always: true, visitor: !this.staff, staff: !!this.staff, day: tod === "day", sunset: tod === "sunset", night: tod === "night", medium: c === "medium",
       heavy: c === "heavy", reveal: this.pack.pieces.some(p => p.unveil === todayISO()), closing: this.closing, drink: !!this.drink, photos: !!(this.progress.photos || []).length,
       helped: !!this.progress.tally.helped, cat: !!(this.room && this.room.cat), shirt: !!this.progress.wearShirt && !this.staff }[w];
   }
@@ -2498,12 +2499,11 @@ class Game {
     const h = new Date().getHours();
     return h >= 19 || h < 6 ? "night" : h >= 17 || h === 6 ? "sunset" : "day";
   }
-  /* How busy today is: slow, medium or heavy, picked per day. Any day a piece is unveiled is heavy. */
+  /* How busy today is: medium or heavy, picked per day (about half each). Any day a piece is unveiled is heavy. */
   crowdToday() {
     const t = todayISO();
     if (this.pack && this.pack.pieces.some(p => p.unveil === t)) return "heavy";
-    const r = strSeed("crowd" + t) % 10;
-    return r < 5 ? "medium" : "heavy";
+    return strSeed("crowd" + t) % 2 ? "heavy" : "medium";
   }
   setTime(t) { this.timeOverride = t || null; this.lastTod = this.tod(); this.rebuild(); }
   lookOutWindow() {
@@ -2560,7 +2560,7 @@ class Game {
   shopRows() {
     const sh = this.pack.settings.shop;
     const items = sh.items.slice().sort((a, b) => (b.id === sh.featured) - (a.id === sh.featured));
-    const full = this.progress.stamps.length >= sh.stampSize && sh.stampItems.length;
+    const full = this.progress.stamps.length >= sh.stampSize && sh.items.length;
     return [...(full ? [{ trade: true }] : []), ...items.map(it => ({ item: it })), { shirt: true }, { collection: true }, { leave: true }];
   }
   renderShop() {
@@ -2577,7 +2577,7 @@ class Game {
       if (r.item) {
         const img = document.createElement("img"); img.src = this.itemIcon(r.item).toDataURL(); img.alt = ""; row.appendChild(img);
         const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = (r.item.id === sh.featured ? "* " : "") + r.item.name; row.appendChild(nm);
-        const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = owned.includes(r.item.id) ? "OWNED" : r.item.price + " T" + (sh.stampItems.includes(r.item.id) ? " or card" : ""); row.appendChild(pr);
+        const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = owned.includes(r.item.id) ? "OWNED" : r.item.price + " T" + (this.stampPrize(r.item) ? " or card" : ""); row.appendChild(pr);
       } else if (r.trade) {
         const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = "Trade your full stamp card"; row.appendChild(nm);
         const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = "FREE"; row.appendChild(pr);
@@ -2616,10 +2616,7 @@ class Game {
     }
     this.renderShop();
   }
-  /* Items on sale fill the racks in menu order, six per rack; spare spots get trinkets. */
-  /* Each rack has two shelves, and each shelf holds one item (three of it). Items fill racks in menu order: rack 1 gets items 1 and 2, and so on.
-     A shelf without an item gets a row of trinkets. */
-  /* Shelving units hold six stacks each: items fill them in Shop-tab order (unit 1 has items 1 to 6). */
+  /* Each stand (rack or shelving unit) shows one item, in Shop-tab order: stand 1 has item 1, and so on. A stand without an item gets trinkets. */
   unitGoods(u) { const it = this.pack.settings.shop.items[u], out = []; for (let k = 0; k < 6; k++) out.push(it ? { item: it } : { trinket: hash(u, k) % 8 }); return out; } // one item per stand, in menu order
   rackItems(i) { const items = this.pack.settings.shop.items; return [items[i] || null]; } // one item per stand, in menu order
   browseUnit(u) { this.browseRack(u); } // each stand shows its one item, same as a rack
@@ -2638,10 +2635,6 @@ class Game {
       this.say([it.name.toUpperCase(), ...(it.description ? [it.description] : []), note], () => { this.el.cuImg.classList.remove("item"); show(k + 1); });
     };
     show(0);
-  }
-  buy(it) {
-    this.progress.tokens = (this.progress.tokens || 0) - it.price; this.progress.items.push(it.id); this.saveProgress(); this.updateHud();
-    this.say(["You bought " + it.name + "!", this.staff ? "It'll be waiting in the collection cabinet in the staff room." : "It's in your collection. Staff keep theirs in the staff room's collection cabinet."]);
   }
   ownedItems() { return this.pack.settings.shop.items.filter(it => this.progress.items.includes(it.id)); }
   viewCollection() {
@@ -2667,7 +2660,7 @@ class Game {
   }
   /* The museum cat naps somewhere different each day. */
   petCat() {
-    const name = this.pack.settings.staff.catName; this.petT = 70;
+    this.petT = 70;
     this.progress.tally.pets = (this.progress.tally.pets || 0) + 1; this.saveProgress();
     this.say(this.tx("cat.pet"));
   }
@@ -3110,7 +3103,6 @@ class Game {
     else if (e.lights) this.toggleLights();
     else if (e.announce) this.announce();
     else if (e.frontDoor) this.frontDoor();
-    else if (e.staffDoor) this.staffDoor(e);
     else if (e.timeClock) this.timeClock();
     else if (e.locker !== undefined) this.locker(e.locker);
     else if (e.corkboard) this.readCorkboard();
@@ -3119,7 +3111,6 @@ class Game {
     else if (e.rules) this.readRules();
     else if (e.usher) { const u = this.room.npcs.find(n => n.usher); if (u) this.usherTalk(); else this.readGuestbook(); }
     else if (e.window) this.lookOutWindow();
-    else if (e.shopDoor) this.shopDoor(e);
     else if (e.shopCounter) this.shopCounter();
     else if (e.cafe) this.cafe();
     else if (e.trash) this.bin(e);
@@ -3754,7 +3745,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-03 picks";
+const VERSION = "2026-10-04 cleanup";
 window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
