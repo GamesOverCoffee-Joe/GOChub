@@ -4055,6 +4055,8 @@ function mountControls(game, host) {
   host.innerHTML = '<div class="gt-pad" role="group" aria-label="Directional pad"><span class="u"></span><span class="d"></span><span class="l"></span><span class="r"></span><i></i></div>' +
     '<button type="button" class="gt-start" data-k="start" aria-label="Start: menu">START</button>' +
     '<div class="gt-btns"><button type="button" class="gt-btn gt-btn-b" data-k="b" aria-label="B, go back or take a photo">B</button><button type="button" class="gt-btn gt-btn-a" data-k="a" aria-label="A, look or talk">A</button></div>';
+  // iOS Safari double-tap zooms on quick taps here even though the pointer events below are cancelled; cancelling the touches stops it.
+  ["touchstart", "touchend"].forEach(t => host.addEventListener(t, e => { if (e.cancelable) e.preventDefault(); }, { passive: false }));
   const pad = host.querySelector(".gt-pad"); let active = null;
   const set = d => { if (d === active) return; if (active) game.hold(active, false); active = d; if (d) game.hold(d, true); pad.dataset.dir = d || ""; };
   const dirAt = e => {
@@ -4078,7 +4080,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-06 life 2";
+const VERSION = "2026-10-06 life 3";
 window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
