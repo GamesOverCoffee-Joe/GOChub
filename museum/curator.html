@@ -275,6 +275,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
       <button role="tab" id="tab-art" aria-selected="true" aria-controls="main">Art</button>
       <button role="tab" id="tab-pieces" aria-selected="false" aria-controls="main">Pieces</button>
       <button role="tab" id="tab-staff" aria-selected="false" aria-controls="main">Staff</button>
+      <button role="tab" id="tab-visitors" aria-selected="false" aria-controls="main">Visitors</button>
       <button role="tab" id="tab-shop" aria-selected="false" aria-controls="main">Shop</button>
       <button role="tab" id="tab-rooms" aria-selected="false" aria-controls="main">Rooms</button>
       <button role="tab" id="tab-words" aria-selected="false" aria-controls="main">Words</button>
@@ -307,6 +308,9 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
           <button class="btn" type="button" id="spooky" aria-pressed="false" title="How often something creepy happens after the lights go out">Spooky: rare</button>
           <button class="btn" type="button" id="recrate" title="Put pieces with a future unveil date back in their crates">Repack crates</button>
           <button class="btn" type="button" id="rechore" title="Dust settles, plants get thirsty, the mug goes missing, visitors come back, lights come on">Reset chores</button>
+          <button class="btn" type="button" id="figureBtn" title="The figure appears right now, beside or behind you, with this room's lights off. Turn and photograph it before it's gone.">Summon the figure</button>
+          <button class="btn" type="button" id="dayBtn" title="Jump the preview to the next day: curious visitors come back, dust settles, the museum opens again">Skip to tomorrow</button>
+          <button class="btn" type="button" id="testPcs" aria-pressed="false" title="Fill the preview with 60 placeholder pieces so the oldest go to the archive on Someone's PC (B1). Never saved to the pack.">Test pieces: off</button>
         </div>
       </details>
     </div>
@@ -318,7 +322,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-03 picks";
+window.GOQ_WANT = "2026-10-06 life 2";
 (function load(retry) {
   const s = document.createElement("script");
   s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry ? "&r=" + Date.now() : "");
@@ -359,6 +363,7 @@ function packOut() {
     if (p.episodeUrl) o.episodeUrl = p.episodeUrl;
     if (p.gameUrl) o.gameUrl = p.gameUrl;
     if (p.hint) o.hint = p.hint;
+    if (p.minds && p.minds.length) o.minds = p.minds;
     if (p.unveil) o.unveil = p.unveil;
     if (p.pick) o.pick = true;
     if (p.image) o.image = p.image; else { o.colors = p.colors; o.style = p.style; }
@@ -402,8 +407,16 @@ const game = new GOQ.Game(stage, undefined, { curator: true, capture: "focus", s
 GOQ.mountControls(game, $("#controls"));
 game.tapWalk = matchMedia("(pointer:coarse)").matches; // tap to walk in the preview on touch screens
 window.goqCurator = { game, get draft() { return draft; } };
+/* "Test pieces": placeholder pieces at the top of the list (the oldest), so they're the ones that overflow into the archive. Preview only. */
+let testPieces = false;
+function previewPack() {
+  const p = packOut(); if (!testPieces) return p;
+  const fake = Array.from({ length: 60 }, (_, i) => ({ id: "test-" + i, kind: i % 2 ? "community" : "episode", title: "Test piece " + (i + 1), developer: "Test Developer",
+    observation: "A placeholder observation for testing.", intention: "A placeholder intention for testing.", guestWriter: "Tester", guestNote: "A placeholder guest note for testing.", hint: "the test one, number " + (i + 1) }));
+  return Object.assign({}, p, { pieces: [...fake, ...p.pieces] });
+}
 async function refreshPreview() {
-  await game.setPack(packOut());
+  await game.setPack(previewPack());
   pending = false; $("#applyDot").hidden = true; fillRoomPicker();
   if (tab === "art") renderSlotList();
 }
@@ -436,6 +449,16 @@ $("#timeBtn").addEventListener("click", e => {
   const order = [null, "day", "sunset", "night"], next = order[(order.indexOf(game.timeOverride) + 1) % order.length];
   game.setTime(next); e.currentTarget.textContent = "Time: " + (next || "clock"); stage.focus({ preventScroll: true });
 });
+$("#figureBtn").addEventListener("click", () => {
+  game.closeAll(); if (!game.summonFigure()) status("No room for the figure here. Try a bigger room.", true);
+  stage.focus({ preventScroll: true });
+});
+$("#dayBtn").addEventListener("click", () => { game.closeAll(); game.skipDay(); stage.focus({ preventScroll: true }); });
+$("#testPcs").addEventListener("click", async e => {
+  testPieces = !testPieces; e.currentTarget.textContent = "Test pieces: " + (testPieces ? "on" : "off"); e.currentTarget.setAttribute("aria-pressed", testPieces);
+  await refreshPreview(); status(testPieces ? "Preview has 60 test pieces; the oldest are in the archive on Someone's PC (Storage)" : "Test pieces removed from the preview");
+  stage.focus({ preventScroll: true });
+});
 // Spooky: "always" makes the rare creepy moment happen on every closing, handy for recording an end-card.
 $("#spooky").addEventListener("click", e => {
   game.forceSpook = !game.forceSpook; game.spook = null;
@@ -448,20 +471,21 @@ $("#spooky").addEventListener("click", e => {
 let tab = "art", current = "atlas";
 function setTab(t) {
   tab = t;
-  ["art", "pieces", "staff", "shop", "rooms", "words", "ach"].forEach(k => $("#tab-" + k).setAttribute("aria-selected", t === k));
+  ["art", "pieces", "staff", "visitors", "shop", "rooms", "words", "ach"].forEach(k => $("#tab-" + k).setAttribute("aria-selected", t === k));
   $("#app").classList.toggle("no-side", t !== "art");
   render();
 }
 $("#tab-art").addEventListener("click", () => setTab("art"));
 $("#tab-pieces").addEventListener("click", () => setTab("pieces"));
 $("#tab-staff").addEventListener("click", () => setTab("staff"));
+$("#tab-visitors").addEventListener("click", () => setTab("visitors"));
 $("#tab-shop").addEventListener("click", () => setTab("shop"));
 $("#tab-rooms").addEventListener("click", () => setTab("rooms"));
 $("#tab-words").addEventListener("click", () => setTab("words"));
 $("#tab-ach").addEventListener("click", () => setTab("ach"));
 // Small screens: the preview sits below the editor; this jumps to it.
 $("#pvJump").addEventListener("click", () => document.querySelector(".preview").scrollIntoView({ behavior: "smooth", block: "start" }));
-function render() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "shop") renderShop(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else renderPieces(); }
+function render() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "visitors") renderVisitors(); else if (tab === "shop") renderShop(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else renderPieces(); }
 
 /* ---------- Image helpers ---------- */
 function readFile(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error("That file couldn't be read.")); r.readAsDataURL(file); }); }
@@ -687,17 +711,17 @@ function renderStaff() {
   wrap.appendChild(el("h2", { class: "title", text: "Staff" }));
   wrap.appendChild(el("p", { text: "Patreon members clock in at the staff door with a badge, wear the staff uniform, and their chores count toward a staff tally. Real badges live in Supabase (set it up below). The offline test badge, number 0001 and key QQQ-QQQ, works on your own computer and in this preview; its points stay in that browser." }));
 
-  // Patreon members: they show up as named visitors (a fresh mix each day) and are all listed on the Patron Board.
+  // Patreon members: two or three are on shift in the staff room each day, and they're all listed on the Patron Board.
   st.members = st.members || [];
   const mem = el("textarea", { id: "memText", style: "min-height:140px", placeholder: "Sam, 0002\nPriya, 0003\nAlex" });
   mem.value = st.members.map(m => m.name + (m.badge ? ", " + m.badge : "")).join("\n");
   const memCount = el("p", { class: "note", style: "margin:8px 0 0" });
-  const showCount = () => { const n = st.members.length; memCount.textContent = n + " member" + (n === 1 ? "" : "s") + ". Up to about 19 visit on a busy day (12 on a medium day); with more members than that, a different group visits each day. Everyone is always on the Patron Board in the lobby."; };
+  const showCount = () => { const n = st.members.length; memCount.textContent = n + " member" + (n === 1 ? "" : "s") + ". Two or three are on shift in the staff room each day, a different group each day. Everyone is always on the Patron Board in the lobby."; };
   mem.addEventListener("input", () => { st.members = mem.value.split("\n").map(l => l.trim()).filter(Boolean).map(l => { const m = l.match(/^(.*?)(?:\s*,\s*(\d+))?$/); return { name: m[1].trim().slice(0, 32), badge: m[2] || "" }; }).filter(m => m.name); showCount(); changed(); });
   showCount();
   wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
     el("h3", { text: "Patreon members", style: "margin:0 0 4px" }),
-    el("p", { class: "note", style: "margin:0 0 12px", text: "One per line: their name, then a comma and their badge number if they have one. When a member clocks in with their badge, their visitor version leaves the museum, since they're the one playing. Names are public on your site, so use the names members are happy to show." }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "One per line: their name, then a comma and their badge number if they have one. When a member clocks in with their badge, they're never also in the staff room, since they're the one playing. Names are public on your site, so use the names members are happy to show." }),
     el("label", { class: "sr-only", for: "memText", text: "Patreon members" }), mem, memCount,
   ]));
   const cat = el("input", { type: "text", value: st.catName || "Pixel", placeholder: "Pixel", maxlength: 30 });
@@ -1385,9 +1409,11 @@ function renderWords() {
         ]));
       }));
     }
+    if (!wordsQuery) list.appendChild(el("p", { class: "note", text: "What curious visitors say is in the Visitors tab." }));
     // Everything else, by area; each line is a one-row summary that opens into its editor
     const groups = {};
     for (const k in GOQ.TEXT) (groups[GOQ.TEXT[k].g] = groups[GOQ.TEXT[k].g] || []).push(k);
+    delete groups["Curious visitors"]; // edited in the Visitors tab, with their placeholders color-coded
     for (const g in groups) {
       const keys = groups[g].filter(k => match(g, GOQ.TEXT[k].l, toText(st.text[k] || GOQ.TEXT[k].v)));
       if (!keys.length) continue;
@@ -1436,6 +1462,100 @@ function renderAchievements() {
   ]));
 }
 
+/* ---------- Visitors: curious visitors and mindsets ---------- */
+/* Mindset checkboxes on a piece: who'd love this game. Built from the Visitors tab's list. */
+function mindsBox(p) {
+  const list = draft.settings.mindsets || [];
+  p.minds = (p.minds || []).filter(id => list.some(m => m.id === id));
+  const boxes = list.map(m => {
+    const cb = el("input", { type: "checkbox", checked: p.minds.includes(m.id) });
+    cb.addEventListener("change", () => { p.minds = p.minds.filter(x => x !== m.id); if (cb.checked) p.minds.push(m.id); changed(); });
+    return el("label", { class: "check", style: "margin:0 12px 4px 0" }, [cb, document.createTextNode(m.name)]);
+  });
+  return el("div", { class: "fieldset wide" }, [el("span", { class: "flabel", text: "Who'd love it" }),
+    el("small", { text: "Tick the mindsets this game suits, usually one to three. A curious visitor with one of these loves it; leave them all off and visitors just say it was pretty good. Edit the mindsets in the Visitors tab." }),
+    list.length ? el("div", { class: "unveil", style: "flex-wrap:wrap" }, boxes) : el("p", { class: "note", text: "No mindsets yet. Add some in the Visitors tab." })]);
+}
+function renderVisitors() {
+  const main = $("#main"); main.innerHTML = "";
+  const st = draft.settings, list = st.mindsets = st.mindsets || JSON.parse(JSON.stringify(GOQ.SAMPLE_MINDS));
+  st.curious = st.curious || { perDay: 3 };
+  const wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
+  wrap.appendChild(el("h2", { class: "title", text: "Visitors" }));
+  wrap.appendChild(el("p", { text: "Curious visitors wander the galleries with a \"?\" over their heads. Talk to one and they say how they like to play, then follow you, even between floors, until you look at a piece and recommend it. The next day they come back to the lobby with a \"!\" and tell you how it went: they love it if the game has their mindset ticked (Pieces tab), like it if it has the second thing they mentioned, and otherwise it wasn't for them. A loved recommendation is worth 3 staff points." }));
+  const per = el("input", { type: "number", min: 0, max: 10, value: st.curious.perDay, style: "max-width:120px" });
+  per.addEventListener("input", () => { st.curious.perDay = Math.max(0, Math.min(10, Math.round(+per.value || 0))); changed(); });
+  wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:10px 0 14px" }, [el("label", {}, [document.createTextNode("Curious visitors a day"), el("small", { text: "Anyone you didn't get to comes back the next day. 0 turns curious visitors off." }), per])]));
+  // Museum life: how often visitors have a drink, carry a shop bag, or photograph a piece.
+  st.life = st.life || { drinks: 30, bags: 20, photos: 8 };
+  const pctIn = (k, label, hint) => {
+    const out = el("b", { text: st.life[k] + "%" }), i = el("input", { type: "range", min: 0, max: 100, step: 1, value: st.life[k], "aria-label": label });
+    i.addEventListener("input", () => { st.life[k] = Math.round(+i.value); out.textContent = st.life[k] + "%"; changed(); });
+    return el("label", {}, [el("span", {}, [document.createTextNode(label + ": "), out]), el("small", { text: hint }), i]);
+  };
+  wrap.appendChild(el("h3", { text: "Museum life", style: "margin:6px 0 4px" }));
+  wrap.appendChild(el("div", { class: "fields", style: "margin:0 0 14px" }, [
+    pctIn("drinks", "Visitors with a drink", "Lobby and café only. They sip, finish, and drop the cup in a bin. Nobody carries a drink and a bag at once."),
+    pctIn("bags", "Visitors with a shop bag", "Anywhere in the museum. The bag's art is under Art, People."),
+    pctIn("photos", "Photos of a piece", "The chance a visitor who stops in front of a piece takes a photo of it. Keep it low."),
+  ]));
+  wrap.appendChild(el("h3", { text: "Mindsets", style: "margin:6px 0 4px" }));
+  wrap.appendChild(el("p", { class: "note" }, [document.createTextNode("How a visitor likes to play. Each curious visitor has one, and sometimes mentions a second. Put one line per row in each box. \"What they're looking for\" lines start with \"Something...\", since they follow \"I was looking for a game recommendation.\" In the next-day lines, "), phChip("title"), document.createTextNode(" is the game you recommended. \"Liked it\" lines are used when this is the second thing a visitor mentioned. Visitors never see the mindset's name.")]));
+  const lines = (m, k, ph) => { const t = el("textarea", { placeholder: ph, style: "min-height:76px" }); t.value = (m[k] || []).join("\n"); t.addEventListener("input", () => { m[k] = t.value.split("\n").map(x => x.trim()).filter(Boolean); changed(); }); return t; };
+  list.forEach((m, i) => {
+    const name = el("input", { type: "text", value: m.name, placeholder: "Unhurried", maxlength: 40 }); name.addEventListener("input", () => { m.name = name.value; changed(); });
+    const tagged = draft.pieces.filter(p => (p.minds || []).includes(m.id)).length;
+    wrap.appendChild(el("article", { class: "prow", style: "display:block" }, [el("div", { class: "fields" }, [
+      el("label", {}, [document.createTextNode("Name (only you see it)"), name]),
+      el("p", { class: "note", style: "align-self:end;margin:0", text: tagged + " piece" + (tagged === 1 ? "" : "s") + " ticked" }),
+      el("label", { class: "wide" }, [document.createTextNode("What they're looking for"), lines(m, "ask", "Something I can play at my own pace.\nSomething relaxing. Nothing stressful, please.")]),
+      el("label", {}, [document.createTextNode("Next day: loved it"), lines(m, "loved", "{title} was so calm. I just sat with it for hours.")]),
+      el("label", {}, [document.createTextNode("Next day: liked it"), lines(m, "liked", "{title} had some quiet moments I really liked.")]),
+      el("label", { class: "wide" }, [document.createTextNode("Next day: not for them (say why)"), lines(m, "nope", "{title} kept pushing me to hurry. I wanted to breathe.")]),
+      m.loved && m.loved[0] ? el("div", { class: "wide" }, [phExample(m.loved[0])]) : null,
+      el("div", { class: "acts" }, [
+        el("button", { type: "button", class: "btn small quiet", text: "Move up", disabled: i === 0, onclick: () => { [list[i - 1], list[i]] = [list[i], list[i - 1]]; changed(); renderVisitors(); } }),
+        el("button", { type: "button", class: "btn small quiet", text: "Remove", onclick: () => {
+          if (!confirm("Remove \"" + (m.name || "this mindset") + "\"? It's unticked from " + tagged + " piece" + (tagged === 1 ? "" : "s") + ".")) return;
+          list.splice(i, 1); draft.pieces.forEach(p => { p.minds = (p.minds || []).filter(x => x !== m.id); }); changed({ now: true }); renderVisitors();
+        } }),
+      ]),
+    ])]));
+  });
+  wrap.appendChild(el("div", { class: "row" }, [
+    el("button", { type: "button", class: "btn primary", text: "Add a mindset", onclick: () => { list.push({ id: "mind-" + Math.random().toString(36).slice(2, 8), name: "New mindset", ask: [], loved: [], liked: [], nope: [] }); changed({ now: true }); renderVisitors(); } }),
+  ]));
+  renderCuriousWords(wrap);
+  wrap.appendChild(el("p", { class: "note", style: "margin-top:18px", text: "What Patreon members on shift say is in the Words tab, under Chat: Patreon members on shift." }));
+}
+/* Placeholders, each in its own color, with a sample value. The examples under each box use the same colors. */
+const PH = { name: ["Hal", "#2f6fb0"], title: ["Comets Have Feathers", "#b5651d"], hint: [", the one where you fly in an open world", "#2f7a3a"] };
+const phChip = k => el("code", { text: "{" + k + "}", style: "color:#fff;background:" + PH[k][1] + ";border-radius:3px;padding:0 .3em;font-size:.85em" });
+function phExample(line) {
+  const out = el("small", { style: "display:block;margin-top:4px" }, [document.createTextNode("Example: ")]);
+  String(line).split(/(\{\w+\})/).forEach(part => { const k = (part.match(/^\{(\w+)\}$/) || [])[1]; out.appendChild(k && PH[k] ? el("b", { text: PH[k][0], style: "color:" + PH[k][1] }) : document.createTextNode(part)); });
+  return out;
+}
+function renderCuriousWords(wrap) {
+  const st = draft.settings; st.text = st.text || {};
+  wrap.appendChild(el("h3", { text: "What curious visitors say", style: "margin:18px 0 4px" }));
+  wrap.appendChild(el("p", { class: "note" }, [document.createTextNode("One page per line; a blank line separates versions, which take turns. The game fills in "), phChip("name"), document.createTextNode(" (the visitor), "), phChip("title"), document.createTextNode(" (the game) and "), phChip("hint"), document.createTextNode(" (the piece's \"the one where...\" line).")]));
+  Object.keys(GOQ.TEXT).filter(k => GOQ.TEXT[k].g === "Curious visitors").forEach(k => {
+    const def = GOQ.TEXT[k], cur = st.text[k] || def.v, t = el("textarea", { "aria-label": def.l, style: "min-height:56px" });
+    t.value = cur.map(v => v.join("\n")).join("\n\n");
+    t.addEventListener("input", () => {
+      const v = t.value.split(/\n\s*\n/).map(b => b.split("\n").map(x => x.trim()).filter(Boolean)).filter(b => b.length);
+      if (v.length && JSON.stringify(v) !== JSON.stringify(def.v)) st.text[k] = v; else delete st.text[k];
+      changed();
+    });
+    const used = Object.keys(PH).filter(p => def.v.flat().join(" ").includes("{" + p + "}"));
+    wrap.appendChild(el("article", { class: "prow", style: "display:block;padding:10px 14px" }, [
+      el("label", { style: "display:block" }, [el("b", { text: def.l }), used.length ? el("span", { style: "margin-left:8px" }, used.map(phChip)) : null, t]),
+      used.length ? phExample(def.v[0].join(" ")) : null,
+    ]));
+  });
+}
+
 /* ---------- Shop ---------- */
 async function itemImage(file) {
   const src = await readFile(file), img = await loadImg(src);
@@ -1456,7 +1576,7 @@ function renderShop() {
   sh.stampItems = sh.stampItems || [];
   const ssize = el("input", { type: "number", min: 3, max: 40, value: sh.stampSize || 10, style: "max-width:120px" });
   ssize.addEventListener("input", () => { sh.stampSize = Math.max(3, Math.min(40, Math.round(+ssize.value || 10))); changed(); });
-  wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:6px 0 6px" }, [el("label", {}, [document.createTextNode("Stamps on a full stamp card"), el("small", { text: "Visitors get a stamp for each piece whose placard they read. A full card trades for one item marked \"Stamp card prize\" below." }), ssize])]));
+  wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:6px 0 6px" }, [el("label", {}, [document.createTextNode("Stamps on a full stamp card"), el("small", { text: "Visitors get a stamp for each display case they read on both sides, and each painting they read. A full card trades for one item ticked \"Stamp card prize\" below. Tick none and it trades for any item." }), ssize])]));
   if (!sh.items.length) wrap.appendChild(el("p", { class: "empty", text: "No items yet. Add the first one below." }));
   sh.items.forEach((it, i) => {
     const icon = el("img", { class: "th", alt: "", style: "aspect-ratio:1/1;width:96px;object-fit:contain;background:var(--surface-2)" });
@@ -1596,7 +1716,8 @@ function pieceRow(p, i, place) {
     f("Frame", kind), el("div", { class: "fieldset" }, [el("span", { class: "flabel", text: "Unveiling" }), el("small", { text: "Off: it hangs right away." }), unveilBox]),
     el("div", { class: "fieldset wide" }, [el("span", { class: "flabel", text: "Curator's pick" }), el("small", { text: "Pins a medal to the piece and tags its placard." }), el("div", { class: "unveil" }, [el("label", { class: "check" }, [pickBox, document.createTextNode("This is one of my picks")])])]),
     ...placard,
-    f("How a visitor would describe it", text("hint", "the one where the clock never ran out but I still rushed"), true, "Lost visitors ask for it this way. Keep it to one line, in their words."),
+    f("How a visitor would describe it", text("hint", "the one where the clock never ran out but I still rushed"), true, "Visitors say this when they come back to tell you how it went: \"I tried Lantern Keeper, the one where...\" Keep it to one line, in their words."),
+    mindsBox(p),
     f("YouTube episode", link("episodeUrl", "https://youtube.com/watch?v=..."), false, "Shown as \"Watch the episode\""),
     f("The game", link("gameUrl", "https://store.steampowered.com/... or itch.io"), false, "Shown as \"Play the game\""),
     el("div", { class: "acts" }, [
