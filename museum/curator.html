@@ -318,7 +318,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-04 quiz";
+window.GOQ_WANT = "2026-10-03 picks";
 (function load(retry) {
   const s = document.createElement("script");
   s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry ? "&r=" + Date.now() : "");
@@ -359,7 +359,6 @@ function packOut() {
     if (p.episodeUrl) o.episodeUrl = p.episodeUrl;
     if (p.gameUrl) o.gameUrl = p.gameUrl;
     if (p.hint) o.hint = p.hint;
-    if (p.quiz && p.quiz.length) o.quiz = p.quiz;
     if (p.unveil) o.unveil = p.unveil;
     if (p.pick) o.pick = true;
     if (p.image) o.image = p.image; else { o.colors = p.colors; o.style = p.style; }
@@ -1453,18 +1452,11 @@ function renderShop() {
   const price = el("input", { type: "number", min: 0, max: 99, value: sh.drinkPrice || 0, style: "max-width:120px" });
   price.addEventListener("input", () => { sh.drinkPrice = Math.max(0, Math.min(99, Math.round(+price.value || 0))); changed(); });
   wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:10px 0 6px" }, [el("label", {}, [document.createTextNode("Café drinks cost (tokens)"), el("small", { text: "0 means coffee, tea and cocoa are free." }), price])]));
-  // Fancy drinks: they cost tokens, or a full quiz card. (An all-super quiz card also trades for any one item below.)
-  const fprice = el("input", { type: "number", min: 0, max: 99, value: sh.fancyPrice, style: "max-width:120px" });
-  fprice.addEventListener("input", () => { sh.fancyPrice = Math.max(0, Math.min(99, Math.round(+fprice.value || 0))); changed(); });
-  wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:6px 0 6px" }, [el("label", {}, [document.createTextNode("Fancy drinks cost (tokens)"), el("small", { text: "A full quiz card also buys one fancy drink. A card with five super stamps buys any one item in the shop instead. Each card works once." }), fprice])]));
-  const cups = ["Coffee cup", "Tea cup", "Cocoa cup"], fancyRows = el("div", { class: "fields", style: "max-width:620px;margin:0 0 12px" });
-  sh.fancy.forEach((d, i) => {
-    const nm = el("input", { type: "text", value: d.name, placeholder: "Fancy drink name", maxlength: 40 }); nm.addEventListener("input", () => { d.name = nm.value; changed(); });
-    const cup = el("select", {}, cups.map((c, k) => el("option", { value: k, text: c }))); cup.value = d.cup; cup.addEventListener("change", () => { d.cup = +cup.value; changed(); });
-    fancyRows.appendChild(el("label", {}, [document.createTextNode("Fancy drink " + (i + 1)), nm]));
-    fancyRows.appendChild(el("label", {}, [document.createTextNode("Held in"), cup]));
-  });
-  wrap.appendChild(fancyRows);
+  // Stamp card: reading a piece's placard stamps it; a full card trades for one prize item (ticked below).
+  sh.stampItems = sh.stampItems || [];
+  const ssize = el("input", { type: "number", min: 3, max: 40, value: sh.stampSize || 10, style: "max-width:120px" });
+  ssize.addEventListener("input", () => { sh.stampSize = Math.max(3, Math.min(40, Math.round(+ssize.value || 10))); changed(); });
+  wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:6px 0 6px" }, [el("label", {}, [document.createTextNode("Stamps on a full stamp card"), el("small", { text: "Visitors get a stamp for each piece whose placard they read. A full card trades for one item marked \"Stamp card prize\" below." }), ssize])]));
   if (!sh.items.length) wrap.appendChild(el("p", { class: "empty", text: "No items yet. Add the first one below." }));
   sh.items.forEach((it, i) => {
     const icon = el("img", { class: "th", alt: "", style: "aspect-ratio:1/1;width:96px;object-fit:contain;background:var(--surface-2)" });
@@ -1487,6 +1479,7 @@ function renderShop() {
         el("label", { class: "wide" }, [document.createTextNode("Description"), desc]),
         el("div", { class: "acts" }, [
           el("label", { class: "check", style: "margin:0 10px 0 0" }, [feat, document.createTextNode("Featured")]),
+          (() => { const cb = el("input", { type: "checkbox", checked: sh.stampItems.includes(it.id) }); cb.addEventListener("change", () => { sh.stampItems = sh.stampItems.filter(x => x !== it.id); if (cb.checked) sh.stampItems.push(it.id); changed(); }); return el("label", { class: "check", style: "margin:0 10px 0 0" }, [cb, document.createTextNode("Stamp card prize")]); })(),
           el("button", { class: "btn small quiet", type: "button", text: "Move up", disabled: i === 0, onclick: () => move(-1) }),
           el("button", { class: "btn small quiet", type: "button", text: "Move down", disabled: i === sh.items.length - 1, onclick: () => move(1) }),
           el("button", { class: "btn small quiet", type: "button", text: "Remove item", onclick: () => {
@@ -1548,23 +1541,6 @@ function renderPieces() {
     el("label", { class: "sr-only", for: "gbText", text: "Guestbook entries" }), gb,
   ]));
 }
-/* Super questions as plain text, one per line: "video | Question? | Right | Wrong | Wrong | Wrong". Batch fill can write the same list as JSON (piece.quiz). */
-function quizText(list) { return (list || []).map(x => [x.from === "store" ? "store" : "video", x.q, x.a, ...x.wrong].join(" | ")).join("\n"); }
-function parseQuiz(text) {
-  return GOQ.normalizeQuiz(text.split("\n").map(l => l.split("|").map(x => x.trim())).filter(c => c.length >= 3).map(c => {
-    const from = /^(video|store|v|s)$/i.test(c[0]) ? c.shift().toLowerCase() : "video";
-    return { from: from[0] === "s" ? "store" : "video", q: c[0], a: c[1], wrong: c.slice(2) };
-  }));
-}
-function quizBox(p) {
-  const t = el("textarea", { placeholder: "video | What does the host spill in the first minute? | Coffee | Tea | Paint | Glitter\nstore | What does the store page call the game? | A cozy flight sim | A racing game | A puzzle RPG | A horror game" });
-  t.value = quizText(p.quiz);
-  const note = el("small", { text: "" });
-  const sync = () => { p.quiz = parseQuiz(t.value); const bad = t.value.split("\n").filter(l => l.trim()).length - p.quiz.length; note.textContent = p.quiz.length + " super question" + (p.quiz.length === 1 ? "" : "s") + (bad > 0 ? ". " + bad + " line" + (bad > 1 ? "s" : "") + " skipped: each needs a question, a right answer and at least one wrong answer." : ""); };
-  t.addEventListener("input", () => { sync(); changed(); });
-  sync();
-  return el("div", {}, [t, note]);
-}
 function pieceRow(p, i, place) {
   const row = el("article", { class: "prow" + (p.kind === "community" ? " community" : ""), "aria-label": p.title || "Untitled piece" });
   const th = el("img", { class: "th", alt: "" });
@@ -1621,7 +1597,6 @@ function pieceRow(p, i, place) {
     el("div", { class: "fieldset wide" }, [el("span", { class: "flabel", text: "Curator's pick" }), el("small", { text: "Pins a medal to the piece and tags its placard." }), el("div", { class: "unveil" }, [el("label", { class: "check" }, [pickBox, document.createTextNode("This is one of my picks")])])]),
     ...placard,
     f("How a visitor would describe it", text("hint", "the one where the clock never ran out but I still rushed"), true, "Lost visitors ask for it this way. Keep it to one line, in their words."),
-    f("Super questions (quiz cards)", quizBox(p), true, "One per line: video or store | question | right answer | wrong answers (up to six, separated by |). Visitors see three wrong answers at a time. Regular questions are made from the placards automatically."),
     f("YouTube episode", link("episodeUrl", "https://youtube.com/watch?v=..."), false, "Shown as \"Watch the episode\""),
     f("The game", link("gameUrl", "https://store.steampowered.com/... or itch.io"), false, "Shown as \"Play the game\""),
     el("div", { class: "acts" }, [

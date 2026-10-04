@@ -827,32 +827,6 @@ const SAMPLE_ITEMS = [
   { id: "postcards", name: "Gallery postcard set", price: 4, description: "Every piece in Gallery One, small enough to mail." },
 ];
 const DRINKS = [{ id: "coffee", name: "Coffee" }, { id: "tea", name: "Tea" }, { id: "cocoa", name: "Cocoa" }];
-/* Fancy drinks: they cost tokens, or a full quiz card. cup: which cup you hold (0 coffee, 1 tea, 2 cocoa). The host renames them in the Shop tab. */
-const SAMPLE_FANCY = [{ id: "caramel", name: "Caramel latte", cup: 0 }, { id: "chai", name: "Honey chai", cup: 1 }, { id: "mocha", name: "Peppermint mocha", cup: 2 }];
-/* Quiz cards: five games, one stamp each. A super stamp comes from a question about the episode video or the game's store page. */
-const QUIZ_SIZE = 5;
-/* Super questions, written per piece: { q, a, wrong: [...], from: "video" | "store" }. Three wrong answers are drawn from up to six. */
-function normalizeQuiz(list) {
-  return (Array.isArray(list) ? list : []).slice(0, 12).map(x => ({
-    q: str(x && x.q, 240), a: str(x && x.a, 120), from: x && x.from === "store" ? "store" : "video",
-    wrong: (Array.isArray(x && x.wrong) ? x.wrong : []).map(w => str(w, 120)).filter(Boolean).slice(0, 6),
-  })).filter(x => x.q && x.a && x.wrong.length >= 1);
-}
-function shuffled(list) { const a = list.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
-/* Saves from before quiz cards: cases read on both sides, and pieces on the old stamp card, count as read. */
-function oldRead(p) {
-  const out = {}, d = todayISO();
-  for (const id in p.sides || {}) if (p.sides[id] && p.sides[id].front && p.sides[id].back) out[id] = d;
-  (Array.isArray(p.stamps) ? p.stamps : []).forEach(id => { if (typeof id === "string") out[id] = d; });
-  return out;
-}
-/* The quiz card in a save: up to five slots, each a piece and its stamp (0 none, 1 stamp, 2 super stamp). */
-function cleanCard(c) {
-  const slots = c && Array.isArray(c.slots) ? c.slots : [];
-  return { slots: slots.filter(s => s && typeof s.id === "string").slice(0, QUIZ_SIZE).map(s => ({
-    id: s.id, stamp: [0, 1, 2].includes(s.stamp) ? s.stamp : 0, seen: Array.isArray(s.seen) ? s.seen.filter(k => typeof k === "string").slice(-20) : [],
-    cur: s.cur && Array.isArray(s.cur.opts) && typeof s.cur.q === "string" && typeof s.cur.ans === "number" ? s.cur : null, miss: !!s.miss })) };
-}
 /* Offline staff badge for testing. Real badges live in Supabase (see supabase-setup.sql).
    Never put real badge keys in this file or in a museum pack: both are public on the site. */
 /* Chores that count toward staff points (helping a visitor is worth 3). */
@@ -875,7 +849,7 @@ function normalizePiece(p, i) {
     observation: str(p.observation), intention: str(p.intention), guestWriter: str(p.guestWriter, 80), guestNote: str(p.guestNote),
     episodeUrl: safeUrl(p.episodeUrl), gameUrl: safeUrl(p.gameUrl), image: str(p.image, 20000000) || null,
     unveil: /^\d{4}-\d{2}-\d{2}$/.test(p.unveil || "") ? p.unveil : "",
-    hint: str(p.hint, 160), pick: !!p.pick, quiz: normalizeQuiz(p.quiz),
+    hint: str(p.hint, 160), pick: !!p.pick,
     colors: colors.length >= 2 ? colors : ["#f0ecf8", "#a898d0", "#584a88", "#1a1430"],
     style: STYLES.includes(p.style) ? p.style : STYLES[strSeed(str(p.title, 80) || String(i)) % STYLES.length],
   };
@@ -912,11 +886,10 @@ function normalizePack(p) {
     id: str(it && it.id, 60) || "item-" + (i + 1), name: str(it && it.name, 60) || "Untitled item",
     price: Math.max(0, Math.min(999, Math.round(+(it && it.price) || 0))), description: str(it && it.description, 240), image: str(it && it.image, 2000000) || null,
   }));
-  const fancy = (Array.isArray(shin.fancy) ? shin.fancy : SAMPLE_FANCY).slice(0, 6).map((d, i) => ({
-    id: str(d && d.id, 40) || "fancy-" + (i + 1), name: str(d && d.name, 40) || "Fancy drink", cup: [0, 1, 2].includes(d && d.cup) ? d.cup : i % 3 })).filter(d => d.name);
-  const shop = { items, fancy, featured: items.some(it => it.id === shin.featured) ? shin.featured : (items[0] ? items[0].id : ""),
-    drinkPrice: Math.max(0, Math.min(99, Math.round(+shin.drinkPrice || 0))),
-    fancyPrice: Math.max(0, Math.min(99, Math.round(shin.fancyPrice === undefined ? 4 : +shin.fancyPrice || 0))) };
+  const stampSize = Math.max(3, Math.min(40, Math.round(+shin.stampSize || 10)));
+  const stampItems = (Array.isArray(shin.stampItems) ? shin.stampItems : []).filter(id => items.some(it => it.id === id));
+  const shop = { items, stampSize, stampItems, featured: items.some(it => it.id === shin.featured) ? shin.featured : (items[0] ? items[0].id : ""),
+    drinkPrice: Math.max(0, Math.min(99, Math.round(+shin.drinkPrice || 0))) };
   const rooms = p.rooms && typeof p.rooms === "object" ? p.rooms : {};
   const vlist = v => (Array.isArray(v) ? v.filter(Array.isArray).map(pg => pg.map(x => str(x, 400)).filter(Boolean)).filter(pg => pg.length).slice(0, 30) : null);
   const textIn = (p.settings && p.settings.text) || {}, text = {};
@@ -1253,25 +1226,10 @@ const TEXT = {
   "shirt.tease":       { g: "Secret shirt", l: "The discontinued shirt in the shop menu", v: [["DISCONTINUED. The GOQ shirt. We don't sell these anymore. Don't ask. (People ask.)"]] },
   "shirt.owned":       { g: "Secret shirt", l: "The shirt in the shop menu once you have it", v: [["Yours now. The shopkeeper pretends not to remember giving it to you."]] },
   "shirt.reveal":      { g: "Secret shirt", l: "The shopkeeper hands over the shirt", v: [["...", "You did the whole thing, didn't you. The cocoa. The stool. The trash can. The nap.", "Fine. FINE. Here.", "You got the GOQ shirt! Wear it from the Start menu, under Wardrobe."]] },
-  "quiz.stop":         { g: "Quiz card", l: "The usher calls out the first time you head for a door", v: [["Hey! Wait up!"]] },
-  "quiz.intro":        { g: "Quiz card", l: "The usher hands you your first quiz card", v: [["Before you head in, here's a quiz card.", "Read the placards. When you're ready, come find me and I'll quiz you on five games you've read.", "Every right answer gets a stamp. A full card is good for one fancy drink at the café.", "Answer questions about the episode video or the game's store page instead, and you get super stamps. Five super stamps get you any item in the gift shop.", "Each card only works once. Have fun!"]] },
-  "quiz.got":          { g: "Quiz card", l: "Notice: you got a quiz card", v: [["Got a quiz card!"]] },
-  "quiz.ask":          { g: "Quiz card", l: "Usher, asking what you'd like", v: [["What can I do for you?"]] },
-  "quiz.howto":        { g: "Quiz card", l: "Quiz card, not full yet (shown on the card)", v: [["Read placards, then ask the usher to quiz you on five games you've read. One stamp per right answer. Questions about the episode video or the store page give super stamps. Miss one? Take another look at that game and come back."]] },
-  "quiz.full":         { g: "Quiz card", l: "Quiz card, full (shown on the card)", v: [["Your card is full! Trade it at the café for one fancy drink."]] },
-  "quiz.superFull":    { g: "Quiz card", l: "Quiz card, all super (shown on the card)", v: [["Five super stamps! Trade it at the gift shop for any one item, or at the café for a fancy drink. A card only works once."]] },
-  "quiz.tooFew":       { g: "Quiz card", l: "Not enough games read yet ({n} read so far)", v: [["You've read {n} of the games so far. Read at least five (both sides of a case, or a painting's note), then come back and I'll quiz you."]] },
-  "quiz.pickIntro":    { g: "Quiz card", l: "Before picking five games", v: [["Which five games do you want to talk about? These are the ones you've read.", "Games with a star have super questions, about the video or the store page."]] },
-  "quiz.kind":         { g: "Quiz card", l: "Question: regular or super questions", v: [["Regular questions are about the placards. Super questions are about the episode video or the game's store page. Which kind?"]] },
-  "quiz.right":        { g: "Quiz card", l: "A right answer (one at random)", v: [["That's right! Stamp."], ["Correct! *ka-chunk*"], ["Yep! Here's your stamp."]] },
-  "quiz.rightSuper":   { g: "Quiz card", l: "A right answer to a super question (one at random)", v: [["You really watched it! Super stamp."], ["That's right! *KA-CHUNK* Super stamp."]] },
-  "quiz.wrong":        { g: "Quiz card", l: "A wrong answer ({title})", v: [["Not quite.", "Take another look at {title}, and I'll ask you something different about it next time."]] },
-  "quiz.done":         { g: "Quiz card", l: "End of a quiz ({n} new stamps)", v: [["That's the quiz! New stamps: {n}."]] },
-  "quiz.locked":       { g: "Quiz card", l: "Every open question needs another look first", v: [["Go take another look at the games you missed, then come back and I'll ask you something new."]] },
-  "quiz.isFull":       { g: "Quiz card", l: "Asking for a quiz with a full card", v: [["Your card's full! Spend it at the café for a fancy drink.", "If it's all super stamps, the gift shop will take it for any item too."]] },
-  "quiz.spent":        { g: "Quiz card", l: "After spending a card ({title} is what you got)", v: [["*punch* That card's spent. Enjoy your {title}!", "Here's a fresh quiz card."]] },
-  "quiz.spendSuper":   { g: "Quiz card", l: "Warning: using a super card on a drink", v: [["That's a super card. It could get you any item in the gift shop.", "Use it on a drink anyway? Cards only work once."]] },
-  "quiz.noPrizes":     { g: "Quiz card", l: "Super card, but you already own every item", v: [["You already have everything in the shop. The shopkeeper is impressed and a little worried."]] },
+  "stamp.howto":       { g: "Stamp card", l: "Stamp card, not full yet", v: [["Read both sides of a display case (or a painting's note) to collect a stamp. Each piece stamps once per card. Trade a full card at the gift shop."]] },
+  "stamp.full":        { g: "Stamp card", l: "Stamp card, full", v: [["Your card is full! Trade it at the gift shop counter for one prize item."]] },
+  "stamp.traded":      { g: "Stamp card", l: "After trading a card", v: [["The shopkeeper punches a hole in your card with great ceremony.", "You got {title}! Here's a fresh stamp card."]] },
+  "stamp.noPrizes":    { g: "Stamp card", l: "No prizes left to trade for", v: [["You already have every prize. The shopkeeper is impressed and a little worried."]] },
   "respawn.quip":      { g: "Menu", l: "After respawning (one at random)", v: [["*bzzt*", "...Did you see that? I just teleported.", "Let's not tell the curator."], ["Okay, so, I can do that now, apparently.", "Don't think about it too hard. I'm not going to."], ["Whoa. Head rush.", "If anyone asks, I took the stairs."]] },
   "respawn.no":        { g: "Menu", l: "Respawn after closing", v: [["Teleporting around an empty, dark museum? Hard pass."]] },
   "fridge":            { g: "Staff", l: "The staff fridge (one at random)", v: [["A note on the fridge: LABEL YOUR FOOD.", "Below it, a yogurt labeled NOT YOURS. Underlined twice."], ["Inside: three condiments, one sad lemon, and a sandwich older than some of the exhibits."], ["A drawing on the fridge door: the cat, rendered lovingly in crayon."]] },
@@ -1313,7 +1271,7 @@ const TALK_DEFAULTS = {
 const ACH_STATS = {
   dusted: "Frames dusted", straightened: "Frames straightened", watered: "Plants watered", mugs: "Mugs found", wiped: "Cases wiped",
   helped: "Lost visitors helped", pets: "Times petting the cat", closings: "Times closing the museum", photos: "Photos taken",
-  bothSides: "Cases read on both sides", stamps: "Quiz stamps earned", supers: "Super stamps earned", cards: "Quiz cards spent", items: "Gift shop items owned",
+  bothSides: "Cases read on both sides", stamps: "Stamps collected", cards: "Stamp cards traded", items: "Gift shop items owned",
   drinks: "Drinks ordered", naps: "Bench naps", rooms: "Different rooms visited", microwave: "Microwave incidents", segway: "Segway rides",
   shirt: "Has the GOQ shirt (1 = yes)", shifts: "Times clocking in",
 };
@@ -1324,7 +1282,7 @@ const SAMPLE_ACH = [
   { id: "cat", name: "Cat Person", desc: "Pet the cat 10 times.", stat: "pets", target: 10 },
   { id: "explorer", name: "Wayfinder", desc: "Visit every room in the museum.", stat: "rooms", target: 10 },
   { id: "closer", name: "Lights Out", desc: "Close the museum for the night.", stat: "closings", target: 1 },
-  { id: "card", name: "Punch Card Pro", desc: "Spend a full quiz card.", stat: "cards", target: 1 },
+  { id: "card", name: "Punch Card Pro", desc: "Trade in a full stamp card.", stat: "cards", target: 1 },
   { id: "resonance", name: "Resonance Cascade", desc: "Use the staff microwave.", stat: "microwave", target: 1, secret: true },
   { id: "zoom", name: "Up Up Down Down", desc: "Find the Segway.", stat: "segway", target: 1, secret: true },
   { id: "shirt", name: "The Shirt That Got Away", desc: "Get the discontinued GOQ shirt.", stat: "shirt", target: 1, secret: true },
@@ -1917,7 +1875,7 @@ class Game {
     }
     el.cu.addEventListener("click", () => this.press("a"));
   }
-  /* Short notices (room names, "Got a quiz card!", "Photo saved"...). They wait while a placard, menu or text box is open,
+  /* Short notices (room names, "Stamp!", "Photo saved"...). They wait while a placard, menu or text box is open,
      then show one at a time. */
   showLoc(name) { (this.toastQ = this.toastQ || []).push(name); this.flushToasts(); }
   flushToasts() {
@@ -1994,228 +1952,31 @@ class Game {
     this.el.reader.querySelector(".gt-rd-n").textContent = (r.pages.length > 1 ? (r.i + 1) + " / " + r.pages.length + "   " : "") + (r.i < r.pages.length - 1 ? "A: next" : "A: done") + "   B: close";
   }
   closeRead() { this.el.reader.style.display = "none"; const d = this.rd && this.rd.done; this.rd = null; this.mode = "walk"; this.inputLock = true; if (d) d(); }
-  /* ----- quiz cards -----
-     Reading a piece (both sides of a case, a painting's note, or a piece on Someone's PC) marks it read; nothing is stamped yet.
-     The usher quizzes you on five games you've read and pick: one stamp per right answer. Regular questions are built from the
-     placards, with the wrong answers drawn from other pieces, so the whole question changes from one try to the next.
-     Super questions come from each piece's own list (about the episode video or the store page) and give super stamps.
-     A full card buys one fancy drink at the café; an all-super card also buys any one gift shop item. A card works once.
-     Quizzes stay in this browser: they never count toward staff points or the staff office (the answers are in the public pack). */
-  markRead(p) {
-    const r = this.progress.read || (this.progress.read = {});
-    if (!r[p.id]) { r[p.id] = todayISO(); this.saveProgress(); }
+  /* The stamp card: each piece you read stamps it once per card. A full card trades for one prize item at the shop counter. */
+  stamp(p) {
+    const st = this.progress.stamps, size = this.pack.settings.shop.stampSize;
+    if (st.includes(p.id) || st.length >= size) return;
+    st.push(p.id); this.progress.tally.stamps = (this.progress.tally.stamps || 0) + 1; this.saveProgress();
+    this.showLoc(st.length >= size ? "Stamp card full! Trade it at the gift shop." : "Stamp! " + st.length + " / " + size);
   }
-  /* Looking at a piece again lets you retry the question you missed about it. */
-  lookedAgain(p) {
-    const s = this.card().slots.find(x => x.id === p.id && x.miss);
-    if (s) { s.miss = false; this.saveProgress(); }
+  showStampCard() {
+    const st = this.progress.stamps, size = this.pack.settings.shop.stampSize, full = st.length >= size;
+    const titles = st.map(id => (this.pack.pieces.find(p => p.id === id) || { title: "a retired piece" }).title);
+    const row = Array.from({ length: size }, (_, i) => (i < st.length ? "\u25CF" : "\u25CB")).join(" ");
+    this.read({ title: "STAMP CARD", sub: st.length + " of " + size + " stamps",
+      sections: [{ label: "", text: row }, { label: "", text: this.tx(full ? "stamp.full" : "stamp.howto").join(" ") }, ...(titles.length ? [{ label: "STAMPED", text: titles.join(", ") }] : [])] });
   }
-  card() { return this.progress.card || (this.progress.card = { slots: [] }); }
-  cardStamps(c) { return (c || this.card()).slots.filter(s => s.stamp > 0).length; }
-  cardFull(c) { c = c || this.card(); return !!this.progress.quizIntro && c.slots.length === QUIZ_SIZE && c.slots.every(s => s.stamp > 0); }
-  cardSuper(c) { c = c || this.card(); return this.cardFull(c) && c.slots.every(s => s.stamp === 2); }
-  pieceById(id) { return this.pack.pieces.find(p => p.id === id); }
-  /* Games you can be quizzed on: read, still in the museum, and unveiled. */
-  quizzable() { const r = this.progress.read || {}, t = todayISO(); return this.pack.pieces.filter(p => r[p.id] && (!p.unveil || p.unveil <= t)); }
-  showQuizCard() {
-    if (!this.progress.quizIntro) { this.read({ title: "QUIZ CARD", sub: "None yet", sections: [{ label: "", text: "You don't have a quiz card yet. The usher at the front desk hands them out." }] }); return; }
-    const c = this.card(), n = this.cardStamps(c), mark = s => (!s || !s.stamp ? "○" : s.stamp === 2 ? "★" : "●");
-    const row = Array.from({ length: QUIZ_SIZE }, (_, i) => mark(c.slots[i])).join(" ");
-    const games = c.slots.map(s => { const p = this.pieceById(s.id); return mark(s) + " " + (p ? p.title : "a retired piece") + (s.stamp === 2 ? " (super)" : !s.stamp && s.miss ? " (take another look)" : ""); });
-    const how = this.tx(this.cardSuper(c) ? "quiz.superFull" : this.cardFull(c) ? "quiz.full" : "quiz.howto").join(" ");
-    this.read({ title: "QUIZ CARD", sub: n + " of " + QUIZ_SIZE + " stamps" + (this.cardSuper(c) ? ", all super" : ""),
-      sections: [{ label: "", text: row + "\n\n" + how }, ...(games.length ? [{ label: "GAMES", text: games.join("\n") }] : [])] });
-  }
-  /* The usher: a quiz, or a chat. Anyone who somehow missed the welcome gets their card here. */
-  usherTalk() {
-    if (this.closing) { this.staffTalk("usher"); return; }
-    if (!this.progress.quizIntro) { this.giveQuizCard(); return; }
-    this.choose(this.tx("quiz.ask").join(" "), ["Quiz me", "Just chatting", "Never mind"], i => {
-      if (i === 0) this.startQuiz(); else if (i === 1) this.staffTalk("usher");
-    }, 2);
-  }
-  giveQuizCard(then) {
-    this.say(this.tx("quiz.intro"), () => {
-      this.progress.quizIntro = true; this.card(); this.saveProgress(); this.showLoc(this.tx("quiz.got")[0]);
-      if (then) then();
-    });
-  }
-  /* The first time you head for a way out of the lobby, the usher calls you over... well, comes over, hands you a quiz card,
-     and goes back to the desk. Returns true when it starts. */
-  quizStopCheck() {
-    if (this.progress.quizIntro || this.curator || this.closing || this.room.id !== "lobby" || this.mode !== "walk") return false;
-    const u = this.room.npcs.find(n => n.usher); if (!u || u.cue) return false;
-    const p = this.player, near = Object.keys(this.room.events).some(k => {
-      const e = this.room.events[k]; if (!e.warp && !e.shopDoor && !e.staffDoor) return false;
-      const [x, y] = k.split(",").map(Number); return Math.abs(x - p.x) + Math.abs(y - p.y) <= 1;
-    });
-    if (!near) return false;
-    p.walking = false; this.path = null; this.pathAct = null; this.inputLock = true;
-    this.say(this.tx("quiz.stop"), () => this.usherCome(u));
-    return true;
-  }
-  usherCome(u) {
-    const p = this.player, dist = ([x, y]) => Math.abs(x - u.x) + Math.abs(y - u.y);
-    u.home = u.home || { x: u.x, y: u.y, dir: u.dir };
-    // Stand beside the player, on the side nearest the desk.
-    const spots = Object.values(DIRS).map(([dx, dy]) => [p.x + dx, p.y + dy]).filter(([x, y]) => (x === u.x && y === u.y) || !this.blocked(x, y, u)).sort((a, b) => dist(a) - dist(b));
-    let to = null, route = null;
-    for (const s of spots) { route = s[0] === u.x && s[1] === u.y ? [] : this.npcPath(u, s[0], s[1], true); if (route) { to = s; break; } }
-    const handOver = () => {
-      u.dir = p.x > u.x ? "right" : p.x < u.x ? "left" : p.y > u.y ? "down" : "up"; p.dir = OPP[u.dir];
-      this.giveQuizCard(() => this.usherReturn(u));
-    };
-    if (!to) { handOver(); return; } // boxed in: just call it over
-    this.mode = "busy";
-    u.cue = { route, to, wait: 12, fails: 0, done: handOver };
-  }
-  usherReturn(u) {
-    const h = u.home; if (!h) return;
-    u.cue = { route: this.npcPath(u, h.x, h.y, true) || [], to: [h.x, h.y], wait: 20, fails: 0, patient: true, done: () => { u.dir = h.dir; } };
-  }
-  /* One step of a scripted walk. Someone in the way: wait, find another way. The usher heading home never gives up. */
-  cueStep(n) {
-    const c = n.cue;
-    if (n.moving) { this.advance(n); return; }
-    if (c.wait > 0) { c.wait--; return; }
-    if ((n.x === c.to[0] && n.y === c.to[1]) || (!c.patient && c.fails > 6)) { n.cue = null; c.done(); return; }
-    if (c.route.length && this.tryMove(n, c.route[0])) { c.route.shift(); c.wait = 2; return; }
-    c.fails++; c.wait = 20; c.route = this.npcPath(n, c.to[0], c.to[1], true) || [];
-  }
-  /* A question whose text won't fit the text box with the options open: the start reads out first, the end stays up with the options. */
-  ask(q, options, done, cancelTo) {
-    const pages = this.paginate([q]);
-    if (pages.length <= 1) { this.choose(q, options, done, cancelTo); return; }
-    this.say(pages.slice(0, -1), () => this.choose(pages[pages.length - 1], options, done, cancelTo));
-  }
-  startQuiz() {
-    const c = this.card();
-    c.slots = c.slots.filter(s => s.stamp || this.pieceById(s.id)); // a game that left the museum before you answered: pick another
-    if (c.slots.length < QUIZ_SIZE) {
-      const need = QUIZ_SIZE - c.slots.length, pool = this.quizzable().filter(p => !c.slots.some(s => s.id === p.id));
-      if (pool.length < need) { this.say(this.tx("quiz.tooFew", { n: this.quizzable().length })); return; }
-      this.say(this.tx("quiz.pickIntro"), () => this.pickGames(pool, need, () => this.startQuiz()));
-      return;
-    }
-    const reg = c.slots.filter(s => !s.stamp && !s.miss), sup = c.slots.filter(s => s.stamp < 2 && !s.miss && (this.pieceById(s.id) || { quiz: [] }).quiz.length);
-    if (!reg.length && !sup.length) { this.say(this.tx(this.cardFull(c) ? "quiz.isFull" : "quiz.locked")); return; }
-    if (!sup.length) { this.runQuiz(reg, false); return; }
-    const opts = [...(reg.length ? ["Regular questions"] : []), "Super questions", "Not now"];
-    this.ask(this.tx("quiz.kind").join(" "), opts, i => {
-      if (opts[i] === "Regular questions") this.runQuiz(reg, false);
-      else if (opts[i] === "Super questions") this.runQuiz(sup, true);
-    }, opts.length - 1);
-  }
-  /* Pick the games for this card from the ones you've read. A picks or unpicks; DONE once there are enough. */
-  pickGames(pool, need, done) {
-    const chosen = new Set(), c = this.card();
-    let note = "";
-    const title = () => note || "PICK " + need + " GAME" + (need > 1 ? "S" : "") + " (" + chosen.size + "/" + need + ")";
-    const rows = () => [...pool.map(p => ({ text: (chosen.has(p.id) ? "■ " : "□ ") + p.title + (p.quiz.length ? " ★" : ""), pick: p.pick })),
-      chosen.size === need ? "DONE: QUIZ ME!" : "Pick " + (need - chosen.size) + " more", "Not now"];
-    this.openList(title(), rows(), i => {
-      const L = this.list; note = "";
-      if (i < pool.length) {
-        const id = pool[i].id;
-        if (chosen.has(id)) chosen.delete(id); else if (chosen.size < need) chosen.add(id); else note = "THAT'S " + need + ". UNPICK ONE FIRST.";
-        L.rows = rows(); L.title = title(); this.renderList(); return;
-      }
-      if (i === pool.length) {
-        if (chosen.size < need) { note = "PICK " + (need - chosen.size) + " MORE FIRST."; L.title = title(); this.renderList(); return; }
-        this.closeList();
-        pool.filter(p => chosen.has(p.id)).forEach(p => c.slots.push({ id: p.id, stamp: 0, seen: [], cur: null, miss: false }));
-        this.saveProgress(); done(); return;
-      }
-      this.closeList();
-    }, true);
-  }
-  /* Ask each open slot one question, in card order. B on a question stops the quiz; that question waits for next time. */
-  runQuiz(slots, sup) {
-    let k = 0, got = 0;
-    const tally = this.progress.tally;
-    const next = () => {
-      const s = slots[k++];
-      if (!s) {
-        this.saveProgress();
-        this.say(this.tx("quiz.done", { n: got }), () => { if (this.cardFull()) this.showLoc(this.cardSuper() ? "Quiz card full: all super!" : "Quiz card full!"); });
-        return;
-      }
-      const p = this.pieceById(s.id), q = p && this.quizQuestion(p, s, sup);
-      if (!q) { next(); return; }
-      this.saveProgress();
-      const go = () => this.ask("(" + k + "/" + slots.length + ") " + q.q, q.opts, i => {
-        if (i < 0 || i >= q.opts.length) { this.saveProgress(); this.say(["No problem. We'll pick this up later."]); return; }
-        s.cur = null; s.seen = [...s.seen.filter(x => x !== q.key), q.key].slice(-20);
-        if (i === q.ans) {
-          s.stamp = Math.max(s.stamp, sup ? 2 : 1); got++;
-          tally.stamps = (tally.stamps || 0) + 1; if (sup) tally.supers = (tally.supers || 0) + 1;
-          this.saveProgress(); this.say(this.tx(sup ? "quiz.rightSuper" : "quiz.right", null, true), next);
-        } else { s.miss = true; this.saveProgress(); this.say(this.tx("quiz.wrong", { title: p.title }), next); }
-      }, -1);
-      if (q.quote) this.say(["“" + q.quote + "”"], go); else go();
-    };
-    next();
-  }
-  /* The question for a slot: the one left waiting, else one not asked lately, with fresh wrong answers. */
-  quizQuestion(p, s, sup) {
-    if (s.cur && !!s.cur.sup === !!sup && Array.isArray(s.cur.opts)) return s.cur;
-    const bank = sup ? this.superBank(p) : this.regularBank(p);
-    if (!bank.length) return null;
-    const fresh = bank.filter(b => !s.seen.includes(b.key)), from = fresh.length ? fresh : bank, b = from[Math.floor(Math.random() * from.length)];
-    const near = shuffled(b.near.filter(n => b.wrong.includes(n))).slice(0, 2);
-    const decoys = [...near, ...shuffled(b.wrong.filter(w => !near.includes(w)))].slice(0, 3), opts = shuffled([b.right, ...decoys]);
-    return (s.cur = { key: b.key, sup: !!sup, q: b.q, quote: b.quote || "", opts, ans: opts.indexOf(b.right) });
-  }
-  /* Regular questions, built from what's already on the placards. Wrong answers come from the other pieces; when the answer is a
-     title, some come from the other games on your card, so you can't just pick the one you chose. */
-  regularBank(p) {
-    const t = todayISO(), others = this.pack.pieces.filter(o => o.id !== p.id && (!o.unveil || o.unveil <= t)), mine = new Set(this.card().slots.map(x => x.id));
-    const known = d => d && d !== "Unknown developer", same = (a, b) => String(a).toLowerCase() === String(b).toLowerCase();
-    const uniq = (list, not) => [...new Set(list.filter(Boolean))].filter(v => !same(v, not));
-    const titles = uniq(others.map(o => o.title), p.title), near = uniq(others.filter(o => mine.has(o.id)).map(o => o.title), p.title);
-    const out = [], add = (key, q, right, wrong, quote) => { if (right && wrong.length >= 3) out.push({ key, q, right, wrong, quote, near }); };
-    if (known(p.developer)) {
-      add("dev", "Who made " + p.title + "?", p.developer, uniq(others.map(o => o.developer).filter(known), p.developer));
-      add("made", "Which game did " + p.developer + " make?", p.title, uniq(others.filter(o => !same(o.developer, p.developer)).map(o => o.title), p.title));
-    }
-    if (p.hint) add("hint", "Which game is “" + p.hint + "”?", p.title, titles);
-    const quotes = (key, text, q) => this.excerpts(text, p).forEach((x, i) => add(key + i, q, p.title, titles, x));
-    if (p.kind === "episode") {
-      if (p.observation) quotes("obs", p.observation, "Which game's observation placard says that?");
-      if (p.intention) quotes("int", p.intention, "Which game's intention placard says that?");
-    } else {
-      if (p.guestNote) quotes("note", p.guestNote, "Which painting's guest note says that?");
-      if (p.guestWriter) add("writer", "Who wrote the guest note for " + p.title + "?", p.guestWriter, uniq(others.map(o => o.guestWriter), p.guestWriter));
-    }
-    return out;
-  }
-  superBank(p) { return p.quiz.map((x, i) => ({ key: "s" + i, q: x.q, right: x.a, wrong: x.wrong.filter(w => w.toLowerCase() !== x.a.toLowerCase()), near: [] })); }
-  /* Up to two short passages from a placard, with the game's title and developer blanked out. */
-  excerpts(text, p) {
-    const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    let t = text.replace(new RegExp(esc(p.title), "gi"), "this game");
-    if (p.developer && p.developer !== "Unknown developer") t = t.replace(new RegExp(esc(p.developer), "gi"), "the developer");
-    const sents = t.match(/[^.!?]+[.!?]+["'”)\]]*\s*|[^.!?]+$/g) || [t], out = [];
-    let cur = "";
-    for (const s of sents) { if (cur && (cur + s).length > 160) { out.push(cur.trim()); cur = ""; if (out.length >= 2) break; } cur += s; }
-    if (cur.trim() && out.length < 2) out.push(cur.trim());
-    return out.filter(x => x.length >= 25).map(x => (x.length > 180 ? x.slice(0, 177).replace(/\s+\S*$/, "") + "…" : x)).map(x => x[0].toUpperCase() + x.slice(1));
-  }
-  /* Spend the card (it works once) and hand over a fresh one. */
-  spendCard(title, then) {
-    this.progress.card = { slots: [] }; this.progress.tally.cards = (this.progress.tally.cards || 0) + 1; this.saveProgress();
-    this.say(this.tx("quiz.spent", { title }), then);
-  }
-  tradeQuizCard() {
-    const sh = this.pack.settings.shop, prizes = sh.items.filter(it => !this.progress.items.includes(it.id));
-    if (!prizes.length) { this.shopMsg = this.tx("quiz.noPrizes").join(" "); this.renderShop(); return; }
+  tradeStampCard() {
+    const sh = this.pack.settings.shop, prizes = sh.items.filter(it => sh.stampItems.includes(it.id) && !this.progress.items.includes(it.id));
+    if (!prizes.length) { this.shopMsg = this.tx("stamp.noPrizes").join(" "); this.renderShop(); return; }
     this.closeShop();
-    this.choose("Trade your super quiz card for:", [...prizes.map(it => it.name), "Not yet"], i => {
+    this.choose("Trade your full stamp card for:", [...prizes.map(it => it.name), "Not yet"], i => {
       const it = prizes[i]; if (!it) return;
-      this.progress.items.push(it.id); this.spendCard(it.name);
+      this.progress.items.push(it.id); this.progress.stamps = []; this.progress.tally.cards = (this.progress.tally.cards || 0) + 1; this.saveProgress();
+      this.say(this.tx("stamp.traded", { title: it.name }));
     });
   }
-  viewPiece(p, side, readIt) {
+  viewPiece(p, side, stampAfter) {
     const gold = p.kind === "episode", img = this.pieceImgs[p.id], secs = [];
     if (side === "front") { if (p.observation) secs.push({ label: "OBSERVATION", text: p.observation }); secs.push({ label: "", text: this.tx("case.frontNote").join(" ") }); }
     else if (side === "back") { if (p.intention) secs.push({ label: "INTENTION", text: p.intention }); secs.push({ label: "", text: this.tx("case.backNote").join(" ") }); }
@@ -2224,9 +1985,7 @@ class Game {
     else if (p.guestNote) secs.push({ label: p.guestWriter ? "GUEST NOTE BY " + p.guestWriter.toUpperCase() : "GUEST NOTE", text: p.guestNote });
     this.read({ img: img ? p.image : this.pieceArt(p).toDataURL(), imgClass: img && img.naturalWidth > 160 ? "photo" : "", title: p.title.toUpperCase(), sub: "By " + p.developer,
       sections: secs, pick: p.pick, links: [[p.episodeUrl, "Watch the episode", "WATCH"], [p.gameUrl, "Play the game", "PLAY"]] }, () => {
-      // Reading it all (both sides of a case, a painting, a piece on the PC) counts it as read for quiz cards.
-      if (readIt || side === undefined) this.markRead(p);
-      if (side !== "end") this.lookedAgain(p);
+      if (stampAfter) this.stamp(p);
     });
   }
   /* Episode cases have two placards. From the front (standing below it, facing up) you read the curator's observation;
@@ -2242,7 +2001,7 @@ class Game {
     }
     const d = this.player.dir, side = d === "up" ? "front" : d === "down" ? "back" : null;
     if (!side) { this.say(this.tx("case.ends")); return; }
-    // Reading both sides of a case counts it as read, for quiz cards (after the placard closes).
+    // Reading both sides of a case stamps your card (after the placard closes).
     const seen = this.progress.sides || (this.progress.sides = {}), k = seen[c.piece.id] || (seen[c.piece.id] = {});
     k[side] = 1; this.saveProgress();
     this.viewPiece(c.piece, side, !!(k.front && k.back));
@@ -2271,9 +2030,7 @@ class Game {
       staffTally: p.staffTally || {}, lastBadge: p.lastBadge || null,
       tokens: typeof p.tokens === "number" ? p.tokens : 0, items: Array.isArray(p.items) ? p.items : [], shirt: !!p.shirt, wearShirt: !!p.wearShirt, quest: p.quest || 0,
       ach: p.ach || {}, visited: Array.isArray(p.visited) ? p.visited : [],
-      photos: Array.isArray(p.photos) ? p.photos : [], where: p.where || null, sides: p.sides || {}, wiped: p.wiped || {},
-      // Quiz cards: which pieces you've read, whether the usher has given you a card, and the card in your pocket.
-      read: p.read && typeof p.read === "object" ? p.read : oldRead(p), quizIntro: !!p.quizIntro, card: cleanCard(p.card) };                    // chores counted per badge while clocked in
+      photos: Array.isArray(p.photos) ? p.photos : [], stamps: Array.isArray(p.stamps) ? p.stamps : [], where: p.where || null, sides: p.sides || {}, wiped: p.wiped || {} };                    // chores counted per badge while clocked in
   }
   saveProgress() { this.checkAchievements(); try { if (this.saveKey) localStorage.setItem(this.saveKey, JSON.stringify(this.progress)); } catch (e) {} }
   /* ----- achievements ----- */
@@ -2803,7 +2560,8 @@ class Game {
   shopRows() {
     const sh = this.pack.settings.shop;
     const items = sh.items.slice().sort((a, b) => (b.id === sh.featured) - (a.id === sh.featured));
-    return [...(this.cardSuper() ? [{ trade: true }] : []), ...items.map(it => ({ item: it })), { shirt: true }, { collection: true }, { leave: true }];
+    const full = this.progress.stamps.length >= sh.stampSize && sh.stampItems.length;
+    return [...(full ? [{ trade: true }] : []), ...items.map(it => ({ item: it })), { shirt: true }, { collection: true }, { leave: true }];
   }
   renderShop() {
     const box = this.el.shop, rows = this.shopRows(), sh = this.pack.settings.shop, owned = this.progress.items;
@@ -2819,10 +2577,10 @@ class Game {
       if (r.item) {
         const img = document.createElement("img"); img.src = this.itemIcon(r.item).toDataURL(); img.alt = ""; row.appendChild(img);
         const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = (r.item.id === sh.featured ? "* " : "") + r.item.name; row.appendChild(nm);
-        const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = owned.includes(r.item.id) ? "OWNED" : r.item.price + " T"; row.appendChild(pr);
+        const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = owned.includes(r.item.id) ? "OWNED" : r.item.price + " T" + (sh.stampItems.includes(r.item.id) ? " or card" : ""); row.appendChild(pr);
       } else if (r.trade) {
-        const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = "Trade your super quiz card"; row.appendChild(nm);
-        const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = "ANY ITEM"; row.appendChild(pr);
+        const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = "Trade your full stamp card"; row.appendChild(nm);
+        const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = "FREE"; row.appendChild(pr);
       } else if (r.shirt) {
         const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = "GOQ shirt"; row.appendChild(nm);
         const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = this.progress.shirt ? "YOURS" : "DISCONTINUED"; row.appendChild(pr);
@@ -2832,7 +2590,7 @@ class Game {
     });
     const r = rows[this.shopSel], det = document.createElement("p"); det.className = "gt-shop-detail";
     det.textContent = this.shopMsg || (r.item ? (r.item.id === sh.featured ? "FEATURED. " : "") + (r.item.description || "") :
-      r.trade ? "Five super stamps: pick any one item, on the house. The card is spent." : r.shirt ? this.tx(this.progress.shirt ? "shirt.owned" : "shirt.tease").join(" ") : r.collection ? "See what you've bought." : "Head back out.");
+      r.trade ? "Pick one prize item, on the house." : r.shirt ? this.tx(this.progress.shirt ? "shirt.owned" : "shirt.tease").join(" ") : r.collection ? "See what you've bought." : "Head back out.");
     box.appendChild(det);
     const sel = list.children[this.shopSel]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: "nearest" });
   }
@@ -2840,7 +2598,7 @@ class Game {
     const r = this.shopRows()[this.shopSel], t = this.progress.tokens || 0;
     if (r.leave) { this.closeShop(); this.say(this.tx("shop.bye")); return; }
     if (r.shirt) { this.shopMsg = this.tx(this.progress.shirt ? "shirt.owned" : "shirt.tease").join(" "); this.renderShop(); return; }
-    if (r.trade) { this.tradeQuizCard(); return; }
+    if (r.trade) { this.tradeStampCard(); return; }
     if (r.collection) {
       const names = this.pack.settings.shop.items.filter(it => this.progress.items.includes(it.id)).map(it => it.name);
       const gone = this.progress.items.length - names.length;
@@ -2921,51 +2679,27 @@ class Game {
   cafe() {
     if (this.closing) { this.say(this.tx("cafe.closed")); return; }
     if (this.drink && this.drink.empty) {
-      const n = this.drink.name.toLowerCase(), plain = DRINKS[this.drink.kind] || DRINKS[0];
-      // Refills are on the house, but a fancy drink refills as the plain one in the same cup.
-      this.choose("Finished? Want a refill on that " + n + "?", [this.drink.fancy ? "A plain " + plain.name.toLowerCase() + ", please" : "Refill, please", "No thanks"], i => {
-        if (i === 0) { this.drink = { kind: this.drink.kind, name: this.drink.fancy ? plain.name : this.drink.name, sips: 0 }; this.say(this.tx("drink.refill")); }
+      const n = this.drink.name.toLowerCase();
+      this.choose("Finished? Want a refill on that " + n + "?", ["Refill, please", "No thanks"], i => {
+        if (i === 0) { this.drink = { kind: this.drink.kind, name: this.drink.name, sips: 0 }; this.say(this.tx("drink.refill")); }
         else this.say(this.tx("drink.noRefill"));
       });
       return;
     }
     if (this.drink) { this.say(this.tx("drink.still")); return; }
-    const sh = this.pack.settings.shop, price = sh.drinkPrice, tag = price ? " (" + price + " T)" : "";
-    const ftag = " (" + (sh.fancyPrice ? sh.fancyPrice + " T" : "free") + (this.cardFull() ? " or card" : "") + ")";
-    const lines = ["What can I get you?", "What'll it be?", "Something warm?"], nb = DRINKS.length, nf = sh.fancy.length;
+    const price = this.pack.settings.shop.drinkPrice, tag = price ? " (" + price + " T)" : "";
+    const lines = ["What can I get you?", "What'll it be?", "Something warm?"];
     this.cafeI = (this.cafeI || 0) + 1;
-    this.choose(lines[this.cafeI % lines.length], [...DRINKS.map(d => d.name + tag), ...sh.fancy.map(d => d.name + ftag), "Just chatting", "Nothing, thanks"], i => {
-      if (i === nb + nf) { this.staffTalk("barista"); return; }
-      if (i < 0 || i > nb + nf) return;
-      if (i >= nb) { this.orderFancy(sh.fancy[i - nb]); return; }
+    this.choose(lines[this.cafeI % lines.length], [...DRINKS.map(d => d.name + tag), "Just chatting", "Nothing, thanks"], i => {
+      if (i === DRINKS.length) { this.staffTalk("barista"); return; }
+      if (i >= DRINKS.length) return;
       if (price && (this.progress.tokens || 0) < price) { this.say(["That's " + price + " token" + (price > 1 ? "s" : "") + ". Chores earn tokens."]); return; }
       if (price) { this.progress.tokens -= price; this.saveProgress(); this.updateHud(); }
+      this.drink = { kind: i, name: DRINKS[i].name, sips: 0 };
       if (DRINKS[i].id === "cocoa") this.quest("cocoa");
-      this.serve({ kind: i, name: DRINKS[i].name, sips: 0 });
+      this.progress.tally.drinks = (this.progress.tally.drinks || 0) + 1; this.saveProgress();
+      this.say(this.tx("drink.served"));
     });
-  }
-  serve(d, quiet) {
-    this.drink = d;
-    this.progress.tally.drinks = (this.progress.tally.drinks || 0) + 1; this.saveProgress();
-    if (!quiet) this.say(this.tx("drink.served"));
-  }
-  /* Fancy drinks: tokens, or a full quiz card. A super card could buy a gift shop item instead, so the barista checks first. */
-  orderFancy(f) {
-    const fp = this.pack.settings.shop.fancyPrice, t = this.progress.tokens || 0, d = { kind: f.cup, name: f.name, sips: 0, fancy: true };
-    const pay = () => { if (fp) { this.progress.tokens = t - fp; this.saveProgress(); this.updateHud(); } this.serve(d); };
-    if (!this.cardFull()) {
-      if (t < fp) { this.say(["That's " + fp + " token" + (fp > 1 ? "s" : "") + ". Chores earn tokens, or bring a full quiz card."]); return; }
-      pay(); return;
-    }
-    const useCard = () => this.spendCard(f.name, () => this.serve(d, true));
-    const opts = [...(t >= fp ? [fp ? "Pay " + fp + " tokens" : "It's free"] : []), "Use my quiz card", "Never mind"];
-    this.choose("How would you like to pay?", opts, k => {
-      const o = opts[k];
-      if (o === "Use my quiz card") {
-        if (this.cardSuper()) this.ask(this.tx("quiz.spendSuper").join(" "), ["Use it on a drink", "Keep my card"], j => { if (j === 0) useCard(); }, 1);
-        else useCard();
-      } else if (o && o !== "Never mind") pay();
-    }, opts.length - 1);
   }
   /* Empty cups go in the bus tub or a trash can. */
   bin(e) {
@@ -3087,9 +2821,9 @@ class Game {
   /* ----- the Start menu: photos, save, save and quit ----- */
   openMenu() {
     const n = (this.progress.photos || []).length;
-    const sc = this.cardStamps() + "/" + QUIZ_SIZE;
+    const sc = this.progress.stamps.length + "/" + this.pack.settings.shop.stampSize;
     const an = Object.keys(this.progress.ach || {}).length + "/" + this.pack.settings.achievements.length;
-    const opts = ["Photos (" + n + ")", "Quiz card (" + sc + ")", "Achievements (" + an + ")", ...(this.progress.shirt ? ["Wardrobe"] : []), "Respawn", "Save", "Save and quit", "Back"];
+    const opts = ["Photos (" + n + ")", "Stamp card (" + sc + ")", "Achievements (" + an + ")", ...(this.progress.shirt ? ["Wardrobe"] : []), "Respawn", "Save", "Save and quit", "Back"];
     this.choose("PAUSED", opts, k => {
       const o = opts[k];
       if (o === "Wardrobe") {
@@ -3098,7 +2832,7 @@ class Game {
         });
         return;
       }
-      if (o.startsWith("Quiz card")) { this.showQuizCard(); return; }
+      if (o.startsWith("Stamp card")) { this.showStampCard(); return; }
       if (o.startsWith("Achievements")) { this.showAchievements(); return; }
       if (o === "Respawn") { this.respawn(); return; }
       const i = o.startsWith("Photos") ? 0 : o === "Save" ? 1 : o === "Save and quit" ? 2 : 3;
@@ -3212,9 +2946,8 @@ class Game {
     if (!small) s.appendChild(document.createTextNode("CURATOR'S PICK"));
     return s;
   }
-  /* keep: the list stays open after a pick (the pick closes it with closeList). */
-  openList(title, rows, pick, keep) {
-    this.mode = "list"; this.list = { title, rows, pick, i: 0, keep: !!keep }; this.el.album.style.display = "block"; this.renderList();
+  openList(title, rows, pick) {
+    this.mode = "list"; this.list = { title, rows, pick, i: 0 }; this.el.album.style.display = "block"; this.renderList();
   }
   renderList() {
     const L = this.list, box = this.el.album; box.innerHTML = "";
@@ -3229,8 +2962,7 @@ class Game {
     });
     const sel = wrap.children[L.i]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: "nearest" });
   }
-  listPick() { const L = this.list; if (L.keep) { L.pick(L.i); return; } this.closeList(); L.pick(L.i); }
-  closeList() { this.el.album.style.display = "none"; this.mode = "walk"; this.inputLock = true; this.list = null; }
+  listPick() { const L = this.list; this.el.album.style.display = "none"; this.mode = "walk"; this.inputLock = true; this.list = null; L.pick(L.i); }
   /* The microwave runs once per opened museum. It does not go well. */
   microwave() {
     if (this.microwaved) { this.say(this.tx("microwave.after")); return; }
@@ -3250,6 +2982,7 @@ class Game {
   }
   saveWhere() { const p = this.player; this.progress.where = { room: this.room.id, x: p.x, y: p.y, dir: p.dir }; this.saveProgress(); }
   /* The usher talks to visitors like visitors and to staff like coworkers. */
+  usherTalk() { this.staffTalk("usher"); }
   talkTo(npc) {
     if (npc.usher) { this.usherTalk(); return; }
     if (npc.role) { this.staffTalk(npc.role); return; }
@@ -3361,7 +3094,7 @@ class Game {
       const s = e.spot;
       if (s.state === "covered") this.say(this.tx("painting.covered", { date: niceDate(s.piece.unveil), title: s.piece.title }));
       else if (s.state === "crate") this.hang(s);
-      else if (!this.tidy(s)) this.viewPiece(s.piece, undefined, true); // a painting has one side: one read counts
+      else if (!this.tidy(s)) this.viewPiece(s.piece, undefined, true); // a painting has one side: one read stamps it
     }
     else if (e.plant) {
       if (!this.isThirsty(e.plant)) { this.say(this.tx("plant.done", { room: e.name })); return; }
@@ -3418,7 +3151,7 @@ class Game {
     if (this.blocked(nx, ny, c)) {
       if (c === this.player) {
         const e = this.room.events[nx + "," + ny];
-        if (e && e.bump && !this.inputLock) { this.inputLock = true; c.walking = false; if (!this.quizStopCheck()) this.runEvent(e); return false; }
+        if (e && e.bump && !this.inputLock) { this.inputLock = true; c.walking = false; this.runEvent(e); return false; }
         if (c.bumpT <= 0) { c.bumpT = 16; c.step = !c.step; }
       }
       return false;
@@ -3429,14 +3162,13 @@ class Game {
     if (c.bumpT > 0) c.bumpT--;
     if (!c.moving) return false;
     if (c.slow && (this.t & 1)) return false; // the night guard strolls at half speed
-    if (c !== this.player && !c.slow && !c.goal && !c.leaving && !c.cue) { c.spd = (c.spd || 0) + this.pack.settings.staff.patronSpeed; if (c.spd < 1) return false; c.spd -= 1; } // patrons: slower than you
+    if (c !== this.player && !c.slow && !c.goal && !c.leaving) { c.spd = (c.spd || 0) + this.pack.settings.staff.patronSpeed; if (c.spd < 1) return false; c.spd -= 1; } // patrons: slower than you
     if ((c.prog += c === this.player && this.segway ? 2 : 1) >= T) {
       c.x += DIRS[c.dir][0]; c.y += DIRS[c.dir][1]; c.prog = 0; c.moving = false;
       if (c === this.player) {
         this.stepInDark();
         const e = this.room.events[c.x + "," + c.y];
         if (e && e.step && !this.trans) { this.path = null; this.pathAct = null; c.walking = false; if (this.room.id === "stairwell" && e.warp[0] === "stairwell2") this.quest("stairsTo2F"); this.runEvent(e); }
-        else if (!this.trans) this.quizStopCheck();
       }
       return true;
     }
@@ -3480,7 +3212,7 @@ class Game {
     if (this.mode === "list") {
       const L = this.list, n = L.rows.length;
       if (has("up") || has("down")) { L.i = (L.i + (has("up") ? n - 1 : 1)) % n; this.renderList(); }
-      if (has("a")) this.listPick(); else if (has("b") || has("start")) this.closeList();
+      if (has("a")) this.listPick(); else if (has("b") || has("start")) { this.el.album.style.display = "none"; this.mode = "walk"; this.inputLock = true; this.list = null; }
       return;
     }
     if (this.mode === "album") {
@@ -3585,7 +3317,6 @@ class Game {
   updateNpcs() {
     const def = ROOMS[this.room.id];
     for (const n of this.room.npcs.slice()) {
-      if (n.cue) { this.cueStep(n); continue; } // the usher, walking over with a quiz card or back to the desk
       if (n.leaving) { this.walkOut(n, def.exitTo || ROOMS[this.room.id].spawn); continue; }
       if (n.goal) { this.walkTo(n); continue; }
       if (n.moving) { this.advance(n); continue; }
@@ -3665,8 +3396,8 @@ class Game {
     const near = this.room.cases.find(c => c.piece && c.state === "wall" && Math.abs(c.x - ax) + Math.abs(c.y - ay) === 1);
     if (near && amt > 0 && Math.random() < amt * 0.5) { const xp = this.extraPrints || (this.extraPrints = {}); xp[near.piece.id] = Math.min(3, (xp[near.piece.id] || 0) + 1); }
   }
-  /* Shortest route for a visitor, around walls, furniture, people and no-go tiles (at most 40 steps). anywhere: no-go tiles are fine (staff on an errand). */
-  npcPath(n, tx, ty, anywhere) {
+  /* Shortest route for a visitor, around walls, furniture, people and no-go tiles (at most 40 steps). */
+  npcPath(n, tx, ty) {
     const r = this.room, W = r.w, prev = new Map(), start = n.y * W + n.x, goal = ty * W + tx, q = [start];
     prev.set(start, -1);
     while (q.length) {
@@ -3674,7 +3405,7 @@ class Game {
       const cx = c % W, cy = (c / W) | 0;
       for (const [dx, dy] of Object.values(DIRS)) {
         const nx = cx + dx, ny = cy + dy, k = ny * W + nx;
-        if (nx < 1 || ny < 3 || nx >= W - 1 || ny >= r.h - 1 || prev.has(k) || this.blocked(nx, ny, n) || (!anywhere && r.noWander && r.noWander.has(nx + "," + ny))) continue;
+        if (nx < 1 || ny < 3 || nx >= W - 1 || ny >= r.h - 1 || prev.has(k) || this.blocked(nx, ny, n) || (r.noWander && r.noWander.has(nx + "," + ny))) continue;
         prev.set(k, c); q.push(k);
       }
     }
@@ -4023,8 +3754,8 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-04 quiz";
-window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeQuiz, QUIZ_SIZE, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
+const VERSION = "2026-10-03 picks";
+window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
   spotRooms: () => Object.keys(ROOMS).filter(id => (ROOMS[id].spots || []).length).map(id => ({ id, name: ROOMS[id].name, n: ROOMS[id].spots.length })),
