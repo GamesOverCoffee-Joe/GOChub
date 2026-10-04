@@ -1270,9 +1270,10 @@ const TEXT = {
   "shop.bye":          { g: "Gift shop", l: "Leaving the shop menu", v: [["Thanks for stopping by!"]] },
   "rack.empty":        { g: "Gift shop", l: "A stand with nothing for sale", v: [["A stand of little knickknacks.", "Nothing on this one is for sale. They're just here to keep you company."]] },
   "rack.available":    { g: "Gift shop", l: "Stand close-up: for sale", v: [["{n} tokens. Available to buy at the counter up front."]] },
-  "cur.hello":         { g: "Curious visitors", l: "Saying hi (what they're looking for comes next, from their mindset)", v: [["Hey, do you work here? My name is {name}, and I was looking for a game recommendation."]] },
+  "cur.hello":         { g: "Curious visitors", l: "When you walk up to them (takes turns)", v: [["Oh, hello!"], ["Oh! Hi there."], ["Hm? Oh, hello!"]] },
+  "cur.help":          { g: "Curious visitors", l: "After \"Do you need help?\" (what they're looking for comes next, from their mindset)", v: [["Actually, yes! My name is {name}, and I was looking for a game recommendation."]] },
+  "cur.busy":          { g: "Curious visitors", l: "After \"Sorry, I'm busy.\"", v: [["Oh, no worries! I'll keep looking around."]] },
   "cur.also":          { g: "Curious visitors", l: "Before the second thing they like (joined to that line)", v: [["Oh, and"]] },
-  "cur.ask":           { g: "Curious visitors", l: "Asking you to help", v: [["Could you help me find one?"]] },
   "cur.follow":        { g: "Curious visitors", l: "They start following you", v: [["Lead the way! I'm right behind you."]] },
   "cur.lead":          { g: "Curious visitors", l: "Talking to them while they follow you", v: [["Where are we headed?"]] },
   "cur.release":       { g: "Curious visitors", l: "You tell them never mind", v: [["No worries. I'll keep looking around."]] },
@@ -1283,6 +1284,7 @@ const TEXT = {
   "cur.unreadNote":    { g: "Curious visitors", l: "Question: recommend a painting whose note you haven't read?", v: [["You haven't read the note on {title} yet. Recommend it to {name} anyway?"]] },
   "cur.thanks":        { g: "Curious visitors", l: "After you recommend a piece", v: [["Ooh, {title}. I'll try it tonight!", "I'll come back and tell you how it went."]] },
   "cur.back":          { g: "Curious visitors", l: "Coming back the next day ({hint} is \", the one where...\" from the piece)", v: [["Hey, it's me, {name}! I tried {title}{hint}."]] },
+  "cur.beat":          { g: "Curious visitors", l: "The pause before they say what they thought (takes turns)", v: [["And honestly..."], ["So..."], ["Okay, so..."]] },
   "cur.liked":         { g: "Curious visitors", l: "Next day, about a game with no mindsets ticked", v: [["It was pretty good! Not my favorite, but I'm glad I tried it."]] },
   "cur.loved":         { g: "Curious visitors", l: "Next day: loved it, if their mindset has no lines of its own", v: [["I loved it. Thank you so much!"]] },
   "cur.nope":          { g: "Curious visitors", l: "Next day: not for them, if their mindset has no lines of its own", v: [["Honestly, it wasn't really for me. Thanks for trying, though!"]] },
@@ -1309,8 +1311,10 @@ const TEXT = {
   "microwave.after":   { g: "Staff", l: "Microwave after the incident", v: [["The inside of the microwave is a crime scene.", "Nobody is going to clean that today."]] },
   "patrons.intro":     { g: "Lobby", l: "Patron Board, before the names", v: [["Games Over Qualia is made possible by these wonderful people. Some of them are probably in the museum right now."]] },
   "patrons.empty":     { g: "Lobby", l: "Patron Board with no names yet", v: [["The Patron Board. The name plates are polished and waiting."]] },
-  "frame.ask":         { g: "Staff", l: "Your locker's photo frame, empty", v: [["There's a little empty frame on your locker door."]] },
-  "frame.has":         { g: "Staff", l: "Your locker's photo frame, with a photo", v: [["The little frame on your locker door."]] },
+  "frame.ask":         { g: "Staff", l: "Your locker's photo frame, with your own photo", v: [["A little frame on your locker door, with a photo of you in it."]] },
+  "frame.has":         { g: "Staff", l: "Your locker's photo frame, with one of your photos", v: [["The little frame on your locker door."]] },
+  "frame.self":        { g: "Staff", l: "Looking at your own photo in the frame", v: [["You, on your first day. Not bad."]] },
+  "frame.back":        { g: "Staff", l: "Putting your own photo back (the framed one is erased)", v: [["Put your own photo back? The photo in the frame now will be erased."]] },
   "frame.warn":        { g: "Staff", l: "Putting a photo in the frame (it moves out of your album)", v: [["Put this photo in your locker frame? It moves out of your album."]] },
   "frame.replace":     { g: "Staff", l: "Swapping the photo in the frame", v: [["Swap it in? The photo in the frame now will be erased, and this one moves out of your album."]] },
   "frame.done":        { g: "Staff", l: "After framing a photo", v: [["You slide the photo into the little frame. Perfect."]] },
@@ -1438,6 +1442,7 @@ function noWanderTiles(id, r, def) {
   for (const k in r.events) { const e = r.events[k]; if (e.warp || e.bump || e.step || e.elevatorDoor || e.frontDoor) { const [x, y] = k.split(",").map(Number); add(x, y); } }
   for (const st of r.stairs || []) add(st.x, st.y);
   add(def.spawn[0], def.spawn[1]);
+  for (const c of r.cases || []) out.add(c.x + "," + (c.y - 1)); // a case is drawn two tiles tall: visitors keep off its top half (you can still stand there to read the back)
   return out;
 }
 function safeSpots(r, def) {
@@ -2513,24 +2518,34 @@ class Game {
         this.say(this.tx("clock.out", { name }));
       });
   }
+  /* The photo in your locker frame: one you put there, or a snapshot of you (head and shoulders, in what you're wearing). */
+  framePhoto() {
+    const lp = this.progress.lockerPhoto; if (lp) return this.photoThumb(lp);
+    const sheet = this.staff ? "player_staff" : this.progress.wearShirt ? "player_goq_shirt" : "player", ck = "selfie|" + sheet;
+    if (this.cache[ck]) return this.cache[ck];
+    const art = ROOMS.staff && ROOMS.staff.art ? ROOMS.staff.art : {};
+    return (this.cache[ck] = this.photoThumb({ thumb: { slot: sheet, bg: art.floor || "staff_floor" }, desc: "selfie", tod: "day", seed: 7 }));
+  }
   /* Which locker is yours: by badge when you're clocked in; the first one for the curator (to try the frame). -1 = none. */
   myLocker() { return this.staff ? strSeed(this.staff.badge) % 6 : this.curator ? 0 : -1; }
   locker(i) {
     if (this.myLocker() === i) {
       const lp = this.progress.lockerPhoto, has = !!lp, ph = this.progress.photos || [];
       this.say(this.tx("locker.mine", { locker: i + 1 }), () => {
-        const opts = [...(has ? ["Look at the photo"] : []), ...(ph.length ? [has ? "Change the photo" : "Put a photo in the frame"] : []), "Leave it"];
+        const opts = ["Look at the photo", ...(ph.length ? ["Change the photo"] : []), ...(has ? ["Put my own photo back"] : []), "Leave it"];
         this.choose(this.tx(has ? "frame.has" : "frame.ask").join(" "), opts, k => {
           const o = opts[k];
           if (o === "Look at the photo") {
             this.el.cuFrame.style.borderImageSource = `url("${this.src("closeup_wood")}")`;
-            this.el.cuImg.src = this.photoSrc(lp); this.el.cuImg.alt = lp.desc; this.el.cuImg.classList.remove("photo", "item");
+            this.el.cuImg.src = this.framePhoto().toDataURL(); this.el.cuImg.alt = has ? lp.desc : "You"; this.el.cuImg.classList.remove("photo", "item");
             this.el.cuLinks.innerHTML = ""; this.el.cu.style.display = "flex";
-            this.say([lp.desc], () => { this.el.cu.style.display = "none"; });
+            this.say(has ? [lp.desc] : this.tx("frame.self"), () => { this.el.cu.style.display = "none"; });
+          } else if (o === "Put my own photo back") {
+            this.ask(this.tx("frame.back").join(" "), ["Yes", "No"], y => { if (y === 0) { this.progress.lockerPhoto = null; this.saveProgress(); this.say(this.tx("frame.done")); } }, 1);
           } else if (o && o !== "Leave it") {
             this.albumPick = j => this.ask(this.tx(has ? "frame.replace" : "frame.warn").join(" "), ["Yes", "No"], y => {
               if (y !== 0) return;
-              this.progress.lockerPhoto = ph.splice(j, 1)[0]; this.lockerImg = null; this.saveProgress();
+              this.progress.lockerPhoto = ph.splice(j, 1)[0]; this.saveProgress();
               this.say(this.tx("frame.done"));
             }, 1);
             this.mode = "album"; this.albumSel = 0; this.el.album.style.display = "block"; this.renderAlbum();
@@ -2912,13 +2927,17 @@ class Game {
   }
   curiousTalk(n) {
     const v = n.cur, m = this.mind(v.mind), m2 = this.mind(v.mind2), low = t => (/^I\b/.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1));
-    const pages = this.tx("cur.hello", { name: v.name }).slice();
-    if (m && m.ask.length) pages.push(this.pickLine(m.ask, v.id));
-    if (m2 && m2.ask.length) pages.push(this.tx("cur.also")[0] + " " + low(this.pickLine(m2.ask, v.id + "+")));
-    pages.push(...this.tx("cur.ask", { name: v.name }));
-    const named = ps => ps.map((p, k) => v.name + ": " + p), q = pages.pop();
-    this.say(named(pages), () => this.ask(v.name + ": " + q, ["Follow me!", "Could I get by?", "Not right now"], i => {
-      if (i === 0) this.startFollow(n); else if (i === 1) this.askToMove(n, named);
+    const named = ps => ps.map(p => v.name + ": " + p), hello = named(this.tx("cur.hello", { name: v.name })), q = hello.pop();
+    this.say(hello, () => this.choose(q, ["Do you need help?", "Can I get by you?", "Never mind"], i => {
+      if (i === 1) { this.askToMove(n, named); return; }
+      if (i !== 0) return;
+      const pages = this.tx("cur.help", { name: v.name }).slice();
+      if (m && m.ask.length) pages.push(this.pickLine(m.ask, v.id));
+      if (m2 && m2.ask.length) pages.push(this.tx("cur.also")[0] + " " + low(this.pickLine(m2.ask, v.id + "+")));
+      const last = named(pages).pop();
+      this.say(named(pages).slice(0, -1), () => this.ask(last, ["Follow me!", "Sorry, I'm busy."], k => {
+        if (k === 0) this.startFollow(n); else this.say(named(this.tx("cur.busy", { name: v.name })));
+      }, 1));
     }, 2));
   }
   startFollow(n) {
@@ -3005,9 +3024,14 @@ class Game {
     const own = p && p.minds.length && m && m[how] && m[how].length ? m[how] : null; // a game with no mindsets ticked gets the general line
     const line = own ? this.fmt(this.pickLine(own, v.id + how), { title }) : this.tx("cur." + how, { title }).join(" ");
     cv.back = cv.back.filter(x => x !== v); n.back = null; n.lines = this.pack.settings.text["cur.after"] || TEXT["cur.after"].v; n.lineI = -1;
-    if (how === "loved") this.count("helped", v.id);
-    this.saveProgress(); this.updateHud();
-    this.say([...this.tx("cur.back", { name: v.name, title, hint: p && p.hint ? ", " + p.hint : "" }), line].map((pg, k) => (k ? v.name + ": " + pg : pg)));
+    this.saveProgress();
+    const intro = [...this.tx("cur.back", { name: v.name, title, hint: p && p.hint ? ", " + p.hint : "" }), ...this.tx("cur.beat")].map((pg, k) => (k ? v.name + ": " + pg : pg));
+    this.say(intro, () => {
+      // The moment: the text box steps aside for a second so you see it (a happy hop and hearts, one heart, or a little sigh), then they say it.
+      n.react = { how, t0: this.t }; n.dir = OPP[this.player.dir]; this.mode = "busy";
+      if (how === "loved") { this.count("helped", v.id); this.updateHud(true); }
+      setTimeout(() => { this.mode = "walk"; this.say([v.name + ": " + line], () => { if (how === "loved") this.showLoc(v.name + " loved it!"); }); }, how === "nope" ? 700 : 1100);
+    });
   }
   pieceById(id) { return this.pack.pieces.find(p => p.id === id); }
   /* A question too long for the text box with the options open: the start reads out first, the end stays up with the options. */
@@ -3022,8 +3046,9 @@ class Game {
     const L = this.pack.settings.life;
     for (const id in this.rooms) for (const n of this.rooms[id].npcs) {
       if (n.staff || n.role || n.usher || n.patrol || n.patron) continue;
-      n.bag = Math.random() * 100 < L.bags;
+      n.bag = false; n.drink = null; // one thing in hand at a time: a drink or a bag
       if ((id === "lobby" || id === "shop") && Math.random() * 100 < L.drinks) n.drink = { kind: Math.floor(Math.random() * DRINKS.length), sips: 0, empty: false, t: 300 + Math.random() * 600 };
+      else n.bag = Math.random() * 100 < L.bags;
     }
   }
   updateLife(n) {
@@ -3053,7 +3078,7 @@ class Game {
     const r = this.room, c = r.cases.find(c => c.piece && c.state === "wall" && c.x === n.x && Math.abs(c.y - n.y) === 1);
     const h = !c && n.y === 3 && r.hung.find(h => h.state === "wall" && (h.x === n.x || h.x + 1 === n.x));
     if (!c && !h) return;
-    n.dir = c ? (c.y < n.y ? "up" : "down") : "up"; n.snapT = 40;
+    n.dir = c ? (c.y < n.y ? "up" : "down") : "up"; n.snapT = 70;
   }
   /* Patreon members on shift: two or three of them are in the staff room each day, never the one clocked in on this browser. */
   placeMembers() {
@@ -3083,7 +3108,7 @@ class Game {
     // The figure in the dark: caught if it's straight ahead (a tile either side is fine) within seven tiles. Then it's gone.
     if (fg && !fg.leaving && fg.alpha > 0.25 && this.lightsOff.has(r.id)) {
       const ahead = (fg.x - p.x) * dx + (fg.y - p.y) * dy, side = Math.abs((fg.x - p.x) * dy) + Math.abs((fg.y - p.y) * dx);
-      if (ahead >= 1 && ahead <= 7 && side <= 1) { fg.leaving = true; this.progress.tally.figure = 1; return { desc: this.tx("figure.photo").join(" "), at: [fg.x, fg.y], thumb: { slot: "shadow_figure", bg: art.floor, dark: true } }; }
+      if (ahead >= 1 && ahead <= 7 && side <= 1) { fg.leaving = true; this.progress.tally.figure = 1; return { desc: this.tx("figure.photo").join(" "), thumb: { slot: "shadow_figure", bg: art.floor, dark: true } }; }
     }
     if (npc && npc.member) return { desc: npc.member + (npc.patron ? ", on a break in the staff room." : npc.follow ? ", following you around the museum." : npc.cur ? ", looking curious." : npc.back ? ", back to tell you how a game went." : ", enjoying the museum.") + dark, thumb: { slot: npc.sheet, bg: art.floor, dark: dk } };
     if (npc) return { desc: (npc.patrol ? "The night guard, mid-rounds. They gave a little wave." : npc.usher ? "The usher at the front desk, smiling politely." : npc.still && npc.staff ? "The conservator, busy with something delicate." : npc.sitting ? "A visitor relaxing at the café." : npc.still ? "A visitor, deep in thought about a purchase." : "A visitor admiring the museum.") + dark, thumb: { slot: npc.sheet, bg: art.floor, dark: dk } };
@@ -3098,20 +3123,10 @@ class Game {
     if (r.solid[fy] && r.solid[fy][fx]) return { desc: "A wall. Nicely painted, at least." + dark, thumb: { slot: art.upper, tile: true, dark: dk } };
     return { desc: "A blurry photo of the floor. Very artsy." + dark, thumb: { slot: art.floor, tile: true, blur: true, dark: dk } };
   }
-  /* A small crop of the screen: what's in front of you (or the figure, if you caught it), lights and all. */
-  snap(at) {
-    try {
-      const W = 80, H = 60, p = this.pos(this.player), [dx, dy] = DIRS[this.player.dir];
-      const cx = at ? at[0] * T + 8 - this.camX : p.x + 8 - this.camX + dx * 36, cy = at ? at[1] * T + 4 - this.camY : p.y + 4 - this.camY + dy * 34;
-      const x = Math.max(0, Math.min(SW - W, Math.round(cx - W / 2))), y = Math.max(0, Math.min(SH - H, Math.round(cy - H / 2)));
-      const c = document.createElement("canvas"); c.width = W; c.height = H; c.getContext("2d").drawImage(this.canvas, x, y, W, H, 0, 0, W, H);
-      return c.toDataURL("image/png");
-    } catch (e) { return null; }
-  }
-  photoSrc(ph) { return ph.img || this.photoThumb(ph).toDataURL(); }
+  photoSrc(ph) { return this.photoThumb(ph).toDataURL(); }
   takePhoto() {
     const sub = this.photoSubject(), ph = this.progress.photos || (this.progress.photos = []);
-    ph.unshift({ desc: sub.desc, piece: sub.piece || null, room: this.room.name.replace(/\s+/g, " "), thumb: sub.thumb || null, img: this.snap(sub.at), tod: this.tod() });
+    ph.unshift({ desc: sub.desc, piece: sub.piece || null, room: this.room.name.replace(/\s+/g, " "), thumb: sub.thumb || null, tod: this.tod(), seed: (Math.random() * 1e9) | 0 });
     if (ph.length > 40) ph.length = 40;
     this.progress.tally.photos = (this.progress.tally.photos || 0) + 1;
     this.saveProgress(); this.phoneT = 34; this.showLoc("Photo saved");
@@ -3147,7 +3162,7 @@ class Game {
      A grid of little snapshots, newest first, with the selected photo's description underneath.
      Arrows (or tap) to choose, A to look closer or delete, B to close. */
   photoThumb(ph) {
-    const ck = "thumb|" + JSON.stringify(ph.thumb || ph.piece || "x");
+    const ck = "thumb|" + JSON.stringify(ph.thumb || ph.piece || "x") + "|" + (ph.seed || ph.desc) + "|" + (ph.tod || "");
     if (this.cache[ck]) return this.cache[ck];
     const c = document.createElement("canvas"); c.width = 24; c.height = 18; const x = c.getContext("2d"); x.imageSmoothingEnabled = false;
     const th = ph.thumb || (ph.piece ? { piece: ph.piece } : null);
@@ -3168,6 +3183,12 @@ class Game {
     } else { x.fillStyle = "#a8a098"; x.fillRect(4, 4, 16, 10); }
     if (th && th.blur) { x.globalAlpha = 0.45; x.drawImage(c, 1, 0); x.drawImage(c, -1, 1); x.globalAlpha = 1; }
     if (th && th.dark) { x.fillStyle = "rgba(10,8,24,.7)"; x.fillRect(0, 0, 24, 18); }
+    // Like a real snapshot: never quite centered, the light of the hour, darker corners, a little grain.
+    const sd = ph.seed || strSeed(ph.desc || ""), ox = (sd % 3) - 1, oy = ((sd >> 3) % 3) - 1;
+    if (ox || oy) { const cp = document.createElement("canvas"); cp.width = 24; cp.height = 18; cp.getContext("2d").drawImage(c, 0, 0); x.drawImage(cp, ox, oy); }
+    x.fillStyle = { day: "rgba(255,226,170,.10)", sunset: "rgba(255,150,90,.18)", night: "rgba(70,90,170,.20)" }[ph.tod] || "rgba(255,226,170,.10)"; x.fillRect(0, 0, 24, 18);
+    const vg = x.createRadialGradient(12, 9, 6, 12, 9, 15); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(20,12,8,.42)"); x.fillStyle = vg; x.fillRect(0, 0, 24, 18);
+    for (let i = 0; i < 14; i++) { const h = hash(sd, i); x.fillStyle = h & 1 ? "rgba(255,255,255,.14)" : "rgba(0,0,0,.14)"; x.fillRect(h % 24, (h >> 5) % 18, 1, 1); }
     return (this.cache[ck] = c);
   }
   openAlbum() { this.mode = "album"; this.albumSel = 0; this.el.album.style.display = "block"; this.renderAlbum(); }
@@ -3632,6 +3653,7 @@ class Game {
   stroll(n) {
     if (n.stepWait > 0) { n.stepWait--; return; }
     { const p = this.player, [fx, fy] = DIRS[p.dir]; if (!p.moving && p.x + fx === n.x && p.y + fy === n.y) { n.route = null; return; } } // you're facing them: they wait
+    if (n.arrived) { n.arrived = false; if (!this.binRun(n)) this.maybeSnap(n); } // just stepped onto the spot they were heading for
     if (n.snapT > 0) return; // taking a photo: hold still
     if (n.timer > 0) { n.timer--; if (n.timer % 90 === 0 && Math.random() < 0.5) n.dir = DIRS_LIST[(Math.random() * 4) | 0]; return; }
     if (this.binRun(n) && n.timer > 0) return;
@@ -3642,17 +3664,20 @@ class Game {
       // Often, somewhere in front of a piece: the front or back of a case, or under a painting.
       const views = opts.filter(([x, y]) => r.cases.some(c => c.piece && c.x === x && Math.abs(c.y - y) === 1) || (y === 3 && r.hung.some(h => h.x === x || h.x + 1 === x)));
       if (views.length && Math.random() < 0.5) opts.splice(0, opts.length, ...views);
-      const t = opts[(Math.random() * opts.length) | 0];
+      const t = n.goalT || opts[(Math.random() * opts.length) | 0]; // someone was in the way: try the same spot again
+      n.goalT = t;
       n.route = t ? this.npcPath(n, t[0], t[1]) : null;
-      if (!n.route || !n.route.length) { n.timer = 60 + Math.random() * 120; n.route = null; return; }
+      if (!n.route || !n.route.length) { n.timer = 60 + Math.random() * 120; n.route = null; n.goalT = null; n.retry = 0; return; }
     }
     const d = n.route[0], [dx, dy] = DIRS[d];
-    if (noGo(n.x + dx, n.y + dy) || !this.tryMove(n, d)) { n.route = null; n.timer = 30 + Math.random() * 60; n.dir = d; return; }
+    if (noGo(n.x + dx, n.y + dy) || !this.tryMove(n, d)) { // blocked: wait a moment and find a way around, up to three times
+      n.route = null; n.dir = d; n.retry = (n.retry || 0) + 1;
+      if (n.retry > 3) { n.goalT = null; n.retry = 0; n.timer = 30 + Math.random() * 60; } else n.timer = 20 + Math.random() * 20;
+      return;
+    }
     n.route.shift();
     if (n.route.length) { n.stepWait = Math.round(8 * (1 - this.pack.settings.staff.patronSpeed) / this.pack.settings.staff.patronSpeed); return; }
-    n.timer = 180 + Math.random() * 300; // arrived: stay a while
-    if (this.binRun(n)) return;
-    this.maybeSnap(n);
+    n.timer = 180 + Math.random() * 300; n.goalT = null; n.retry = 0; n.arrived = true; // arrived (once this last step lands): stay a while
     // Stopping right next to a case now and then leaves a fingerprint (not every time).
     const ax = n.x + dx, ay = n.y + dy, amt = this.pack.settings.staff.fingerprints;
     const near = this.room.cases.find(c => c.piece && c.state === "wall" && Math.abs(c.x - ax) + Math.abs(c.y - ay) === 1);
@@ -3825,6 +3850,22 @@ class Game {
     for (const p of r.props) { const s = SLOT[p.key]; if (s && s.h > T) clip(p.x * T - cx, p.y * T - (s.h - T) - cy, s.w, s.h - T, () => this.drawProp(p, cx, cy)); }
     if (r.featuredAt) clip(r.featuredAt.x * T - cx, r.featuredAt.y * T - T - cy, T, T, () => this.drawFeatured(r, cx, cy));
   }
+  /* A visitor telling you how your recommendation went: loved it = a happy hop, hearts and sparkles; liked it = one heart;
+     not for them = a little gray sigh. Drawn over the next couple of seconds. */
+  drawReaction(c, sx, sy) {
+    const k = this.t - c.react.t0, ctx = this.ctx;
+    if (k > 150) { c.react = null; return; }
+    if (c.react.how === "loved") {
+      for (let i = 0; i < 4; i++) { const t = k - i * 14; if (t < 0 || t > 70) continue; ctx.globalAlpha = Math.max(0, 1 - t / 70); this.drawSlot("heart", 0, 0, sx + 4 + [-7, 7, -2, 4][i] + Math.round(Math.sin(t / 6 + i) * 2), sy - 6 - Math.round(t * 0.4)); }
+      ctx.globalAlpha = 1;
+      [[-6, 0, 0], [16, 2, 10], [4, -10, 20], [14, -8, 32]].forEach(([dx, dy, d]) => { const f = Math.floor((k - d) / 5); if (f >= 0 && f < 4) this.drawSlot("sparkle", f, 0, sx + dx, sy + dy); });
+    } else if (c.react.how === "liked") {
+      if (k < 70) { ctx.globalAlpha = Math.max(0, 1 - k / 70); this.drawSlot("heart", 0, 0, sx + 4, sy - 6 - Math.round(k * 0.3)); ctx.globalAlpha = 1; }
+    } else if (k < 110) { // a little sigh: three gray dots drifting up
+      ctx.fillStyle = "rgba(200,200,210," + Math.max(0, 1 - k / 110).toFixed(2) + ")";
+      for (let i = 0; i < 3; i++) if (k > i * 12) ctx.fillRect(sx + 3 + i * 4, sy - 4 - Math.round(k / 12), 2, 2);
+    }
+  }
   /* The drink in your hand; lifted to your mouth while sipping, with a little steam. */
   drawCup(sx, sy, c) {
     const me = c === this.player, d = me ? this.drink : c.drink, st = me ? (this.sip ? this.sip.t : 0) : c.sipT ? 46 - c.sipT : 0;
@@ -3904,15 +3945,11 @@ class Game {
     }
     const def = ROOMS[r.id];
     if (def.lockers) def.lockers.forEach(x => this.drawSlot("lockers", 0, 0, x * T - cx, T - cy));
-    const lp = def.lockers && this.progress.lockerPhoto, li = this.myLocker();
-    if (lp && li >= 0 && def.lockers[li] !== undefined) { // your photo, in a little frame on your locker door
-      if (!this.lockerImg) { const im = new Image(); im.src = this.photoSrc(lp); this.lockerImg = im; }
-      const fx = def.lockers[li] * T + 2 - cx, fy = T + 8 - cy, im = this.lockerImg;
+    const li = def.lockers ? this.myLocker() : -1;
+    if (li >= 0 && def.lockers[li] !== undefined) { // a little frame on your locker door: a photo of you, or one of yours
+      const fx = def.lockers[li] * T + 2 - cx, fy = T + 8 - cy, im = this.framePhoto();
       ctx.fillStyle = "#181820"; ctx.fillRect(fx, fy, 11, 9); ctx.fillStyle = "#e8b24a"; ctx.fillRect(fx + 1, fy + 1, 9, 7);
-      if (im.complete && im.naturalWidth) { // the middle of the photo, so it still reads at this size
-        const sw = im.naturalWidth * 0.6, sh = im.naturalHeight * 0.6;
-        ctx.imageSmoothingEnabled = true; ctx.drawImage(im, (im.naturalWidth - sw) / 2, (im.naturalHeight - sh) / 2, sw, sh, fx + 2, fy + 2, 7, 5); ctx.imageSmoothingEnabled = false;
-      }
+      ctx.imageSmoothingEnabled = true; ctx.drawImage(im, 5, 3, 14, 10, fx + 2, fy + 2, 7, 5); ctx.imageSmoothingEnabled = false; // the middle, so it reads at this size
     }
     if (r.corkAt) this.drawSlot("corkboard", 0, 0, r.corkAt.x * T - cx, T - cy);
     if (r.boardAt) this.drawSlot("leaderboard", 0, 0, r.boardAt.x * T - cx, T - cy);
@@ -3956,7 +3993,8 @@ class Game {
       if (c.alpha !== undefined) ctx.globalAlpha = Math.max(0, c.alpha);
       const sheet = c === this.player ? (this.staff ? "player_staff" : this.progress.wearShirt ? "player_goq_shirt" : c.sheet) : c.sheet;
       if (c === this.player && this.segway && !c.sitting) { const pp3 = this.pos(c); this.drawSlot("segway", 0, 0, Math.round(pp3.x - cx), Math.round(pp3.y - cy - 1)); }
-      const sx = Math.round(p.x - cx), sy = Math.round(p.y - cy - 4) + (c.sitting ? 2 : 0) - (c === this.player && this.segway && !c.sitting ? 4 : 0);
+      const hop = c.react && c.react.how === "loved" && this.t - c.react.t0 < 48 ? Math.round(Math.abs(Math.sin((this.t - c.react.t0) / 8)) * 4) : 0; // a happy hop
+      const sx = Math.round(p.x - cx), sy = Math.round(p.y - cy - 4) + (c.sitting ? 2 : 0) - (c === this.player && this.segway && !c.sitting ? 4 : 0) - hop;
       const cup = c === this.player ? this.drink : c.drink, cupFirst = cup && c.dir === "up";
       const bagAt = c.bag && !c.sitting ? [sx + { down: 1, up: 9, left: 9, right: -1 }[c.dir], sy + 9] : null, bagFirst = bagAt && c.dir !== "down"; // a shop bag hangs at their side
       if (bagFirst) this.drawSlot("shop_bag", 0, 0, ...bagAt);
@@ -3964,9 +4002,12 @@ class Game {
       this.drawSlot(sheet, c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
       if (cup && !cupFirst) this.drawCup(sx, sy, c);
       if (bagAt && !bagFirst) this.drawSlot("shop_bag", 0, 0, ...bagAt);
-      if (c !== this.player && c.snapT > 0) { // a visitor taking a photo of a piece, with a little flash
-        const ox = { down: 4, up: 4, left: 0, right: 8 }[c.dir]; if (c.dir !== "up") this.drawSlot("phone", 0, 0, sx + ox, sy + 4);
-        if (c.snapT > 14 && c.snapT < 19) { ctx.fillStyle = "rgba(255,255,240,.85)"; const fy = c.dir === "up" ? sy - 2 : sy + 2; ctx.fillRect(sx + ox + 2, fy, 4, 4); ctx.fillRect(sx + ox + 1, fy + 1, 6, 2); ctx.fillRect(sx + ox + 3, fy - 1, 2, 6); }
+      if (c !== this.player && c.snapT > 0) { // a visitor taking a photo of a piece: phone held up above their head, then a flash
+        const ox = { down: 4, up: 4, left: 0, right: 8 }[c.dir], oy = c.dir === "up" ? -6 : 3;
+        this.drawSlot("phone", 0, 0, sx + ox, sy + oy);
+        if (c.snapT > 22 && c.snapT < 30) { const k = c.snapT > 26 ? 1 : 0.5, fx = sx + ox + 4, fy = sy + oy + (c.dir === "up" ? -1 : 3);
+          ctx.fillStyle = "rgba(255,255,240," + (0.95 * k) + ")"; ctx.fillRect(fx - 1, fy - 4, 2, 8); ctx.fillRect(fx - 4, fy - 1, 8, 2); ctx.fillRect(fx - 2, fy - 2, 4, 4);
+          ctx.fillStyle = "rgba(255,255,230," + (0.25 * k) + ")"; ctx.beginPath(); ctx.arc(fx, fy, 9, 0, 7); ctx.fill(); }
       }
       if (c === this.player && this.phoneT > 0) {
         if (this.phoneT === 16) this.flash = 6;
@@ -3974,6 +4015,7 @@ class Game {
       }
       if (c === this.player && this.asleep && this.t % 120 < 90) { const zy = Math.floor((this.t % 120) / 30); ctx.fillStyle = "#f8f8f0"; ctx.font = "6px monospace"; ctx.fillText("z", sx + 12 + zy, sy - zy * 3); }
       const bub = c.leaving || this.full ? -1 : c.back ? 1 : c.cur && !c.follow ? 0 : -1; // "?" curious, "!" back to tell you how it went
+      if (c.react && !this.full) this.drawReaction(c, sx, sy);
       if (c.member && !c.leaving && !this.full && Math.abs(c.x - this.player.x) + Math.abs(c.y - this.player.y) <= 2) {
         ctx.font = "6px monospace"; const w = Math.ceil(ctx.measureText(c.member).width) + 4, nx = Math.round(sx + 8 - w / 2), ny = sy - (bub >= 0 ? 18 : 8);
         ctx.fillStyle = "rgba(24,24,32,.85)"; ctx.fillRect(nx, ny, w, 8); ctx.fillStyle = "#f8f0c0"; ctx.textBaseline = "top"; ctx.fillText(c.member, nx + 2, ny + 1);
@@ -4036,7 +4078,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-06 life";
+const VERSION = "2026-10-06 life 2";
 window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

@@ -322,7 +322,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-06 life";
+window.GOQ_WANT = "2026-10-06 life 2";
 (function load(retry) {
   const s = document.createElement("script");
   s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry ? "&r=" + Date.now() : "");
@@ -1488,12 +1488,16 @@ function renderVisitors() {
   wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:10px 0 14px" }, [el("label", {}, [document.createTextNode("Curious visitors a day"), el("small", { text: "Anyone you didn't get to comes back the next day. 0 turns curious visitors off." }), per])]));
   // Museum life: how often visitors have a drink, carry a shop bag, or photograph a piece.
   st.life = st.life || { drinks: 30, bags: 20, photos: 8 };
-  const pctIn = (k, label, hint) => { const i = el("input", { type: "number", min: 0, max: 100, value: st.life[k], style: "max-width:100px" }); i.addEventListener("input", () => { st.life[k] = Math.max(0, Math.min(100, Math.round(+i.value || 0))); changed(); }); return el("label", {}, [document.createTextNode(label), el("small", { text: hint }), i]); };
+  const pctIn = (k, label, hint) => {
+    const out = el("b", { text: st.life[k] + "%" }), i = el("input", { type: "range", min: 0, max: 100, step: 1, value: st.life[k], "aria-label": label });
+    i.addEventListener("input", () => { st.life[k] = Math.round(+i.value); out.textContent = st.life[k] + "%"; changed(); });
+    return el("label", {}, [el("span", {}, [document.createTextNode(label + ": "), out]), el("small", { text: hint }), i]);
+  };
   wrap.appendChild(el("h3", { text: "Museum life", style: "margin:6px 0 4px" }));
   wrap.appendChild(el("div", { class: "fields", style: "margin:0 0 14px" }, [
-    pctIn("drinks", "Visitors with a drink (%)", "Lobby and café only. They sip, finish, and drop the cup in a bin."),
-    pctIn("bags", "Visitors with a shop bag (%)", "Anywhere in the museum. The bag's art is under Art, People."),
-    pctIn("photos", "Photos of a piece (%)", "The chance a visitor who stops in front of a piece takes a photo of it. Keep it low."),
+    pctIn("drinks", "Visitors with a drink", "Lobby and café only. They sip, finish, and drop the cup in a bin. Nobody carries a drink and a bag at once."),
+    pctIn("bags", "Visitors with a shop bag", "Anywhere in the museum. The bag's art is under Art, People."),
+    pctIn("photos", "Photos of a piece", "The chance a visitor who stops in front of a piece takes a photo of it. Keep it low."),
   ]));
   wrap.appendChild(el("h3", { text: "Mindsets", style: "margin:6px 0 4px" }));
   wrap.appendChild(el("p", { class: "note" }, [document.createTextNode("How a visitor likes to play. Each curious visitor has one, and sometimes mentions a second. Put one line per row in each box. \"What they're looking for\" lines start with \"Something...\", since they follow \"I was looking for a game recommendation.\" In the next-day lines, "), phChip("title"), document.createTextNode(" is the game you recommended. \"Liked it\" lines are used when this is the second thing a visitor mentioned. Visitors never see the mindset's name.")]));
