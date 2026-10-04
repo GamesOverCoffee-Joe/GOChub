@@ -308,6 +308,9 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
           <button class="btn" type="button" id="spooky" aria-pressed="false" title="How often something creepy happens after the lights go out">Spooky: rare</button>
           <button class="btn" type="button" id="recrate" title="Put pieces with a future unveil date back in their crates">Repack crates</button>
           <button class="btn" type="button" id="rechore" title="Dust settles, plants get thirsty, the mug goes missing, visitors come back, lights come on">Reset chores</button>
+          <button class="btn" type="button" id="figureBtn" title="The figure appears right now, beside or behind you, with this room's lights off. Turn and photograph it before it's gone.">Summon the figure</button>
+          <button class="btn" type="button" id="dayBtn" title="Jump the preview to the next day: curious visitors come back, dust settles, the museum opens again">Skip to tomorrow</button>
+          <button class="btn" type="button" id="testPcs" aria-pressed="false" title="Fill the preview with 60 placeholder pieces so the oldest go to the archive on Someone's PC (B1). Never saved to the pack.">Test pieces: off</button>
         </div>
       </details>
     </div>
@@ -319,7 +322,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-05 visitors";
+window.GOQ_WANT = "2026-10-06 life";
 (function load(retry) {
   const s = document.createElement("script");
   s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry ? "&r=" + Date.now() : "");
@@ -404,8 +407,16 @@ const game = new GOQ.Game(stage, undefined, { curator: true, capture: "focus", s
 GOQ.mountControls(game, $("#controls"));
 game.tapWalk = matchMedia("(pointer:coarse)").matches; // tap to walk in the preview on touch screens
 window.goqCurator = { game, get draft() { return draft; } };
+/* "Test pieces": placeholder pieces at the top of the list (the oldest), so they're the ones that overflow into the archive. Preview only. */
+let testPieces = false;
+function previewPack() {
+  const p = packOut(); if (!testPieces) return p;
+  const fake = Array.from({ length: 60 }, (_, i) => ({ id: "test-" + i, kind: i % 2 ? "community" : "episode", title: "Test piece " + (i + 1), developer: "Test Developer",
+    observation: "A placeholder observation for testing.", intention: "A placeholder intention for testing.", guestWriter: "Tester", guestNote: "A placeholder guest note for testing.", hint: "the test one, number " + (i + 1) }));
+  return Object.assign({}, p, { pieces: [...fake, ...p.pieces] });
+}
 async function refreshPreview() {
-  await game.setPack(packOut());
+  await game.setPack(previewPack());
   pending = false; $("#applyDot").hidden = true; fillRoomPicker();
   if (tab === "art") renderSlotList();
 }
@@ -437,6 +448,16 @@ $("#rechore").addEventListener("click", () => { game.resetProgress(); stage.focu
 $("#timeBtn").addEventListener("click", e => {
   const order = [null, "day", "sunset", "night"], next = order[(order.indexOf(game.timeOverride) + 1) % order.length];
   game.setTime(next); e.currentTarget.textContent = "Time: " + (next || "clock"); stage.focus({ preventScroll: true });
+});
+$("#figureBtn").addEventListener("click", () => {
+  game.closeAll(); if (!game.summonFigure()) status("No room for the figure here. Try a bigger room.", true);
+  stage.focus({ preventScroll: true });
+});
+$("#dayBtn").addEventListener("click", () => { game.closeAll(); game.skipDay(); stage.focus({ preventScroll: true }); });
+$("#testPcs").addEventListener("click", async e => {
+  testPieces = !testPieces; e.currentTarget.textContent = "Test pieces: " + (testPieces ? "on" : "off"); e.currentTarget.setAttribute("aria-pressed", testPieces);
+  await refreshPreview(); status(testPieces ? "Preview has 60 test pieces; the oldest are in the archive on Someone's PC (Storage)" : "Test pieces removed from the preview");
+  stage.focus({ preventScroll: true });
 });
 // Spooky: "always" makes the rare creepy moment happen on every closing, handy for recording an end-card.
 $("#spooky").addEventListener("click", e => {
@@ -1388,9 +1409,11 @@ function renderWords() {
         ]));
       }));
     }
+    if (!wordsQuery) list.appendChild(el("p", { class: "note", text: "What curious visitors say is in the Visitors tab." }));
     // Everything else, by area; each line is a one-row summary that opens into its editor
     const groups = {};
     for (const k in GOQ.TEXT) (groups[GOQ.TEXT[k].g] = groups[GOQ.TEXT[k].g] || []).push(k);
+    delete groups["Curious visitors"]; // edited in the Visitors tab, with their placeholders color-coded
     for (const g in groups) {
       const keys = groups[g].filter(k => match(g, GOQ.TEXT[k].l, toText(st.text[k] || GOQ.TEXT[k].v)));
       if (!keys.length) continue;
@@ -1463,8 +1486,17 @@ function renderVisitors() {
   const per = el("input", { type: "number", min: 0, max: 10, value: st.curious.perDay, style: "max-width:120px" });
   per.addEventListener("input", () => { st.curious.perDay = Math.max(0, Math.min(10, Math.round(+per.value || 0))); changed(); });
   wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:10px 0 14px" }, [el("label", {}, [document.createTextNode("Curious visitors a day"), el("small", { text: "Anyone you didn't get to comes back the next day. 0 turns curious visitors off." }), per])]));
+  // Museum life: how often visitors have a drink, carry a shop bag, or photograph a piece.
+  st.life = st.life || { drinks: 30, bags: 20, photos: 8 };
+  const pctIn = (k, label, hint) => { const i = el("input", { type: "number", min: 0, max: 100, value: st.life[k], style: "max-width:100px" }); i.addEventListener("input", () => { st.life[k] = Math.max(0, Math.min(100, Math.round(+i.value || 0))); changed(); }); return el("label", {}, [document.createTextNode(label), el("small", { text: hint }), i]); };
+  wrap.appendChild(el("h3", { text: "Museum life", style: "margin:6px 0 4px" }));
+  wrap.appendChild(el("div", { class: "fields", style: "margin:0 0 14px" }, [
+    pctIn("drinks", "Visitors with a drink (%)", "Lobby and café only. They sip, finish, and drop the cup in a bin."),
+    pctIn("bags", "Visitors with a shop bag (%)", "Anywhere in the museum. The bag's art is under Art, People."),
+    pctIn("photos", "Photos of a piece (%)", "The chance a visitor who stops in front of a piece takes a photo of it. Keep it low."),
+  ]));
   wrap.appendChild(el("h3", { text: "Mindsets", style: "margin:6px 0 4px" }));
-  wrap.appendChild(el("p", { class: "note", text: "How a visitor likes to play. Each curious visitor has one, and sometimes mentions a second. Put one line per row in each box. In the next-day lines, {title} is the game you recommended. \"Liked it\" lines are used when this is the second thing a visitor mentioned. Visitors never see the mindset's name." }));
+  wrap.appendChild(el("p", { class: "note" }, [document.createTextNode("How a visitor likes to play. Each curious visitor has one, and sometimes mentions a second. Put one line per row in each box. \"What they're looking for\" lines start with \"Something...\", since they follow \"I was looking for a game recommendation.\" In the next-day lines, "), phChip("title"), document.createTextNode(" is the game you recommended. \"Liked it\" lines are used when this is the second thing a visitor mentioned. Visitors never see the mindset's name.")]));
   const lines = (m, k, ph) => { const t = el("textarea", { placeholder: ph, style: "min-height:76px" }); t.value = (m[k] || []).join("\n"); t.addEventListener("input", () => { m[k] = t.value.split("\n").map(x => x.trim()).filter(Boolean); changed(); }); return t; };
   list.forEach((m, i) => {
     const name = el("input", { type: "text", value: m.name, placeholder: "Unhurried", maxlength: 40 }); name.addEventListener("input", () => { m.name = name.value; changed(); });
@@ -1472,10 +1504,11 @@ function renderVisitors() {
     wrap.appendChild(el("article", { class: "prow", style: "display:block" }, [el("div", { class: "fields" }, [
       el("label", {}, [document.createTextNode("Name (only you see it)"), name]),
       el("p", { class: "note", style: "align-self:end;margin:0", text: tagged + " piece" + (tagged === 1 ? "" : "s") + " ticked" }),
-      el("label", { class: "wide" }, [document.createTextNode("What they say they like"), lines(m, "ask", "I want to go at my own pace.\nNothing stressful, please.")]),
+      el("label", { class: "wide" }, [document.createTextNode("What they're looking for"), lines(m, "ask", "Something I can play at my own pace.\nSomething relaxing. Nothing stressful, please.")]),
       el("label", {}, [document.createTextNode("Next day: loved it"), lines(m, "loved", "{title} was so calm. I just sat with it for hours.")]),
       el("label", {}, [document.createTextNode("Next day: liked it"), lines(m, "liked", "{title} had some quiet moments I really liked.")]),
       el("label", { class: "wide" }, [document.createTextNode("Next day: not for them (say why)"), lines(m, "nope", "{title} kept pushing me to hurry. I wanted to breathe.")]),
+      m.loved && m.loved[0] ? el("div", { class: "wide" }, [phExample(m.loved[0])]) : null,
       el("div", { class: "acts" }, [
         el("button", { type: "button", class: "btn small quiet", text: "Move up", disabled: i === 0, onclick: () => { [list[i - 1], list[i]] = [list[i], list[i - 1]]; changed(); renderVisitors(); } }),
         el("button", { type: "button", class: "btn small quiet", text: "Remove", onclick: () => {
@@ -1488,7 +1521,35 @@ function renderVisitors() {
   wrap.appendChild(el("div", { class: "row" }, [
     el("button", { type: "button", class: "btn primary", text: "Add a mindset", onclick: () => { list.push({ id: "mind-" + Math.random().toString(36).slice(2, 8), name: "New mindset", ask: [], loved: [], liked: [], nope: [] }); changed({ now: true }); renderVisitors(); } }),
   ]));
-  wrap.appendChild(el("p", { class: "note", style: "margin-top:18px", text: "The words around the visit (saying hi, following, recommending, coming back) are in the Words tab, under Curious visitors. What Patreon members on shift say is under Patreon members on shift." }));
+  renderCuriousWords(wrap);
+  wrap.appendChild(el("p", { class: "note", style: "margin-top:18px", text: "What Patreon members on shift say is in the Words tab, under Chat: Patreon members on shift." }));
+}
+/* Placeholders, each in its own color, with a sample value. The examples under each box use the same colors. */
+const PH = { name: ["Hal", "#2f6fb0"], title: ["Comets Have Feathers", "#b5651d"], hint: [", the one where you fly in an open world", "#2f7a3a"] };
+const phChip = k => el("code", { text: "{" + k + "}", style: "color:#fff;background:" + PH[k][1] + ";border-radius:3px;padding:0 .3em;font-size:.85em" });
+function phExample(line) {
+  const out = el("small", { style: "display:block;margin-top:4px" }, [document.createTextNode("Example: ")]);
+  String(line).split(/(\{\w+\})/).forEach(part => { const k = (part.match(/^\{(\w+)\}$/) || [])[1]; out.appendChild(k && PH[k] ? el("b", { text: PH[k][0], style: "color:" + PH[k][1] }) : document.createTextNode(part)); });
+  return out;
+}
+function renderCuriousWords(wrap) {
+  const st = draft.settings; st.text = st.text || {};
+  wrap.appendChild(el("h3", { text: "What curious visitors say", style: "margin:18px 0 4px" }));
+  wrap.appendChild(el("p", { class: "note" }, [document.createTextNode("One page per line; a blank line separates versions, which take turns. The game fills in "), phChip("name"), document.createTextNode(" (the visitor), "), phChip("title"), document.createTextNode(" (the game) and "), phChip("hint"), document.createTextNode(" (the piece's \"the one where...\" line).")]));
+  Object.keys(GOQ.TEXT).filter(k => GOQ.TEXT[k].g === "Curious visitors").forEach(k => {
+    const def = GOQ.TEXT[k], cur = st.text[k] || def.v, t = el("textarea", { "aria-label": def.l, style: "min-height:56px" });
+    t.value = cur.map(v => v.join("\n")).join("\n\n");
+    t.addEventListener("input", () => {
+      const v = t.value.split(/\n\s*\n/).map(b => b.split("\n").map(x => x.trim()).filter(Boolean)).filter(b => b.length);
+      if (v.length && JSON.stringify(v) !== JSON.stringify(def.v)) st.text[k] = v; else delete st.text[k];
+      changed();
+    });
+    const used = Object.keys(PH).filter(p => def.v.flat().join(" ").includes("{" + p + "}"));
+    wrap.appendChild(el("article", { class: "prow", style: "display:block;padding:10px 14px" }, [
+      el("label", { style: "display:block" }, [el("b", { text: def.l }), used.length ? el("span", { style: "margin-left:8px" }, used.map(phChip)) : null, t]),
+      used.length ? phExample(def.v[0].join(" ")) : null,
+    ]));
+  });
 }
 
 /* ---------- Shop ---------- */
