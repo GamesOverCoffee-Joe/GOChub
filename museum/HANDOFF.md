@@ -226,6 +226,28 @@ Goal: an empty building you can walk through, with the right proportions.
 
 **Done when:** walking around feels like a building, the hallways feel long but not tedious, and resizing in the curator is easy.
 
+**Status (2026-10-08): built, waiting on your play-test.**
+
+What's in:
+- **The museum map.** Rooms: Café and Gift Shop, Puzzle, Strategy, Action, Story. Hallways: Upper Hall and Lower Hall (30 tiles each), Lobby Hall (8), the two L-shaped halls from Puzzle and Strategy down into the café (19 each), the side halls off the café (6), the verticals Puzzle↔Action and Strategy↔Story (8), a short link from the café down to the Lower Hall, and a spur at the bottom right with the stairs down to B1. The whole map is 62×49 tiles.
+- **Art per zone.** Placeholder art only: the café uses the old gift-shop tiles, Puzzle/Strategy/Action use the old gallery 1/2/3 tiles, Story uses the staff-room tiles, and hallways use the lobby marble.
+- **Room names.** Walking into a room shows its name; hallways stay quiet. Visiting a museum room counts toward Wayfinder, which now needs 8 rooms (5 museum rooms + lobby, staff room, B1).
+- **Lights.** Each museum room has its own switch, by the left end of its back wall. Hallways go dark once every room is off. A dark room looks dark from the hallway too. Closing needs the lobby plus all 5 museum rooms off.
+- **Lobby.** The top door leads into the Lobby Hall, the right-side café door is walled up, and the gift shop and directory signs and the usher's directions are updated.
+- **B1.** Reached by the stairs at the end of the spur. B1's right-hand door leads back up; its elevator door is walled up.
+- **Curator → Rooms → Museum → Layout tool.**
+  - Drag rooms to move them, or their walls to resize them.
+  - Drag hallways sideways, or the round corner of an L.
+  - Each hallway shows its length, turns red when it's under its minimum, and has width and minimum settings.
+  - You can add a room or a hallway, and set art per room or hallway.
+  - Undo works.
+  - The preview's "Go to room" list includes every museum room and hallway.
+- **Old drafts.** A browser draft or imported pack from before the change asks once, then drops the old floors and rewires the doors.
+
+Left for later, on purpose:
+- **Display and the café:** no cases, paintings, café counter or gift shop yet (Phase 2). All episodes sit in the archive on Someone's PC until there are cases.
+- **Floor-era code:** the old elevator and stairwell code and text are still in the engine, unused. They come out in Phase 3 along with the shirt-quest rewrite (its elevator and 2F steps can't be done right now).
+
 ### Phase 2: Furnishing
 
 Goal: the rooms feel like rooms.
