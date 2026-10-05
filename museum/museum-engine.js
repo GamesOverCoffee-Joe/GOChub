@@ -911,8 +911,9 @@ function genreOf(p, genres) {
   for (const m of p.minds || []) { const g = genres.find(g => g.minds.includes(m)); if (g) return g.id; }
   return "";
 }
-/* Episodes in cases. Newest first: each goes to a free case in its genre's room; the rest fill any free case (rooms
-   without a genre first); whatever doesn't fit is archived on Someone's PC. Returns the piece in each case, room by room. */
+/* Episodes in cases. Newest first, each goes to a free case in its genre's room, and only there: add cases to a room
+   and more of its genre come out of the archive; take some away and its oldest go back in. Episodes with no genre go in
+   rooms with no genre. Whatever doesn't fit is archived on Someone's PC. Returns the piece in each case, room by room. */
 function assignCases(pieces, genres) {
   const slots = [];
   for (const id in ROOMS) {
@@ -923,9 +924,7 @@ function assignCases(pieces, genres) {
     });
   }
   const eps = pieces.filter(p => p.kind === "episode"), newest = eps.slice().reverse(), placed = new Set();
-  for (const p of newest) { const g = genreOf(p, genres), s = g && slots.find(s => !s.p && s.genre === g); if (s) { s.p = p; placed.add(p.id); } }
-  const free = slots.filter(s => !s.p).sort((a, b) => !!a.genre - !!b.genre);
-  newest.filter(p => !placed.has(p.id)).slice(0, free.length).forEach((p, k) => { free[k].p = p; placed.add(p.id); });
+  for (const p of newest) { const g = genreOf(p, genres), s = slots.find(s => !s.p && s.genre === g); if (s) { s.p = p; placed.add(p.id); } }
   const byRoom = {}; slots.forEach(s => ((byRoom[s.room] = byRoom[s.room] || [])[s.i] = s.p));
   return { byRoom, slots, archived: eps.filter(p => !placed.has(p.id)) };
 }
@@ -1074,6 +1073,7 @@ const ROOMS = {
       { x: 7, y: 9, frontDoor: true, bump: true },
       { x: 3, y: 2, window: true }, { x: 4, y: 2, window: true },
     ],
+    stairs: [{ x: 13, y: 5, kind: "down", to: ["storage", 13, 5, "left"] }], // down to B1 Storage, where the café door used to be
     lightSwitch: [5, 2], intercom: [2, 2], exitTo: [7, 8],
     eotmAt: [9, 1],
     light: { dim: 0, spots: 0 }, // dim: how dark the room is with the lights on (0 to 0.8); spots: spotlight strength on pieces (0 to 1)
@@ -1107,10 +1107,9 @@ const ROOMS = {
         { id: "cafe-east", name: "Café, east", path: [[35, 21], [46, 21]], width: 2, min: 0 },
         { id: "puzzle-action", name: "Puzzle to Action", path: [[10, 14], [10, 29]], width: 2, min: 0 },
         { id: "strategy-story", name: "Strategy to Story", path: [[46, 14], [46, 30]], width: 2, min: 0 },
-        { id: "b1", name: "Stairs to B1", path: [[41, 37], [41, 44], [44, 44]], width: 2, min: 0 },
       ],
       doors: [{ id: "lobby", zone: "lobbyhall", side: "bottom", at: 0, warp: ["lobby", 7, 3, "down"] }],
-      stairs: [{ id: "b1", zone: "b1", at: [-3, -1], kind: "down", arrive: "up", to: ["storage", 13, 5, "left"] }],
+      stairs: [],
       spawn: "lobby",
     },
     light: { dim: 0, spots: 0 },
@@ -1144,7 +1143,7 @@ const ROOMS = {
       { key: "trash_can", x: 4, y: 3, event: { trash: true } },
       { key: "someones_pc", x: 12, y: 3, event: { pc: true } },
     ],
-    events: [{ x: 14, y: 5, warp: ["museum", "@b1", 0, "up"] }],
+    events: [{ x: 14, y: 5, warp: ["lobby", 13, 5, "left"] }],
     light: { dim: 0.35, spots: 0 },
     catSpots: [[12, 6]],
     visitors: [{ sheet: "shop_staff", x: 7, y: 7, still: true, staff: true, role: "conservator", lines: [
@@ -4257,7 +4256,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-09 furnished";
+const VERSION = "2026-10-09 furnished 2";
 window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
