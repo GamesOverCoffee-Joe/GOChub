@@ -325,7 +325,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-08 one building 3";
+window.GOQ_WANT = "2026-10-09 furnished";
 (function load(retry) {
   const s = document.createElement("script");
   s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry ? "&r=" + Date.now() : "");
@@ -367,6 +367,7 @@ function packOut() {
     if (p.gameUrl) o.gameUrl = p.gameUrl;
     if (p.hint) o.hint = p.hint;
     if (p.minds && p.minds.length) o.minds = p.minds;
+    if (p.genre) o.genre = p.genre;
     if (p.unveil) o.unveil = p.unveil;
     if (p.pick) o.pick = true;
     if (p.image) o.image = p.image; else { o.colors = p.colors; o.style = p.style; }
@@ -891,8 +892,8 @@ function roomItems(d) {
   (d.cases || []).forEach((c, i) => out.push({ type: "case", i, x: c[0], y: c[1] - 1, w: 1, h: 2, label: "Episode case " + (i + 1) }));
   (d.props || []).forEach((p, i) => { const h = sh(p.key); out.push({ type: "prop", i, x: p.x, y: p.y - (h - 1), w: sw(p.key), h, label: (GOQ.SLOT[p.key] || {}).label || p.key }); });
   (d.lockers || []).forEach((x, i) => out.push({ type: "locker", i, x, y: 1, w: 1, h: 2, label: "Locker" }));
-  (d.spots || []).forEach((x, i) => out.push({ type: "spot", i, x, y: 1, w: 2, h: 2, label: "Painting spot " + (i + 1) }));
-  (d.wallArt || []).forEach((a, i) => out.push({ type: "wallArt", i, x: a.x, y: 1, w: sw(a.key), h: 2, label: (GOQ.SLOT[a.key] || {}).label || a.key }));
+  (d.spots || []).forEach((s, i) => out.push({ type: "spot", i, x: Array.isArray(s) ? s[0] : s, y: Array.isArray(s) ? s[1] : 1, w: 2, h: 2, label: "Painting spot " + (i + 1) }));
+  (d.wallArt || []).forEach((a, i) => out.push({ type: "wallArt", i, x: a.x, y: a.y || 1, w: sw(a.key), h: 2, label: (GOQ.SLOT[a.key] || {}).label || a.key }));
   (d.decals || []).forEach((a, i) => out.push({ type: "decal", i, x: a.x, y: a.y, w: sw(a.key), h: sh(a.key), label: (GOQ.SLOT[a.key] || {}).label || a.key }));
   return out;
 }
@@ -924,8 +925,8 @@ function renderRooms() {
   // The museum is drawn from its layout, so it has a Layout tool instead of tile painting.
   const lay = isLayout(roomDef(R.id));
   if (lay && ["paint", "fill", "erase"].includes(R.tool)) R.tool = "layout";
-  if (!lay && R.tool === "layout") R.tool = "select";
-  const tools = el("div", { class: "rtools", role: "toolbar", "aria-label": "Tools" }, (lay ? [["layout", "Layout"], ["select", "Select"], ["place", "Place"]] : [
+  if (!lay && (R.tool === "layout" || R.tool === "shape")) R.tool = "select";
+  const tools = el("div", { class: "rtools", role: "toolbar", "aria-label": "Tools" }, (lay ? [["layout", "Layout"], ["shape", "Shape"], ["select", "Select"], ["place", "Place"]] : [
     ["select", "Select"], ["paint", "Paint"], ["fill", "Fill"], ["erase", "Erase"], ["place", "Place"],
   ]).map(([t, l]) => el("button", { type: "button", class: "btn small" + (R.tool === t ? " on" : ""), "aria-pressed": R.tool === t, text: l, onclick: () => { R.tool = t; R.linking = null; renderRooms(); } })));
   wrap.appendChild(el("div", { class: "rhead" }, [
@@ -950,6 +951,10 @@ function renderRooms() {
     wrap.appendChild(el("div", { class: "rpick" }, [el("button", { type: "button", class: "rchip on", onclick: () => openChooser("Paint with", [{ name: "Tiles", items: TILE_BRUSHES.filter(b => R.tool === "paint" || !b.pair).map(b => ({ label: b.name, on: R.brush.ch === b.ch, swatch: brushSwatch(b), pick: () => { R.brush = b; } })) }]) },
       [brushSwatch(R.brush), el("span", { text: R.brush.name }), el("b", { text: "Change", class: "rchg" })])]));
   }
+  if (R.tool === "shape") {
+    R.shape = R.shape || ".";
+    wrap.appendChild(paletteStrip([[".", "Add floor"], ["#", "Add wall"], ["x", "Back to the plan"]].map(([v, l]) => ({ label: l, on: R.shape === v, pick: () => { R.shape = v; renderRooms(); } }))));
+  }
   if (R.tool === "place") {
     const cur = R.place, lbl = it => it.name || (GOQ.SLOT[it.key] || {}).label || it.key;
     wrap.appendChild(el("div", { class: "rpick" }, [el("button", { type: "button", class: "rchip on", onclick: () => openChooser("Place", PLACE_GROUPS.map(g => ({ name: g.name, items: g.items.map(it => ({ label: lbl(it), on: R.place === it, swatch: slotSwatch(it.key), pick: () => { R.place = it; } })) }))) },
@@ -964,6 +969,7 @@ function renderRooms() {
   left.appendChild(box); body.appendChild(left); wrap.appendChild(body);
   R.cv = cv; bindCanvas(cv);
   const hint = el("p", { class: "note rhint", text: {
+    shape: "Drag across a room's floor or walls to change its shape: alcoves and bump-outs (Add floor), pillars and notches (Add wall). Tweaks move with the room.",
     layout: "Drag a room to move it, or its walls to resize it. Drag a hallway sideways, or the round corner of an L. Tap one for its settings.",
     select: "Tap something to select it; drag to move it. Tap a door to choose where it leads. Tap empty floor for room settings.",
     paint: "Drag to paint tiles. " + (R.brush.note || ""), fill: "Tap to fill a connected area of the same tile.",
@@ -1038,7 +1044,7 @@ function drawEditor() {
     const ch = getCh(d, tx, ty); if (!"dsBEH".includes(ch)) continue;
     const ev = doorEvent(d, tx, ty); tag(tx, ty, ev ? "\u2192" : "!", ev ? "#e8b24a" : "#f08a6a");
   }
-  if (isLayout(d) && R.tool === "layout") drawLayout(x, d, z);
+  if (isLayout(d) && (R.tool === "layout" || R.tool === "shape")) drawLayout(x, d, z);
   else if (R.sel) { const it = roomItems(d).find(i => sameSel(i, R.sel)) || R.sel; outline(it, "#ffffff"); }
   if (R.hover) { x.fillStyle = "rgba(232,178,74,.25)"; x.fillRect(R.hover.x * 16, R.hover.y * 16, 16, 16); }
   x.restore();
@@ -1086,7 +1092,7 @@ function bindCanvas(cv) {
       stroke.started = true;
       const d = roomDef(R.id), onThing = itemAt(d, press.t.x, press.t.y);
       // Paint paints; Select drags the thing under your finger; otherwise one finger slides the map.
-      if (R.tool === "paint" || (R.tool === "select" && onThing && onThing.type !== "locker") || (R.tool === "layout" && layHit(d.layout, press.t))) beginStroke(press.t);
+      if (R.tool === "paint" || (R.tool === "select" && onThing && onThing.type !== "locker") || (R.tool === "layout" && layHit(d.layout, press.t)) || R.tool === "shape") beginStroke(press.t);
       else { gesture = { a: { x: press.x, y: press.y }, b: null, panX: R.panX, panY: R.panY, zoom: R.zoom, mouse: true, one: true }; press = null; stroke = null; return; }
     }
     moveStroke(t);
@@ -1110,6 +1116,7 @@ let drag = null;
 function beginStroke(t) {
   const d = roomDef(R.id);
   if (R.tool === "layout") { layBegin(t); return; }
+  if (R.tool === "shape") { snapshot(); shapeAt(t); return; }
   if (R.tool === "paint") { snapshot(); paintAt(t); return; }
   if (R.tool === "select") {
     const it = itemAt(d, t.x, t.y); if (!it || it.type === "locker") return;
@@ -1118,6 +1125,7 @@ function beginStroke(t) {
 }
 function moveStroke(t) {
   if (R.tool === "layout") { layMove(t); return; }
+  if (R.tool === "shape") { shapeAt(t); return; }
   if (R.tool === "paint") { paintAt(t); return; }
   if (R.tool === "select" && drag) {
     const dx = t.x - drag.last.x, dy = t.y - drag.last.y; if (!dx && !dy) return;
@@ -1130,6 +1138,7 @@ function tapTool(t) {
   if (t.x < 0 || t.y < 0 || t.x >= W(d) || t.y >= H(d)) { R.sel = null; R.laySel = null; drawEditor(); renderInspector(); return; }
   if (R.linking) { finishLink(t); return; }
   if (R.tool === "layout") { layTap(t); return; }
+  if (R.tool === "shape") { snapshot(); shapeAt(t); roomChanged(true); return; }
   if (R.tool === "select") { selectAt(t); return; }
   if (R.tool === "paint") { snapshot(); paintAt(t); roomChanged(true); return; }
   if (R.tool === "fill") { snapshot(); fillAt(t); return; }
@@ -1172,8 +1181,13 @@ function eraseAt(t) {
 function placeAt(t) {
   const d = editable(R.id), p = R.place, s = GOQ.SLOT[p.key] || { w: 16, h: 16 }, w = s.w / 16, tall = s.h >= 32;
   if (p.kind === "case") (d.cases = d.cases || []).push([t.x, t.y]);
-  else if (p.kind === "spot") (d.spots = d.spots || []).push(t.x);
-  else if (p.kind === "wallArt") (d.wallArt = d.wallArt || []).push({ key: p.key, x: t.x, say: ["(What it says when someone looks at it.)"] });
+  else if (p.kind === "spot" || p.kind === "wallArt") {
+    // The museum has walls at every height: hang it on the wall you tapped (or the one just above).
+    const wy = isLayout(d) ? wallRowAt(d, t) : 1;
+    if (wy === null) { status("Tap a wall (the back wall of a room or hallway) to hang it.", true); R.undo.pop(); return; }
+    if (p.kind === "spot") (d.spots = d.spots || []).push(isLayout(d) ? [t.x, wy] : t.x);
+    else (d.wallArt = d.wallArt || []).push(Object.assign({ key: p.key, x: t.x, say: ["(What it says when someone looks at it.)"] }, isLayout(d) ? { y: wy } : {}));
+  }
   else if (p.kind === "decal") (d.decals = d.decals || []).push({ key: p.key, x: t.x, y: t.y });
   else if (p.kind === "spawn") d.spawn = [t.x, t.y, (d.spawn && d.spawn[2]) || "down"];
   else if (p.kind === "catSpot") (d.catSpots = d.catSpots || []).push([t.x, t.y]);
@@ -1215,14 +1229,21 @@ function removeItem(d, it) {
   if (arr) d[arr].splice(it.i, 1);
   else if (it.type === "fixed") delete d[it.key];
 }
+/* Wall things sit on a back wall's upper row. In the museum they can move to another wall: dy, if that's a wall too, else 0. */
+function wallRowMove(d, x, y, dy) { return dy && isLayout(d) && getCh(d, x, y + dy) === "^" && getCh(d, x, y + dy + 1) === "v" ? dy : 0; }
+/* The upper wall row for a tap on a wall (or the floor just below it), or null. */
+function wallRowAt(d, t) {
+  for (const y of [t.y, t.y - 1, t.y - 2, t.y - 3]) if (getCh(d, t.x, y) === "^" && getCh(d, t.x, y + 1) === "v") return y;
+  return null;
+}
 function moveItem(d, it, dx, dy) {
   const sety = it.type !== "spot" && it.type !== "wallArt" && !(it.type === "fixed" && ["windowAt", "eotmAt", "corkboardAt", "leaderboardAt"].includes(it.key));
   const mv = o => { o.x += dx; if (sety) o.y += dy; };
   if (it.type === "visitor") mv(d.visitors[it.i]);
   else if (it.type === "prop") mv(d.props[it.i]);
   else if (it.type === "decal") mv(d.decals[it.i]);
-  else if (it.type === "wallArt") d.wallArt[it.i].x += dx;
-  else if (it.type === "spot") d.spots[it.i] += dx;
+  else if (it.type === "wallArt") { const a = d.wallArt[it.i]; a.x += dx; const ny = wallRowMove(d, a.x, a.y || 1, dy); if (ny) { a.y = (a.y || 1) + ny; it.y += ny; } }
+  else if (it.type === "spot") { const v = d.spots[it.i]; if (Array.isArray(v)) { v[0] += dx; const ny = wallRowMove(d, v[0], v[1], dy); if (ny) { v[1] += ny; it.y += ny; } } else d.spots[it.i] += dx; }
   else if (it.type === "case") { d.cases[it.i][0] += dx; d.cases[it.i][1] += dy; }
   else if (it.type === "stairs") { d.stairs[it.i].x += dx; d.stairs[it.i].y += dy; }
   else if (it.type === "catSpot") { d.catSpots[it.i][0] += dx; d.catSpots[it.i][1] += dy; }
@@ -1361,13 +1382,43 @@ function layBegin(t) {
   const d = roomDef(R.id), hit = layHit(d.layout, t); if (!hit) return false;
   snapshot(); const e = editable(R.id);
   R.laySel = { kind: hit.kind === "edge" || hit.kind === "room" ? "room" : "hall", id: hit.id };
-  R.layDrag = { hit, start: t, orig: clone(e.layout) };
+  R.layDrag = { hit, start: t, orig: clone(e.layout), items: itemsOf(e) };
   return true;
 }
 function layMove(t) {
   const g = R.layDrag; if (!g) return;
   const L = layApply(g.orig, g.hit, t.x - g.start.x, t.y - g.start.y); if (!L) return;
-  const d = editable(R.id); d.layout = L; recarve(d); roomChanged();
+  const d = editable(R.id), o = g.orig, h = g.hit;
+  // Furniture, cases and paintings move with the room (or the stretch of hallway) you're dragging.
+  let box = null, dx = 0, dy = 0;
+  if (h.kind === "room") { const a = layRoom(o, h.id), b = layRoom(L, h.id); box = { x: a.x - 3, y: a.y - 4, w: a.w + 6, h: a.h + 7 }; dx = b.x - a.x; dy = b.y - a.y; }
+  else if (h.kind === "hall") {
+    const a = layHall(o, h.id), b = layHall(L, h.id), i = Math.min(h.seg, a.path.length - 2), rc = GOQ.hallRects(a)[i];
+    if (rc && b.path.length === a.path.length) { box = { x: rc.x, y: rc.y - 3, w: rc.w, h: rc.h + 3 }; dx = b.path[i][0] - a.path[i][0]; dy = b.path[i][1] - a.path[i][1]; }
+  }
+  Object.assign(d, shiftItems(g.items, box, dx, dy));
+  d.layout = L; recarve(d); roomChanged();
+}
+/* The things placed in a room, so a drag can move them from where they started. */
+const ITEM_KEYS = ["props", "cases", "spots", "wallArt", "decals", "glows", "catSpots", "mugSpots", "visitors", "featuredAt"];
+function itemsOf(d) { const o = {}; ITEM_KEYS.forEach(k => { if (d[k] !== undefined) o[k] = clone(d[k]); }); return o; }
+function shiftItems(items, box, dx, dy) {
+  const out = clone(items); if (!box || (!dx && !dy)) return out;
+  const inside = (x, y) => x >= box.x && y >= box.y && x < box.x + box.w && y < box.y + box.h;
+  ["props", "decals", "visitors", "wallArt"].forEach(k => (out[k] || []).forEach(o => { if (inside(o.x, o.y === undefined ? 1 : o.y)) { o.x += dx; if (o.y !== undefined) o.y += dy; } }));
+  ["cases", "glows", "catSpots", "mugSpots"].forEach(k => (out[k] || []).forEach(p => { if (inside(p[0], p[1])) { p[0] += dx; p[1] += dy; } }));
+  (out.spots || []).forEach((p, i) => { if (Array.isArray(p) && inside(p[0], p[1])) { p[0] += dx; p[1] += dy; } });
+  if (out.featuredAt && inside(out.featuredAt[0], out.featuredAt[1])) { out.featuredAt[0] += dx; out.featuredAt[1] += dy; }
+  return out;
+}
+/* Shape tool: add floor or wall at a tile, as a tweak to the nearest room (stored from its top-left, so it moves with it). */
+function shapeAt(t) {
+  const d = editable(R.id), L = d.layout, near = r => Math.max(r.x - t.x, t.x - (r.x + r.w - 1), 0) + Math.max(r.y - t.y, t.y - (r.y + r.h - 1), 0);
+  const r = L.rooms.filter(r => near(r) <= 3).sort((a, b) => near(a) - near(b))[0];
+  if (!r) { status("Shape tweaks go in or right next to a room.", true); return; }
+  const dx = t.x - r.x, dy = t.y - r.y; r.edits = (r.edits || []).filter(e => e[0] !== dx || e[1] !== dy);
+  if (R.shape !== "x") r.edits.push([dx, dy, R.shape || "."]);
+  R.laySel = { kind: "room", id: r.id }; recarve(d); roomChanged();
 }
 function layTap(t) {
   const d = roomDef(R.id), hit = layHit(d.layout, t);
@@ -1393,6 +1444,11 @@ function renderLayoutPanel(box, d) {
     w.addEventListener("change", resize); hh.addEventListener("change", resize);
     box.appendChild(el("div", { class: "rrow" }, [field("Width", w), field("Depth", hh)]));
     box.appendChild(el("p", { class: "note", text: "Floor tiles, not counting the walls. Or drag the room's walls on the map." }));
+    const genres = draft.settings.genres || GOQ.SAMPLE_GENRES, gs = el("select", {}, [el("option", { value: "", text: "None (any episode can fill a spare case)" })].concat(genres.map(g => el("option", { value: g.id, text: g.name }))));
+    gs.value = r.genre || ""; gs.addEventListener("change", () => layEdit(L2 => { layRoom(L2, r.id).genre = gs.value; }));
+    box.appendChild(field("Genre", gs, "Episodes of this genre go in this room's cases first. Edit the genres in the Visitors tab."));
+    if (r.edits && r.edits.length) box.appendChild(el("div", { class: "row" }, [el("span", { class: "note", text: r.edits.length + " shape tweak" + (r.edits.length === 1 ? "" : "s") + ". " }),
+      el("button", { type: "button", class: "btn small quiet", text: "Back to a plain rectangle", onclick: () => layEdit(L2 => { layRoom(L2, r.id).edits = []; }) })]));
     box.appendChild(artRow(() => r.art || {}, (L2, a) => { const q = layRoom(L2, r.id); if (a) q.art = a; return q.art || {}; }));
     const lt = el("input", { type: "checkbox", checked: r.light !== false }); lt.addEventListener("change", () => layEdit(L2 => { layRoom(L2, r.id).light = lt.checked; }));
     box.appendChild(el("label", { class: "check" }, [lt, document.createTextNode("Has a light switch (it must be off to close the museum)")]));
@@ -1452,7 +1508,7 @@ function renderInspector() {
   const field = (label, input, hint) => el("label", { class: "rfield" }, [el("span", { text: label }), hint ? el("small", { text: hint }) : null, input]);
   const linesBox = (get, set, hint) => { const t = el("textarea"); t.value = get(); t.addEventListener("change", () => { snapshot(); set(t.value); roomChanged(true); }); return field("What it says", t, hint || "One page per line."); };
   const delBtn = () => el("button", { type: "button", class: "btn small quiet", text: "Remove", onclick: () => { snapshot(); removeItem(editable(R.id), it); R.sel = null; roomChanged(true); } });
-  if (isLayout(d) && R.tool === "layout") return renderLayoutPanel(box, d);
+  if (isLayout(d) && (R.tool === "layout" || R.tool === "shape")) return renderLayoutPanel(box, d);
   if (!it) return renderRoomSettings(box, d);
   box.appendChild(el("h3", { text: it.label }));
   if (it.type === "door") return renderDoor(box, d, it);
@@ -1717,6 +1773,35 @@ function mindsBox(p) {
     el("small", { text: "Tick the mindsets this game suits, usually one to three. A curious visitor with one of these loves it; leave them all off and visitors just say it was pretty good. Edit the mindsets in the Visitors tab." }),
     list.length ? el("div", { class: "unveil", style: "flex-wrap:wrap" }, boxes) : el("p", { class: "note", text: "No mindsets yet. Add some in the Visitors tab." })]);
 }
+/* Genres: the museum's rooms for episodes, and the mindsets each one is for. */
+function renderGenres(wrap) {
+  const st = draft.settings, list = st.genres = st.genres || clone(GOQ.SAMPLE_GENRES), minds = st.mindsets || [];
+  const lay = GOQ.layoutOf(roomDef("museum")), roomsOf = id => lay ? lay.zones.filter(z => z.rect && z.rect.genre === id).map(z => z.name) : [];
+  wrap.appendChild(el("h3", { text: "Genres (the museum's rooms)", style: "margin:18px 0 4px" }));
+  wrap.appendChild(el("p", { class: "note", text: "Each genre is a room in the museum (pick a room's genre in Rooms, Museum, Layout). An episode goes to the first genre that welcomes one of its ticked mindsets, unless you pick its room in Pieces." }));
+  list.forEach((g, i) => {
+    const name = el("input", { type: "text", value: g.name, maxlength: 40 }); name.addEventListener("input", () => { g.name = name.value; changed(); });
+    const col = el("input", { type: "color", value: g.color || "#a08868" }); col.addEventListener("input", () => { g.color = col.value; changed(); });
+    const boxes = minds.map(m => { const cb = el("input", { type: "checkbox", checked: g.minds.includes(m.id) }); cb.addEventListener("change", () => { g.minds = g.minds.filter(x => x !== m.id); if (cb.checked) g.minds.push(m.id); changed(); }); return el("label", { class: "check", style: "margin:0 12px 4px 0" }, [cb, document.createTextNode(m.name)]); });
+    const where = roomsOf(g.id);
+    wrap.appendChild(el("article", { class: "prow", style: "display:block" }, [el("div", { class: "fields" }, [
+      el("label", {}, [document.createTextNode("Name"), name]), el("label", {}, [document.createTextNode("Color"), col]),
+      el("div", { class: "fieldset wide" }, [el("span", { class: "flabel", text: "Mindsets it's for" }), el("div", { class: "unveil", style: "flex-wrap:wrap" }, boxes)]),
+      el("p", { class: "note wide", text: where.length ? "Room: " + where.join(", ") : "No room has this genre yet." }),
+      el("div", { class: "acts" }, [el("button", { type: "button", class: "btn small quiet", text: "Remove", onclick: () => {
+        if (!confirm("Remove the \u201c" + g.name + "\u201d genre? Pieces set to it go back to following their mindsets.")) return;
+        list.splice(i, 1); draft.pieces.forEach(p => { if (p.genre === g.id) p.genre = ""; }); changed({ now: true }); renderVisitors(); } })]),
+    ])]));
+  });
+  wrap.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn primary", text: "Add a genre", onclick: () => { list.push({ id: "genre-" + Math.random().toString(36).slice(2, 7), name: "New genre", color: "#a08868", minds: [] }); changed({ now: true }); renderVisitors(); } })]));
+}
+/* Which room an episode is shown in: its mindsets decide, or pick a genre by hand. */
+function genreBox(p) {
+  const genres = draft.settings.genres || GOQ.SAMPLE_GENRES, auto = GOQ.genreOf(Object.assign({}, p, { genre: "" }), genres), an = (genres.find(g => g.id === auto) || {}).name;
+  const s = el("select", {}, [el("option", { value: "", text: "Its mindsets decide" + (an ? " (" + an + ")" : " (any spare case)") })].concat(genres.map(g => el("option", { value: g.id, text: g.name }))));
+  s.value = p.genre || ""; s.addEventListener("change", () => { p.genre = s.value; changed({ now: true }); renderPieces(); });
+  return el("label", { class: "wide" }, [document.createTextNode("Exhibited in"), el("small", { text: "The room whose cases it goes in. If that room's cases are full, it fills a spare case somewhere else." }), s]);
+}
 function renderVisitors() {
   const main = $("#main"); main.innerHTML = "";
   const st = draft.settings, list = st.mindsets = st.mindsets || JSON.parse(JSON.stringify(GOQ.SAMPLE_MINDS));
@@ -1766,6 +1851,7 @@ function renderVisitors() {
   wrap.appendChild(el("div", { class: "row" }, [
     el("button", { type: "button", class: "btn primary", text: "Add a mindset", onclick: () => { list.push({ id: "mind-" + Math.random().toString(36).slice(2, 8), name: "New mindset", ask: [], loved: [], liked: [], nope: [] }); changed({ now: true }); renderVisitors(); } }),
   ]));
+  renderGenres(wrap);
   renderCuriousWords(wrap);
   wrap.appendChild(el("p", { class: "note", style: "margin-top:18px", text: "What Patreon members on shift say is in the Words tab, under Chat: Patreon members on shift." }));
 }
@@ -1872,17 +1958,21 @@ function renderPieces() {
   const spots = GOQ.spotCount(), cases = GOQ.caseCount(), wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
   wrap.appendChild(el("h2", { class: "title", text: "Pieces" }));
   wrap.appendChild(el("p", { class: "note", text: "When there are more pieces than places, the oldest (highest in this list) move to the archive on Someone's PC in Storage, and the newest stay on display. Add new pieces at the bottom." }));
-  wrap.appendChild(el("p", { text: "Episodes go in display cases (" + cases + " in the museum): your observation on the front placard, the developer's intention on the back. Community finds hang on the walls as paintings (" + spots + " wall spots). Each kind fills its places in this order. Add more cases and wall spots in the Rooms tab." }));
+  wrap.appendChild(el("p", { text: "Episodes go in display cases (" + cases + " in the museum), in the room for their genre (set under Exhibited in, or by their mindsets): your observation on the front placard, the developer's intention on the back. Community finds hang on the walls as paintings (" + spots + " wall spots). Each kind fills its places in this order. Add more cases and wall spots in the Rooms tab." }));
   wrap.appendChild(el("p", { text: "Turn on \"Unveil on a date\" and visitors see the piece under a sheet until that day. In curator mode it waits in a crate, so you can hang it on camera. Links show as small buttons while someone is looking at the piece." }));
   if (!draft.pieces.length) wrap.appendChild(el("p", { class: "empty", text: "No pieces yet. Add the first one below." }));
   // Where each piece is: which gallery and case or wall spot, or archived on Someone's PC (the oldest go first).
-  const where = {}, nE = draft.pieces.filter(p => p.kind === "episode").length, nC = draft.pieces.length - nE;
-  const oldE = Math.max(0, nE - cases), oldC = Math.max(0, nC - spots), places = { episode: [], community: [] };
-  Object.keys(GOQ.ROOMS).forEach(id => { const r = GOQ.ROOMS[id], fl = r.elevatorStop ? r.elevatorStop.label.split(/\s+/)[0] + " " : "";
-    (r.cases || []).forEach((_, i) => places.episode.push(fl + "CASE " + (i + 1))); (r.spots || []).forEach((_, i) => places.community.push(fl + "WALL " + (i + 1))); });
-  const idx = { episode: 0, community: 0 };
-  draft.pieces.forEach((p, i) => { const k = p.kind === "episode" ? "episode" : "community", n = idx[k]++, old = k === "episode" ? oldE : oldC;
-    wrap.appendChild(pieceRow(p, i, n < old ? "ARCHIVED (SOMEONE'S PC)" : places[k][n - old])); });
+  // Where each piece is. Episodes: the case in their genre's room (or a spare case elsewhere), newest first; community finds:
+  // the wall spots in order. Whatever doesn't fit is archived on Someone's PC.
+  const nC = draft.pieces.filter(p => p.kind !== "episode").length, oldC = Math.max(0, nC - spots), walls = [];
+  Object.keys(GOQ.ROOMS).forEach(id => (GOQ.ROOMS[id].spots || []).forEach((_, i) => walls.push("WALL " + (walls.length + 1))));
+  const asg = GOQ.assignCases(draft.pieces, draft.settings.genres || GOQ.SAMPLE_GENRES), caseNo = {}, label = {};
+  asg.slots.forEach(sl => { caseNo[sl.where] = (caseNo[sl.where] || 0) + 1; if (sl.p) label[sl.p.id] = sl.where.toUpperCase() + ", CASE " + caseNo[sl.where]; });
+  let ci = 0;
+  draft.pieces.forEach((p, i) => {
+    const place = p.kind === "episode" ? label[p.id] || "ARCHIVED (SOMEONE'S PC)" : (ci++ < oldC ? "ARCHIVED (SOMEONE'S PC)" : walls[ci - 1 - oldC]);
+    wrap.appendChild(pieceRow(p, i, place));
+  });
   wrap.appendChild(el("div", { class: "row" }, [el("button", { class: "btn primary", type: "button", text: "Add a piece", onclick: () => {
     draft.pieces.push(GOQ.normalizePiece({ id: uid(), title: "New piece", developer: "" }, draft.pieces.length)); changed({ now: true }); renderPieces();
     const rows = document.querySelectorAll(".prow"); const last = rows[rows.length - 1]; if (last) { last.scrollIntoView({ block: "nearest" }); last.querySelector("input").focus(); }
@@ -1959,6 +2049,7 @@ function pieceRow(p, i, place) {
     ...placard,
     f("How a visitor would describe it", text("hint", "the one where the clock never ran out but I still rushed"), true, "Visitors say this when they come back to tell you how it went: \"I tried Lantern Keeper, the one where...\" Keep it to one line, in their words."),
     mindsBox(p),
+    p.kind === "episode" ? genreBox(p) : null,
     f("YouTube episode", link("episodeUrl", "https://youtube.com/watch?v=..."), false, "Shown as \"Watch the episode\""),
     f("The game", link("gameUrl", "https://store.steampowered.com/... or itch.io"), false, "Shown as \"Play the game\""),
     el("div", { class: "acts" }, [

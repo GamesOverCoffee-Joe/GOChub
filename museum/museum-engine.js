@@ -890,6 +890,45 @@ function normalizeMinds(list) {
     return { id, name: str(m && m.name, 40) || "Mindset " + (i + 1), ask: lines(m && m.ask), loved: lines(m && m.loved), liked: lines(m && m.liked), nope: lines(m && m.nope) };
   });
 }
+/* Genres: one per museum room that shows episodes. minds: the mindsets that room is for (a piece follows its first ticked mindset). */
+const SAMPLE_GENRES = [
+  { id: "action", name: "Action", color: "#e07040", minds: ["thrill", "hands-on", "one-more"] },
+  { id: "puzzle", name: "Puzzle", color: "#4caf9a", minds: ["tinkerer"] },
+  { id: "strategy", name: "Strategy", color: "#6a8ad8", minds: ["systems"] },
+  { id: "story", name: "Story", color: "#c878b0", minds: ["story", "unhurried"] },
+];
+function normalizeGenres(list, mids) {
+  if (!Array.isArray(list)) list = JSON.parse(JSON.stringify(SAMPLE_GENRES));
+  const seen = new Set();
+  return list.filter(g => g && typeof g === "object").slice(0, 12).map((g, i) => {
+    let id = str(g.id, 30).toLowerCase().replace(/[^a-z0-9_-]/g, "") || "genre-" + i; while (seen.has(id)) id += "2"; seen.add(id);
+    return { id, name: str(g.name, 40) || "Genre", color: isHex(g.color) ? g.color : "#a08868", minds: (Array.isArray(g.minds) ? g.minds : []).map(x => str(x, 30)).filter(m => !mids || mids.has(m)) };
+  });
+}
+/* Which room a piece belongs in: picked by hand, or the first genre that welcomes one of its mindsets (in the order they're ticked). */
+function genreOf(p, genres) {
+  if (p.genre && genres.some(g => g.id === p.genre)) return p.genre;
+  for (const m of p.minds || []) { const g = genres.find(g => g.minds.includes(m)); if (g) return g.id; }
+  return "";
+}
+/* Episodes in cases. Newest first: each goes to a free case in its genre's room; the rest fill any free case (rooms
+   without a genre first); whatever doesn't fit is archived on Someone's PC. Returns the piece in each case, room by room. */
+function assignCases(pieces, genres) {
+  const slots = [];
+  for (const id in ROOMS) {
+    const def = ROOMS[id], lay = layoutOf(def);
+    (def.cases || []).forEach(([x, y], i) => {
+      const z = lay && lay.zoneAt[y] ? lay.zoneAt[y][x] : -1, zone = z >= 0 ? lay.zones[z] : null;
+      slots.push({ room: id, i, genre: zone && zone.rect && zone.rect.genre || "", where: zone ? zone.name : def.name, p: null });
+    });
+  }
+  const eps = pieces.filter(p => p.kind === "episode"), newest = eps.slice().reverse(), placed = new Set();
+  for (const p of newest) { const g = genreOf(p, genres), s = g && slots.find(s => !s.p && s.genre === g); if (s) { s.p = p; placed.add(p.id); } }
+  const free = slots.filter(s => !s.p).sort((a, b) => !!a.genre - !!b.genre);
+  newest.filter(p => !placed.has(p.id)).slice(0, free.length).forEach((p, k) => { free[k].p = p; placed.add(p.id); });
+  const byRoom = {}; slots.forEach(s => ((byRoom[s.room] = byRoom[s.room] || [])[s.i] = s.p));
+  return { byRoom, slots, archived: eps.filter(p => !placed.has(p.id)) };
+}
 function normalizePiece(p, i) {
   p = p && typeof p === "object" ? p : {};
   const colors = Array.isArray(p.colors) ? p.colors.filter(isHex).slice(0, 8) : [];
@@ -899,7 +938,7 @@ function normalizePiece(p, i) {
     observation: str(p.observation), intention: str(p.intention), guestWriter: str(p.guestWriter, 80), guestNote: str(p.guestNote),
     episodeUrl: safeUrl(p.episodeUrl), gameUrl: safeUrl(p.gameUrl), image: str(p.image, 20000000) || null,
     unveil: /^\d{4}-\d{2}-\d{2}$/.test(p.unveil || "") ? p.unveil : "",
-    hint: str(p.hint, 160), pick: !!p.pick, minds: Array.isArray(p.minds) ? p.minds.map(x => str(x, 30)).filter(Boolean).slice(0, 8) : [],
+    hint: str(p.hint, 160), pick: !!p.pick, minds: Array.isArray(p.minds) ? p.minds.map(x => str(x, 30)).filter(Boolean).slice(0, 8) : [], genre: str(p.genre, 30),
     colors: colors.length >= 2 ? colors : ["#f0ecf8", "#a898d0", "#584a88", "#1a1430"],
     style: STYLES.includes(p.style) ? p.style : STYLES[strSeed(str(p.title, 80) || String(i)) % STYLES.length],
   };
@@ -959,7 +998,10 @@ function normalizePack(p) {
   // Museum life: the chance (0 to 100) that a visitor has a drink (lobby and café), carries a shop bag, or photographs a piece they stop at.
   const lin2 = (p.settings && p.settings.life) || {}, pct = (v, d) => Math.max(0, Math.min(100, Math.round(v === undefined ? d : +v || 0)));
   const life = { drinks: pct(lin2.drinks, 30), bags: pct(lin2.bags, 20), photos: pct(lin2.photos, 8) };
-  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, mindsets, curious, life }, samples: !Array.isArray(p.pieces) };
+  // Genres: the museum's rooms (Action, Puzzle...), each welcoming some mindsets. A piece's genre is set by hand, or follows its mindsets.
+  const genres = normalizeGenres(p.settings && p.settings.genres, mids), gids = new Set(genres.map(g => g.id));
+  pieces.forEach(pc => { if (!gids.has(pc.genre)) pc.genre = ""; });
+  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, mindsets, curious, life, genres }, samples: !Array.isArray(p.pieces) };
 }
 /* The curator's "Skip to tomorrow" moves every daily system forward together. */
 let DAY_SHIFT = 0;
@@ -1068,7 +1110,7 @@ const ROOMS = {
         { id: "b1", name: "Stairs to B1", path: [[41, 37], [41, 44], [44, 44]], width: 2, min: 0 },
       ],
       doors: [{ id: "lobby", zone: "lobbyhall", side: "bottom", at: 0, warp: ["lobby", 7, 3, "down"] }],
-      stairs: [{ id: "b1", zone: "b1", at: [0, 6], kind: "down", arrive: "up", to: ["storage", 13, 5, "left"] }],
+      stairs: [{ id: "b1", zone: "b1", at: [-3, -1], kind: "down", arrive: "up", to: ["storage", 13, 5, "left"] }],
       spawn: "lobby",
     },
     light: { dim: 0, spots: 0 },
@@ -1337,7 +1379,8 @@ const NIGHT_DIM = { lobby: 0.2, museum: 0.12, staff: 0.08, storage: 0.05 };
             should be, for the curator's warnings.
      doors: [{ id, zone, side, at, warp }]   a doorway in a room or hallway's wall (side: top, bottom, left or right; at: how far
             along). Other rooms can lead here with ["museum", "@id"].
-     stairs: [{ id, zone, at: [dx, dy], kind, arrive, to }]   stairs on the floor of a room or hallway.
+     stairs: [{ id, zone, at: [dx, dy], kind, arrive, to }]   stairs on the floor of a room (from its top-left floor tile) or a
+            hallway (from its last point).
    Walls are worked out from the floor: three rows of wall behind (above) every stretch of floor, a wall top all around.
    Every room and hallway is a "zone": its own art, its own name (rooms say theirs when you walk in) and, for rooms, a light switch. */
 const DIRS_LIST = ["up", "down", "left", "right"];
@@ -1350,14 +1393,15 @@ function normalizeLayout(L) {
   const art = a => (a && typeof a === "object" ? Object.fromEntries(Object.entries(a).filter(([k, v]) => ["top", "upper", "lower", "floor"].includes(k) && SLOT[v])) : {});
   const out = { hallArt: art(L.hallArt), rooms: [], halls: [], doors: [], stairs: [] };
   (Array.isArray(L.rooms) ? L.rooms : []).slice(0, 40).forEach((r, i) => { if (!r) return;
-    out.rooms.push({ id: id(r.id, "room" + i), name: str(r.name, 40) || "Room", x: n(r.x, 1, LAYOUT_MAX_W - 4, 2), y: n(r.y, 3, LAYOUT_MAX_H - 4, 3), w: n(r.w, 2, 60, 8), h: n(r.h, 2, 60, 6), art: art(r.art), light: r.light !== false }); });
+    out.rooms.push({ id: id(r.id, "room" + i), name: str(r.name, 40) || "Room", x: n(r.x, 1, LAYOUT_MAX_W - 4, 2), y: n(r.y, 3, LAYOUT_MAX_H - 4, 3), w: n(r.w, 2, 60, 8), h: n(r.h, 2, 60, 6), art: art(r.art), light: r.light !== false, genre: str(r.genre, 30),
+      edits: (Array.isArray(r.edits) ? r.edits : []).slice(0, 400).filter(e => Array.isArray(e) && (e[2] === "." || e[2] === "#")).map(e => [n(e[0], -30, 90, 0), n(e[1], -30, 90, 0), e[2]]) }); });
   (Array.isArray(L.halls) ? L.halls : []).slice(0, 60).forEach((h, i) => { if (!h) return;
     const path = (Array.isArray(h.path) ? h.path : []).slice(0, 8).map(p => [n(p && p[0], 1, LAYOUT_MAX_W - 3, 1), n(p && p[1], 3, LAYOUT_MAX_H - 3, 3)]);
     if (path.length) out.halls.push({ id: id(h.id, "hall" + i), name: str(h.name, 40) || "Hallway", path, width: n(h.width, 2, 6, 2), min: n(h.min, 0, 99, 0), art: art(h.art) }); });
   (Array.isArray(L.doors) ? L.doors : []).slice(0, 20).forEach((d, i) => { if (d && Array.isArray(d.warp))
     out.doors.push({ id: sid(d.id, "door" + i), zone: String(d.zone || ""), side: LAYOUT_SIDES.includes(d.side) ? d.side : "bottom", at: n(d.at, 0, 60, 0), warp: d.warp.slice(0, 4) }); });
   (Array.isArray(L.stairs) ? L.stairs : []).slice(0, 10).forEach((st, i) => { if (st && Array.isArray(st.to))
-    out.stairs.push({ id: sid(st.id, "stairs" + i), zone: String(st.zone || ""), at: [n(st.at && st.at[0], 0, 60, 0), n(st.at && st.at[1], 0, 60, 0)], kind: st.kind === "up" ? "up" : "down", arrive: DIRS_LIST.includes(st.arrive) ? st.arrive : "up", to: st.to.slice(0, 4) }); });
+    out.stairs.push({ id: sid(st.id, "stairs" + i), zone: String(st.zone || ""), at: [n(st.at && st.at[0], -60, 60, 0), n(st.at && st.at[1], -60, 60, 0)], kind: st.kind === "up" ? "up" : "down", arrive: DIRS_LIST.includes(st.arrive) ? st.arrive : "up", to: st.to.slice(0, 4) }); });
   out.spawn = typeof L.spawn === "string" ? L.spawn : (out.doors[0] || {}).id || "";
   return out;
 }
@@ -1392,10 +1436,16 @@ function carveLayout(L) {
   L.halls.forEach(h => { const rs = hallRects(h); zones.push({ id: h.id, name: h.name, kind: "hall", art: Object.keys(h.art || {}).length ? h.art : L.hallArt, hall: h, rects: rs }); rs.forEach(r => rects.push(Object.assign({ z: zones.length - 1, hall: true }, r))); });
   let W = 8, H = 8;
   for (const r of rects) { W = Math.max(W, r.x + r.w + 2); H = Math.max(H, r.y + r.h + 2); }
+  L.rooms.forEach(r => (r.edits || []).forEach(([dx, dy, c]) => { if (c === ".") { W = Math.max(W, r.x + dx + 3); H = Math.max(H, r.y + dy + 3); } }));
   W = Math.min(LAYOUT_MAX_W, W); H = Math.min(LAYOUT_MAX_H, H);
   const zf = mk(W, H, -1); // the zone of each floor tile; rooms first, so a hallway's end inside a room is the room's
   for (const r of rects.filter(r => !r.hall).concat(rects.filter(r => r.hall)))
     for (let y = Math.max(3, r.y); y < Math.min(H - 1, r.y + r.h); y++) for (let x = Math.max(1, r.x); x < Math.min(W - 1, r.x + r.w); x++) if (zf[y][x] < 0) zf[y][x] = r.z;
+  // Each room's shape tweaks, measured from its top-left floor tile: "." adds floor (an alcove, a bump-out), "#" takes it away (a pillar, a notch).
+  L.rooms.forEach((r, z) => (r.edits || []).forEach(([dx, dy, c]) => {
+    const x = r.x + dx, y = r.y + dy; if (x < 1 || y < 3 || x >= W - 1 || y >= H - 1) return;
+    zf[y][x] = c === "." ? (zf[y][x] >= 0 && zones[zf[y][x]].kind === "hall" ? zf[y][x] : z) : -1;
+  }));
   const fl = (x, y) => y >= 0 && y < H && x >= 0 && x < W && zf[y][x] >= 0;
   const ch = mk(W, H, " "), za = mk(W, H, -1);
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -1426,7 +1476,8 @@ function carveLayout(L) {
   }
   for (const st of L.stairs) {
     const z = zoneOf(st.zone); if (!z) continue;
-    const b = box(z), x = b.x + st.at[0], y = b.y + st.at[1]; if (!fl(x, y)) continue;
+    // In a room: measured from its top-left floor tile. In a hallway: from its last point (usually a dead end), so it stays put at the end.
+    const e = z.hall ? z.hall.path[z.hall.path.length - 1] : [z.rect.x, z.rect.y], x = e[0] + st.at[0], y = e[1] + st.at[1]; if (!fl(x, y)) continue;
     stairs.push({ x, y, kind: st.kind, to: st.to }); anchors[st.id] = { x, y, dir: st.arrive };
   }
   zones.forEach((z, i) => {
@@ -1517,7 +1568,7 @@ function safeSpots(r, def) {
   const W = r.w, H = r.h, avoid = new Set(), key = (x, y) => x + "," + y;
   for (const k in r.events) { const [x, y] = k.split(",").map(Number); for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) avoid.add(key(x + dx, y + dy)); }
   for (const c of r.cases || []) { avoid.add(key(c.x, c.y - 1)); avoid.add(key(c.x, c.y + 1)); }
-  for (const h of r.hung || []) { avoid.add(key(h.x, 3)); avoid.add(key(h.x + 1, 3)); }
+  for (const h of r.hung || []) { avoid.add(key(h.x, h.y + 2)); avoid.add(key(h.x + 1, h.y + 2)); }
   for (let dx = -2; dx <= 2; dx++) for (let dy = -2; dy <= 2; dy++) avoid.add(key(def.spawn[0] + dx, def.spawn[1] + dy));
   for (const st of r.stairs || []) for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) avoid.add(key(st.x + dx, st.y + dy));
   // Staff who stand still count as obstacles while checking.
@@ -1581,7 +1632,7 @@ function buildRoom(id, pieces, o) {
   if (def.intercom) { const [x, y] = def.intercom; r.intercomAt = { x, y }; r.events[x + "," + y] = { announce: true }; }
   if (def.wallArt) {
     r.wallArt = def.wallArt;
-    def.wallArt.forEach(w => { for (let i = 0; i < SLOT[w.key].w / T; i++) r.events[(w.x + i) + ",2"] = w.cafe && w.key !== "cafe_menu" ? { cafe: true } : { say: w.say || ["The café menu."] }; });
+    def.wallArt.forEach(w => { for (let i = 0; i < SLOT[w.key].w / T; i++) r.events[(w.x + i) + "," + ((w.y || 1) + 1)] = w.cafe && w.key !== "cafe_menu" ? { cafe: true } : { say: w.say || ["The café menu."] }; });
   }
   r.decals = def.decals || []; r.glows = def.glows || []; r.bunting = !!def.bunting;
   if (def.catSpots && o.catRoom === id) {
@@ -1594,17 +1645,18 @@ function buildRoom(id, pieces, o) {
     if (r.cat && r.cat.x === x && r.cat.y === y) [x, y] = def.mugSpots[(o.mugIndex + 1) % def.mugSpots.length];
     r.mug = { x, y }; r.solid[y][x] = true; r.events[x + "," + y] = { mug: true, x, y };
   }
-  (def.spots || []).forEach((x, i) => {
+  (def.spots || []).forEach((s, i) => { // a painting spot: its column (the top wall), or [x, y] on any wall (y: the upper wall row)
     const p = o.community[(o.spotStart[id] || 0) + i]; if (!p) return;
-    const spot = { x, y: 1, piece: p, state: spotState(p, o) };
+    const x = Array.isArray(s) ? s[0] : s, y = Array.isArray(s) ? s[1] : 1;
+    const spot = { x, y, piece: p, state: spotState(p, o) };
     r.hung.push(spot);
-    r.events[x + ",2"] = r.events[(x + 1) + ",2"] = { spot };
+    r.events[x + "," + (y + 1)] = r.events[(x + 1) + "," + (y + 1)] = { spot };
   });
   r.cases = [];
   (def.cases || []).forEach(([x, y], i) => {
     if (!r.solid[y]) return;
     r.solid[y][x] = true;
-    const p = o.episodes[(o.caseStart[id] || 0) + i];
+    const p = (o.caseFor[id] || [])[i];
     const c = { x, y, piece: p || null, state: p ? spotState(p, o) : "empty", isCase: true };
     r.cases.push(c); r.events[x + "," + y] = { caseAt: c };
   });
@@ -1654,7 +1706,7 @@ function buildRoom(id, pieces, o) {
     const free = (x, y) => r.solid[y] && !r.solid[y][x] && !r.events[x + "," + y] && !extra.some(v => v._x === x && v._y === y);
     const cafeX = Math.min(...(def.props || []).filter(p => /^cafe_/.test(p.key)).map(p => p.x).concat([r.w]));
     const shelves = (def.wallArt || []).filter(w => w.key === "shop_shelves" && w.x < cafeX - 2), spots = [];
-    shelves.forEach(w => { for (let i = 0; i < SLOT[w.key].w / T; i++) if (free(w.x + i, 3)) spots.push([w.x + i, 3]); });
+    shelves.forEach(w => { for (let i = 0; i < SLOT[w.key].w / T; i++) if (free(w.x + i, (w.y || 1) + 2)) spots.push([w.x + i, (w.y || 1) + 2]); });
     if (spots.length) { const [x, y] = spots[Math.floor(Math.random() * spots.length)]; extra.push(Object.assign(someone(), { _x: x, _y: y, still: true, dir: "up", lines: BROWSE_LINES })); }
     const stools = (def.props || []).filter(p => p.key === "cafe_stool" && p.sit);
     if (stools.length) { const st = stools[Math.floor(Math.random() * stools.length)]; extra.push(Object.assign(someone(), { _x: st.x, _y: st.y, still: true, sitting: true, dir: st.sit, lines: SIT_LINES })); }
@@ -3176,7 +3228,7 @@ class Game {
   maybeSnap(n) {
     if (this.isDark(this.room, n.x, n.y) || Math.random() * 100 >= this.pack.settings.life.photos) return;
     const r = this.room, c = r.cases.find(c => c.piece && c.state === "wall" && c.x === n.x && Math.abs(c.y - n.y) === 1);
-    const h = !c && n.y === 3 && r.hung.find(h => h.state === "wall" && (h.x === n.x || h.x + 1 === n.x));
+    const h = !c && r.hung.find(h => h.state === "wall" && n.y === h.y + 2 && (h.x === n.x || h.x + 1 === n.x));
     if (!c && !h) return;
     n.dir = c ? (c.y < n.y ? "up" : "down") : "up"; n.snapT = 70;
   }
@@ -3447,8 +3499,8 @@ class Game {
       mugRoom: this.progress.mug === today ? null : rooms[seed % rooms.length], mugIndex: seed >>> 4, closing: this.closing };
     let n = 0, m = 0; o.spotStart = {}; o.caseStart = {};
     for (const id of Object.keys(ROOMS)) { o.spotStart[id] = n; n += (ROOMS[id].spots || []).length; o.caseStart[id] = m; m += (ROOMS[id].cases || []).length; }
-    const split = archiveSplit(this.pack.pieces);
-    o.episodes = split.episodes; o.community = split.community; this.archived = split.archived;
+    const split = archiveSplit(this.pack.pieces), cases = assignCases(this.pack.pieces, this.pack.settings.genres);
+    o.caseFor = cases.byRoom; o.community = split.community; this.archived = [...cases.archived, ...split.archived.filter(p => p.kind !== "episode")];
     this.rooms = {}; Object.keys(ROOMS).forEach(id => (this.rooms[id] = buildRoom(id, this.pack.pieces, o)));
     this.placeCurious(); this.placeMembers(); this.giveLife();
   }
@@ -3779,7 +3831,7 @@ class Game {
       const opts = [];
       for (let y = 3; y < r.h - 1; y++) for (let x = 1; x < r.w - 1; x++) if (!r.solid[y][x] && !noGo(x, y) && Math.abs(x - n.x) + Math.abs(y - n.y) > 2) opts.push([x, y]);
       // Often, somewhere in front of a piece: the front or back of a case, or under a painting.
-      const views = opts.filter(([x, y]) => r.cases.some(c => c.piece && c.x === x && Math.abs(c.y - y) === 1) || (y === 3 && r.hung.some(h => h.x === x || h.x + 1 === x)));
+      const views = opts.filter(([x, y]) => r.cases.some(c => c.piece && c.x === x && Math.abs(c.y - y) === 1) || r.hung.some(h => y === h.y + 2 && (h.x === x || h.x + 1 === x)));
       if (views.length && Math.random() < 0.5) opts.splice(0, opts.length, ...views);
       const t = n.goalT || opts[(Math.random() * opts.length) | 0]; // someone was in the way: try the same spot again
       n.goalT = t;
@@ -4088,7 +4140,7 @@ class Game {
       const x = r.windowAt.x * T - cx, y = r.windowAt.y * T - cy;
       this.drawSlot("sky_" + tod, 0, 0, x + 2, y + 2); this.drawSlot("window_frame", 0, 0, x, y);
     }
-    if (r.wallArt) r.wallArt.forEach(w => this.drawSlot(w.key, 0, 0, w.x * T - cx, T - cy));
+    if (r.wallArt) r.wallArt.forEach(w => this.drawSlot(w.key, 0, 0, w.x * T - cx, (w.y || 1) * T - cy));
     const fs = ROOMS[r.id] && ROOMS[r.id].floorSign, fi = ["B1", "1F", "2F", "3F", "4F", "5F"].indexOf(fs);
     if (fi >= 0 && ROOMS[r.id].stairwell) this.drawSlot("floor_sign", fi, 0, (Math.floor(r.w / 2) - 1) * T - cx, T - cy);
     if (r.bunting) for (let x = 1; x < r.w - 1; x++) this.drawSlot("bunting", 0, 0, x * T - cx, T - cy);
@@ -4205,11 +4257,11 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-08 one building 3";
+const VERSION = "2026-10-09 furnished";
 window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
   spotRooms: () => Object.keys(ROOMS).filter(id => (ROOMS[id].spots || []).length).map(id => ({ id, name: ROOMS[id].name, n: ROOMS[id].spots.length })),
-  BUILTIN_ROOMS, applyRooms, normalizeRoom, SLOTS_BY_KEY: SLOT, normalizeLayout, carveLayout, hallRects, hallLength, layoutOf, LAYOUT_MAX_W, LAYOUT_MAX_H,
+  BUILTIN_ROOMS, applyRooms, normalizeRoom, SLOTS_BY_KEY: SLOT, normalizeLayout, carveLayout, hallRects, hallLength, layoutOf, LAYOUT_MAX_W, LAYOUT_MAX_H, SAMPLE_GENRES, genreOf, assignCases,
   placeholderPainting: p => { const n = normalizePiece(p, 0); return paint([paintingGrid(n)], 24, 18, 1, n.colors); } };
 })();

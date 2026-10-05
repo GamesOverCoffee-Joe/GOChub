@@ -260,6 +260,40 @@ Goal: the rooms feel like rooms.
 - Cat spots and mug spots.
 - Genre editor in the curator (genres ↔ mindsets), and "Exhibited in" set per room.
 
+**Status (2026-10-09): built, waiting on your play-test.**
+
+What's in:
+- **Genres.**
+  - Action, Puzzle, Strategy and Story, each with the mindsets it welcomes. Edit them in Visitors → Genres: add, remove, rename, recolor, tick mindsets.
+  - Each genre room has its genre set in Rooms → Museum → Layout (tap the room).
+  - An episode goes to the first genre that welcomes one of its ticked mindsets. You can override that per piece with **Exhibited in** (Pieces tab).
+  - The Pieces tab shows where each piece ended up (for example "PUZZLE, CASE 3").
+- **Cases.**
+  - 8 per genre room (32 total). Newest episodes first: each fills a case in its genre's room. If that room is full, it takes a spare case elsewhere.
+  - Anything that still doesn't fit goes to the archive on Someone's PC. With today's 31 episodes, nothing is archived.
+- **Paintings.**
+  - 16 wall spots: 6 along the Upper Hall, 6 along the Lower Hall, and 2 each on the café's west and east halls.
+  - Wall spots and wall art can now hang on any back wall in the museum, not just the top row. Place them on a wall in the Rooms editor; dragging moves them along the wall, or onto another back wall.
+- **Café and Gift Shop.**
+  - Gift shop half (left): the four shelving units (one per shop item), postcard spinner, the shop counter, a basket and the cat bed. Wall shelves and posters hang on the back wall.
+  - Café half (right): the café counter with its bus tub, two tables with stools on rugs, the magazine rack, two lamps, planters and the café fern. The menu and mug shelf hang on the back wall.
+  - The featured item stand sits by the west door.
+  - The middle aisles stay clear between all four doors.
+- **Genre rooms.** Each has a sign explaining its genre, a plant (a watering chore), and a bench facing the cases.
+  - Shape tweaks so they aren't plain boxes: Puzzle and Strategy have a notched corner, and Action and Story each have an alcove off the side.
+- **Hallways.** A bench in the Upper and Lower Halls facing the paintings, and a plant in each side hallway.
+- **Cat and mug.** The cat can nap on the café's cat bed, in the café, or in Puzzle. The mug can turn up in the café, the halls or Strategy.
+- **Curator → Rooms → Museum → Shape tool.**
+  - Paint **Add floor** (alcoves, bump-outs) or **Add wall** (pillars, notches) in or next to a room. **Back to the plan** removes a tweak.
+  - Tweaks are stored from the room's corner, so they move with it. A room's settings can reset it to a plain rectangle.
+- **Moving things along.** Dragging a room in the Layout tool brings its furniture, cases, paintings, lamps and cat/mug spots with it. Dragging a straight stretch of hallway brings its paintings and benches.
+- **B1 stairs.** They're now measured from the end of their hallway, so they stay at the dead end when the hallway moves.
+
+Left for later, on purpose:
+- **Bunting:** not in the museum yet. The old version ran across the top of the whole map; it needs per-room support (Phase 4).
+- **Staff:** the café and shop staff aren't back yet (Phase 3). Their counters already work without them.
+- **Windows:** none in the hallways yet. The engine allows one window per room, so hallway windows wait for Phase 4 decoration.
+
 ### Phase 3: NPCs back in
 
 Goal: the building feels lived in, and you envy the visitors.
