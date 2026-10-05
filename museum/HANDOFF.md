@@ -388,3 +388,10 @@ Goal: character.
 - **Leaving visitors** (after a recommendation) find their way through the halls and café to the lobby doors before fading out. Before, they bumped into walls and vanished.
 - **Following visitors:** a new "What were you looking for?" option repeats what they asked for. Its intro line is in Words → Curious visitors.
 
+**Fifth room (2026-10-14).**
+- **The map** grew 9 rows (now 57×58), and everything in the museum moved down to match.
+- **The North Room** (12×10, plain for now, with its own light switch) sits above the Upper Hall. The 5-tile North Hall runs up to it from the middle of the Upper Hall. The Upper Hall's center painting spot made way for the doorway, and its two lights now flank it.
+- **Murals** are all cleared for a clean slate. The mural art is still in Art → Murals, and Place → Mural still works.
+- **Not decided yet:** the five design categories (The Shape in the Dark, The Long Road to Mastery, Whispers of a Larger World, Mad Scientist, Stories) aren't wired in. Rooms still use the old genres until then.
+- **Source of truth:** the museum layout lives in museum-pack.json. The engine's built-in fallback layout is older and only used if a pack has no museum.
+
