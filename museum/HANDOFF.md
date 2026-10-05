@@ -382,3 +382,9 @@ Goal: character.
   - The paintings and lights on those two walls were rearranged around the arrows: 13 painting spots in all now.
 - **New murals:** floating isles, castle hill and moonlit forest.
 
+**Tweaks (2026-10-13, later):**
+- **Curator speed.** After an edit, the map editor only rebuilds the museum's rooms instead of reloading the whole pack. It keeps the art it has already drawn, decodes images once, and doesn't run a hidden game loop. Saving to the browser waits until you pause. Applying an edit went from about 150 ms to about 25 ms on a desktop.
+- **Runner corners line up.** A straight run of runner shares one line. If any of it is in a hallway, the whole run follows the hallway's center, so a hallway runner carries straight on into a room. Each corner lines its arms up with the runners beside it (centered or not) and takes their widths. The four room doorways now join their hallway runners into the room paths.
+- **Leaving visitors** (after a recommendation) find their way through the halls and café to the lobby doors before fading out. Before, they bumped into walls and vanished.
+- **Following visitors:** a new "What were you looking for?" option repeats what they asked for. Its intro line is in Words → Curious visitors.
+

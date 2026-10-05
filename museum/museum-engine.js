@@ -1102,8 +1102,14 @@ function niceDate(iso) {
   const [y, m, d] = iso.split("-").map(Number);
   return ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][m - 1] + " " + d + ", " + y;
 }
+/* Images by their address, decoded once: a pack's art and piece images are reused every time the pack is applied. */
+const IMAGES = new Map();
 function loadImage(src) {
-  return new Promise(res => { if (!src) return res(null); const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
+  if (!src) return Promise.resolve(null);
+  if (IMAGES.has(src)) return IMAGES.get(src);
+  const pr = new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => { IMAGES.delete(src); res(null); }; i.src = src; });
+  if (IMAGES.size > 400) IMAGES.clear();
+  IMAGES.set(src, pr); return pr;
 }
 
 /* Placeholder art for a piece without an image, 24x18, painted from its colors. */
@@ -1355,6 +1361,7 @@ const TEXT = {
   "cur.also":          { g: "Curious visitors", l: "Before the second thing they like (joined to that line)", v: [["Oh, and"]] },
   "cur.follow":        { g: "Curious visitors", l: "They start following you", v: [["Lead the way! I'm right behind you."]] },
   "cur.lead":          { g: "Curious visitors", l: "Talking to them while they follow you", v: [["Where are we headed?"]] },
+  "cur.remind":        { g: "Curious visitors", l: "You ask what they were looking for again (what they want comes next)", v: [["Oh, right! Like I said:"], ["Sure! I'm after this:"]] },
   "cur.release":       { g: "Curious visitors", l: "You tell them never mind", v: [["No worries. I'll keep looking around."]] },
   "cur.staffOnly":     { g: "Curious visitors", l: "You go into the staff room while they follow you", v: [["(From the other side of the door:) Staff only? I'll wait right here!"]] },
   "cur.closing":       { g: "Curious visitors", l: "Closing time while they follow you", v: [["Oh! Closing time already?", "I'll come back tomorrow. Save me a good one!"]] },
@@ -1706,18 +1713,38 @@ function safeSpots(r, def, inZone, limit) {
 function runnerTiles(def) {
   const isFloor = (x, y) => def.map[y] && (def.map[y][x] === "." || def.map[y][x] === "=");
   const out = (def.runners || []).filter(t => Array.isArray(t) && /^([hv][012]|c[0-3])$/.test(t[2]) && isFloor(t[0], t[1])).map(([x, y, k, wd]) => {
-    if (k[0] === "c") return { x, y, k, w: Math.max(10, Math.min(16, wd | 0 || 16)), mid: 0, ok: true }; // a corner: on its own tile
+    if (k[0] === "c") return { x, y, k, w: Math.max(10, Math.min(32, wd | 0 || 16)) }; // a corner: its arms line up with its neighbors (below)
     const across = k[0] === "h"; let a = across ? y : x, b = a;
     while (b - a < 6 && (across ? isFloor(x, a - 1) : isFloor(a - 1, y))) a--;
     while (b - a < 6 && (across ? isFloor(x, b + 1) : isFloor(b + 1, y))) b++;
     const ok = b - a + 1 <= 3, mid = ok ? (a + b + 1) * T / 2 : ((across ? y : x) + 0.5) * T;
     return { x, y, k, w: Math.max(10, Math.min(48, wd | 0 || 20)), mid, a, b, ok };
   });
-  // Where two hallways cross, the floor is wide open: a tile there lines up with the runner on either side of it.
-  for (let pass = 0; pass < 4; pass++) out.forEach(t => {
-    if (t.ok) return;
-    const across = t.k[0] === "h", n = out.find(o => o.ok && o.k[0] === t.k[0] && (across ? o.y >= t.y - 2 && o.y <= t.y + 2 && Math.abs(o.x - t.x) === 1 : o.x >= t.x - 2 && o.x <= t.x + 2 && Math.abs(o.y - t.y) === 1));
-    if (n) { t.mid = n.mid; t.a = n.a; t.b = n.b; t.ok = true; }
+  const at = new Map(out.map(t => [t.x + "," + t.y, t]));
+  // A straight run of runner shares one line: in the middle of a hallway's floor if any of it is in one (so it carries on
+  // straight into a room, and through crossings), otherwise down the middle of its tiles.
+  const seen = new Set();
+  out.forEach(t => {
+    if (t.k[0] === "c" || seen.has(t)) return;
+    const across = t.k[0] === "h", run = [], q = [t]; seen.add(t);
+    while (q.length) {
+      const c = q.pop(); run.push(c);
+      // the next tile along, on the same line; in a hallway, anywhere across its floor counts as the same line
+      out.forEach(o => {
+        if (seen.has(o) || o.k[0] !== t.k[0]) return;
+        const next = across ? Math.abs(o.x - c.x) === 1 : Math.abs(o.y - c.y) === 1, op = across ? o.y : o.x, cp = across ? c.y : c.x;
+        if (next && (op === cp || (o.ok && o.a <= cp && cp <= o.b) || (c.ok && c.a <= op && op <= c.b))) { seen.add(o); q.push(o); }
+      });
+    }
+    const c = run.find(r => r.ok); if (c) run.forEach(r => { r.mid = c.mid; r.ok = true; });
+  });
+  // Corners: the arm across lines up with the runner beside it, the arm up or down with the runner above or below it.
+  out.forEach(t => {
+    if (t.k[0] !== "c") return;
+    const side = t.k === "c0" || t.k === "c2" ? 1 : -1, vert = t.k === "c0" || t.k === "c1" ? 1 : -1;
+    const h = at.get((t.x + side) + "," + t.y), v = at.get(t.x + "," + (t.y + vert));
+    t.ay = h && h.k[0] === "h" ? h.mid : (t.y + 0.5) * T; t.wh = h && h.k[0] === "h" ? Math.min(32, h.w) : t.w;
+    t.ax = v && v.k[0] === "v" ? v.mid : (t.x + 0.5) * T; t.wv = v && v.k[0] === "v" ? Math.min(32, v.w) : t.w;
   });
   return out;
 }
@@ -1765,28 +1792,34 @@ function hallEndColors(lay, h, genres, depth) {
 /* A runner corner (c0 joins right and down, c1 left and down, c2 right and up, c3 left and up), any width up to a tile,
    in the colors of the straight runner art (its border, trim and field), so it matches replaced art too. */
 const CORNERS = new WeakMap();
-function runnerCorner(img, k, w) {
+function runnerCorner(img, ru) {
   const iw = img.naturalWidth || img.width; if (!iw) return null;
   let per = CORNERS.get(img); if (!per) { per = {}; CORNERS.set(img, per); }
-  const key = k + w; if (per[key]) return per[key];
+  const k = ru.k, P = T; // drawn on a 3×3-tile canvas, the corner's own tile in the middle
+  const fx = k === "c1" || k === "c3", fy = k === "c2" || k === "c3";
+  // in the corner's own frame (c0: arms going right and down), measured from the tile's top-left
+  const lx = ru.ax - ru.x * T, ly = ru.ay - ru.y * T, ax = fx ? T - lx : lx, ay = fy ? T - ly : ly;
+  const key = [k, ax, ay, ru.wh, ru.wv].join(","); if (per[key]) return per[key];
   const s = document.createElement("canvas"); s.width = iw; s.height = T; const sx = s.getContext("2d"); sx.drawImage(img, 0, 0);
   const col = r => { const d = sx.getImageData(T + 8, r, 1, 1).data; return "rgba(" + d[0] + "," + d[1] + "," + d[2] + "," + d[3] / 255 + ")"; };
-  const cols = [col(3), col(4), col(5)], c = document.createElement("canvas"); c.width = T; c.height = T; const x = c.getContext("2d");
-  const a = (T - w) >> 1, b = a + w, fx = k === "c1" || k === "c3", fy = k === "c2" || k === "c3";
-  for (let py = 0; py < T; py++) for (let px = 0; px < T; px++) {
-    const X = fx ? T - 1 - px : px, Y = fy ? T - 1 - py : py; let d = -1;
-    if (X >= a && X < b && Y >= a && Y < b) d = Math.min(X - a, Y - a);  // the corner square: edged on its two outer sides
-    else if (X >= b && Y >= a && Y < b) d = Math.min(Y - a, b - 1 - Y);   // the arm running across
-    else if (Y >= b && X >= a && X < b) d = Math.min(X - a, b - 1 - X);   // the arm running down
-    if (d < 0) continue;
-    x.fillStyle = cols[Math.min(2, d)]; x.fillRect(px, py, 1, 1);
+  const cols = [col(3), col(4), col(5)], N = T + 2 * P, c = document.createElement("canvas"); c.width = N; c.height = N; const x = c.getContext("2d");
+  const y0 = Math.round(ay - ru.wh / 2), y1 = y0 + ru.wh, x0 = Math.round(ax - ru.wv / 2), x1 = x0 + ru.wv;
+  // the arm across runs right to the tile's edge (and on, into the next tile); the arm down runs to the bottom edge
+  const inside = (X, Y) => (Y >= y0 && Y < y1 && X >= x0 && X < T + P) || (X >= x0 && X < x1 && Y >= y0 && Y < T + P);
+  const open = (X, Y) => (X >= T && Y >= y0 && Y < y1) || (Y >= T && X >= x0 && X < x1); // where an arm carries on into the next tile: no border
+  for (let Y = -P; Y < T + P; Y++) for (let X = -P; X < T + P; X++) {
+    if (!inside(X, Y)) continue;
+    let d = 3;
+    for (let r = 0; r < 3 && d === 3; r++) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = X + dx * (r + 1), ny = Y + dy * (r + 1); if (!inside(nx, ny) && !open(nx, ny)) { d = r; break; } }
+    x.fillStyle = cols[Math.min(2, d)];
+    x.fillRect((fx ? T - 1 - X : X) + P, (fy ? T - 1 - Y : Y) + P, 1, 1);
   }
   return (per[key] = c);
 }
 /* One runner tile, any width: the art's border rows top and bottom, its plain field stretched between, and its pattern row
    in the middle. (Down runners are the same, sideways.) img: the carpet_h or carpet_v sheet. */
 function drawRunner(ctx, img, ru, cx, cy) {
-  if (ru.k[0] === "c") { const c = runnerCorner(img, ru.k, ru.w); if (c) ctx.drawImage(c, ru.x * T - cx, ru.y * T - cy); return; }
+  if (ru.k[0] === "c") { if (ru.ax === undefined) { ru.ax = (ru.x + 0.5) * T; ru.ay = (ru.y + 0.5) * T; ru.wh = ru.wv = ru.w; } const c = runnerCorner(img, ru); if (c) ctx.drawImage(c, ru.x * T - T - cx, ru.y * T - T - cy); return; }
   const across = ru.k[0] === "h", f = +ru.k[1] * T, w = ru.w;
   const at = Math.round(ru.mid - w / 2), body = w - 6, pat = Math.min(4, body), gap = body - pat, g1 = gap >> 1;
   // pieces of the art, measured across the runner: border 3..5, plain field row 5, pattern 6..9, border 10..12
@@ -1981,7 +2014,7 @@ class Game {
       while (this.acc >= 1000 / 60) { this.update(); this.acc -= 1000 / 60; }
       this.draw(); requestAnimationFrame(tick);
     };
-    requestAnimationFrame(tick);
+    if (!opts.headless) requestAnimationFrame(tick); // headless: drawn only when asked (the curator's map editor)
   }
   /* fine: quarter steps (touch layouts); otherwise whole steps from 2x up, like the Theater. Never below 1x unless the screen is narrower than the game. */
   fit(maxW, maxH, fine) {
@@ -2000,11 +2033,16 @@ class Game {
     ]);
     this.itemImgs = ii;
     if (token !== this.packToken) return;
-    this.pack = pack; this.overrides = ov; this.pieceImgs = pi; this.cache = {};
+    // Keep the art already drawn (tiles, tints, murals) when the pack's art hasn't changed; redraw piece art either way.
+    const sig = Object.keys(pack.assets).sort().map(k => k + ":" + pack.assets[k].src.length + pack.assets[k].src.slice(-24)).join("|");
+    if (sig !== this.assetSig) { this.cache = {}; this.assetSig = sig; } else for (const k in this.cache) if (k.includes("|")) delete this.cache[k];
+    this.pack = pack; this.overrides = ov; this.pieceImgs = pi;
     this.rebuild(); this.refreshBoard(true);
     const tb = `url("${this.src("textbox")}")`;
     [this.el.text, this.el.choice, this.el.badgeForm, this.el.shop, this.el.album, this.el.reader].forEach(e => (e.style.borderImageSource = tb));
   }
+  /* The curator's room editor: new rooms only (nothing else in the pack changed), without reloading any art. */
+  quickRooms(rooms) { if (!this.pack) return; applyRooms(rooms); this.pack.rooms = rooms; this.rebuild(); }
   rebuild() {
     const where = this.room ? [this.room.id, this.player.x, this.player.y, this.player.dir] : null;
     this.buildWorld();
@@ -3325,8 +3363,14 @@ class Game {
     this.say(this.tx("cur.follow", { name: n.cur.name }));
   }
   followerTalk(n) {
-    this.choose(n.member + ": " + this.tx("cur.lead", { name: n.member }).join(" "), ["Keep going", "Never mind"], i => {
-      if (i !== 1) return;
+    this.choose(n.member + ": " + this.tx("cur.lead", { name: n.member }).join(" "), ["Keep going", "What were you looking for?", "Never mind"], i => {
+      if (i === 1) { // a reminder of what they asked for, in their words, then back to walking
+        const v = n.cur, m = this.mind(v.mind), m2 = this.mind(v.mind2), low = t => (/^I\b/.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1)), pages = [...this.tx("cur.remind", { name: v.name })];
+        if (m && m.ask.length) pages.push(this.pickLine(m.ask, v.id));
+        if (m2 && m2.ask.length) pages.push(this.tx("cur.also")[0] + " " + low(this.pickLine(m2.ask, v.id + "+")));
+        this.say(pages.map(p => n.member + ": " + p)); return;
+      }
+      if (i !== 2) return;
       const v = n.cur, home = v.home && this.rooms[v.home] ? v.home : this.room.id;
       this.fol = null; n.follow = false; n.timer = 120; v.state = "waiting"; v.room = home; this.saveProgress();
       this.say(this.tx("cur.release", { name: n.member }).map((p, k) => (k ? p : n.member + ": " + p)), () => {
@@ -4135,7 +4179,7 @@ class Game {
     if (near && amt > 0 && Math.random() < amt * 0.5) { const xp = this.extraPrints || (this.extraPrints = {}); xp[near.piece.id] = Math.min(3, (xp[near.piece.id] || 0) + 1); }
   }
   /* Shortest route for a visitor, around walls, furniture, people and no-go tiles (at most 40 steps). */
-  npcPath(n, tx, ty) {
+  npcPath(n, tx, ty, loose) { // loose: may cross the tiles visitors usually keep off (doorways), to leave or catch up
     const r = this.room, W = r.w, prev = new Map(), start = n.y * W + n.x, goal = ty * W + tx, q = [start];
     prev.set(start, -1);
     for (let qi = 0; qi < q.length; qi++) {
@@ -4143,7 +4187,7 @@ class Game {
       const cx = c % W, cy = (c / W) | 0;
       for (const [dx, dy] of Object.values(DIRS)) {
         const nx = cx + dx, ny = cy + dy, k = ny * W + nx;
-        if (nx < 1 || ny < 3 || nx >= W - 1 || ny >= r.h - 1 || prev.has(k) || this.blocked(nx, ny, n) || (r.noWander && r.noWander.has(nx + "," + ny))) continue;
+        if (nx < 1 || ny < 3 || nx >= W - 1 || ny >= r.h - 1 || prev.has(k) || this.blocked(nx, ny, n) || (!loose && r.noWander && r.noWander.has(nx + "," + ny))) continue;
         prev.set(k, c); q.push(k);
       }
     }
@@ -4170,8 +4214,10 @@ class Game {
     if (n.moving) { this.advance(n); return; }
     if (n.leaveT < 0 || n.leaveT % 2) return;
     const dx = Math.sign(to[0] - n.x), dy = Math.sign(to[1] - n.y);
-    if ((!dx && !dy) || n.leaveT > 360) { n.fading = true; n.dir = "down"; return; }
-    if (n.leaveTo) { const rt = this.npcPath(n, to[0], to[1], true); if (rt && rt.length && this.tryMove(n, rt[0])) return; } // heading for a doorway: around people
+    // The museum is big: there they get time to walk all the way out (to the lobby doors), and always find the way around.
+    const far = !!this.room.zoneAt;
+    if ((!dx && !dy) || n.leaveT > (far ? 3000 : 360)) { n.fading = true; n.dir = "down"; return; }
+    if (n.leaveTo || far) { const rt = this.npcPath(n, to[0], to[1], true); if (rt && rt.length) { if (this.tryMove(n, rt[0])) return; n.leaveT += 6; return; } } // around people; someone in the way: wait a moment
     const tries = Math.abs(to[0] - n.x) >= Math.abs(to[1] - n.y) ? [[dx, 0], [0, dy]] : [[0, dy], [dx, 0]];
     tries.push([0, dy || 1], [0, -(dy || 1)], [dx || 1, 0]);
     for (const [ax, ay] of tries) {
@@ -4552,7 +4598,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-13 four rooms";
+const VERSION = "2026-10-13 four rooms 2";
 window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

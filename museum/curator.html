@@ -325,7 +325,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-13 four rooms";
+window.GOQ_WANT = "2026-10-13 four rooms 2";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -394,7 +394,7 @@ function changed(opts) {
     try { localStorage.setItem(DRAFT_KEY, JSON.stringify(packOut())); status("Saved in this browser"); }
     catch (e) { status("Too large to save in the browser. Export the pack to keep your changes.", true); }
     markPending();
-  }, opts.now ? 0 : 400);
+  }, opts.now ? 0 : opts.slow ? 1500 : 400); // saving the whole pack takes a moment: after editing rooms, wait until you pause
 }
 /* The preview only reloads when you press Apply (so it doesn't reshuffle with every keystroke or drag). */
 let pending = false;
@@ -447,7 +447,7 @@ $("#applyBtn").addEventListener("click", async () => { await refreshPreview(); s
 $("#goRoom").addEventListener("change", e => { const id = e.target.value; if (!id) return; game.teleport(id); e.target.value = ""; stage.focus({ preventScroll: true }); });
 // A second, hidden copy of the engine draws the Rooms editor's map, so editing never disturbs the live preview.
 const edWrap = el("div", { style: "position:absolute;left:-9999px;top:0;width:10px;height:10px;overflow:hidden", "aria-hidden": "true" }); document.body.appendChild(edWrap);
-const edGame = new GOQ.Game(edWrap, undefined, { curator: true, capture: "focus", saveKey: null });
+const edGame = new GOQ.Game(edWrap, undefined, { curator: true, capture: "focus", saveKey: null, headless: true });
 function fitPreview() {
   const w = window.innerWidth;
   game.fit(w > 1400 ? 480 : w > 980 ? 360 : Math.min(480, w - 60), 400);
@@ -888,7 +888,8 @@ function roomChanged(now) {
   // Mid-drag, only redraw the editor: rebuilding the whole museum on every step made dragging laggy. It catches up when you let go.
   if (!now && R.stroking && isLayout(roomDef(R.id))) { drawEditor(); return; }
   clearTimeout(roomT);
-  roomT = setTimeout(async () => { await edGame.setPack(packOut()); R.img = edGame.renderRoomFull(R.id, true); drawEditor(); renderInspector(); changed(); }, now ? 0 : 90);
+  // Only the rooms changed, so the editor's copy of the museum just rebuilds its rooms (no art to reload).
+  roomT = setTimeout(async () => { if (edGame.pack) edGame.quickRooms(packOut().rooms); else await edGame.setPack(packOut()); R.img = edGame.renderRoomFull(R.id, true); drawEditor(); renderInspector(); changed({ slow: true }); }, now ? 0 : 90);
   drawEditor();
 }
 
