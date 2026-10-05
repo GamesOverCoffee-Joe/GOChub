@@ -42,6 +42,7 @@ const PAL = {
   m_canyon: ["#7ab8e0", "#a8d4ec", "#f4f8fc", "#c85a38", "#9a3c24", "#e8b878", "#4a4048", "#f0e0a0"],
   m_storm: ["#48506a", "#6a7490", "#9aa4bc", "#f8f4c0", "#4a7a3a", "#2e5428", "#7aa050", "#d8e0e8"],
   m_volcano: ["#140c24", "#2a1a40", "#fff6d0", "#3a2a30", "#e05030", "#f8a040", "#5a3a3a", "#ffd870"],
+  screen:  ["#1a2030", "#3a4a68", "#7ad0e8", "#d0f4ff", "#6a5240", "#4a382a", "#2a1e16", "#e8b24a"],
   m_isles: ["#bfe6e0", "#e8f6f2", "#5aa890", "#3c7a68", "#8a7058", "#a8dcf0", "#ffffff", "#f0d890"],
   m_castle: ["#9cc4e8", "#d8ecf8", "#6a8a4a", "#4a6a38", "#8a8c98", "#5c5e6c", "#c84040", "#e8d8a0"],
   m_forest: ["#1a2240", "#2c3660", "#f4ecc0", "#1e3a2e", "#2c5440", "#f0b860", "#4a3a5a", "#9ab0d8"],
@@ -472,6 +473,14 @@ const GEN = {
     rect(a, 2, 8, 12, 7, 7); for (let x = 3; x < 14; x += 3) rect(a, x, 9, 1, 5, 3);
     return outline(a, 8);
   },
+  // A small touch screen on its own pedestal: a room's extra pieces live on it.
+  overflow_screen: () => {
+    const a = mk(16, 32);
+    rect(a, 5, 14, 6, 15, 4); rect(a, 6, 14, 1, 15, 5); rect(a, 3, 28, 10, 3, 5); rect(a, 3, 31, 10, 1, 6); // the pedestal and its foot
+    rect(a, 2, 5, 12, 10, 0); rect(a, 3, 6, 10, 7, 1); rect(a, 4, 7, 8, 5, 2); rect(a, 4, 7, 3, 1, 3);     // the screen, tilted to you
+    rect(a, 5, 9, 2, 2, 3); rect(a, 9, 9, 2, 2, 3); px(a, 7, 13, 7);                                         // little tiles of art, a power light
+    return outline(a, 6);
+  },
   // Plush carpet for a room's floor. Gray, so a room's floor color (Rooms, Layout) tints it any color.
   carpet_floor: () => fillFn(mk(16, 16), (x, y) => { const h = hash(x, y) % 9; return h === 0 ? 2 : h === 1 ? 3 : (x + y * 3) % 8 === 0 ? 2 : (x * 3 + y) % 11 === 0 ? 0 : 1; }),
   /* Murals: landscapes painted along the top row of a wall (256×16; a wall shorter than that shows the middle of it). */
@@ -813,6 +822,7 @@ const SLOTS = [
   { key: "postcard_spinner", label: "Postcard spinner", group: "Gift shop and café", w: 16, h: 32, pal: "trinket", gen: GEN.postcard_spinner, note: "Stands two tiles tall." },
   { key: "floor_lamp", label: "Floor lamp", group: "Gift shop and café", w: 16, h: 32, pal: "trinket", gen: GEN.floor_lamp, note: "Stands two tiles tall and casts a warm glow." },
   { key: "basket", label: "Basket of goodies", group: "Gift shop and café", w: 16, h: 16, pal: "trinket", gen: GEN.basket },
+  { key: "overflow_screen", label: "Touch screen on a pedestal", group: "Rooms", w: 16, h: 32, pal: "screen", gen: GEN.overflow_screen, note: "Two tiles tall. Holds the room's extra pieces: the ones of its genre that don't fit in its cases." },
   { key: "hall_floor", label: "Hallway floor (dark wood)", group: "Hallways", w: 16, h: 16, pal: "darkwood", gen: GEN.floor_wood, note: "Tiles seamlessly in every direction." },
   { key: "carpet_floor", label: "Carpet floor", group: "Rooms", w: 16, h: 16, pal: "plush", gen: GEN.carpet_floor, note: "Gray on purpose: a room's floor color tints it (Rooms, Museum, Layout). Tiles seamlessly." },
   { key: "mural_dusk", label: "Mural: dusk peaks", group: "Murals", w: 256, h: 16, pal: "m_dusk", gen: GEN.mural_dusk, note: "Painted along the top row of a wall. A shorter wall shows the middle of it." },
@@ -984,17 +994,18 @@ function normalizeMinds(list) {
 }
 /* Genres: one per museum room that shows episodes. minds: the mindsets that room is for (a piece follows its first ticked mindset). */
 const SAMPLE_GENRES = [
-  { id: "action", name: "Action", color: "#e0817a", minds: ["thrill", "hands-on", "one-more"] },
-  { id: "puzzle", name: "Puzzle", color: "#4caf9a", minds: ["tinkerer"] },
-  { id: "strategy", name: "Strategy", color: "#6a8ad8", minds: ["systems"] },
-  { id: "story", name: "Story", color: "#c878b0", minds: ["story", "unhurried"] },
+  { id: "dark", name: "The Shape in the Dark", short: "Dark", color: "#8a7ab8", minds: ["thrill"] },
+  { id: "mastery", name: "The Long Road to Mastery", short: "Mastery", color: "#e0817a", minds: ["hands-on", "one-more"] },
+  { id: "whispers", name: "Whispers of a Larger World", short: "Whispers", color: "#4caf9a", minds: ["unhurried"] },
+  { id: "experiment", name: "Mad Scientist", short: "Mad Scientist", color: "#6a8ad8", minds: ["systems", "tinkerer"] },
+  { id: "stories", name: "Stories", short: "Stories", color: "#c878b0", minds: ["story"] },
 ];
 function normalizeGenres(list, mids) {
   if (!Array.isArray(list)) list = JSON.parse(JSON.stringify(SAMPLE_GENRES));
   const seen = new Set();
   return list.filter(g => g && typeof g === "object").slice(0, 12).map((g, i) => {
     let id = str(g.id, 30).toLowerCase().replace(/[^a-z0-9_-]/g, "") || "genre-" + i; while (seen.has(id)) id += "2"; seen.add(id);
-    return { id, name: str(g.name, 40) || "Genre", color: isHex(g.color) ? g.color : "#a08868", minds: (Array.isArray(g.minds) ? g.minds : []).map(x => str(x, 30)).filter(m => !mids || mids.has(m)) };
+    return { id, name: str(g.name, 40) || "Genre", short: str(g.short, 16), color: isHex(g.color) ? g.color : "#a08868", minds: (Array.isArray(g.minds) ? g.minds : []).map(x => str(x, 30)).filter(m => !mids || mids.has(m)) };
   });
 }
 /* Which room a piece belongs in: picked by hand, or the first genre that welcomes one of its mindsets (in the order they're ticked). */
@@ -1029,7 +1040,7 @@ function normalizePiece(p, i) {
     observation: str(p.observation), intention: str(p.intention), guestWriter: str(p.guestWriter, 80), guestNote: str(p.guestNote),
     episodeUrl: safeUrl(p.episodeUrl), gameUrl: safeUrl(p.gameUrl), image: str(p.image, 20000000) || null,
     unveil: /^\d{4}-\d{2}-\d{2}$/.test(p.unveil || "") ? p.unveil : "",
-    hint: str(p.hint, 160), pick: !!p.pick, minds: Array.isArray(p.minds) ? p.minds.map(x => str(x, 30)).filter(Boolean).slice(0, 8) : [], genre: str(p.genre, 30),
+    hint: str(p.hint, 160), pick: !!p.pick, minds: Array.isArray(p.minds) ? p.minds.map(x => str(x, 30)).filter(Boolean).slice(0, 8) : [], genre: str(p.genre, 30), blend: str(p.blend, 30), // blend: a second category it also belongs to
     colors: colors.length >= 2 ? colors : ["#f0ecf8", "#a898d0", "#584a88", "#1a1430"],
     style: STYLES.includes(p.style) ? p.style : STYLES[strSeed(str(p.title, 80) || String(i)) % STYLES.length],
   };
@@ -1091,7 +1102,7 @@ function normalizePack(p) {
   const life = { drinks: pct(lin2.drinks, 30), bags: pct(lin2.bags, 20), photos: pct(lin2.photos, 8) };
   // Genres: the museum's rooms (Action, Puzzle...), each welcoming some mindsets. A piece's genre is set by hand, or follows its mindsets.
   const genres = normalizeGenres(p.settings && p.settings.genres, mids), gids = new Set(genres.map(g => g.id));
-  pieces.forEach(pc => { if (!gids.has(pc.genre)) pc.genre = ""; });
+  pieces.forEach(pc => { if (!gids.has(pc.genre)) pc.genre = ""; if (!gids.has(pc.blend) || pc.blend === pc.genre) pc.blend = ""; });
   return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, mindsets, curious, life, genres }, samples: !Array.isArray(p.pieces) };
 }
 /* The curator's "Skip to tomorrow" moves every daily system forward together. */
@@ -1375,6 +1386,8 @@ const TEXT = {
   "cur.loved":         { g: "Curious visitors", l: "Next day: loved it, if their mindset has no lines of its own", v: [["I loved it. Thank you so much!"]] },
   "cur.nope":          { g: "Curious visitors", l: "Next day: not for them, if their mindset has no lines of its own", v: [["Honestly, it wasn't really for me. Thanks for trying, though!"]] },
   "cur.after":         { g: "Curious visitors", l: "Talking to them again after they told you (takes turns)", v: [["Thanks again for the recommendation!"], ["I might come ask you for another one sometime."]] },
+  "pc.idle":           { g: "Storage", l: "Someone's PC (waiting for its new job)", v: [["Someone's PC hums quietly.", "A sticky note on the monitor: RESERVED FOR SOMETHING NEW."]] },
+  "screen.empty":      { g: "Rooms", l: "A room's touch screen when every piece fits in the cases ({room})", v: [["The little screen glows.", "EVERY PIECE IN {room} IS ON DISPLAY. Nothing waiting here."]] },
   "pc.on":             { g: "Floors", l: "Turning on Someone's PC", v: [["You turned on Someone's PC.", "Accessed the museum archive."]] },
   "pc.empty":          { g: "Floors", l: "The archive is empty", v: [["The archive is empty.", "Every piece is on display right now."]] },
   "mag.1":             { g: "Magazines", l: "Magazine 1 (first line is the title; each line after is a paragraph)", v: [["Pixel Monthly", "This month: why every menu in a cozy game should make a little sound when you open it. We asked twelve players. Eleven said yes. The twelfth asked what a menu was.", "Also inside: the case for walking slower. Games that let you stroll tend to get remembered as places, not as tasks. Something to think about next time a game hands you a sprint button."]] },
@@ -3654,17 +3667,19 @@ class Game {
     });
   }
   /* Someone's PC: a list of every archived piece. Pick one to see its art and placards; LOG OFF to leave. */
-  someonesPC() {
-    const list = this.archived || []; this.quest("pc");
-    this.say(this.tx("pc.on"), () => {
-      if (!list.length) { this.say(this.tx("pc.empty")); return; }
-      const show = () => this.openList("SOMEONE'S PC: ARCHIVE", [...list.map(p => (p.pick ? { text: p.title, pick: true } : p.title)), "LOG OFF"], i => {
-        const p = list[i]; if (!p) return;
-        this.viewPiece(p); const done = this.rd && this.rd.done;
-        this.rd.done = () => { if (done) done(); show(); };
-      });
-      show();
+  someonesPC() { this.quest("pc"); this.say(this.tx("pc.idle")); } // waiting for its new job (the archive moved to each room's touch screen)
+  /* A room's touch screen: the pieces of its genre that don't fit in its cases, to browse (and recommend). */
+  overflowScreen() {
+    const p = this.player, [dx, dy] = DIRS[p.dir], z = this.zoneAt(this.room, p.x + dx, p.y + dy) || this.zone;
+    const g = z && z.rect ? z.rect.genre : "", gen = (this.pack.settings.genres || []).find(x => x.id === g), list = (this.overflow && this.overflow[g]) || [];
+    const title = (gen ? (gen.short || gen.name) : z ? z.name : "This room").toUpperCase();
+    if (!list.length) { this.say(this.tx("screen.empty", { room: gen ? gen.name : z ? z.name : "this room" })); return; }
+    const show = () => this.openList(title + ": MORE PIECES", [...list.map(q => (q.pick ? { text: q.title, pick: true } : q.title)), "CLOSE"], i => {
+      const q = list[i]; if (!q) return;
+      const read = () => { this.viewPiece(q); const done = this.rd && this.rd.done; this.rd.done = () => { if (done) done(); show(); }; };
+      if (!this.offerRecommend(q, read)) read();
     });
+    show();
   }
   /* The magazine stand: pick a magazine, read it in the reading panel. Magazines are in the Words tab. */
   magazines() {
@@ -3773,6 +3788,8 @@ class Game {
     for (const id of Object.keys(ROOMS)) { o.spotStart[id] = n; n += (ROOMS[id].spots || []).length; o.caseStart[id] = m; m += (ROOMS[id].cases || []).length; }
     const split = archiveSplit(this.pack.pieces), cases = assignCases(this.pack.pieces, this.pack.settings.genres);
     o.caseFor = cases.byRoom; o.community = split.community; this.archived = [...cases.archived, ...split.archived.filter(p => p.kind !== "episode")];
+    // A room's overflow (its genre's episodes that don't fit its cases) is on that room's touch screen.
+    this.overflow = {}; cases.archived.forEach(p => { const g = genreOf(p, this.pack.settings.genres); (this.overflow[g] = this.overflow[g] || []).push(p); });
     this.rooms = {}; Object.keys(ROOMS).forEach(id => (this.rooms[id] = buildRoom(id, this.pack.pieces, o)));
     this.placeCurious(); this.placeMembers(); this.giveLife();
   }
@@ -3859,6 +3876,7 @@ class Game {
     else if (e.guestbook) this.readGuestbook();
     else if (e.roofStairs) this.say(this.tx("stairs.roof"), () => { const p = this.player; p.dir = OPP[p.dir]; });
     else if (e.directory) this.readDirectory();
+    else if (e.kiosk) this.overflowScreen();
     else if (e.arrow) { const a = this.arrowInfo(e.arrow); this.say([a.label.toUpperCase() + " " + ({ left: "\u2190", right: "\u2192", up: "\u2191", down: "\u2193" }[e.arrow.dir] || ""), "This way to " + a.label + "."]); }
     else if (e.say) this.say(e.say);
   }
@@ -4598,7 +4616,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-14 north room";
+const VERSION = "2026-10-15 five rooms";
 window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

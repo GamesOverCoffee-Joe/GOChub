@@ -392,6 +392,15 @@ Goal: character.
 - **The map** grew 9 rows (now 57×58), and everything in the museum moved down to match.
 - **The North Room** (12×10, plain for now, with its own light switch) sits above the Upper Hall. The 5-tile North Hall runs up to it from the middle of the Upper Hall. The Upper Hall's center painting spot made way for the doorway, and its two lights now flank it.
 - **Murals** are all cleared for a clean slate. The mural art is still in Art → Murals, and Place → Mural still works.
-- **Not decided yet:** the five design categories (The Shape in the Dark, The Long Road to Mastery, Whispers of a Larger World, Mad Scientist, Stories) aren't wired in. Rooms still use the old genres until then.
+- (The five design categories were wired in on 2026-10-15; see below.)
 - **Source of truth:** the museum layout lives in museum-pack.json. The engine's built-in fallback layout is older and only used if a pack has no museum.
 
+
+**Five categories (2026-10-15).**
+- **Genres are now the five design categories:** The Shape in the Dark (`dark`), The Long Road to Mastery (`mastery`), Whispers of a Larger World (`whispers`), Mad Scientist (`experiment`) and Stories (`stories`). Each has a short name (editable in Visitors → Genres) that goes on its touch screen.
+- **Rooms:** North → Dark, Action room → Mastery, Puzzle room → Whispers, Strategy room → Mad Scientist, Story room → Stories. The room ids (`north`, `action`...) are unchanged; their names, genres and signs changed. Each sign reads the category's description, then its "In design terms" line. The hall arrows read WHISPERS, MAD SCIENTIST, MASTERY and STORIES.
+- **The Dark room** has dark carpet (floor #231e2e, wall #2a2732), a winding runner that dead-ends at its touch screen, 8 cases, a sign, a bench and a fern.
+- **Pieces:** every episode has its category set by hand. Six have a **blend** (a second category, `blend` on the piece, "Blends with" in Pieces): Cave Escape and Sneaky (Mastery), Hyperbaric (Stories), Ominoflux (Mad Scientist), Seeing Double and Enemies Within (Dark). A blend is for the record only; the piece is shown in its main room. "Monter Freaks!" was renamed "Monster Freaks!".
+- **New drafts:** Hovershot (Yaniv) and Spacecat Solitaire (Grey Duck Games), in Mastery, with no images or links yet.
+- **Touch screens replace the archive.** Each genre room has a small touch screen on a pedestal (`overflow_screen`, event `{kiosk: true}`, Place → Display → Touch screen). It lists that room's genre episodes that don't fit in its cases, to read or recommend. Mastery has 9 episodes for 8 cases, so Polariball (the oldest) is on its screen.
+- **Someone's PC (B1)** is idle, waiting for its new job. Community finds that don't fit a wall spot aren't shown anywhere for now.

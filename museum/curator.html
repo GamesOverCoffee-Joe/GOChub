@@ -313,7 +313,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
           <button class="btn" type="button" id="rechore" title="Dust settles, plants get thirsty, the mug goes missing, visitors come back, lights come on">Reset chores</button>
           <button class="btn" type="button" id="figureBtn" title="The figure appears right now, beside or behind you, with this room's lights off. Turn and photograph it before it's gone.">Summon the figure</button>
           <button class="btn" type="button" id="dayBtn" title="Jump the preview to the next day: curious visitors come back, dust settles, the museum opens again">Skip to tomorrow</button>
-          <button class="btn" type="button" id="testPcs" aria-pressed="false" title="Fill the preview with 60 placeholder pieces so the oldest go to the archive on Someone's PC (B1). Never saved to the pack.">Test pieces: off</button>
+          <button class="btn" type="button" id="testPcs" aria-pressed="false" title="Fill the preview with 60 placeholder pieces so the oldest go to the rooms' touch screens. Never saved to the pack.">Test pieces: off</button>
         </div>
       </details>
     </div>
@@ -325,7 +325,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-14 north room";
+window.GOQ_WANT = "2026-10-15 five rooms";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -376,6 +376,7 @@ function packOut() {
     if (p.hint) o.hint = p.hint;
     if (p.minds && p.minds.length) o.minds = p.minds;
     if (p.genre) o.genre = p.genre;
+    if (p.blend) o.blend = p.blend;
     if (p.unveil) o.unveil = p.unveil;
     if (p.pick) o.pick = true;
     if (p.image) o.image = p.image; else { o.colors = p.colors; o.style = p.style; }
@@ -473,7 +474,7 @@ $("#figureBtn").addEventListener("click", () => {
 $("#dayBtn").addEventListener("click", () => { game.closeAll(); game.skipDay(); stage.focus({ preventScroll: true }); });
 $("#testPcs").addEventListener("click", async e => {
   testPieces = !testPieces; e.currentTarget.textContent = "Test pieces: " + (testPieces ? "on" : "off"); e.currentTarget.setAttribute("aria-pressed", testPieces);
-  await refreshPreview(); status(testPieces ? "Preview has 60 test pieces; the oldest are in the archive on Someone's PC (Storage)" : "Test pieces removed from the preview");
+  await refreshPreview(); status(testPieces ? "Preview has 60 test pieces; the oldest are on the rooms' touch screens" : "Test pieces removed from the preview");
   stage.focus({ preventScroll: true });
 });
 // Spooky: "always" makes the rare creepy moment happen on every closing, handy for recording an end-card.
@@ -839,6 +840,7 @@ const PLACE_GROUPS = [
   { name: "Display", items: [
     { kind: "case", name: "Episode case", key: "display_case", note: "Episodes fill cases in Pieces order. Stand it on the floor with room to walk all the way around." },
     { kind: "spot", name: "Painting spot", key: "wall_frame_wood", note: "Community pieces hang here. Tap the wall; it takes two tiles across both wall rows." },
+    { kind: "prop", key: "overflow_screen", name: "Touch screen", note: "The room's extra pieces: episodes of its genre that don't fit in its cases. One per room is plenty." },
   ] },
   { name: "Furniture", items: ["bench", "plant", "sign_stand", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board"].map(k => ({ kind: "prop", key: k })) },
   { name: "Shop and café", items: ["shelf_unit", "magazine_rack", "item_rack", "shop_counter", "cafe_counter", "bus_tub", "cafe_table", "cafe_stool", "floor_lamp", "postcard_spinner", "basket", "planter", "cat_bed"].map(k => ({ kind: "prop", key: k }))
@@ -1266,6 +1268,7 @@ function placeAt(t) {
     if (p.key === "bus_tub") prop.event = { trash: true, tub: true };
     if (p.key === "workbench") prop.event = { upcoming: true };
     if (p.key === "someones_pc") prop.event = { pc: true };
+    if (p.key === "overflow_screen") prop.event = { kiosk: true };
     if (p.key === "fridge") { prop.blockTop = true; prop.event = { fridge: true }; }
     if (p.key === "microwave_counter") prop.event = { microwave: true };
     if (p.key === "patron_board") { prop.blockTop = true; prop.event = { patronBoard: true }; }
@@ -1904,11 +1907,12 @@ function renderGenres(wrap) {
   wrap.appendChild(el("p", { class: "note", text: "Each genre is a room in the museum (pick a room's genre in Rooms, Museum, Layout). An episode goes to the first genre that welcomes one of its ticked mindsets, unless you pick its room in Pieces." }));
   list.forEach((g, i) => {
     const name = el("input", { type: "text", value: g.name, maxlength: 40 }); name.addEventListener("input", () => { g.name = name.value; changed(); });
+    const sh = el("input", { type: "text", value: g.short || "", maxlength: 16, placeholder: "e.g. Dark" }); sh.addEventListener("input", () => { g.short = sh.value; changed(); });
     const col = el("input", { type: "color", value: g.color || "#a08868" }); col.addEventListener("input", () => { g.color = col.value; changed(); });
     const boxes = minds.map(m => { const cb = el("input", { type: "checkbox", checked: g.minds.includes(m.id) }); cb.addEventListener("change", () => { g.minds = g.minds.filter(x => x !== m.id); if (cb.checked) g.minds.push(m.id); changed(); }); return el("label", { class: "check", style: "margin:0 12px 4px 0" }, [cb, document.createTextNode(m.name)]); });
     const where = roomsOf(g.id);
     wrap.appendChild(el("article", { class: "prow", style: "display:block" }, [el("div", { class: "fields" }, [
-      el("label", {}, [document.createTextNode("Name"), name]), el("label", {}, [document.createTextNode("Color"), col]),
+      el("label", {}, [document.createTextNode("Name"), name]), el("label", {}, [document.createTextNode("Short name"), el("small", { text: "On its touch screen." }), sh]), el("label", {}, [document.createTextNode("Color"), col]),
       el("div", { class: "fieldset wide" }, [el("span", { class: "flabel", text: "Mindsets it's for" }), el("div", { class: "unveil", style: "flex-wrap:wrap" }, boxes)]),
       el("p", { class: "note wide", text: where.length ? "Room: " + where.join(", ") : "No room has this genre yet." }),
       el("div", { class: "acts" }, [el("button", { type: "button", class: "btn small quiet", text: "Remove", onclick: () => {
@@ -1923,7 +1927,14 @@ function genreBox(p) {
   const genres = draft.settings.genres || GOQ.SAMPLE_GENRES, auto = GOQ.genreOf(Object.assign({}, p, { genre: "" }), genres), an = (genres.find(g => g.id === auto) || {}).name;
   const s = el("select", {}, [el("option", { value: "", text: "Its mindsets decide" + (an ? " (" + an + ")" : " (no genre: rooms without one)") })].concat(genres.map(g => el("option", { value: g.id, text: g.name }))));
   s.value = p.genre || ""; s.addEventListener("change", () => { p.genre = s.value; changed({ now: true }); renderPieces(); });
-  return el("label", { class: "wide" }, [document.createTextNode("Exhibited in"), el("small", { text: "The room whose cases it goes in, and only that room. If its cases are full, the oldest of that genre wait in the archive until you add a case there." }), s]);
+  return el("label", { class: "wide" }, [document.createTextNode("Exhibited in"), el("small", { text: "The room whose cases it goes in, and only that room. If its cases are full, the oldest of that genre wait on the room's touch screen until you add a case there." }), s]);
+}
+/* A second category it also belongs to (a blend). For the record; it's shown in the room it's exhibited in. */
+function blendBox(p) {
+  const genres = draft.settings.genres || GOQ.SAMPLE_GENRES;
+  const s = el("select", {}, [el("option", { value: "", text: "No blend" })].concat(genres.map(g => el("option", { value: g.id, text: g.name }))));
+  s.value = p.blend || ""; s.addEventListener("change", () => { p.blend = s.value; changed({ now: true }); });
+  return el("label", { class: "wide" }, [document.createTextNode("Blends with"), el("small", { text: "A second category it also belongs to. It's still exhibited only in the room above." }), s]);
 }
 function renderVisitors() {
   const main = $("#main"); main.innerHTML = "";
@@ -2080,13 +2091,13 @@ function renderPieces() {
   const main = $("#main"); main.innerHTML = "";
   const spots = GOQ.spotCount(), cases = GOQ.caseCount(), wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
   wrap.appendChild(el("h2", { class: "title", text: "Pieces" }));
-  wrap.appendChild(el("p", { class: "note", text: "When there are more pieces than places, the oldest (highest in this list) move to the archive on Someone's PC in Storage, and the newest stay on display. Add new pieces at the bottom." }));
+  wrap.appendChild(el("p", { class: "note", text: "When a room has more episodes than cases, the oldest (highest in this list) move to that room's touch screen, and the newest stay in the cases. Community finds need a free wall spot to be shown. Add new pieces at the bottom." }));
   wrap.appendChild(el("p", { text: "Episodes go in display cases (" + cases + " in the museum), in the room for their genre (set under Exhibited in, or by their mindsets): your observation on the front placard, the developer's intention on the back. Community finds hang on the walls as paintings (" + spots + " wall spots). Each kind fills its places in this order. Add more cases and wall spots in the Rooms tab." }));
   wrap.appendChild(el("p", { text: "Turn on \"Unveil on a date\" and visitors see the piece under a sheet until that day. In curator mode it waits in a crate, so you can hang it on camera. Links show as small buttons while someone is looking at the piece." }));
   if (!draft.pieces.length) wrap.appendChild(el("p", { class: "empty", text: "No pieces yet. Add the first one below." }));
-  // Where each piece is: which gallery and case or wall spot, or archived on Someone's PC (the oldest go first).
+  // Where each piece is: which gallery and case or wall spot, or on its room's touch screen (the oldest go first).
   // Where each piece is. Episodes: the case in their genre's room (or a spare case elsewhere), newest first; community finds:
-  // the wall spots in order. Whatever doesn't fit is archived on Someone's PC.
+  // the wall spots in order. Episodes that don't fit go on their room's touch screen.
   const nC = draft.pieces.filter(p => p.kind !== "episode").length, oldC = Math.max(0, nC - spots), walls = [];
   Object.keys(GOQ.ROOMS).forEach(id => (GOQ.ROOMS[id].spots || []).forEach((_, i) => walls.push("WALL " + (walls.length + 1))));
   const asg = GOQ.assignCases(draft.pieces, draft.settings.genres || GOQ.SAMPLE_GENRES), caseNo = {}, label = {};
@@ -2094,12 +2105,13 @@ function renderPieces() {
   // Per genre: how many episodes, how many cases, how many wait in the archive.
   const gl = (draft.settings.genres || GOQ.SAMPLE_GENRES).concat([{ id: "", name: "No genre" }]).map(g => {
     const n = draft.pieces.filter(p => p.kind === "episode" && GOQ.genreOf(p, draft.settings.genres || GOQ.SAMPLE_GENRES) === g.id).length, c = asg.slots.filter(sl => sl.genre === g.id).length;
-    return n || c ? g.name + ": " + n + " episode" + (n === 1 ? "" : "s") + ", " + c + " case" + (c === 1 ? "" : "s") + (n > c ? " (" + (n - c) + " in the archive)" : "") : null;
+    return n || c ? g.name + ": " + n + " episode" + (n === 1 ? "" : "s") + ", " + c + " case" + (c === 1 ? "" : "s") + (n > c ? " (" + (n - c) + " on the room's touch screen)" : "") : null;
   }).filter(Boolean);
   if (gl.length) wrap.appendChild(el("ul", { class: "laylist" }, gl.map(t => el("li", { text: t }))));
   let ci = 0;
   draft.pieces.forEach((p, i) => {
-    const place = p.kind === "episode" ? label[p.id] || "ARCHIVED (SOMEONE'S PC)" : (ci++ < oldC ? "ARCHIVED (SOMEONE'S PC)" : walls[ci - 1 - oldC]);
+    const g = p.kind === "episode" ? (draft.settings.genres || GOQ.SAMPLE_GENRES).find(x => x.id === GOQ.genreOf(p, draft.settings.genres || GOQ.SAMPLE_GENRES)) : null;
+    const place = p.kind === "episode" ? label[p.id] || (g ? "ON THE " + (g.short || g.name).toUpperCase() + " SCREEN" : "NOT SHOWN (NO GENRE)") : (ci++ < oldC ? "NOT SHOWN (NO WALL SPOT FREE)" : walls[ci - 1 - oldC]);
     wrap.appendChild(pieceRow(p, i, place));
   });
   wrap.appendChild(el("div", { class: "row" }, [el("button", { class: "btn primary", type: "button", text: "Add a piece", onclick: () => {
@@ -2134,12 +2146,12 @@ function pieceRow(p, i, place) {
   const pickBox = el("input", { type: "checkbox", checked: !!p.pick });
   const pickLbl = el("span", { class: "spotlbl pick", text: "CURATOR'S PICK", hidden: !p.pick });
   pickBox.addEventListener("change", () => { p.pick = pickBox.checked; pickLbl.hidden = !p.pick; changed({ now: true }); });
-  const ep = p.kind === "episode", on = !!place && !/^ARCHIVED/.test(place);
+  const ep = p.kind === "episode", on = !!place && !/^ARCHIVED|^NOT SHOWN|SCREEN$/.test(place);
   const spotTxt = place || "NOT ON DISPLAY";
   const left = el("div", {}, [
     el("div", { class: "frame" }, [th]),
     pickLbl,
-    el("span", { class: "spotlbl" + (on ? "" : " off"), text: spotTxt, title: on ? "" : "Archived: it's on Someone's PC in Storage. Move it lower in the list to put it back on display." }),
+    el("span", { class: "spotlbl" + (on ? "" : " off"), text: spotTxt, title: on ? "" : "Not in a case: it's on its room's touch screen. Move it lower in the list, or add a case to its room, to put it back in a case." }),
     el("div", { class: "side-acts" }, [
       el("label", { class: "btn small", for: fileId, text: p.image ? "Replace image" : "Add image" }), file,
       p.image ? el("button", { class: "btn small quiet", type: "button", text: "Remove image", onclick: () => { p.image = null; changed({ now: true }); renderPieces(); } }) : null,
@@ -2179,6 +2191,7 @@ function pieceRow(p, i, place) {
     f("How a visitor would describe it", text("hint", "the one where the clock never ran out but I still rushed"), true, "Visitors say this when they come back to tell you how it went: \"I tried Lantern Keeper, the one where...\" Keep it to one line, in their words."),
     mindsBox(p),
     p.kind === "episode" ? genreBox(p) : null,
+    p.kind === "episode" ? blendBox(p) : null,
     f("YouTube episode", link("episodeUrl", "https://youtube.com/watch?v=..."), false, "Shown as \"Watch the episode\""),
     f("The game", link("gameUrl", "https://store.steampowered.com/... or itch.io"), false, "Shown as \"Play the game\""),
     el("div", { class: "acts" }, [
