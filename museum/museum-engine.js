@@ -35,6 +35,8 @@ const PAL = {
   shopfl:  ["#e0ae74", "#d29e64", "#a8723f", "#3a200e", "#ecc088"],
   trinket: [null, "#f8f0e0", "#e06848", "#f0b840", "#58a868", "#5878c8", "#b868b8", "#8a5a34", "#2a160c", "#f8c8c8", "#78c8c8"],
   rug:     ["#f0d8b0", "#c84848", "#e8a040", "#3a6888", "#2a160c"],
+  carpet:  ["#e8c070", "#9a3040", "#7c2434", "#4a1420", "#f4dca0"],
+  sconce:  ["#fff0b8", "#f0b850", "#9a6c34", "#3a2414"],
   cat:     [null, "#f0a050", "#c87028", "#2a1810", "#f8f0e0", "#f88898", "#a05018"],
   apron:   [null, "#f0d0b0", "#c86848", "#181820", "#f8f0c0"],
   guard:   [null, "#e8c098", "#283c64", "#181820", "#f0c040"],
@@ -461,6 +463,25 @@ const GEN = {
     rect(a, 2, 8, 12, 7, 7); for (let x = 3; x < 14; x += 3) rect(a, x, 9, 1, 5, 3);
     return outline(a, 8);
   },
+  // Hallway carpet runner, one tile at a time: 3 frames (start, middle, end). Across: start is the left end. Down: start is the top.
+  carpet_h: f => fillFn(mk(16, 16), (x, y) => {
+    if (y < 3 || y > 12) return undefined;
+    if (f === 0 && x < 3) return x === 1 && y % 2 === 0 && y > 3 && y < 12 ? 0 : x === 2 ? 3 : undefined; // tassels, then the edge
+    if (f === 2 && x > 12) return x === 14 && y % 2 === 0 && y > 3 && y < 12 ? 0 : x === 13 ? 3 : undefined;
+    if (y === 3 || y === 12) return 3;
+    if (y === 4 || y === 11 || (f === 0 && x === 3) || (f === 2 && x === 12)) return 0;
+    if (y === 5 || y === 10) return 1;
+    const dx = (x + 4) % 8 - 3.5, dy = y - 7.5; // a little diamond every half tile
+    return Math.abs(dx) + Math.abs(dy) < 2.5 ? (Math.abs(dx) + Math.abs(dy) < 1.2 ? 4 : 2) : 1;
+  }),
+  carpet_v: f => { const a = GEN.carpet_h(f); return a[0].map((_, x) => a.map(row => row[x])); },
+  // A little brass wall light with a warm shade, hung on the upper wall row.
+  wall_sconce: () => {
+    const a = mk(16, 16);
+    rect(a, 7, 9, 2, 5, 2); rect(a, 5, 13, 6, 2, 2);                 // stem and wall plate
+    for (let y = 2; y < 9; y++) rect(a, 8 - Math.floor((y + 1) / 2), y, Math.floor((y + 1) / 2) * 2, 1, y < 4 ? 0 : 1); // the shade, lit from inside
+    return outline(a, 3);
+  },
   rug: () => fillFn(mk(48, 32), (x, y) => {
     const d = Math.min(x, y, 47 - x, 31 - y);
     if (d === 0) return (x + y) % 2 ? 4 : 2;
@@ -717,6 +738,9 @@ const SLOTS = [
   { key: "postcard_spinner", label: "Postcard spinner", group: "Gift shop and café", w: 16, h: 32, pal: "trinket", gen: GEN.postcard_spinner, note: "Stands two tiles tall." },
   { key: "floor_lamp", label: "Floor lamp", group: "Gift shop and café", w: 16, h: 32, pal: "trinket", gen: GEN.floor_lamp, note: "Stands two tiles tall and casts a warm glow." },
   { key: "basket", label: "Basket of goodies", group: "Gift shop and café", w: 16, h: 16, pal: "trinket", gen: GEN.basket },
+  { key: "carpet_h", label: "Carpet runner, across", group: "Hallways", w: 16, h: 16, frames: 3, pal: "carpet", gen: GEN.carpet_h, note: "3 frames side by side (48×16): the left end, a middle piece, the right end. Painted one tile at a time with the Carpet tool in Rooms." },
+  { key: "carpet_v", label: "Carpet runner, down", group: "Hallways", w: 16, h: 16, frames: 3, pal: "carpet", gen: GEN.carpet_v, note: "3 frames side by side (48×16): the top end, a middle piece, the bottom end." },
+  { key: "wall_sconce", label: "Accent light", group: "Hallways", w: 16, h: 16, pal: "sconce", gen: GEN.wall_sconce, note: "A small wall light, hung on the upper wall row. It glows with the lights on." },
   { key: "rug", label: "Rug", group: "Gift shop and café", w: 48, h: 32, pal: "rug", gen: GEN.rug, note: "Lies on the floor under everything else; you walk over it." },
   { key: "planter", label: "Planter", group: "Gift shop and café", w: 16, h: 16, pal: "trinket", gen: GEN.planter, note: "A row of these divides the shop from the café." },
   { key: "cat_bed", label: "Cat bed", group: "The cat", w: 16, h: 16, pal: "cat", gen: GEN.cat_bed },
@@ -876,7 +900,7 @@ function normalizeMinds(list) {
 }
 /* Genres: one per museum room that shows episodes. minds: the mindsets that room is for (a piece follows its first ticked mindset). */
 const SAMPLE_GENRES = [
-  { id: "action", name: "Action", color: "#e07040", minds: ["thrill", "hands-on", "one-more"] },
+  { id: "action", name: "Action", color: "#e0817a", minds: ["thrill", "hands-on", "one-more"] },
   { id: "puzzle", name: "Puzzle", color: "#4caf9a", minds: ["tinkerer"] },
   { id: "strategy", name: "Strategy", color: "#6a8ad8", minds: ["systems"] },
   { id: "story", name: "Story", color: "#c878b0", minds: ["story", "unhurried"] },
@@ -1343,6 +1367,13 @@ const SAMPLE_ACH = [
 ];
 /* The secret shirt: the museum day from the third magazine, in order. */
 const SHIRT_STEPS = ["cocoa", "finishOnStool", "lobbyTrash", "water", "catPhoto", "stairsB1", "pc", "upperHall", "napUpper", "chat", "chat", "chat"];
+/* A tiny 3×5 pixel font for signs (capitals and digits). */
+const PIXEL_FONT = (() => {
+  const g = "A:010101111101101 B:110101110101110 C:011100100100011 D:110101101101110 E:111100110100111 F:111100110100100 G:011100101101011 H:101101111101101 I:111010010010111 J:001001001101010 K:101101110101101 L:100100100100111 M:101111111101101 N:110101101101101 O:010101101101010 P:110101110100100 Q:010101101110011 R:110101110101101 S:011100010001110 T:111010010010010 U:101101101101111 V:101101101101010 W:101101111111101 X:101101010101101 Y:101101010010010 Z:111001010100111 0:111101101101111 1:010110010010111 2:110001010100111 3:110001010001110 4:101101111001001 5:111100110001110 6:011100111101111 7:111001010010010 8:111101111101111 9:111101111001110";
+  const out = { " ": ["000", "000", "000", "000", "000"] };
+  g.split(" ").forEach(e => { const [k, b] = e.split(":"); out[k] = [0, 1, 2, 3, 4].map(i => b.slice(i * 3, i * 3 + 3)); });
+  return out;
+})();
 const KONAMI = ["up", "up", "down", "down", "left", "right", "left", "right", "b", "a"];
 const REDUCED_MOTION = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 const BROWSE_LINES = [["Hmm. Hmm hmm hmm."], ["Should I get the mug? I should get the mug.", "...Or the tote."], ["I've been standing here a while.", "I'm very close to deciding."], ["Don't rush me. This is a big decision."]];
@@ -1484,7 +1515,7 @@ prepLayoutRoom(ROOMS.museum);
 /* A pristine copy of the built-in rooms. A pack's "rooms" replaces any of these or adds new ones;
    the level editor in curator.html writes them. Rooms are plain data, so a deep copy is enough. */
 const BUILTIN_ROOMS = JSON.parse(JSON.stringify(ROOMS));
-const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "windowAt", "intercom", "lightSwitch", "eotmAt",
+const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "runners", "lamps", "arrows", "windowAt", "intercom", "lightSwitch", "eotmAt",
   "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo"];
 /* Light checks so a hand-edited or damaged pack can't break the game: rectangular map, sane size, a spawn on the map. */
 function normalizeRoom(id, d) {
@@ -1620,6 +1651,11 @@ function buildRoom(id, pieces, o) {
     def.wallArt.forEach(w => { for (let i = 0; i < SLOT[w.key].w / T; i++) r.events[(w.x + i) + "," + ((w.y || 1) + 1)] = w.cafe && w.key !== "cafe_menu" ? { cafe: true } : { say: w.say || ["The café menu."] }; });
   }
   r.decals = def.decals || []; r.glows = def.glows || []; r.bunting = !!def.bunting;
+  // Hallway dressing: carpet runner tiles [x, y, "h0".."v2"], accent lights on the wall [x, y], and arrow signs pointing the way.
+  r.runners = (def.runners || []).filter(t => Array.isArray(t) && /^[hv][012]$/.test(t[2]));
+  r.lamps = (def.lamps || []).filter(Array.isArray);
+  r.arrows = (def.arrows || []).filter(a => a && typeof a === "object");
+  r.arrows.forEach(a => { for (let i = 0; i < (a.w || 4); i++) { const k = (a.x + i) + "," + ((a.y || 1) + 1); if (!r.events[k]) r.events[k] = { arrow: a }; } });
   if (def.catSpots && o.catRoom === id) {
     const [x, y] = def.catSpots[o.catIndex % def.catSpots.length];
     if (!r.solid[y][x] || r.props.some(p => p.catBed && p.x === x && p.y === y)) { r.cat = { x, y }; r.solid[y][x] = true; r.events[x + "," + y] = { cat: true }; }
@@ -3577,7 +3613,32 @@ class Game {
     else if (e.guestbook) this.readGuestbook();
     else if (e.roofStairs) this.say(this.tx("stairs.roof"), () => { const p = this.player; p.dir = OPP[p.dir]; });
     else if (e.directory) this.readDirectory();
+    else if (e.arrow) { const a = this.arrowInfo(e.arrow); this.say([a.label.toUpperCase() + " " + ({ left: "\u2190", right: "\u2192", up: "\u2191", down: "\u2193" }[e.arrow.dir] || ""), "This way to " + a.label + "."]); }
     else if (e.say) this.say(e.say);
+  }
+  /* An arrow sign's words and color: from its genre (Visitors, Genres), unless it has its own. */
+  arrowInfo(a) {
+    const g = (this.pack.settings.genres || []).find(g => g.id === a.genre);
+    return { label: a.label || (g ? g.name : "This way"), color: /^#[0-9a-f]{6}$/i.test(a.color || "") ? a.color : g ? g.color : "#c8a070" };
+  }
+  /* A big arrow painted across the wall (both wall rows, w tiles long) with the room's name on it, in the room's color. */
+  arrowArt(a) {
+    const info = this.arrowInfo(a), w = Math.max(2, Math.min(8, a.w || 4)) * T, dir = a.dir === "left" ? "left" : "right", key = [w, dir, info.label, info.color].join("|");
+    const cache = this.arrowCache || (this.arrowCache = new Map()); if (cache.has(key)) return cache.get(key);
+    const c = document.createElement("canvas"); c.width = w; c.height = 2 * T; const x = c.getContext("2d");
+    const [r0, g0, b0] = hexRgb(info.color), shade = k => "rgb(" + [r0, g0, b0].map(v => Math.round(k < 1 ? v * k : v + (255 - v) * (k - 1))).join(",") + ")";
+    const head = Math.min(16, w / 3), inside = (px, py) => { const hx = w - 2 - px; if (hx < 0) return false; if (hx <= head) return Math.abs(py - 15.5) <= 13 * hx / head; return px >= 2 && py >= 9 && py <= 22; };
+    for (let py = 0; py < 2 * T; py++) for (let px = 0; px < w; px++) {
+      const qx = dir === "left" ? w - 1 - px : px; if (!inside(qx, py)) continue;
+      const edge = !inside(qx - 1, py) || !inside(qx + 1, py) || !inside(qx, py - 1) || !inside(qx, py + 1);
+      x.fillStyle = edge ? shade(0.5) : !inside(qx, py - 2) ? shade(1.35) : shade(1); x.fillRect(px, py, 1, 1);
+    }
+    // The name, in a little pixel font, centered on the arrow's shaft.
+    const txt = info.label.toUpperCase().replace(/[^A-Z0-9 ]/g, ""), shaft = w - head - 8, sc = txt.length * 4 * 2 - 2 <= shaft ? 2 : 1, tw = txt.length * 4 * sc - sc;
+    let tx = Math.round((dir === "left" ? head + 4 + (shaft - tw) / 2 : 4 + (shaft - tw) / 2)), ty = Math.round(15.5 - 2.5 * sc);
+    x.fillStyle = "#fff8ec";
+    for (const ch of txt) { const gl = PIXEL_FONT[ch] || []; gl.forEach((row, yy) => [...row].forEach((v, xx) => { if (v === "1") x.fillRect(tx + xx * sc, ty + yy * sc, sc, sc); })); tx += 4 * sc; }
+    cache.set(key, c); return c;
   }
   /* The lobby directory: where everything is, worked out from the museum's layout. */
   readDirectory() {
@@ -3952,6 +4013,7 @@ class Game {
     for (const sw of r.switches || []) hole(sw.x * T + 8 - cx, sw.y * T + 8 - cy, 9, 9, 0.7);
     if (r.intercomAt) hole(r.intercomAt.x * T + 8 - cx, r.intercomAt.y * T + 8 - cy, 9, 9, 0.6);
     if (!off) for (const [gx, gy] of r.glows) hole(gx * T + 8 - cx, gy * T - cy, 30, 26, 0.85); // lamps go dark with the lights
+    if (!off) for (const [lx, ly] of r.lamps) hole(lx * T + 8 - cx, ly * T + 10 - cy, 16, 18, 0.7);
     if (r.featuredAt && spots > 0) hole(r.featuredAt.x * T + 8 - cx, r.featuredAt.y * T - cy, 14, 22, spots);
     if (r.windowAt && tod !== "night") hole(r.windowAt.x * T + 16 - cx, r.windowAt.y * T + 14 - cy, 22, 20, 0.6);
     if (r.windowAt && tod === "night") hole(r.windowAt.x * T + 16 - cx, r.windowAt.y * T + 14 - cy, 16, 15, 0.35);
@@ -3969,6 +4031,14 @@ class Game {
       for (const [x0, y0] of doors) {
         const x = x0 * T + 8 - cx, y = y0 * T + 8 - cy, g = ctx.createRadialGradient(x, y, 1, x, y, 16);
         g.addColorStop(0, "rgba(255,210,140,0.14)"); g.addColorStop(1, "rgba(255,210,140,0)"); ctx.fillStyle = g; ctx.fillRect(x - 16, y - 16, 32, 32);
+      }
+      ctx.globalCompositeOperation = "source-over";
+    }
+    if (r.lamps.length && !off) { // accent lights: a small warm pool on the wall and floor
+      ctx.globalCompositeOperation = "lighter";
+      for (const [lx, ly] of r.lamps) {
+        const x = lx * T + 8 - cx, y = ly * T + 6 - cy; if (x < -30 || y < -30 || x > SW + 30 || y > SH + 30) continue;
+        const g = ctx.createRadialGradient(x, y, 1, x, y + 8, 24); g.addColorStop(0, "rgba(255,200,120,0.28)"); g.addColorStop(1, "rgba(255,200,120,0)"); ctx.fillStyle = g; ctx.fillRect(x - 24, y - 20, 48, 52);
       }
       ctx.globalCompositeOperation = "source-over";
     }
@@ -4165,6 +4235,9 @@ class Game {
     for (const sw of r.switches || []) this.drawSlot("light_switch", 0, 0, sw.x * T - cx, sw.y * T - cy);
     if (r.intercomAt) this.drawSlot("intercom", 0, 0, r.intercomAt.x * T - cx, r.intercomAt.y * T - cy);
     for (const d of r.decals) this.drawSlot(d.key, 0, 0, d.x * T - cx, d.y * T - cy);
+    for (const [x, y, k] of r.runners) this.drawSlot(k[0] === "h" ? "carpet_h" : "carpet_v", +k[1], 0, x * T - cx, y * T - cy);
+    for (const [x, y] of r.lamps) this.drawSlot("wall_sconce", 0, 0, x * T - cx, y * T - cy);
+    for (const a of r.arrows) ctx.drawImage(this.arrowArt(a), a.x * T - cx, (a.y || 1) * T - cy);
     for (const [mx, my] of this.doorMats(r)) this.drawSlot("doormat", 0, 0, mx * T - cx, my * T - cy);
     for (const st of r.stairs) this.drawSlot(st.kind === "up" ? "stair_up" : "stair_down", 0, 0, st.x * T - cx, st.y * T - cy);
     for (const c of r.cases) this.drawCase(c, cx, cy);
@@ -4273,7 +4346,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-10 visitors";
+const VERSION = "2026-10-11 hallways";
 window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

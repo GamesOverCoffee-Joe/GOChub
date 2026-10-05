@@ -325,7 +325,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-10 visitors";
+window.GOQ_WANT = "2026-10-11 hallways";
 (function load(retry) {
   const s = document.createElement("script");
   s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry ? "&r=" + Date.now() : "");
@@ -838,6 +838,10 @@ const PLACE_GROUPS = [
   { name: "Storage and floors", items: [{ kind: "stairs", key: "stair_up", name: "Stairs up", note: "Step on it to change floors. Select it to choose where it leads." },
     { kind: "stairs", key: "stair_down", name: "Stairs down", note: "Step on it to change floors. Select it to choose where it leads." }]
     .concat(["railing", "storage_shelves", "box_stack", "workbench"].map(k => ({ kind: "prop", key: k }))) },
+  { name: "Hallways", items: [
+    { kind: "lamp", key: "wall_sconce", name: "Accent light", note: "A small wall light. Tap a wall (the back wall of a room or hallway)." },
+    { kind: "arrow", key: "carpet_h", name: "Arrow sign", note: "A big arrow across the wall, four tiles long, pointing the way to a room. Tap a wall, then pick its room and direction." },
+  ] },
   { name: "On the wall", items: ["shop_shelves", "shop_posters", "mug_shelf", "cafe_menu"].map(k => ({ kind: "wallArt", key: k })) },
   { name: "Spots", items: [
     { kind: "spawn", name: "Start spot", key: "player", note: "Where you appear when the preview jumps here." },
@@ -873,7 +877,7 @@ let roomT = 0;
 function roomChanged(now) {
   const u = $("#rUndo"), r = $("#rRedo"); if (u) u.disabled = !R.undo.length; if (r) r.disabled = !R.redo.length;
   // Mid-drag, only redraw the editor: rebuilding the whole museum on every step made dragging laggy. It catches up when you let go.
-  if (!now && R.stroking) { drawEditor(); return; }
+  if (!now && R.stroking && isLayout(roomDef(R.id))) { drawEditor(); return; }
   clearTimeout(roomT);
   roomT = setTimeout(async () => { await edGame.setPack(packOut()); R.img = edGame.renderRoomFull(R.id, true); drawEditor(); renderInspector(); changed(); }, now ? 0 : 90);
   drawEditor();
@@ -896,6 +900,8 @@ function roomItems(d) {
   (d.lockers || []).forEach((x, i) => out.push({ type: "locker", i, x, y: 1, w: 1, h: 2, label: "Locker" }));
   (d.spots || []).forEach((s, i) => out.push({ type: "spot", i, x: Array.isArray(s) ? s[0] : s, y: Array.isArray(s) ? s[1] : 1, w: 2, h: 2, label: "Painting spot " + (i + 1) }));
   (d.wallArt || []).forEach((a, i) => out.push({ type: "wallArt", i, x: a.x, y: a.y || 1, w: sw(a.key), h: 2, label: (GOQ.SLOT[a.key] || {}).label || a.key }));
+  (d.lamps || []).forEach((a, i) => out.push({ type: "lamp", i, x: a[0], y: a[1], w: 1, h: 1, label: "Accent light" }));
+  (d.arrows || []).forEach((a, i) => out.push({ type: "arrow", i, x: a.x, y: a.y || 1, w: a.w || 4, h: 2, label: "Arrow sign" }));
   (d.decals || []).forEach((a, i) => out.push({ type: "decal", i, x: a.x, y: a.y, w: sw(a.key), h: sh(a.key), label: (GOQ.SLOT[a.key] || {}).label || a.key }));
   return out;
 }
@@ -928,8 +934,8 @@ function renderRooms() {
   const lay = isLayout(roomDef(R.id));
   if (lay && ["paint", "fill", "erase"].includes(R.tool)) R.tool = "layout";
   if (!lay && (R.tool === "layout" || R.tool === "shape")) R.tool = "select";
-  const tools = el("div", { class: "rtools", role: "toolbar", "aria-label": "Tools" }, (lay ? [["layout", "Layout"], ["shape", "Shape"], ["select", "Select"], ["place", "Place"]] : [
-    ["select", "Select"], ["paint", "Paint"], ["fill", "Fill"], ["erase", "Erase"], ["place", "Place"],
+  const tools = el("div", { class: "rtools", role: "toolbar", "aria-label": "Tools" }, (lay ? [["layout", "Layout"], ["shape", "Shape"], ["carpet", "Carpet"], ["select", "Select"], ["place", "Place"]] : [
+    ["select", "Select"], ["paint", "Paint"], ["fill", "Fill"], ["erase", "Erase"], ["carpet", "Carpet"], ["place", "Place"],
   ]).map(([t, l]) => el("button", { type: "button", class: "btn small" + (R.tool === t ? " on" : ""), "aria-pressed": R.tool === t, text: l, onclick: () => { R.tool = t; R.linking = null; renderRooms(); } })));
   wrap.appendChild(el("div", { class: "rhead" }, [
     pick,
@@ -953,6 +959,11 @@ function renderRooms() {
     wrap.appendChild(el("div", { class: "rpick" }, [el("button", { type: "button", class: "rchip on", onclick: () => openChooser("Paint with", [{ name: "Tiles", items: TILE_BRUSHES.filter(b => R.tool === "paint" || !b.pair).map(b => ({ label: b.name, on: R.brush.ch === b.ch, swatch: brushSwatch(b), pick: () => { R.brush = b; } })) }]) },
       [brushSwatch(R.brush), el("span", { text: R.brush.name }), el("b", { text: "Change", class: "rchg" })])]));
   }
+  if (R.tool === "carpet") {
+    R.carpet = R.carpet || "h1";
+    const piece = (k, l) => ({ label: l, on: R.carpet === k, swatch: carpetSwatch(k), pick: () => { R.carpet = k; renderRooms(); } });
+    wrap.appendChild(paletteStrip([piece("h0", "Left end"), piece("h1", "Across"), piece("h2", "Right end"), piece("v0", "Top end"), piece("v1", "Down"), piece("v2", "Bottom end"), { label: "Remove", on: R.carpet === "x", pick: () => { R.carpet = "x"; renderRooms(); } }]));
+  }
   if (R.tool === "shape") {
     R.shape = R.shape || ".";
     wrap.appendChild(paletteStrip([[".", "Add floor"], ["#", "Add wall"], ["x", "Back to the plan"]].map(([v, l]) => ({ label: l, on: R.shape === v, pick: () => { R.shape = v; renderRooms(); } }))));
@@ -971,6 +982,7 @@ function renderRooms() {
   left.appendChild(box); body.appendChild(left); wrap.appendChild(body);
   R.cv = cv; bindCanvas(cv);
   const hint = el("p", { class: "note rhint", text: {
+    carpet: "Drag along the floor to lay a carpet runner with the piece you picked: an end, the middle, the other end. Remove takes it up.",
     shape: "Drag across a room's floor or walls to change its shape: alcoves and bump-outs (Add floor), pillars and notches (Add wall). Tweaks move with the room.",
     layout: "Drag a room to move it, or its walls to resize it. Drag a hallway sideways, or the round corner of an L. Tap one for its settings.",
     select: "Tap something to select it; drag to move it. Tap a door to choose where it leads. Tap empty floor for room settings.",
@@ -1053,6 +1065,7 @@ function drawEditor() {
     const sh = key && GOQ.SLOT[key] && edGame.sheet(key);
     if (sh) { const sl = GOQ.SLOT[key]; x.drawImage(sh, 0, 0, sl.w, sl.h, it.x * 16, (it.y + it.h) * 16 - sl.h, sl.w, sl.h); }
   }
+  if (R.tool === "carpet") (d.runners || []).forEach(([rx, ry, k]) => x.drawImage(edGame.sheet(k[0] === "h" ? "carpet_h" : "carpet_v"), +k[1] * 16, 0, 16, 16, rx * 16, ry * 16, 16, 16)); // live, while you paint
   if (isLayout(d) && (R.tool === "layout" || R.tool === "shape")) drawLayout(x, d, z);
   else if (R.sel) { const it = roomItems(d).find(i => sameSel(i, R.sel)) || R.sel; outline(it, "#ffffff"); }
   if (R.hover) { x.fillStyle = "rgba(232,178,74,.25)"; x.fillRect(R.hover.x * 16, R.hover.y * 16, 16, 16); }
@@ -1101,7 +1114,7 @@ function bindCanvas(cv) {
       stroke.started = true;
       const d = roomDef(R.id), onThing = itemAt(d, press.t.x, press.t.y);
       // Paint paints; Select drags the thing under your finger; otherwise one finger slides the map.
-      if (R.tool === "paint" || (R.tool === "select" && onThing && onThing.type !== "locker") || (R.tool === "layout" && layHit(d.layout, press.t)) || R.tool === "shape") beginStroke(press.t);
+      if (R.tool === "paint" || (R.tool === "select" && onThing && onThing.type !== "locker") || (R.tool === "layout" && layHit(d.layout, press.t)) || R.tool === "shape" || R.tool === "carpet") beginStroke(press.t);
       else { gesture = { a: { x: press.x, y: press.y }, b: null, panX: R.panX, panY: R.panY, zoom: R.zoom, mouse: true, one: true }; press = null; stroke = null; return; }
     }
     moveStroke(t);
@@ -1126,6 +1139,7 @@ function beginStroke(t) {
   const d = roomDef(R.id); R.stroking = true;
   if (R.tool === "layout") { layBegin(t); return; }
   if (R.tool === "shape") { snapshot(); shapeAt(t); return; }
+  if (R.tool === "carpet") { snapshot(); carpetAt(t); return; }
   if (R.tool === "paint") { snapshot(); paintAt(t); return; }
   if (R.tool === "select") {
     const it = itemAt(d, t.x, t.y); if (!it || it.type === "locker") return;
@@ -1135,6 +1149,7 @@ function beginStroke(t) {
 function moveStroke(t) {
   if (R.tool === "layout") { layMove(t); return; }
   if (R.tool === "shape") { shapeAt(t); return; }
+  if (R.tool === "carpet") { carpetAt(t); return; }
   if (R.tool === "paint") { paintAt(t); return; }
   if (R.tool === "select" && drag) {
     const dx = t.x - drag.last.x, dy = t.y - drag.last.y; if (!dx && !dy) return;
@@ -1148,6 +1163,7 @@ function tapTool(t) {
   if (R.linking) { finishLink(t); return; }
   if (R.tool === "layout") { layTap(t); return; }
   if (R.tool === "shape") { snapshot(); shapeAt(t); roomChanged(true); return; }
+  if (R.tool === "carpet") { snapshot(); carpetAt(t); roomChanged(true); return; }
   if (R.tool === "select") { selectAt(t); return; }
   if (R.tool === "paint") { snapshot(); paintAt(t); roomChanged(true); return; }
   if (R.tool === "fill") { snapshot(); fillAt(t); return; }
@@ -1190,6 +1206,12 @@ function eraseAt(t) {
 function placeAt(t) {
   const d = editable(R.id), p = R.place, s = GOQ.SLOT[p.key] || { w: 16, h: 16 }, w = s.w / 16, tall = s.h >= 32;
   if (p.kind === "case") (d.cases = d.cases || []).push([t.x, t.y]);
+  else if (p.kind === "lamp" || p.kind === "arrow") {
+    const wy = isLayout(d) ? wallRowAt(d, t) : 1;
+    if (wy === null) { status("Tap a wall (the back wall of a room or hallway) to hang it.", true); R.undo.pop(); return; }
+    if (p.kind === "lamp") (d.lamps = d.lamps || []).push([t.x, wy]);
+    else (d.arrows = d.arrows || []).push({ x: t.x, y: wy, w: 4, dir: "right", genre: ((draft.settings.genres || [])[0] || {}).id || "" });
+  }
   else if (p.kind === "spot" || p.kind === "wallArt") {
     // The museum has walls at every height: hang it on the wall you tapped (or the one just above).
     const wy = isLayout(d) ? wallRowAt(d, t) : 1;
@@ -1234,7 +1256,7 @@ function placeAt(t) {
   roomChanged(true);
 }
 function removeItem(d, it) {
-  const arr = { glow: "glows", visitor: "visitors", catSpot: "catSpots", mugSpot: "mugSpots", case: "cases", prop: "props", spot: "spots", wallArt: "wallArt", decal: "decals", stairs: "stairs" }[it.type];
+  const arr = { lamp: "lamps", arrow: "arrows", glow: "glows", visitor: "visitors", catSpot: "catSpots", mugSpot: "mugSpots", case: "cases", prop: "props", spot: "spots", wallArt: "wallArt", decal: "decals", stairs: "stairs" }[it.type];
   if (arr) d[arr].splice(it.i, 1);
   else if (it.type === "fixed") delete d[it.key];
 }
@@ -1246,11 +1268,13 @@ function wallRowAt(d, t) {
   return null;
 }
 function moveItem(d, it, dx, dy) {
-  const sety = it.type !== "spot" && it.type !== "wallArt" && !(it.type === "fixed" && ["windowAt", "eotmAt", "corkboardAt", "leaderboardAt"].includes(it.key));
+  const sety = it.type !== "spot" && it.type !== "wallArt" && it.type !== "lamp" && it.type !== "arrow" && !(it.type === "fixed" && ["windowAt", "eotmAt", "corkboardAt", "leaderboardAt"].includes(it.key));
   const mv = o => { o.x += dx; if (sety) o.y += dy; };
   if (it.type === "visitor") mv(d.visitors[it.i]);
   else if (it.type === "prop") mv(d.props[it.i]);
   else if (it.type === "decal") mv(d.decals[it.i]);
+  else if (it.type === "lamp") { const a = d.lamps[it.i]; a[0] += dx; const ny = wallRowMove(d, a[0], a[1], dy); if (ny) { a[1] += ny; it.y += ny; } }
+  else if (it.type === "arrow") { const a = d.arrows[it.i]; a.x += dx; const ny = wallRowMove(d, a.x, a.y || 1, dy); if (ny) { a.y = (a.y || 1) + ny; it.y += ny; } }
   else if (it.type === "wallArt") { const a = d.wallArt[it.i]; a.x += dx; const ny = wallRowMove(d, a.x, a.y || 1, dy); if (ny) { a.y = (a.y || 1) + ny; it.y += ny; } }
   else if (it.type === "spot") { const v = d.spots[it.i]; if (Array.isArray(v)) { v[0] += dx; const ny = wallRowMove(d, v[0], v[1], dy); if (ny) { v[1] += ny; it.y += ny; } } else d.spots[it.i] += dx; }
   else if (it.type === "case") { d.cases[it.i][0] += dx; d.cases[it.i][1] += dy; }
@@ -1409,16 +1433,27 @@ function layMove(t) {
   d.layout = L; recarve(d); roomChanged();
 }
 /* The things placed in a room, so a drag can move them from where they started. */
-const ITEM_KEYS = ["props", "cases", "spots", "wallArt", "decals", "glows", "catSpots", "mugSpots", "visitors", "featuredAt"];
+const ITEM_KEYS = ["props", "cases", "spots", "wallArt", "decals", "glows", "catSpots", "mugSpots", "visitors", "featuredAt", "runners", "lamps", "arrows"];
 function itemsOf(d) { const o = {}; ITEM_KEYS.forEach(k => { if (d[k] !== undefined) o[k] = clone(d[k]); }); return o; }
 function shiftItems(items, box, dx, dy) {
   const out = clone(items); if (!box || (!dx && !dy)) return out;
   const inside = (x, y) => x >= box.x && y >= box.y && x < box.x + box.w && y < box.y + box.h;
-  ["props", "decals", "visitors", "wallArt"].forEach(k => (out[k] || []).forEach(o => { if (inside(o.x, o.y === undefined ? 1 : o.y)) { o.x += dx; if (o.y !== undefined) o.y += dy; } }));
-  ["cases", "glows", "catSpots", "mugSpots"].forEach(k => (out[k] || []).forEach(p => { if (inside(p[0], p[1])) { p[0] += dx; p[1] += dy; } }));
+  ["props", "decals", "visitors", "wallArt", "arrows"].forEach(k => (out[k] || []).forEach(o => { if (inside(o.x, o.y === undefined ? 1 : o.y)) { o.x += dx; if (o.y !== undefined) o.y += dy; } }));
+  ["cases", "glows", "catSpots", "mugSpots", "runners", "lamps"].forEach(k => (out[k] || []).forEach(p => { if (inside(p[0], p[1])) { p[0] += dx; p[1] += dy; } }));
   (out.spots || []).forEach((p, i) => { if (Array.isArray(p) && inside(p[0], p[1])) { p[0] += dx; p[1] += dy; } });
   if (out.featuredAt && inside(out.featuredAt[0], out.featuredAt[1])) { out.featuredAt[0] += dx; out.featuredAt[1] += dy; }
   return out;
+}
+/* Carpet tool: lay (or take up) one runner tile. Only on floor. */
+function carpetAt(t) {
+  const d = editable(R.id), ch = getCh(d, t.x, t.y);
+  d.runners = (d.runners || []).filter(r => r[0] !== t.x || r[1] !== t.y);
+  if (R.carpet !== "x" && (ch === "." || ch === "=")) d.runners.push([t.x, t.y, R.carpet || "h1"]);
+  roomChanged();
+}
+function carpetSwatch(k) {
+  const c = document.createElement("canvas"); c.width = 32; c.height = 32; const x = c.getContext("2d"); x.imageSmoothingEnabled = false;
+  x.drawImage(game.sheet(k[0] === "h" ? "carpet_h" : "carpet_v"), +k[1] * 16, 0, 16, 16, 0, 0, 32, 32); return c;
 }
 /* Shape tool: add floor or wall at a tile, as a tweak to the nearest room (stored from its top-left, so it moves with it). */
 function shapeAt(t) {
@@ -1533,6 +1568,19 @@ function renderInspector() {
       box.appendChild(field("Can you sit here?", s));
     }
   }
+  if (it.type === "arrow") {
+    const a = d.arrows[it.i], genres = draft.settings.genres || GOQ.SAMPLE_GENRES, ed = fn => { snapshot(); fn(editable(R.id).arrows[it.i]); roomChanged(true); renderInspector(); };
+    const gs = el("select", {}, genres.map(g => el("option", { value: g.id, text: g.name })).concat([el("option", { value: "", text: "None (use the words and color below)" })]));
+    gs.value = a.genre || ""; gs.addEventListener("change", () => ed(q => { q.genre = gs.value; }));
+    const ds = el("select", {}, [["left", "Pointing left"], ["right", "Pointing right"]].map(([v, l]) => el("option", { value: v, text: l }))); ds.value = a.dir === "left" ? "left" : "right";
+    ds.addEventListener("change", () => ed(q => { q.dir = ds.value; }));
+    const wd = el("input", { type: "number", min: 2, max: 8, value: a.w || 4 }); wd.addEventListener("change", () => ed(q => { q.w = Math.max(2, Math.min(8, +wd.value || 4)); }));
+    box.appendChild(el("div", { class: "rrow" }, [field("Room it points to", gs, "Its name and color come from the genre (Visitors, Genres)."), field("Direction", ds), field("Length (tiles)", wd)]));
+    const lb = el("input", { type: "text", value: a.label || "", placeholder: "(the genre's name)", maxlength: 16 }); lb.addEventListener("change", () => ed(q => { if (lb.value.trim()) q.label = lb.value.trim(); else delete q.label; }));
+    const cl = el("input", { type: "color", value: a.color || (genres.find(g => g.id === a.genre) || {}).color || "#c8a070" }); cl.addEventListener("change", () => ed(q => { q.color = cl.value; }));
+    box.appendChild(el("div", { class: "rrow" }, [field("Words (optional)", lb), field("Own color (optional)", cl)]));
+    if (a.color) box.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small quiet", text: "Use the genre's color", onclick: () => ed(q => { delete q.color; }) })]));
+  }
   if (it.type === "wallArt") box.appendChild(linesBox(() => (d.wallArt[it.i].say || []).join("\n"), v => { editable(R.id).wallArt[it.i].say = v.split("\n").map(s => s.trim()).filter(Boolean); }));
   if (it.type === "visitor") {
     const v = d.visitors[it.i];
@@ -1561,7 +1609,7 @@ function renderInspector() {
     box.appendChild(el("p", { class: "note", text: "Tap the other floor's matching stairs: you arrive standing on them, facing the way you'll step off (pick the facing above)." }));
     box.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small", text: "Pick where you arrive", onclick: () => { R.linking = { from: R.id, stairsI: it.i, face: face.value }; R.id = rs.value; R.sel = null; renderRooms(); status("Now tap the floor where you should arrive in " + roomDef(rs.value).name + "."); } })]));
   }
-  const notes = { glow: "A warm pool of light, shown even when the room's lights are on. Drag it to move it.", case: "Holds the next episode in Pieces order. The front placard is read from below it, the back from above.", spot: "A painting spot for the next community piece, across both wall rows.",
+  const notes = { lamp: "A small accent light on the wall. Drag it along the wall, or onto another wall.", arrow: "Drag it along the wall, or onto another wall.", glow: "A warm pool of light, shown even when the room's lights are on. Drag it to move it.", case: "Holds the next episode in Pieces order. The front placard is read from below it, the back from above.", spot: "A painting spot for the next community piece, across both wall rows.",
     spawn: "Where you appear when jumping to this room.", catSpot: "One of the places the cat might nap today.", mugSpot: "One of the places the curator's mug might turn up.", fixed: "A built-in feature. Drag it to move it.", locker: "Lockers are part of the staff room." };
   if (notes[it.type]) box.appendChild(el("p", { class: "note", text: notes[it.type] }));
   if (it.type !== "spawn" && it.type !== "locker") box.appendChild(el("div", { class: "row" }, [delBtn()]));

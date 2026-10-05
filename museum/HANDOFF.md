@@ -336,6 +336,16 @@ Goal: character.
 - Sound or ambience hooks if wanted. Small details and secrets along the long hallways.
 - Later, if the layout works: the **rooftop**.
 
+**Phase 4 is going room by room. Hallways, step 1 (2026-10-11): built, waiting on your look.**
+- **Carpet runners.** Tile pieces in two directions, each with a start, a middle and an end. Paint them with the new **Carpet** tool in Rooms (any room). They're laid along every hallway, and they move with a dragged room or hallway. The art is replaceable in Art → Hallways.
+- **Accent lights.** Small brass wall lights with a warm glow, eight of them along the back walls of the horizontal hallways. Place more with Place → Hallways → Accent light. They go dark with the lights.
+- **Arrow signs.** A big arrow across the wall, in its genre's color with the genre's name on it.
+  - The first one is in the Lower Hall, left of the café's south door: four tiles, pointing left, "ACTION" in soft red. Action's genre color is now soft red (#e0817a).
+  - Place more with Place → Hallways → Arrow sign; then set the room, direction, length and optional words or color.
+  - Looking at one says "This way to Action."
+  - The Lower Hall's two left-hand painting spots moved over (to columns 17 and 20) to make room.
+
+
 ### Open questions (can be decided during Phase 1)
 
 - Where the basement staircase goes. Default: a small stair nook off the lower hallway, near the lobby hallway junction.
