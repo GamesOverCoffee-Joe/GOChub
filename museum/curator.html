@@ -325,7 +325,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-11 hallways 2";
+window.GOQ_WANT = "2026-10-12 action room";
 (function load(retry) {
   const s = document.createElement("script");
   s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry ? "&r=" + Date.now() : "");
@@ -840,6 +840,7 @@ const PLACE_GROUPS = [
     .concat(["railing", "storage_shelves", "box_stack", "workbench"].map(k => ({ kind: "prop", key: k }))) },
   { name: "Hallways", items: [
     { kind: "lamp", key: "wall_sconce", name: "Accent light", note: "A small wall light. Tap a wall (the back wall of a room or hallway)." },
+    { kind: "mural", key: "mural_dusk", name: "Mural", note: "A landscape painted along the top row of a wall. Tap a wall: it fills that stretch of wall. Pick its art and which part of it shows after." },
     { kind: "arrow", key: "carpet_h", name: "Arrow sign", note: "A big arrow across the wall, four tiles long, pointing the way to a room. Tap a wall, then pick its room and direction." },
   ] },
   { name: "On the wall", items: ["shop_shelves", "shop_posters", "mug_shelf", "cafe_menu"].map(k => ({ kind: "wallArt", key: k })) },
@@ -900,6 +901,7 @@ function roomItems(d) {
   (d.lockers || []).forEach((x, i) => out.push({ type: "locker", i, x, y: 1, w: 1, h: 2, label: "Locker" }));
   (d.spots || []).forEach((s, i) => out.push({ type: "spot", i, x: Array.isArray(s) ? s[0] : s, y: Array.isArray(s) ? s[1] : 1, w: 2, h: 2, label: "Painting spot " + (i + 1) }));
   (d.wallArt || []).forEach((a, i) => out.push({ type: "wallArt", i, x: a.x, y: a.y || 1, w: sw(a.key), h: 2, label: (GOQ.SLOT[a.key] || {}).label || a.key }));
+  (d.murals || []).forEach((m, i) => out.push({ type: "mural", i, x: m.x, y: m.y, w: m.w || 1, h: 1, label: "Mural" }));
   (d.lamps || []).forEach((a, i) => out.push({ type: "lamp", i, x: a[0], y: a[1], w: 1, h: 1, label: "Accent light" }));
   (d.arrows || []).forEach((a, i) => out.push({ type: "arrow", i, x: a.x, y: a.y || 1, w: a.w || 4, h: 2, label: "Arrow sign" }));
   (d.decals || []).forEach((a, i) => out.push({ type: "decal", i, x: a.x, y: a.y, w: sw(a.key), h: sh(a.key), label: (GOQ.SLOT[a.key] || {}).label || a.key }));
@@ -1211,6 +1213,13 @@ function eraseAt(t) {
 function placeAt(t) {
   const d = editable(R.id), p = R.place, s = GOQ.SLOT[p.key] || { w: 16, h: 16 }, w = s.w / 16, tall = s.h >= 32;
   if (p.kind === "case") (d.cases = d.cases || []).push([t.x, t.y]);
+  else if (p.kind === "mural") {
+    const wy = isLayout(d) ? wallRowAt(d, t) : 1;
+    if (wy === null) { status("Tap a wall (the back wall of a room or hallway) to paint a mural.", true); R.undo.pop(); return; }
+    let x0 = t.x, x1 = t.x; const wall = x => getCh(d, x, wy) === "^" && getCh(d, x, wy + 1) === "v";
+    while (wall(x0 - 1)) x0--; while (wall(x1 + 1)) x1++; // the whole stretch of wall you tapped
+    (d.murals = d.murals || []).push({ x: x0, y: wy, w: x1 - x0 + 1, key: "mural_dusk" });
+  }
   else if (p.kind === "lamp" || p.kind === "arrow") {
     const wy = isLayout(d) ? wallRowAt(d, t) : 1;
     if (wy === null) { status("Tap a wall (the back wall of a room or hallway) to hang it.", true); R.undo.pop(); return; }
@@ -1261,7 +1270,7 @@ function placeAt(t) {
   roomChanged(true);
 }
 function removeItem(d, it) {
-  const arr = { lamp: "lamps", arrow: "arrows", glow: "glows", visitor: "visitors", catSpot: "catSpots", mugSpot: "mugSpots", case: "cases", prop: "props", spot: "spots", wallArt: "wallArt", decal: "decals", stairs: "stairs" }[it.type];
+  const arr = { mural: "murals", lamp: "lamps", arrow: "arrows", glow: "glows", visitor: "visitors", catSpot: "catSpots", mugSpot: "mugSpots", case: "cases", prop: "props", spot: "spots", wallArt: "wallArt", decal: "decals", stairs: "stairs" }[it.type];
   if (arr) d[arr].splice(it.i, 1);
   else if (it.type === "fixed") delete d[it.key];
 }
@@ -1273,11 +1282,12 @@ function wallRowAt(d, t) {
   return null;
 }
 function moveItem(d, it, dx, dy) {
-  const sety = it.type !== "spot" && it.type !== "wallArt" && it.type !== "lamp" && it.type !== "arrow" && !(it.type === "fixed" && ["windowAt", "eotmAt", "corkboardAt", "leaderboardAt"].includes(it.key));
+  const sety = it.type !== "spot" && it.type !== "wallArt" && it.type !== "lamp" && it.type !== "arrow" && it.type !== "mural" && !(it.type === "fixed" && ["windowAt", "eotmAt", "corkboardAt", "leaderboardAt"].includes(it.key));
   const mv = o => { o.x += dx; if (sety) o.y += dy; };
   if (it.type === "visitor") mv(d.visitors[it.i]);
   else if (it.type === "prop") mv(d.props[it.i]);
   else if (it.type === "decal") mv(d.decals[it.i]);
+  else if (it.type === "mural") { const a = d.murals[it.i]; a.x += dx; const ny = wallRowMove(d, a.x, a.y, dy); if (ny) { a.y += ny; it.y += ny; } }
   else if (it.type === "lamp") { const a = d.lamps[it.i]; a[0] += dx; const ny = wallRowMove(d, a[0], a[1], dy); if (ny) { a[1] += ny; it.y += ny; } }
   else if (it.type === "arrow") { const a = d.arrows[it.i]; a.x += dx; const ny = wallRowMove(d, a.x, a.y || 1, dy); if (ny) { a.y = (a.y || 1) + ny; it.y += ny; } }
   else if (it.type === "wallArt") { const a = d.wallArt[it.i]; a.x += dx; const ny = wallRowMove(d, a.x, a.y || 1, dy); if (ny) { a.y = (a.y || 1) + ny; it.y += ny; } }
@@ -1438,12 +1448,12 @@ function layMove(t) {
   d.layout = L; recarve(d); roomChanged();
 }
 /* The things placed in a room, so a drag can move them from where they started. */
-const ITEM_KEYS = ["props", "cases", "spots", "wallArt", "decals", "glows", "catSpots", "mugSpots", "visitors", "featuredAt", "runners", "lamps", "arrows"];
+const ITEM_KEYS = ["props", "cases", "spots", "wallArt", "decals", "glows", "catSpots", "mugSpots", "visitors", "featuredAt", "runners", "lamps", "arrows", "murals"];
 function itemsOf(d) { const o = {}; ITEM_KEYS.forEach(k => { if (d[k] !== undefined) o[k] = clone(d[k]); }); return o; }
 function shiftItems(items, box, dx, dy) {
   const out = clone(items); if (!box || (!dx && !dy)) return out;
   const inside = (x, y) => x >= box.x && y >= box.y && x < box.x + box.w && y < box.y + box.h;
-  ["props", "decals", "visitors", "wallArt", "arrows"].forEach(k => (out[k] || []).forEach(o => { if (inside(o.x, o.y === undefined ? 1 : o.y)) { o.x += dx; if (o.y !== undefined) o.y += dy; } }));
+  ["props", "decals", "visitors", "wallArt", "arrows", "murals"].forEach(k => (out[k] || []).forEach(o => { if (inside(o.x, o.y === undefined ? 1 : o.y)) { o.x += dx; if (o.y !== undefined) o.y += dy; } }));
   ["cases", "glows", "catSpots", "mugSpots", "runners", "lamps"].forEach(k => (out[k] || []).forEach(p => { if (inside(p[0], p[1])) { p[0] += dx; p[1] += dy; } }));
   (out.spots || []).forEach((p, i) => { if (Array.isArray(p) && inside(p[0], p[1])) { p[0] += dx; p[1] += dy; } });
   if (out.featuredAt && inside(out.featuredAt[0], out.featuredAt[1])) { out.featuredAt[0] += dx; out.featuredAt[1] += dy; }
@@ -1502,6 +1512,18 @@ function renderLayoutPanel(box, d) {
     if (r.edits && r.edits.length) box.appendChild(el("div", { class: "row" }, [el("span", { class: "note", text: r.edits.length + " shape tweak" + (r.edits.length === 1 ? "" : "s") + ". " }),
       el("button", { type: "button", class: "btn small quiet", text: "Back to a plain rectangle", onclick: () => layEdit(L2 => { layRoom(L2, r.id).edits = []; }) })]));
     box.appendChild(artRow(() => r.art || {}, (L2, a) => { const q = layRoom(L2, r.id); if (a) q.art = a; return q.art || {}; }));
+    // Colors: the room's theme (hallways blend between rooms' themes), and tints for its floor and walls.
+    const genreCol = ((draft.settings.genres || []).find(g => g.id === r.genre) || {}).color || "";
+    const colorField = (label, hint, get, set) => {
+      const v = get(), inp = el("input", { type: "color", value: v || "#808080" }), clr = el("button", { type: "button", class: "btn small quiet", text: v ? "Clear" : "None", disabled: !v, onclick: () => layEdit(L2 => set(layRoom(L2, r.id), "")) });
+      inp.addEventListener("change", () => layEdit(L2 => set(layRoom(L2, r.id), inp.value)));
+      return el("label", { class: "rfield" }, [el("span", { text: label }), el("small", { text: hint }), el("div", { class: "row", style: "gap:8px;align-items:center" }, [inp, clr])]);
+    };
+    box.appendChild(el("div", { class: "rrow" }, [
+      colorField("Theme color", r.color ? "Hallways blend from this room's theme to the next." : genreCol ? "Using its genre's color. Pick one to override it." : "Hallways blend from this room's theme to the next.", () => r.color || genreCol, (q, v) => { q.color = v; }),
+      colorField("Floor color", "Tints the floor art. Clear for the art's own color.", () => (r.tint || {}).floor, (q, v) => { q.tint = Object.assign({}, q.tint, { floor: v }); }),
+      colorField("Wall color", "Tints the walls, under any murals. Clear for the art's own color.", () => (r.tint || {}).wall, (q, v) => { q.tint = Object.assign({}, q.tint, { wall: v }); }),
+    ]));
     const lt = el("input", { type: "checkbox", checked: r.light !== false }); lt.addEventListener("change", () => layEdit(L2 => { layRoom(L2, r.id).light = lt.checked; }));
     box.appendChild(el("label", { class: "check" }, [lt, document.createTextNode("Has a light switch (it must be off to close the museum)")]));
     box.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small quiet", text: "Delete this room", onclick: () => {
@@ -1525,6 +1547,14 @@ function renderLayoutPanel(box, d) {
       h.path.length > 2 && h.path[0][0] !== h.path[h.path.length - 1][0] && h.path[0][1] !== h.path[h.path.length - 1][1] ? null : h.path.length > 2 ? el("button", { type: "button", class: "btn small quiet", text: "Make it straight", onclick: () => layEdit(L2 => { const q = layHall(L2, h.id); q.path = [q.path[0], q.path[q.path.length - 1]]; }) }) : null,
       el("button", { type: "button", class: "btn small quiet", text: "Delete this hallway", onclick: () => { if (!confirm("Delete " + h.name + "?")) return; layEdit(L2 => { L2.halls = L2.halls.filter(q => q.id !== h.id); }); R.laySel = null; renderInspector(); } }),
     ]));
+    const wl = h.walls || { mode: "auto" }, ends = GOQ.hallEndColors(GOQ.carveLayout(L), h, draft.settings.genres || GOQ.SAMPLE_GENRES);
+    const ms = el("select", {}, [["auto", "Blend between the rooms it joins"], ["custom", "Blend between two colors I pick"], ["plain", "The wall art's own color"]].map(([v, l]) => el("option", { value: v, text: l })));
+    ms.value = wl.mode || "auto"; ms.addEventListener("change", () => layEdit(L2 => { const q = layHall(L2, h.id); q.walls = Object.assign({}, q.walls, { mode: ms.value }); }));
+    box.appendChild(field("Wall colors", ms, wl.mode === "auto" || !wl.mode ? (ends[0] || ends[1] ? "It blends from one end's room theme to the other's (Theme color, on each room)." : "Neither end is a room with a theme color, so it keeps the art's color.") : ""));
+    if (wl.mode === "custom") {
+      const pick = k => { const i = el("input", { type: "color", value: wl[k] || ends[k === "from" ? 0 : 1] || "#808080" }); i.addEventListener("change", () => layEdit(L2 => { const q = layHall(L2, h.id); q.walls = Object.assign({}, q.walls, { [k]: i.value }); })); return i; };
+      box.appendChild(el("div", { class: "rrow" }, [field("At the first end", pick("from")), field("At the other end", pick("to"))]));
+    }
     box.appendChild(artRow(() => h.art || {}, (L2, a) => { const q = layHall(L2, h.id); if (a) q.art = a; return q.art || {}; }));
     return;
   }
@@ -1576,6 +1606,16 @@ function renderInspector() {
       box.appendChild(field("Can you sit here?", s));
     }
   }
+  if (it.type === "mural") {
+    const m = d.murals[it.i], ed = fn => { snapshot(); fn(editable(R.id).murals[it.i]); roomChanged(true); renderInspector(); };
+    const ks = el("select", {}, GOQ.SLOTS.filter(sl => sl.group === "Murals").map(sl => el("option", { value: sl.key, text: sl.label.replace(/^Mural: /, "") })));
+    ks.value = m.key; ks.addEventListener("change", () => ed(q => { q.key = ks.value; }));
+    const wd = el("input", { type: "number", min: 1, max: 40, value: m.w || 1 }); wd.addEventListener("change", () => ed(q => { q.w = Math.max(1, Math.min(40, +wd.value || 1)); }));
+    const sl = GOQ.SLOT[m.key] || { w: 256 }, room = Math.max(0, sl.w - (m.w || 1) * 16);
+    const at = el("input", { type: "range", min: 0, max: room, step: 4, value: m.at >= 0 ? Math.min(room, m.at) : room / 2, disabled: !room }); at.addEventListener("change", () => ed(q => { q.at = +at.value; }));
+    box.appendChild(el("div", { class: "rrow" }, [field("Art", ks, "Replace it in Art, Murals."), field("Length (tiles)", wd)]));
+    box.appendChild(field("Which part of the art shows", at, room ? "Slide to pick the stretch of the landscape on this wall." : "The wall is as long as the art, so all of it shows."));
+  }
   if (it.type === "arrow") {
     const a = d.arrows[it.i], genres = draft.settings.genres || GOQ.SAMPLE_GENRES, ed = fn => { snapshot(); fn(editable(R.id).arrows[it.i]); roomChanged(true); renderInspector(); };
     const gs = el("select", {}, genres.map(g => el("option", { value: g.id, text: g.name })).concat([el("option", { value: "", text: "None (use the words and color below)" })]));
@@ -1617,7 +1657,7 @@ function renderInspector() {
     box.appendChild(el("p", { class: "note", text: "Tap the other floor's matching stairs: you arrive standing on them, facing the way you'll step off (pick the facing above)." }));
     box.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small", text: "Pick where you arrive", onclick: () => { R.linking = { from: R.id, stairsI: it.i, face: face.value }; R.id = rs.value; R.sel = null; renderRooms(); status("Now tap the floor where you should arrive in " + roomDef(rs.value).name + "."); } })]));
   }
-  const notes = { lamp: "A small accent light on the wall. Drag it along the wall, or onto another wall.", arrow: "Drag it along the wall, or onto another wall.", glow: "A warm pool of light, shown even when the room's lights are on. Drag it to move it.", case: "Holds the next episode in Pieces order. The front placard is read from below it, the back from above.", spot: "A painting spot for the next community piece, across both wall rows.",
+  const notes = { mural: "Painted along the top row of the wall; the wall's own color shows below it. Drag it along the wall, or onto another wall.", lamp: "A small accent light on the wall. Drag it along the wall, or onto another wall.", arrow: "Drag it along the wall, or onto another wall.", glow: "A warm pool of light, shown even when the room's lights are on. Drag it to move it.", case: "Holds the next episode in Pieces order. The front placard is read from below it, the back from above.", spot: "A painting spot for the next community piece, across both wall rows.",
     spawn: "Where you appear when jumping to this room.", catSpot: "One of the places the cat might nap today.", mugSpot: "One of the places the curator's mug might turn up.", fixed: "A built-in feature. Drag it to move it.", locker: "Lockers are part of the staff room." };
   if (notes[it.type]) box.appendChild(el("p", { class: "note", text: notes[it.type] }));
   if (it.type !== "spawn" && it.type !== "locker") box.appendChild(el("div", { class: "row" }, [delBtn()]));
@@ -1671,6 +1711,13 @@ function renderRoomSettings(box, d) {
     return el("label", { class: "rfield" }, [el("span", { text: label }), s]);
   };
   box.appendChild(el("div", { class: "rrow" }, [artSel("floor", "Floor art", /floor/), artSel("upper", "Wall art, upper", /upper/), artSel("lower", "Wall art, lower", /lower/), artSel("top", "Wall top art", /top/)]));
+  if (!isLayout(d)) box.appendChild(el("div", { class: "rrow" }, ["floor", "wall"].map(part => {
+    const v = (d.tint || {})[part] || "", inp = el("input", { type: "color", value: v || "#808080" });
+    const set = val => { snapshot(); const dd = editable(R.id); dd.tint = Object.assign({}, dd.tint, { [part]: val }); roomChanged(true); renderInspector(); };
+    inp.addEventListener("change", () => set(inp.value));
+    return el("label", { class: "rfield" }, [el("span", { text: part === "floor" ? "Floor color" : "Wall color" }), el("small", { text: "Tints the art. Clear for its own color." }),
+      el("div", { class: "row", style: "gap:8px;align-items:center" }, [inp, el("button", { type: "button", class: "btn small quiet", text: "Clear", disabled: !v, onclick: () => set("") })])]);
+  })));
   const bunt = el("input", { type: "checkbox", checked: !!d.bunting }); bunt.addEventListener("change", () => { snapshot(); editable(R.id).bunting = bunt.checked; roomChanged(true); });
   box.appendChild(el("label", { class: "check" }, [bunt, document.createTextNode("Bunting along the walls")]));
   const crowd = el("input", { type: "checkbox", checked: !!d.crowd }); crowd.addEventListener("change", () => { snapshot(); editable(R.id).crowd = crowd.checked; roomChanged(true); });

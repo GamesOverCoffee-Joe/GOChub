@@ -350,3 +350,20 @@ Goal: character.
 
 - Where the basement staircase goes. Default: a small stair nook off the lower hallway, near the lobby hallway junction.
 - Names for the hallways (for example "North Hall"). Default: plain names, editable in the Layout view.
+
+**Hallways, step 2, and the Action room (2026-10-12): built, waiting on your look.**
+- **Hallway floors** are dark wood (new art: Art → Hallways → Hallway floor).
+- **Hallway walls** blend from the theme color of the room at one end to the room at the other, muted a little so arrows and lights stand out.
+  - Each hallway can blend between its rooms (the default), blend between two colors you pick, or keep the plain art (Layout → tap the hallway → Wall colors).
+  - A hallway that ends in another hallway takes the middle of that hallway's colors.
+- **Room colors** (Layout → tap a room):
+  - **Theme color:** defaults to the room's genre color. The café's is brown (#8a5a3a).
+  - **Floor color** and **Wall color:** tints that recolor whatever art is there while keeping its shading. Rooms outside the museum have Floor and Wall color in their room settings too.
+- **The Action room:**
+  - A deep red carpet floor: the new Carpet floor art, which is gray so the floor color decides it.
+  - Dark gray walls (#4a4a50).
+  - Three landscape murals with no words, one on each stretch of top wall. Dusk peaks is left of the doorway, canyon road is right of it, and a volcano night is in the alcove.
+- **Murals.** New landscape art (dusk peaks, canyon road, storm plains, volcano night) along a wall's top row, so the wall color shows below. Replace any of them in Art → Murals.
+  - Place → Hallways → Mural, then tap a wall: it fills that stretch.
+  - Pick its art, its length, and which part of the landscape shows.
+

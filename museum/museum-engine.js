@@ -36,6 +36,12 @@ const PAL = {
   trinket: [null, "#f8f0e0", "#e06848", "#f0b840", "#58a868", "#5878c8", "#b868b8", "#8a5a34", "#2a160c", "#f8c8c8", "#78c8c8"],
   rug:     ["#f0d8b0", "#c84848", "#e8a040", "#3a6888", "#2a160c"],
   carpet:  ["#e8c070", "#9a3040", "#7c2434", "#4a1420", "#f4dca0"],
+  darkwood: ["#8a5e3e", "#5e3c26", "#43291a", "#1c100a", "#704a30"],
+  plush:   ["#8c8c8c", "#7e7e7e", "#727272", "#9a9a9a"],
+  m_dusk:  ["#2a1838", "#6a2850", "#c84e48", "#f0904a", "#f8d070", "#1c1428", "#3a2440", "#fff0c0"],
+  m_canyon: ["#7ab8e0", "#a8d4ec", "#f4f8fc", "#c85a38", "#9a3c24", "#e8b878", "#4a4048", "#f0e0a0"],
+  m_storm: ["#48506a", "#6a7490", "#9aa4bc", "#f8f4c0", "#4a7a3a", "#2e5428", "#7aa050", "#d8e0e8"],
+  m_volcano: ["#140c24", "#2a1a40", "#fff6d0", "#3a2a30", "#e05030", "#f8a040", "#5a3a3a", "#ffd870"],
   sconce:  ["#fff0b8", "#f0b850", "#9a6c34", "#3a2414"],
   cat:     [null, "#f0a050", "#c87028", "#2a1810", "#f8f0e0", "#f88898", "#a05018"],
   apron:   [null, "#f0d0b0", "#c86848", "#181820", "#f8f0c0"],
@@ -463,6 +469,42 @@ const GEN = {
     rect(a, 2, 8, 12, 7, 7); for (let x = 3; x < 14; x += 3) rect(a, x, 9, 1, 5, 3);
     return outline(a, 8);
   },
+  // Plush carpet for a room's floor. Gray, so a room's floor color (Rooms, Layout) tints it any color.
+  carpet_floor: () => fillFn(mk(16, 16), (x, y) => { const h = hash(x, y) % 9; return h === 0 ? 2 : h === 1 ? 3 : (x + y * 3) % 8 === 0 ? 2 : (x * 3 + y) % 11 === 0 ? 0 : 1; }),
+  /* Murals: landscapes painted along the top row of a wall (256×16; a wall shorter than that shows the middle of it). */
+  mural_dusk: () => { // a red sunset behind jagged peaks
+    const a = fillFn(mk(256, 16), (x, y) => (y < 2 ? 0 : y < 5 ? 1 : y < 8 ? 2 : y < 11 ? 3 : 4));
+    [[52, 9], [170, 8]].forEach(([cx, cy]) => circ(a, cx, cy, 3.5, 7));
+    fillFn(a, (x, y) => (y > 6 + Math.abs(((x * 5) % 46) - 23) / 4.5 + 2 * Math.sin(x / 13) ? 6 : undefined));
+    fillFn(a, (x, y) => (y > 12 + Math.round(1.5 * Math.sin(x / 9)) ? 5 : undefined));
+    return a;
+  },
+  mural_canyon: () => { // red mesas, a clear sky, a road running off into the distance
+    const a = fillFn(mk(256, 16), (x, y) => (y < 4 ? 0 : 1));
+    [[30, 2], [118, 3], [200, 2]].forEach(([cx, cy]) => { circ(a, cx, cy, 2, 2); circ(a, cx + 3, cy, 2.5, 2); circ(a, cx + 6, cy + 1, 1.5, 2); });
+    [[10, 40, 5], [70, 96, 6], [140, 182, 4], [214, 250, 6]].forEach(([x0, x1, top]) => { rect(a, x0, top, x1 - x0, 12 - top, 3); rect(a, x0, top, x1 - x0, 1, 4); rect(a, x0 + 3, top + 3, x1 - x0 - 6, 1, 4); });
+    rect(a, 0, 11, 256, 5, 5); rect(a, 0, 13, 256, 2, 6); for (let x = 2; x < 256; x += 8) rect(a, x, 13, 4, 1, 7);
+    return a;
+  },
+  mural_storm: () => { // a storm rolling over green plains, lightning far off
+    const a = fillFn(mk(256, 16), (x, y) => (y < 3 ? 0 : y < 7 ? 1 : 2));
+    for (let i = 0; i < 10; i++) { const cx = (i * 29 + 7) % 256; circ(a, cx, 2, 3.5, 1); circ(a, cx + 5, 3, 3, 0); }
+    [[64, 0], [190, 1]].forEach(([x0]) => { let x = x0; for (let y = 2; y < 10; y++) { px(a, x, y, 3); x += y % 3 ? 1 : -1; } });
+    fillFn(a, (x, y) => (y > 9 + Math.round(1.5 * Math.sin(x / 17)) ? 4 : undefined));
+    fillFn(a, (x, y) => (y > 12 + Math.round(Math.sin(x / 7 + 1)) ? 5 : undefined));
+    for (let x = 4; x < 256; x += 11) px(a, x, 11 + (x % 3), 6);
+    return a;
+  },
+  mural_volcano: () => { // a volcano glowing under the stars
+    const a = fillFn(mk(256, 16), (x, y) => (y < 6 ? 0 : 1));
+    for (let i = 0; i < 26; i++) px(a, (i * 37 + 11) % 256, (i * 7) % 7, 2);
+    [[90, 4], [210, 6]].forEach(([cx, top]) => {
+      fillFn(a, (x, y) => (y >= top && Math.abs(x - cx) <= (y - top) * 2.4 + 2 ? 3 : undefined));
+      rect(a, cx - 2, top, 5, 1, 7); for (let y = top + 1; y < 13; y++) px(a, cx + Math.round(Math.sin(y) * 2), y, y < top + 4 ? 5 : 4);
+    });
+    fillFn(a, (x, y) => (y > 12 + Math.round(Math.sin(x / 11)) ? 6 : undefined));
+    return a;
+  },
   // Hallway carpet runner, one tile at a time: 3 frames (start, middle, end). Across: start is the left end. Down: start is the top.
   carpet_h: f => fillFn(mk(16, 16), (x, y) => {
     if (y < 3 || y > 12) return undefined;
@@ -738,6 +780,12 @@ const SLOTS = [
   { key: "postcard_spinner", label: "Postcard spinner", group: "Gift shop and café", w: 16, h: 32, pal: "trinket", gen: GEN.postcard_spinner, note: "Stands two tiles tall." },
   { key: "floor_lamp", label: "Floor lamp", group: "Gift shop and café", w: 16, h: 32, pal: "trinket", gen: GEN.floor_lamp, note: "Stands two tiles tall and casts a warm glow." },
   { key: "basket", label: "Basket of goodies", group: "Gift shop and café", w: 16, h: 16, pal: "trinket", gen: GEN.basket },
+  { key: "hall_floor", label: "Hallway floor (dark wood)", group: "Hallways", w: 16, h: 16, pal: "darkwood", gen: GEN.floor_wood, note: "Tiles seamlessly in every direction." },
+  { key: "carpet_floor", label: "Carpet floor", group: "Rooms", w: 16, h: 16, pal: "plush", gen: GEN.carpet_floor, note: "Gray on purpose: a room's floor color tints it (Rooms, Museum, Layout). Tiles seamlessly." },
+  { key: "mural_dusk", label: "Mural: dusk peaks", group: "Murals", w: 256, h: 16, pal: "m_dusk", gen: GEN.mural_dusk, note: "Painted along the top row of a wall. A shorter wall shows the middle of it." },
+  { key: "mural_canyon", label: "Mural: canyon road", group: "Murals", w: 256, h: 16, pal: "m_canyon", gen: GEN.mural_canyon, note: "Painted along the top row of a wall. A shorter wall shows the middle of it." },
+  { key: "mural_storm", label: "Mural: storm plains", group: "Murals", w: 256, h: 16, pal: "m_storm", gen: GEN.mural_storm, note: "Painted along the top row of a wall. A shorter wall shows the middle of it." },
+  { key: "mural_volcano", label: "Mural: volcano night", group: "Murals", w: 256, h: 16, pal: "m_volcano", gen: GEN.mural_volcano, note: "Painted along the top row of a wall. A shorter wall shows the middle of it." },
   { key: "carpet_h", label: "Carpet runner, across", group: "Hallways", w: 16, h: 16, frames: 3, pal: "carpet", gen: GEN.carpet_h, note: "3 frames side by side (48×16): the left end, a middle piece, the right end. Painted one tile at a time with the Carpet tool in Rooms." },
   { key: "carpet_v", label: "Carpet runner, down", group: "Hallways", w: 16, h: 16, frames: 3, pal: "carpet", gen: GEN.carpet_v, note: "3 frames side by side (48×16): the top end, a middle piece, the bottom end." },
   { key: "wall_sconce", label: "Accent light", group: "Hallways", w: 16, h: 16, pal: "sconce", gen: GEN.wall_sconce, note: "A small wall light, hung on the upper wall row. It glows with the lights on." },
@@ -1397,6 +1445,7 @@ const NIGHT_DIM = { lobby: 0.2, museum: 0.12, staff: 0.08, storage: 0.05 };
    Every room and hallway is a "zone": its own art, its own name (rooms say theirs when you walk in) and, for rooms, a light switch. */
 const DIRS_LIST = ["up", "down", "left", "right"];
 const LAYOUT_MAX_W = 120, LAYOUT_MAX_H = 100, LAYOUT_SIDES = ["top", "bottom", "left", "right"];
+const hexOr = c => (/^#[0-9a-f]{6}$/i.test(c || "") ? c.toLowerCase() : "");
 function normalizeLayout(L) {
   L = L && typeof L === "object" ? L : {};
   const n = (v, lo, hi, d) => (Number.isFinite(+v) ? Math.max(lo, Math.min(hi, Math.round(+v))) : d), zoneIds = new Set(), spotIds = new Set();
@@ -1405,11 +1454,13 @@ function normalizeLayout(L) {
   const art = a => (a && typeof a === "object" ? Object.fromEntries(Object.entries(a).filter(([k, v]) => ["top", "upper", "lower", "floor"].includes(k) && SLOT[v])) : {});
   const out = { hallArt: art(L.hallArt), rooms: [], halls: [], doors: [], stairs: [] };
   (Array.isArray(L.rooms) ? L.rooms : []).slice(0, 40).forEach((r, i) => { if (!r) return;
-    out.rooms.push({ id: id(r.id, "room" + i), name: str(r.name, 40) || "Room", x: n(r.x, 1, LAYOUT_MAX_W - 4, 2), y: n(r.y, 3, LAYOUT_MAX_H - 4, 3), w: n(r.w, 2, 60, 8), h: n(r.h, 2, 60, 6), art: art(r.art), light: r.light !== false, genre: str(r.genre, 30),
+    out.rooms.push({ id: id(r.id, "room" + i), name: str(r.name, 40) || "Room", x: n(r.x, 1, LAYOUT_MAX_W - 4, 2), y: n(r.y, 3, LAYOUT_MAX_H - 4, 3), w: n(r.w, 2, 60, 8), h: n(r.h, 2, 60, 6), art: art(r.art), light: r.light !== false, genre: str(r.genre, 30), color: hexOr(r.color), tint: { floor: hexOr(r.tint && r.tint.floor), wall: hexOr(r.tint && r.tint.wall) },
       edits: (Array.isArray(r.edits) ? r.edits : []).slice(0, 400).filter(e => Array.isArray(e) && (e[2] === "." || e[2] === "#")).map(e => [n(e[0], -30, 90, 0), n(e[1], -30, 90, 0), e[2]]) }); });
   (Array.isArray(L.halls) ? L.halls : []).slice(0, 60).forEach((h, i) => { if (!h) return;
     const path = (Array.isArray(h.path) ? h.path : []).slice(0, 8).map(p => [n(p && p[0], 1, LAYOUT_MAX_W - 3, 1), n(p && p[1], 3, LAYOUT_MAX_H - 3, 3)]);
-    if (path.length) out.halls.push({ id: id(h.id, "hall" + i), name: str(h.name, 40) || "Hallway", path, width: n(h.width, 2, 6, 2), min: n(h.min, 0, 99, 0), art: art(h.art) }); });
+    const wl = h.walls && typeof h.walls === "object" ? h.walls : {};
+    if (path.length) out.halls.push({ id: id(h.id, "hall" + i), name: str(h.name, 40) || "Hallway", path, width: n(h.width, 2, 6, 2), min: n(h.min, 0, 99, 0), art: art(h.art),
+      walls: { mode: ["auto", "custom", "plain"].includes(wl.mode) ? wl.mode : "auto", from: hexOr(wl.from), to: hexOr(wl.to) } }); });
   (Array.isArray(L.doors) ? L.doors : []).slice(0, 20).forEach((d, i) => { if (d && Array.isArray(d.warp))
     out.doors.push({ id: sid(d.id, "door" + i), zone: String(d.zone || ""), side: LAYOUT_SIDES.includes(d.side) ? d.side : "bottom", at: n(d.at, 0, 60, 0), warp: d.warp.slice(0, 4) }); });
   (Array.isArray(L.stairs) ? L.stairs : []).slice(0, 10).forEach((st, i) => { if (st && Array.isArray(st.to))
@@ -1515,7 +1566,7 @@ prepLayoutRoom(ROOMS.museum);
 /* A pristine copy of the built-in rooms. A pack's "rooms" replaces any of these or adds new ones;
    the level editor in curator.html writes them. Rooms are plain data, so a deep copy is enough. */
 const BUILTIN_ROOMS = JSON.parse(JSON.stringify(ROOMS));
-const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "runners", "lamps", "arrows", "windowAt", "intercom", "lightSwitch", "eotmAt",
+const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "runners", "lamps", "arrows", "murals", "tint", "windowAt", "intercom", "lightSwitch", "eotmAt",
   "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo"];
 /* Light checks so a hand-edited or damaged pack can't break the game: rectangular map, sane size, a spawn on the map. */
 function normalizeRoom(id, d) {
@@ -1633,6 +1684,47 @@ function runnerTiles(def) {
   });
   return out;
 }
+/* A room's theme color: its own, else its genre's. */
+function themeOf(zone, genres) {
+  const r = zone && zone.rect; if (!r) return "";
+  if (r.color) return r.color;
+  const g = (genres || []).find(g => g.id === r.genre); return g ? hexOr(g.color) : "";
+}
+function mixHex(a, b, t) { const A = hexRgb(a), B = hexRgb(b); return "#" + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, "0")).join(""); }
+/* The tint for a floor or wall tile, or "" for none. */
+function tintAt(def, lay, z, part, x, y, genres) {
+  if (!lay) return hexOr(def.tint && def.tint[part]);
+  const zone = z >= 0 ? lay.zones[z] : null; if (!zone) return "";
+  if (zone.kind === "room") return hexOr(zone.rect.tint && zone.rect.tint[part]);
+  if (part !== "wall") return "";
+  const h = zone.hall, wl = h.walls || { mode: "auto" }; if (wl.mode === "plain") return "";
+  const ends = hallEndColors(lay, h, genres), from = wl.mode === "custom" && wl.from ? wl.from : ends[0], to = wl.mode === "custom" && wl.to ? wl.to : ends[1];
+  // Muted a little toward warm gray, so arrows and lights in the room's full color stand out against it.
+  const soften = c => mixHex(c, "#5a4c44", 0.4);
+  if (!from && !to) return ""; if (!from || !to || from === to) return soften(from || to);
+  // How far along the hallway this tile is (0 at the first end, 1 at the last), in steps so neighbors share a color.
+  const p = h.path; let total = 0, best = Infinity, at = 0;
+  for (let i = 0; i < p.length - 1; i++) {
+    const [x1, y1] = p[i], [x2, y2] = p[i + 1], len = Math.abs(x2 - x1) + Math.abs(y2 - y1);
+    const tx = Math.max(Math.min(x1, x2), Math.min(Math.max(x1, x2), x)), ty = Math.max(Math.min(y1, y2), Math.min(Math.max(y1, y2), y)), dd = Math.abs(tx - x) + Math.abs(ty - y);
+    if (dd < best) { best = dd; at = total + Math.abs(tx - x1) + Math.abs(ty - y1); }
+    total += len;
+  }
+  const t = total ? Math.round((at / total) * 12) / 12 : 0;
+  return soften(mixHex(from, to, t));
+}
+/* The theme colors at each end of a hallway: the room it ends in, or (ending in another hallway) the middle of that hallway's colors. */
+function hallEndColors(lay, h, genres, depth) {
+  const p = [h.path[0], h.path[h.path.length - 1]];
+  return p.map(([x, y]) => {
+    const room = lay.zones.find(z => z.kind === "room" && x >= z.rect.x && y >= z.rect.y && x < z.rect.x + z.rect.w && y < z.rect.y + z.rect.h);
+    if (room) return themeOf(room, genres);
+    if (depth) return "";
+    const other = lay.zones.find(z => z.kind === "hall" && z.hall !== h && z.rects.some(r => x >= r.x && y >= r.y && x < r.x + r.w && y < r.y + r.h));
+    if (!other) return "";
+    const [a, b] = hallEndColors(lay, other.hall, genres, 1); return a && b ? mixHex(a, b, 0.5) : a || b;
+  });
+}
 /* One runner tile, any width: the art's border rows top and bottom, its plain field stretched between, and its pattern row
    in the middle. (Down runners are the same, sideways.) img: the carpet_h or carpet_v sheet. */
 function drawRunner(ctx, img, ru, cx, cy) {
@@ -1648,6 +1740,9 @@ function buildRoom(id, pieces, o) {
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
     const ch = def.map[y][x], m = MAP_TILE[ch] || ["floor"], z = lay && lay.zoneAt[y] ? lay.zoneAt[y][x] : -1, art = z >= 0 ? Object.assign({}, def.art, lay.zones[z].art) : def.art;
     r.tiles[y][x] = m[0] === null ? null : art[m[0]] || art.floor; r.over[y][x] = m[1] || null;
+    // Colors: a room's floor and wall tints, and a hallway's walls blending from the room at one end to the room at the other.
+    const part = m[0] === "floor" ? "floor" : m[0] === "upper" || m[0] === "lower" ? "wall" : null;
+    if (part && r.tiles[y][x]) { const t = tintAt(def, lay, z, part, x, y, o.genres); if (t) r.tiles[y][x] += "@" + t; }
     r.solid[y][x] = ch !== "." && ch !== "=";
   }
   (def.props || []).forEach(p => {
@@ -1683,6 +1778,7 @@ function buildRoom(id, pieces, o) {
   r.runners = runnerTiles(def);
   r.lamps = (def.lamps || []).filter(Array.isArray);
   r.arrows = (def.arrows || []).filter(a => a && typeof a === "object");
+  r.murals = (def.murals || []).filter(m => m && SLOT[m.key]).map(m => ({ x: m.x | 0, y: m.y | 0, w: Math.max(1, m.w | 0 || 1), key: m.key, at: Number.isFinite(m.at) ? Math.max(0, m.at | 0) : -1 })); // at: which part of the art (pixels from its left)
   r.arrows.forEach(a => { for (let i = 0; i < (a.w || 4); i++) { const k = (a.x + i) + "," + ((a.y || 1) + 1); if (!r.events[k]) r.events[k] = { arrow: a }; } });
   if (def.catSpots && o.catRoom === id) {
     const [x, y] = def.catSpots[o.catIndex % def.catSpots.length];
@@ -1864,11 +1960,30 @@ class Game {
     this.closeAll(); this.warp(room, sp[0], sp[1], sp[2]);
   }
   closeAll() { this.el.text.style.display = "none"; this.el.cu.style.display = "none"; this.txt = null; this.mode = "walk"; }
-  sheet(key) { return this.overrides[key] || this.cache[key] || (this.cache[key] = placeholder(key)); }
+  sheet(key) {
+    if (key.includes("@")) return this.cache[key] || this.tinted(key);
+    return this.overrides[key] || this.cache[key] || (this.cache[key] = placeholder(key));
+  }
+  /* "lobby_wall_upper@#4a4a50": the art recolored to that color, keeping its light and shade (its average lands on the color). */
+  tinted(key) {
+    const [base, hex] = key.split("@"), src = this.sheet(base), w = src.naturalWidth || src.width, h = src.naturalHeight || src.height;
+    if (!w || !h) return src;
+    const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d"); x.drawImage(src, 0, 0);
+    const img = x.getImageData(0, 0, w, h), d = img.data, [cr, cg, cb] = hexRgb(hex);
+    let sum = 0, n = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 3]) { sum += (0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]) / 255; n++; }
+    const mean = n ? sum / n : 0.5;
+    for (let i = 0; i < d.length; i += 4) {
+      if (!d[i + 3]) continue;
+      const l = Math.max(0, Math.min(1, 0.5 + ((0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]) / 255 - mean) * 1.2));
+      const f = v => (l < 0.5 ? v * l * 2 : v + (255 - v) * (l * 2 - 1));
+      d[i] = f(cr); d[i + 1] = f(cg); d[i + 2] = f(cb);
+    }
+    x.putImageData(img, 0, 0); return (this.cache[key] = c);
+  }
   src(key) { return this.pack.assets[key] && this.overrides[key] ? this.pack.assets[key].src : this.sheet(key).toDataURL(); }
-  frame(key) { const s = SLOT[key]; return s.frames > 1 && s.fps ? Math.floor((this.t / 60) * s.fps) % s.frames : 0; }
+  frame(key) { const s = SLOT[key.split("@")[0]]; return s.frames > 1 && s.fps ? Math.floor((this.t / 60) * s.fps) % s.frames : 0; }
   drawSlot(key, col, row, dx, dy) {
-    const s = SLOT[key], img = this.sheet(key), iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+    const s = SLOT[key.split("@")[0]], img = this.sheet(key), iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
     const sx = col * s.w, sy = row * s.h, w = Math.min(s.w, iw - sx), h = Math.min(s.h, ih - sy);
     if (w > 0 && h > 0) this.ctx.drawImage(img, sx, sy, w, h, dx, dy, w, h);
   }
@@ -3549,7 +3664,7 @@ class Game {
   buildWorld() {
     const today = todayISO(), rooms = Object.keys(ROOMS).filter(id => ROOMS[id].mugSpots), seed = strSeed("mug" + today);
     const catRooms = Object.keys(ROOMS).filter(id => ROOMS[id].catSpots), cs = strSeed("cat" + today + this.catBucket());
-    const o = { curator: this.curator, today, hung: this.hungNow, tod: this.tod(), crowd: this.crowdToday(), catRoom: catRooms[cs % catRooms.length], catIndex: cs >>> 5,
+    const o = { genres: this.pack.settings.genres, curator: this.curator, today, hung: this.hungNow, tod: this.tod(), crowd: this.crowdToday(), catRoom: catRooms[cs % catRooms.length], catIndex: cs >>> 5,
       mugRoom: this.progress.mug === today ? null : rooms[seed % rooms.length], mugIndex: seed >>> 4, closing: this.closing };
     let n = 0, m = 0; o.spotStart = {}; o.caseStart = {};
     for (const id of Object.keys(ROOMS)) { o.spotStart[id] = n; n += (ROOMS[id].spots || []).length; o.caseStart[id] = m; m += (ROOMS[id].cases || []).length; }
@@ -4266,6 +4381,10 @@ class Game {
     for (const ru of r.runners) drawRunner(ctx, this.sheet(ru.k[0] === "h" ? "carpet_h" : "carpet_v"), ru, cx, cy);
     for (const [x, y] of r.lamps) this.drawSlot("wall_sconce", 0, 0, x * T - cx, y * T - cy);
     for (const a of r.arrows) ctx.drawImage(this.arrowArt(a), a.x * T - cx, (a.y || 1) * T - cy);
+    for (const m of r.murals) { // the middle of the mural's art, as wide as its wall (repeated if the wall is longer)
+      const img = this.sheet(m.key), iw = img.naturalWidth || img.width, w = m.w * T; if (!iw) continue;
+      for (let o = 0; o < w; o += iw) { const room = iw - Math.min(w, iw), sx = m.at >= 0 ? Math.min(room, m.at) : Math.max(0, Math.floor(room / 2)), sw = Math.min(iw - sx, w - o); ctx.drawImage(img, sx, 0, sw, T, m.x * T + o - cx, m.y * T - cy, sw, T); }
+    }
     for (const [mx, my] of this.doorMats(r)) this.drawSlot("doormat", 0, 0, mx * T - cx, my * T - cy);
     for (const st of r.stairs) this.drawSlot(st.kind === "up" ? "stair_up" : "stair_down", 0, 0, st.x * T - cx, st.y * T - cy);
     for (const c of r.cases) this.drawCase(c, cx, cy);
@@ -4374,11 +4493,11 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-11 hallways 2";
+const VERSION = "2026-10-12 action room";
 window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
   spotRooms: () => Object.keys(ROOMS).filter(id => (ROOMS[id].spots || []).length).map(id => ({ id, name: ROOMS[id].name, n: ROOMS[id].spots.length })),
-  BUILTIN_ROOMS, applyRooms, normalizeRoom, SLOTS_BY_KEY: SLOT, normalizeLayout, carveLayout, hallRects, hallLength, layoutOf, LAYOUT_MAX_W, LAYOUT_MAX_H, SAMPLE_GENRES, genreOf, assignCases, runnerTiles, drawRunner,
+  BUILTIN_ROOMS, applyRooms, normalizeRoom, SLOTS_BY_KEY: SLOT, normalizeLayout, carveLayout, hallRects, themeOf, hallEndColors, hallLength, layoutOf, LAYOUT_MAX_W, LAYOUT_MAX_H, SAMPLE_GENRES, genreOf, assignCases, runnerTiles, drawRunner,
   placeholderPainting: p => { const n = normalizePiece(p, 0); return paint([paintingGrid(n)], 24, 18, 1, n.colors); } };
 })();
