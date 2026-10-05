@@ -42,6 +42,9 @@ const PAL = {
   m_canyon: ["#7ab8e0", "#a8d4ec", "#f4f8fc", "#c85a38", "#9a3c24", "#e8b878", "#4a4048", "#f0e0a0"],
   m_storm: ["#48506a", "#6a7490", "#9aa4bc", "#f8f4c0", "#4a7a3a", "#2e5428", "#7aa050", "#d8e0e8"],
   m_volcano: ["#140c24", "#2a1a40", "#fff6d0", "#3a2a30", "#e05030", "#f8a040", "#5a3a3a", "#ffd870"],
+  m_isles: ["#bfe6e0", "#e8f6f2", "#5aa890", "#3c7a68", "#8a7058", "#a8dcf0", "#ffffff", "#f0d890"],
+  m_castle: ["#9cc4e8", "#d8ecf8", "#6a8a4a", "#4a6a38", "#8a8c98", "#5c5e6c", "#c84040", "#e8d8a0"],
+  m_forest: ["#1a2240", "#2c3660", "#f4ecc0", "#1e3a2e", "#2c5440", "#f0b860", "#4a3a5a", "#9ab0d8"],
   sconce:  ["#fff0b8", "#f0b850", "#9a6c34", "#3a2414"],
   cat:     [null, "#f0a050", "#c87028", "#2a1810", "#f8f0e0", "#f88898", "#a05018"],
   apron:   [null, "#f0d0b0", "#c86848", "#181820", "#f8f0c0"],
@@ -505,6 +508,36 @@ const GEN = {
     fillFn(a, (x, y) => (y > 12 + Math.round(Math.sin(x / 11)) ? 6 : undefined));
     return a;
   },
+  mural_isles: () => { // floating islands over a misty sea, a waterfall falling off one
+    const a = fillFn(mk(256, 16), (x, y) => (y < 9 ? 0 : y < 12 ? 1 : 5));
+    for (let x = 0; x < 256; x += 5) px(a, x + (x % 3), 13 + (x % 2), 6);
+    [[34, 4, 14], [100, 6, 10], [168, 3, 16], [228, 5, 9]].forEach(([cx, top, r]) => {
+      rect(a, cx - r, top, r * 2, 2, 2); rect(a, cx - r + 1, top, r * 2 - 2, 1, 3);
+      for (let k = 0; k < r; k++) rect(a, cx - r + k, top + 2 + (k >> 1), (r - k) * 2, 1, 4);
+      circ(a, cx - r / 2, top - 1, 1.5, 3); circ(a, cx + r / 3, top - 1, 2, 3);
+    });
+    for (let y = 6; y < 16; y++) px(a, 170, y, y % 2 ? 6 : 1); circ(a, 60, 2, 1.5, 7);
+    return a;
+  },
+  mural_castle: () => { // a castle on a hill, banners flying, fields below
+    const a = fillFn(mk(256, 16), (x, y) => (y < 5 ? 1 : 0));
+    fillFn(a, (x, y) => (y > 8 + Math.round(2 * Math.sin(x / 23)) ? 2 : undefined));
+    fillFn(a, (x, y) => (y > 12 + Math.round(Math.sin(x / 9)) ? 3 : undefined));
+    [[70, 2], [190, 3]].forEach(([cx, top]) => {
+      rect(a, cx - 10, top + 3, 20, 7, 4); rect(a, cx - 12, top, 4, 10, 5); rect(a, cx + 8, top, 4, 10, 5); rect(a, cx - 2, top - 1, 4, 11, 5);
+      for (let i = -10; i < 10; i += 3) px(a, cx + i, top + 2, 4); rect(a, cx - 1, top + 6, 2, 4, 5);
+      px(a, cx, top - 3, 6); px(a, cx + 1, top - 3, 6); px(a, cx, top - 2, 5);
+    });
+    for (let x = 6; x < 256; x += 13) px(a, x, 14, 7);
+    return a;
+  },
+  mural_forest: () => { // a moonlit forest with a village's lights between the trees
+    const a = fillFn(mk(256, 16), (x, y) => (y < 6 ? 0 : 1));
+    circ(a, 210, 3, 2.5, 2); for (let i = 0; i < 18; i++) px(a, (i * 41 + 5) % 256, (i * 5) % 6, 7);
+    for (let i = 0; i < 40; i++) { const cx = (i * 13 + (i % 3) * 4) % 256, h = 6 + (i * 7) % 5; for (let k = 0; k < h; k++) rect(a, cx - (k >> 1), 15 - h + k, (k >> 1) * 2 + 1, 1, i % 2 ? 3 : 4); }
+    [[40, 12], [44, 12], [120, 13], [150, 12], [156, 13]].forEach(([x, y]) => { rect(a, x - 1, y, 3, 2, 6); px(a, x, y, 5); });
+    return a;
+  },
   // Hallway carpet runner, one tile at a time: 3 frames (start, middle, end). Across: start is the left end. Down: start is the top.
   carpet_h: f => fillFn(mk(16, 16), (x, y) => {
     if (y < 3 || y > 12) return undefined;
@@ -786,6 +819,9 @@ const SLOTS = [
   { key: "mural_canyon", label: "Mural: canyon road", group: "Murals", w: 256, h: 16, pal: "m_canyon", gen: GEN.mural_canyon, note: "Painted along the top row of a wall. A shorter wall shows the middle of it." },
   { key: "mural_storm", label: "Mural: storm plains", group: "Murals", w: 256, h: 16, pal: "m_storm", gen: GEN.mural_storm, note: "Painted along the top row of a wall. A shorter wall shows the middle of it." },
   { key: "mural_volcano", label: "Mural: volcano night", group: "Murals", w: 256, h: 16, pal: "m_volcano", gen: GEN.mural_volcano, note: "Painted along the top row of a wall. A shorter wall shows the middle of it." },
+  { key: "mural_isles", label: "Mural: floating isles", group: "Murals", w: 256, h: 16, pal: "m_isles", gen: GEN.mural_isles, note: "Painted along the top row of a wall. A shorter wall shows the middle of it." },
+  { key: "mural_castle", label: "Mural: castle hill", group: "Murals", w: 256, h: 16, pal: "m_castle", gen: GEN.mural_castle, note: "Painted along the top row of a wall. A shorter wall shows the middle of it." },
+  { key: "mural_forest", label: "Mural: moonlit forest", group: "Murals", w: 256, h: 16, pal: "m_forest", gen: GEN.mural_forest, note: "Painted along the top row of a wall. A shorter wall shows the middle of it." },
   { key: "carpet_h", label: "Carpet runner, across", group: "Hallways", w: 16, h: 16, frames: 3, pal: "carpet", gen: GEN.carpet_h, note: "3 frames side by side (48×16): the left end, a middle piece, the right end. Painted one tile at a time with the Carpet tool in Rooms." },
   { key: "carpet_v", label: "Carpet runner, down", group: "Hallways", w: 16, h: 16, frames: 3, pal: "carpet", gen: GEN.carpet_v, note: "3 frames side by side (48×16): the top end, a middle piece, the bottom end." },
   { key: "wall_sconce", label: "Accent light", group: "Hallways", w: 16, h: 16, pal: "sconce", gen: GEN.wall_sconce, note: "A small wall light, hung on the upper wall row. It glows with the lights on." },
@@ -1669,7 +1705,8 @@ function safeSpots(r, def, inZone, limit) {
    of the floor, whichever row (or column) it was painted on; in a room it sits on its own tile. */
 function runnerTiles(def) {
   const isFloor = (x, y) => def.map[y] && (def.map[y][x] === "." || def.map[y][x] === "=");
-  const out = (def.runners || []).filter(t => Array.isArray(t) && /^[hv][012]$/.test(t[2]) && isFloor(t[0], t[1])).map(([x, y, k, wd]) => {
+  const out = (def.runners || []).filter(t => Array.isArray(t) && /^([hv][012]|c[0-3])$/.test(t[2]) && isFloor(t[0], t[1])).map(([x, y, k, wd]) => {
+    if (k[0] === "c") return { x, y, k, w: Math.max(10, Math.min(16, wd | 0 || 16)), mid: 0, ok: true }; // a corner: on its own tile
     const across = k[0] === "h"; let a = across ? y : x, b = a;
     while (b - a < 6 && (across ? isFloor(x, a - 1) : isFloor(a - 1, y))) a--;
     while (b - a < 6 && (across ? isFloor(x, b + 1) : isFloor(b + 1, y))) b++;
@@ -1725,9 +1762,31 @@ function hallEndColors(lay, h, genres, depth) {
     const [a, b] = hallEndColors(lay, other.hall, genres, 1); return a && b ? mixHex(a, b, 0.5) : a || b;
   });
 }
+/* A runner corner (c0 joins right and down, c1 left and down, c2 right and up, c3 left and up), any width up to a tile,
+   in the colors of the straight runner art (its border, trim and field), so it matches replaced art too. */
+const CORNERS = new WeakMap();
+function runnerCorner(img, k, w) {
+  const iw = img.naturalWidth || img.width; if (!iw) return null;
+  let per = CORNERS.get(img); if (!per) { per = {}; CORNERS.set(img, per); }
+  const key = k + w; if (per[key]) return per[key];
+  const s = document.createElement("canvas"); s.width = iw; s.height = T; const sx = s.getContext("2d"); sx.drawImage(img, 0, 0);
+  const col = r => { const d = sx.getImageData(T + 8, r, 1, 1).data; return "rgba(" + d[0] + "," + d[1] + "," + d[2] + "," + d[3] / 255 + ")"; };
+  const cols = [col(3), col(4), col(5)], c = document.createElement("canvas"); c.width = T; c.height = T; const x = c.getContext("2d");
+  const a = (T - w) >> 1, b = a + w, fx = k === "c1" || k === "c3", fy = k === "c2" || k === "c3";
+  for (let py = 0; py < T; py++) for (let px = 0; px < T; px++) {
+    const X = fx ? T - 1 - px : px, Y = fy ? T - 1 - py : py; let d = -1;
+    if (X >= a && X < b && Y >= a && Y < b) d = Math.min(X - a, Y - a);  // the corner square: edged on its two outer sides
+    else if (X >= b && Y >= a && Y < b) d = Math.min(Y - a, b - 1 - Y);   // the arm running across
+    else if (Y >= b && X >= a && X < b) d = Math.min(X - a, b - 1 - X);   // the arm running down
+    if (d < 0) continue;
+    x.fillStyle = cols[Math.min(2, d)]; x.fillRect(px, py, 1, 1);
+  }
+  return (per[key] = c);
+}
 /* One runner tile, any width: the art's border rows top and bottom, its plain field stretched between, and its pattern row
    in the middle. (Down runners are the same, sideways.) img: the carpet_h or carpet_v sheet. */
 function drawRunner(ctx, img, ru, cx, cy) {
+  if (ru.k[0] === "c") { const c = runnerCorner(img, ru.k, ru.w); if (c) ctx.drawImage(c, ru.x * T - cx, ru.y * T - cy); return; }
   const across = ru.k[0] === "h", f = +ru.k[1] * T, w = ru.w;
   const at = Math.round(ru.mid - w / 2), body = w - 6, pat = Math.min(4, body), gap = body - pat, g1 = gap >> 1;
   // pieces of the art, measured across the runner: border 3..5, plain field row 5, pattern 6..9, border 10..12
@@ -3777,7 +3836,7 @@ class Game {
       x.fillStyle = edge ? shade(0.5) : !inside(qx, py - 2) ? shade(1.35) : shade(1); x.fillRect(px, py, 1, 1);
     }
     // The name, in a little pixel font, centered on the arrow's shaft.
-    const txt = info.label.toUpperCase().replace(/[^A-Z0-9 ]/g, ""), shaft = w - head - 8, sc = txt.length * 4 * 2 - 2 <= shaft ? 2 : 1, tw = txt.length * 4 * sc - sc;
+    const txt = info.label.toUpperCase().replace(/[^A-Z0-9 ]/g, ""), shaft = w - head - 8, sc = 1 /* every arrow's name the same size */, tw = txt.length * 4 * sc - sc;
     let tx = Math.round((dir === "left" ? head + 4 + (shaft - tw) / 2 : 4 + (shaft - tw) / 2)), ty = Math.round(15.5 - 2.5 * sc);
     x.fillStyle = "#fff8ec";
     for (const ch of txt) { const gl = PIXEL_FONT[ch] || []; gl.forEach((row, yy) => [...row].forEach((v, xx) => { if (v === "1") x.fillRect(tx + xx * sc, ty + yy * sc, sc, sc); })); tx += 4 * sc; }
@@ -4378,7 +4437,7 @@ class Game {
     for (const sw of r.switches || []) this.drawSlot("light_switch", 0, 0, sw.x * T - cx, sw.y * T - cy);
     if (r.intercomAt) this.drawSlot("intercom", 0, 0, r.intercomAt.x * T - cx, r.intercomAt.y * T - cy);
     for (const d of r.decals) this.drawSlot(d.key, 0, 0, d.x * T - cx, d.y * T - cy);
-    for (const ru of r.runners) drawRunner(ctx, this.sheet(ru.k[0] === "h" ? "carpet_h" : "carpet_v"), ru, cx, cy);
+    for (const ru of r.runners) drawRunner(ctx, this.sheet(ru.k[0] === "v" ? "carpet_v" : "carpet_h"), ru, cx, cy);
     for (const [x, y] of r.lamps) this.drawSlot("wall_sconce", 0, 0, x * T - cx, y * T - cy);
     for (const a of r.arrows) ctx.drawImage(this.arrowArt(a), a.x * T - cx, (a.y || 1) * T - cy);
     for (const m of r.murals) { // the middle of the mural's art, as wide as its wall (repeated if the wall is longer)
@@ -4493,7 +4552,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-12 action room";
+const VERSION = "2026-10-13 four rooms";
 window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

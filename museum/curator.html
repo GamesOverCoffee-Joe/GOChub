@@ -325,7 +325,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-12 action room";
+window.GOQ_WANT = "2026-10-13 four rooms";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -972,7 +972,9 @@ function renderRooms() {
   if (R.tool === "carpet") {
     R.carpet = R.carpet || "h1";
     const piece = (k, l) => ({ label: l, on: R.carpet === k, swatch: carpetSwatch(k), pick: () => { R.carpet = k; renderRooms(); } });
-    wrap.appendChild(paletteStrip([piece("h0", "Left end"), piece("h1", "Across"), piece("h2", "Right end"), piece("v0", "Top end"), piece("v1", "Down"), piece("v2", "Bottom end"), { label: "Remove", on: R.carpet === "x", pick: () => { R.carpet = "x"; renderRooms(); } }]));
+    wrap.appendChild(paletteStrip([piece("h0", "Left end"), piece("h1", "Across"), piece("h2", "Right end"), piece("v0", "Top end"), piece("v1", "Down"), piece("v2", "Bottom end"),
+      piece("c0", "Corner \u250c"), piece("c1", "Corner \u2510"), piece("c2", "Corner \u2514"), piece("c3", "Corner \u2518"), { label: "Remove", on: R.carpet === "x", pick: () => { R.carpet = "x"; renderRooms(); } }]));
+    wrap.lastChild.style.flexWrap = "wrap"; // all eleven pieces in view
     R.carpetW = R.carpetW || 20;
     const wv = el("b", { text: R.carpetW + " px" }), wi = el("input", { type: "range", min: 10, max: 32, step: 2, value: R.carpetW, "aria-label": "Runner width" });
     wi.addEventListener("input", () => { R.carpetW = +wi.value; wv.textContent = R.carpetW + " px"; });
@@ -1080,7 +1082,7 @@ function drawEditor() {
     const sh = key && GOQ.SLOT[key] && edGame.sheet(key);
     if (sh) { const sl = GOQ.SLOT[key]; x.drawImage(sh, 0, 0, sl.w, sl.h, it.x * 16, (it.y + it.h) * 16 - sl.h, sl.w, sl.h); }
   }
-  if (R.tool === "carpet") GOQ.runnerTiles(d).forEach(ru => GOQ.drawRunner(x, edGame.sheet(ru.k[0] === "h" ? "carpet_h" : "carpet_v"), ru, 0, 0)); // live, while you paint
+  if (R.tool === "carpet") GOQ.runnerTiles(d).forEach(ru => GOQ.drawRunner(x, edGame.sheet(ru.k[0] === "v" ? "carpet_v" : "carpet_h"), ru, 0, 0)); // live, while you paint
   if (isLayout(d) && (R.tool === "layout" || R.tool === "shape")) drawLayout(x, d, z);
   else if (R.sel) { const it = roomItems(d).find(i => sameSel(i, R.sel)) || R.sel; outline(it, "#ffffff"); }
   if (R.hover) { x.fillStyle = "rgba(232,178,74,.25)"; x.fillRect(R.hover.x * 16, R.hover.y * 16, 16, 16); }
@@ -1472,14 +1474,15 @@ function carpetAt(t) {
   const d = editable(R.id), ch = getCh(d, t.x, t.y), k = R.carpet || "h1";
   // In a hallway a runner sits in the middle of the floor, so a tile anywhere across it replaces the one already there.
   const span = dir => GOQ.runnerTiles({ map: d.map, runners: [[t.x, t.y, dir + "1"]] })[0];
-  const same = (r, dir) => { const s = span(dir); return s && r[2][0] === dir && (dir === "h" ? r[0] === t.x && r[1] >= s.a && r[1] <= s.b : r[1] === t.y && r[0] >= s.a && r[0] <= s.b); };
+  const same = (r, dir) => { if (dir === "c") return false; const s = span(dir); return s && r[2][0] === dir && (dir === "h" ? r[0] === t.x && r[1] >= s.a && r[1] <= s.b : r[1] === t.y && r[0] >= s.a && r[0] <= s.b); };
   d.runners = (d.runners || []).filter(r => !(r[0] === t.x && r[1] === t.y) && !(k === "x" ? same(r, "h") || same(r, "v") : same(r, k[0])));
   if (k !== "x" && (ch === "." || ch === "=")) d.runners.push([t.x, t.y, k, R.carpetW || 20]);
   roomChanged();
 }
 function carpetSwatch(k) {
-  const c = document.createElement("canvas"); c.width = 32; c.height = 32; const x = c.getContext("2d"); x.imageSmoothingEnabled = false;
-  x.drawImage(game.sheet(k[0] === "h" ? "carpet_h" : "carpet_v"), +k[1] * 16, 0, 16, 16, 0, 0, 32, 32); return c;
+  const t = document.createElement("canvas"); t.width = 16; t.height = 16;
+  GOQ.drawRunner(t.getContext("2d"), game.sheet(k[0] === "v" ? "carpet_v" : "carpet_h"), Object.assign({ x: 0, y: 0, k, w: 12, mid: 8 }), 0, 0);
+  const c = document.createElement("canvas"); c.width = 32; c.height = 32; const x = c.getContext("2d"); x.imageSmoothingEnabled = false; x.drawImage(t, 0, 0, 32, 32); return c;
 }
 /* Shape tool: add floor or wall at a tile, as a tweak to the nearest room (stored from its top-left, so it moves with it). */
 function shapeAt(t) {

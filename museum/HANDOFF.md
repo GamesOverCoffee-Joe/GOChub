@@ -369,3 +369,16 @@ Goal: character.
 
 **Releases and caching.** Each release bumps three version strings, and they must all match: `VERSION` in museum-engine.js, `window.GOQ_WANT` in museum.html and curator.html, and `museum/version.json`. A page that finds a newer version in version.json reloads itself once to get fresh files.
 
+**The four genre rooms (2026-10-13): built, waiting on your look.** Each room has a carpet path that winds from one doorway to the other, with its 8 cases spread along it (every case can still be read front or back).
+- **Action:** the path starts at the north door, swings past the volcano alcove, and leaves by the Lower Hall door. Red carpet, dark gray walls, dusk, canyon and volcano murals.
+- **Puzzle:** the twistiest path, from the Upper Hall door into a loop and out the bottom. Teal carpet (#1d5a50), slate walls (#3c4650), floating-isles mural.
+- **Strategy:** an S-bend from the Upper Hall door down to the south door. Navy carpet (#1f2d5c), warm stone walls (#4a4840), castle-hill mural.
+- **Story:** a slow wander from the north door to the Lower Hall door. Plum carpet (#5a2448), dusky walls (#463c46), moonlit-forest and isles murals, and a bench in the side alcove as a reading nook.
+- **In every room:** a sign by a doorway, a bench by the path, and a plant or two.
+- **Runner corners.** Four corner pieces (┌ ┐ └ ┘) for the Carpet tool, drawn in the straight runner art's own colors so they match replaced art. Corners go up to a tile wide; paths in rooms are 14 px wide.
+- **Hallway arrows.**
+  - Upper Hall: PUZZLE ← and STRATEGY →. Lower Hall: ACTION ← and STORY →. Each is in its genre's color, and all names are now the same size.
+  - The café's hallways have no arrows, and the vertical hallways have no back wall to hang one on.
+  - The paintings and lights on those two walls were rearranged around the arrows: 13 painting spots in all now.
+- **New murals:** floating isles, castle hill and moonlit forest.
+
