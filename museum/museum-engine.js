@@ -1614,6 +1614,34 @@ function safeSpots(r, def, inZone, limit) {
   fixed.forEach(v => (r.solid[v.y][v.x] = false));
   return out;
 }
+/* Runner tiles: [x, y, "h0".."v2", width in pixels]. In a hallway (up to 3 tiles of floor across) a runner sits in the middle
+   of the floor, whichever row (or column) it was painted on; in a room it sits on its own tile. */
+function runnerTiles(def) {
+  const isFloor = (x, y) => def.map[y] && (def.map[y][x] === "." || def.map[y][x] === "=");
+  const out = (def.runners || []).filter(t => Array.isArray(t) && /^[hv][012]$/.test(t[2]) && isFloor(t[0], t[1])).map(([x, y, k, wd]) => {
+    const across = k[0] === "h"; let a = across ? y : x, b = a;
+    while (b - a < 6 && (across ? isFloor(x, a - 1) : isFloor(a - 1, y))) a--;
+    while (b - a < 6 && (across ? isFloor(x, b + 1) : isFloor(b + 1, y))) b++;
+    const ok = b - a + 1 <= 3, mid = ok ? (a + b + 1) * T / 2 : ((across ? y : x) + 0.5) * T;
+    return { x, y, k, w: Math.max(10, Math.min(48, wd | 0 || 20)), mid, a, b, ok };
+  });
+  // Where two hallways cross, the floor is wide open: a tile there lines up with the runner on either side of it.
+  for (let pass = 0; pass < 4; pass++) out.forEach(t => {
+    if (t.ok) return;
+    const across = t.k[0] === "h", n = out.find(o => o.ok && o.k[0] === t.k[0] && (across ? o.y >= t.y - 2 && o.y <= t.y + 2 && Math.abs(o.x - t.x) === 1 : o.x >= t.x - 2 && o.x <= t.x + 2 && Math.abs(o.y - t.y) === 1));
+    if (n) { t.mid = n.mid; t.a = n.a; t.b = n.b; t.ok = true; }
+  });
+  return out;
+}
+/* One runner tile, any width: the art's border rows top and bottom, its plain field stretched between, and its pattern row
+   in the middle. (Down runners are the same, sideways.) img: the carpet_h or carpet_v sheet. */
+function drawRunner(ctx, img, ru, cx, cy) {
+  const across = ru.k[0] === "h", f = +ru.k[1] * T, w = ru.w;
+  const at = Math.round(ru.mid - w / 2), body = w - 6, pat = Math.min(4, body), gap = body - pat, g1 = gap >> 1;
+  // pieces of the art, measured across the runner: border 3..5, plain field row 5, pattern 6..9, border 10..12
+  const strip = (from, len, to, size) => { if (size <= 0) return; if (across) ctx.drawImage(img, f, from, T, len, ru.x * T - cx, to - cy, T, size); else ctx.drawImage(img, f + from, 0, len, T, to - cx, ru.y * T - cy, size, T); };
+  strip(3, 3, at, 3); strip(5, 1, at + 3, g1); strip(6, pat, at + 3 + g1, pat); strip(5, 1, at + 3 + g1 + pat, gap - g1); strip(10, 3, at + w - 3, 3);
+}
 function buildRoom(id, pieces, o) {
   const def = ROOMS[id], h = def.map.length, w = def.map[0].length, lay = layoutOf(def);
   const r = { id, name: def.name, w, h, tiles: mk(w, h, null), over: mk(w, h, null), solid: mk(w, h, false), events: {}, props: [], hung: [], npcs: [] };
@@ -1652,7 +1680,7 @@ function buildRoom(id, pieces, o) {
   }
   r.decals = def.decals || []; r.glows = def.glows || []; r.bunting = !!def.bunting;
   // Hallway dressing: carpet runner tiles [x, y, "h0".."v2"], accent lights on the wall [x, y], and arrow signs pointing the way.
-  r.runners = (def.runners || []).filter(t => Array.isArray(t) && /^[hv][012]$/.test(t[2]));
+  r.runners = runnerTiles(def);
   r.lamps = (def.lamps || []).filter(Array.isArray);
   r.arrows = (def.arrows || []).filter(a => a && typeof a === "object");
   r.arrows.forEach(a => { for (let i = 0; i < (a.w || 4); i++) { const k = (a.x + i) + "," + ((a.y || 1) + 1); if (!r.events[k]) r.events[k] = { arrow: a }; } });
@@ -4235,7 +4263,7 @@ class Game {
     for (const sw of r.switches || []) this.drawSlot("light_switch", 0, 0, sw.x * T - cx, sw.y * T - cy);
     if (r.intercomAt) this.drawSlot("intercom", 0, 0, r.intercomAt.x * T - cx, r.intercomAt.y * T - cy);
     for (const d of r.decals) this.drawSlot(d.key, 0, 0, d.x * T - cx, d.y * T - cy);
-    for (const [x, y, k] of r.runners) this.drawSlot(k[0] === "h" ? "carpet_h" : "carpet_v", +k[1], 0, x * T - cx, y * T - cy);
+    for (const ru of r.runners) drawRunner(ctx, this.sheet(ru.k[0] === "h" ? "carpet_h" : "carpet_v"), ru, cx, cy);
     for (const [x, y] of r.lamps) this.drawSlot("wall_sconce", 0, 0, x * T - cx, y * T - cy);
     for (const a of r.arrows) ctx.drawImage(this.arrowArt(a), a.x * T - cx, (a.y || 1) * T - cy);
     for (const [mx, my] of this.doorMats(r)) this.drawSlot("doormat", 0, 0, mx * T - cx, my * T - cy);
@@ -4346,11 +4374,11 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-11 hallways";
+const VERSION = "2026-10-11 hallways 2";
 window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
   spotRooms: () => Object.keys(ROOMS).filter(id => (ROOMS[id].spots || []).length).map(id => ({ id, name: ROOMS[id].name, n: ROOMS[id].spots.length })),
-  BUILTIN_ROOMS, applyRooms, normalizeRoom, SLOTS_BY_KEY: SLOT, normalizeLayout, carveLayout, hallRects, hallLength, layoutOf, LAYOUT_MAX_W, LAYOUT_MAX_H, SAMPLE_GENRES, genreOf, assignCases,
+  BUILTIN_ROOMS, applyRooms, normalizeRoom, SLOTS_BY_KEY: SLOT, normalizeLayout, carveLayout, hallRects, hallLength, layoutOf, LAYOUT_MAX_W, LAYOUT_MAX_H, SAMPLE_GENRES, genreOf, assignCases, runnerTiles, drawRunner,
   placeholderPainting: p => { const n = normalizePiece(p, 0); return paint([paintingGrid(n)], 24, 18, 1, n.colors); } };
 })();

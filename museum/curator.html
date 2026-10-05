@@ -325,7 +325,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-11 hallways";
+window.GOQ_WANT = "2026-10-11 hallways 2";
 (function load(retry) {
   const s = document.createElement("script");
   s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry ? "&r=" + Date.now() : "");
@@ -963,6 +963,11 @@ function renderRooms() {
     R.carpet = R.carpet || "h1";
     const piece = (k, l) => ({ label: l, on: R.carpet === k, swatch: carpetSwatch(k), pick: () => { R.carpet = k; renderRooms(); } });
     wrap.appendChild(paletteStrip([piece("h0", "Left end"), piece("h1", "Across"), piece("h2", "Right end"), piece("v0", "Top end"), piece("v1", "Down"), piece("v2", "Bottom end"), { label: "Remove", on: R.carpet === "x", pick: () => { R.carpet = "x"; renderRooms(); } }]));
+    R.carpetW = R.carpetW || 20;
+    const wv = el("b", { text: R.carpetW + " px" }), wi = el("input", { type: "range", min: 10, max: 32, step: 2, value: R.carpetW, "aria-label": "Runner width" });
+    wi.addEventListener("input", () => { R.carpetW = +wi.value; wv.textContent = R.carpetW + " px"; });
+    wrap.appendChild(el("div", { class: "rpick", style: "align-items:center;gap:10px;flex-wrap:wrap" }, [el("span", {}, [document.createTextNode("Width: "), wv]), wi,
+      el("button", { type: "button", class: "btn small quiet", text: "Use this width for every runner here", onclick: () => { snapshot(); const d = editable(R.id); (d.runners || []).forEach(t => { t[3] = R.carpetW; }); roomChanged(true); } })]));
   }
   if (R.tool === "shape") {
     R.shape = R.shape || ".";
@@ -982,7 +987,7 @@ function renderRooms() {
   left.appendChild(box); body.appendChild(left); wrap.appendChild(body);
   R.cv = cv; bindCanvas(cv);
   const hint = el("p", { class: "note rhint", text: {
-    carpet: "Drag along the floor to lay a carpet runner with the piece you picked: an end, the middle, the other end. Remove takes it up.",
+    carpet: "Drag along the floor to lay a carpet runner with the piece you picked: an end, the middle, the other end. In a hallway it sits in the middle of the floor. Remove takes it up.",
     shape: "Drag across a room's floor or walls to change its shape: alcoves and bump-outs (Add floor), pillars and notches (Add wall). Tweaks move with the room.",
     layout: "Drag a room to move it, or its walls to resize it. Drag a hallway sideways, or the round corner of an L. Tap one for its settings.",
     select: "Tap something to select it; drag to move it. Tap a door to choose where it leads. Tap empty floor for room settings.",
@@ -1065,7 +1070,7 @@ function drawEditor() {
     const sh = key && GOQ.SLOT[key] && edGame.sheet(key);
     if (sh) { const sl = GOQ.SLOT[key]; x.drawImage(sh, 0, 0, sl.w, sl.h, it.x * 16, (it.y + it.h) * 16 - sl.h, sl.w, sl.h); }
   }
-  if (R.tool === "carpet") (d.runners || []).forEach(([rx, ry, k]) => x.drawImage(edGame.sheet(k[0] === "h" ? "carpet_h" : "carpet_v"), +k[1] * 16, 0, 16, 16, rx * 16, ry * 16, 16, 16)); // live, while you paint
+  if (R.tool === "carpet") GOQ.runnerTiles(d).forEach(ru => GOQ.drawRunner(x, edGame.sheet(ru.k[0] === "h" ? "carpet_h" : "carpet_v"), ru, 0, 0)); // live, while you paint
   if (isLayout(d) && (R.tool === "layout" || R.tool === "shape")) drawLayout(x, d, z);
   else if (R.sel) { const it = roomItems(d).find(i => sameSel(i, R.sel)) || R.sel; outline(it, "#ffffff"); }
   if (R.hover) { x.fillStyle = "rgba(232,178,74,.25)"; x.fillRect(R.hover.x * 16, R.hover.y * 16, 16, 16); }
@@ -1446,9 +1451,12 @@ function shiftItems(items, box, dx, dy) {
 }
 /* Carpet tool: lay (or take up) one runner tile. Only on floor. */
 function carpetAt(t) {
-  const d = editable(R.id), ch = getCh(d, t.x, t.y);
-  d.runners = (d.runners || []).filter(r => r[0] !== t.x || r[1] !== t.y);
-  if (R.carpet !== "x" && (ch === "." || ch === "=")) d.runners.push([t.x, t.y, R.carpet || "h1"]);
+  const d = editable(R.id), ch = getCh(d, t.x, t.y), k = R.carpet || "h1";
+  // In a hallway a runner sits in the middle of the floor, so a tile anywhere across it replaces the one already there.
+  const span = dir => GOQ.runnerTiles({ map: d.map, runners: [[t.x, t.y, dir + "1"]] })[0];
+  const same = (r, dir) => { const s = span(dir); return s && r[2][0] === dir && (dir === "h" ? r[0] === t.x && r[1] >= s.a && r[1] <= s.b : r[1] === t.y && r[0] >= s.a && r[0] <= s.b); };
+  d.runners = (d.runners || []).filter(r => !(r[0] === t.x && r[1] === t.y) && !(k === "x" ? same(r, "h") || same(r, "v") : same(r, k[0])));
+  if (k !== "x" && (ch === "." || ch === "=")) d.runners.push([t.x, t.y, k, R.carpetW || 20]);
   roomChanged();
 }
 function carpetSwatch(k) {

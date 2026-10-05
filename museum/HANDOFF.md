@@ -337,7 +337,7 @@ Goal: character.
 - Later, if the layout works: the **rooftop**.
 
 **Phase 4 is going room by room. Hallways, step 1 (2026-10-11): built, waiting on your look.**
-- **Carpet runners.** Tile pieces in two directions, each with a start, a middle and an end. Paint them with the new **Carpet** tool in Rooms (any room). They're laid along every hallway, and they move with a dragged room or hallway. The art is replaceable in Art → Hallways.
+- **Carpet runners.** Tile pieces in two directions, each with a start, a middle and an end. In a hallway (up to 3 tiles across), a runner sits in the middle of the floor whichever row you paint it on, and lines up through crossings. Each tile has a width (10–32 px, default 20), set with the Carpet tool's slider; "Use this width for every runner here" changes them all at once. Paint them with the new **Carpet** tool in Rooms (any room). They're laid along every hallway, and they move with a dragged room or hallway. The art is replaceable in Art → Hallways.
 - **Accent lights.** Small brass wall lights with a warm glow, eight of them along the back walls of the horizontal hallways. Place more with Place → Hallways → Accent light. They go dark with the lights.
 - **Arrow signs.** A big arrow across the wall, in its genre's color with the genre's name on it.
   - The first one is in the Lower Hall, left of the café's south door: four tiles, pointing left, "ACTION" in soft red. Action's genre color is now soft red (#e0817a).
