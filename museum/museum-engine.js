@@ -1049,24 +1049,23 @@ const ROOMS = {
     layout: {
       hallArt: { top: "lobby_wall_top", upper: "lobby_wall_upper", lower: "lobby_wall_lower", floor: "lobby_floor" },
       rooms: [
-        { id: "cafe", name: "Café and Gift Shop", x: 22, y: 20, w: 18, h: 14, art: { top: "shop_wall_top", upper: "shop_wall_upper", lower: "shop_wall_lower", floor: "shop_floor" } },
-        { id: "puzzle", name: "Puzzle", x: 2, y: 4, w: 14, h: 12, art: { top: "gallery_wall_top", upper: "gallery_wall_upper", lower: "gallery_wall_lower", floor: "gallery_floor" } },
-        { id: "strategy", name: "Strategy", x: 46, y: 4, w: 14, h: 12, art: { top: "g2_wall_top", upper: "g2_wall_upper", lower: "g2_wall_lower", floor: "g2_floor" } },
-        { id: "action", name: "Action", x: 2, y: 24, w: 14, h: 15, art: { top: "g3_wall_top", upper: "g3_wall_upper", lower: "g3_wall_lower", floor: "g3_floor" } },
-        { id: "story", name: "Story", x: 46, y: 24, w: 14, h: 15, art: { top: "staff_wall_top", upper: "staff_wall_upper", lower: "staff_wall_lower", floor: "staff_floor" } },
+        { id: "cafe", name: "Café and Gift Shop", x: 21, y: 17, w: 16, h: 10, art: { top: "shop_wall_top", upper: "shop_wall_upper", lower: "shop_wall_lower", floor: "shop_floor" }, light: true },
+        { id: "puzzle", name: "Puzzle", x: 5, y: 6, w: 12, h: 10, art: { top: "gallery_wall_top", upper: "gallery_wall_upper", lower: "gallery_wall_lower", floor: "gallery_floor" }, light: true },
+        { id: "strategy", name: "Strategy", x: 41, y: 6, w: 12, h: 10, art: { top: "g2_wall_top", upper: "g2_wall_upper", lower: "g2_wall_lower", floor: "g2_floor" }, light: true },
+        { id: "action", name: "Action", x: 5, y: 29, w: 12, h: 10, art: { top: "g3_wall_top", upper: "g3_wall_upper", lower: "g3_wall_lower", floor: "g3_floor" }, light: true },
+        { id: "story", name: "Story", x: 41, y: 29, w: 12, h: 10, art: { top: "staff_wall_top", upper: "staff_wall_upper", lower: "staff_wall_lower", floor: "staff_floor" }, light: true },
       ],
       halls: [
-        { id: "upper", name: "Upper Hall", path: [[14, 6], [47, 6]], width: 2, min: 25 },
-        { id: "lower", name: "Lower Hall", path: [[14, 37], [47, 37]], width: 2, min: 25 },
-        { id: "lobbyhall", name: "Lobby Hall", path: [[30, 37], [30, 45]], width: 2, min: 8 },
-        { id: "cafe-south", name: "Café, south", path: [[30, 32], [30, 37]], width: 2 },
-        { id: "puzzle-cafe", name: "Puzzle to Café", path: [[14, 11], [26, 11], [26, 21]], width: 2 },
-        { id: "strategy-cafe", name: "Strategy to Café", path: [[47, 11], [34, 11], [34, 21]], width: 2 },
-        { id: "action-cafe", name: "Action to Café", path: [[14, 28], [23, 28]], width: 2 },
-        { id: "story-cafe", name: "Story to Café", path: [[38, 28], [47, 28]], width: 2 },
-        { id: "puzzle-action", name: "Puzzle to Action", path: [[8, 14], [8, 25]], width: 2 },
-        { id: "strategy-story", name: "Strategy to Story", path: [[52, 14], [52, 25]], width: 2 },
-        { id: "b1", name: "Stairs to B1", path: [[44, 37], [44, 42]], width: 2 },
+        { id: "upper", name: "Upper Hall", path: [[15, 9], [42, 9]], width: 2, min: 25 },
+        { id: "lower", name: "Lower Hall", path: [[14, 37], [42, 37]], width: 2, min: 25 },
+        { id: "lobbyhall", name: "Lobby Hall", path: [[28, 37], [28, 45]], width: 2, min: 8 },
+        { id: "cafe-south", name: "Café, south", path: [[28, 25], [28, 37]], width: 2, min: 0 },
+        { id: "cafe-west", name: "Café, west", path: [[21, 21], [10, 21]], width: 2, min: 0 },
+        { id: "cafe-north", name: "Café, north", path: [[28, 17], [28, 9]], width: 2, min: 0 },
+        { id: "cafe-east", name: "Café, east", path: [[35, 21], [46, 21]], width: 2, min: 0 },
+        { id: "puzzle-action", name: "Puzzle to Action", path: [[10, 14], [10, 29]], width: 2, min: 0 },
+        { id: "strategy-story", name: "Strategy to Story", path: [[46, 14], [46, 30]], width: 2, min: 0 },
+        { id: "b1", name: "Stairs to B1", path: [[41, 37], [41, 44], [44, 44]], width: 2, min: 0 },
       ],
       doors: [{ id: "lobby", zone: "lobbyhall", side: "bottom", at: 0, warp: ["lobby", 7, 3, "down"] }],
       stairs: [{ id: "b1", zone: "b1", at: [0, 6], kind: "down", arrive: "up", to: ["storage", 13, 5, "left"] }],
@@ -4206,7 +4205,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-08 one building";
+const VERSION = "2026-10-08 one building 2";
 window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
