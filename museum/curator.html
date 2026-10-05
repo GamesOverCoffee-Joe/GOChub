@@ -207,6 +207,9 @@ input[type=range]{accent-color:var(--gold);width:100%}
 .rfield input,.rfield select{font:inherit;font-weight:400;color:var(--text);background:var(--surface);border:2px solid var(--line);border-radius:3px;padding:6px 8px;min-height:40px}
 .rrow{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
 .rissues{margin:8px 0;padding-left:1.2em;color:var(--warn);font-size:.9rem}
+.note.warn{color:var(--warn)}
+.laylist{margin:8px 0;padding-left:1.2em;font-size:.9rem;line-height:1.6}
+.linkish{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer}
 
 .wtitle{margin:26px 0 6px;font-size:1.05rem}
 .wsearch{width:100%;max-width:480px;margin:6px 0 12px}
@@ -310,7 +313,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
           <button class="btn" type="button" id="rechore" title="Dust settles, plants get thirsty, the mug goes missing, visitors come back, lights come on">Reset chores</button>
           <button class="btn" type="button" id="figureBtn" title="The figure appears right now, beside or behind you, with this room's lights off. Turn and photograph it before it's gone.">Summon the figure</button>
           <button class="btn" type="button" id="dayBtn" title="Jump the preview to the next day: curious visitors come back, dust settles, the museum opens again">Skip to tomorrow</button>
-          <button class="btn" type="button" id="testPcs" aria-pressed="false" title="Fill the preview with 60 placeholder pieces so the oldest go to the archive on Someone's PC (B1). Never saved to the pack.">Test pieces: off</button>
+          <button class="btn" type="button" id="testPcs" aria-pressed="false" title="Fill the preview with 60 placeholder pieces so the oldest go to the rooms' touch screens. Never saved to the pack.">Test pieces: off</button>
         </div>
       </details>
     </div>
@@ -322,7 +325,15 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-06 life 4";
+window.GOQ_WANT = "2026-10-16 curator view";
+/* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
+   always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
+   gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
+if (/^https?:$/.test(location.protocol)) fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => (r.ok ? r.json() : null)).then(j => {
+  if (!j || !j.version || j.version === window.GOQ_WANT) return;
+  try { const k = "goq-fresh-" + location.pathname + j.version; if (sessionStorage.getItem(k)) return; sessionStorage.setItem(k, "1"); } catch (e) { return; }
+  const u = new URL(location.href); u.searchParams.set("fresh", j.version); location.replace(u.toString());
+}).catch(() => {});
 (function load(retry) {
   const s = document.createElement("script");
   s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry ? "&r=" + Date.now() : "");
@@ -364,6 +375,8 @@ function packOut() {
     if (p.gameUrl) o.gameUrl = p.gameUrl;
     if (p.hint) o.hint = p.hint;
     if (p.minds && p.minds.length) o.minds = p.minds;
+    if (p.genre) o.genre = p.genre;
+    if (p.blend) o.blend = p.blend;
     if (p.unveil) o.unveil = p.unveil;
     if (p.pick) o.pick = true;
     if (p.image) o.image = p.image; else { o.colors = p.colors; o.style = p.style; }
@@ -382,7 +395,7 @@ function changed(opts) {
     try { localStorage.setItem(DRAFT_KEY, JSON.stringify(packOut())); status("Saved in this browser"); }
     catch (e) { status("Too large to save in the browser. Export the pack to keep your changes.", true); }
     markPending();
-  }, opts.now ? 0 : 400);
+  }, opts.now ? 0 : opts.slow ? 1500 : 400); // saving the whole pack takes a moment: after editing rooms, wait until you pause
 }
 /* The preview only reloads when you press Apply (so it doesn't reshuffle with every keystroke or drag). */
 let pending = false;
@@ -423,14 +436,19 @@ async function refreshPreview() {
 function fillRoomPicker() {
   const sel = $("#goRoom"), cur = sel.value; sel.innerHTML = "";
   sel.appendChild(el("option", { value: "", text: "Go to room..." }));
-  Object.keys(GOQ.ROOMS).forEach(id => sel.appendChild(el("option", { value: id, text: GOQ.ROOMS[id].name.replace(/\s+/g, " ") })));
+  Object.keys(GOQ.ROOMS).forEach(id => {
+    const lay = GOQ.layoutOf(GOQ.ROOMS[id]);
+    if (!lay) { sel.appendChild(el("option", { value: id, text: GOQ.ROOMS[id].name.replace(/\s+/g, " ") })); return; }
+    // The museum: each of its rooms, then each hallway.
+    sel.appendChild(el("optgroup", { label: GOQ.ROOMS[id].name }, lay.zones.filter(z => z.kind === "room").concat(lay.zones.filter(z => z.kind !== "room")).map(z => el("option", { value: id + ":" + z.id, text: z.name }))));
+  });
   sel.value = "";
 }
 $("#applyBtn").addEventListener("click", async () => { await refreshPreview(); status("Preview updated"); stage.focus({ preventScroll: true }); });
 $("#goRoom").addEventListener("change", e => { const id = e.target.value; if (!id) return; game.teleport(id); e.target.value = ""; stage.focus({ preventScroll: true }); });
 // A second, hidden copy of the engine draws the Rooms editor's map, so editing never disturbs the live preview.
 const edWrap = el("div", { style: "position:absolute;left:-9999px;top:0;width:10px;height:10px;overflow:hidden", "aria-hidden": "true" }); document.body.appendChild(edWrap);
-const edGame = new GOQ.Game(edWrap, undefined, { curator: true, capture: "focus", saveKey: null });
+const edGame = new GOQ.Game(edWrap, undefined, { curator: true, capture: "focus", saveKey: null, headless: true });
 function fitPreview() {
   const w = window.innerWidth;
   game.fit(w > 1400 ? 480 : w > 980 ? 360 : Math.min(480, w - 60), 400);
@@ -456,7 +474,7 @@ $("#figureBtn").addEventListener("click", () => {
 $("#dayBtn").addEventListener("click", () => { game.closeAll(); game.skipDay(); stage.focus({ preventScroll: true }); });
 $("#testPcs").addEventListener("click", async e => {
   testPieces = !testPieces; e.currentTarget.textContent = "Test pieces: " + (testPieces ? "on" : "off"); e.currentTarget.setAttribute("aria-pressed", testPieces);
-  await refreshPreview(); status(testPieces ? "Preview has 60 test pieces; the oldest are in the archive on Someone's PC (Storage)" : "Test pieces removed from the preview");
+  await refreshPreview(); status(testPieces ? "Preview has 60 test pieces; the oldest are on the rooms' touch screens" : "Test pieces removed from the preview");
   stage.focus({ preventScroll: true });
 });
 // Spooky: "always" makes the rare creepy moment happen on every closing, handy for recording an end-card.
@@ -822,6 +840,7 @@ const PLACE_GROUPS = [
   { name: "Display", items: [
     { kind: "case", name: "Episode case", key: "display_case", note: "Episodes fill cases in Pieces order. Stand it on the floor with room to walk all the way around." },
     { kind: "spot", name: "Painting spot", key: "wall_frame_wood", note: "Community pieces hang here. Tap the wall; it takes two tiles across both wall rows." },
+    { kind: "prop", key: "overflow_screen", name: "Touch screen", note: "The room's extra pieces: episodes of its genre that don't fit in its cases. One per room is plenty." },
   ] },
   { name: "Furniture", items: ["bench", "plant", "sign_stand", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board"].map(k => ({ kind: "prop", key: k })) },
   { name: "Shop and café", items: ["shelf_unit", "magazine_rack", "item_rack", "shop_counter", "cafe_counter", "bus_tub", "cafe_table", "cafe_stool", "floor_lamp", "postcard_spinner", "basket", "planter", "cat_bed"].map(k => ({ kind: "prop", key: k }))
@@ -829,6 +848,11 @@ const PLACE_GROUPS = [
   { name: "Storage and floors", items: [{ kind: "stairs", key: "stair_up", name: "Stairs up", note: "Step on it to change floors. Select it to choose where it leads." },
     { kind: "stairs", key: "stair_down", name: "Stairs down", note: "Step on it to change floors. Select it to choose where it leads." }]
     .concat(["railing", "storage_shelves", "box_stack", "workbench"].map(k => ({ kind: "prop", key: k }))) },
+  { name: "Hallways", items: [
+    { kind: "lamp", key: "wall_sconce", name: "Accent light", note: "A small wall light. Tap a wall (the back wall of a room or hallway)." },
+    { kind: "mural", key: "mural_dusk", name: "Mural", note: "A landscape painted along the top row of a wall. Tap a wall: it fills that stretch of wall. Pick its art and which part of it shows after." },
+    { kind: "arrow", key: "carpet_h", name: "Arrow sign", note: "A big arrow across the wall, four tiles long, pointing the way to a room. Tap a wall, then pick its room and direction." },
+  ] },
   { name: "On the wall", items: ["shop_shelves", "shop_posters", "mug_shelf", "cafe_menu"].map(k => ({ kind: "wallArt", key: k })) },
   { name: "Spots", items: [
     { kind: "spawn", name: "Start spot", key: "player", note: "Where you appear when the preview jumps here." },
@@ -844,7 +868,11 @@ const clone = o => JSON.parse(JSON.stringify(o));
 const R = { id: "lobby", tool: "select", brush: TILE_BRUSHES[0], place: null, sel: null, zoom: 0, panX: 0, panY: 0, undo: [], redo: [], img: null, grid: true, linking: null };
 
 function roomIds() { const ids = Object.keys(GOQ.BUILTIN_ROOMS); for (const id in (draft.rooms || {})) if (!ids.includes(id)) ids.push(id); return ids; }
-function roomDef(id) { return (draft.rooms && draft.rooms[id]) || GOQ.BUILTIN_ROOMS[id] || GOQ.ROOMS[id]; }
+function roomDef(id) {
+  const d = (draft.rooms && draft.rooms[id]) || GOQ.BUILTIN_ROOMS[id] || GOQ.ROOMS[id];
+  if (d && d.layout && !Array.isArray(d.map)) recarve(d); // a pack can hold just the museum's layout: work out its map here
+  return d;
+}
 function editable(id) { draft.rooms = draft.rooms || {}; if (!draft.rooms[id]) draft.rooms[id] = clone(GOQ.BUILTIN_ROOMS[id]); return draft.rooms[id]; }
 function W(d) { return d.map[0].length; } function H(d) { return d.map.length; }
 function setCh(d, x, y, ch) { if (y < 0 || y >= H(d) || x < 0 || x >= W(d)) return; d.map[y] = d.map[y].slice(0, x) + ch + d.map[y].slice(x + 1); }
@@ -858,8 +886,12 @@ function restore(from, to) {
 }
 let roomT = 0;
 function roomChanged(now) {
+  const u = $("#rUndo"), r = $("#rRedo"); if (u) u.disabled = !R.undo.length; if (r) r.disabled = !R.redo.length;
+  // Mid-drag, only redraw the editor: rebuilding the whole museum on every step made dragging laggy. It catches up when you let go.
+  if (!now && R.stroking && isLayout(roomDef(R.id))) { drawEditor(); return; }
   clearTimeout(roomT);
-  roomT = setTimeout(async () => { await edGame.setPack(packOut()); R.img = edGame.renderRoomFull(R.id, true); drawEditor(); renderInspector(); changed(); }, now ? 0 : 90);
+  // Only the rooms changed, so the editor's copy of the museum just rebuilds its rooms (no art to reload).
+  roomT = setTimeout(async () => { if (edGame.pack) edGame.quickRooms(packOut().rooms); else await edGame.setPack(packOut()); R.img = edGame.renderRoomFull(R.id, true); drawEditor(); renderInspector(); changed({ slow: true }); }, now ? 0 : 90);
   drawEditor();
 }
 
@@ -871,15 +903,18 @@ function roomItems(d) {
   (d.catSpots || []).forEach((p, i) => out.push({ type: "catSpot", i, x: p[0], y: p[1], w: 1, h: 1, label: "Cat nap spot" }));
   (d.glows || []).forEach((p, i) => out.push({ type: "glow", i, x: p[0], y: p[1], w: 1, h: 1, label: "Light" }));
   (d.mugSpots || []).forEach((p, i) => out.push({ type: "mugSpot", i, x: p[0], y: p[1], w: 1, h: 1, label: "Mug spot" }));
-  [["lightSwitch", "Light switch", 1, 1], ["intercom", "Intercom", 1, 1], ["timeClock", "Time clock", 1, 1], ["elevatorPanel", "Elevator panel", 1, 1]].forEach(([k, l, w, h]) => { if (d[k]) out.push({ type: "fixed", key: k, x: d[k][0], y: d[k][1], w, h, label: l }); });
+  [["lightSwitch", "Light switch", 1, 1], ["intercom", "Intercom", 1, 1], ["timeClock", "Time clock", 1, 1]].forEach(([k, l, w, h]) => { if (d[k]) out.push({ type: "fixed", key: k, x: d[k][0], y: d[k][1], w, h, label: l }); });
   [["windowAt", "Window"], ["eotmAt", "Employee of the Month"], ["corkboardAt", "Corkboard"], ["leaderboardAt", "Staff leaderboard"]].forEach(([k, l]) => { if (d[k]) out.push({ type: "fixed", key: k, x: d[k][0], y: 1, w: 2, h: 2, label: l }); });
   if (d.featuredAt) out.push({ type: "fixed", key: "featuredAt", x: d.featuredAt[0], y: d.featuredAt[1] - 1, w: 1, h: 2, label: "Featured item stand" });
   (d.stairs || []).forEach((st, i) => out.push({ type: "stairs", i, x: st.x, y: st.y, w: 1, h: 1, label: st.kind === "up" ? "Stairs up" : "Stairs down" }));
   (d.cases || []).forEach((c, i) => out.push({ type: "case", i, x: c[0], y: c[1] - 1, w: 1, h: 2, label: "Episode case " + (i + 1) }));
   (d.props || []).forEach((p, i) => { const h = sh(p.key); out.push({ type: "prop", i, x: p.x, y: p.y - (h - 1), w: sw(p.key), h, label: (GOQ.SLOT[p.key] || {}).label || p.key }); });
   (d.lockers || []).forEach((x, i) => out.push({ type: "locker", i, x, y: 1, w: 1, h: 2, label: "Locker" }));
-  (d.spots || []).forEach((x, i) => out.push({ type: "spot", i, x, y: 1, w: 2, h: 2, label: "Painting spot " + (i + 1) }));
-  (d.wallArt || []).forEach((a, i) => out.push({ type: "wallArt", i, x: a.x, y: 1, w: sw(a.key), h: 2, label: (GOQ.SLOT[a.key] || {}).label || a.key }));
+  (d.spots || []).forEach((s, i) => out.push({ type: "spot", i, x: Array.isArray(s) ? s[0] : s, y: Array.isArray(s) ? s[1] : 1, w: 2, h: 2, label: "Painting spot " + (i + 1) }));
+  (d.wallArt || []).forEach((a, i) => out.push({ type: "wallArt", i, x: a.x, y: a.y || 1, w: sw(a.key), h: 2, label: (GOQ.SLOT[a.key] || {}).label || a.key }));
+  (d.murals || []).forEach((m, i) => out.push({ type: "mural", i, x: m.x, y: m.y, w: m.w || 1, h: 1, label: "Mural" }));
+  (d.lamps || []).forEach((a, i) => out.push({ type: "lamp", i, x: a[0], y: a[1], w: 1, h: 1, label: "Accent light" }));
+  (d.arrows || []).forEach((a, i) => out.push({ type: "arrow", i, x: a.x, y: a.y || 1, w: a.w || 4, h: 2, label: "Arrow sign" }));
   (d.decals || []).forEach((a, i) => out.push({ type: "decal", i, x: a.x, y: a.y, w: sw(a.key), h: sh(a.key), label: (GOQ.SLOT[a.key] || {}).label || a.key }));
   return out;
 }
@@ -890,7 +925,15 @@ function doorTileAt(d, x, y) {
   const ey = ch === "D" || ch === "S" ? y + 1 : y; // the event sits on the lower half
   return { x, y: ey, ch: getCh(d, x, ey) };
 }
-function doorEvent(d, x, y) { return (d.events || []).find(e => e.x === x && e.y === y && (e.warp || e.frontDoor || e.staffDoor || e.shopDoor || e.elevatorDoor || e.elevatorExit)); }
+function doorEvent(d, x, y) {
+  return (d.events || []).find(e => e.x === x && e.y === y && (e.warp || e.frontDoor || e.staffDoor || e.shopDoor))
+    || (isLayout(d) ? GOQ.carveLayout(GOQ.normalizeLayout(d.layout)).doors.find(e => e.x === x && e.y === y) : null); // the museum's doorways are part of its layout
+}
+/* Where a door leads, in words. "@lobby" means the museum's doorway (or stairs) of that name. */
+function whereTo(to) {
+  if (typeof to[1] === "string") return "Leads to " + roomDef(to[0]).name + " (its \u201c" + to[1].replace(/^@/, "") + "\u201d doorway).";
+  return "Leads to " + roomDef(to[0]).name + ", at column " + (to[1] + 1) + ", row " + (to[2] + 1) + ", facing " + to[3] + ".";
+}
 function sameSel(a, b) { return a && b && a.type === b.type && a.i === b.i && a.key === b.key && a.x === b.x && a.y === b.y; }
 
 /* ----- the editor screen ----- */
@@ -899,17 +942,21 @@ function renderRooms() {
   if (!roomIds().includes(R.id)) R.id = "lobby";
   const wrap = el("section", { class: "rooms" }); main.appendChild(wrap);
   const pick = el("select", { "aria-label": "Room" }, roomIds().map(id => el("option", { value: id, text: roomDef(id).name + (draft.rooms && draft.rooms[id] ? (GOQ.BUILTIN_ROOMS[id] ? " (edited)" : " (new)") : "") })));
-  pick.value = R.id; pick.addEventListener("change", () => { R.id = pick.value; R.sel = null; R.zoom = 0; openRoom(); });
-  const tools = el("div", { class: "rtools", role: "toolbar", "aria-label": "Tools" }, [
-    ["select", "Select"], ["paint", "Paint"], ["fill", "Fill"], ["erase", "Erase"], ["place", "Place"],
-  ].map(([t, l]) => el("button", { type: "button", class: "btn small" + (R.tool === t ? " on" : ""), "aria-pressed": R.tool === t, text: l, onclick: () => { R.tool = t; R.linking = null; renderRooms(); } })));
+  pick.value = R.id; pick.addEventListener("change", () => { R.id = pick.value; R.sel = null; R.laySel = null; R.zoom = 0; if (isLayout(roomDef(R.id))) R.tool = "layout"; renderRooms(); });
+  // The museum is drawn from its layout, so it has a Layout tool instead of tile painting.
+  const lay = isLayout(roomDef(R.id));
+  if (lay && ["paint", "fill", "erase"].includes(R.tool)) R.tool = "layout";
+  if (!lay && (R.tool === "layout" || R.tool === "shape")) R.tool = "select";
+  const tools = el("div", { class: "rtools", role: "toolbar", "aria-label": "Tools" }, (lay ? [["layout", "Layout"], ["shape", "Shape"], ["carpet", "Carpet"], ["select", "Select"], ["place", "Place"]] : [
+    ["select", "Select"], ["paint", "Paint"], ["fill", "Fill"], ["erase", "Erase"], ["carpet", "Carpet"], ["place", "Place"],
+  ]).map(([t, l]) => el("button", { type: "button", class: "btn small" + (R.tool === t ? " on" : ""), "aria-pressed": R.tool === t, text: l, onclick: () => { R.tool = t; R.linking = null; renderRooms(); } })));
   wrap.appendChild(el("div", { class: "rhead" }, [
     pick,
 
     tools,
     el("div", { class: "rtools" }, [
-      el("button", { type: "button", class: "btn small quiet", text: "Undo", disabled: !R.undo.length, onclick: () => { restore(R.undo, R.redo); renderRooms(); } }),
-      el("button", { type: "button", class: "btn small quiet", text: "Redo", disabled: !R.redo.length, onclick: () => { restore(R.redo, R.undo); renderRooms(); } }),
+      el("button", { type: "button", id: "rUndo", class: "btn small quiet", text: "Undo", disabled: !R.undo.length, onclick: () => { restore(R.undo, R.redo); renderRooms(); } }),
+      el("button", { type: "button", id: "rRedo", class: "btn small quiet", text: "Redo", disabled: !R.redo.length, onclick: () => { restore(R.redo, R.undo); renderRooms(); } }),
 
       (() => { const m = el("details", { class: "rmore" }, [el("summary", { class: "btn small quiet", text: "More" }), el("div", { class: "rmenu" }, [
         el("button", { type: "button", class: "btn small quiet", text: "New room", onclick: newRoom }),
@@ -925,6 +972,22 @@ function renderRooms() {
     wrap.appendChild(el("div", { class: "rpick" }, [el("button", { type: "button", class: "rchip on", onclick: () => openChooser("Paint with", [{ name: "Tiles", items: TILE_BRUSHES.filter(b => R.tool === "paint" || !b.pair).map(b => ({ label: b.name, on: R.brush.ch === b.ch, swatch: brushSwatch(b), pick: () => { R.brush = b; } })) }]) },
       [brushSwatch(R.brush), el("span", { text: R.brush.name }), el("b", { text: "Change", class: "rchg" })])]));
   }
+  if (R.tool === "carpet") {
+    R.carpet = R.carpet || "h1";
+    const piece = (k, l) => ({ label: l, on: R.carpet === k, swatch: carpetSwatch(k), pick: () => { R.carpet = k; renderRooms(); } });
+    wrap.appendChild(paletteStrip([piece("h0", "Left end"), piece("h1", "Across"), piece("h2", "Right end"), piece("v0", "Top end"), piece("v1", "Down"), piece("v2", "Bottom end"),
+      piece("c0", "Corner \u250c"), piece("c1", "Corner \u2510"), piece("c2", "Corner \u2514"), piece("c3", "Corner \u2518"), { label: "Remove", on: R.carpet === "x", pick: () => { R.carpet = "x"; renderRooms(); } }]));
+    wrap.lastChild.style.flexWrap = "wrap"; // all eleven pieces in view
+    R.carpetW = R.carpetW || 20;
+    const wv = el("b", { text: R.carpetW + " px" }), wi = el("input", { type: "range", min: 10, max: 32, step: 2, value: R.carpetW, "aria-label": "Runner width" });
+    wi.addEventListener("input", () => { R.carpetW = +wi.value; wv.textContent = R.carpetW + " px"; });
+    wrap.appendChild(el("div", { class: "rpick", style: "align-items:center;gap:10px;flex-wrap:wrap" }, [el("span", {}, [document.createTextNode("Width: "), wv]), wi,
+      el("button", { type: "button", class: "btn small quiet", text: "Use this width for every runner here", onclick: () => { snapshot(); const d = editable(R.id); (d.runners || []).forEach(t => { t[3] = R.carpetW; }); roomChanged(true); } })]));
+  }
+  if (R.tool === "shape") {
+    R.shape = R.shape || ".";
+    wrap.appendChild(paletteStrip([[".", "Add floor"], ["#", "Add wall"], ["x", "Back to the plan"]].map(([v, l]) => ({ label: l, on: R.shape === v, pick: () => { R.shape = v; renderRooms(); } }))));
+  }
   if (R.tool === "place") {
     const cur = R.place, lbl = it => it.name || (GOQ.SLOT[it.key] || {}).label || it.key;
     wrap.appendChild(el("div", { class: "rpick" }, [el("button", { type: "button", class: "rchip on", onclick: () => openChooser("Place", PLACE_GROUPS.map(g => ({ name: g.name, items: g.items.map(it => ({ label: lbl(it), on: R.place === it, swatch: slotSwatch(it.key), pick: () => { R.place = it; } })) }))) },
@@ -939,6 +1002,9 @@ function renderRooms() {
   left.appendChild(box); body.appendChild(left); wrap.appendChild(body);
   R.cv = cv; bindCanvas(cv);
   const hint = el("p", { class: "note rhint", text: {
+    carpet: "Drag along the floor to lay a carpet runner with the piece you picked: an end, the middle, the other end. In a hallway it sits in the middle of the floor. Remove takes it up.",
+    shape: "Drag across a room's floor or walls to change its shape: alcoves and bump-outs (Add floor), pillars and notches (Add wall). Tweaks move with the room.",
+    layout: "Drag a room to move it, or its walls to resize it. Drag a hallway sideways, or the round corner of an L. Tap one for its settings.",
     select: "Tap something to select it; drag to move it. Tap a door to choose where it leads. Tap empty floor for room settings.",
     paint: "Drag to paint tiles. " + (R.brush.note || ""), fill: "Tap to fill a connected area of the same tile.",
     erase: "Tap a thing to remove it, or a tile to turn it back into floor.", place: R.place ? "Tap the map to place: " + (R.place.name || (GOQ.SLOT[R.place.key] || {}).label) + ". " + (R.place.note || "") : "Pick something above, then tap the map.",
@@ -1012,7 +1078,16 @@ function drawEditor() {
     const ch = getCh(d, tx, ty); if (!"dsBEH".includes(ch)) continue;
     const ev = doorEvent(d, tx, ty); tag(tx, ty, ev ? "\u2192" : "!", ev ? "#e8b24a" : "#f08a6a");
   }
-  if (R.sel) { const it = roomItems(d).find(i => sameSel(i, R.sel)) || R.sel; outline(it, "#ffffff"); }
+  if (drag && drag.it && R.sel) { // dragging: the map catches up on release, so shade where it was and draw it where it's going
+    const o = drag.it, it = roomItems(d).find(i => sameSel(i, R.sel)) || R.sel;
+    x.fillStyle = "rgba(18,11,14,.55)"; x.fillRect(o.x * 16, o.y * 16, o.w * 16, o.h * 16);
+    const key = it.type === "prop" ? (d.props[it.i] || {}).key : it.type === "decal" ? (d.decals[it.i] || {}).key : it.type === "wallArt" ? (d.wallArt[it.i] || {}).key : it.type === "case" ? "display_case" : it.type === "spot" ? "wall_frame_wood" : null;
+    const sh = key && GOQ.SLOT[key] && edGame.sheet(key);
+    if (sh) { const sl = GOQ.SLOT[key]; x.drawImage(sh, 0, 0, sl.w, sl.h, it.x * 16, (it.y + it.h) * 16 - sl.h, sl.w, sl.h); }
+  }
+  if (R.tool === "carpet") GOQ.runnerTiles(d).forEach(ru => GOQ.drawRunner(x, edGame.sheet(ru.k[0] === "v" ? "carpet_v" : "carpet_h"), ru, 0, 0)); // live, while you paint
+  if (isLayout(d) && (R.tool === "layout" || R.tool === "shape")) drawLayout(x, d, z);
+  else if (R.sel) { const it = roomItems(d).find(i => sameSel(i, R.sel)) || R.sel; outline(it, "#ffffff"); }
   if (R.hover) { x.fillStyle = "rgba(232,178,74,.25)"; x.fillRect(R.hover.x * 16, R.hover.y * 16, 16, 16); }
   x.restore();
 }
@@ -1059,7 +1134,7 @@ function bindCanvas(cv) {
       stroke.started = true;
       const d = roomDef(R.id), onThing = itemAt(d, press.t.x, press.t.y);
       // Paint paints; Select drags the thing under your finger; otherwise one finger slides the map.
-      if (R.tool === "paint" || (R.tool === "select" && onThing && onThing.type !== "locker")) beginStroke(press.t);
+      if (R.tool === "paint" || (R.tool === "select" && onThing && onThing.type !== "locker") || (R.tool === "layout" && layHit(d.layout, press.t)) || R.tool === "shape" || R.tool === "carpet") beginStroke(press.t);
       else { gesture = { a: { x: press.x, y: press.y }, b: null, panX: R.panX, panY: R.panY, zoom: R.zoom, mouse: true, one: true }; press = null; stroke = null; return; }
     }
     moveStroke(t);
@@ -1081,7 +1156,10 @@ function zoomAt(cx, cy, k) {
 }
 let drag = null;
 function beginStroke(t) {
-  const d = roomDef(R.id);
+  const d = roomDef(R.id); R.stroking = true;
+  if (R.tool === "layout") { layBegin(t); return; }
+  if (R.tool === "shape") { snapshot(); shapeAt(t); return; }
+  if (R.tool === "carpet") { snapshot(); carpetAt(t); return; }
   if (R.tool === "paint") { snapshot(); paintAt(t); return; }
   if (R.tool === "select") {
     const it = itemAt(d, t.x, t.y); if (!it || it.type === "locker") return;
@@ -1089,17 +1167,23 @@ function beginStroke(t) {
   }
 }
 function moveStroke(t) {
+  if (R.tool === "layout") { layMove(t); return; }
+  if (R.tool === "shape") { shapeAt(t); return; }
+  if (R.tool === "carpet") { carpetAt(t); return; }
   if (R.tool === "paint") { paintAt(t); return; }
   if (R.tool === "select" && drag) {
     const dx = t.x - drag.last.x, dy = t.y - drag.last.y; if (!dx && !dy) return;
     moveItem(editable(R.id), R.sel, dx, dy); R.sel.x += dx; R.sel.y += dy; drag.last = t; roomChanged();
   }
 }
-function endStroke() { drag = null; roomChanged(true); }
+function endStroke() { R.stroking = false; drag = null; if (R.layDrag) { R.layDrag = null; renderInspector(); } roomChanged(true); }
 function tapTool(t) {
   const d = roomDef(R.id);
-  if (t.x < 0 || t.y < 0 || t.x >= W(d) || t.y >= H(d)) { R.sel = null; drawEditor(); renderInspector(); return; }
+  if (t.x < 0 || t.y < 0 || t.x >= W(d) || t.y >= H(d)) { R.sel = null; R.laySel = null; drawEditor(); renderInspector(); return; }
   if (R.linking) { finishLink(t); return; }
+  if (R.tool === "layout") { layTap(t); return; }
+  if (R.tool === "shape") { snapshot(); shapeAt(t); roomChanged(true); return; }
+  if (R.tool === "carpet") { snapshot(); carpetAt(t); roomChanged(true); return; }
   if (R.tool === "select") { selectAt(t); return; }
   if (R.tool === "paint") { snapshot(); paintAt(t); roomChanged(true); return; }
   if (R.tool === "fill") { snapshot(); fillAt(t); return; }
@@ -1142,8 +1226,26 @@ function eraseAt(t) {
 function placeAt(t) {
   const d = editable(R.id), p = R.place, s = GOQ.SLOT[p.key] || { w: 16, h: 16 }, w = s.w / 16, tall = s.h >= 32;
   if (p.kind === "case") (d.cases = d.cases || []).push([t.x, t.y]);
-  else if (p.kind === "spot") (d.spots = d.spots || []).push(t.x);
-  else if (p.kind === "wallArt") (d.wallArt = d.wallArt || []).push({ key: p.key, x: t.x, say: ["(What it says when someone looks at it.)"] });
+  else if (p.kind === "mural") {
+    const wy = isLayout(d) ? wallRowAt(d, t) : 1;
+    if (wy === null) { status("Tap a wall (the back wall of a room or hallway) to paint a mural.", true); R.undo.pop(); return; }
+    let x0 = t.x, x1 = t.x; const wall = x => getCh(d, x, wy) === "^" && getCh(d, x, wy + 1) === "v";
+    while (wall(x0 - 1)) x0--; while (wall(x1 + 1)) x1++; // the whole stretch of wall you tapped
+    (d.murals = d.murals || []).push({ x: x0, y: wy, w: x1 - x0 + 1, key: "mural_dusk" });
+  }
+  else if (p.kind === "lamp" || p.kind === "arrow") {
+    const wy = isLayout(d) ? wallRowAt(d, t) : 1;
+    if (wy === null) { status("Tap a wall (the back wall of a room or hallway) to hang it.", true); R.undo.pop(); return; }
+    if (p.kind === "lamp") (d.lamps = d.lamps || []).push([t.x, wy]);
+    else (d.arrows = d.arrows || []).push({ x: t.x, y: wy, w: 4, dir: "right", genre: ((draft.settings.genres || [])[0] || {}).id || "" });
+  }
+  else if (p.kind === "spot" || p.kind === "wallArt") {
+    // The museum has walls at every height: hang it on the wall you tapped (or the one just above).
+    const wy = isLayout(d) ? wallRowAt(d, t) : 1;
+    if (wy === null) { status("Tap a wall (the back wall of a room or hallway) to hang it.", true); R.undo.pop(); return; }
+    if (p.kind === "spot") (d.spots = d.spots || []).push(isLayout(d) ? [t.x, wy] : t.x);
+    else (d.wallArt = d.wallArt || []).push(Object.assign({ key: p.key, x: t.x, say: ["(What it says when someone looks at it.)"] }, isLayout(d) ? { y: wy } : {}));
+  }
   else if (p.kind === "decal") (d.decals = d.decals || []).push({ key: p.key, x: t.x, y: t.y });
   else if (p.kind === "spawn") d.spawn = [t.x, t.y, (d.spawn && d.spawn[2]) || "down"];
   else if (p.kind === "catSpot") (d.catSpots = d.catSpots || []).push([t.x, t.y]);
@@ -1166,6 +1268,7 @@ function placeAt(t) {
     if (p.key === "bus_tub") prop.event = { trash: true, tub: true };
     if (p.key === "workbench") prop.event = { upcoming: true };
     if (p.key === "someones_pc") prop.event = { pc: true };
+    if (p.key === "overflow_screen") prop.event = { kiosk: true };
     if (p.key === "fridge") { prop.blockTop = true; prop.event = { fridge: true }; }
     if (p.key === "microwave_counter") prop.event = { microwave: true };
     if (p.key === "patron_board") { prop.blockTop = true; prop.event = { patronBoard: true }; }
@@ -1181,18 +1284,28 @@ function placeAt(t) {
   roomChanged(true);
 }
 function removeItem(d, it) {
-  const arr = { glow: "glows", visitor: "visitors", catSpot: "catSpots", mugSpot: "mugSpots", case: "cases", prop: "props", spot: "spots", wallArt: "wallArt", decal: "decals", stairs: "stairs" }[it.type];
+  const arr = { mural: "murals", lamp: "lamps", arrow: "arrows", glow: "glows", visitor: "visitors", catSpot: "catSpots", mugSpot: "mugSpots", case: "cases", prop: "props", spot: "spots", wallArt: "wallArt", decal: "decals", stairs: "stairs" }[it.type];
   if (arr) d[arr].splice(it.i, 1);
   else if (it.type === "fixed") delete d[it.key];
 }
+/* Wall things sit on a back wall's upper row. In the museum they can move to another wall: dy, if that's a wall too, else 0. */
+function wallRowMove(d, x, y, dy) { return dy && isLayout(d) && getCh(d, x, y + dy) === "^" && getCh(d, x, y + dy + 1) === "v" ? dy : 0; }
+/* The upper wall row for a tap on a wall (or the floor just below it), or null. */
+function wallRowAt(d, t) {
+  for (const y of [t.y, t.y - 1, t.y - 2, t.y - 3]) if (getCh(d, t.x, y) === "^" && getCh(d, t.x, y + 1) === "v") return y;
+  return null;
+}
 function moveItem(d, it, dx, dy) {
-  const sety = it.type !== "spot" && it.type !== "wallArt" && !(it.type === "fixed" && ["windowAt", "eotmAt", "corkboardAt", "leaderboardAt"].includes(it.key));
+  const sety = it.type !== "spot" && it.type !== "wallArt" && it.type !== "lamp" && it.type !== "arrow" && it.type !== "mural" && !(it.type === "fixed" && ["windowAt", "eotmAt", "corkboardAt", "leaderboardAt"].includes(it.key));
   const mv = o => { o.x += dx; if (sety) o.y += dy; };
   if (it.type === "visitor") mv(d.visitors[it.i]);
   else if (it.type === "prop") mv(d.props[it.i]);
   else if (it.type === "decal") mv(d.decals[it.i]);
-  else if (it.type === "wallArt") d.wallArt[it.i].x += dx;
-  else if (it.type === "spot") d.spots[it.i] += dx;
+  else if (it.type === "mural") { const a = d.murals[it.i]; a.x += dx; const ny = wallRowMove(d, a.x, a.y, dy); if (ny) { a.y += ny; it.y += ny; } }
+  else if (it.type === "lamp") { const a = d.lamps[it.i]; a[0] += dx; const ny = wallRowMove(d, a[0], a[1], dy); if (ny) { a[1] += ny; it.y += ny; } }
+  else if (it.type === "arrow") { const a = d.arrows[it.i]; a.x += dx; const ny = wallRowMove(d, a.x, a.y || 1, dy); if (ny) { a.y = (a.y || 1) + ny; it.y += ny; } }
+  else if (it.type === "wallArt") { const a = d.wallArt[it.i]; a.x += dx; const ny = wallRowMove(d, a.x, a.y || 1, dy); if (ny) { a.y = (a.y || 1) + ny; it.y += ny; } }
+  else if (it.type === "spot") { const v = d.spots[it.i]; if (Array.isArray(v)) { v[0] += dx; const ny = wallRowMove(d, v[0], v[1], dy); if (ny) { v[1] += ny; it.y += ny; } } else d.spots[it.i] += dx; }
   else if (it.type === "case") { d.cases[it.i][0] += dx; d.cases[it.i][1] += dy; }
   else if (it.type === "stairs") { d.stairs[it.i].x += dx; d.stairs[it.i].y += dy; }
   else if (it.type === "catSpot") { d.catSpots[it.i][0] += dx; d.catSpots[it.i][1] += dy; }
@@ -1203,6 +1316,288 @@ function moveItem(d, it, dx, dy) {
   if (!sety) it.y -= dy; // wall things stay on the wall rows
 }
 
+/* ----- the museum's layout -----
+   The museum is drawn from a blueprint: rooms are rectangles of floor, hallways are straight or L-shaped runs between them.
+   With the Layout tool: drag a room to move it, drag its walls to resize it, drag a hallway sideways, or drag the corner of
+   an L. Hallways stay attached to whatever their ends sit in. */
+const isLayout = d => !!(d && d.layout);
+const inR = (r, x, y) => x >= r.x && y >= r.y && x < r.x + r.w && y < r.y + r.h;
+function recarve(d) { d.layout = GOQ.normalizeLayout(d.layout); const c = GOQ.carveLayout(d.layout); d.map = c.map.slice(); d.spawn = c.spawn.slice(); }
+function layRoom(L, id) { return L.rooms.find(r => r.id === id); }
+function layHall(L, id) { return L.halls.find(h => h.id === id); }
+/* What a hallway's end sits in: a room, or another hallway. */
+function layOwner(L, h, p) {
+  const r = L.rooms.find(r => inR(r, p[0], p[1])); if (r) return { room: r.id };
+  const o = L.halls.find(o => o !== h && GOQ.hallRects(o).some(rc => inR(rc, p[0], p[1]))); return o ? { hall: o.id } : null;
+}
+function layInside(L, own, p, w) {
+  if (!own) return true;
+  if (own.room) { const r = layRoom(L, own.room); w = w || 1; return !!r && p[0] >= r.x && p[1] >= r.y && p[0] + w <= r.x + r.w && p[1] + w <= r.y + r.h; } // the hallway's whole width fits inside
+  const o = layHall(L, own.hall); return !!o && GOQ.hallRects(o).some(rc => inR(rc, p[0], p[1]));
+}
+function cleanPath(path) {
+  const p = path.filter((q, i) => i === 0 || q[0] !== path[i - 1][0] || q[1] !== path[i - 1][1]);
+  for (let i = p.length - 2; i > 0; i--) if ((p[i - 1][0] === p[i][0] && p[i][0] === p[i + 1][0]) || (p[i - 1][1] === p[i][1] && p[i][1] === p[i + 1][1])) p.splice(i, 1);
+  return p;
+}
+const straight = p => p.every((q, i) => i === 0 || q[0] === p[i - 1][0] || q[1] === p[i - 1][1]);
+/* Where something is: a hallway's corner, a hallway, a room's wall (to resize it), or a room (to move it). */
+function layHit(L, t) {
+  for (const h of L.halls) for (let i = 1; i < h.path.length - 1; i++) { const [px, py] = h.path[i]; if (t.x >= px && t.x < px + h.width && t.y >= py && t.y < py + h.width) return { kind: "bend", id: h.id, i }; }
+  if (!L.rooms.some(r => inR(r, t.x, t.y))) for (const h of L.halls) { const seg = GOQ.hallRects(h).findIndex(rc => inR(rc, t.x, t.y)); if (seg >= 0) return { kind: "hall", id: h.id, seg }; }
+  for (const r of L.rooms) {
+    if (t.x < r.x - 1 || t.x > r.x + r.w || t.y < r.y - 3 || t.y > r.y + r.h) continue;
+    const e = { l: t.x === r.x - 1, r: t.x === r.x + r.w, t: t.y < r.y, b: t.y === r.y + r.h };
+    if (e.l || e.r || e.t || e.b) return Object.assign({ kind: "edge", id: r.id }, e);
+  }
+  for (const r of L.rooms) if (inR(r, t.x, t.y)) return { kind: "room", id: r.id };
+  return null;
+}
+/* Apply a drag (dx, dy tiles from where it started) to a copy of the blueprint. Returns null if it would break a hallway. */
+function layApply(orig, hit, dx, dy) {
+  const L = clone(orig), owners = new Map();
+  L.halls.forEach(h => owners.set(h.id, [layOwner(orig, layHall(orig, h.id), h.path[0]), layOwner(orig, layHall(orig, h.id), h.path[h.path.length - 1])]));
+  const ends = h => [0, h.path.length - 1];
+  if (hit.kind === "room" || hit.kind === "edge") {
+    const r = layRoom(L, hit.id), o = layRoom(orig, hit.id);
+    if (hit.kind === "room") { r.x = Math.max(1, o.x + dx); r.y = Math.max(3, o.y + dy); }
+    else {
+      if (hit.l) { r.x = Math.max(1, Math.min(o.x + o.w - 2, o.x + dx)); r.w = o.x + o.w - r.x; }
+      if (hit.r) r.w = Math.max(2, o.w + dx);
+      if (hit.t) { r.y = Math.max(3, Math.min(o.y + o.h - 2, o.y + dy)); r.h = o.y + o.h - r.y; }
+      if (hit.b) r.h = Math.max(2, o.h + dy);
+    }
+    // Hallway ends in this room move with it (or stay inside it when it shrinks); the hallway bends to keep up.
+    L.halls.forEach(h => {
+      const own = owners.get(h.id), oh = layHall(orig, h.id); let moved = false;
+      ends(h).forEach((k, n) => {
+        if (!own[n] || own[n].room !== r.id) return;
+        const p = h.path[k];
+        if (hit.kind === "room") { p[0] += r.x - o.x; p[1] += r.y - o.y; }
+        else { p[0] = Math.max(r.x, Math.min(r.x + r.w - h.width, p[0])); p[1] = Math.max(r.y, Math.min(r.y + r.h - h.width, p[1])); }
+        moved = true;
+        // The point next to it keeps its line (a corner slides along); an end on the other side stays put.
+        [k - 1, k + 1].forEach(j => {
+          if (j <= 0 || j >= h.path.length - 1) return;
+          if (oh.path[j][1] === oh.path[k][1]) h.path[j][1] = p[1]; else h.path[j][0] = p[0];
+        });
+      });
+      if (moved && !straight(h.path)) { const a = h.path[0], b = h.path[h.path.length - 1], horiz = oh.path[0][1] === oh.path[1][1]; h.path = horiz ? [a, [b[0], a[1]], b] : [a, [a[0], b[1]], b]; }
+      h.path = cleanPath(h.path);
+    });
+  } else {
+    const h = layHall(L, hit.id), oh = layHall(orig, hit.id), mv = new Set();
+    if (hit.kind === "bend") { h.path[hit.i] = [oh.path[hit.i][0] + dx, oh.path[hit.i][1] + dy]; mv.add(hit.i); }
+    else {
+      const i = Math.min(hit.seg, h.path.length - 2), horiz = oh.path[i][1] === oh.path[i + 1][1];
+      [i, i + 1].forEach(k => { h.path[k] = horiz ? [oh.path[k][0], oh.path[k][1] + dy] : [oh.path[k][0] + dx, oh.path[k][1]]; mv.add(k); });
+      if (oh.path.length === 1) h.path[0] = [oh.path[0][0] + dx, oh.path[0][1] + dy];
+    }
+    // Neighbors keep their line, so a dragged corner slides the ends along the rooms they're in.
+    [...mv].forEach(k => [k - 1, k + 1].forEach(j => {
+      if (j < 0 || j >= h.path.length || mv.has(j)) return;
+      if (oh.path[j][1] === oh.path[k][1]) h.path[j][1] = h.path[k][1]; else h.path[j][0] = h.path[k][0];
+    }));
+    h.path = h.path.map(([x, y]) => [Math.max(1, x), Math.max(3, y)]);
+  }
+  // A corner that ended up inside the room an end sits in isn't needed: it becomes the end, and the hallway straightens.
+  L.halls.forEach(h => {
+    const own = owners.get(h.id);
+    while (h.path.length > 2 && own[0] && layInside(L, own[0], h.path[1], h.width)) h.path.shift();
+    while (h.path.length > 2 && own[1] && layInside(L, own[1], h.path[h.path.length - 2], h.width)) h.path.pop();
+  });
+  // Every hallway's ends must still be in the room (or hallway) they started in.
+  for (const h of L.halls) { const own = owners.get(h.id); if (!layInside(L, own[0], h.path[0], h.width) || !layInside(L, own[1], h.path[h.path.length - 1], h.width)) return null; }
+  return L;
+}
+function layIssues(L) {
+  const out = [];
+  L.halls.forEach(h => { const n = GOQ.hallLength(L, h); if (h.min && n < h.min) out.push(h.name + " is " + n + " long; it should be at least " + h.min + "."); });
+  L.halls.forEach(h => { if (!layOwner(L, h, h.path[0]) && !layOwner(L, h, h.path[h.path.length - 1])) out.push(h.name + " isn't joined to any room or hallway."); }); // one loose end is fine: a dead end, a doorway, stairs
+  return out;
+}
+function drawLayout(x, d, z) {
+  const L = d.layout, sel = R.laySel, px = 16, f = n => n / z;
+  x.lineWidth = f(2);
+  L.halls.forEach(h => {
+    const n = GOQ.hallLength(L, h), bad = h.min && n < h.min, on = sel && sel.kind === "hall" && sel.id === h.id;
+    GOQ.hallRects(h).forEach(rc => { x.fillStyle = bad ? "rgba(240,110,90,.28)" : on ? "rgba(140,200,255,.35)" : "rgba(140,200,255,.14)"; x.fillRect(rc.x * px, rc.y * px, rc.w * px, rc.h * px); });
+    for (let i = 1; i < h.path.length - 1; i++) { const [bx, by] = h.path[i]; x.fillStyle = "#8cc8ff"; x.beginPath(); x.arc((bx + h.width / 2) * px, (by + h.width / 2) * px, f(6), 0, Math.PI * 2); x.fill(); }
+    const rs = GOQ.hallRects(h), big = rs.slice().sort((a, b) => b.w * b.h - a.w * a.h)[0], tx = (big.x + big.w / 2) * px, ty = (big.y + big.h / 2) * px;
+    const label = h.name + ": " + n + (h.min ? " / " + h.min : "");
+    x.font = "600 " + f(11) + "px sans-serif"; x.textAlign = "center"; x.textBaseline = "middle";
+    const w = x.measureText(label).width + f(8); x.fillStyle = bad ? "rgba(150,40,30,.92)" : "rgba(18,11,14,.85)"; x.fillRect(tx - w / 2, ty - f(8), w, f(16));
+    x.fillStyle = bad ? "#ffe0d8" : "#d8ecff"; x.fillText(label, tx, ty + f(0.5));
+  });
+  L.rooms.forEach(r => {
+    const on = sel && sel.kind === "room" && sel.id === r.id;
+    x.strokeStyle = on ? "#ffffff" : "rgba(255,230,180,.75)"; x.setLineDash(on ? [] : [f(5), f(4)]);
+    x.strokeRect((r.x - 1) * px, (r.y - 3) * px, (r.w + 2) * px, (r.h + 4) * px); x.setLineDash([]);
+    if (on) { x.fillStyle = "#ffffff"; [[r.x - 1, r.y + r.h / 2 - 0.5], [r.x + r.w, r.y + r.h / 2 - 0.5], [r.x + r.w / 2 - 0.5, r.y - 2], [r.x + r.w / 2 - 0.5, r.y + r.h]].forEach(([hx, hy]) => x.fillRect((hx + 0.25) * px, (hy + 0.25) * px, px / 2, px / 2)); }
+    const label = r.name + "  " + r.w + "×" + r.h;
+    x.font = "700 " + f(12) + "px sans-serif"; x.textAlign = "left"; x.textBaseline = "top";
+    const w = x.measureText(label).width + f(8); x.fillStyle = "rgba(18,11,14,.85)"; x.fillRect(r.x * px + f(3), r.y * px + f(3), w, f(17));
+    x.fillStyle = "#ffe6b4"; x.fillText(label, r.x * px + f(7), r.y * px + f(5));
+  });
+}
+function layBegin(t) {
+  const d = roomDef(R.id), hit = layHit(d.layout, t); if (!hit) return false;
+  snapshot(); const e = editable(R.id);
+  R.laySel = { kind: hit.kind === "edge" || hit.kind === "room" ? "room" : "hall", id: hit.id };
+  R.layDrag = { hit, start: t, orig: clone(e.layout), items: itemsOf(e) };
+  return true;
+}
+function layMove(t) {
+  const g = R.layDrag; if (!g) return;
+  const L = layApply(g.orig, g.hit, t.x - g.start.x, t.y - g.start.y); if (!L) return;
+  const d = editable(R.id), o = g.orig, h = g.hit;
+  // Furniture, cases and paintings move with the room (or the stretch of hallway) you're dragging.
+  let box = null, dx = 0, dy = 0;
+  if (h.kind === "room") { const a = layRoom(o, h.id), b = layRoom(L, h.id); box = { x: a.x - 3, y: a.y - 4, w: a.w + 6, h: a.h + 7 }; dx = b.x - a.x; dy = b.y - a.y; }
+  else if (h.kind === "hall") {
+    const a = layHall(o, h.id), b = layHall(L, h.id), i = Math.min(h.seg, a.path.length - 2), rc = GOQ.hallRects(a)[i];
+    if (rc && b.path.length === a.path.length) { box = { x: rc.x, y: rc.y - 3, w: rc.w, h: rc.h + 3 }; dx = b.path[i][0] - a.path[i][0]; dy = b.path[i][1] - a.path[i][1]; }
+  }
+  Object.assign(d, shiftItems(g.items, box, dx, dy));
+  d.layout = L; recarve(d); roomChanged();
+}
+/* The things placed in a room, so a drag can move them from where they started. */
+const ITEM_KEYS = ["props", "cases", "spots", "wallArt", "decals", "glows", "catSpots", "mugSpots", "visitors", "featuredAt", "runners", "lamps", "arrows", "murals"];
+function itemsOf(d) { const o = {}; ITEM_KEYS.forEach(k => { if (d[k] !== undefined) o[k] = clone(d[k]); }); return o; }
+function shiftItems(items, box, dx, dy) {
+  const out = clone(items); if (!box || (!dx && !dy)) return out;
+  const inside = (x, y) => x >= box.x && y >= box.y && x < box.x + box.w && y < box.y + box.h;
+  ["props", "decals", "visitors", "wallArt", "arrows", "murals"].forEach(k => (out[k] || []).forEach(o => { if (inside(o.x, o.y === undefined ? 1 : o.y)) { o.x += dx; if (o.y !== undefined) o.y += dy; } }));
+  ["cases", "glows", "catSpots", "mugSpots", "runners", "lamps"].forEach(k => (out[k] || []).forEach(p => { if (inside(p[0], p[1])) { p[0] += dx; p[1] += dy; } }));
+  (out.spots || []).forEach((p, i) => { if (Array.isArray(p) && inside(p[0], p[1])) { p[0] += dx; p[1] += dy; } });
+  if (out.featuredAt && inside(out.featuredAt[0], out.featuredAt[1])) { out.featuredAt[0] += dx; out.featuredAt[1] += dy; }
+  return out;
+}
+/* Carpet tool: lay (or take up) one runner tile. Only on floor. */
+function carpetAt(t) {
+  const d = editable(R.id), ch = getCh(d, t.x, t.y), k = R.carpet || "h1";
+  // In a hallway a runner sits in the middle of the floor, so a tile anywhere across it replaces the one already there.
+  const span = dir => GOQ.runnerTiles({ map: d.map, runners: [[t.x, t.y, dir + "1"]] })[0];
+  const same = (r, dir) => { if (dir === "c") return false; const s = span(dir); return s && r[2][0] === dir && (dir === "h" ? r[0] === t.x && r[1] >= s.a && r[1] <= s.b : r[1] === t.y && r[0] >= s.a && r[0] <= s.b); };
+  d.runners = (d.runners || []).filter(r => !(r[0] === t.x && r[1] === t.y) && !(k === "x" ? same(r, "h") || same(r, "v") : same(r, k[0])));
+  if (k !== "x" && (ch === "." || ch === "=")) d.runners.push([t.x, t.y, k, R.carpetW || 20]);
+  roomChanged();
+}
+function carpetSwatch(k) {
+  const t = document.createElement("canvas"); t.width = 16; t.height = 16;
+  GOQ.drawRunner(t.getContext("2d"), game.sheet(k[0] === "v" ? "carpet_v" : "carpet_h"), Object.assign({ x: 0, y: 0, k, w: 12, mid: 8 }), 0, 0);
+  const c = document.createElement("canvas"); c.width = 32; c.height = 32; const x = c.getContext("2d"); x.imageSmoothingEnabled = false; x.drawImage(t, 0, 0, 32, 32); return c;
+}
+/* Shape tool: add floor or wall at a tile, as a tweak to the nearest room (stored from its top-left, so it moves with it). */
+function shapeAt(t) {
+  const d = editable(R.id), L = d.layout, near = r => Math.max(r.x - t.x, t.x - (r.x + r.w - 1), 0) + Math.max(r.y - t.y, t.y - (r.y + r.h - 1), 0);
+  const r = L.rooms.filter(r => near(r) <= 3).sort((a, b) => near(a) - near(b))[0];
+  if (!r) { status("Shape tweaks go in or right next to a room.", true); return; }
+  const dx = t.x - r.x, dy = t.y - r.y; r.edits = (r.edits || []).filter(e => e[0] !== dx || e[1] !== dy);
+  if (R.shape !== "x") r.edits.push([dx, dy, R.shape || "."]);
+  R.laySel = { kind: "room", id: r.id }; recarve(d); roomChanged();
+}
+function layTap(t) {
+  const d = roomDef(R.id), hit = layHit(d.layout, t);
+  R.laySel = hit ? { kind: hit.kind === "edge" || hit.kind === "room" ? "room" : "hall", id: hit.id } : null;
+  drawEditor(); renderInspector();
+}
+function layEdit(fn) { snapshot(); const d = editable(R.id); fn(d.layout); recarve(d); roomChanged(true); renderInspector(); }
+function renderLayoutPanel(box, d) {
+  const L = d.layout, sel = R.laySel, field = (label, input, hint) => el("label", { class: "rfield" }, [el("span", { text: label }), hint ? el("small", { text: hint }) : null, input]);
+  const r = sel && sel.kind === "room" && layRoom(L, sel.id), h = sel && sel.kind === "hall" && layHall(L, sel.id);
+  const tileSlots = GOQ.SLOTS.filter(s => s.w === 16 && s.h === 16 && /floor|wall/.test(s.key) && !s.retired);
+  const artRow = (get, set) => el("div", { class: "rrow" }, [["floor", "Floor", /floor/], ["upper", "Wall, upper", /upper/], ["lower", "Wall, lower", /lower/], ["top", "Wall top", /top/]].map(([part, label, re]) => {
+    const s = el("select", {}, [el("option", { value: "", text: "Same as the hallways" })].concat(tileSlots.filter(x => re.test(x.key)).map(x => el("option", { value: x.key, text: x.label }))));
+    s.value = get()[part] || ""; s.addEventListener("change", () => layEdit(L2 => { const a = Object.assign({}, set(L2)); if (s.value) a[part] = s.value; else delete a[part]; set(L2, a); }));
+    return field(label, s);
+  }));
+  if (r) {
+    box.appendChild(el("h3", { text: r.name }));
+    const name = el("input", { type: "text", value: r.name }); name.addEventListener("change", () => layEdit(L2 => { layRoom(L2, r.id).name = name.value.trim() || "Room"; }));
+    box.appendChild(field("Name", name, "Said when you walk in."));
+    const w = el("input", { type: "number", min: 2, max: 60, value: r.w }), hh = el("input", { type: "number", min: 2, max: 60, value: r.h });
+    const resize = () => { const L2 = layApply(L, { kind: "edge", id: r.id, r: true, b: true }, (+w.value || r.w) - r.w, (+hh.value || r.h) - r.h); if (!L2) { status("That would cut off a hallway. Move the hallway first.", true); return; } layEdit(L3 => Object.assign(L3, L2)); };
+    w.addEventListener("change", resize); hh.addEventListener("change", resize);
+    box.appendChild(el("div", { class: "rrow" }, [field("Width", w), field("Depth", hh)]));
+    box.appendChild(el("p", { class: "note", text: "Floor tiles, not counting the walls. Or drag the room's walls on the map." }));
+    const genres = draft.settings.genres || GOQ.SAMPLE_GENRES, gs = el("select", {}, [el("option", { value: "", text: "None (for episodes with no genre)" })].concat(genres.map(g => el("option", { value: g.id, text: g.name }))));
+    gs.value = r.genre || ""; gs.addEventListener("change", () => layEdit(L2 => { layRoom(L2, r.id).genre = gs.value; }));
+    box.appendChild(field("Genre", gs, "Episodes of this genre go in this room's cases first. Edit the genres in the Visitors tab."));
+    if (r.edits && r.edits.length) box.appendChild(el("div", { class: "row" }, [el("span", { class: "note", text: r.edits.length + " shape tweak" + (r.edits.length === 1 ? "" : "s") + ". " }),
+      el("button", { type: "button", class: "btn small quiet", text: "Back to a plain rectangle", onclick: () => layEdit(L2 => { layRoom(L2, r.id).edits = []; }) })]));
+    box.appendChild(artRow(() => r.art || {}, (L2, a) => { const q = layRoom(L2, r.id); if (a) q.art = a; return q.art || {}; }));
+    // Colors: the room's theme (hallways blend between rooms' themes), and tints for its floor and walls.
+    const genreCol = ((draft.settings.genres || []).find(g => g.id === r.genre) || {}).color || "";
+    const colorField = (label, hint, get, set) => {
+      const v = get(), inp = el("input", { type: "color", value: v || "#808080" }), clr = el("button", { type: "button", class: "btn small quiet", text: v ? "Clear" : "None", disabled: !v, onclick: () => layEdit(L2 => set(layRoom(L2, r.id), "")) });
+      inp.addEventListener("change", () => layEdit(L2 => set(layRoom(L2, r.id), inp.value)));
+      return el("label", { class: "rfield" }, [el("span", { text: label }), el("small", { text: hint }), el("div", { class: "row", style: "gap:8px;align-items:center" }, [inp, clr])]);
+    };
+    box.appendChild(el("div", { class: "rrow" }, [
+      colorField("Theme color", r.color ? "Hallways blend from this room's theme to the next." : genreCol ? "Using its genre's color. Pick one to override it." : "Hallways blend from this room's theme to the next.", () => r.color || genreCol, (q, v) => { q.color = v; }),
+      colorField("Floor color", "Tints the floor art. Clear for the art's own color.", () => (r.tint || {}).floor, (q, v) => { q.tint = Object.assign({}, q.tint, { floor: v }); }),
+      colorField("Wall color", "Tints the walls, under any murals. Clear for the art's own color.", () => (r.tint || {}).wall, (q, v) => { q.tint = Object.assign({}, q.tint, { wall: v }); }),
+    ]));
+    const lt = el("input", { type: "checkbox", checked: r.light !== false }); lt.addEventListener("change", () => layEdit(L2 => { layRoom(L2, r.id).light = lt.checked; }));
+    box.appendChild(el("label", { class: "check" }, [lt, document.createTextNode("Has a light switch (it must be off to close the museum)")]));
+    box.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small quiet", text: "Delete this room", onclick: () => {
+      if (!confirm("Delete " + r.name + " and the hallways that end in it?")) return;
+      layEdit(L2 => { const own = h2 => [h2.path[0], h2.path[h2.path.length - 1]].some(p => inR(layRoom(L2, r.id), p[0], p[1])); L2.halls = L2.halls.filter(h2 => !own(h2)); L2.rooms = L2.rooms.filter(q => q.id !== r.id); });
+      R.laySel = null; renderInspector(); } })]));
+    return;
+  }
+  if (h) {
+    const n = GOQ.hallLength(L, h);
+    box.appendChild(el("h3", { text: h.name }));
+    const name = el("input", { type: "text", value: h.name }); name.addEventListener("change", () => layEdit(L2 => { layHall(L2, h.id).name = name.value.trim() || "Hallway"; }));
+    box.appendChild(field("Name", name));
+    box.appendChild(el("p", { class: "note" + (h.min && n < h.min ? " warn" : ""), text: "Length: " + n + " tiles" + (h.min ? (n < h.min ? ", shorter than the " + h.min + " it should be." : " (at least " + h.min + ").") : ".") + " Width: " + h.width + "." }));
+    const wd = el("input", { type: "number", min: 2, max: 6, value: h.width }); wd.addEventListener("change", () => layEdit(L2 => { layHall(L2, h.id).width = Math.max(2, Math.min(6, +wd.value || 2)); }));
+    const mn = el("input", { type: "number", min: 0, max: 99, value: h.min || 0 }); mn.addEventListener("change", () => layEdit(L2 => { layHall(L2, h.id).min = Math.max(0, +mn.value || 0); }));
+    box.appendChild(el("div", { class: "rrow" }, [field("Width", wd, "At least 2."), field("Shortest it should be", mn, "0 for no warning.")]));
+    box.appendChild(el("p", { class: "note", text: h.path.length > 2 ? "An L: drag its corner (the round dot) to change where it turns, or drag either leg sideways." : "Straight: drag it sideways to slide it along the rooms it joins." }));
+    box.appendChild(el("div", { class: "row" }, [
+      h.path.length === 2 ? el("button", { type: "button", class: "btn small quiet", text: "Make it an L", onclick: () => layEdit(L2 => { const q = layHall(L2, h.id), [a, b] = q.path; q.path = cleanPath(a[1] === b[1] || a[0] === b[0] ? [a, [Math.round((a[0] + b[0]) / 2), a[1]], [Math.round((a[0] + b[0]) / 2), b[1]], b] : [a, [b[0], a[1]], b]); }) }) : null,
+      h.path.length > 2 && h.path[0][0] !== h.path[h.path.length - 1][0] && h.path[0][1] !== h.path[h.path.length - 1][1] ? null : h.path.length > 2 ? el("button", { type: "button", class: "btn small quiet", text: "Make it straight", onclick: () => layEdit(L2 => { const q = layHall(L2, h.id); q.path = [q.path[0], q.path[q.path.length - 1]]; }) }) : null,
+      el("button", { type: "button", class: "btn small quiet", text: "Delete this hallway", onclick: () => { if (!confirm("Delete " + h.name + "?")) return; layEdit(L2 => { L2.halls = L2.halls.filter(q => q.id !== h.id); }); R.laySel = null; renderInspector(); } }),
+    ]));
+    const wl = h.walls || { mode: "auto" }, ends = GOQ.hallEndColors(GOQ.carveLayout(L), h, draft.settings.genres || GOQ.SAMPLE_GENRES);
+    const ms = el("select", {}, [["auto", "Blend between the rooms it joins"], ["custom", "Blend between two colors I pick"], ["plain", "The wall art's own color"]].map(([v, l]) => el("option", { value: v, text: l })));
+    ms.value = wl.mode || "auto"; ms.addEventListener("change", () => layEdit(L2 => { const q = layHall(L2, h.id); q.walls = Object.assign({}, q.walls, { mode: ms.value }); }));
+    box.appendChild(field("Wall colors", ms, wl.mode === "auto" || !wl.mode ? (ends[0] || ends[1] ? "It blends from one end's room theme to the other's (Theme color, on each room)." : "Neither end is a room with a theme color, so it keeps the art's color.") : ""));
+    if (wl.mode === "custom") {
+      const pick = k => { const i = el("input", { type: "color", value: wl[k] || ends[k === "from" ? 0 : 1] || "#808080" }); i.addEventListener("change", () => layEdit(L2 => { const q = layHall(L2, h.id); q.walls = Object.assign({}, q.walls, { [k]: i.value }); })); return i; };
+      box.appendChild(el("div", { class: "rrow" }, [field("At the first end", pick("from")), field("At the other end", pick("to"))]));
+    }
+    box.appendChild(artRow(() => h.art || {}, (L2, a) => { const q = layHall(L2, h.id); if (a) q.art = a; return q.art || {}; }));
+    return;
+  }
+  box.appendChild(el("h3", { text: "The museum's layout" }));
+  box.appendChild(el("p", { class: "note", text: "Drag a room to move it, or drag its walls to resize it. Drag a hallway sideways, or drag the round corner of an L. Hallways stay attached. Tap a room or hallway for its settings." }));
+  const iss = layIssues(L);
+  box.appendChild(iss.length ? el("ul", { class: "rissues" }, iss.map(t => el("li", { text: t }))) : el("p", { class: "note", text: "Every hallway is as long as it should be." }));
+  box.appendChild(el("ul", { class: "laylist" }, L.halls.map(h2 => { const n = GOQ.hallLength(L, h2); return el("li", {}, [el("button", { type: "button", class: "linkish", text: h2.name, onclick: () => { R.laySel = { kind: "hall", id: h2.id }; drawEditor(); renderInspector(); } }), document.createTextNode(": " + n + (h2.min ? " (at least " + h2.min + ")" : ""))]); })));
+  const from = el("select", {}, L.rooms.map(q => el("option", { value: q.id, text: q.name }))), to = el("select", {}, L.rooms.map(q => el("option", { value: q.id, text: q.name })));
+  if (L.rooms[1]) to.value = L.rooms[1].id;
+  box.appendChild(el("div", { class: "rrow" }, [field("New hallway from", from), field("to", to)]));
+  box.appendChild(el("div", { class: "row" }, [
+    el("button", { type: "button", class: "btn small", text: "Add the hallway", onclick: () => {
+      const a = layRoom(L, from.value), b = layRoom(L, to.value); if (!a || !b || a === b) { status("Pick two different rooms.", true); return; }
+      const ca = [a.x + (a.w >> 1) - 1, a.y + (a.h >> 1) - 1], cb = [b.x + (b.w >> 1) - 1, b.y + (b.h >> 1) - 1], id = "hall-" + Math.random().toString(36).slice(2, 6);
+      layEdit(L2 => L2.halls.push({ id, name: a.name + " to " + b.name, path: cleanPath([ca, [cb[0], ca[1]], cb]), width: 2, min: 0 }));
+      R.laySel = { kind: "hall", id }; renderInspector(); drawEditor();
+    } }),
+    el("button", { type: "button", class: "btn small quiet", text: "Add a room", onclick: () => {
+      const right = Math.max(...L.rooms.map(q => q.x + q.w), 0), id = "room-" + Math.random().toString(36).slice(2, 6);
+      layEdit(L2 => L2.rooms.push({ id, name: "New room", x: Math.min(GOQ.LAYOUT_MAX_W - 14, right + 4), y: 4, w: 10, h: 8, art: {}, light: true }));
+      R.laySel = { kind: "room", id }; R.zoom = 0; renderInspector(); drawEditor();
+    } }),
+  ]));
+  box.appendChild(artRow(() => L.hallArt || {}, (L2, a) => { if (a) L2.hallArt = a; return L2.hallArt || {}; }));
+  box.appendChild(el("p", { class: "note", text: "Hallway art (each room and hallway can have its own; tap it)." }));
+}
+
 /* ----- inspector ----- */
 function renderInspector() {
   const box = $("#rinsp"); if (!box) return; box.innerHTML = "";
@@ -1210,6 +1605,7 @@ function renderInspector() {
   const field = (label, input, hint) => el("label", { class: "rfield" }, [el("span", { text: label }), hint ? el("small", { text: hint }) : null, input]);
   const linesBox = (get, set, hint) => { const t = el("textarea"); t.value = get(); t.addEventListener("change", () => { snapshot(); set(t.value); roomChanged(true); }); return field("What it says", t, hint || "One page per line."); };
   const delBtn = () => el("button", { type: "button", class: "btn small quiet", text: "Remove", onclick: () => { snapshot(); removeItem(editable(R.id), it); R.sel = null; roomChanged(true); } });
+  if (isLayout(d) && (R.tool === "layout" || R.tool === "shape")) return renderLayoutPanel(box, d);
   if (!it) return renderRoomSettings(box, d);
   box.appendChild(el("h3", { text: it.label }));
   if (it.type === "door") return renderDoor(box, d, it);
@@ -1224,6 +1620,29 @@ function renderInspector() {
       s.value = p.sit || ""; s.addEventListener("change", () => { snapshot(); const q = editable(R.id).props[it.i]; if (s.value) q.sit = s.value; else delete q.sit; roomChanged(true); });
       box.appendChild(field("Can you sit here?", s));
     }
+  }
+  if (it.type === "mural") {
+    const m = d.murals[it.i], ed = fn => { snapshot(); fn(editable(R.id).murals[it.i]); roomChanged(true); renderInspector(); };
+    const ks = el("select", {}, GOQ.SLOTS.filter(sl => sl.group === "Murals").map(sl => el("option", { value: sl.key, text: sl.label.replace(/^Mural: /, "") })));
+    ks.value = m.key; ks.addEventListener("change", () => ed(q => { q.key = ks.value; }));
+    const wd = el("input", { type: "number", min: 1, max: 40, value: m.w || 1 }); wd.addEventListener("change", () => ed(q => { q.w = Math.max(1, Math.min(40, +wd.value || 1)); }));
+    const sl = GOQ.SLOT[m.key] || { w: 256 }, room = Math.max(0, sl.w - (m.w || 1) * 16);
+    const at = el("input", { type: "range", min: 0, max: room, step: 4, value: m.at >= 0 ? Math.min(room, m.at) : room / 2, disabled: !room }); at.addEventListener("change", () => ed(q => { q.at = +at.value; }));
+    box.appendChild(el("div", { class: "rrow" }, [field("Art", ks, "Replace it in Art, Murals."), field("Length (tiles)", wd)]));
+    box.appendChild(field("Which part of the art shows", at, room ? "Slide to pick the stretch of the landscape on this wall." : "The wall is as long as the art, so all of it shows."));
+  }
+  if (it.type === "arrow") {
+    const a = d.arrows[it.i], genres = draft.settings.genres || GOQ.SAMPLE_GENRES, ed = fn => { snapshot(); fn(editable(R.id).arrows[it.i]); roomChanged(true); renderInspector(); };
+    const gs = el("select", {}, genres.map(g => el("option", { value: g.id, text: g.name })).concat([el("option", { value: "", text: "None (use the words and color below)" })]));
+    gs.value = a.genre || ""; gs.addEventListener("change", () => ed(q => { q.genre = gs.value; }));
+    const ds = el("select", {}, [["left", "Pointing left"], ["right", "Pointing right"]].map(([v, l]) => el("option", { value: v, text: l }))); ds.value = a.dir === "left" ? "left" : "right";
+    ds.addEventListener("change", () => ed(q => { q.dir = ds.value; }));
+    const wd = el("input", { type: "number", min: 2, max: 8, value: a.w || 4 }); wd.addEventListener("change", () => ed(q => { q.w = Math.max(2, Math.min(8, +wd.value || 4)); }));
+    box.appendChild(el("div", { class: "rrow" }, [field("Room it points to", gs, "Its name and color come from the genre (Visitors, Genres)."), field("Direction", ds), field("Length (tiles)", wd)]));
+    const lb = el("input", { type: "text", value: a.label || "", placeholder: "(the genre's name)", maxlength: 16 }); lb.addEventListener("change", () => ed(q => { if (lb.value.trim()) q.label = lb.value.trim(); else delete q.label; }));
+    const cl = el("input", { type: "color", value: a.color || (genres.find(g => g.id === a.genre) || {}).color || "#c8a070" }); cl.addEventListener("change", () => ed(q => { q.color = cl.value; }));
+    box.appendChild(el("div", { class: "rrow" }, [field("Words (optional)", lb), field("Own color (optional)", cl)]));
+    if (a.color) box.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small quiet", text: "Use the genre's color", onclick: () => ed(q => { delete q.color; }) })]));
   }
   if (it.type === "wallArt") box.appendChild(linesBox(() => (d.wallArt[it.i].say || []).join("\n"), v => { editable(R.id).wallArt[it.i].say = v.split("\n").map(s => s.trim()).filter(Boolean); }));
   if (it.type === "visitor") {
@@ -1253,17 +1672,17 @@ function renderInspector() {
     box.appendChild(el("p", { class: "note", text: "Tap the other floor's matching stairs: you arrive standing on them, facing the way you'll step off (pick the facing above)." }));
     box.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small", text: "Pick where you arrive", onclick: () => { R.linking = { from: R.id, stairsI: it.i, face: face.value }; R.id = rs.value; R.sel = null; renderRooms(); status("Now tap the floor where you should arrive in " + roomDef(rs.value).name + "."); } })]));
   }
-  const notes = { glow: "A warm pool of light, shown even when the room's lights are on. Drag it to move it.", case: "Holds the next episode in Pieces order. The front placard is read from below it, the back from above.", spot: "A painting spot for the next community piece, across both wall rows.",
+  const notes = { mural: "Painted along the top row of the wall; the wall's own color shows below it. Drag it along the wall, or onto another wall.", lamp: "A small accent light on the wall. Drag it along the wall, or onto another wall.", arrow: "Drag it along the wall, or onto another wall.", glow: "A warm pool of light, shown even when the room's lights are on. Drag it to move it.", case: "Holds the next episode in Pieces order. The front placard is read from below it, the back from above.", spot: "A painting spot for the next community piece, across both wall rows.",
     spawn: "Where you appear when jumping to this room.", catSpot: "One of the places the cat might nap today.", mugSpot: "One of the places the curator's mug might turn up.", fixed: "A built-in feature. Drag it to move it.", locker: "Lockers are part of the staff room." };
   if (notes[it.type]) box.appendChild(el("p", { class: "note", text: notes[it.type] }));
   if (it.type !== "spawn" && it.type !== "locker") box.appendChild(el("div", { class: "row" }, [delBtn()]));
 }
 function renderDoor(box, d, it) {
   const ev = doorEvent(d, it.x, it.y), ch = getCh(d, it.x, it.y);
-  if (ev && (ev.elevatorDoor || ev.elevatorExit)) { box.appendChild(el("p", { class: "note", text: ev.elevatorDoor ? "An elevator door. It opens into the elevator; the panel inside picks the floor. Rooms with an elevator stop are listed on the panel." : "The elevator's own door. It lets you out on whichever floor the panel was set to." })); return; }
   if (ch === "E" || (ev && ev.frontDoor)) { box.appendChild(el("p", { class: "note", text: "The museum's front doors. Leaving through them at closing time shows the CLOSED screen." })); return; }
   const to = (ev && ev.warp) || null;
-  box.appendChild(el("p", { class: "note", text: to ? "Leads to " + roomDef(to[0]).name + ", at column " + (to[1] + 1) + ", row " + (to[2] + 1) + ", facing " + to[3] + "." : "This door doesn't lead anywhere yet." }));
+  box.appendChild(el("p", { class: "note", text: to ? whereTo(to) : "This door doesn't lead anywhere yet." }));
+  if (isLayout(d) && !(d.events || []).some(e => e.x === it.x && e.y === it.y)) { box.appendChild(el("p", { class: "note", text: "This doorway is part of the museum's layout: it moves with its hallway." })); return; }
   const rs = el("select", {}, roomIds().filter(id => id !== R.id).map(id => el("option", { value: id, text: roomDef(id).name })));
   if (to) rs.value = to[0];
   const face = el("select", {}, ["up", "down", "left", "right"].map(dd => el("option", { value: dd, text: "Facing " + dd })));
@@ -1297,7 +1716,8 @@ function renderRoomSettings(box, d) {
   const name = el("input", { type: "text", value: d.name }); name.addEventListener("change", () => { snapshot(); editable(R.id).name = name.value.trim() || "Room"; roomChanged(true); renderRooms(); });
   box.appendChild(el("label", { class: "rfield" }, [el("span", { text: "Name" }), name]));
   const w = el("input", { type: "number", min: 8, max: 40, value: W(d) }), h = el("input", { type: "number", min: 8, max: 20, value: H(d) });
-  box.appendChild(el("div", { class: "rrow" }, [el("label", { class: "rfield" }, [el("span", { text: "Width" }), w]), el("label", { class: "rfield" }, [el("span", { text: "Height" }), h]),
+  if (isLayout(d)) box.appendChild(el("p", { class: "note", text: "The museum is drawn from its layout: use the Layout tool to move and resize its rooms and hallways." }));
+  else box.appendChild(el("div", { class: "rrow" }, [el("label", { class: "rfield" }, [el("span", { text: "Width" }), w]), el("label", { class: "rfield" }, [el("span", { text: "Height" }), h]),
     el("button", { type: "button", class: "btn small", text: "Resize", onclick: () => resizeRoom(+w.value, +h.value) })]));
   const tileSlots = GOQ.SLOTS.filter(s => s.w === 16 && s.h === 16 && /floor|wall|runner/.test(s.key) && !s.retired);
   const artSel = (part, label, filter) => {
@@ -1306,16 +1726,17 @@ function renderRoomSettings(box, d) {
     return el("label", { class: "rfield" }, [el("span", { text: label }), s]);
   };
   box.appendChild(el("div", { class: "rrow" }, [artSel("floor", "Floor art", /floor/), artSel("upper", "Wall art, upper", /upper/), artSel("lower", "Wall art, lower", /lower/), artSel("top", "Wall top art", /top/)]));
+  if (!isLayout(d)) box.appendChild(el("div", { class: "rrow" }, ["floor", "wall"].map(part => {
+    const v = (d.tint || {})[part] || "", inp = el("input", { type: "color", value: v || "#808080" });
+    const set = val => { snapshot(); const dd = editable(R.id); dd.tint = Object.assign({}, dd.tint, { [part]: val }); roomChanged(true); renderInspector(); };
+    inp.addEventListener("change", () => set(inp.value));
+    return el("label", { class: "rfield" }, [el("span", { text: part === "floor" ? "Floor color" : "Wall color" }), el("small", { text: "Tints the art. Clear for its own color." }),
+      el("div", { class: "row", style: "gap:8px;align-items:center" }, [inp, el("button", { type: "button", class: "btn small quiet", text: "Clear", disabled: !v, onclick: () => set("") })])]);
+  })));
   const bunt = el("input", { type: "checkbox", checked: !!d.bunting }); bunt.addEventListener("change", () => { snapshot(); editable(R.id).bunting = bunt.checked; roomChanged(true); });
   box.appendChild(el("label", { class: "check" }, [bunt, document.createTextNode("Bunting along the walls")]));
   const crowd = el("input", { type: "checkbox", checked: !!d.crowd }); crowd.addEventListener("change", () => { snapshot(); editable(R.id).crowd = crowd.checked; roomChanged(true); });
   box.appendChild(el("label", { class: "check" }, [crowd, document.createTextNode("Extra visitors drop in here on busy days")]));
-  const stop = el("input", { type: "text", value: d.elevatorStop ? d.elevatorStop.label : "", placeholder: "e.g. 3F Gallery Three" });
-  stop.addEventListener("change", () => { snapshot(); const dd = editable(R.id); if (stop.value.trim()) dd.elevatorStop = Object.assign({ order: 5, x: dd.spawn[0], y: dd.spawn[1], dir: dd.spawn[2] }, dd.elevatorStop || {}, { label: stop.value.trim() }); else delete dd.elevatorStop; roomChanged(true); });
-  const fsel = el("select", {}, [["", "None"], ["B1", "B1"], ["1F", "1F"], ["2F", "2F"], ["3F", "3F"], ["4F", "4F"], ["5F", "5F"]].map(([v, l]) => el("option", { value: v, text: l })));
-  fsel.value = d.floorSign || ""; fsel.addEventListener("change", () => { snapshot(); const dd = editable(R.id); if (fsel.value) dd.floorSign = fsel.value; else delete dd.floorSign; roomChanged(true); });
-  box.appendChild(el("label", { class: "rfield" }, [el("span", { text: "Floor painted on the wall (stairwells)" }), fsel]));
-  box.appendChild(el("label", { class: "rfield" }, [el("span", { text: "Elevator stop" }), el("small", { text: "Name it to put this room on the elevator panel (you arrive at the start spot). Leave empty for none. Give the room an elevator door too." }), stop]));
   box.appendChild(el("p", { class: "note", text: "Lighting for this room is in Art, then Lighting." }));
   const issues = roomIssues(R.id); if (issues.length) box.appendChild(el("ul", { class: "rissues" }, issues.map(t => el("li", { text: t }))));
   const builtIn = !!GOQ.BUILTIN_ROOMS[R.id];
@@ -1351,7 +1772,9 @@ function newRoom() {
 function roomIssues(id) {
   const d = roomDef(id), out = [];
   for (let y = 0; y < H(d); y++) for (let x = 0; x < W(d); x++) if ("dsBH".includes(getCh(d, x, y)) && !doorEvent(d, x, y)) out.push("A door at column " + (x + 1) + ", row " + (y + 1) + " doesn't lead anywhere yet.");
-  if (id !== "lobby" && !roomIds().some(o => o !== id && (roomDef(o).events || []).some(e => e.warp && e.warp[0] === id))) out.push("No door in another room leads here yet, so visitors can't reach it.");
+  const leadsHere = o => (roomDef(o).events || []).some(e => e.warp && e.warp[0] === id) || (isLayout(roomDef(o)) && roomDef(o).layout.doors.concat(roomDef(o).layout.stairs).some(e => (e.warp || e.to || [])[0] === id));
+  if (isLayout(d)) layIssues(GOQ.normalizeLayout(d.layout)).forEach(t => out.push(t));
+  if (id !== "lobby" && !roomIds().some(o => o !== id && leadsHere(o))) out.push("No door in another room leads here yet, so visitors can't reach it.");
   (d.events || []).forEach(e => { if (e.warp && !roomIds().includes(e.warp[0])) out.push("A door leads to a room that no longer exists."); });
   return out;
 }
@@ -1476,13 +1899,50 @@ function mindsBox(p) {
     el("small", { text: "Tick the mindsets this game suits, usually one to three. A curious visitor with one of these loves it; leave them all off and visitors just say it was pretty good. Edit the mindsets in the Visitors tab." }),
     list.length ? el("div", { class: "unveil", style: "flex-wrap:wrap" }, boxes) : el("p", { class: "note", text: "No mindsets yet. Add some in the Visitors tab." })]);
 }
+/* Genres: the museum's rooms for episodes, and the mindsets each one is for. */
+function renderGenres(wrap) {
+  const st = draft.settings, list = st.genres = st.genres || clone(GOQ.SAMPLE_GENRES), minds = st.mindsets || [];
+  const lay = GOQ.layoutOf(roomDef("museum")), roomsOf = id => lay ? lay.zones.filter(z => z.rect && z.rect.genre === id).map(z => z.name) : [];
+  wrap.appendChild(el("h3", { text: "Genres (the museum's rooms)", style: "margin:18px 0 4px" }));
+  wrap.appendChild(el("p", { class: "note", text: "Each genre is a room in the museum (pick a room's genre in Rooms, Museum, Layout). An episode goes to the first genre that welcomes one of its ticked mindsets, unless you pick its room in Pieces." }));
+  list.forEach((g, i) => {
+    const name = el("input", { type: "text", value: g.name, maxlength: 40 }); name.addEventListener("input", () => { g.name = name.value; changed(); });
+    const sh = el("input", { type: "text", value: g.short || "", maxlength: 16, placeholder: "e.g. Dark" }); sh.addEventListener("input", () => { g.short = sh.value; changed(); });
+    const col = el("input", { type: "color", value: g.color || "#a08868" }); col.addEventListener("input", () => { g.color = col.value; changed(); });
+    const boxes = minds.map(m => { const cb = el("input", { type: "checkbox", checked: g.minds.includes(m.id) }); cb.addEventListener("change", () => { g.minds = g.minds.filter(x => x !== m.id); if (cb.checked) g.minds.push(m.id); changed(); }); return el("label", { class: "check", style: "margin:0 12px 4px 0" }, [cb, document.createTextNode(m.name)]); });
+    const where = roomsOf(g.id);
+    wrap.appendChild(el("article", { class: "prow", style: "display:block" }, [el("div", { class: "fields" }, [
+      el("label", {}, [document.createTextNode("Name"), name]), el("label", {}, [document.createTextNode("Short name"), el("small", { text: "On its touch screen." }), sh]), el("label", {}, [document.createTextNode("Color"), col]),
+      el("div", { class: "fieldset wide" }, [el("span", { class: "flabel", text: "Mindsets it's for" }), el("div", { class: "unveil", style: "flex-wrap:wrap" }, boxes)]),
+      el("p", { class: "note wide", text: where.length ? "Room: " + where.join(", ") : "No room has this genre yet." }),
+      el("div", { class: "acts" }, [el("button", { type: "button", class: "btn small quiet", text: "Remove", onclick: () => {
+        if (!confirm("Remove the \u201c" + g.name + "\u201d genre? Pieces set to it go back to following their mindsets.")) return;
+        list.splice(i, 1); draft.pieces.forEach(p => { if (p.genre === g.id) p.genre = ""; }); changed({ now: true }); renderVisitors(); } })]),
+    ])]));
+  });
+  wrap.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn primary", text: "Add a genre", onclick: () => { list.push({ id: "genre-" + Math.random().toString(36).slice(2, 7), name: "New genre", color: "#a08868", minds: [] }); changed({ now: true }); renderVisitors(); } })]));
+}
+/* Which room an episode is shown in: its mindsets decide, or pick a genre by hand. */
+function genreBox(p) {
+  const genres = draft.settings.genres || GOQ.SAMPLE_GENRES, auto = GOQ.genreOf(Object.assign({}, p, { genre: "" }), genres), an = (genres.find(g => g.id === auto) || {}).name;
+  const s = el("select", {}, [el("option", { value: "", text: "Its mindsets decide" + (an ? " (" + an + ")" : " (no genre: rooms without one)") })].concat(genres.map(g => el("option", { value: g.id, text: g.name }))));
+  s.value = p.genre || ""; s.addEventListener("change", () => { p.genre = s.value; changed({ now: true }); renderPieces(); });
+  return el("label", { class: "wide" }, [document.createTextNode("Exhibited in"), el("small", { text: "The room whose cases it goes in, and only that room. If its cases are full, the oldest of that genre wait on the room's touch screen until you add a case there." }), s]);
+}
+/* A second category it also belongs to (a blend). For the record; it's shown in the room it's exhibited in. */
+function blendBox(p) {
+  const genres = draft.settings.genres || GOQ.SAMPLE_GENRES;
+  const s = el("select", {}, [el("option", { value: "", text: "No blend" })].concat(genres.map(g => el("option", { value: g.id, text: g.name }))));
+  s.value = p.blend || ""; s.addEventListener("change", () => { p.blend = s.value; changed({ now: true }); });
+  return el("label", { class: "wide" }, [document.createTextNode("Blends with"), el("small", { text: "A second category it also belongs to. It's still exhibited only in the room above." }), s]);
+}
 function renderVisitors() {
   const main = $("#main"); main.innerHTML = "";
   const st = draft.settings, list = st.mindsets = st.mindsets || JSON.parse(JSON.stringify(GOQ.SAMPLE_MINDS));
   st.curious = st.curious || { perDay: 3 };
   const wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
   wrap.appendChild(el("h2", { class: "title", text: "Visitors" }));
-  wrap.appendChild(el("p", { text: "Curious visitors wander the galleries with a \"?\" over their heads. Talk to one and they say how they like to play, then follow you, even between floors, until you look at a piece and recommend it. The next day they come back to the lobby with a \"!\" and tell you how it went: they love it if the game has their mindset ticked (Pieces tab), like it if it has the second thing they mentioned, and otherwise it wasn't for them. A loved recommendation is worth 3 staff points." }));
+  wrap.appendChild(el("p", { text: "Curious visitors wait in the museum room for the way they like to play (the genre that welcomes their mindset), with a \"?\" over their heads. Talk to one and they say how they like to play, then follow you anywhere, even down the hallways to another room, until you look at a piece and recommend it. The next day they come back to the lobby with a \"!\" and tell you how it went: they love it if the game has their mindset ticked (Pieces tab), like it if it has the second thing they mentioned, and otherwise it wasn't for them. A loved recommendation is worth 3 staff points." }));
   const per = el("input", { type: "number", min: 0, max: 10, value: st.curious.perDay, style: "max-width:120px" });
   per.addEventListener("input", () => { st.curious.perDay = Math.max(0, Math.min(10, Math.round(+per.value || 0))); changed(); });
   wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:10px 0 14px" }, [el("label", {}, [document.createTextNode("Curious visitors a day"), el("small", { text: "Anyone you talked to but didn't get to show a game comes back the next day; the rest are new faces. 0 turns curious visitors off." }), per])]));
@@ -1525,6 +1985,7 @@ function renderVisitors() {
   wrap.appendChild(el("div", { class: "row" }, [
     el("button", { type: "button", class: "btn primary", text: "Add a mindset", onclick: () => { list.push({ id: "mind-" + Math.random().toString(36).slice(2, 8), name: "New mindset", ask: [], loved: [], liked: [], nope: [] }); changed({ now: true }); renderVisitors(); } }),
   ]));
+  renderGenres(wrap);
   renderCuriousWords(wrap);
   wrap.appendChild(el("p", { class: "note", style: "margin-top:18px", text: "What Patreon members on shift say is in the Words tab, under Chat: Patreon members on shift." }));
 }
@@ -1630,18 +2091,29 @@ function renderPieces() {
   const main = $("#main"); main.innerHTML = "";
   const spots = GOQ.spotCount(), cases = GOQ.caseCount(), wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
   wrap.appendChild(el("h2", { class: "title", text: "Pieces" }));
-  wrap.appendChild(el("p", { class: "note", text: "When there are more pieces than places, the oldest (highest in this list) move to the archive on Someone's PC in Storage, and the newest stay on display. Add new pieces at the bottom." }));
-  wrap.appendChild(el("p", { text: "Episodes go in display cases (" + cases + " in the museum): your observation on the front placard, the developer's intention on the back. Community finds hang on the walls as paintings (" + spots + " wall spots). Each kind fills its places in this order. Add more cases and wall spots in the Rooms tab." }));
+  wrap.appendChild(el("p", { class: "note", text: "When a room has more episodes than cases, the oldest (highest in this list) move to that room's touch screen, and the newest stay in the cases. Community finds need a free wall spot to be shown. Add new pieces at the bottom." }));
+  wrap.appendChild(el("p", { text: "Episodes go in display cases (" + cases + " in the museum), in the room for their genre (set under Exhibited in, or by their mindsets): your observation on the front placard, the developer's intention on the back. Community finds hang on the walls as paintings (" + spots + " wall spots). Each kind fills its places in this order. Add more cases and wall spots in the Rooms tab." }));
   wrap.appendChild(el("p", { text: "Turn on \"Unveil on a date\" and visitors see the piece under a sheet until that day. In curator mode it waits in a crate, so you can hang it on camera. Links show as small buttons while someone is looking at the piece." }));
   if (!draft.pieces.length) wrap.appendChild(el("p", { class: "empty", text: "No pieces yet. Add the first one below." }));
-  // Where each piece is: which gallery and case or wall spot, or archived on Someone's PC (the oldest go first).
-  const where = {}, nE = draft.pieces.filter(p => p.kind === "episode").length, nC = draft.pieces.length - nE;
-  const oldE = Math.max(0, nE - cases), oldC = Math.max(0, nC - spots), places = { episode: [], community: [] };
-  Object.keys(GOQ.ROOMS).forEach(id => { const r = GOQ.ROOMS[id], fl = r.elevatorStop ? r.elevatorStop.label.split(/\s+/)[0] + " " : "";
-    (r.cases || []).forEach((_, i) => places.episode.push(fl + "CASE " + (i + 1))); (r.spots || []).forEach((_, i) => places.community.push(fl + "WALL " + (i + 1))); });
-  const idx = { episode: 0, community: 0 };
-  draft.pieces.forEach((p, i) => { const k = p.kind === "episode" ? "episode" : "community", n = idx[k]++, old = k === "episode" ? oldE : oldC;
-    wrap.appendChild(pieceRow(p, i, n < old ? "ARCHIVED (SOMEONE'S PC)" : places[k][n - old])); });
+  // Where each piece is: which gallery and case or wall spot, or on its room's touch screen (the oldest go first).
+  // Where each piece is. Episodes: the case in their genre's room (or a spare case elsewhere), newest first; community finds:
+  // the wall spots in order. Episodes that don't fit go on their room's touch screen.
+  const nC = draft.pieces.filter(p => p.kind !== "episode").length, oldC = Math.max(0, nC - spots), walls = [];
+  Object.keys(GOQ.ROOMS).forEach(id => (GOQ.ROOMS[id].spots || []).forEach((_, i) => walls.push("WALL " + (walls.length + 1))));
+  const asg = GOQ.assignCases(draft.pieces, draft.settings.genres || GOQ.SAMPLE_GENRES), caseNo = {}, label = {};
+  asg.slots.forEach(sl => { caseNo[sl.where] = (caseNo[sl.where] || 0) + 1; if (sl.p) label[sl.p.id] = sl.where.toUpperCase() + ", CASE " + caseNo[sl.where]; });
+  // Per genre: how many episodes, how many cases, how many wait in the archive.
+  const gl = (draft.settings.genres || GOQ.SAMPLE_GENRES).concat([{ id: "", name: "No genre" }]).map(g => {
+    const n = draft.pieces.filter(p => p.kind === "episode" && GOQ.genreOf(p, draft.settings.genres || GOQ.SAMPLE_GENRES) === g.id).length, c = asg.slots.filter(sl => sl.genre === g.id).length;
+    return n || c ? g.name + ": " + n + " episode" + (n === 1 ? "" : "s") + ", " + c + " case" + (c === 1 ? "" : "s") + (n > c ? " (" + (n - c) + " on the room's touch screen)" : "") : null;
+  }).filter(Boolean);
+  if (gl.length) wrap.appendChild(el("ul", { class: "laylist" }, gl.map(t => el("li", { text: t }))));
+  let ci = 0;
+  draft.pieces.forEach((p, i) => {
+    const g = p.kind === "episode" ? (draft.settings.genres || GOQ.SAMPLE_GENRES).find(x => x.id === GOQ.genreOf(p, draft.settings.genres || GOQ.SAMPLE_GENRES)) : null;
+    const place = p.kind === "episode" ? label[p.id] || (g ? "ON THE " + (g.short || g.name).toUpperCase() + " SCREEN" : "NOT SHOWN (NO GENRE)") : (ci++ < oldC ? "NOT SHOWN (NO WALL SPOT FREE)" : walls[ci - 1 - oldC]);
+    wrap.appendChild(pieceRow(p, i, place));
+  });
   wrap.appendChild(el("div", { class: "row" }, [el("button", { class: "btn primary", type: "button", text: "Add a piece", onclick: () => {
     draft.pieces.push(GOQ.normalizePiece({ id: uid(), title: "New piece", developer: "" }, draft.pieces.length)); changed({ now: true }); renderPieces();
     const rows = document.querySelectorAll(".prow"); const last = rows[rows.length - 1]; if (last) { last.scrollIntoView({ block: "nearest" }); last.querySelector("input").focus(); }
@@ -1674,12 +2146,12 @@ function pieceRow(p, i, place) {
   const pickBox = el("input", { type: "checkbox", checked: !!p.pick });
   const pickLbl = el("span", { class: "spotlbl pick", text: "CURATOR'S PICK", hidden: !p.pick });
   pickBox.addEventListener("change", () => { p.pick = pickBox.checked; pickLbl.hidden = !p.pick; changed({ now: true }); });
-  const ep = p.kind === "episode", on = !!place && !/^ARCHIVED/.test(place);
+  const ep = p.kind === "episode", on = !!place && !/^ARCHIVED|^NOT SHOWN|SCREEN$/.test(place);
   const spotTxt = place || "NOT ON DISPLAY";
   const left = el("div", {}, [
     el("div", { class: "frame" }, [th]),
     pickLbl,
-    el("span", { class: "spotlbl" + (on ? "" : " off"), text: spotTxt, title: on ? "" : "Archived: it's on Someone's PC in Storage. Move it lower in the list to put it back on display." }),
+    el("span", { class: "spotlbl" + (on ? "" : " off"), text: spotTxt, title: on ? "" : "Not in a case: it's on its room's touch screen. Move it lower in the list, or add a case to its room, to put it back in a case." }),
     el("div", { class: "side-acts" }, [
       el("label", { class: "btn small", for: fileId, text: p.image ? "Replace image" : "Add image" }), file,
       p.image ? el("button", { class: "btn small quiet", type: "button", text: "Remove image", onclick: () => { p.image = null; changed({ now: true }); renderPieces(); } }) : null,
@@ -1708,7 +2180,7 @@ function pieceRow(p, i, place) {
   date.addEventListener("change", () => { if (dated.checked && date.value) { p.unveil = date.value; changed({ now: true }); } });
   const unveilBox = el("div", { class: "unveil" }, [el("label", { class: "check" }, [dated, document.createTextNode("Unveil on a date")]), date]);
   const placard = p.kind === "episode"
-    ? [f("Observation (yours)", area("observation", "What you noticed while playing."), true), f("Intention (the developer's)", area("intention", "What the developer was going for."), true)]
+    ? [f("Observation (yours)", area("observation", "What you noticed while playing. Every placard frames this as your own view (Words, Pieces)."), true), f("Intention (the developer's)", area("intention", "What the developer was going for."), true)]
     : [f("Guest writer", text("guestWriter", "Name (Discord)")), el("span"), f("Guest note", area("guestNote", "The guest writer's note."), true)];
   const move = (d) => { const j = i + d; if (j < 0 || j >= draft.pieces.length) return; const a = draft.pieces; [a[i], a[j]] = [a[j], a[i]]; changed({ now: true }); renderPieces(); };
   const fields = el("div", { class: "fields" }, [
@@ -1718,6 +2190,8 @@ function pieceRow(p, i, place) {
     ...placard,
     f("How a visitor would describe it", text("hint", "the one where the clock never ran out but I still rushed"), true, "Visitors say this when they come back to tell you how it went: \"I tried Lantern Keeper, the one where...\" Keep it to one line, in their words."),
     mindsBox(p),
+    p.kind === "episode" ? genreBox(p) : null,
+    p.kind === "episode" ? blendBox(p) : null,
     f("YouTube episode", link("episodeUrl", "https://youtube.com/watch?v=..."), false, "Shown as \"Watch the episode\""),
     f("The game", link("gameUrl", "https://store.steampowered.com/... or itch.io"), false, "Shown as \"Play the game\""),
     el("div", { class: "acts" }, [
@@ -1744,10 +2218,34 @@ $("#importFile").addEventListener("change", async e => {
     const j = JSON.parse(await f.text());
     if (!j || j.format !== GOQ.PACK_FORMAT) throw new Error("That file isn't a museum pack.");
     if ((Object.keys(draft.assets).length || draft.pieces.length) && !confirm("Replace everything here with this pack? Export first if you want to keep the current one.")) return;
-    useDraft(j); changed({ now: true }); await game.setPack(packOut()); render(); status("Imported " + f.name);
+    migrateFloors(j); useDraft(j); changed({ now: true }); await game.setPack(packOut()); render(); status("Imported " + f.name);
   } catch (err) { status(err instanceof SyntaxError ? "That file couldn't be read as JSON." : err.message, true); }
 });
 
+/* A pack from before the museum became one building: drop the old floors (galleries, stairwells, elevator, gift shop room)
+   and rewire the doors that led to them, so it opens onto the new layout. Asks first. */
+const OLD_FLOORS = ["gallery", "gallery2", "gallery3", "shop", "stairwell", "stairwell2", "stairwell3", "stairwellB1", "elevator"];
+function migrateFloors(raw) {
+  if (!raw || !raw.rooms || raw.rooms.museum || !OLD_FLOORS.some(k => raw.rooms[k])) return false;
+  if (!confirm("This museum pack is from before the museum became one building. Switch it to the new layout?\n\nYour pieces, art and settings stay. The old gallery floors, stairwells, elevator and gift shop room are removed, and the doors that led to them are rewired or walled up.")) return false;
+  OLD_FLOORS.forEach(k => { delete raw.rooms[k]; if (raw.settings && raw.settings.lighting) delete raw.settings.lighting[k]; });
+  for (const id in raw.rooms) {
+    const d = raw.rooms[id]; if (!d || !Array.isArray(d.map)) continue;
+    const wall = (x, y) => { const c = (d.map[y] || "")[x], put = (yy, ch) => { d.map[yy] = d.map[yy].slice(0, x) + ch + d.map[yy].slice(x + 1); };
+      if (c === "d" || c === "s") { put(y, "v"); if (d.map[y - 1]) put(y - 1, "^"); } else if (c) put(y, "#"); };
+    d.events = (d.events || []).filter(e => {
+      if (e.elevatorDoor) { wall(e.x, e.y); return false; }
+      if (!e.warp || !OLD_FLOORS.includes(e.warp[0])) return true;
+      if (id === "lobby" && e.warp[0] === "gallery") { e.warp = ["museum", "@lobby", 0, "up"]; return true; }
+      if (e.warp[0] === "stairwellB1") { e.warp = ["lobby", 13, 5, "left"]; return true; }
+      wall(e.x, e.y); return false;
+    });
+    delete d.elevatorStop;
+  }
+  const lob = raw.rooms.lobby; if (lob && !(lob.stairs || []).some(st => st.to && st.to[0] === "storage")) (lob.stairs = lob.stairs || []).push({ x: 13, y: 5, kind: "down", to: ["storage", 13, 5, "left"] }); // B1 is down the lobby's stairs now
+  ((raw.settings && raw.settings.achievements) || []).forEach(a => { if (a.id === "explorer" && a.target === 10) a.target = 8; });
+  return true;
+}
 /* ---------- Start: this browser's draft, else the site's pack, else the sample pieces ---------- */
 (async function start() {
   let raw = null;
@@ -1757,7 +2255,8 @@ $("#importFile").addEventListener("change", async e => {
     try { const r = await fetch(SITE_PACK, { cache: "no-cache" }); const j = r.ok ? await r.json() : null; if (j && j.format === GOQ.PACK_FORMAT) { raw = j; status("Loaded " + SITE_PACK + " from the site"); } } catch (e) {}
   }
   if (!raw) { raw = { pieces: GOQ.SAMPLE_PIECES }; status("Started with the sample pieces"); }
-  useDraft(raw);
+  const moved = migrateFloors(raw);
+  useDraft(raw); if (moved) { changed({ now: true }); status("Switched your draft to the one-building layout"); }
   await game.setPack(packOut());
   render();
 })();
