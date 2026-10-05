@@ -1056,8 +1056,8 @@ const ROOMS = {
         { id: "story", name: "Story", x: 41, y: 29, w: 12, h: 10, art: { top: "staff_wall_top", upper: "staff_wall_upper", lower: "staff_wall_lower", floor: "staff_floor" }, light: true },
       ],
       halls: [
-        { id: "upper", name: "Upper Hall", path: [[15, 9], [42, 9]], width: 2, min: 25 },
-        { id: "lower", name: "Lower Hall", path: [[14, 37], [42, 37]], width: 2, min: 25 },
+        { id: "upper", name: "Upper Hall", path: [[15, 9], [42, 9]], width: 2, min: 24 },
+        { id: "lower", name: "Lower Hall", path: [[14, 37], [42, 37]], width: 2, min: 24 },
         { id: "lobbyhall", name: "Lobby Hall", path: [[28, 37], [28, 45]], width: 2, min: 8 },
         { id: "cafe-south", name: "Café, south", path: [[28, 25], [28, 37]], width: 2, min: 0 },
         { id: "cafe-west", name: "Café, west", path: [[21, 21], [10, 21]], width: 2, min: 0 },
@@ -4205,7 +4205,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-08 one building 2";
+const VERSION = "2026-10-08 one building 3";
 window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

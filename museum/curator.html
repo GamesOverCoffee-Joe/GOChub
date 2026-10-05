@@ -325,7 +325,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-08 one building 2";
+window.GOQ_WANT = "2026-10-08 one building 3";
 (function load(retry) {
   const s = document.createElement("script");
   s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry ? "&r=" + Date.now() : "");
@@ -852,7 +852,11 @@ const clone = o => JSON.parse(JSON.stringify(o));
 const R = { id: "lobby", tool: "select", brush: TILE_BRUSHES[0], place: null, sel: null, zoom: 0, panX: 0, panY: 0, undo: [], redo: [], img: null, grid: true, linking: null };
 
 function roomIds() { const ids = Object.keys(GOQ.BUILTIN_ROOMS); for (const id in (draft.rooms || {})) if (!ids.includes(id)) ids.push(id); return ids; }
-function roomDef(id) { return (draft.rooms && draft.rooms[id]) || GOQ.BUILTIN_ROOMS[id] || GOQ.ROOMS[id]; }
+function roomDef(id) {
+  const d = (draft.rooms && draft.rooms[id]) || GOQ.BUILTIN_ROOMS[id] || GOQ.ROOMS[id];
+  if (d && d.layout && !Array.isArray(d.map)) recarve(d); // a pack can hold just the museum's layout: work out its map here
+  return d;
+}
 function editable(id) { draft.rooms = draft.rooms || {}; if (!draft.rooms[id]) draft.rooms[id] = clone(GOQ.BUILTIN_ROOMS[id]); return draft.rooms[id]; }
 function W(d) { return d.map[0].length; } function H(d) { return d.map.length; }
 function setCh(d, x, y, ch) { if (y < 0 || y >= H(d) || x < 0 || x >= W(d)) return; d.map[y] = d.map[y].slice(0, x) + ch + d.map[y].slice(x + 1); }
@@ -1326,7 +1330,7 @@ function layApply(orig, hit, dx, dy) {
 function layIssues(L) {
   const out = [];
   L.halls.forEach(h => { const n = GOQ.hallLength(L, h); if (h.min && n < h.min) out.push(h.name + " is " + n + " long; it should be at least " + h.min + "."); });
-  L.halls.forEach(h => { if (!layOwner(L, h, h.path[0]) || !layOwner(L, h, h.path[h.path.length - 1])) out.push(h.name + " has an end that isn't in a room or another hallway."); });
+  L.halls.forEach(h => { if (!layOwner(L, h, h.path[0]) && !layOwner(L, h, h.path[h.path.length - 1])) out.push(h.name + " isn't joined to any room or hallway."); }); // one loose end is fine: a dead end, a doorway, stairs
   return out;
 }
 function drawLayout(x, d, z) {
