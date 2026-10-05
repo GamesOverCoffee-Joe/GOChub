@@ -404,3 +404,7 @@ Goal: character.
 - **New drafts:** Hovershot (Yaniv) and Spacecat Solitaire (Grey Duck Games), in Mastery, with no images or links yet.
 - **Touch screens replace the archive.** Each genre room has a small touch screen on a pedestal (`overflow_screen`, event `{kiosk: true}`, Place → Display → Touch screen). It lists that room's genre episodes that don't fit in its cases, to read or recommend. Mastery has 9 episodes for 8 cases, so Polariball (the oldest) is on its screen.
 - **Someone's PC (B1)** is idle, waiting for its new job. Community finds that don't fit a wall spot aren't shown anywhere for now.
+
+**Curator's view (2026-10-16).**
+- Every observation placard is headed THE CURATOR'S OBSERVATION and followed by a line saying it is the curator's own impressions, not the developer's view and not a verdict. The back placard is headed THE DEVELOPER'S INTENTION. All three lines are editable in Words → Pieces (`case.obsLabel`, `case.obsNote`, `case.intLabel`).
+- **version.json is required.** The pages check it to notice a stale cached engine. Keep it in step with `VERSION` and both `GOQ_WANT` lines.

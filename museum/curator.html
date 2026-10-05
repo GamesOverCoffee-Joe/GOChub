@@ -325,7 +325,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-15 five rooms";
+window.GOQ_WANT = "2026-10-16 curator view";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -2180,7 +2180,7 @@ function pieceRow(p, i, place) {
   date.addEventListener("change", () => { if (dated.checked && date.value) { p.unveil = date.value; changed({ now: true }); } });
   const unveilBox = el("div", { class: "unveil" }, [el("label", { class: "check" }, [dated, document.createTextNode("Unveil on a date")]), date]);
   const placard = p.kind === "episode"
-    ? [f("Observation (yours)", area("observation", "What you noticed while playing."), true), f("Intention (the developer's)", area("intention", "What the developer was going for."), true)]
+    ? [f("Observation (yours)", area("observation", "What you noticed while playing. Every placard frames this as your own view (Words, Pieces)."), true), f("Intention (the developer's)", area("intention", "What the developer was going for."), true)]
     : [f("Guest writer", text("guestWriter", "Name (Discord)")), el("span"), f("Guest note", area("guestNote", "The guest writer's note."), true)];
   const move = (d) => { const j = i + d; if (j < 0 || j >= draft.pieces.length) return; const a = draft.pieces; [a[i], a[j]] = [a[j], a[i]]; changed({ now: true }); renderPieces(); };
   const fields = el("div", { class: "fields" }, [

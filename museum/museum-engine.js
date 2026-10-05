@@ -1301,6 +1301,9 @@ const TEXT = {
   "case.covered":      { g: "Pieces", l: "Case under a cloth (unveiling soon)", v: [["Something is under a cloth in this case.", "The card says it will be unveiled on {date}."]] },
   "painting.covered":  { g: "Pieces", l: "Painting under a sheet (unveiling soon)", v: [["Something is hanging under a sheet.", "The card says it will be unveiled on {date}."]] },
   "case.ends":         { g: "Pieces", l: "Reading a case from the side", v: [["The placards are on the front and the back. Walk around to read them."]] },
+  "case.obsLabel":     { g: "Pieces", l: "Heading over the observation (one line)", v: [["THE CURATOR'S OBSERVATION"]] },
+  "case.obsNote":      { g: "Pieces", l: "Under every observation: whose view it is", v: [["(These are my own impressions as the curator, from playing it myself. Not the developer's view, and not a verdict on the game.)"]] },
+  "case.intLabel":     { g: "Pieces", l: "Heading over the developer's intention (one line)", v: [["THE DEVELOPER'S INTENTION"]] },
   "case.frontNote":    { g: "Pieces", l: "After the front placard", v: [["(The developer's intention is on the other side of the case.)"]] },
   "case.backNote":     { g: "Pieces", l: "After the back placard", v: [["(The curator's observation is on the other side of the case.)"]] },
   "intercom.ask":      { g: "Closing up", l: "Intercom question", v: [["The intercom. Make the closing announcement?"]] },
@@ -2480,10 +2483,13 @@ class Game {
   }
   viewPiece(p, side, stampAfter) {
     const gold = p.kind === "episode", img = this.pieceImgs[p.id], secs = [];
-    if (side === "front") { if (p.observation) secs.push({ label: "OBSERVATION", text: p.observation }); secs.push({ label: "", text: this.tx("case.frontNote").join(" ") }); }
-    else if (side === "back") { if (p.intention) secs.push({ label: "INTENTION", text: p.intention }); secs.push({ label: "", text: this.tx("case.backNote").join(" ") }); }
+    // The observation is always framed as the curator's own view; the headings and that line are in Words, Pieces.
+    const obs = () => { secs.push({ label: this.tx("case.obsLabel").join(" "), text: p.observation }); secs.push({ label: "", text: this.tx("case.obsNote").join(" ") }); };
+    const int = () => secs.push({ label: this.tx("case.intLabel").join(" "), text: p.intention });
+    if (side === "front") { if (p.observation) obs(); secs.push({ label: "", text: this.tx("case.frontNote").join(" ") }); }
+    else if (side === "back") { if (p.intention) int(); secs.push({ label: "", text: this.tx("case.backNote").join(" ") }); }
     else if (side === "end") secs.push({ label: "", text: this.tx("case.ends").join(" ") });
-    else if (gold) { if (p.observation) secs.push({ label: "OBSERVATION", text: p.observation }); if (p.intention) secs.push({ label: "INTENTION", text: p.intention }); }
+    else if (gold) { if (p.observation) obs(); if (p.intention) int(); }
     else if (p.guestNote) secs.push({ label: p.guestWriter ? "GUEST NOTE BY " + p.guestWriter.toUpperCase() : "GUEST NOTE", text: p.guestNote });
     this.read({ img: img ? p.image : this.pieceArt(p).toDataURL(), imgClass: img && img.naturalWidth > 160 ? "photo" : "", title: p.title.toUpperCase(), sub: "By " + p.developer,
       sections: secs, pick: p.pick, links: [[p.episodeUrl, "Watch the episode", "WATCH"], [p.gameUrl, "Play the game", "PLAY"]] }, () => {
@@ -4616,7 +4622,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-15 five rooms";
+const VERSION = "2026-10-16 curator view";
 window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
