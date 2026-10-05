@@ -367,3 +367,5 @@ Goal: character.
   - Place → Hallways → Mural, then tap a wall: it fills that stretch.
   - Pick its art, its length, and which part of the landscape shows.
 
+**Releases and caching.** Each release bumps three version strings, and they must all match: `VERSION` in museum-engine.js, `window.GOQ_WANT` in museum.html and curator.html, and `museum/version.json`. A page that finds a newer version in version.json reloads itself once to get fresh files.
+
