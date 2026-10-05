@@ -322,7 +322,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-06 life 4";
+window.GOQ_WANT = "2026-10-07 wings";
 (function load(retry) {
   const s = document.createElement("script");
   s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry ? "&r=" + Date.now() : "");
@@ -364,6 +364,7 @@ function packOut() {
     if (p.gameUrl) o.gameUrl = p.gameUrl;
     if (p.hint) o.hint = p.hint;
     if (p.minds && p.minds.length) o.minds = p.minds;
+    if (p.wing) o.wing = p.wing;
     if (p.unveil) o.unveil = p.unveil;
     if (p.pick) o.pick = true;
     if (p.image) o.image = p.image; else { o.colors = p.colors; o.style = p.style; }
@@ -817,10 +818,11 @@ const TILE_BRUSHES = [
   { ch: "D", name: "Doorway", pair: "d", note: "Paint on the upper wall row; the lower half is added below." },
   { ch: "S", name: "Staff door", pair: "s", note: "Paint on the upper wall row; the lower half is added below." },
   { ch: "B", name: "Door in a bottom wall" }, { ch: "H", name: "Door in a side wall", note: "Paint on the left or right wall." }, { ch: "E", name: "Front doors" },
+  { ch: "|", name: "Divider (half wall)", note: "Paint on the floor, in a line, to separate wings. Nobody walks through it. Its art is under Art, Wings." },
 ];
 const PLACE_GROUPS = [
   { name: "Display", items: [
-    { kind: "case", name: "Episode case", key: "display_case", note: "Episodes fill cases in Pieces order. Stand it on the floor with room to walk all the way around." },
+    { kind: "case", name: "Episode case", key: "display_case", note: "Episodes go in the cases of their wing (Room settings, Wings); the rest fill free cases in Pieces order. Stand it on the floor with room to walk all the way around." },
     { kind: "spot", name: "Painting spot", key: "wall_frame_wood", note: "Community pieces hang here. Tap the wall; it takes two tiles across both wall rows." },
   ] },
   { name: "Furniture", items: ["bench", "plant", "sign_stand", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board"].map(k => ({ kind: "prop", key: k })) },
@@ -970,7 +972,7 @@ function slotSwatch(key, isChar) {
 }
 function brushSwatch(b) {
   const d = roomDef(R.id), art = d.art || {};
-  const key = { ".": art.floor, "=": art.runner || "lobby_runner", "#": art.top, "^": art.upper, "v": art.lower, D: "doorway_upper", S: "staff_door_upper", B: "doorway_bottom", H: "doorway_side", E: "exit_door" }[b.ch];
+  const key = { ".": art.floor, "=": art.runner || "lobby_runner", "#": art.top, "^": art.upper, "v": art.lower, D: "doorway_upper", S: "staff_door_upper", B: "doorway_bottom", H: "doorway_side", E: "exit_door", "|": "divider" }[b.ch];
   const c = slotSwatch(key || art.floor);
   if ("DSBEH".includes(b.ch)) { const x = c.getContext("2d"), base = slotSwatch("BEH".includes(b.ch) ? art.top : art.upper); x.globalCompositeOperation = "destination-over"; x.drawImage(base, 0, 0); }
   return c;
@@ -1316,6 +1318,17 @@ function renderRoomSettings(box, d) {
   fsel.value = d.floorSign || ""; fsel.addEventListener("change", () => { snapshot(); const dd = editable(R.id); if (fsel.value) dd.floorSign = fsel.value; else delete dd.floorSign; roomChanged(true); });
   box.appendChild(el("label", { class: "rfield" }, [el("span", { text: "Floor painted on the wall (stairwells)" }), fsel]));
   box.appendChild(el("label", { class: "rfield" }, [el("span", { text: "Elevator stop" }), el("small", { text: "Name it to put this room on the elevator panel (you arrive at the start spot). Leave empty for none. Give the room an elevator door too." }), stop]));
+  // Wings: a stretch of columns given to one mindset, with its mural, rug and sign. Its cases hold that mindset's games.
+  const wings = (d.wings || []).map(w => Object.assign({}, w)), minds = draft.settings.mindsets || [], saveWings = () => { snapshot(); const dd = editable(R.id); if (wings.length) dd.wings = wings.map(w => Object.assign({}, w)); else delete dd.wings; roomChanged(true); };
+  const wbox = el("div", { class: "rwings" }, [el("h3", { text: "Wings", style: "margin:12px 0 4px" }), el("small", { text: "Each wing takes columns From to To (counting from 0 at the left wall), down to its last row. Its cases show that mindset's games, with its mural on the back wall. Paint dividers between wings with the Divider tile." })]);
+  wings.forEach((w, i) => {
+    const sel = el("select", {}, minds.map(m => el("option", { value: m.id, text: m.title || m.name }))); sel.value = w.mind; sel.addEventListener("change", () => { w.mind = sel.value; saveWings(); });
+    const num = (k, label) => { const n = el("input", { type: "number", min: 0, max: 47, value: w[k], style: "max-width:70px" }); n.addEventListener("change", () => { w[k] = Math.max(0, Math.round(+n.value || 0)); saveWings(); }); return el("label", { class: "rfield" }, [el("span", { text: label }), n]); };
+    wbox.appendChild(el("div", { class: "rrow" }, [el("label", { class: "rfield" }, [el("span", { text: "Mindset" }), sel]), num("x0", "From"), num("x1", "To"), num("y1", "Last row"),
+      el("button", { type: "button", class: "btn small quiet", text: "Remove", onclick: () => { wings.splice(i, 1); saveWings(); renderRooms(); } })]));
+  });
+  wbox.appendChild(el("button", { type: "button", class: "btn small", text: "Add a wing", disabled: !minds.length, onclick: () => { wings.push({ mind: minds[0].id, x0: 1, x1: Math.min(W(d) - 2, 8), y1: H(d) - 3 }); saveWings(); renderRooms(); } }));
+  box.appendChild(wbox);
   box.appendChild(el("p", { class: "note", text: "Lighting for this room is in Art, then Lighting." }));
   const issues = roomIssues(R.id); if (issues.length) box.appendChild(el("ul", { class: "rissues" }, issues.map(t => el("li", { text: t }))));
   const builtIn = !!GOQ.BUILTIN_ROOMS[R.id];
@@ -1466,6 +1479,8 @@ function renderAchievements() {
 /* Mindset checkboxes on a piece: who'd love this game. Built from the Visitors tab's list. */
 function mindsBox(p) {
   const list = draft.settings.mindsets || [];
+  const wingSel = el("select", {}, [el("option", { value: "", text: "Automatic (its first ticked mindset)" }), ...list.map(m => el("option", { value: m.id, text: m.title || m.name }))]);
+  wingSel.value = list.some(m => m.id === p.wing) ? p.wing : ""; wingSel.addEventListener("change", () => { p.wing = wingSel.value; changed({ now: true }); renderPieces(); });
   p.minds = (p.minds || []).filter(id => list.some(m => m.id === id));
   const boxes = list.map(m => {
     const cb = el("input", { type: "checkbox", checked: p.minds.includes(m.id) });
@@ -1474,7 +1489,8 @@ function mindsBox(p) {
   });
   return el("div", { class: "fieldset wide" }, [el("span", { class: "flabel", text: "Who'd love it" }),
     el("small", { text: "Tick the mindsets this game suits, usually one to three. A curious visitor with one of these loves it; leave them all off and visitors just say it was pretty good. Edit the mindsets in the Visitors tab." }),
-    list.length ? el("div", { class: "unveil", style: "flex-wrap:wrap" }, boxes) : el("p", { class: "note", text: "No mindsets yet. Add some in the Visitors tab." })]);
+    list.length ? el("div", { class: "unveil", style: "flex-wrap:wrap" }, boxes) : el("p", { class: "note", text: "No mindsets yet. Add some in the Visitors tab." }),
+    p.kind === "episode" ? el("label", { style: "display:block;margin-top:6px" }, [document.createTextNode("Exhibited in "), wingSel]) : null]);
 }
 function renderVisitors() {
   const main = $("#main"); main.innerHTML = "";
@@ -1508,6 +1524,9 @@ function renderVisitors() {
     wrap.appendChild(el("article", { class: "prow", style: "display:block" }, [el("div", { class: "fields" }, [
       el("label", {}, [document.createTextNode("Name (only you see it)"), name]),
       el("p", { class: "note", style: "align-self:end;margin:0", text: tagged + " piece" + (tagged === 1 ? "" : "s") + " ticked" }),
+      (() => { const t = el("input", { type: "text", value: m.title || "", placeholder: "THRILLS", maxlength: 24 }); t.addEventListener("input", () => { m.title = t.value; changed(); }); return el("label", {}, [document.createTextNode("Wing sign (everyone sees it)"), t]); })(),
+      (() => { const t = el("input", { type: "text", value: m.tagline || "", placeholder: "Something's coming", maxlength: 40 }); t.addEventListener("input", () => { m.tagline = t.value; changed(); }); return el("label", {}, [document.createTextNode("Wing tagline (shown when you walk in)"), t]); })(),
+      (() => { const t = el("input", { type: "color", value: m.color || "#888888" }); t.addEventListener("input", () => { m.color = t.value; changed(); }); return el("label", {}, [document.createTextNode("Wing color (rug and sign)"), t]); })(),
       el("label", { class: "wide" }, [document.createTextNode("What they're looking for"), lines(m, "ask", "Something I can play at my own pace.\nSomething relaxing. Nothing stressful, please.")]),
       el("label", {}, [document.createTextNode("Next day: loved it"), lines(m, "loved", "{title} was so calm. I just sat with it for hours.")]),
       el("label", {}, [document.createTextNode("Next day: liked it"), lines(m, "liked", "{title} had some quiet moments I really liked.")]),
@@ -1635,13 +1654,13 @@ function renderPieces() {
   wrap.appendChild(el("p", { text: "Turn on \"Unveil on a date\" and visitors see the piece under a sheet until that day. In curator mode it waits in a crate, so you can hang it on camera. Links show as small buttons while someone is looking at the piece." }));
   if (!draft.pieces.length) wrap.appendChild(el("p", { class: "empty", text: "No pieces yet. Add the first one below." }));
   // Where each piece is: which gallery and case or wall spot, or archived on Someone's PC (the oldest go first).
-  const where = {}, nE = draft.pieces.filter(p => p.kind === "episode").length, nC = draft.pieces.length - nE;
-  const oldE = Math.max(0, nE - cases), oldC = Math.max(0, nC - spots), places = { episode: [], community: [] };
-  Object.keys(GOQ.ROOMS).forEach(id => { const r = GOQ.ROOMS[id], fl = r.elevatorStop ? r.elevatorStop.label.split(/\s+/)[0] + " " : "";
-    (r.cases || []).forEach((_, i) => places.episode.push(fl + "CASE " + (i + 1))); (r.spots || []).forEach((_, i) => places.community.push(fl + "WALL " + (i + 1))); });
-  const idx = { episode: 0, community: 0 };
-  draft.pieces.forEach((p, i) => { const k = p.kind === "episode" ? "episode" : "community", n = idx[k]++, old = k === "episode" ? oldE : oldC;
-    wrap.appendChild(pieceRow(p, i, n < old ? "ARCHIVED (SOMEONE'S PC)" : places[k][n - old])); });
+  // Where each piece is: episodes by wing (see Room settings, Wings), community finds on the wall spots in order.
+  const nC = draft.pieces.filter(p => p.kind !== "episode").length, oldC = Math.max(0, nC - spots), wallPlaces = [], floorOf = id => { const r = GOQ.ROOMS[id]; return r.elevatorStop ? r.elevatorStop.label.split(/\s+/)[0] + " " : r.name + " "; };
+  Object.keys(GOQ.ROOMS).forEach(id => (GOQ.ROOMS[id].spots || []).forEach((_, i) => wallPlaces.push(floorOf(id) + "WALL " + (i + 1))));
+  const caseOf = {}, mindTitle = id => { const m = (draft.settings.mindsets || []).find(x => x.id === id); return m ? m.title || m.name : ""; };
+  GOQ.assignCases(draft.pieces.map((p, i) => GOQ.normalizePiece(p, i))).slots.forEach(sl => { if (sl.p) caseOf[sl.p.id] = floorOf(sl.room) + "CASE " + (sl.i + 1) + (sl.mind ? " \u00B7 " + mindTitle(sl.mind) : ""); });
+  let ci = 0;
+  draft.pieces.forEach((p, i) => { const place = p.kind === "episode" ? caseOf[p.id] || "ARCHIVED (SOMEONE'S PC)" : (ci++ < oldC ? "ARCHIVED (SOMEONE'S PC)" : wallPlaces[ci - 1 - oldC]); wrap.appendChild(pieceRow(p, i, place)); });
   wrap.appendChild(el("div", { class: "row" }, [el("button", { class: "btn primary", type: "button", text: "Add a piece", onclick: () => {
     draft.pieces.push(GOQ.normalizePiece({ id: uid(), title: "New piece", developer: "" }, draft.pieces.length)); changed({ now: true }); renderPieces();
     const rows = document.querySelectorAll(".prow"); const last = rows[rows.length - 1]; if (last) { last.scrollIntoView({ block: "nearest" }); last.querySelector("input").focus(); }
