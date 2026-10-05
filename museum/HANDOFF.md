@@ -304,6 +304,28 @@ Goal: the building feels lived in, and you envy the visitors.
 - Shirt quest steps rewritten. Usher directions and text updated. The lobby directory as a map. Figure-in-the-dark spots chosen along the dark hallways.
 - From the wings work, worth keeping: the lobby directory event, and the `addVisitor`/`freeSpot` placement fix.
 
+**Status (2026-10-10): built, waiting on your play-test.** First, three fixes from the Phase 2 play-test:
+- **Cases stay in their genre.** An episode only goes in its own genre's room. If that room is full, the oldest of that genre wait in the archive, and adding a case to the room brings the next one out. Episodes with no genre only go in rooms with no genre. The Pieces tab lists episodes, cases and archived per genre.
+- **The B1 stairs are in the lobby**, where the café door used to be. The spur off the Lower Hall is gone.
+- **Dragging in the curator is smooth.** Every drag step used to rebuild the whole museum, about 75 ms on a desktop and more on a phone. Now the map updates when you let go, and the thing you're dragging is drawn where it's going.
+
+What's in:
+- **Visitors in every room.** Two per genre room (three on busy days, fewer at night), plus whoever is placed in the editor.
+  - Each visitor belongs to a room and strolls there, often stopping in front of a case.
+  - Now and then one wanders down a hallway to another room or to the café, and you see them walking the halls.
+  - In the café: one person browsing the wall shelves, one sitting at a stool, one more on busy days.
+  - Visitors who wander into the café sometimes leave with a drink. The drink and bag sliders still apply, and nobody carries both.
+- **Curious visitors** wait in the room whose genre welcomes their mindset, so a thrill-seeker is in Action.
+  - Follow works anywhere in the building.
+  - If you say "never mind", they walk back to their own room. In the lobby, they head back into the museum.
+- **Staff.** The shopkeeper stands by the shop counter and the barista behind the café counter. At night, two guards walk the Upper and Lower Halls with flashlights. The usher and the B1 conservator are unchanged.
+- **The lobby directory.** It lists the café in the middle, each genre room with its compass direction and the mindsets it suits, and the B1 stairs. It's built from the layout, so it stays right when you move rooms.
+- **Shirt quest.** "Ride the elevator down" is now "take the lobby stairs down to B1". "Climb to the second floor" is now "walk the Upper Hall from Puzzle to Strategy". "Nap up there" is now "nap on the Upper Hall bench". Magazine 3's riddle is updated to match.
+- **Floor-era cleanup.** The elevator and stairwell code, art slots and text are gone, along with the curator's elevator options.
+- **Speed.** Rebuilding the whole museum got faster (about 7 ms on a desktop, was about 25 ms), so opening and Apply to preview are snappier.
+- **Figure in the dark.** No changes needed: once every room's lights are off, the hallways are dark too, so it can turn up there.
+
+
 ### Phase 4: Decoration
 
 Goal: character.

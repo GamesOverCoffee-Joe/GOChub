@@ -325,7 +325,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-09 furnished 2";
+window.GOQ_WANT = "2026-10-10 visitors";
 (function load(retry) {
   const s = document.createElement("script");
   s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry ? "&r=" + Date.now() : "");
@@ -887,7 +887,7 @@ function roomItems(d) {
   (d.catSpots || []).forEach((p, i) => out.push({ type: "catSpot", i, x: p[0], y: p[1], w: 1, h: 1, label: "Cat nap spot" }));
   (d.glows || []).forEach((p, i) => out.push({ type: "glow", i, x: p[0], y: p[1], w: 1, h: 1, label: "Light" }));
   (d.mugSpots || []).forEach((p, i) => out.push({ type: "mugSpot", i, x: p[0], y: p[1], w: 1, h: 1, label: "Mug spot" }));
-  [["lightSwitch", "Light switch", 1, 1], ["intercom", "Intercom", 1, 1], ["timeClock", "Time clock", 1, 1], ["elevatorPanel", "Elevator panel", 1, 1]].forEach(([k, l, w, h]) => { if (d[k]) out.push({ type: "fixed", key: k, x: d[k][0], y: d[k][1], w, h, label: l }); });
+  [["lightSwitch", "Light switch", 1, 1], ["intercom", "Intercom", 1, 1], ["timeClock", "Time clock", 1, 1]].forEach(([k, l, w, h]) => { if (d[k]) out.push({ type: "fixed", key: k, x: d[k][0], y: d[k][1], w, h, label: l }); });
   [["windowAt", "Window"], ["eotmAt", "Employee of the Month"], ["corkboardAt", "Corkboard"], ["leaderboardAt", "Staff leaderboard"]].forEach(([k, l]) => { if (d[k]) out.push({ type: "fixed", key: k, x: d[k][0], y: 1, w: 2, h: 2, label: l }); });
   if (d.featuredAt) out.push({ type: "fixed", key: "featuredAt", x: d.featuredAt[0], y: d.featuredAt[1] - 1, w: 1, h: 2, label: "Featured item stand" });
   (d.stairs || []).forEach((st, i) => out.push({ type: "stairs", i, x: st.x, y: st.y, w: 1, h: 1, label: st.kind === "up" ? "Stairs up" : "Stairs down" }));
@@ -907,7 +907,7 @@ function doorTileAt(d, x, y) {
   return { x, y: ey, ch: getCh(d, x, ey) };
 }
 function doorEvent(d, x, y) {
-  return (d.events || []).find(e => e.x === x && e.y === y && (e.warp || e.frontDoor || e.staffDoor || e.shopDoor || e.elevatorDoor || e.elevatorExit))
+  return (d.events || []).find(e => e.x === x && e.y === y && (e.warp || e.frontDoor || e.staffDoor || e.shopDoor))
     || (isLayout(d) ? GOQ.carveLayout(GOQ.normalizeLayout(d.layout)).doors.find(e => e.x === x && e.y === y) : null); // the museum's doorways are part of its layout
 }
 /* Where a door leads, in words. "@lobby" means the museum's doorway (or stairs) of that name. */
@@ -1568,7 +1568,6 @@ function renderInspector() {
 }
 function renderDoor(box, d, it) {
   const ev = doorEvent(d, it.x, it.y), ch = getCh(d, it.x, it.y);
-  if (ev && (ev.elevatorDoor || ev.elevatorExit)) { box.appendChild(el("p", { class: "note", text: ev.elevatorDoor ? "An elevator door. It opens into the elevator; the panel inside picks the floor. Rooms with an elevator stop are listed on the panel." : "The elevator's own door. It lets you out on whichever floor the panel was set to." })); return; }
   if (ch === "E" || (ev && ev.frontDoor)) { box.appendChild(el("p", { class: "note", text: "The museum's front doors. Leaving through them at closing time shows the CLOSED screen." })); return; }
   const to = (ev && ev.warp) || null;
   box.appendChild(el("p", { class: "note", text: to ? whereTo(to) : "This door doesn't lead anywhere yet." }));
@@ -1817,7 +1816,7 @@ function renderVisitors() {
   st.curious = st.curious || { perDay: 3 };
   const wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
   wrap.appendChild(el("h2", { class: "title", text: "Visitors" }));
-  wrap.appendChild(el("p", { text: "Curious visitors wander the galleries with a \"?\" over their heads. Talk to one and they say how they like to play, then follow you, even between floors, until you look at a piece and recommend it. The next day they come back to the lobby with a \"!\" and tell you how it went: they love it if the game has their mindset ticked (Pieces tab), like it if it has the second thing they mentioned, and otherwise it wasn't for them. A loved recommendation is worth 3 staff points." }));
+  wrap.appendChild(el("p", { text: "Curious visitors wait in the museum room for the way they like to play (the genre that welcomes their mindset), with a \"?\" over their heads. Talk to one and they say how they like to play, then follow you anywhere, even down the hallways to another room, until you look at a piece and recommend it. The next day they come back to the lobby with a \"!\" and tell you how it went: they love it if the game has their mindset ticked (Pieces tab), like it if it has the second thing they mentioned, and otherwise it wasn't for them. A loved recommendation is worth 3 staff points." }));
   const per = el("input", { type: "number", min: 0, max: 10, value: st.curious.perDay, style: "max-width:120px" });
   per.addEventListener("input", () => { st.curious.perDay = Math.max(0, Math.min(10, Math.round(+per.value || 0))); changed(); });
   wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:10px 0 14px" }, [el("label", {}, [document.createTextNode("Curious visitors a day"), el("small", { text: "Anyone you talked to but didn't get to show a game comes back the next day; the rest are new faces. 0 turns curious visitors off." }), per])]));
