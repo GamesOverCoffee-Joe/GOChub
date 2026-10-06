@@ -171,7 +171,7 @@ dialog.settings::backdrop{background:rgba(10,5,7,.7)}
   <div id="stage" aria-label="Game screen. Use arrow keys or WASD to walk, Z or Space to look and talk, X to go back."></div>
   <div id="controls"></div>
 </main>
-<p class="hint">Walk with <kbd>Arrow keys</kbd> or <kbd>WASD</kbd>, or click to walk if it's on in Settings. Look, talk and tidy with <kbd>Z</kbd> or <kbd>Space</kbd>. <kbd>X</kbd> goes back, or takes a photo of whatever's in front of you. <kbd>Enter</kbd> opens the menu (photos, save, quit). Dust the frames, water the plants, find the curator's mug, and turn out the lights when you leave.</p>
+<p class="hint">Walk with <kbd>Arrow keys</kbd> or <kbd>WASD</kbd>, or click to walk if it's on in Settings. Look, talk and tidy with <kbd>Z</kbd> or <kbd>Space</kbd>. <kbd>X</kbd> goes back, or takes a photo of whatever's in front of you. <kbd>Enter</kbd> or <kbd>Esc</kbd> opens the menu (your stuff, controls, save). A game controller works too. Dust the frames, water the plants, find the curator's mug, and turn out the lights when you leave.</p>
 <p class="hint" id="ver"></p>
 
 <dialog class="settings" id="settings" aria-labelledby="setTitle">
@@ -184,6 +184,14 @@ dialog.settings::backdrop{background:rgba(10,5,7,.7)}
     <div class="set-row">
       <div class="txt"><b>On-screen controls</b><small>Automatic shows them on touch screens. Hide them if you've connected a keyboard or controller to a tablet.</small></div>
       <select id="optCtl" aria-label="On-screen controls"><option value="auto">Automatic</option><option value="show">Always show</option><option value="hide">Hide</option></select>
+    </div>
+    <div class="set-row">
+      <div class="txt"><b>Sharp pixels</b><small>Only zoom the game by whole numbers (2x, 3x...) so every pixel stays crisp. On a phone held upright that can make it quite small.</small></div>
+      <input type="checkbox" class="switch" id="optSharp" aria-label="Sharp pixels">
+    </div>
+    <div class="set-row">
+      <div class="txt"><b>Swap A and B</b><small>For Nintendo-style controllers, where A and B are the other way around. Swaps the keyboard's Z and X too.</small></div>
+      <input type="checkbox" class="switch" id="optSwap" aria-label="Swap A and B">
     </div>
     <div class="set-row" id="rowBuzz" hidden>
       <div class="txt"><b>Vibrate on button presses</b><small>A tiny buzz when you press the D-pad, A or B.</small></div>
@@ -201,7 +209,7 @@ dialog.settings::backdrop{background:rgba(10,5,7,.7)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-21 note button";
+window.GOQ_WANT = "2026-10-21 controls and stats";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -254,6 +262,9 @@ window.goqStart = function () {
   const game = new GOQ.Game(stage, saved || undefined, { curator, spooky, time, tapWalk: tapWalk(), haptics: set.haptics !== false,
     showTestBadge: testMode || curator || isLocal });
   GOQ.mountControls(game, document.getElementById("controls"));
+  // Sharp pixels: on by default with a mouse, off on touch screens. Swap A and B: off.
+  const sharp = () => (typeof set.sharp === "boolean" ? set.sharp : !coarse());
+  game.sharp = sharp(); game.swapAB = !!set.swapAB;
   window.goqMuseum = game;
 
   function describe(p, from) {
@@ -341,9 +352,12 @@ window.goqStart = function () {
 
   /* ---------- Settings panel ---------- */
   const dlg = document.getElementById("settings"), optTap = document.getElementById("optTap"), optCtl = document.getElementById("optCtl"), optBuzz = document.getElementById("optBuzz");
+  const optSharp = document.getElementById("optSharp"), optSwap = document.getElementById("optSwap");
+  optSharp.addEventListener("change", () => { set.sharp = optSharp.checked; game.sharp = optSharp.checked; saveSet(); layout(); });
+  optSwap.addEventListener("change", () => { set.swapAB = optSwap.checked; game.swapAB = optSwap.checked; saveSet(); });
   if (navigator.vibrate) document.getElementById("rowBuzz").hidden = false;
   document.getElementById("setBtn").addEventListener("click", () => {
-    optTap.checked = tapWalk(); optCtl.value = set.controls || "auto"; optBuzz.checked = set.haptics !== false;
+    optTap.checked = tapWalk(); optCtl.value = set.controls || "auto"; optBuzz.checked = set.haptics !== false; optSharp.checked = sharp(); optSwap.checked = !!set.swapAB;
     if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
   });
   optTap.addEventListener("change", () => { set.tapWalk = optTap.checked; game.tapWalk = optTap.checked; saveSet(); });

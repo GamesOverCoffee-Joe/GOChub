@@ -447,3 +447,13 @@ Goal: character.
 - **Wing names everywhere (2026-10-20):** `{ROOM:id}` is the same as `{room:id}` in capitals; the five room signs open with it, so they always show the wing's current name. A room's touch screen is titled with the wing's name ("NISHIKADO WING: MORE PIECES"), and so is the curator's "ON THE NISHIKADO WING SCREEN". An arrow with no words of its own says the name of the wing for its genre.
 
 **Note button (2026-10-21).** Leaving a note is now a yellow **NOTE +** button under WATCH and PLAY on a placard (Up does the same). The old "Leave a note?" question after the last page is gone (and its Words line, `note.ask`); A on the last page just closes the placard. With three buttons, they're drawn a little tighter so the placard's footer still fits.
+
+**Controls, menus and stats (2026-10-21).**
+- **Keys:** Esc pauses (like Enter and P). X is B: photos, and back in menus. K and Backspace go back in menus but never take a photo (they're the "bk" key, dropped while walking).
+- **Controller** (Gamepad API, standard layout), polled every frame through the same path as the touch buttons: D-pad or left stick, bottom button A, right button B, Start or Select pauses. "Controller connected" shows on first use.
+- **Settings (museum.html):** **Sharp pixels** (whole-number zoom only; default on with a mouse, off on touch) and **Swap A and B** (controllers, and the keyboard's Z/X).
+- **Pause menu:** My Stuff (Photos, Stamp card, Achievements, Wardrobe), Controls (keyboard, touch and controller pages; the one you're using first), Respawn, Save, Save and quit, Back.
+- **Notes with a controller:** the note card shows a keyboard (three rows of letters and . , ! ?, then Caps, ', Space, Del, Done). D-pad picks, A types, B deletes (on an empty note it puts the card away), Done moves to the name, Start sends. Only when the last input was a controller; phones keep their own keyboard.
+- **Stats on Someone's PC (B1):** it boots PLAYER_STATS.EXE: a staff profile (up to three titles you've earned, best first), then Visits, Reading, Recommending, Chores and Life. New counters in `progress.stats`: days visited, streak and best streak, time in the museum, time in the dark after closing, steps, walking into walls, drinks and plants by kind, who you photograph most, loved recommendations by genre, misses. Turning the PC on still counts for the shirt riddle.
+- **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
+- **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).

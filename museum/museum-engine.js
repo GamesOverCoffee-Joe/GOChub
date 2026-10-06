@@ -1401,6 +1401,9 @@ const ROOMS = {
   },
 };
 const TUT_ROOMS = ["tut_office", "tut_room1", "tut_room2"];
+/* The note card's keyboard for controllers: three rows of ten, then Caps, ', Space, Delete and Done. col/span place it on the grid. */
+const NOTE_KEYS = [..."abcdefghijklmnopqrstuvwxyz.,!?"].map((k, i) => ({ k, col: i % 10, span: 1 }))
+  .concat([{ k: "CAPS", label: "Caps", col: 0, span: 2 }, { k: "'", col: 2, span: 1 }, { k: " ", label: "Space", col: 3, span: 3 }, { k: "DEL", label: "Del", col: 6, span: 2 }, { k: "DONE", label: "Done", col: 8, span: 2 }]);
 /* The ten starting shirt colors for visitors (Visitors tab). */
 const SHIRT_COLORS = ["#c83838", "#e07830", "#e8c040", "#58a048", "#3a9a98", "#3a68c8", "#8850c0", "#e070a8", "#8a5a34", "#808898"];
 /* The tutorial's three games, in a row: just a color each. A planter blocks purple's front and another green's back;
@@ -1574,6 +1577,29 @@ const TEXT = {
   "cur.loved":         { g: "Curious visitors", l: "Next day: loved it, if their mindset has no lines of its own", v: [["I loved it. Thank you so much!"]] },
   "cur.nope":          { g: "Curious visitors", l: "Next day: not for them, if their mindset has no lines of its own", v: [["Honestly, it wasn't really for me. Thanks for trying, though!"]] },
   "cur.after":         { g: "Curious visitors", l: "Talking to them again after they told you (takes turns)", v: [["Thanks again for the recommendation!"], ["I might come ask you for another one sometime."]] },
+  "pc.boot":           { g: "Storage", l: "Turning on Someone's PC (before the stats)", v: [["Someone's PC whirs to life.", "There's one program on the desktop: PLAYER_STATS.EXE. It's about you. Somehow."]] },
+  "end.stats":         { g: "Closing up", l: "On the closing screen, after a few of your stats", v: [["All your stats are on the old PC in the basement."]] },
+  "title.cat":         { g: "Staff profile titles", l: "Petting the cat a lot (variants take turns by day)", v: [["Cat Person (Diagnosed)"], ["Allergies Be Damned"]] },
+  "title.naps":        { g: "Staff profile titles", l: "Bench naps", v: [["Narcoleptic Intern"], ["Sleeps on the Job, Literally"]] },
+  "title.closer":      { g: "Staff profile titles", l: "Closing the museum often", v: [["Night Shift Goblin"], ["Turns Off Lights Professionally"]] },
+  "title.matchmaker":  { g: "Staff profile titles", l: "Recommendations visitors loved", v: [["Matchmaker"], ["Knows What You Want Better Than You"]] },
+  "title.wrong":       { g: "Staff profile titles", l: "Recommendations that missed", v: [["Confidently Wrong"], ["Taste Is Subjective, Apparently"]] },
+  "title.paparazzo":   { g: "Staff profile titles", l: "Lots of photos", v: [["Paparazzo"], ["Has 400 Photos of a Bench"]] },
+  "title.creep":       { g: "Staff profile titles", l: "Photographing the same person over and over", v: [["Kind of a Creep, Honestly"]] },
+  "title.walls":       { g: "Staff profile titles", l: "Walking into walls ({n}: how many times)", v: [["Walls: {n}, You: 0"], ["Spatially Challenged"]] },
+  "title.intern":      { g: "Staff profile titles", l: "Dusting, straightening, wiping, watering", v: [["Unpaid Intern"], ["Clean Freak (Derogatory)"]] },
+  "title.nerd":        { g: "Staff profile titles", l: "Reading (nearly) every placard", v: [["Reads the Placards. All of Them."], ["Nerrrrrd"]] },
+  "title.vibes":       { g: "Staff profile titles", l: "Visiting a lot, reading almost nothing", v: [["Here for the Vibes"], ["Skims"]] },
+  "title.caffeine":    { g: "Staff profile titles", l: "Lots of drinks", v: [["Over-Caffeinated"], ["The Barista Knows Your Name. Not in a Good Way."]] },
+  "title.mug":         { g: "Staff profile titles", l: "Finding the curator's mug", v: [["Mug Bloodhound"]] },
+  "title.fire":        { g: "Staff profile titles", l: "The microwave", v: [["Fire Hazard"]] },
+  "title.segway":      { g: "Staff profile titles", l: "Segway rides", v: [["Segway Menace"]] },
+  "title.dark":        { g: "Staff profile titles", l: "Time in the dark after closing", v: [["Afraid of Nothing (Lying)"]] },
+  "title.laps":        { g: "Staff profile titles", l: "Lots of steps", v: [["Walks Laps for Fun"]] },
+  "title.streak":      { g: "Staff profile titles", l: "Visiting days in a row", v: [["Lives Here Now"], ["Please Go Outside"]] },
+  "title.notes":       { g: "Staff profile titles", l: "Leaving notes", v: [["Has Opinions"]] },
+  "title.shirt":       { g: "Staff profile titles", l: "Having the GOQ shirt", v: [["Big Goron Energy"]] },
+  "title.new":         { g: "Staff profile titles", l: "Brand new (nothing earned yet)", v: [["Just Got Here"], ["Still Looking for the Bathroom"]] },
   "pc.idle":           { g: "Storage", l: "Someone's PC (waiting for its new job)", v: [["Someone's PC hums quietly.", "A sticky note on the monitor: RESERVED FOR SOMETHING NEW."]] },
   "screen.empty":      { g: "Rooms", l: "A room's touch screen when every piece fits in the cases ({room})", v: [["The little screen glows.", "EVERY PIECE IN {room} IS ON DISPLAY. Nothing waiting here."]] },
   "pc.on":             { g: "Floors", l: "Turning on Someone's PC", v: [["You turned on Someone's PC.", "Accessed the museum archive."]] },
@@ -2192,7 +2218,7 @@ function buildRoom(id, pieces, o) {
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const OPP = { up: "down", down: "up", left: "right", right: "left" };
 const KEYMAP = { ArrowUp: "up", KeyW: "up", ArrowDown: "down", KeyS: "down", ArrowLeft: "left", KeyA: "left", ArrowRight: "right", KeyD: "right",
-  KeyZ: "a", Space: "a", KeyJ: "a", KeyX: "b", Escape: "b", Backspace: "b", KeyK: "b", Enter: "start", KeyP: "start" };
+  KeyZ: "a", Space: "a", KeyJ: "a", KeyX: "b", Escape: "start", Backspace: "bk", KeyK: "bk", Enter: "start", KeyP: "start" }; // bk: back in menus, never a photo
 
 class Game {
   constructor(wrap, pack, opts) {
@@ -2221,10 +2247,11 @@ class Game {
     else { const sp = ROOMS.lobby.spawn; this.enterRoom("lobby", sp[0], sp[1], sp[2], true); }
     this.ready = this.setPack(pack); this.updateHud();
     this.ready.then(() => { if (this.needTutorial()) this.startTutorial(); }); // a new player starts with the tutorial
+    this.markDay();
     setTimeout(() => { if (!this.tut && !this.needTutorial()) this.showLoc("GOQ Museum: " + (this.zone ? this.zone.name : this.room.name)); }, 400);
     this.last = performance.now(); this.acc = 0;
     const tick = now => {
-      this.acc += Math.min(100, now - this.last); this.last = now;
+      this.acc += Math.min(100, now - this.last); this.last = now; this.pollPad();
       while (this.acc >= 1000 / 60) { this.update(); this.acc -= 1000 / 60; }
       this.draw(); requestAnimationFrame(tick);
     };
@@ -2233,7 +2260,8 @@ class Game {
   /* fine: quarter steps (touch layouts); otherwise whole steps from 2x up, like the Theater. Never below 1x unless the screen is narrower than the game. */
   fit(maxW, maxH, fine) {
     let s = Math.min(maxW / SW, maxH / SH);
-    s = fine ? (s >= 1 ? Math.floor(s * 4) / 4 : Math.max(0.75, s)) : s >= 2 ? Math.floor(s) : Math.max(0.75, Math.floor(s * 8) / 8);
+    if (this.sharp) s = s >= 1 ? Math.floor(s) : Math.max(0.5, s); // Settings: Sharp pixels (whole numbers; smaller than 1x only if the screen is)
+    else s = fine ? (s >= 1 ? Math.floor(s * 4) / 4 : Math.max(0.75, s)) : s >= 2 ? Math.floor(s) : Math.max(0.75, Math.floor(s * 8) / 8);
     this.wrap.style.setProperty("--s", s);
   }
 
@@ -2326,8 +2354,9 @@ class Game {
       const k = KEYMAP[e.code]; if (!k || isField(e.target) || e.target.tagName === "BUTTON" && (k === "a" || k === "start")) return;
       if (this.capture === "focus" && document.activeElement !== this.wrap) return;
       e.preventDefault(); if (e.repeat) return;
+      this.lastInput = "keyboard";
       if (DIRS[k]) { this.held = this.held.filter(d => d !== k); this.held.push(k); }
-      this.queue.push(k);
+      this.queue.push(this.swapAB && (k === "a" || k === "b") ? (k === "a" ? "b" : "a") : k); // Settings: Swap A and B
     });
     window.addEventListener("keyup", e => { const k = KEYMAP[e.code]; if (k && DIRS[k]) this.held = this.held.filter(d => d !== k); });
     window.addEventListener("blur", () => { this.held = []; this.virt = []; });
@@ -2414,8 +2443,25 @@ class Game {
     p.dir = act.face;
     if (act.bump) this.tryMove(p, act.face); else this.interact();
   }
-  hold(dir, on) { this.virt = this.virt.filter(d => d !== dir); if (on) { this.virt.push(dir); this.queue.push(dir); } }
-  press(btn) { this.queue.push(btn); }
+  hold(dir, on, src) { this.virt = this.virt.filter(d => d !== dir); if (on) { this.lastInput = src || "touch"; this.virt.push(dir); this.queue.push(dir); } }
+  press(btn, src) { this.lastInput = src || "touch"; this.queue.push(btn); }
+  /* A game controller (standard layout): D-pad or left stick to move, bottom button A, right button B, Start or Select to pause.
+     It goes through the same path as the on-screen buttons, so every menu, placard and keypad works with it. */
+  pollPad() {
+    const pads = navigator.getGamepads ? navigator.getGamepads() : [], gp = [...(pads || [])].find(g => g && g.connected && g.buttons && g.buttons.length >= 10);
+    const was = this.padDirs || [];
+    if (!gp) { was.forEach(d => this.hold(d, false)); this.padDirs = []; this.padPrev = {}; return; }
+    const b = i => !!(gp.buttons[i] && gp.buttons[i].pressed), ax = gp.axes[0] || 0, ay = gp.axes[1] || 0, dirs = [];
+    if (b(12) || ay < -0.5) dirs.push("up"); if (b(13) || ay > 0.5) dirs.push("down");
+    if (b(14) || ax < -0.5) dirs.push("left"); if (b(15) || ax > 0.5) dirs.push("right");
+    was.filter(d => !dirs.includes(d)).forEach(d => this.hold(d, false));
+    dirs.filter(d => !was.includes(d)).forEach(d => this.hold(d, true, "pad"));
+    this.padDirs = dirs;
+    const now = { a: b(this.swapAB ? 1 : 0), b: b(this.swapAB ? 0 : 1), start: b(9) || b(8) }, prev = this.padPrev || {};
+    for (const k in now) if (now[k] && !prev[k]) this.press(k, "pad");
+    if (!this.padSeen && (dirs.length || now.a || now.b || now.start)) { this.padSeen = true; this.showLoc("Controller connected"); }
+    this.padPrev = now;
+  }
   heldDir() { const all = this.held.concat(this.virt); return all.length ? all[all.length - 1] : null; }
 
   /* ----- UI ----- */
@@ -2463,7 +2509,11 @@ class Game {
       '<label>Your note<textarea name="note" maxlength="200" rows="3" spellcheck="true"></textarea></label><p class="gt-note-count"></p>' +
       '<label>Your name (optional)<input name="who" maxlength="24" autocomplete="nickname"></label>' +
       '<p class="gt-badge-err" role="alert"></p>' +
+      '<div class="gt-notekb" hidden></div><p class="gt-notekb-hint">Start: pin it up \u00b7 B: delete</p>' +
       '<div class="gt-badge-btns"><button type="submit">Pin it up</button><button type="button" class="ghost">Not now</button></div>';
+    el.noteKb = el.noteForm.querySelector(".gt-notekb");
+    NOTE_KEYS.forEach((k, i) => { const b = document.createElement("button"); b.type = "button"; b.textContent = k.label || k.k; if (k.span > 1) b.style.gridColumn = "span " + k.span;
+      b.addEventListener("pointerdown", e => e.preventDefault()); b.addEventListener("click", e => { e.preventDefault(); if (this.nkb) { this.nkb.i = i; this.nkbPress(); } }); el.noteKb.appendChild(b); });
     el.noteForm.note.addEventListener("input", () => this.noteCount());
     el.noteForm.addEventListener("submit", e => { e.preventDefault(); this.submitNote(); });
     el.noteForm.querySelector(".ghost").addEventListener("click", () => this.closeNote());
@@ -2482,7 +2532,7 @@ class Game {
 .gt-end p{margin:0}
 .gt-end-sign{font-size:calc(16px * var(--s));line-height:1.3;letter-spacing:.06em;color:#a33a22;margin-bottom:calc(6px * var(--s)) !important}
 .gt-end-line,.gt-end-sum{font-size:calc(6px * var(--s));line-height:1.6}
-.gt-end-sum{color:#505068;margin-top:calc(4px * var(--s)) !important;min-height:1.6em}
+.gt-end-sum{color:#505068;margin-top:calc(4px * var(--s)) !important;min-height:1.6em;white-space:pre-line}
 .gt-end-btn{margin-top:calc(8px * var(--s));font-family:inherit;font-size:calc(6px * var(--s));padding:calc(4px * var(--s)) calc(6px * var(--s));background:#181820;color:#f8f8f0;
   border:calc(1px * var(--s)) solid #181820;cursor:pointer}
 .gt-end-btn:hover,.gt-end-btn:focus-visible{background:#e8b24a;color:#181820;outline:none}
@@ -2557,6 +2607,15 @@ class Game {
   border:calc(1px * var(--s)) solid #181820;background:#fff;color:#181820;outline:none;resize:none}
 .gt-badge textarea:focus{box-shadow:0 0 0 calc(1px * var(--s)) #e8b24a}
 .gt-note-count{text-align:right;color:#505068;font-size:.85em}
+.gt-notekb{display:grid;grid-template-columns:repeat(10,1fr);gap:calc(1px * var(--s));margin:calc(2px * var(--s)) 0}
+.gt-notekb[hidden]{display:none}
+.gt-notekb button{font-family:inherit;font-size:calc(6px * var(--s));line-height:1;padding:calc(2px * var(--s)) 0;background:#fff;color:#181820;border:calc(1px * var(--s)) solid #181820;cursor:pointer;min-width:0}
+.gt-notekb button.on{background:#e8b24a}
+.gt-note.kb .gt-badge-sub,.gt-note.kb .gt-note-count,.gt-note.kb .gt-badge-btns{display:none}
+.gt-notekb-hint{display:none;color:#505068;font-size:.85em}.gt-note.kb .gt-notekb-hint{display:block}
+.gt-note.kb .gt-badge-err:empty{min-height:0;margin:0 !important}
+.gt-note.kb textarea{height:calc(22px * var(--s))}
+.gt-note.kb textarea.on,.gt-note.kb input.on{box-shadow:0 0 0 calc(1px * var(--s)) #e8b24a}
 .gt-badge-test{color:#7c5a0c;margin-top:calc(3px * var(--s)) !important}
 .gt-badge-err{color:#a33a22;min-height:1.5em}
 .gt-badge-btns{display:flex;gap:calc(4px * var(--s))}
@@ -2785,7 +2844,9 @@ class Game {
       tokens: typeof p.tokens === "number" ? p.tokens : 0, items: Array.isArray(p.items) ? p.items : [], shirt: !!p.shirt, wearShirt: !!p.wearShirt, quest: p.quest || 0,
       ach: p.ach || {}, visited: Array.isArray(p.visited) ? p.visited.filter(v => !/^tut_/.test(v)) : [], // (tutorial rooms never count)
       photos: Array.isArray(p.photos) ? p.photos : [], stamps: Array.isArray(p.stamps) ? p.stamps : [], where: p.where || null, sides: p.sides || {}, wiped: p.wiped || {},
-      myNotes: p.myNotes || {}, reactions: p.reactions || {}, noteName: typeof p.noteName === "string" ? p.noteName : "", clientId: typeof p.clientId === "string" ? p.clientId : "" };                    // chores counted per badge while clocked in
+      myNotes: p.myNotes || {}, reactions: p.reactions || {},
+      // For the stats on Someone's PC: days, streaks, time, steps, walls, the dark, favorite drink, plant and photo subject, verdicts by genre.
+      stats: Object.assign({ days: 0, lastDay: "", streak: 0, best: 0, secs: 0, dark: 0, steps: 0, bumps: 0, drinks: {}, plants: {}, shots: {}, loved: {}, nope: 0 }, p.stats || {}), noteName: typeof p.noteName === "string" ? p.noteName : "", clientId: typeof p.clientId === "string" ? p.clientId : "" };                    // chores counted per badge while clocked in
   }
   saveProgress() { this.checkAchievements(); try { if (this.saveKey) localStorage.setItem(this.saveKey, JSON.stringify(this.progress)); } catch (e) {} }
   /* ----- achievements ----- */
@@ -2973,6 +3034,10 @@ class Game {
     let sum = bits.length ? "Tonight: " + bits.join(", ") + "." : "Thanks for visiting.";
     if (this.staff && kind !== "brb") { sum += " " + this.staff.name + " clocked out."; this.progress.staff = null; this.saveProgress(); this.updateHud(); }
     if (kind === "brb") sum = "Saved.";
+    else { // three of your stats, at random, and where to find the rest
+      const rows = this.statRows().filter(r => r[0] !== "READING" || !/ of \d/.test(String(r[2]))).sort(() => Math.random() - 0.5).slice(0, 3);
+      if (rows.length) sum += "\n" + rows.map(r => r[1] + ": " + r[2]).join("\n") + "\n" + this.tx("end.stats").join(" ");
+    }
     e.querySelector(".gt-end-sum").textContent = sum;
     e.style.borderImageSource = `url("${this.src("textbox")}")`;
     this.el.endWrap.style.display = "flex"; this.mode = "ended";
@@ -2988,6 +3053,7 @@ class Game {
     if (w && this.rooms[w.room]) this.enterRoom(w.room, w.x, w.y, w.dir); else { const sp = ROOMS.lobby.spawn; this.enterRoom("lobby", sp[0], sp[1], sp[2]); }
     this.wrap.focus({ preventScroll: true });
     if (this.needTutorial()) this.startTutorial(); // quit in the middle of it: it starts over
+    this.markDay();
   }
   /* ----- staff -----
      Clocking in uses a badge number and key: the offline test badge (locally), or a real badge checked by Supabase.
@@ -3240,6 +3306,76 @@ class Game {
       if (this.tut && this.tut.step === "feedback" && Object.values(this.tut.people).every(p => p.tutHeard)) { this.tut.step = "closing"; this.say(this.tutSpeak("tut.closeUp")); }
     });
   }
+  /* ----- the player's stats (Someone's PC in the basement, and a taste on the closing screen) ----- */
+  markDay() { // one visit a day; visits on days in a row make a streak
+    if (!this.saveKey) return;
+    const st = this.progress.stats, t = todayISO(); if (st.lastDay === t) return;
+    st.streak = st.lastDay && daysBetween(st.lastDay, t) === 1 ? st.streak + 1 : 1; st.best = Math.max(st.best, st.streak);
+    st.days++; st.lastDay = t; this.saveProgress();
+  }
+  tickStats() { // once a second: time in the museum, and time in the dark
+    if (!this.saveKey || this.mode === "ended" || this.full || (typeof document !== "undefined" && document.hidden)) return;
+    const st = this.progress.stats; st.secs++; if (this.closing && this.darkHere()) st.dark++;
+    if (st.secs % 30 === 0) this.saveProgress();
+  }
+  bump(obj, key) { if (key) obj[key] = (obj[key] || 0) + 1; }
+  topOf(obj) { let best = null, n = 0; for (const k in obj) if (obj[k] > n) { best = k; n = obj[k]; } return best ? [best, n] : null; }
+  /* Everything the stats screen shows: [section, label, value] rows (only the ones with something to say). */
+  statRows() {
+    const p = this.progress, t = p.tally || {}, st = p.stats, rows = [], add = (sec, label, v) => { if (v !== null && v !== undefined && v !== "" && v !== 0) rows.push([sec, label, v]); };
+    const hm = x => (x >= 3600 ? Math.floor(x / 3600) + "h " : "") + Math.floor((x % 3600) / 60) + "m", plural = (n, w) => n + " " + w + (n === 1 ? "" : "s");
+    add("VISITS", "Days you've visited", st.days); add("VISITS", "Current streak", st.streak > 1 ? plural(st.streak, "day") : 0); add("VISITS", "Best streak", st.best > 1 ? plural(st.best, "day") : 0);
+    add("VISITS", "Time in the museum", st.secs >= 60 ? hm(st.secs) : 0);
+    const lay = layoutOf(ROOMS.museum), hall = lay && lay.zones.find(z => z.id === "upper"), hl = hall ? Math.max(1, (hall.rect || hall.rects[0] || { w: 24 }).w) : 24;
+    add("VISITS", "Steps walked", st.steps ? st.steps + (st.steps >= hl * 2 ? " (the " + (hall ? hall.name : "long hall") + " " + Math.floor(st.steps / hl) + " times over)" : "") : 0);
+    add("VISITS", "Times you walked into a wall", st.bumps);
+    const sides = Object.values(p.sides || {}), read = sides.reduce((a, k) => a + (k.front ? 1 : 0) + (k.back ? 1 : 0) + (k.note ? 1 : 0), 0);
+    add("READING", "Placards read", read); add("READING", "Cases read on both sides", this.stat("bothSides"));
+    const r = this.rooms && this.rooms.museum;
+    if (r && r.zones) {
+      const per = r.zones.filter(z => z.kind === "room").map(z => { const cs = r.cases.filter(c => c.piece && this.zoneAt(r, c.x, c.y) === z); return [z.name, cs.length, cs.filter(c => this.isRead(c.piece)).length]; }).filter(x => x[1]);
+      per.forEach(([name, all, done]) => add("READING", name, done + " of " + all + (done === all ? ", all of it" : "")));
+      const fav = per.filter(x => x[2]).sort((a, b) => b[2] / b[1] - a[2] / a[1])[0]; if (fav) add("READING", "Most-read wing", fav[0]);
+    }
+    add("RECOMMENDING", "Games recommended", t.recs); add("RECOMMENDING", "Visitors who loved them", t.helped); add("RECOMMENDING", "Visitors who didn't", st.nope);
+    const lg = this.topOf(st.loved), gn = lg && (this.pack.settings.genres || []).find(g => g.id === lg[0]); if (gn) add("RECOMMENDING", "Your best category", gn.name);
+    add("CHORES", "Frames dusted", t.dusted); add("CHORES", "Frames straightened", t.straightened); add("CHORES", "Cases wiped", t.wiped); add("CHORES", "Plants watered", t.watered);
+    const pl = this.topOf(st.plants); if (pl && pl[1] > 1) add("CHORES", "Favorite plant", "the " + pl[0] + " (" + pl[1] + " drinks)");
+    add("CHORES", "Mugs found", t.mugs); add("CHORES", "Times you closed the museum", t.closings);
+    add("LIFE", "Cat pets", t.pets); add("LIFE", "Photos taken", t.photos); add("LIFE", "Photo reactions caught", this.stat("reactions") ? this.stat("reactions") + " of 10" : 0);
+    const sh = this.topOf(st.shots); if (sh && sh[1] > 1) add("LIFE", "Most photographed", sh[0] + " (" + sh[1] + " times)");
+    add("LIFE", "Notes left", t.notes); add("LIFE", "Drinks ordered", t.drinks);
+    const dr = this.topOf(st.drinks), dn = dr && DRINKS.find(d => d.id === dr[0]); if (dn && t.drinks > 1) add("LIFE", "Usual order", dn.name);
+    add("LIFE", "Bench naps", t.naps); add("LIFE", "Microwave incidents", t.microwave); add("LIFE", "Segway rides", t.segway); add("LIFE", "Shifts clocked in", t.shifts);
+    add("LIFE", "Time in the dark after closing", st.dark >= 60 ? hm(st.dark) : st.dark ? st.dark + "s" : 0);
+    return rows;
+  }
+  /* Your staff profile: the titles you've earned, best first (each title's words are in Words, Staff profile titles). */
+  profile() {
+    const p = this.progress, t = p.tally || {}, st = p.stats, all = Object.keys(p.sides || {}).length, shotTop = this.topOf(st.shots);
+    const cases = this.rooms && this.rooms.museum ? this.rooms.museum.cases.filter(c => c.piece).length : 0;
+    const read = Object.values(p.sides || {}).reduce((a, k) => a + (k.front ? 1 : 0) + (k.back ? 1 : 0) + (k.note ? 1 : 0), 0);
+    const score = {
+      cat: (t.pets || 0) / 10, naps: (t.naps || 0) / 3, closer: (t.closings || 0) / 5, matchmaker: (t.helped || 0) / 5, wrong: st.nope / 3,
+      paparazzo: (t.photos || 0) / 25, creep: shotTop ? shotTop[1] / 5 : 0, walls: st.bumps / 25,
+      intern: ((t.dusted || 0) + (t.straightened || 0) + (t.wiped || 0) + (t.watered || 0)) / 30, nerd: cases ? this.stat("bothSides") / cases / 0.9 : 0,
+      vibes: st.days >= 3 && read < 5 ? 1.5 : 0, caffeine: (t.drinks || 0) / 10, mug: (t.mugs || 0) / 5, fire: (t.microwave || 0) ? 1.05 : 0,
+      segway: (t.segway || 0) / 3, dark: st.dark / 600, laps: st.steps / 3000, streak: st.streak / 5, notes: (t.notes || 0) / 3, shirt: p.shirt ? 1.2 : 0,
+    };
+    const day = strSeed(todayISO()), pick = key => { const v = this.pack.settings.text["title." + key] || TEXT["title." + key].v; return this.fmt(v[day % v.length][0], { n: st.bumps }); };
+    const got = Object.keys(score).filter(k => score[k] >= 1).sort((a, b) => score[b] - score[a]);
+    return got.length ? got.slice(0, 3).map(pick) : [pick("new")];
+  }
+  /* Someone's PC: it boots up and opens PLAYER_STATS.EXE. (Turning it on is still a step in the shirt riddle.) */
+  showStats() {
+    const pr = this.profile(), rows = this.statRows(), secs = [];
+    secs.push({ label: "STAFF PROFILE", text: pr[0] + (pr.length > 1 ? ". Also known as: " + pr.slice(1).join("; ") + "." : ".") });
+    for (const sec of ["VISITS", "READING", "RECOMMENDING", "CHORES", "LIFE"]) {
+      const these = rows.filter(r => r[0] === sec); if (!these.length) continue;
+      secs.push({ label: sec, text: these.map(r => r[1] + ": " + r[2]).join(". ") + "." });
+    }
+    this.say(this.tx("pc.boot"), () => this.read({ title: "PLAYER_STATS.EXE", sub: "Someone's PC", sections: secs }));
+  }
   /* ----- visitor notes -----
      Anyone can leave a short note on a piece. It goes to Supabase and waits there until the curator approves it (curator,
      Notes tab); approved notes show under the piece's placard. Without Supabase there are no notes and nothing asks. */
@@ -3261,14 +3397,47 @@ class Game {
     f.reset(); f.querySelector(".gt-badge-err").textContent = "";
     f.querySelector(".gt-badge-sub").textContent = this.tx("note.prompt", { title: p.title }).join(" ");
     f.who.value = this.progress.noteName || (this.staff ? this.staff.name : ""); this.noteCount();
+    // With a controller, a keyboard on the card: the D-pad picks a key, A types, B deletes, Start sends.
+    const kb = this.lastInput === "pad"; this.nkb = kb ? { i: 0, caps: false, field: "note" } : null;
+    f.classList.toggle("kb", kb); this.el.noteKb.hidden = !kb; f.note.readOnly = f.who.readOnly = kb;
+    if (kb) this.nkbRender();
     const sc = parseFloat(getComputedStyle(this.wrap).getPropertyValue("--s")) || 1;
     this.el.noteWrap.classList.toggle("big", sc < 1.75 || matchMedia("(pointer:coarse)").matches);
     this.el.noteWrap.style.display = "flex";
-    setTimeout(() => f.note.focus(), 30);
+    if (!kb) setTimeout(() => f.note.focus(), 30);
+  }
+  nkbRender() {
+    const n = this.nkb, f = this.el.noteForm; if (!n) return;
+    [...this.el.noteKb.children].forEach((b, i) => { b.classList.toggle("on", i === n.i); const k = NOTE_KEYS[i]; if (k.k.length === 1 && /[a-z]/.test(k.k)) b.textContent = n.caps ? k.k.toUpperCase() : k.k; else if (k.k === "CAPS") b.textContent = n.caps ? "CAPS" : "Caps"; });
+    f.note.classList.toggle("on", n.field === "note"); f.who.classList.toggle("on", n.field === "who");
+  }
+  nkbMove(d) {
+    const n = this.nkb, k = NOTE_KEYS[n.i], row = Math.min(3, Math.floor(n.i / 10));
+    if (d === "left" || d === "right") n.i = Math.max(0, Math.min(NOTE_KEYS.length - 1, n.i + (d === "left" ? -1 : 1)));
+    else { // up and down: the key in the next row that covers this column
+      const col = k.col + Math.floor((k.span - 1) / 2), r2 = Math.max(0, Math.min(3, row + (d === "up" ? -1 : 1)));
+      if (r2 !== row) n.i = r2 < 3 ? r2 * 10 + col : NOTE_KEYS.findIndex((q, j) => j >= 30 && col >= q.col && col < q.col + q.span);
+    }
+    this.nkbRender();
+  }
+  nkbPress() {
+    const n = this.nkb, k = NOTE_KEYS[n.i], f = this.el.noteForm, inp = n.field === "note" ? f.note : f.who, max = n.field === "note" ? 200 : 24;
+    if (k.k === "CAPS") n.caps = !n.caps;
+    else if (k.k === "DEL") this.nkbDel(true);
+    else if (k.k === "DONE") { if (n.field === "note") n.field = "who"; else this.submitNote(); }
+    else if (inp.value.length < max) inp.value += n.caps ? k.k.toUpperCase() : k.k;
+    this.noteCount(); this.nkbRender();
+  }
+  nkbDel(key) { // B, or the Del key: a letter back; on an empty name, back to the note; on an empty note (B only), put the card away
+    const n = this.nkb, f = this.el.noteForm, inp = n.field === "note" ? f.note : f.who;
+    if (inp.value) inp.value = inp.value.slice(0, -1);
+    else if (n.field === "who") n.field = "note";
+    else if (!key) { this.closeNote(); return; }
+    this.noteCount(); this.nkbRender();
   }
   noteCount() { const f = this.el.noteForm; f.querySelector(".gt-note-count").textContent = f.note.value.length + " / 200"; }
   closeNote(sent) {
-    this.el.noteWrap.style.display = "none"; this.mode = "walk"; this.inputLock = true; this.wrap.focus({ preventScroll: true });
+    this.nkb = null; this.el.noteWrap.style.display = "none"; this.mode = "walk"; this.inputLock = true; this.wrap.focus({ preventScroll: true });
     const n = this.noteFor; this.noteFor = null;
     if (sent) this.say(this.tx("note.thanks"), () => n && n.then()); else if (n) n.then();
   }
@@ -3760,7 +3929,7 @@ class Game {
       if (price) { this.progress.tokens -= price; this.saveProgress(); this.updateHud(); }
       this.drink = { kind: i, name: DRINKS[i].name, sips: 0 };
       if (DRINKS[i].id === "cocoa") this.quest("cocoa");
-      this.progress.tally.drinks = (this.progress.tally.drinks || 0) + 1; this.saveProgress();
+      this.progress.tally.drinks = (this.progress.tally.drinks || 0) + 1; this.bump(this.progress.stats.drinks, DRINKS[i].id); this.saveProgress();
       this.say(this.tx("drink.served"));
     });
   }
@@ -3965,7 +4134,8 @@ class Game {
     this.say(intro, () => {
       // The moment: the text box steps aside for a second so you see it (a happy hop and hearts, one heart, or a little sigh), then they say it.
       n.react = { how, t0: this.t }; n.dir = OPP[this.player.dir]; this.mode = "busy";
-      if (how === "loved") { this.count("helped", v.id); this.updateHud(true); }
+      if (how === "loved") { this.count("helped", v.id); this.updateHud(true); this.bump(this.progress.stats.loved, p ? genreOf(p, this.pack.settings.genres) : ""); }
+      else if (how === "nope") this.progress.stats.nope++;
       setTimeout(() => { this.mode = "walk"; this.say([v.name + ": " + line], () => { if (how === "loved") this.showLoc(v.name + " loved it!"); }); }, how === "nope" ? 700 : 1100);
     });
   }
@@ -4076,7 +4246,7 @@ class Game {
     if (n.still && kind !== "busy") { n.homeDir = keep; n.faceT = (kind === "startled" ? 110 : 90) + 150; } // and turn back a few seconds later
     if (kind === "snapback") n.snapT = 34; // their phone comes up and flashes at you
     n.route = null; n.pose = { kind, t0: now, dur: kind === "startled" ? 110 : 90 };
-    this.progress.reactions[kind] = 1;
+    this.progress.reactions[kind] = 1; if (who !== "A visitor") this.bump(this.progress.stats.shots, who);
     return this.tx("react." + kind, { who }).join(" ") + (dark ? " It's very dark." : "");
   }
   takePhoto() {
@@ -4101,29 +4271,42 @@ class Game {
       });
       return;
     }
-    const n = (this.progress.photos || []).length;
-    const sc = this.progress.stamps.length + "/" + this.pack.settings.shop.stampSize;
-    const an = Object.keys(this.progress.ach || {}).length + "/" + this.pack.settings.achievements.length;
-    const opts = ["Photos (" + n + ")", "Stamp card (" + sc + ")", "Achievements (" + an + ")", ...(this.progress.shirt ? ["Wardrobe"] : []), "Respawn", "Save", "Save and quit", "Back"];
+    const opts = ["My Stuff", "Controls", "Respawn", "Save", "Save and quit", "Back"];
     this.choose("PAUSED", opts, k => {
       const o = opts[k];
-      if (o === "Wardrobe") {
-        this.choose("Wardrobe", [this.progress.wearShirt ? "Take off the GOQ shirt" : "Wear the GOQ shirt", "Back"], j => {
-          if (j === 0) { this.progress.wearShirt = !this.progress.wearShirt; this.saveProgress(); this.showLoc(this.progress.wearShirt ? "Looking sharp." : "Back to the usual."); }
-        });
-        return;
-      }
-      if (o.startsWith("Stamp card")) { this.showStampCard(); return; }
-      if (o.startsWith("Achievements")) { this.showAchievements(); return; }
-      if (o === "Respawn") { this.respawn(); return; }
-      const i = o.startsWith("Photos") ? 0 : o === "Save" ? 1 : o === "Save and quit" ? 2 : 3;
-      if (i === 0) {
-        const ph = this.progress.photos || [];
-        if (!ph.length) { this.say(this.tx("photos.none")); return; }
-        this.openAlbum();
-      } else if (i === 1) { this.saveWhere(); this.say(this.tx("menu.saved")); }
-      else if (i === 2) { this.saveWhere(); this.mode = "busy"; this.trans = { t: 0, dur: 24, switched: false, fn: () => this.showEnd("brb"), hold: true }; }
+      if (o === "My Stuff") this.myStuff();
+      else if (o === "Controls") this.showControls();
+      else if (o === "Respawn") this.respawn();
+      else if (o === "Save") { this.saveWhere(); this.say(this.tx("menu.saved")); }
+      else if (o === "Save and quit") { this.saveWhere(); this.mode = "busy"; this.trans = { t: 0, dur: 24, switched: false, fn: () => this.showEnd("brb"), hold: true }; }
     });
+  }
+  /* My Stuff: photos, the stamp card, achievements, and (once you have the shirt) the wardrobe. Back returns to the pause menu. */
+  myStuff() {
+    const n = (this.progress.photos || []).length, sc = this.progress.stamps.length + "/" + this.pack.settings.shop.stampSize;
+    const an = Object.keys(this.progress.ach || {}).length + "/" + this.pack.settings.achievements.length;
+    const opts = ["Photos (" + n + ")", "Stamp card (" + sc + ")", "Achievements (" + an + ")", ...(this.progress.shirt ? ["Wardrobe"] : []), "Back"];
+    this.choose("MY STUFF", opts, k => {
+      const o = opts[k];
+      if (o.startsWith("Photos")) { if (!n) this.say(this.tx("photos.none")); else this.openAlbum(); }
+      else if (o.startsWith("Stamp card")) this.showStampCard();
+      else if (o.startsWith("Achievements")) this.showAchievements();
+      else if (o === "Wardrobe") this.choose("Wardrobe", [this.progress.wearShirt ? "Take off the GOQ shirt" : "Wear the GOQ shirt", "Back"], j => {
+        if (j === 0) { this.progress.wearShirt = !this.progress.wearShirt; this.saveProgress(); this.showLoc(this.progress.wearShirt ? "Looking sharp." : "Back to the usual."); }
+      });
+      else this.openMenu();
+    }, opts.length - 1);
+  }
+  /* Controls: keyboard, touch and controller, one page each. The one you're using comes first. */
+  showControls() {
+    const sw = this.swapAB, A = sw ? "B" : "A", B = sw ? "A" : "B";
+    const pages = {
+      keyboard: { label: "KEYBOARD", text: "Move: arrow keys or WASD. " + A + " (look, talk, read): Z, Space or J. " + B + " (photo, and back in menus): X. Back in menus: K or Backspace. Pause: Enter, Esc or P." + (sw ? " (A and B are swapped in Settings.)" : "") },
+      touch: { label: "TOUCH", text: "Move with the on-screen pad. A looks, talks and reads. B takes a photo, and goes back in menus. START pauses. With Tap to walk on (Settings), tap where you want to go, or tap something to walk over and use it." },
+      pad: { label: "CONTROLLER", text: "Move: D-pad or left stick. " + A + " (look, talk, read): the bottom button. " + B + " (photo, and back in menus): the right button. Pause: Start or Select. Writing a note shows a keyboard: the D-pad picks a key, A types it, B deletes, Start sends." + (sw ? " (A and B are swapped in Settings.)" : "") },
+    };
+    const first = this.lastInput === "pad" ? "pad" : this.lastInput === "touch" ? "touch" : "keyboard";
+    this.read({ title: "CONTROLS", sections: [first, ...["keyboard", "touch", "pad"].filter(k => k !== first)].map(k => pages[k]) }, () => this.openMenu());
   }
   /* ----- the photo album -----
      A grid of little snapshots, newest first, with the selected photo's description underneath.
@@ -4197,7 +4380,7 @@ class Game {
     });
   }
   /* Someone's PC: a list of every archived piece. Pick one to see its art and placards; LOG OFF to leave. */
-  someonesPC() { this.quest("pc"); this.say(this.tx("pc.idle")); } // waiting for its new job (the archive moved to each room's touch screen)
+  someonesPC() { this.quest("pc"); this.showStats(); }
   /* A room's touch screen: the pieces of its genre that don't fit in its cases, to browse (and recommend). */
   overflowScreen() {
     const p = this.player, [dx, dy] = DIRS[p.dir], z = this.zoneAt(this.room, p.x + dx, p.y + dy) || this.zone;
@@ -4373,7 +4556,7 @@ class Game {
     }
     else if (e.plant) {
       if (!this.isThirsty(e.plant)) { this.say(this.tx("plant.done", { room: e.name })); return; }
-      this.progress.watered[e.plant] = todayISO(); this.count("watered", this.room.id + ":" + e.plant); this.saveProgress();
+      this.progress.watered[e.plant] = todayISO(); this.count("watered", this.room.id + ":" + e.plant); this.bump(this.progress.stats.plants, e.name || "plant"); this.saveProgress();
       this.quest("water");
       this.say(this.tx("plant.water", { room: e.name }));
     }
@@ -4467,7 +4650,7 @@ class Game {
       if (c === this.player) {
         const e = this.room.events[nx + "," + ny];
         if (e && e.bump && !this.inputLock) { this.inputLock = true; c.walking = false; this.runEvent(e); return false; }
-        if (c.bumpT <= 0) { c.bumpT = 16; c.step = !c.step; }
+        if (c.bumpT <= 0) { c.bumpT = 16; c.step = !c.step; if (!this.full && this.progress.stats && !e) this.progress.stats.bumps++; } // walked into a wall
       }
       return false;
     }
@@ -4482,6 +4665,7 @@ class Game {
     if ((c.prog += c === this.player && this.segway ? 2 : 1) >= T) {
       c.x += DIRS[c.dir][0]; c.y += DIRS[c.dir][1]; c.prog = 0; c.moving = false;
       if (c === this.player) {
+        if (!this.full && this.progress.stats) this.progress.stats.steps++;
         this.stepInDark(); this.zoneCheck();
         const e = this.room.events[c.x + "," + c.y];
         if (e && e.step && !this.trans) { this.path = null; this.pathAct = null; c.walking = false; if (e.warp[0] === "storage") this.quest("stairsB1"); this.runEvent(e); }
@@ -4492,7 +4676,7 @@ class Game {
   }
   update() {
     this.t++;
-    const q = this.queue; this.queue = [];
+    const q = this.queue.map(k => (k === "bk" ? (this.mode === "walk" ? null : "b") : k)).filter(Boolean); this.queue = []; // K / Backspace: back, but no photo
     // Up, up, down, down, left, right, left, right, B, A, Start: a Segway. Enter it again to park it. That Start doesn't open the menu.
     if (this.mode === "walk") for (const k of q) if (KONAMI.includes(k)) {
       (this.kbuf = this.kbuf || []).push(k); if (this.kbuf.length > KONAMI.length) this.kbuf.shift();
@@ -4513,6 +4697,7 @@ class Game {
     if (this.boomT > 0) this.boomT--;
     if (this.shakeT > 0) this.shakeT--;
     if (this.flash > 0) this.flash--;
+    if (this.t % 60 === 0) this.tickStats();
     if (this.phoneT > 0) { this.phoneT--; if (this.phoneT === 16) this.flash = 6; } // the camera flash, timed in the update so a slow frame can't skip it
     if (this.t % 600 === 0 && this.mode === "walk") {
       const t = this.tod(); if (this.lastTod && t !== this.lastTod) this.rebuild(); this.lastTod = t;
@@ -4550,6 +4735,11 @@ class Game {
       for (const d of ["up", "down", "left", "right"]) if (has(d)) this.kpMove(d);
       if (has("a")) this.kpPress(this.kpKeys[this.kpSel]);
       else if (has("b")) { if (this.el.badgeForm[this.kpOn].value) this.kpPress("DEL"); else if (this.kpOn === "key") this.kpField("badge"); else this.closeBadge(); }
+      return;
+    }
+    if (this.mode === "form" && this.nkb) { // the note card's keyboard, with a controller
+      for (const d of ["up", "down", "left", "right"]) if (has(d)) this.nkbMove(d);
+      if (has("a")) this.nkbPress(); else if (has("b")) this.nkbDel(); else if (has("start")) this.submitNote();
       return;
     }
     if (this.mode === "form") return; // typing in a form (the note card, the badge form on a keyboard)
@@ -5259,7 +5449,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-21 note button";
+const VERSION = "2026-10-21 controls and stats";
 window.GOQ = { ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
