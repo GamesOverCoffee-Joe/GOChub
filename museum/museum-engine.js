@@ -1366,7 +1366,7 @@ const ROOMS = {
     ],
     spawn: [5, 8, "up"], lightSwitch: [2, 2],
     props: [ // planters block the purple game's front and the green game's back
-      { key: "planter", x: 3, y: 6, say: ["A planter, right in front of the case.", "You can't read this side from here."] },
+      { key: "planter_wide", x: 2, y: 6, say: ["A long planter, right in front of the purple case.", "You can't read this side from here."] }, // its right half blocks the front
       { key: "planter_wide", x: 7, y: 4, say: ["A long planter, pushed right up behind the green case.", "No reading the back of this one."] }, // half of it shows past the case
     ],
     events: [{ x: 5, y: 2, tutDoor: "r1-r2", bump: true }, { x: 5, y: 9, tutDoor: "r1-office", bump: true }],
@@ -5216,7 +5216,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-19 long planter";
+const VERSION = "2026-10-19 planters 2";
 window.GOQ = { ACH_STATS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
