@@ -1304,6 +1304,15 @@ const TEXT = {
   "case.obsLabel":     { g: "Pieces", l: "Heading over the observation (one line)", v: [["THE CURATOR'S OBSERVATION"]] },
   "case.obsNote":      { g: "Pieces", l: "Under every observation: whose view it is", v: [["(These are my own impressions as the curator, from playing it myself. Not the developer's view, and not a verdict on the game.)"]] },
   "case.intLabel":     { g: "Pieces", l: "Heading over the developer's intention (one line)", v: [["THE DEVELOPER'S INTENTION"]] },
+  "note.anon":         { g: "Visitor notes", l: "Heading over a visitor's note without a name", v: [["A VISITOR'S NOTE"]] },
+  "note.from":         { g: "Visitor notes", l: "Heading over a visitor's note with a name ({who})", v: [["A NOTE FROM {who}"]] },
+  "note.mine":         { g: "Visitor notes", l: "On the placard while your own note waits for the curator", v: [["(Your note is with the curator. It shows up here once they've read it.)"]] },
+  "note.ask":          { g: "Visitor notes", l: "After reading a placard to the end ({title})", v: [["Leave a note about {title} for other visitors? The curator reads every note before it goes up."]] },
+  "note.prompt":       { g: "Visitor notes", l: "At the top of the note card ({title})", v: [["How did {title} make you feel? The curator reads every note before it goes up."]] },
+  "note.empty":        { g: "Visitor notes", l: "Sending an empty note", v: [["Write a few words first."]] },
+  "note.thanks":       { g: "Visitor notes", l: "After sending a note", v: [["You tucked your note into the little card holder under the placard.", "The curator will read it soon."]] },
+  "note.slow":         { g: "Visitor notes", l: "Too many notes at once", v: [["The card holder is full for now. Try again a little later."]] },
+  "note.fail":         { g: "Visitor notes", l: "A note that didn't send", v: [["Your note didn't send. Check your connection and try again."]] },
   "case.frontNote":    { g: "Pieces", l: "After the front placard", v: [["(The developer's intention is on the other side of the case.)"]] },
   "case.backNote":     { g: "Pieces", l: "After the back placard", v: [["(The curator's observation is on the other side of the case.)"]] },
   "intercom.ask":      { g: "Closing up", l: "Intercom question", v: [["The intercom. Make the closing announcement?"]] },
@@ -2053,9 +2062,9 @@ class Game {
     const sig = Object.keys(pack.assets).sort().map(k => k + ":" + pack.assets[k].src.length + pack.assets[k].src.slice(-24)).join("|");
     if (sig !== this.assetSig) { this.cache = {}; this.assetSig = sig; } else for (const k in this.cache) if (k.includes("|")) delete this.cache[k];
     this.pack = pack; this.overrides = ov; this.pieceImgs = pi;
-    this.rebuild(); this.refreshBoard(true);
+    this.rebuild(); this.refreshBoard(true); this.refreshNotes(true);
     const tb = `url("${this.src("textbox")}")`;
-    [this.el.text, this.el.choice, this.el.badgeForm, this.el.shop, this.el.album, this.el.reader].forEach(e => (e.style.borderImageSource = tb));
+    [this.el.text, this.el.choice, this.el.badgeForm, this.el.noteForm, this.el.shop, this.el.album, this.el.reader].forEach(e => (e.style.borderImageSource = tb));
   }
   /* The curator's room editor: new rooms only (nothing else in the pack changed), without reloading any art. */
   quickRooms(rooms) { if (!this.pack) return; applyRooms(rooms); this.pack.rooms = rooms; this.rebuild(); }
@@ -2257,6 +2266,18 @@ class Game {
     el.badgeForm.addEventListener("focusin", () => el.badgeWrap.classList.add("kb"));
     el.badgeForm.addEventListener("focusout", () => setTimeout(() => { if (!el.badgeForm.contains(document.activeElement)) el.badgeWrap.classList.remove("kb"); }, 50));
     el.badgeForm.addEventListener("keydown", e => { if (e.key === "Escape") { e.preventDefault(); this.closeBadge(); } if (!this.kp) e.stopPropagation(); });
+    // The note card: a visitor's note on a piece (it goes to the curator to approve first).
+    el.noteWrap = h("gt-badgewrap gt-notewrap");
+    el.noteForm = h("gt-box gt-badge gt-note", el.noteWrap, "form");
+    el.noteForm.innerHTML = '<p class="gt-badge-title">LEAVE A NOTE</p><p class="gt-badge-sub"></p>' +
+      '<label>Your note<textarea name="note" maxlength="200" rows="3" spellcheck="true"></textarea></label><p class="gt-note-count"></p>' +
+      '<label>Your name (optional)<input name="who" maxlength="24" autocomplete="nickname"></label>' +
+      '<p class="gt-badge-err" role="alert"></p>' +
+      '<div class="gt-badge-btns"><button type="submit">Pin it up</button><button type="button" class="ghost">Not now</button></div>';
+    el.noteForm.note.addEventListener("input", () => this.noteCount());
+    el.noteForm.addEventListener("submit", e => { e.preventDefault(); this.submitNote(); });
+    el.noteForm.querySelector(".ghost").addEventListener("click", () => this.closeNote());
+    el.noteForm.addEventListener("keydown", e => { if (e.key === "Escape") { e.preventDefault(); this.closeNote(); } e.stopPropagation(); });
     el.endWrap = h("gt-endwrap");
     el.end = h("gt-end", el.endWrap);
     el.end.innerHTML = '<p class="gt-end-sign">CLOSED</p><p class="gt-end-line">The museum is closed for the night.</p><p class="gt-end-sum"></p>' +
@@ -2338,6 +2359,10 @@ class Game {
 .gt-badge input{display:block;width:100%;box-sizing:border-box;margin-top:calc(1px * var(--s));font-family:inherit;font-size:calc(7px * var(--s));padding:calc(2px * var(--s)) calc(3px * var(--s));
   border:calc(1px * var(--s)) solid #181820;background:#fff;color:#181820;outline:none}
 .gt-badge input:focus{box-shadow:0 0 0 calc(1px * var(--s)) #e8b24a}
+.gt-badge textarea{display:block;width:100%;box-sizing:border-box;margin-top:calc(1px * var(--s));font-family:inherit;font-size:calc(7px * var(--s));line-height:1.3;padding:calc(2px * var(--s)) calc(3px * var(--s));
+  border:calc(1px * var(--s)) solid #181820;background:#fff;color:#181820;outline:none;resize:none}
+.gt-badge textarea:focus{box-shadow:0 0 0 calc(1px * var(--s)) #e8b24a}
+.gt-note-count{text-align:right;color:#505068;font-size:.85em}
 .gt-badge-test{color:#7c5a0c;margin-top:calc(3px * var(--s)) !important}
 .gt-badge-err{color:#a33a22;min-height:1.5em}
 .gt-badge-btns{display:flex;gap:calc(4px * var(--s))}
@@ -2446,15 +2471,19 @@ class Game {
       if (cur.trim()) pages.push({ label: first ? sec.label : (sec.label ? sec.label + " (CONTINUED)" : ""), text: cur.trim() });
     }
     if (!pages.length) pages.push({ label: "", text: "" });
-    this.rd = { pages, i: 0, done };
+    this.rd = { pages, i: 0, done, note: spec.note || null }; // note: a piece you can leave a note on (A on the last page offers it)
     this.renderRead();
   }
   renderRead() {
     const r = this.rd, pg = r.pages[r.i], body = this.el.reader.querySelector(".gt-rd-body");
     body.innerHTML = ""; if (pg.label) { const b = document.createElement("b"); b.textContent = pg.label; body.appendChild(b); } body.appendChild(document.createTextNode(pg.text));
-    this.el.reader.querySelector(".gt-rd-n").textContent = (r.pages.length > 1 ? (r.i + 1) + " / " + r.pages.length + "   " : "") + (r.i < r.pages.length - 1 ? "A: next" : "A: done") + "   B: close";
+    this.el.reader.querySelector(".gt-rd-n").textContent = (r.pages.length > 1 ? (r.i + 1) + " / " + r.pages.length + "   " : "") + (r.i < r.pages.length - 1 ? "A: next" : r.note ? "A: leave a note" : "A: done") + "   B: close";
   }
-  closeRead() { this.el.reader.style.display = "none"; const d = this.rd && this.rd.done; this.rd = null; this.mode = "walk"; this.inputLock = true; if (d) d(); }
+  closeRead(viaA) {
+    this.el.reader.style.display = "none"; const r = this.rd, d = r && r.done; this.rd = null; this.mode = "walk"; this.inputLock = true;
+    if (viaA && r && r.note) { this.offerNote(r.note, () => { if (d) d(); }); return; }
+    if (d) d();
+  }
   /* The stamp card: each piece you read stamps it once per card. A full card trades for one prize item at the shop counter. */
   stamp(p) {
     const st = this.progress.stamps, size = this.pack.settings.shop.stampSize;
@@ -2491,8 +2520,10 @@ class Game {
     else if (side === "end") secs.push({ label: "", text: this.tx("case.ends").join(" ") });
     else if (gold) { if (p.observation) obs(); if (p.intention) int(); }
     else if (p.guestNote) secs.push({ label: p.guestWriter ? "GUEST NOTE BY " + p.guestWriter.toUpperCase() : "GUEST NOTE", text: p.guestNote });
+    const notes = side !== "back" && side !== "end" && this.online(); // visitors' notes: under the front placard, or with the whole piece
+    if (notes) { const ns = this.notesFor(p); if (side === "front") secs.splice(secs.length - 1, 0, ...ns); else secs.push(...ns); this.refreshNotes(); } // before the "other side" line
     this.read({ img: img ? p.image : this.pieceArt(p).toDataURL(), imgClass: img && img.naturalWidth > 160 ? "photo" : "", title: p.title.toUpperCase(), sub: "By " + p.developer,
-      sections: secs, pick: p.pick, links: [[p.episodeUrl, "Watch the episode", "WATCH"], [p.gameUrl, "Play the game", "PLAY"]] }, () => {
+      sections: secs, pick: p.pick, note: notes && !this.curator ? p : null, links: [[p.episodeUrl, "Watch the episode", "WATCH"], [p.gameUrl, "Play the game", "PLAY"]] }, () => {
       if (side === undefined) { const k = (this.progress.sides || (this.progress.sides = {}))[p.id] || (this.progress.sides[p.id] = {}); if (gold) k.front = k.back = 1; else k.note = 1; this.saveProgress(); }
       if (stampAfter) this.stamp(p);
     });
@@ -2543,7 +2574,8 @@ class Game {
       staffTally: p.staffTally || {}, lastBadge: p.lastBadge || null,
       tokens: typeof p.tokens === "number" ? p.tokens : 0, items: Array.isArray(p.items) ? p.items : [], shirt: !!p.shirt, wearShirt: !!p.wearShirt, quest: p.quest || 0,
       ach: p.ach || {}, visited: Array.isArray(p.visited) ? p.visited : [],
-      photos: Array.isArray(p.photos) ? p.photos : [], stamps: Array.isArray(p.stamps) ? p.stamps : [], where: p.where || null, sides: p.sides || {}, wiped: p.wiped || {} };                    // chores counted per badge while clocked in
+      photos: Array.isArray(p.photos) ? p.photos : [], stamps: Array.isArray(p.stamps) ? p.stamps : [], where: p.where || null, sides: p.sides || {}, wiped: p.wiped || {},
+      myNotes: p.myNotes || {}, noteName: typeof p.noteName === "string" ? p.noteName : "", clientId: typeof p.clientId === "string" ? p.clientId : "" };                    // chores counted per badge while clocked in
   }
   saveProgress() { this.checkAchievements(); try { if (this.saveKey) localStorage.setItem(this.saveKey, JSON.stringify(this.progress)); } catch (e) {} }
   /* ----- achievements ----- */
@@ -2808,6 +2840,54 @@ class Game {
       if (!res.ok) throw new Error("HTTP " + res.status);
       return await res.json();
     } finally { if (tm) clearTimeout(tm); }
+  }
+  /* ----- visitor notes -----
+     Anyone can leave a short note on a piece. It goes to Supabase and waits there until the curator approves it (curator,
+     Notes tab); approved notes show under the piece's placard. Without Supabase there are no notes and nothing asks. */
+  refreshNotes(force) {
+    if (!this.online()) { this.notes = null; return; }
+    const now = Date.now(); if (this.notesBusy || (!force && now - (this.notesAt || 0) < 300000)) return;
+    this.notesBusy = true; this.notesAt = now;
+    this.rpc("get_notes").then(j => { this.notes = j && typeof j === "object" && !Array.isArray(j) ? j : {}; }).catch(() => {}).finally(() => { this.notesBusy = false; });
+  }
+  notesFor(p) {
+    const list = (this.notes && Array.isArray(this.notes[p.id]) ? this.notes[p.id] : []).slice(0, 6), secs = [];
+    list.forEach(n => secs.push({ label: n.name ? this.tx("note.from", { who: String(n.name).toUpperCase() }).join(" ") : this.tx("note.anon").join(" "), text: String(n.note || "") }));
+    const mine = this.progress.myNotes[p.id]; // your own note, until it's up (or two weeks pass)
+    if (mine && Date.now() - mine.at < 14 * 864e5 && !list.some(n => n.note === mine.note)) secs.push({ label: "", text: this.tx("note.mine").join(" ") });
+    return secs;
+  }
+  offerNote(p, then) {
+    this.ask(this.tx("note.ask", { title: p.title }).join(" "), ["Not now", "Leave a note"], i => { if (i === 1) this.openNote(p, then); else then(); }, 0);
+  }
+  openNote(p, then) {
+    const f = this.el.noteForm; this.mode = "form"; this.kp = false; this.noteFor = { p, then };
+    f.reset(); f.querySelector(".gt-badge-err").textContent = "";
+    f.querySelector(".gt-badge-sub").textContent = this.tx("note.prompt", { title: p.title }).join(" ");
+    f.who.value = this.progress.noteName || (this.staff ? this.staff.name : ""); this.noteCount();
+    const sc = parseFloat(getComputedStyle(this.wrap).getPropertyValue("--s")) || 1;
+    this.el.noteWrap.classList.toggle("big", sc < 1.75 || matchMedia("(pointer:coarse)").matches);
+    this.el.noteWrap.style.display = "flex";
+    setTimeout(() => f.note.focus(), 30);
+  }
+  noteCount() { const f = this.el.noteForm; f.querySelector(".gt-note-count").textContent = f.note.value.length + " / 200"; }
+  closeNote(sent) {
+    this.el.noteWrap.style.display = "none"; this.mode = "walk"; this.inputLock = true; this.wrap.focus({ preventScroll: true });
+    const n = this.noteFor; this.noteFor = null;
+    if (sent) this.say(this.tx("note.thanks"), () => n && n.then()); else if (n) n.then();
+  }
+  async submitNote() {
+    const f = this.el.noteForm, err = f.querySelector(".gt-badge-err"), n = this.noteFor; if (!n || this.noteBusy) return;
+    const note = f.note.value.replace(/\s+/g, " ").trim().slice(0, 200), who = f.who.value.replace(/\s+/g, " ").trim().slice(0, 24);
+    if (note.length < 2) { err.textContent = this.tx("note.empty")[0]; f.note.focus(); return; }
+    if (!this.progress.clientId) this.progress.clientId = Math.random().toString(36).slice(2, 10) + Date.now().toString(36); // a random id for fair limits; not who you are
+    this.noteBusy = true; err.textContent = "Sending...";
+    let res = null;
+    try { res = await this.rpc("submit_note", { p_piece: n.p.id, p_title: n.p.title, p_name: who, p_note: note, p_client: this.progress.clientId }); } catch (e) {} finally { this.noteBusy = false; }
+    if (!res || !res.ok) { err.textContent = this.tx(res && /^(slow|busy|full)$/.test(res.reason) ? "note.slow" : res && res.reason === "short" ? "note.empty" : "note.fail")[0]; return; }
+    this.progress.myNotes[n.p.id] = { note, at: Date.now() }; this.progress.noteName = who;
+    this.progress.tally.notes = (this.progress.tally.notes || 0) + 1; this.saveProgress();
+    this.closeNote(true);
   }
   /* The leaderboard and Employee of the Month: fetched on load and when you walk into the lobby or staff room (at most every 5 minutes). */
   refreshBoard(force) {
@@ -3990,7 +4070,7 @@ class Game {
     if (this.mode === "read") {
       const r = this.rd;
       if (has("left") && r.i > 0) { r.i--; this.renderRead(); }
-      else if (has("a") || has("right")) { if (r.i < r.pages.length - 1) { r.i++; this.renderRead(); } else this.closeRead(); }
+      else if (has("a") || has("right")) { if (r.i < r.pages.length - 1) { r.i++; this.renderRead(); } else this.closeRead(has("a")); }
       else if (has("b") || has("start")) this.closeRead();
       return;
     }
@@ -4020,6 +4100,7 @@ class Game {
       else if (has("b")) { if (this.el.badgeForm[this.kpOn].value) this.kpPress("DEL"); else if (this.kpOn === "key") this.kpField("badge"); else this.closeBadge(); }
       return;
     }
+    if (this.mode === "form") return; // typing in a form (the note card, the badge form on a keyboard)
     if (this.mode === "choice") {
       const c = this.ch;
       if (has("up")) c.i = (c.i + c.options.length - 1) % c.options.length;
@@ -4622,7 +4703,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-16 curator view";
+const VERSION = "2026-10-17 notes";
 window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
