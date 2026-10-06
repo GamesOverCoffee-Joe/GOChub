@@ -18,7 +18,7 @@ const PAL = {
   gold:    ["#fff6cc", "#f0c040", "#b07818", "#3c2408", "#c8d8e8", "#a8bcd0"],
   plant:   [null, "#9ccc68", "#4c8c3c", "#1e2418", "#c8784c", "#8a4428", "#a89048"],
   dust:    ["#e8e0d0", "#b8b0a0"],
-  mug:     [null, "#e8e4dc", "#3a2418", "#181820"],
+  mug:     ["#f8f4ec", "#e8e4dc", "#3a2418", "#181820"], // 0 is the mug's body: it used to be see-through, so the floor showed through the mug
   switchp: ["#f4f0e8", "#e8b24a", "#505068", "#181820"],
   door:    [null, "#3a2c4c", "#6a5878", "#120c18", "#f4d888", "#b88a38"],
   mat:     [null, "#c85848", "#8a3028", "#2a1010", "#e8b24a"],
@@ -1238,21 +1238,21 @@ const ROOMS = {
       hallArt: { top: "lobby_wall_top", upper: "lobby_wall_upper", lower: "lobby_wall_lower", floor: "lobby_floor" },
       rooms: [
         { id: "cafe", name: "Café and Gift Shop", x: 21, y: 17, w: 16, h: 10, art: { top: "shop_wall_top", upper: "shop_wall_upper", lower: "shop_wall_lower", floor: "shop_floor" }, light: true },
-        { id: "puzzle", name: "Puzzle", x: 5, y: 6, w: 12, h: 10, art: { top: "gallery_wall_top", upper: "gallery_wall_upper", lower: "gallery_wall_lower", floor: "gallery_floor" }, light: true },
-        { id: "strategy", name: "Strategy", x: 41, y: 6, w: 12, h: 10, art: { top: "g2_wall_top", upper: "g2_wall_upper", lower: "g2_wall_lower", floor: "g2_floor" }, light: true },
-        { id: "action", name: "Action", x: 5, y: 29, w: 12, h: 10, art: { top: "g3_wall_top", upper: "g3_wall_upper", lower: "g3_wall_lower", floor: "g3_floor" }, light: true },
-        { id: "story", name: "Story", x: 41, y: 29, w: 12, h: 10, art: { top: "staff_wall_top", upper: "staff_wall_upper", lower: "staff_wall_lower", floor: "staff_floor" }, light: true },
+        { id: "puzzle", name: "Wolpaw Wing", x: 5, y: 6, w: 12, h: 10, art: { top: "gallery_wall_top", upper: "gallery_wall_upper", lower: "gallery_wall_lower", floor: "gallery_floor" }, light: true },
+        { id: "strategy", name: "Meier Wing", x: 41, y: 6, w: 12, h: 10, art: { top: "g2_wall_top", upper: "g2_wall_upper", lower: "g2_wall_lower", floor: "g2_floor" }, light: true },
+        { id: "action", name: "Nishikado Wing", x: 5, y: 29, w: 12, h: 10, art: { top: "g3_wall_top", upper: "g3_wall_upper", lower: "g3_wall_lower", floor: "g3_floor" }, light: true },
+        { id: "story", name: "Roberta Williams Wing", x: 41, y: 29, w: 12, h: 10, art: { top: "staff_wall_top", upper: "staff_wall_upper", lower: "staff_wall_lower", floor: "staff_floor" }, light: true },
       ],
       halls: [
-        { id: "upper", name: "Upper Hall", path: [[15, 9], [42, 9]], width: 2, min: 24 },
-        { id: "lower", name: "Lower Hall", path: [[14, 37], [42, 37]], width: 2, min: 24 },
+        { id: "upper", name: "North Hall", path: [[15, 9], [42, 9]], width: 2, min: 24 },
+        { id: "lower", name: "South Hall", path: [[14, 37], [42, 37]], width: 2, min: 24 },
         { id: "lobbyhall", name: "Lobby Hall", path: [[28, 37], [28, 45]], width: 2, min: 8 },
         { id: "cafe-south", name: "Café, south", path: [[28, 25], [28, 37]], width: 2, min: 0 },
         { id: "cafe-west", name: "Café, west", path: [[21, 21], [10, 21]], width: 2, min: 0 },
         { id: "cafe-north", name: "Café, north", path: [[28, 17], [28, 9]], width: 2, min: 0 },
         { id: "cafe-east", name: "Café, east", path: [[35, 21], [46, 21]], width: 2, min: 0 },
-        { id: "puzzle-action", name: "Puzzle to Action", path: [[10, 14], [10, 29]], width: 2, min: 0 },
-        { id: "strategy-story", name: "Strategy to Story", path: [[46, 14], [46, 30]], width: 2, min: 0 },
+        { id: "puzzle-action", name: "West Hall", path: [[10, 14], [10, 29]], width: 2, min: 0 },
+        { id: "strategy-story", name: "East Hall", path: [[46, 14], [46, 30]], width: 2, min: 0 },
       ],
       doors: [{ id: "lobby", zone: "lobbyhall", side: "bottom", at: 0, warp: ["lobby", 7, 3, "down"] }],
       stairs: [],
@@ -1581,7 +1581,7 @@ const TEXT = {
   "pc.empty":          { g: "Floors", l: "The archive is empty", v: [["The archive is empty.", "Every piece is on display right now."]] },
   "mag.1":             { g: "Magazines", l: "Magazine 1 (first line is the title; each line after is a paragraph)", v: [["Pixel Monthly", "This month: why every menu in a cozy game should make a little sound when you open it. We asked twelve players. Eleven said yes. The twelfth asked what a menu was.", "Also inside: the case for walking slower. Games that let you stroll tend to get remembered as places, not as tasks. Something to think about next time a game hands you a sprint button."]] },
   "mag.2":             { g: "Magazines", l: "Magazine 2", v: [["Curator's Digest", "Ten things museum staff wish visitors knew. Number one: the backs of the display cases are not the boring side. Number four: the cat is not an exhibit, but she does accept compliments.", "Letters page: a reader asks whether there are bad mechanics. Our editor replies that there are only mechanics in the wrong game, and then goes back to wiping fingerprints off the glass."]] },
-  "mag.3":             { g: "Magazines", l: "Magazine 3 (holds the secret shirt riddle)", v: [["Thread Count Quarterly", "FASHION: THE SHIRT THAT GOT AWAY. Years ago the museum shop sold a GOQ shirt. Then, one day, it didn't. The shopkeeper won't say why. But the shopkeeper still has one, and rumor says it goes to whoever proves they've lived the full museum day, in order:", "First, something sweet and brown from the café. Drink it all, sitting on a stool, not a bench. Throw the cup out by the front doors, not in the tub. Give a plant a drink of its own. Photograph the cat. Take the lobby stairs all the way down, and wake up the old PC. Walk the Upper Hall from Puzzle to Strategy. Sleep on the bench in that hall. Then visit the shopkeeper and just chat. Three times. In a row.", "Do it out of order, and you'll have to start over. The shopkeeper notices everything."]] },
+  "mag.3":             { g: "Magazines", l: "Magazine 3 (holds the secret shirt riddle)", v: [["Thread Count Quarterly", "FASHION: THE SHIRT THAT GOT AWAY. Years ago the museum shop sold a GOQ shirt. Then, one day, it didn't. The shopkeeper won't say why. But the shopkeeper still has one, and rumor says it goes to whoever proves they've lived the full museum day, in order:", "First, something sweet and brown from the café. Drink it all, sitting on a stool, not a bench. Throw the cup out by the front doors, not in the tub. Give a plant a drink of its own. Photograph the cat. Take the lobby stairs all the way down, and wake up the old PC. Walk the {room:upper} from the {room:puzzle} to the {room:strategy}. Sleep on the bench in that hall. Then visit the shopkeeper and just chat. Three times. In a row.", "Do it out of order, and you'll have to start over. The shopkeeper notices everything."]] },
   "mag.4":             { g: "Magazines", l: "Magazine 4", v: [["Café Society", "A field guide to museum café seating. The stool by the lamp is for people who are about to have an idea. The stool by the window is for people who already had one. The bench in the gallery is for people who need a nap first.", "Recipe corner: cocoa, but you stare at a painting while it cools."]] },
   "mag.intro":         { g: "Magazines", l: "Magazine stand question", v: [["A rack of magazines. Read one?"]] },
   "shirt.tease":       { g: "Secret shirt", l: "The discontinued shirt in the shop menu", v: [["DISCONTINUED. The GOQ shirt. We don't sell these anymore. Don't ask. (People ask.)"]] },
@@ -2609,7 +2609,7 @@ class Game {
     clearTimeout(this._locT); this._locT = setTimeout(() => { el.classList.remove("on"); setTimeout(() => { this.toastBusy = false; this.flushToasts(); }, 300); }, 2000);
   }
   say(pages, done) {
-    pages = this.paginate(pages);
+    pages = this.paginate((pages || []).map(p => this.roomNames(p))); // what things say can name rooms with {room:id}
     if (!pages.length) { if (done) done(); return; }
     this.mode = "text"; this.txt = { pages, i: 0, n: 0, done };
     this.el.text.style.display = "block"; this.renderText();
@@ -3516,7 +3516,14 @@ class Game {
   }
 
   /* ----- words ----- */
-  fmt(str, vars) { return str.replace(/\{(\w+)\}/g, (m, k) => (vars && vars[k] !== undefined ? vars[k] : m)); }
+  fmt(str, vars) { return this.roomNames(str).replace(/\{(\w+)\}/g, (m, k) => (vars && vars[k] !== undefined ? vars[k] : m)); }
+  /* {room:upper} in any text: that room's or hallway's name right now (a museum room or hallway by its id, or a room like
+     "lobby"), so renaming a room renames it everywhere it's mentioned. */
+  roomNames(str) { return String(str).replace(/\{room:([\w-]+)\}/g, (m, id) => this.roomName(id) || m); }
+  roomName(id) {
+    for (const rid in ROOMS) { const lay = layoutOf(ROOMS[rid]), z = lay && lay.zones.find(q => q.id === id); if (z) return z.name; }
+    return ROOMS[id] ? ROOMS[id].name.replace(/\s+/g, " ") : "";
+  }
   baseVars() {
     const catRoom = Object.values(this.rooms || {}).find(r => r.cat);
     return { name: this.staff ? this.staff.name : "friend", cat: this.pack.settings.staff.catName, catRoom: catRoom ? catRoom.name.replace(/\s+/g, " ") : "somewhere", drink: this.drink ? this.drink.name.toLowerCase() : "drink" };
@@ -4068,7 +4075,7 @@ class Game {
     const sub = this.photoSubject(), ph = this.progress.photos || (this.progress.photos = []);
     { const [dx, dy] = DIRS[this.player.dir], n = this.room.npcs.find(q => q.x === this.player.x + dx && q.y === this.player.y + dy && !q.leaving);
       const d = n && this.photoReact(n); if (d) sub.desc = d; }
-    ph.unshift({ desc: sub.desc, piece: sub.piece || null, room: this.room.name.replace(/\s+/g, " "), thumb: sub.thumb || null, tod: this.tod(), seed: (Math.random() * 1e9) | 0 });
+    ph.unshift({ desc: sub.desc, piece: sub.piece || null, room: (this.room.zoneAt && this.zone ? this.zone.name : this.room.name).replace(/\s+/g, " "), /* the wing or hall, in the museum */ thumb: sub.thumb || null, tod: this.tod(), seed: (Math.random() * 1e9) | 0 });
     if (ph.length > 40) ph.length = 40;
     this.progress.tally.photos = (this.progress.tally.photos || 0) + 1;
     this.saveProgress(); this.phoneT = 34;
@@ -4335,7 +4342,7 @@ class Game {
   zoneCheck(quiet) {
     const z = this.zoneAt(this.room, this.player.x, this.player.y); if (!z || z === this.zone) return;
     const was = this.zone; this.zone = z; this.updateHud();
-    // The shirt quest: walk the Upper Hall from Puzzle to Strategy.
+    // The shirt quest: walk the upper hall (zone "upper") from the puzzle room to the strategy room (whatever they're called now).
     if (z.id === "upper") this.upperWalk = !!(was && (was.id === "puzzle" || (was.id === "upper" && this.upperWalk)));
     else { if (z.id === "strategy" && was && was.id === "upper" && this.upperWalk) this.quest("upperHall"); this.upperWalk = false; }
     if (z.kind !== "room") return;
@@ -5242,7 +5249,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-20 tweaks";
+const VERSION = "2026-10-20 room names";
 window.GOQ = { ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

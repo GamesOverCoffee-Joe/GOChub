@@ -440,3 +440,7 @@ Goal: character.
 - **Photos:** someone photographed mid-step stops where they were (the guard used to step into your tile). In the tutorial there's no "Photo saved"; the first photo says "Oh yeah, you can take photos. They don't help you here, though." (Words → Tutorial, `tut.photo`).
 - **Tutorial:** the games' placards skip the "my own impressions" line. Visitors wanting a game show "?", and "!" once they're back in the office, cleared when they tell you. Rosie, Skye and Onyx wear red, blue and black shirts.
 - **Shirt colors** (Visitors tab): each visitor wears one of ten colors at random (`life.shirtsOn`, `life.shirts`). A placeholder: the new *Visitor shirt* art (just the shirt pixels, gray) is drawn over Visitors A, B and C and tinted. A visitor sheet replaced with your own art keeps its own colors.
+
+**Room names and the mug (2026-10-20).**
+- **The mug** was see-through: its body used palette color 0, which was transparent. It's opaque cream now.
+- **Live room names:** any text (Words, or what a prop says) can write `{room:ID}` for a museum room or hallway (its zone id, e.g. `upper`, `puzzle`) or a room (e.g. `lobby`), and it shows that place's current name. Magazine 3's shirt riddle and the two hall benches use it. Photo album entries now name the wing or hall, not just "Museum". The engine's built-in fallback layout uses the same names as the pack (Wolpaw, Meier, Nishikado, Roberta Williams Wings; North, South, West, East Halls). The curator's Go to room list refreshes once the pack loads.

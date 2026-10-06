@@ -328,7 +328,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-20 tweaks";
+window.GOQ_WANT = "2026-10-20 room names";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -428,7 +428,7 @@ async function freshVersion() { try { const r = await fetch("version.json?t=" + 
 const when = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d) ? d.toLocaleString([], { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }) : ""; };
 async function loadFolderPack(f) {
   migrateFloors(f.j); useDraft(f.j); changed({ now: true, keepBase: true }); setBase(f.text, "folder", f.savedAt);
-  await game.setPack(packOut()); render(); status("Loaded museum-pack.json from this folder");
+  await game.setPack(packOut()); fillRoomPicker(); render(); status("Loaded museum-pack.json from this folder");
 }
 async function checkVersion() {
   let dlg = document.getElementById("verDlg");
@@ -1903,7 +1903,7 @@ function renderWords() {
   const st = draft.settings; st.text = st.text || {}; st.talk = st.talk || JSON.parse(JSON.stringify(GOQ.TALK_DEFAULTS));
   const wrap = el("section", { class: "pieces words" }); main.appendChild(wrap);
   wrap.appendChild(el("h2", { class: "title", text: "Words" }));
-  wrap.appendChild(el("p", { class: "note", text: "Everything the museum says that isn't part of a piece, room or shop item. One page per line; a blank line separates versions, which take turns. Placeholders like {name}, {cat} or {drink} are filled in for you." }));
+  wrap.appendChild(el("p", { class: "note", text: "Everything the museum says that isn't part of a piece, room or shop item. One page per line; a blank line separates versions, which take turns. Placeholders like {name}, {cat} or {drink} are filled in for you. {room:upper} (a room's or hallway's id) becomes its current name, so a rename shows up everywhere; ids are in Rooms, Museum, Layout." }));
   const q = el("input", { type: "search", value: wordsQuery, placeholder: "Search the words, e.g. microwave", "aria-label": "Search the words", class: "wsearch" });
   q.addEventListener("input", () => { wordsQuery = q.value; renderList(); });
   wrap.appendChild(q);
@@ -2406,7 +2406,7 @@ $("#importFile").addEventListener("change", async e => {
     const text = await f.text(), j = JSON.parse(text);
     if (!j || j.format !== GOQ.PACK_FORMAT) throw new Error("That file isn't a museum pack.");
     if ((Object.keys(draft.assets).length || draft.pieces.length) && !confirm("Replace everything here with this pack? Export first if you want to keep the current one.")) return;
-    migrateFloors(j); useDraft(j); changed({ now: true, keepBase: true }); setBase(text, "import", j.savedAt); await game.setPack(packOut()); render(); status("Imported " + f.name);
+    migrateFloors(j); useDraft(j); changed({ now: true, keepBase: true }); setBase(text, "import", j.savedAt); await game.setPack(packOut()); fillRoomPicker(); render(); status("Imported " + f.name);
   } catch (err) { status(err instanceof SyntaxError ? "That file couldn't be read as JSON." : err.message, true); }
 });
 
@@ -2449,6 +2449,7 @@ function migrateFloors(raw) {
   const moved = migrateFloors(raw);
   useDraft(raw); if (moved) { changed({ now: true, keepBase: true }); status("Switched your draft to the one-building layout"); }
   await game.setPack(packOut());
+  fillRoomPicker(); // the pack's own room names
   render();
 })();
 };
