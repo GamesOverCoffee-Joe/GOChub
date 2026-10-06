@@ -328,7 +328,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-18 flash";
+window.GOQ_WANT = "2026-10-20 wing names";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -428,7 +428,7 @@ async function freshVersion() { try { const r = await fetch("version.json?t=" + 
 const when = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d) ? d.toLocaleString([], { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }) : ""; };
 async function loadFolderPack(f) {
   migrateFloors(f.j); useDraft(f.j); changed({ now: true, keepBase: true }); setBase(f.text, "folder", f.savedAt);
-  await game.setPack(packOut()); render(); status("Loaded museum-pack.json from this folder");
+  await game.setPack(packOut()); fillRoomPicker(); render(); status("Loaded museum-pack.json from this folder");
 }
 async function checkVersion() {
   let dlg = document.getElementById("verDlg");
@@ -929,7 +929,7 @@ const PLACE_GROUPS = [
     { kind: "spot", name: "Painting spot", key: "wall_frame_wood", note: "Community pieces hang here. Tap the wall; it takes two tiles across both wall rows." },
     { kind: "prop", key: "overflow_screen", name: "Touch screen", note: "The room's extra pieces: episodes of its genre that don't fit in its cases. One per room is plenty." },
   ] },
-  { name: "Furniture", items: ["bench", "plant", "sign_stand", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board"].map(k => ({ kind: "prop", key: k })) },
+  { name: "Furniture", items: ["bench", "plant", "planter_wide", "sign_stand", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board"].map(k => ({ kind: "prop", key: k })) },
   { name: "Shop and café", items: ["shelf_unit", "magazine_rack", "item_rack", "shop_counter", "cafe_counter", "bus_tub", "cafe_table", "cafe_stool", "floor_lamp", "postcard_spinner", "basket", "planter", "cat_bed"].map(k => ({ kind: "prop", key: k }))
     .concat([{ kind: "decal", key: "rug" }]) },
   { name: "Storage and floors", items: [{ kind: "stairs", key: "stair_up", name: "Stairs up", note: "Step on it to change floors. Select it to choose where it leads." },
@@ -1903,7 +1903,7 @@ function renderWords() {
   const st = draft.settings; st.text = st.text || {}; st.talk = st.talk || JSON.parse(JSON.stringify(GOQ.TALK_DEFAULTS));
   const wrap = el("section", { class: "pieces words" }); main.appendChild(wrap);
   wrap.appendChild(el("h2", { class: "title", text: "Words" }));
-  wrap.appendChild(el("p", { class: "note", text: "Everything the museum says that isn't part of a piece, room or shop item. One page per line; a blank line separates versions, which take turns. Placeholders like {name}, {cat} or {drink} are filled in for you." }));
+  wrap.appendChild(el("p", { class: "note", text: "Everything the museum says that isn't part of a piece, room or shop item. One page per line; a blank line separates versions, which take turns. Placeholders like {name}, {cat} or {drink} are filled in for you. {room:upper} (a room's or hallway's id) becomes its current name, so a rename shows up everywhere; ids are in Rooms, Museum, Layout." }));
   const q = el("input", { type: "search", value: wordsQuery, placeholder: "Search the words, e.g. microwave", "aria-label": "Search the words", class: "wsearch" });
   q.addEventListener("input", () => { wordsQuery = q.value; renderList(); });
   wrap.appendChild(q);
@@ -2098,6 +2098,8 @@ function renderGenres(wrap) {
   wrap.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn primary", text: "Add a genre", onclick: () => { list.push({ id: "genre-" + Math.random().toString(36).slice(2, 7), name: "New genre", color: "#a08868", minds: [] }); changed({ now: true }); renderVisitors(); } })]));
 }
 /* Which room an episode is shown in: its mindsets decide, or pick a genre by hand. */
+/* The museum room (wing) that shows a genre, by its current name. */
+function wingOf(gid) { const lay = GOQ.layoutOf(roomDef("museum")), z = lay && lay.zones.find(q => q.rect && q.rect.genre === gid); return z ? z.name : ""; }
 function genreBox(p) {
   const genres = draft.settings.genres || GOQ.SAMPLE_GENRES, auto = GOQ.genreOf(Object.assign({}, p, { genre: "" }), genres), an = (genres.find(g => g.id === auto) || {}).name;
   const s = el("select", {}, [el("option", { value: "", text: "Its mindsets decide" + (an ? " (" + an + ")" : " (no genre: rooms without one)") })].concat(genres.map(g => el("option", { value: g.id, text: g.name }))));
@@ -2134,6 +2136,18 @@ function renderVisitors() {
     pctIn("bags", "Visitors with a shop bag", "Anywhere in the museum. The bag's art is under Art, People."),
     pctIn("photos", "Photos of a piece", "The chance a visitor who stops in front of a piece takes a photo of it. Keep it low."),
   ]));
+  // Visitors' shirt colors (a placeholder until the visitor art is replaced): each visitor gets one of these at random.
+  if (!Array.isArray(st.life.shirts) || !st.life.shirts.length) st.life.shirts = GOQ.SHIRT_COLORS.slice();
+  while (st.life.shirts.length < 10) st.life.shirts.push(GOQ.SHIRT_COLORS[st.life.shirts.length]);
+  const shOn = el("input", { type: "checkbox", checked: st.life.shirtsOn !== false }); shOn.addEventListener("change", () => { st.life.shirtsOn = shOn.checked; changed(); });
+  const swatches = el("div", { class: "row", style: "flex-wrap:wrap;gap:6px;margin:6px 0" });
+  const drawSw = () => { swatches.innerHTML = ""; st.life.shirts.forEach((c, i) => { const p = el("input", { type: "color", value: c, "aria-label": "Shirt color " + (i + 1) }); p.addEventListener("input", () => { st.life.shirts[i] = p.value; changed(); }); swatches.appendChild(p); }); };
+  drawSw();
+  wrap.appendChild(el("h3", { text: "Shirt colors", style: "margin:6px 0 4px" }));
+  wrap.appendChild(el("p", { class: "note", text: "Each visitor wears one of these ten colors, picked at random. It's a stand-in: the Visitor shirt art (Art, Characters) is drawn over Visitors A, B and C and tinted. A visitor sheet you replace with your own art keeps its own colors. Press Apply to preview to see changes." }));
+  wrap.appendChild(el("label", { class: "check" }, [shOn, document.createTextNode("Visitors wear random shirt colors")]));
+  wrap.appendChild(swatches);
+  wrap.appendChild(el("div", { class: "row", style: "margin:0 0 14px" }, [el("button", { type: "button", class: "btn small quiet", text: "Back to the ten starting colors", onclick: () => { st.life.shirts = GOQ.SHIRT_COLORS.slice(); drawSw(); changed(); } })]));
   wrap.appendChild(el("h3", { text: "Mindsets", style: "margin:6px 0 4px" }));
   wrap.appendChild(el("p", { class: "note" }, [document.createTextNode("How a visitor likes to play. Each curious visitor has one, and sometimes mentions a second. Put one line per row in each box. \"What they're looking for\" lines start with \"Something...\", since they follow \"I was looking for a game recommendation.\" In the next-day lines, "), phChip("title"), document.createTextNode(" is the game you recommended. \"Liked it\" lines are used when this is the second thing a visitor mentioned. Visitors never see the mindset's name.")]));
   const lines = (m, k, ph) => { const t = el("textarea", { placeholder: ph, style: "min-height:76px" }); t.value = (m[k] || []).join("\n"); t.addEventListener("input", () => { m[k] = t.value.split("\n").map(x => x.trim()).filter(Boolean); changed(); }); return t; };
@@ -2286,7 +2300,7 @@ function renderPieces() {
   let ci = 0;
   draft.pieces.forEach((p, i) => {
     const g = p.kind === "episode" ? (draft.settings.genres || GOQ.SAMPLE_GENRES).find(x => x.id === GOQ.genreOf(p, draft.settings.genres || GOQ.SAMPLE_GENRES)) : null;
-    const place = p.kind === "episode" ? label[p.id] || (g ? "ON THE " + (g.short || g.name).toUpperCase() + " SCREEN" : "NOT SHOWN (NO GENRE)") : (ci++ < oldC ? "NOT SHOWN (NO WALL SPOT FREE)" : walls[ci - 1 - oldC]);
+    const place = p.kind === "episode" ? label[p.id] || (g ? "ON THE " + (wingOf(g.id) || g.short || g.name).toUpperCase() + " SCREEN" : "NOT SHOWN (NO GENRE)") : (ci++ < oldC ? "NOT SHOWN (NO WALL SPOT FREE)" : walls[ci - 1 - oldC]);
     wrap.appendChild(pieceRow(p, i, place));
   });
   wrap.appendChild(el("div", { class: "row" }, [el("button", { class: "btn primary", type: "button", text: "Add a piece", onclick: () => {
@@ -2394,7 +2408,7 @@ $("#importFile").addEventListener("change", async e => {
     const text = await f.text(), j = JSON.parse(text);
     if (!j || j.format !== GOQ.PACK_FORMAT) throw new Error("That file isn't a museum pack.");
     if ((Object.keys(draft.assets).length || draft.pieces.length) && !confirm("Replace everything here with this pack? Export first if you want to keep the current one.")) return;
-    migrateFloors(j); useDraft(j); changed({ now: true, keepBase: true }); setBase(text, "import", j.savedAt); await game.setPack(packOut()); render(); status("Imported " + f.name);
+    migrateFloors(j); useDraft(j); changed({ now: true, keepBase: true }); setBase(text, "import", j.savedAt); await game.setPack(packOut()); fillRoomPicker(); render(); status("Imported " + f.name);
   } catch (err) { status(err instanceof SyntaxError ? "That file couldn't be read as JSON." : err.message, true); }
 });
 
@@ -2437,6 +2451,7 @@ function migrateFloors(raw) {
   const moved = migrateFloors(raw);
   useDraft(raw); if (moved) { changed({ now: true, keepBase: true }); status("Switched your draft to the one-building layout"); }
   await game.setPack(packOut());
+  fillRoomPicker(); // the pack's own room names
   render();
 })();
 };
