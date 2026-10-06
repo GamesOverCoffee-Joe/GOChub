@@ -1355,7 +1355,12 @@ const ROOMS = {
       "#####B#####",
     ],
     spawn: [5, 8, "up"], lightSwitch: [2, 2],
-    props: [],
+    props: [ // planters block the purple game's front and the green game's back
+      { key: "planter", x: 3, y: 6, say: ["A planter, right in front of the case.", "You can't read this side from here."] },
+      { key: "planter", x: 6, y: 4, say: ["A row of planters, crowded right up behind the green case.", "No reading the back of this one."] },
+      { key: "planter", x: 7, y: 4, say: ["A planter, tucked right behind the case.", "No reading the back of this one."] }, // hidden behind the case; the two beside it show the row
+      { key: "planter", x: 8, y: 4, say: ["A row of planters, crowded right up behind the green case.", "No reading the back of this one."] },
+    ],
     events: [{ x: 5, y: 2, tutDoor: "r1-r2", bump: true }, { x: 5, y: 9, tutDoor: "r1-office", bump: true }],
     light: { dim: 0, spots: 0.5 },
     visitors: [],
@@ -1384,12 +1389,12 @@ const ROOMS = {
   },
 };
 const TUT_ROOMS = ["tut_office", "tut_room1", "tut_room2"];
-/* The tutorial's three games: just a color each. Purple is up against the bottom wall (you can't read its front), green
-   against the top wall (no back), red stands free. Their words are in Words, Tutorial. */
+/* The tutorial's three games, in a row: just a color each. A planter blocks purple's front and another green's back;
+   red stands free. Their words are in Words, Tutorial. */
 const TUT_GAMES = [
-  { id: "tut-purple", key: "purple", color: "purple", colors: ["red", "blue", "purple"], art: "#8a4ad0", room: "tut_room1", x: 3, y: 8 },
+  { id: "tut-purple", key: "purple", color: "purple", colors: ["red", "blue", "purple"], art: "#8a4ad0", room: "tut_room1", x: 3, y: 5 },
   { id: "tut-red", key: "red", color: "red", colors: ["red"], art: "#d84040", room: "tut_room1", x: 5, y: 5 },
-  { id: "tut-green", key: "green", color: "green", colors: ["green"], art: "#48a850", room: "tut_room1", x: 7, y: 3 },
+  { id: "tut-green", key: "green", color: "green", colors: ["green"], art: "#48a850", room: "tut_room1", x: 7, y: 5 },
 ];
 const TUT_SPOTS = { r1Exit: [5, 8], glass: [6, 8], office: { rosie: [3, 6], skye: [9, 6], onyx: [8, 8] } };
 
@@ -3112,8 +3117,8 @@ class Game {
   tutPair() { // two more visitors waiting in Training Room A
     const t = this.tut; if (!t || t.pair) return;
     t.pair = true;
-    t.people.skye = this.tutPerson("skye", "Skye", "blue", "visitor_a", "tut_room1", 2, 5);
-    t.people.onyx = this.tutPerson("onyx", "Onyx", "black", "visitor_c", "tut_room1", 8, 6);
+    t.people.skye = this.tutPerson("skye", "Skye", "blue", "visitor_a", "tut_room1", 1, 4);
+    t.people.onyx = this.tutPerson("onyx", "Onyx", "black", "visitor_c", "tut_room1", 9, 7);
     const r = this.rooms.tut_room1; [t.people.skye, t.people.onyx].forEach(p => { if (r && !r.npcs.includes(p)) r.npcs.push(p); });
   }
   tutEvent(e) {
@@ -5203,7 +5208,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-19 tutorial";
+const VERSION = "2026-10-19 planters";
 window.GOQ = { ACH_STATS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
