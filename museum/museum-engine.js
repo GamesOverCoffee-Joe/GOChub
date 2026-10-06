@@ -582,6 +582,15 @@ const GEN = {
     rect(a, 1, 9, 14, 6, 7); rect(a, 1, 9, 14, 1, 3);
     return outline(a, 8);
   },
+  // The screening nook's big screen: six tiles wide across both wall rows, a soft flicker between two frames.
+  theater_screen: f => {
+    const a = mk(96, 32);
+    rect(a, 0, 1, 96, 30, 0); rect(a, 2, 3, 92, 24, 1);
+    fillFn(a, (x, y, v) => (v === 1 && y >= 4 && y <= 25 && x >= 3 && x <= 92 ? ((x * 7 + y * 3 + f * 5) % 23 === 0 ? 3 : (y + f) % 6 === 0 ? 2 : 1) : undefined));
+    rect(a, 40, 12, 16, 8, 2); px(a, 46, 14, 3); px(a, 46, 15, 3); px(a, 47, 15, 3); px(a, 46, 16, 3); px(a, 47, 16, 3); px(a, 48, 16, 3); px(a, 46, 17, 3); px(a, 47, 17, 3); px(a, 46, 18, 3); // a play symbol
+    rect(a, 20, 28, 6, 3, 4); rect(a, 70, 28, 6, 3, 4); // its stand
+    return a;
+  },
   // A long planter box, two tiles wide: a leafy row with a few flowers.
   planter_wide: () => {
     const a = mk(32, 16);
@@ -864,6 +873,7 @@ const SLOTS = [
   { key: "carpet_v", label: "Carpet runner, down", group: "Hallways", w: 16, h: 16, frames: 3, pal: "carpet", gen: GEN.carpet_v, note: "3 frames side by side (48×16): the top end, a middle piece, the bottom end." },
   { key: "wall_sconce", label: "Accent light", group: "Hallways", w: 16, h: 16, pal: "sconce", gen: GEN.wall_sconce, note: "A small wall light, hung on the upper wall row. It glows with the lights on." },
   { key: "rug", label: "Rug", group: "Gift shop and café", w: 48, h: 32, pal: "rug", gen: GEN.rug, note: "Lies on the floor under everything else; you walk over it." },
+  { key: "theater_screen", label: "Screening nook screen", group: "Screening nook", w: 96, h: 32, frames: 2, pal: "screen", gen: GEN.theater_screen, note: "2 frames (192×32), six tiles wide across both wall rows; it flickers softly between them. Sit down in the nook to watch an episode." },
   { key: "planter_wide", label: "Long planter", group: "Furniture", w: 32, h: 16, pal: "trinket", gen: GEN.planter_wide, note: "Two tiles wide. A leafy planter box with a few flowers, for dividing a room or blocking a spot." },
   { key: "planter", label: "Planter", group: "Gift shop and café", w: 16, h: 16, pal: "trinket", gen: GEN.planter, note: "A row of these divides the shop from the café." },
   { key: "cat_bed", label: "Cat bed", group: "The cat", w: 16, h: 16, pal: "cat", gen: GEN.cat_bed },
@@ -1327,6 +1337,32 @@ const ROOMS = {
     light: { dim: 0, spots: 0 },
     visitors: [],
   },
+  // The screening nook: a little theater off the café's east hallway. Sit down to watch an episode on the big screen.
+  screening: {
+    name: "Screening Nook",
+    art: { top: "staff_wall_top", upper: "staff_wall_upper", lower: "staff_wall_lower", floor: "carpet_floor" },
+    tint: { floor: "#3a2430", wall: "#2c2630" },
+    map: [
+      "############",
+      "#^^^^^^^^^^#",
+      "#vvvvvvvvvv#",
+      "#..........#",
+      "#..........#",
+      "#..........#",
+      "#..........#",
+      "#..........#",
+      "#####BB#####",
+    ],
+    spawn: [5, 7, "up"], lightSwitch: [10, 2], screenAt: [3, 1],
+    props: [
+      { key: "bench", x: 2, y: 4, sit: "up" }, { key: "bench", x: 8, y: 4, sit: "up" },
+      { key: "bench", x: 2, y: 6, sit: "up" }, { key: "bench", x: 8, y: 6, sit: "up" },
+      { key: "planter", x: 1, y: 3, say: ["A planter. It's seen every episode."] }, { key: "planter", x: 10, y: 3, say: ["A planter, facing the screen. Of course."] },
+    ],
+    events: [{ x: 5, y: 8, warp: ["museum", 40, 30, "down"] }, { x: 6, y: 8, warp: ["museum", 41, 30, "down"] }],
+    light: { dim: 0.35, spots: 0 },
+    visitors: [],
+  },
   // The tutorial (see "the tutorial" in the Game class): the staff office, then two small training rooms.
   tut_office: {
     name: "Staff Office", tutorial: true,
@@ -1474,6 +1510,11 @@ const TEXT = {
   "tut.green.title":   { g: "Tutorial", l: "The green game's title", v: [["Meadow Mayhem"]] },
   "tut.green.front":   { g: "Tutorial", l: "The green game's front placard", v: [["This game has a lot of green stuff. There's green hills, green frogs, and green trees."]] },
   "tut.green.back":    { g: "Tutorial", l: "The green game's back placard (blocked, so nobody reads it)", v: [["The developer wanted every corner of it to feel fresh and green, like a spring morning."]] },
+  "patron.enjoyed":    { g: "Staff", l: "A Patreon member mentioning a game they enjoyed ({title}: a random game; one picked at random)", v: [["I played {title} last week. Really enjoyed it."], ["Have you tried {title}? I keep thinking about it."], ["{title} was so good. No notes."], ["I finally got around to {title}. Worth it."], ["Okay, {title}. Why didn't anyone tell me sooner?"]] },
+  "screen.guest":      { g: "Screening nook", l: "Someone sitting in the screening nook (takes turns)", v: [["Shh. It's getting to the good part."], ["I've seen this one four times."], ["The host talks fast. I like it."], ["Is there popcorn? There should be popcorn."], ["I came in for five minutes. That was an hour ago."]] },
+  "screen.ask":        { g: "Screening nook", l: "Sitting down in the screening nook", v: [["The screen flickers, waiting. Watch an episode?"]] },
+  "screen.none":       { g: "Screening nook", l: "No episodes to show", v: [["Nothing's queued up. The screen just hums."]] },
+  "screen.look":       { g: "Screening nook", l: "Looking at the screen", v: [["The big screen. Have a seat to watch something."]] },
   "react.startled":    { g: "Photo reactions", l: "Someone looking at a piece: startled, then a peace sign ({who})", v: [["{who} jumped, then threw up a peace sign."]] },
   "react.snapback":    { g: "Photo reactions", l: "Someone taking their own photo: they photograph you back ({who})", v: [["{who} took a photo of you right back."]] },
   "react.pose":        { g: "Photo reactions", l: "Someone walking around: they stop and pose ({who})", v: [["{who} stopped and struck a pose."]] },
@@ -1668,7 +1709,7 @@ const ACH_STATS = {
   helped: "Visitors who loved your recommendation", recs: "Games recommended to visitors", pets: "Times petting the cat", closings: "Times closing the museum", photos: "Photos taken",
   bothSides: "Cases read on both sides", stamps: "Stamps collected", cards: "Stamp cards traded", items: "Gift shop items owned",
   drinks: "Drinks ordered", naps: "Bench naps", rooms: "Different rooms visited", microwave: "Microwave incidents", segway: "Segway rides",
-  reactions: "Different photo reactions caught", shirt: "Has the GOQ shirt (1 = yes)", shifts: "Times clocking in", figure: "Photographed the figure in the dark (1 = yes)",
+  reactions: "Different photo reactions caught", episodes: "Episodes watched in the screening nook", shirt: "Has the GOQ shirt (1 = yes)", shifts: "Times clocking in", figure: "Photographed the figure in the dark (1 = yes)",
 };
 const SAMPLE_ACH = [
   { id: "first-dust", name: "Elbow Grease", desc: "Dust a frame for the first time.", stat: "dusted", target: 1 },
@@ -1683,6 +1724,7 @@ const SAMPLE_ACH = [
   { id: "figure", name: "Say Cheese", desc: "Photograph the figure in the dark.", stat: "figure", target: 1, secret: true },
   { id: "shirt", name: "The Shirt That Got Away", desc: "Get the discontinued GOQ shirt.", stat: "shirt", target: 1, secret: true },
   { id: "paparazzi", name: "Paparazzi", desc: "Catch 10 different reactions on camera.", stat: "reactions", target: 10 },
+  { id: "couch", name: "Couch Critic", desc: "Watch 5 episodes in the screening nook.", stat: "episodes", target: 5 },
 ];
 /* Rugs you can size: a border band and corner designs around a plain middle, in any colors (Rooms, select a rug).
    A rug decal: { key: "rug", x, y, w, h, pattern (border style), motif (corner design), field, border, accent, corner (colors) }. */
@@ -1849,7 +1891,7 @@ prepLayoutRoom(ROOMS.museum);
    the level editor in curator.html writes them. Rooms are plain data, so a deep copy is enough. */
 const BUILTIN_ROOMS = JSON.parse(JSON.stringify(ROOMS));
 const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "runners", "lamps", "arrows", "murals", "tint", "windowAt", "intercom", "lightSwitch", "eotmAt",
-  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "tutorial"];
+  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "tutorial", "screenAt"];
 /* Light checks so a hand-edited or damaged pack can't break the game: rectangular map, sane size, a spawn on the map. */
 function normalizeRoom(id, d) {
   if (d && typeof d === "object" && d.layout) { d = Object.assign({}, d); prepLayoutRoom(d); }
@@ -2099,6 +2141,7 @@ function buildRoom(id, pieces, o) {
   if (def.leaderboardAt) { const [x] = def.leaderboardAt; r.boardAt = { x, y: 1 }; r.events[x + ",2"] = r.events[(x + 1) + ",2"] = { leaderboard: true }; }
   if (def.timeClock) { const [x, y] = def.timeClock; r.clockAt = { x, y }; r.events[x + "," + y] = { timeClock: true }; }
   if (def.eotmAt) r.eotmAt = { x: def.eotmAt[0], y: def.eotmAt[1] };
+  if (def.screenAt) { const [x, y] = def.screenAt; r.screenAt = { x, y }; for (let i = 0; i < SLOT.theater_screen.w / T; i++) r.events[(x + i) + "," + (y + 1)] = { screen: true }; }
   if (def.intercom) { const [x, y] = def.intercom; r.intercomAt = { x, y }; r.events[x + "," + y] = { announce: true }; }
   if (def.wallArt) {
     r.wallArt = def.wallArt;
@@ -2218,7 +2261,7 @@ function buildRoom(id, pieces, o) {
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const OPP = { up: "down", down: "up", left: "right", right: "left" };
 const KEYMAP = { ArrowUp: "up", KeyW: "up", ArrowDown: "down", KeyS: "down", ArrowLeft: "left", KeyA: "left", ArrowRight: "right", KeyD: "right",
-  KeyZ: "a", Space: "a", KeyJ: "a", KeyX: "b", Escape: "start", Backspace: "bk", KeyK: "bk", Enter: "start", KeyP: "start" }; // bk: back in menus, never a photo
+  KeyZ: "a", Space: "a", KeyJ: "a", KeyX: "b", Escape: "start", Backspace: "bk", KeyK: "b", Enter: "start", KeyP: "start" }; // bk: back in menus, never a photo
 
 class Game {
   constructor(wrap, pack, opts) {
@@ -2351,10 +2394,14 @@ class Game {
   bindInput() {
     const isField = t => t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable);
     window.addEventListener("keydown", e => {
+      // Typing on a real keyboard while the note card shows its on-screen one: switch to typing for real.
+      if (this.nkb && e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && !isField(e.target)) { e.preventDefault(); this.nkbToNative(e.key); return; }
       const k = KEYMAP[e.code]; if (!k || isField(e.target) || e.target.tagName === "BUTTON" && (k === "a" || k === "start")) return;
       if (this.capture === "focus" && document.activeElement !== this.wrap) return;
       e.preventDefault(); if (e.repeat) return;
       this.lastInput = "keyboard";
+      const ka = this.swapAB && (k === "a" || k === "b") ? (k === "a" ? "b" : "a") : k;
+      if (ka === "a" && this.mode === "read" && this.rd && this.rd.sel >= 0) { this.rdUse(); return; }
       if (DIRS[k]) { this.held = this.held.filter(d => d !== k); this.held.push(k); }
       this.queue.push(this.swapAB && (k === "a" || k === "b") ? (k === "a" ? "b" : "a") : k); // Settings: Swap A and B
     });
@@ -2479,7 +2526,7 @@ class Game {
     el.shop = h("gt-box gt-shop");
     el.album = h("gt-box gt-shop gt-album");
     el.reader = h("gt-box gt-reader");
-    el.reader.addEventListener("click", e => { if (e.target.tagName === "A") return; e.stopPropagation(); this.press("a"); });
+    el.reader.addEventListener("click", e => { if (e.target.tagName === "A" || e.target.tagName === "BUTTON") return; e.stopPropagation(); if (this.rd && this.rd.sel >= 0) this.rdUse(); else this.press("a"); });
     el.badgeWrap = h("gt-badgewrap");
     el.badgeForm = h("gt-box gt-badge", el.badgeWrap, "form");
     el.badgeForm.innerHTML = '<div class="gt-badge-main"><p class="gt-badge-title">STAFF ENTRANCE</p>' +
@@ -2509,15 +2556,19 @@ class Game {
       '<label>Your note<textarea name="note" maxlength="200" rows="3" spellcheck="true"></textarea></label><p class="gt-note-count"></p>' +
       '<label>Your name (optional)<input name="who" maxlength="24" autocomplete="nickname"></label>' +
       '<p class="gt-badge-err" role="alert"></p>' +
-      '<div class="gt-notekb" hidden></div><p class="gt-notekb-hint">Start: pin it up \u00b7 B: delete</p>' +
+      '<div class="gt-notekb" hidden></div><p class="gt-notekb-hint">Start: pin it up \u00b7 B: delete \u00b7 <button type="button" class="gt-notekb-native">Type with my keyboard</button></p>' +
       '<div class="gt-badge-btns"><button type="submit">Pin it up</button><button type="button" class="ghost">Not now</button></div>';
     el.noteKb = el.noteForm.querySelector(".gt-notekb");
+    el.noteForm.querySelector(".gt-notekb-native").addEventListener("click", e => { e.preventDefault(); this.nkbToNative(); });
     NOTE_KEYS.forEach((k, i) => { const b = document.createElement("button"); b.type = "button"; b.textContent = k.label || k.k; if (k.span > 1) b.style.gridColumn = "span " + k.span;
       b.addEventListener("pointerdown", e => e.preventDefault()); b.addEventListener("click", e => { e.preventDefault(); if (this.nkb) { this.nkb.i = i; this.nkbPress(); } }); el.noteKb.appendChild(b); });
     el.noteForm.note.addEventListener("input", () => this.noteCount());
     el.noteForm.addEventListener("submit", e => { e.preventDefault(); this.submitNote(); });
     el.noteForm.querySelector(".ghost").addEventListener("click", () => this.closeNote());
     el.noteForm.addEventListener("keydown", e => { if (e.key === "Escape") { e.preventDefault(); this.closeNote(); } e.stopPropagation(); });
+    // The screening nook's video: the episode plays over the game; B, Start or the button closes it.
+    el.tv = h("gt-tv"); el.tv.innerHTML = '<div class="gt-tv-bar"><span class="gt-tv-t"></span><a class="gt-tv-yt" target="_blank" rel="noopener">YouTube \u2197</a><button type="button" class="gt-tv-x">Close (B)</button></div><div class="gt-tv-box"></div>';
+    el.tv.querySelector(".gt-tv-x").addEventListener("click", e => { e.stopPropagation(); this.closeTv(); });
     el.endWrap = h("gt-endwrap");
     el.end = h("gt-end", el.endWrap);
     el.end.innerHTML = '<p class="gt-end-sign">CLOSED</p><p class="gt-end-line">The museum is closed for the night.</p><p class="gt-end-sum"></p>' +
@@ -2563,9 +2614,11 @@ class Game {
 .gt-rd-links{display:flex;flex-direction:column;gap:calc(2px * var(--s));flex:none;margin-left:auto}
 .gt-rd-links a{display:block;text-align:center;font-family:var(--pixel, monospace);font-size:calc(5px * var(--s));line-height:1;color:#fff8ec;text-decoration:none;padding:calc(3px * var(--s)) calc(4px * var(--s));border:calc(1px * var(--s)) solid #181820;border-radius:calc(1px * var(--s));box-shadow:0 calc(1px * var(--s)) 0 #181820;white-space:nowrap;cursor:pointer}
 .gt-rd-links a.watch{background:#b8382c}.gt-rd-links a.play{background:#2f6f3a}
+.gt-rd-pre .gt-rd-body{white-space:pre-wrap}
 .gt-rd-links button.note{display:block;text-align:center;font-family:var(--pixel, monospace);font-size:calc(5px * var(--s));line-height:1;color:#181820;background:#f0c040;padding:calc(3px * var(--s)) calc(4px * var(--s));border:calc(1px * var(--s)) solid #181820;border-radius:calc(1px * var(--s));box-shadow:0 calc(1px * var(--s)) 0 #181820;white-space:nowrap;cursor:pointer;margin:0}
 .gt-rd-links.three{gap:calc(1px * var(--s))}
 .gt-rd-links.three a,.gt-rd-links.three button.note{padding:calc(2px * var(--s)) calc(4px * var(--s))} /* three buttons fit beside the picture */
+.gt-rd-links .sel{outline:calc(1px * var(--s)) solid #181820;outline-offset:calc(1px * var(--s));filter:brightness(1.15)}
 .gt-rd-links button.note:hover,.gt-rd-links button.note:focus-visible{filter:brightness(1.1);outline:calc(1px * var(--s)) solid #181820}
 .gt-rd-links a:hover,.gt-rd-links a:focus-visible{filter:brightness(1.15);outline:calc(1px * var(--s)) solid #fff8ec}
 .gt-rd-t{flex:1;min-width:0;font-size:calc(7px * var(--s));line-height:1.35;color:#181820}
@@ -2607,6 +2660,12 @@ class Game {
   border:calc(1px * var(--s)) solid #181820;background:#fff;color:#181820;outline:none;resize:none}
 .gt-badge textarea:focus{box-shadow:0 0 0 calc(1px * var(--s)) #e8b24a}
 .gt-note-count{text-align:right;color:#505068;font-size:.85em}
+.gt-tv{position:absolute;inset:0;display:none;flex-direction:column;background:#000;z-index:9}
+.gt-tv-bar{display:flex;align-items:center;gap:calc(4px * var(--s));padding:calc(2px * var(--s)) calc(4px * var(--s));color:#f8f0e0;font-size:max(calc(6px * var(--s)), 10px);background:#141018}
+.gt-tv-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gt-tv-bar a,.gt-tv-bar button{font:inherit;color:#f8f0e0;background:#2c2630;border:1px solid #f8f0e0;padding:calc(1px * var(--s)) calc(4px * var(--s));text-decoration:none;cursor:pointer}
+.gt-tv-box{flex:1;display:flex;align-items:center;justify-content:center;min-height:0}
+.gt-tv-box iframe{width:100%;height:100%;border:0;aspect-ratio:16/9;max-height:100%}
 .gt-notekb{display:grid;grid-template-columns:repeat(10,1fr);gap:calc(1px * var(--s));margin:calc(2px * var(--s)) 0}
 .gt-notekb[hidden]{display:none}
 .gt-notekb button{font-family:inherit;font-size:calc(6px * var(--s));line-height:1;padding:calc(2px * var(--s)) 0;background:#fff;color:#181820;border:calc(1px * var(--s)) solid #181820;cursor:pointer;min-width:0}
@@ -2614,6 +2673,7 @@ class Game {
 .gt-note.kb .gt-badge-sub,.gt-note.kb .gt-note-count,.gt-note.kb .gt-badge-btns{display:none}
 .gt-notekb-hint{display:none;color:#505068;font-size:.85em}.gt-note.kb .gt-notekb-hint{display:block}
 .gt-note.kb .gt-badge-err:empty{min-height:0;margin:0 !important}
+.gt-notekb-native{background:none;border:0;padding:0;font:inherit;color:#505068;text-decoration:underline;cursor:pointer}
 .gt-note.kb textarea{height:calc(22px * var(--s))}
 .gt-note.kb textarea.on,.gt-note.kb input.on{box-shadow:0 0 0 calc(1px * var(--s)) #e8b24a}
 .gt-badge-test{color:#7c5a0c;margin-top:calc(3px * var(--s)) !important}
@@ -2709,6 +2769,7 @@ class Game {
     this.holdToast(); // a toast showing now waits until the placard closes
     const box = this.el.reader; box.style.display = "block"; this.mode = "read";
     box.innerHTML = '<div class="gt-rd-head"></div><div class="gt-rd-body"></div><div class="gt-rd-foot"><span class="gt-rd-n"></span></div>';
+    box.classList.toggle("gt-rd-pre", !!spec.pre); // line breaks and indents kept (the stats)
     const head = box.querySelector(".gt-rd-head"), body = box.querySelector(".gt-rd-body");
     if (spec.img) { const im = document.createElement("img"); im.src = spec.img; im.alt = ""; if (spec.imgClass) im.className = spec.imgClass; head.appendChild(im); }
     const t = document.createElement("div"); t.className = "gt-rd-t"; t.textContent = spec.title || ""; if (spec.sub) { const sm = document.createElement("small"); sm.textContent = spec.sub; t.appendChild(sm); }
@@ -2727,26 +2788,40 @@ class Game {
     // Break each section into pages that fit the box, a word at a time.
     const pages = [], fits = () => body.scrollHeight <= body.clientHeight + 1;
     const put = (label, words) => { body.innerHTML = ""; if (label) { const b = document.createElement("b"); b.textContent = label; body.appendChild(b); } body.appendChild(document.createTextNode(words)); };
+    const trim = spec.pre ? (x => x.replace(/^\n+/, "").replace(/\s+$/, "")) : (x => x.trim()); // the stats keep their indents
     for (const sec of spec.sections || []) {
       const words = String(sec.text || "").split(/(\s+)/); let cur = "", first = true;
       for (const w of words) {
         put(first ? sec.label : (sec.label ? sec.label + " (CONTINUED)" : ""), cur + w);
-        if (!fits() && cur.trim()) { pages.push({ label: first ? sec.label : (sec.label ? sec.label + " (CONTINUED)" : ""), text: cur.trim() }); first = false; cur = w.trimStart(); }
+        if (!fits() && cur.trim()) { pages.push({ label: first ? sec.label : (sec.label ? sec.label + " (CONTINUED)" : ""), text: trim(cur) }); first = false; cur = spec.pre ? w.replace(/^\n+/, "") : w.trimStart(); }
         else cur += w;
       }
-      if (cur.trim()) pages.push({ label: first ? sec.label : (sec.label ? sec.label + " (CONTINUED)" : ""), text: cur.trim() });
+      if (cur.trim()) pages.push({ label: first ? sec.label : (sec.label ? sec.label + " (CONTINUED)" : ""), text: trim(cur) });
     }
     if (!pages.length) pages.push({ label: "", text: "" });
-    this.rd = { pages, i: 0, done, note: spec.note || null }; // note: a piece you can leave a note on (A on the last page offers it)
+    this.rd = { pages, i: 0, done, note: spec.note || null, sel: -1 }; // note: a piece you can leave a note on (its NOTE button); sel: the highlighted button
     this.renderRead();
   }
   renderRead() {
     const r = this.rd, pg = r.pages[r.i], body = this.el.reader.querySelector(".gt-rd-body");
     body.innerHTML = ""; if (pg.label) { const b = document.createElement("b"); b.textContent = pg.label; body.appendChild(b); } body.appendChild(document.createTextNode(pg.text));
-    this.el.reader.querySelector(".gt-rd-n").textContent = (r.pages.length > 1 ? (r.i + 1) + " / " + r.pages.length + "   " : "") + (r.i < r.pages.length - 1 ? "A: next" : "A: done") + "   B: close" + (r.note ? "   \u2191: note" : "");
+    this.el.reader.querySelector(".gt-rd-n").textContent = (r.pages.length > 1 ? (r.i + 1) + " / " + r.pages.length + "   " : "") + (r.sel >= 0 ? "A: open" : r.i < r.pages.length - 1 ? "A: next" : "A: done") + "   B: close" + (this.rdButtons().length ? "   \u2191\u2193: buttons" : "");
   }
   closeRead() { this.el.reader.style.display = "none"; const d = this.rd && this.rd.done; this.rd = null; this.mode = "walk"; this.inputLock = true; if (d) d(); }
-  /* The placard's yellow NOTE button (or Up): put the placard away and open the note card; whatever came after the placard waits. */
+  /* Up and Down highlight the placard's buttons (Watch, Play, Note) in turn; A uses the highlighted one. */
+  rdButtons() { return this.rd ? [...this.el.reader.querySelectorAll(".gt-rd-links > *")] : []; }
+  rdPick(d) {
+    const r = this.rd, bs = this.rdButtons(); if (!bs.length) return;
+    r.sel = r.sel === undefined || r.sel < 0 ? (d > 0 ? 0 : bs.length - 1) : r.sel + d;
+    if (r.sel >= bs.length || r.sel < 0) r.sel = -1; // past the ends: nothing highlighted (A turns pages again)
+    bs.forEach((b, i) => b.classList.toggle("sel", i === r.sel)); this.renderRead();
+  }
+  rdUse() { // a link opens in a new tab; if the browser blocks it (a controller press isn't a click), say so
+    const r = this.rd, b = this.rdButtons()[r.sel]; if (!b) return;
+    if (b.tagName === "BUTTON") { b.click(); return; }
+    const w = window.open(b.href, "_blank", "noopener"); if (!w && !this.rdOpened) this.showLoc("The browser blocked the new tab. Click " + b.textContent + " to open it.");
+  }
+  /* The placard's yellow NOTE button: put the placard away and open the note card; whatever came after the placard waits. */
   noteFromReader() {
     const r = this.rd; if (!r || !r.note) return;
     const d = r.done; r.done = null; this.closeRead();
@@ -3120,6 +3195,36 @@ class Game {
       return await res.json();
     } finally { if (tm) clearTimeout(tm); }
   }
+  /* ----- the screening nook -----
+     Sit down (or look at the screen) to pick an episode; it plays over the game until you close it. One or two visitors are
+     often already sitting there. */
+  episodes() { return this.pack.pieces.filter(p => p.episodeUrl).slice().reverse(); } // newest first
+  ytId(url) { const m = String(url || "").match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/); return m ? m[1] : ""; }
+  pickEpisode() {
+    const eps = this.episodes();
+    this.openList("NOW SHOWING", [...eps.map(p => p.title), "CLOSE"], i => { const p = eps[i]; if (p) this.playEpisode(p); });
+  }
+  playEpisode(p) {
+    const id = this.ytId(p.episodeUrl), tv = this.el.tv, box = tv.querySelector(".gt-tv-box");
+    tv.querySelector(".gt-tv-t").textContent = p.title + " \u00b7 " + p.developer; tv.querySelector(".gt-tv-yt").href = p.episodeUrl;
+    box.innerHTML = "";
+    if (id) { const f = document.createElement("iframe"); f.src = "https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1&rel=0"; f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen"; f.allowFullscreen = true; f.title = p.title; box.appendChild(f); }
+    else { const a = document.createElement("a"); a.href = p.episodeUrl; a.target = "_blank"; a.rel = "noopener"; a.textContent = "This one plays on its own page \u2197"; a.style.color = "#f8f0e0"; box.appendChild(a); }
+    tv.style.display = "flex"; this.mode = "tv";
+    const st = this.progress.stats; st.episodes = (st.episodes || 0) + 1; this.progress.tally.episodes = (this.progress.tally.episodes || 0) + 1; this.saveProgress();
+  }
+  closeTv() { const tv = this.el.tv; tv.style.display = "none"; tv.querySelector(".gt-tv-box").innerHTML = ""; this.mode = "walk"; this.inputLock = true; this.wrap.focus({ preventScroll: true }); }
+  /* One or two visitors already in their seats (not after closing). */
+  seatGuests() {
+    const r = this.rooms && this.rooms.screening; if (!r || this.closing) return;
+    const seats = []; r.props.filter(p => p.sit === "up").forEach(p => { for (let i = 0; i < SLOT[p.key].w / T; i++) seats.push([p.x + i, p.y]); });
+    const n = Math.random() < 0.6 ? 1 : 2, lines = this.pack.settings.text["screen.guest"] || TEXT["screen.guest"].v;
+    for (let k = 0; k < n && seats.length; k++) {
+      const [x, y] = seats.splice(Math.floor(Math.random() * seats.length), 1)[0];
+      r.npcs.push({ sheet: ["visitor_a", "visitor_b", "visitor_c"][Math.floor(Math.random() * 3)], x, y, dir: "up", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 9999,
+        still: true, sitting: true, lines: lines.slice().sort(() => Math.random() - 0.5), lineI: -1 });
+    }
+  }
   /* ----- the tutorial -----
      Plays once for a new player, and again through the lobby's Tutorial door. You walk in through the staff office's glass
      door, the usher signs you in (or you train as a volunteer), and you train on your own: read the colored games in
@@ -3346,7 +3451,7 @@ class Game {
     const sh = this.topOf(st.shots); if (sh && sh[1] > 1) add("LIFE", "Most photographed", sh[0] + " (" + sh[1] + " times)");
     add("LIFE", "Notes left", t.notes); add("LIFE", "Drinks ordered", t.drinks);
     const dr = this.topOf(st.drinks), dn = dr && DRINKS.find(d => d.id === dr[0]); if (dn && t.drinks > 1) add("LIFE", "Usual order", dn.name);
-    add("LIFE", "Bench naps", t.naps); add("LIFE", "Microwave incidents", t.microwave); add("LIFE", "Segway rides", t.segway); add("LIFE", "Shifts clocked in", t.shifts);
+    add("LIFE", "Episodes watched", t.episodes); add("LIFE", "Bench naps", t.naps); add("LIFE", "Microwave incidents", t.microwave); add("LIFE", "Segway rides", t.segway); add("LIFE", "Shifts clocked in", t.shifts);
     add("LIFE", "Time in the dark after closing", st.dark >= 60 ? hm(st.dark) : st.dark ? st.dark + "s" : 0);
     return rows;
   }
@@ -3372,9 +3477,9 @@ class Game {
     secs.push({ label: "STAFF PROFILE", text: pr[0] + (pr.length > 1 ? ". Also known as: " + pr.slice(1).join("; ") + "." : ".") });
     for (const sec of ["VISITS", "READING", "RECOMMENDING", "CHORES", "LIFE"]) {
       const these = rows.filter(r => r[0] === sec); if (!these.length) continue;
-      secs.push({ label: sec, text: these.map(r => r[1] + ": " + r[2]).join(". ") + "." });
+      secs.push({ label: sec, text: these.map(r => "  " + r[1] + ": " + r[2]).join("\n") });
     }
-    this.say(this.tx("pc.boot"), () => this.read({ title: "PLAYER_STATS.EXE", sub: "Someone's PC", sections: secs }));
+    this.say(this.tx("pc.boot"), () => this.read({ title: "PLAYER_STATS.EXE", sub: "Someone's PC", sections: secs, pre: true }));
   }
   /* ----- visitor notes -----
      Anyone can leave a short note on a piece. It goes to Supabase and waits there until the curator approves it (curator,
@@ -3405,6 +3510,14 @@ class Game {
     this.el.noteWrap.classList.toggle("big", sc < 1.75 || matchMedia("(pointer:coarse)").matches);
     this.el.noteWrap.style.display = "flex";
     if (!kb) setTimeout(() => f.note.focus(), 30);
+  }
+  /* Put the on-screen keyboard away and type with a real one (the link under it, or just start typing). */
+  nkbToNative(ch) {
+    const n = this.nkb, f = this.el.noteForm; if (!n) return;
+    const inp = n.field === "note" ? f.note : f.who; this.nkb = null;
+    f.classList.remove("kb"); this.el.noteKb.hidden = true; f.note.readOnly = f.who.readOnly = false; f.note.classList.remove("on"); f.who.classList.remove("on");
+    if (ch && inp.value.length < (inp === f.note ? 200 : 24)) inp.value += ch;
+    this.noteCount(); inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); // right away, so the next keys land in it
   }
   nkbRender() {
     const n = this.nkb, f = this.el.noteForm; if (!n) return;
@@ -4459,7 +4572,11 @@ class Game {
   talkTo(npc) {
     if (this.tutTalk(npc)) return;
     if (npc.usher) { this.usherTalk(); return; }
-    if (npc.patron) { this.staffTalk("member", null, npc.member); return; }
+    if (npc.patron) { // now and then a member tells you about a game from the museum they enjoyed
+      const eps = this.pack.pieces.filter(p => p.kind === "episode");
+      if (eps.length && Math.random() < 0.4) { const p = eps[Math.floor(Math.random() * eps.length)]; this.say(this.tx("patron.enjoyed", { title: p.title }, true).map((x, k) => (k ? x : npc.member + ": " + x))); return; }
+      this.staffTalk("member", null, npc.member); return;
+    }
     if (npc.role) { this.staffTalk(npc.role); return; }
     if (npc.follow) { this.followerTalk(npc); return; }
     if (npc.cur) { this.curiousTalk(npc); return; }
@@ -4476,6 +4593,7 @@ class Game {
     p.sitFrom = [p.x, p.y]; p.x = e.x; p.y = e.y; p.dir = e.sit; p.sitting = true; p.moving = false; this.sipClock = 60; this.inputLock = true;
     p.bench = !!e.bench; this.sitIdle = 0; this.asleep = false;
     if (!this.drink && e.say) this.say(e.say);
+    else if (this.room.screenAt && this.episodes().length) this.ask(this.tx("screen.ask").join(" "), ["Pick an episode", "Not now"], i => { if (i === 0) this.pickEpisode(); }, 1); // the screening nook
   }
   standUp(d) {
     const p = this.player; [p.x, p.y] = p.sitFrom; p.sitting = false; p.dir = d || p.dir; this.sip = null; this.inputLock = true;
@@ -4505,7 +4623,7 @@ class Game {
     // A room's overflow (its genre's episodes that don't fit its cases) is on that room's touch screen.
     this.overflow = {}; cases.archived.forEach(p => { const g = genreOf(p, this.pack.settings.genres); (this.overflow[g] = this.overflow[g] || []).push(p); });
     this.rooms = {}; Object.keys(ROOMS).forEach(id => (this.rooms[id] = buildRoom(id, this.pack.pieces, o)));
-    this.tutDress();
+    this.tutDress(); this.seatGuests();
     this.placeCurious(); this.placeMembers(); this.giveLife();
   }
   enterRoom(id, x, y, dir, quiet) {
@@ -4595,6 +4713,7 @@ class Game {
     else if (e.roofStairs) this.say(this.tx("stairs.roof"), () => { const p = this.player; p.dir = OPP[p.dir]; });
     else if (e.directory) this.readDirectory();
     else if (e.kiosk) this.overflowScreen();
+    else if (e.screen) { if (this.episodes().length) this.pickEpisode(); else this.say(this.tx("screen.none")); }
     else if (e.arrow) { const a = this.arrowInfo(e.arrow); this.say([a.label.toUpperCase() + " " + ({ left: "\u2190", right: "\u2192", up: "\u2191", down: "\u2193" }[e.arrow.dir] || ""), "This way to " + a.label + "."]); }
     else if (e.say) this.say(e.say);
   }
@@ -4706,7 +4825,8 @@ class Game {
     if (this.mode === "read") {
       const r = this.rd;
       if (has("left") && r.i > 0) { r.i--; this.renderRead(); }
-      else if (has("up") && r.note) this.noteFromReader();
+      else if ((has("up") || has("down")) && this.rdButtons().length) this.rdPick(has("up") ? -1 : 1);
+      else if (has("a") && r.sel >= 0) this.rdUse();
       else if (has("a") || has("right")) { if (r.i < r.pages.length - 1) { r.i++; this.renderRead(); } else this.closeRead(); }
       else if (has("b") || has("start")) this.closeRead();
       return;
@@ -4737,6 +4857,7 @@ class Game {
       else if (has("b")) { if (this.el.badgeForm[this.kpOn].value) this.kpPress("DEL"); else if (this.kpOn === "key") this.kpField("badge"); else this.closeBadge(); }
       return;
     }
+    if (this.mode === "tv") { if (has("b") || has("start")) this.closeTv(); return; }
     if (this.mode === "form" && this.nkb) { // the note card's keyboard, with a controller
       for (const d of ["up", "down", "left", "right"]) if (has(d)) this.nkbMove(d);
       if (has("a")) this.nkbPress(); else if (has("b")) this.nkbDel(); else if (has("start")) this.submitNote();
@@ -5320,6 +5441,7 @@ class Game {
     if (r.switchAt) this.drawSlot("light_switch", 0, 0, r.switchAt.x * T - cx, r.switchAt.y * T - cy);
     for (const sw of r.switches || []) this.drawSlot("light_switch", 0, 0, sw.x * T - cx, sw.y * T - cy);
     if (r.intercomAt) this.drawSlot("intercom", 0, 0, r.intercomAt.x * T - cx, r.intercomAt.y * T - cy);
+    if (r.screenAt) this.drawSlot("theater_screen", Math.floor(this.t / 45) % 2, 0, r.screenAt.x * T - cx, r.screenAt.y * T - cy); // the big screen, flickering softly
     for (const d of r.decals) { if (d.key === "rug" && d.w) ctx.drawImage(this.rugArt(d), d.x * T - cx, d.y * T - cy); else this.drawSlot(d.key, 0, 0, d.x * T - cx, d.y * T - cy); }
     for (const ru of r.runners) drawRunner(ctx, this.sheet(ru.k[0] === "v" ? "carpet_v" : "carpet_h"), ru, cx, cy);
     for (const [x, y] of r.lamps) this.drawSlot("wall_sconce", 0, 0, x * T - cx, y * T - cy);
@@ -5449,7 +5571,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-21 controls and stats";
+const VERSION = "2026-10-22 screening nook";
 window.GOQ = { ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

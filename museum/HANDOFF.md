@@ -457,3 +457,11 @@ Goal: character.
 - **Stats on Someone's PC (B1):** it boots PLAYER_STATS.EXE: a staff profile (up to three titles you've earned, best first), then Visits, Reading, Recommending, Chores and Life. New counters in `progress.stats`: days visited, streak and best streak, time in the museum, time in the dark after closing, steps, walking into walls, drinks and plants by kind, who you photograph most, loved recommendations by genre, misses. Turning the PC on still counts for the shirt riddle.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
+
+**Screening nook and tweaks (2026-10-22).**
+- **Screening nook** (`screening`, built in): a small theater through a wide two-tile door in the café east hallway's north wall (layout doors `screening-1/2` on zone `cafe-east`, at 5 and 6; the hall lamp there moved to x44). A big flickering screen (`screenAt`, art *Screening nook screen*), four benches facing it, dim lights, its own light switch (so closing up includes it). One or two visitors are usually already seated (Words → Screening nook). Sitting down, or looking at the screen, offers NOW SHOWING: every piece with an episode link, newest first. The episode plays over the game (privacy-friendly YouTube player) with a YouTube ↗ link and Close (B/Start). Counts as `episodes`; new achievement **Couch Critic** (5).
+- **Placards:** Up and Down highlight WATCH, PLAY and NOTE in turn (past either end, nothing); A uses the highlighted one. A key press opens links directly; a controller press may be blocked by the browser, and then a toast says to click it.
+- **Note keyboard:** "Type with my keyboard" under it, or just start typing on a real keyboard, switches to normal typing.
+- **K** takes photos again (with X). Backspace still only goes back.
+- **Patrons** now and then mention a game from the museum they enjoyed (Words → Staff, `patron.enjoyed`).
+- **Stats** on the PC: one line each, indented (`read({ pre: true })` keeps line breaks and indents).
