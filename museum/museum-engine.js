@@ -4132,7 +4132,8 @@ class Game {
     if (this.flickerT > 0) this.flickerT--;
     if (this.boomT > 0) this.boomT--;
     if (this.shakeT > 0) this.shakeT--;
-    if (this.phoneT > 0) this.phoneT--;
+    if (this.flash > 0) this.flash--;
+    if (this.phoneT > 0) { this.phoneT--; if (this.phoneT === 16) this.flash = 6; } // the camera flash, timed in the update so a slow frame can't skip it
     if (this.t % 600 === 0 && this.mode === "walk") {
       const t = this.tod(); if (this.lastTod && t !== this.lastTod) this.rebuild(); this.lastTod = t;
       const b = this.catBucket(); if (this.lastCat !== undefined && b !== this.lastCat) this.moveCat(); this.lastCat = b;
@@ -4781,7 +4782,6 @@ class Game {
           ctx.fillStyle = "rgba(255,255,230," + (0.25 * k) + ")"; ctx.beginPath(); ctx.arc(fx, fy, 9, 0, 7); ctx.fill(); }
       }
       if (c === this.player && this.phoneT > 0) {
-        if (this.phoneT === 16) this.flash = 6;
         const ox = { down: 4, up: 4, left: 0, right: 8 }[c.dir]; if (c.dir !== "up") this.drawSlot("phone", 0, 0, sx + ox, sy + 4);
       }
       if (c === this.player && this.asleep && this.t % 120 < 90) { const zy = Math.floor((this.t % 120) / 30); ctx.fillStyle = "#f8f8f0"; ctx.font = "6px monospace"; ctx.fillText("z", sx + 12 + zy, sy - zy * 3); }
@@ -4823,7 +4823,7 @@ class Game {
     if (this.flash > 0) {
       const pp2 = this.pos(this.player), [fx, fy] = DIRS[this.player.dir], x0 = pp2.x + 8 + fx * 14 - cx, y0 = pp2.y + 4 + fy * 12 - cy, g = ctx.createRadialGradient(x0, y0, 1, x0, y0, 30);
       g.addColorStop(0, "rgba(255,255,240," + (0.45 * this.flash / 6).toFixed(3) + ")"); g.addColorStop(1, "rgba(255,255,240,0)");
-      ctx.fillStyle = g; ctx.fillRect(x0 - 30, y0 - 30, 60, 60); this.flash--;
+      ctx.fillStyle = g; ctx.fillRect(x0 - 30, y0 - 30, 60, 60);
     }
     if (this.fade > 0) { ctx.globalAlpha = Math.min(1, this.fade); ctx.fillStyle = "#000"; ctx.fillRect(0, 0, SW, SH); ctx.globalAlpha = 1; }
   }
@@ -4860,7 +4860,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-18 reactions";
+const VERSION = "2026-10-18 flash";
 window.GOQ = { ACH_STATS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
