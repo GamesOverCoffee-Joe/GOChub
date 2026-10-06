@@ -1177,7 +1177,7 @@ const ROOMS = {
       "#......=......#",
       "#......=......#",
       "#......=......#",
-      "#......=......#",
+      "H......=......#",
       "#......=......#",
       "#......=......#",
       "#######E#######",
@@ -1195,6 +1195,7 @@ const ROOMS = {
       { key: "plant", plant: "rubber", name: "rubber plant", x: 1, y: 8 },
       { key: "plant", plant: "palm", name: "little palm", x: 13, y: 8 },
       { key: "bench", x: 10, y: 6, sit: "down", say: ["A bench for resting before the museum."] },
+      { key: "sign_stand", x: 1, y: 5, say: ["TUTORIAL", "Staff training, through this door. Anyone's welcome to take it again."] },
     ],
     events: [
       { x: 7, y: 2, warp: ["museum", "@lobby", 0, "up"] },
@@ -1202,6 +1203,7 @@ const ROOMS = {
       { x: 9, y: 2, eotm: true }, { x: 10, y: 2, eotm: true },
       { x: 7, y: 9, frontDoor: true, bump: true },
       { x: 3, y: 2, window: true }, { x: 4, y: 2, window: true },
+      { x: 0, y: 6, tutorial: true, bump: true },
     ],
     stairs: [{ x: 13, y: 5, kind: "down", to: ["storage", 13, 5, "left"] }], // down to B1 Storage, where the café door used to be
     lightSwitch: [5, 2], intercom: [2, 2], exitTo: [7, 8],
@@ -1311,7 +1313,85 @@ const ROOMS = {
     light: { dim: 0, spots: 0 },
     visitors: [],
   },
+  // The tutorial (see "the tutorial" in the Game class): the staff office, then two small training rooms.
+  tut_office: {
+    name: "Staff Office", tutorial: true,
+    art: { top: "staff_wall_top", upper: "staff_wall_upper", lower: "staff_wall_lower", floor: "staff_floor" },
+    map: [
+      "#############",
+      "#^^^^^^^^^D^#",
+      "#vvvvvvvvvdv#",
+      "#...........#",
+      "#...........#",
+      "#...........#",
+      "#...........#",
+      "#...........#",
+      "#...........#",
+      "######E######",
+    ],
+    spawn: [6, 8, "up"], intercom: [2, 2],
+    props: [
+      { key: "front_desk", x: 5, y: 4 },
+      { key: "plant", plant: "tut-office-fern", name: "office fern", x: 1, y: 3 },
+      { key: "plant", plant: "tut-office-palm", name: "office palm", x: 11, y: 8 },
+    ],
+    events: [{ x: 10, y: 2, tutDoor: "office-r1", bump: true }, { x: 6, y: 9, tutDoor: "glass", bump: true }],
+    light: { dim: 0, spots: 0 },
+    visitors: [{ sheet: "usher", x: 6, y: 3, still: true, usher: true, lines: [["Welcome!"]] }],
+  },
+  tut_room1: {
+    name: "Training Room A", tutorial: true,
+    art: { top: "gallery_wall_top", upper: "gallery_wall_upper", lower: "gallery_wall_lower", floor: "gallery_floor" },
+    map: [
+      "###########",
+      "#^^^^D^^^^#",
+      "#vvvvdvvvv#",
+      "#.........#",
+      "#.........#",
+      "#.........#",
+      "#.........#",
+      "#.........#",
+      "#.........#",
+      "#####B#####",
+    ],
+    spawn: [5, 8, "up"], lightSwitch: [2, 2],
+    props: [],
+    events: [{ x: 5, y: 2, tutDoor: "r1-r2", bump: true }, { x: 5, y: 9, tutDoor: "r1-office", bump: true }],
+    light: { dim: 0, spots: 0.5 },
+    visitors: [],
+  },
+  tut_room2: {
+    name: "Training Room B", tutorial: true,
+    art: { top: "gallery_wall_top", upper: "gallery_wall_upper", lower: "gallery_wall_lower", floor: "gallery_floor" },
+    map: [
+      "#########",
+      "#^^^^^^^#",
+      "#vvvvvvv#",
+      "#.......#",
+      "#.......#",
+      "#.......#",
+      "#.......#",
+      "####B####",
+    ],
+    spawn: [4, 6, "up"], lightSwitch: [2, 2],
+    props: [
+      { key: "plant", plant: "tut-room2-fern", name: "fern", x: 7, y: 3 },
+      { key: "bench", x: 1, y: 5, sit: "right", say: ["A bench for waiting on a recommendation."] },
+    ],
+    events: [{ x: 4, y: 7, tutDoor: "r2-r1", bump: true }],
+    light: { dim: 0, spots: 0.5 },
+    visitors: [],
+  },
 };
+const TUT_ROOMS = ["tut_office", "tut_room1", "tut_room2"];
+/* The tutorial's three games: just a color each. Purple is up against the bottom wall (you can't read its front), green
+   against the top wall (no back), red stands free. Their words are in Words, Tutorial. */
+const TUT_GAMES = [
+  { id: "tut-purple", key: "purple", color: "purple", colors: ["red", "blue", "purple"], art: "#8a4ad0", room: "tut_room1", x: 3, y: 8 },
+  { id: "tut-red", key: "red", color: "red", colors: ["red"], art: "#d84040", room: "tut_room1", x: 5, y: 5 },
+  { id: "tut-green", key: "green", color: "green", colors: ["green"], art: "#48a850", room: "tut_room1", x: 7, y: 3 },
+];
+const TUT_SPOTS = { r1Exit: [5, 8], glass: [6, 8], office: { rosie: [3, 6], skye: [9, 6], onyx: [8, 8] } };
 
 /* ---------- Words ----------
    Every line the museum says (that isn't already part of a piece, a room or a shop item) lives here, so the curator's Words tab can change it.
@@ -1325,6 +1405,52 @@ const TEXT = {
   "case.obsLabel":     { g: "Pieces", l: "Heading over the observation (one line)", v: [["THE CURATOR'S OBSERVATION"]] },
   "case.obsNote":      { g: "Pieces", l: "Under every observation: whose view it is", v: [["(These are my own impressions as the curator, from playing it myself. Not the developer's view, and not a verdict on the game.)"]] },
   "case.intLabel":     { g: "Pieces", l: "Heading over the developer's intention (one line)", v: [["THE DEVELOPER'S INTENTION"]] },
+  "tut.hello":         { g: "Tutorial", l: "The usher, when you reach the desk (the last page asks for your badge)", v: [["Oh, hey! You must be the new hire.", "I'm happy to train you.", "First things first: can I get your badge number and key code?"]] },
+  "tut.already":       { g: "Tutorial", l: "The usher, if you're already clocked in ({name})", v: [["Oh, hey, {name}! You're already clocked in, so we can skip the paperwork."]] },
+  "tut.badgeOk":       { g: "Tutorial", l: "The usher, after a badge works", v: [["Perfect. You're all signed in."]] },
+  "tut.patreon":       { g: "Tutorial", l: "The usher, if you don't have a badge", v: [["Oh. Aren't you a Patreon member?"]] },
+  "tut.volunteer":     { g: "Tutorial", l: "The usher, if you're not a Patreon member", v: [["Oh. Well, that's okay. You don't need a badge to do training.", "You'll just be a volunteer."]] },
+  "tut.email":         { g: "Tutorial", l: "The usher, if you're a Patreon member without a badge (the last page asks)", v: [["Email info@gamesover.coffee and tell them you're a Patreon member and need a code.", "You wanna continue?"]] },
+  "tut.go":            { g: "Tutorial", l: "The usher sends you in (a page of just ... is a pause)", v: [["Just step right into that door there.", "...", "What?", "Oh yeah, I'm training you. But you'll be by yourself.", "...", "Yeah, well, the curator thinks gamification is the best way to train people.", "So off you go."]] },
+  "tut.usher.wait":    { g: "Tutorial", l: "The usher, if you try the door before signing in", v: [["Hang on! Let's get you signed in first."]] },
+  "tut.usher.go":      { g: "Tutorial", l: "The usher, while you're training", v: [["Go on, the door's right over there."]] },
+  "tut.usher.feedback": { g: "Tutorial", l: "The usher, while your visitors wait to tell you about their games", v: [["Sounds like your visitors have some thoughts. Go hear them out!"]] },
+  "tut.usher.closing": { g: "Tutorial", l: "The usher, before the closing announcement", v: [["The intercom's on the wall. Go on, make the announcement."]] },
+  "tut.usher.lights":  { g: "Tutorial", l: "The usher, while you turn off the lights", v: [["Lights off in both training rooms, then you're free to go."]] },
+  "tut.speaker":       { g: "Tutorial", l: "The speaker crackling on (before each speaker line)", v: [["*krrst* ...ding dong..."]] },
+  "tut.locked":        { g: "Tutorial", l: "A locked door", v: [["It's locked."]] },
+  "tut.lockedStart":   { g: "Tutorial", l: "The speaker, when you try the way you came in", v: [["Yeah, ok, don't panic. This is part of the training."]] },
+  "tut.unlocked":      { g: "Tutorial", l: "The far door unlocking (one line)", v: [["*click* The far door unlocked."]] },
+  "tut.recommendFirst": { g: "Tutorial", l: "The speaker, when you try a door with visitors still waiting", v: [["You've still got visitors waiting on a recommendation. Help them out first."]] },
+  "tut.ask":           { g: "Tutorial", l: "A visitor asking for a game ({color}; the last page asks to follow)", v: [["Oh! Do you work here?", "Could you recommend me a game? I'm in the mood for... a {color} game."]] },
+  "tut.follow":        { g: "Tutorial", l: "A visitor, following you", v: [["Lead the way!"]] },
+  "tut.remind":        { g: "Tutorial", l: "A visitor, reminding you what they want ({color})", v: [["I'm looking for a {color} game."]] },
+  "tut.oneAtATime":    { g: "Tutorial", l: "Trying to lead two visitors at once", v: [["One visitor at a time! Finish helping the one you're with first."]] },
+  "tut.thanks":        { g: "Tutorial", l: "A visitor, after your recommendation ({title})", v: [["Ooh, {title}? I'll go check it out. Thanks!"]] },
+  "tut.loved":         { g: "Tutorial", l: "A visitor who got their color ({title}, {color})", v: [["I LOVED {title}! It was so {color}!"]] },
+  "tut.liked":         { g: "Tutorial", l: "A visitor whose color was in it, but wasn't the point ({title}, {color})", v: [["{title} was pretty good. There was some {color} in it, at least."]] },
+  "tut.nope":          { g: "Tutorial", l: "A visitor whose color wasn't in it at all ({title}, {color})", v: [["Hmm. {title} didn't have anything {color} in it at all..."]] },
+  "tut.after":         { g: "Tutorial", l: "A visitor, after telling you", v: [["Thanks again for the recommendation!"]] },
+  "tut.closeUp":       { g: "Tutorial", l: "The speaker, after every visitor has told you", v: [["Nice work! That's pretty much the job.", "Last thing: make the closing announcement on the intercom, then turn off the lights in both training rooms before you head out."]] },
+  "tut.intercomEarly": { g: "Tutorial", l: "The intercom, before it's time", v: [["The office intercom. Not yet, though."]] },
+  "tut.announce":      { g: "Tutorial", l: "The tutorial's closing announcement", v: [["*ding-dong*", "Attention, visitors: the museum is closing for the night. Thanks for coming!"]] },
+  "tut.lightsEarly":   { g: "Tutorial", l: "A light switch, before it's time", v: [["Better leave the lights on while there's still training to do."]] },
+  "tut.allDark":       { g: "Tutorial", l: "Both training rooms dark", v: [["That's both rooms. Head out the glass door when you're ready."]] },
+  "tut.lightsFirst":   { g: "Tutorial", l: "The speaker, at the glass door with lights still on", v: [["Lights, please! Both training rooms, before you go."]] },
+  "tut.waitVisitors":  { g: "Tutorial", l: "The glass door while visitors are still leaving", v: [["Let the visitors head out first."]] },
+  "tut.notYet":        { g: "Tutorial", l: "The glass door in the middle of training", v: [["You can't leave in the middle of training!"]] },
+  "tut.done":          { g: "Tutorial", l: "The speaker, as you leave", v: [["And that's training! Welcome to the team.", "The museum's all yours."]] },
+  "tut.welcome":       { g: "Tutorial", l: "Arriving in the lobby after training", v: [["Welcome to the GOQ Museum."]] },
+  "tut.door":          { g: "Tutorial", l: "The lobby's Tutorial door", v: [["A door marked TUTORIAL. Take the training again?"]] },
+  "tut.red.title":     { g: "Tutorial", l: "The red game's title", v: [["Big Red Racer"]] },
+  "tut.red.front":     { g: "Tutorial", l: "The red game's front placard", v: [["This game has a lot of red stuff. There's red cars, red roads, and red trees."]] },
+  "tut.red.back":      { g: "Tutorial", l: "The red game's back placard", v: [["The developer wanted it to feel like the reddest game ever made: red skies, red music (somehow), red everything."]] },
+  "tut.purple.title":  { g: "Tutorial", l: "The purple game's title", v: [["Twilight Garden"]] },
+  "tut.purple.front":  { g: "Tutorial", l: "The purple game's front placard (blocked, so nobody reads it)", v: [["This game has red stuff and blue stuff: red apples, blue rivers, and red birds flying through blue skies."]] },
+  "tut.purple.back":   { g: "Tutorial", l: "The purple game's back placard", v: [["The developer wanted red things and blue things to mix until the whole game felt purple: red apples, blue rivers, red birds in blue skies."]] },
+  "tut.green.title":   { g: "Tutorial", l: "The green game's title", v: [["Meadow Mayhem"]] },
+  "tut.green.front":   { g: "Tutorial", l: "The green game's front placard", v: [["This game has a lot of green stuff. There's green hills, green frogs, and green trees."]] },
+  "tut.green.back":    { g: "Tutorial", l: "The green game's back placard (blocked, so nobody reads it)", v: [["The developer wanted every corner of it to feel fresh and green, like a spring morning."]] },
   "react.startled":    { g: "Photo reactions", l: "Someone looking at a piece: startled, then a peace sign ({who})", v: [["{who} jumped, then threw up a peace sign."]] },
   "react.snapback":    { g: "Photo reactions", l: "Someone taking their own photo: they photograph you back ({who})", v: [["{who} took a photo of you right back."]] },
   "react.pose":        { g: "Photo reactions", l: "Someone walking around: they stop and pose ({who})", v: [["{who} stopped and struck a pose."]] },
@@ -1678,7 +1804,7 @@ prepLayoutRoom(ROOMS.museum);
    the level editor in curator.html writes them. Rooms are plain data, so a deep copy is enough. */
 const BUILTIN_ROOMS = JSON.parse(JSON.stringify(ROOMS));
 const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "runners", "lamps", "arrows", "murals", "tint", "windowAt", "intercom", "lightSwitch", "eotmAt",
-  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo"];
+  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "tutorial"];
 /* Light checks so a hand-edited or damaged pack can't break the game: rectangular map, sane size, a spawn on the map. */
 function normalizeRoom(id, d) {
   if (d && typeof d === "object" && d.layout) { d = Object.assign({}, d); prepLayoutRoom(d); }
@@ -2052,7 +2178,7 @@ const KEYMAP = { ArrowUp: "up", KeyW: "up", ArrowDown: "down", KeyS: "down", Arr
 class Game {
   constructor(wrap, pack, opts) {
     opts = opts || {};
-    this.curator = !!opts.curator; this.capture = opts.capture || "always"; this.hungNow = new Set();
+    this.headless = !!opts.headless; this.curator = !!opts.curator; this.capture = opts.capture || "always"; this.hungNow = new Set();
     this.saveKey = opts.saveKey === undefined ? "goq-museum-progress" : opts.saveKey; // null = don't remember (the curator preview)
     this.progress = this.loadProgress(); this.lightsOff = new Set(); this.chore = null; this.closing = false; this.closed = false; this.flickI = 0; this.shift = {};
     this.forcedCrooked = new Set(); this.spook = null; this.figure = null; this.forceSpook = !!opts.spooky;
@@ -2075,7 +2201,8 @@ class Game {
     if (w && this.rooms[w.room] && this.rooms[w.room].solid[w.y] && this.rooms[w.room].solid[w.y][w.x] === false) this.enterRoom(w.room, w.x, w.y, w.dir, true);
     else { const sp = ROOMS.lobby.spawn; this.enterRoom("lobby", sp[0], sp[1], sp[2], true); }
     this.ready = this.setPack(pack); this.updateHud();
-    setTimeout(() => this.showLoc("GOQ Museum: " + (this.zone ? this.zone.name : this.room.name)), 400);
+    this.ready.then(() => { if (this.needTutorial()) this.startTutorial(); }); // a new player starts with the tutorial
+    setTimeout(() => { if (!this.tut && !this.needTutorial()) this.showLoc("GOQ Museum: " + (this.zone ? this.zone.name : this.room.name)); }, 400);
     this.last = performance.now(); this.acc = 0;
     const tick = now => {
       this.acc += Math.min(100, now - this.last); this.last = now;
@@ -2155,6 +2282,7 @@ class Game {
   /* A piece's art: its image if the pack has one, otherwise a placeholder painting. */
   pieceArt(p) {
     if (this.pieceImgs[p.id]) return this.pieceImgs[p.id];
+    if (p.tut) { const ck = "tutart|" + p.art; if (!this.cache[ck]) { const c = document.createElement("canvas"); c.width = 24; c.height = 18; const x = c.getContext("2d"); x.fillStyle = p.art; x.fillRect(0, 0, 24, 18); this.cache[ck] = c; } return this.cache[ck]; } // the tutorial's games: just a color
     const ck = "paint|" + p.id; return this.cache[ck] || (this.cache[ck] = paint([paintingGrid(p)], 24, 18, 1, p.colors));
   }
   /* The piece as it hangs: art scaled into the frame's window, then the frame on top. */
@@ -2569,7 +2697,7 @@ class Game {
     else if (side === "end") secs.push({ label: "", text: this.tx("case.ends").join(" ") });
     else if (gold) { if (p.observation) obs(); if (p.intention) int(); }
     else if (p.guestNote) secs.push({ label: p.guestWriter ? "GUEST NOTE BY " + p.guestWriter.toUpperCase() : "GUEST NOTE", text: p.guestNote });
-    const notes = side !== "back" && side !== "end" && this.online(); // visitors' notes: under the front placard, or with the whole piece
+    const notes = side !== "back" && side !== "end" && (this.online() || !!p.tut); // visitors' notes: under the front placard, or with the whole piece
     if (notes) { const ns = this.notesFor(p); if (side === "front") secs.splice(secs.length - 1, 0, ...ns); else secs.push(...ns); this.refreshNotes(); } // before the "other side" line
     this.read({ img: img ? p.image : this.pieceArt(p).toDataURL(), imgClass: img && img.naturalWidth > 160 ? "photo" : "", title: p.title.toUpperCase(), sub: "By " + p.developer,
       sections: secs, pick: p.pick, note: notes && !this.curator ? p : null, links: [[p.episodeUrl, "Watch the episode", "WATCH"], [p.gameUrl, "Play the game", "PLAY"]] }, () => {
@@ -2594,10 +2722,10 @@ class Game {
     }
     const d = this.player.dir, side = d === "up" ? "front" : d === "down" ? "back" : null;
     if (!side) { this.say(this.tx("case.ends")); return; }
-    // Reading both sides of a case stamps your card (after the placard closes).
-    const seen = this.progress.sides || (this.progress.sides = {}), k = seen[c.piece.id] || (seen[c.piece.id] = {});
-    k[side] = 1; this.saveProgress();
-    this.viewPiece(c.piece, side, !!(k.front && k.back));
+    // Reading both sides of a case stamps your card (after the placard closes). The tutorial's games keep their own record.
+    const tp = !!c.piece.tut, seen = tp ? (this.tut ? this.tut.sides : {}) : this.progress.sides || (this.progress.sides = {}), k = seen[c.piece.id] || (seen[c.piece.id] = {});
+    k[side] = 1; if (!tp) this.saveProgress(); else this.tutRead();
+    this.viewPiece(c.piece, side, !tp && !!(k.front && k.back));
   }
   /* Curator mode: lift a new piece out of its crate onto the wall, with sparkles, then read its placard. */
   hang(spot) {
@@ -2621,6 +2749,7 @@ class Game {
       tally: Object.assign({ dusted: 0, straightened: 0, watered: 0, mugs: 0, closings: 0 }, p.tally || {}),
       staff: p.staff && p.staff.badge ? p.staff : null,   // who is clocked in on this browser (never the key)
       staffTally: p.staffTally || {}, lastBadge: p.lastBadge || null,
+      tutorial: typeof p.tutorial === "string" ? p.tutorial : "", // the day you finished (or skipped) the tutorial
       tokens: typeof p.tokens === "number" ? p.tokens : 0, items: Array.isArray(p.items) ? p.items : [], shirt: !!p.shirt, wearShirt: !!p.wearShirt, quest: p.quest || 0,
       ach: p.ach || {}, visited: Array.isArray(p.visited) ? p.visited : [],
       photos: Array.isArray(p.photos) ? p.photos : [], stamps: Array.isArray(p.stamps) ? p.stamps : [], where: p.where || null, sides: p.sides || {}, wiped: p.wiped || {},
@@ -2696,6 +2825,7 @@ class Game {
   switches() {
     const out = [];
     for (const id in ROOMS) {
+      if (ROOMS[id].tutorial) continue; // the tutorial's rooms aren't part of closing the museum
       if (ROOMS[id].lightSwitch) out.push({ key: id, name: ROOMS[id].name.replace(/\s+/g, " ") });
       const lay = layoutOf(ROOMS[id]); if (lay) lay.lights.forEach(l => out.push({ key: id + ":" + l.zone, name: lay.zones.find(z => z.id === l.zone).name }));
     }
@@ -2825,6 +2955,7 @@ class Game {
     const w = this.endKind === "brb" && this.progress.where;
     if (w && this.rooms[w.room]) this.enterRoom(w.room, w.x, w.y, w.dir); else { const sp = ROOMS.lobby.spawn; this.enterRoom("lobby", sp[0], sp[1], sp[2]); }
     this.wrap.focus({ preventScroll: true });
+    if (this.needTutorial()) this.startTutorial(); // quit in the middle of it: it starts over
   }
   /* ----- staff -----
      Clocking in uses a badge number and key: the offline test badge (locally), or a real badge checked by Supabase.
@@ -2891,6 +3022,192 @@ class Game {
       return await res.json();
     } finally { if (tm) clearTimeout(tm); }
   }
+  /* ----- the tutorial -----
+     Plays once for a new player, and again through the lobby's Tutorial door. You walk in through the staff office's glass
+     door, the usher signs you in (or you train as a volunteer), and you train on your own: read the colored games in
+     Training Room A (its far door opens once the red one is read front and back), bring a visitor from Training Room B back
+     to them, help two more, hear what they thought out in the office, make the closing announcement, turn off both rooms'
+     lights and leave by the glass door. Pausing offers only Skip or Save and quit (quitting starts it over next time).
+     Nothing in it counts as real reading, stamps or notes. Every line is in Words, Tutorial. */
+  needTutorial() { return !this.curator && !!this.saveKey && !this.headless && !this.progress.tutorial; }
+  tutSaid(name, pages) { return pages.map(p => (p.trim() === "..." ? p : name + ": " + p)); }
+  tutSpeak(key, vars) { return [...this.tx("tut.speaker"), ...this.tx(key, vars)]; }
+  tutPerson(id, name, want, sheet, room, x, y) {
+    return { tutId: id, member: name, tutWant: want, sheet, room, x, y, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 9999, still: true, lines: [["..."]], lineI: -1 };
+  }
+  tutGame(id) {
+    const g = TUT_GAMES.find(q => q.id === id); if (!g) return null;
+    return { id: g.id, kind: "episode", tut: true, tutColor: g.color, tutColors: g.colors, art: g.art, title: this.tx("tut." + g.key + ".title")[0], developer: "The Training Department",
+      observation: this.tx("tut." + g.key + ".front").join(" "), intention: this.tx("tut." + g.key + ".back").join(" "), minds: [], hint: "", episodeUrl: "", gameUrl: "", pick: false };
+  }
+  /* After the rooms are built: the colored games in their cases, and the tutorial's visitors where they were. */
+  tutDress() {
+    for (const g of TUT_GAMES) {
+      const r = this.rooms[g.room]; if (!r || !r.solid[g.y] || r.solid[g.y][g.x] !== false) continue;
+      const c = { x: g.x, y: g.y, piece: this.tutGame(g.id), state: "wall", isCase: true };
+      r.solid[g.y][g.x] = true; r.cases.push(c); r.events[g.x + "," + g.y] = { caseAt: c };
+    }
+    const t = this.tut; if (!t) return;
+    for (const p of Object.values(t.people)) {
+      if (p.gone || p === this.fol) continue;
+      if (p.leaving && p.onGone) { const g = p.onGone; p.onGone = null; p.leaving = false; p.fading = false; p.alpha = 1; g(); if (p.gone) continue; }
+      const r = this.rooms[p.room]; if (r && !r.npcs.includes(p)) r.npcs.push(p);
+    }
+  }
+  startTutorial(replay) {
+    if (this.tut) return;
+    const f = this.fol; // whoever was following you waits for another day
+    if (f) { this.fol = null; f.follow = false; if (f.cur && f.cur.state) { f.cur.state = "waiting"; f.cur.room = null; } this.saveProgress(); }
+    TUT_ROOMS.forEach(k => this.lightsOff.delete(k));
+    this.tut = { step: "intro", sides: {}, notes: {}, replay: !!replay, people: { rosie: this.tutPerson("rosie", "Rosie", "red", "visitor_b", "tut_room2", 4, 4) } };
+    for (const k of TUT_ROOMS) if (this.rooms[k]) this.rooms[k].npcs = this.rooms[k].npcs.filter(n => !n.tutId);
+    this.tutDress(); this.closeAll();
+    this.warp("tut_office", ...ROOMS.tut_office.spawn, () => { if (!this.tut) return; this.path = ["up", "up", "up"]; this.pathAct = null; this.tut.cut = () => this.tutUsher(); });
+  }
+  cleanTutorial() {
+    this.tut = null; if (this.fol && this.fol.tutId) this.fol = null;
+    TUT_ROOMS.forEach(k => { this.lightsOff.delete(k); if (this.rooms[k]) this.rooms[k].npcs = this.rooms[k].npcs.filter(n => !n.tutId); });
+  }
+  endTutorial(skipped) {
+    const t = this.tut; if (!t) return;
+    this.cleanTutorial();
+    if (!this.progress.tutorial) { this.progress.tutorial = todayISO(); this.saveProgress(); }
+    const L = this.rooms.lobby, back = t.replay && L && L.solid[6] && L.solid[6][1] === false ? [1, 6, "right"] : ROOMS.lobby.spawn;
+    this.closeAll();
+    this.warp("lobby", ...back, () => { if (skipped) this.showLoc("Tutorial skipped"); else this.say(this.tx("tut.welcome")); });
+  }
+  /* The usher at the desk: sign in with your badge, or train as a volunteer; then off you go. */
+  tutUsher() {
+    const t = this.tut, U = pages => this.tutSaid("Usher", pages);
+    if (!t) { this.say(["The training desk."]); return; }
+    if (t.step !== "intro") { const k = { signin: "go", room1: "go", feedback: "feedback", closing: "closing", lights: "lights" }[t.step] || "go"; this.say(U(this.tx("tut.usher." + k))); return; }
+    t.step = "signin";
+    if (this.staff) { this.say(U(this.tx("tut.already", { name: this.staff.name })), () => this.tutGo()); return; }
+    const hello = U(this.tx("tut.hello")), q = hello.pop();
+    this.say(hello, () => this.ask(q, ["Here's my badge", "I don't have one"], i => (i === 0 ? this.tutBadge() : this.tutNoBadge()), 1));
+  }
+  tutBadge() {
+    if (!this.tut) return;
+    this.tut.onBadge = ok => { if (ok) this.say(this.tutSaid("Usher", this.tx("tut.badgeOk")), () => this.tutGo()); else this.tutNoBadge(); };
+    this.openBadge();
+  }
+  tutNoBadge() {
+    const U = pages => this.tutSaid("Usher", pages);
+    this.ask(U(this.tx("tut.patreon")).join(" "), ["No", "Yes"], i => {
+      if (i === 0) { this.say(U(this.tx("tut.volunteer")), () => this.tutGo()); return; }
+      const e = U(this.tx("tut.email")), q = e.pop();
+      this.say(e, () => this.ask(q, ["Continue anyway", "I have my badge"], k => (k === 1 ? this.tutBadge() : this.tutGo()), 0));
+    }, 0);
+  }
+  tutGo() { const t = this.tut; if (!t) return; this.say(this.tutSaid("Usher", this.tx("tut.go")), () => { if (this.tut && this.tut.step === "signin") this.tut.step = "room1"; }); }
+  tutRedRead() { const k = this.tut && this.tut.sides["tut-red"]; return !!(k && k.front && k.back); }
+  tutRead() { const t = this.tut; if (t && !t.open && this.tutRedRead()) { t.open = true; this.showLoc(this.tx("tut.unlocked")[0]); } }
+  tutAllShown() { const t = this.tut; return !!t && !!t.pair && Object.values(t.people).every(p => p.tutShown); }
+  // Someone still waiting for a game who isn't with you (Rosie counts once you've met her).
+  tutLeftBehind() { const t = this.tut; return !!t && Object.values(t.people).some(p => !p.tutShown && p !== this.fol && (p.tutId !== "rosie" || t.met2)); }
+  tutFlush() { // visitors still walking out of Training Room A: they're in the office now
+    const t = this.tut; if (!t) return;
+    for (const p of Object.values(t.people)) if (p.leaving && p.onGone) { for (const id in this.rooms) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== p); const g = p.onGone; p.onGone = null; g(); }
+  }
+  tutPair() { // two more visitors waiting in Training Room A
+    const t = this.tut; if (!t || t.pair) return;
+    t.pair = true;
+    t.people.skye = this.tutPerson("skye", "Skye", "blue", "visitor_a", "tut_room1", 2, 5);
+    t.people.onyx = this.tutPerson("onyx", "Onyx", "black", "visitor_c", "tut_room1", 8, 6);
+    const r = this.rooms.tut_room1; [t.people.skye, t.people.onyx].forEach(p => { if (r && !r.npcs.includes(p)) r.npcs.push(p); });
+  }
+  tutEvent(e) {
+    const t = this.tut, say = (key, vars) => this.say(this.tx(key, vars)), speak = (key, vars) => this.say(this.tutSpeak(key, vars));
+    if (e.tutDoor) {
+      const go = (room, x, y, dir, after) => this.warp(room, x, y, dir, after);
+      if (!t) { // just looking around (the curator): every door opens
+        const to = { "office-r1": ["tut_room1", 5, 8, "up"], "r1-office": ["tut_office", 10, 3, "down"], "r1-r2": ["tut_room2", 4, 6, "up"], "r2-r1": ["tut_room1", 5, 3, "down"], glass: ["lobby", 1, 6, "right"] }[e.tutDoor];
+        if (to) go(...to); return true;
+      }
+      const late = t.step === "feedback" || t.step === "closing" || t.step === "lights";
+      if (e.tutDoor === "office-r1") { if (t.step === "intro" || t.step === "signin") this.say(this.tutSaid("Usher", this.tx("tut.usher.wait"))); else go("tut_room1", 5, 8, "up"); }
+      else if (e.tutDoor === "r1-office") {
+        if (late) go("tut_office", 10, 3, "down");
+        else if (this.tutAllShown()) { this.tutFlush(); t.step = "feedback"; go("tut_office", 10, 3, "down"); }
+        else if (t.met2) speak("tut.recommendFirst");
+        else this.say([...this.tx("tut.locked"), ...this.tutSpeak("tut.lockedStart")]);
+      }
+      else if (e.tutDoor === "r1-r2") {
+        if (!this.tutRedRead()) say("tut.locked");
+        else if (!late && this.tutLeftBehind()) speak("tut.recommendFirst");
+        else { t.met2 = true; go("tut_room2", 4, 6, "up"); }
+      }
+      else if (e.tutDoor === "r2-r1") { if (!late && this.tutLeftBehind()) speak("tut.recommendFirst"); else go("tut_room1", 5, 3, "down", () => { if (this.fol && this.fol.tutId === "rosie") this.tutPair(); }); }
+      else if (e.tutDoor === "glass") {
+        if (t.step !== "lights") this.say(this.room.id === "tut_office" ? this.tutSaid("Usher", this.tx("tut.notYet")) : this.tx("tut.notYet"));
+        else if (Object.values(t.people).some(p => !p.gone)) say("tut.waitVisitors");
+        else if (!this.lightsOff.has("tut_room1") || !this.lightsOff.has("tut_room2")) speak("tut.lightsFirst");
+        else this.say(this.tutSpeak("tut.done"), () => this.endTutorial(false));
+      }
+      return true;
+    }
+    if (e.usher || e.guestbook) { if (t) { const u = this.room.npcs.find(n => n.usher); if (u) u.dir = "down"; this.tutUsher(); } else this.say(["The training desk."]); return true; }
+    if (e.announce) {
+      if (!t) { this.say(["The office intercom."]); return true; }
+      if (t.step === "lights") say("intercom.again");
+      else if (t.step !== "closing") say("tut.intercomEarly");
+      else this.choose(this.tx("intercom.ask").join(" "), ["Yes", "Not yet"], i => {
+        if (i !== 0) return;
+        this.say(this.tx("tut.announce"), () => {
+          t.step = "lights";
+          Object.values(t.people).forEach((p, k) => { p.tutBack = false; p.leaving = true; p.leaveT = -k * 8; p.alpha = 1; p.timer = 0; p.route = null; p.leaveTo = TUT_SPOTS.glass; p.onGone = () => { p.gone = true; }; });
+        });
+      });
+      return true;
+    }
+    if (e.lights && t) {
+      if (t.step !== "lights") { say("tut.lightsEarly"); return true; }
+      const k = e.key || this.room.id;
+      if (this.lightsOff.has(k)) { this.lightsOff.delete(k); this.showLoc("Lights on"); return true; }
+      this.lightsOff.add(k); this.showLoc("Lights off");
+      if (this.lightsOff.has("tut_room1") && this.lightsOff.has("tut_room2")) setTimeout(() => say("tut.allDark"), 400);
+      return true;
+    }
+    return false;
+  }
+  /* The tutorial's visitors: ask for a color, follow you, take your recommendation, then tell you how it went. */
+  tutTalk(n) {
+    const t = this.tut;
+    if (n.usher && ROOMS[this.room.id] && ROOMS[this.room.id].tutorial) { this.tutUsher(); return true; }
+    if (!n.tutId) return false;
+    if (!t) return true;
+    const S = pages => this.tutSaid(n.member, pages);
+    if (n.tutBack) { this.tutFeedback(n); return true; }
+    if (n.tutHeard || n.tutShown) { this.say(S(this.tx(n.tutHeard ? "tut.after" : "tut.thanks", { title: (this.tutGame(n.tutShown) || {}).title || "it" }))); return true; }
+    if (n.follow) { this.choose(S(this.tx("tut.follow")).join(" "), ["Keep going", "What were you looking for?"], i => { if (i === 1) this.say(S(this.tx("tut.remind", { color: n.tutWant }))); }, 0); return true; }
+    const pages = S(this.tx("tut.ask", { color: n.tutWant })), q = pages.pop();
+    this.say(pages, () => this.ask(q, ["Follow me!", "Not yet"], i => {
+      if (i !== 0) return;
+      if (this.fol && this.fol !== n) { this.say(this.tx("tut.oneAtATime")); return; }
+      n.follow = true; n.still = false; n.route = null; n.aside = null; n.lost = 0; n.cur = { name: n.member }; this.fol = n;
+      this.say(S(this.tx("tut.follow")));
+    }, 1));
+    return true;
+  }
+  tutRecommend(n, piece) {
+    this.fol = null; n.follow = false; n.still = true; n.tutShown = piece.id; n.dir = OPP[this.player.dir];
+    this.say(this.tutSaid(n.member, this.tx("tut.thanks", { title: piece.title })), () => {
+      n.leaving = true; n.leaveT = 0; n.alpha = 1; n.route = null; n.leaveTo = TUT_SPOTS.r1Exit;
+      n.onGone = () => { // out through the door they came in by, to wait in the office
+        const s = TUT_SPOTS.office[n.tutId] || [3, 6], r = this.rooms.tut_office;
+        Object.assign(n, { leaving: false, fading: false, alpha: 1, leaveTo: null, moving: false, prog: 0, x: s[0], y: s[1], dir: "down", room: "tut_office", still: true, tutBack: true });
+        if (r && !r.npcs.includes(n)) r.npcs.push(n);
+      };
+    });
+  }
+  tutFeedback(n) {
+    const t = this.tut, g = this.tutGame(n.tutShown); if (!t || !g) return;
+    const how = g.tutColor === n.tutWant ? "loved" : g.tutColors.includes(n.tutWant) ? "liked" : "nope"; // their color matched, was in it, or wasn't
+    n.tutBack = false; n.tutHeard = how; n.react = { how, t0: this.t }; n.dir = OPP[this.player.dir];
+    this.say(this.tutSaid(n.member, this.tx("tut." + how, { title: g.title, color: n.tutWant })), () => {
+      if (this.tut && this.tut.step === "feedback" && Object.values(this.tut.people).every(p => p.tutHeard)) { this.tut.step = "closing"; this.say(this.tutSpeak("tut.closeUp")); }
+    });
+  }
   /* ----- visitor notes -----
      Anyone can leave a short note on a piece. It goes to Supabase and waits there until the curator approves it (curator,
      Notes tab); approved notes show under the piece's placard. Without Supabase there are no notes and nothing asks. */
@@ -2901,9 +3218,9 @@ class Game {
     this.rpc("get_notes").then(j => { this.notes = j && typeof j === "object" && !Array.isArray(j) ? j : {}; }).catch(() => {}).finally(() => { this.notesBusy = false; });
   }
   notesFor(p) {
-    const list = (this.notes && Array.isArray(this.notes[p.id]) ? this.notes[p.id] : []).slice(0, 6), secs = [];
+    const list = (!p.tut && this.notes && Array.isArray(this.notes[p.id]) ? this.notes[p.id] : []).slice(0, 6), secs = [];
     list.forEach(n => secs.push({ label: n.name ? this.tx("note.from", { who: String(n.name).toUpperCase() }).join(" ") : this.tx("note.anon").join(" "), text: String(n.note || "") }));
-    const mine = this.progress.myNotes[p.id]; // your own note, until it's up (or two weeks pass)
+    const mine = p.tut ? this.tut && this.tut.notes[p.id] : this.progress.myNotes[p.id]; // your own note, until it's up (or two weeks pass)
     if (mine && Date.now() - mine.at < 14 * 864e5 && !list.some(n => n.note === mine.note)) secs.push({ label: "", text: this.tx("note.mine").join(" ") });
     return secs;
   }
@@ -2930,6 +3247,7 @@ class Game {
     const f = this.el.noteForm, err = f.querySelector(".gt-badge-err"), n = this.noteFor; if (!n || this.noteBusy) return;
     const note = f.note.value.replace(/\s+/g, " ").trim().slice(0, 200), who = f.who.value.replace(/\s+/g, " ").trim().slice(0, 24);
     if (note.length < 2) { err.textContent = this.tx("note.empty")[0]; f.note.focus(); return; }
+    if (n.p.tut) { if (this.tut) this.tut.notes[n.p.id] = { note, at: Date.now() }; this.closeNote(true); return; } // the tutorial: it looks sent, but isn't
     if (!this.progress.clientId) this.progress.clientId = Math.random().toString(36).slice(2, 10) + Date.now().toString(36); // a random id for fair limits; not who you are
     this.noteBusy = true; err.textContent = "Sending...";
     let res = null;
@@ -3059,7 +3377,10 @@ class Game {
     this.el.badgeWrap.classList.toggle("big", (parseFloat(getComputedStyle(this.wrap).getPropertyValue("--s")) || 1) < 1.75);
     this.kpField(f.badge.value && !normKey(f.key.value) ? "key" : "badge");
   }
-  closeBadge() { this.el.badgeWrap.style.display = "none"; this.mode = "walk"; this.inputLock = true; this.wrap.focus({ preventScroll: true }); }
+  closeBadge() {
+    this.el.badgeWrap.style.display = "none"; this.mode = "walk"; this.inputLock = true; this.wrap.focus({ preventScroll: true });
+    if (this.tut && this.tut.onBadge) { const f = this.tut.onBadge; this.tut.onBadge = null; f(false); } // "Not now" at the usher's desk
+  }
   async submitBadge() {
     const f = this.el.badgeForm, err = f.querySelector(".gt-badge-err");
     if (this.badgeBusy) return; this.badgeBusy = true; err.textContent = this.online() ? "Checking your badge..." : "";
@@ -3067,6 +3388,7 @@ class Game {
     if (!who || who.error) { err.textContent = this.tx((who && who.error) || "badge.wrong")[0]; return; }
     this.progress.staff = who; this.shift = {}; this.saveProgress();
     this.progress.lastBadge = who; this.progress.tally.shifts = (this.progress.tally.shifts || 0) + 1; this.saveProgress();
+    if (this.tut && this.tut.onBadge) { const f = this.tut.onBadge; this.tut.onBadge = null; this.closeBadge(); this.updateHud(); f(true); return; } // signing in with the usher
     this.closeBadge(); this.updateHud(); this.showLoc("Clocked in: " + who.name);
     const to = this.staffTo || ["staff", 7, 8, "up"];
     if (this.room.id !== to[0]) this.warp(...to);
@@ -3416,6 +3738,7 @@ class Game {
   }
   /* Fingerprints on cases: they build up a little each day, and visitors who linger by a case leave more. */
   prints(p) {
+    if (p.tut) return 0;
     // amount (0 to 1, set in the curator) is roughly the chance a case has picked up a smudge on a given day.
     const amt = this.pack.settings.staff.fingerprints, t = todayISO(), w = (this.progress.wiped || {})[p.id];
     const base = amt <= 0 ? 0 : w ? Math.min(3, Math.floor(daysBetween(w, t) * amt * 1.5)) : (strSeed(p.id + t) % 100 < amt * 100 ? 1 : 0);
@@ -3429,7 +3752,7 @@ class Game {
      mindsets ticked), otherwise not for them. A loved recommendation counts as a staff chore ("helped", worth 3). */
   mind(id) { return this.pack.settings.mindsets.find(m => m.id === id) || null; }
   pickLine(list, key) { return list[strSeed(key) % list.length]; }
-  isRead(p) { const k = (this.progress.sides || {})[p.id] || {}; return p.kind === "episode" ? !!(k.front && k.back) : !!k.note; }
+  isRead(p) { const k = (p.tut ? this.tut && this.tut.sides : this.progress.sides || {})[p.id] || {}; return p.kind === "episode" ? !!(k.front && k.back) : !!k.note; }
   /* Today's curious visitors. Anyone not shown a game yet comes back tomorrow; new faces fill the rest. */
   curiousPlan() {
     const t = todayISO(), cv = this.progress.curious || (this.progress.curious = { day: "", list: [], back: [] });
@@ -3578,6 +3901,7 @@ class Game {
     return true;
   }
   recommend(n, piece) {
+    if (n.tutWant) { this.tutRecommend(n, piece); return; }
     const v = n.cur, cv = this.curiousPlan();
     this.fol = null; n.follow = false; n.cur = null;
     cv.list = cv.list.filter(x => x !== v); Object.assign(v, { state: "recommended", piece: piece.id, day: todayISO(), room: null }); cv.back.push(v);
@@ -3727,6 +4051,13 @@ class Game {
   /* ----- the Start menu: photos, save, save and quit ----- */
   openMenu() {
     this.holdToast();
+    if (this.tut) { // in the tutorial: skip it, or save and quit (it starts over next time)
+      this.choose("PAUSED", ["Skip the tutorial", "Save and quit", "Back"], i => {
+        if (i === 0) this.endTutorial(true);
+        else if (i === 1) { this.cleanTutorial(); this.mode = "busy"; this.trans = { t: 0, dur: 24, switched: false, fn: () => this.showEnd("brb"), hold: true }; }
+      });
+      return;
+    }
     const n = (this.progress.photos || []).length;
     const sc = this.progress.stamps.length + "/" + this.pack.settings.shop.stampSize;
     const an = Object.keys(this.progress.ach || {}).length + "/" + this.pack.settings.achievements.length;
@@ -3900,6 +4231,7 @@ class Game {
   /* The usher talks to visitors like visitors and to staff like coworkers. */
   usherTalk() { this.staffTalk("usher"); }
   talkTo(npc) {
+    if (this.tutTalk(npc)) return;
     if (npc.usher) { this.usherTalk(); return; }
     if (npc.patron) { this.staffTalk("member", null, npc.member); return; }
     if (npc.role) { this.staffTalk(npc.role); return; }
@@ -3947,6 +4279,7 @@ class Game {
     // A room's overflow (its genre's episodes that don't fit its cases) is on that room's touch screen.
     this.overflow = {}; cases.archived.forEach(p => { const g = genreOf(p, this.pack.settings.genres); (this.overflow[g] = this.overflow[g] || []).push(p); });
     this.rooms = {}; Object.keys(ROOMS).forEach(id => (this.rooms[id] = buildRoom(id, this.pack.pieces, o)));
+    this.tutDress();
     this.placeCurious(); this.placeMembers(); this.giveLife();
   }
   enterRoom(id, x, y, dir, quiet) {
@@ -3964,6 +4297,7 @@ class Game {
     this.zone = null; if (this.room.zoneAt) { this.zoneCheck(quiet); quiet = true; }
     if (!quiet) this.showLoc(this.room.name.replace(/\s+/g, " "));
     this.bringFollower();
+    if (this.fol && this.fol.tutId) this.fol.room = id;
   }
   visit(key) {
     if (!this.progress || this.saveKey === undefined || this.full) return;
@@ -3982,6 +4316,8 @@ class Game {
   }
   warp(to, x, y, dir, after) { this.mode = "busy"; this.trans = { t: 0, dur: 14, switched: false, fn: () => this.enterRoom(to, x, y, dir), after }; }
   runEvent(e) {
+    if (ROOMS[this.room.id] && ROOMS[this.room.id].tutorial && this.tutEvent(e)) return;
+    if (e.tutorial) { this.choose(this.tx("tut.door").join(" "), ["Yes", "Not now"], i => { if (i === 0) this.startTutorial(true); }, 1); return; }
     if (e.staffDoor) { this.staffDoor(e); return; }
     if (e.shopDoor) { this.shopDoor(e); return; }
     if (e.warp) this.warp(...e.warp);
@@ -4191,6 +4527,13 @@ class Game {
       }
       this.renderText();
     } else if (this.mode === "walk") {
+      if (this.tut && this.tut.cut) { // the tutorial's opening: you walk up to the desk on your own
+        const p = this.player;
+        if (p.moving) { if (this.advance(p) && this.path) this.followPath(); }
+        else if (this.path) this.followPath();
+        else { const f = this.tut.cut; this.tut.cut = null; p.walking = false; p.dir = "up"; f(); }
+        return;
+      }
       if (this.konamiNow) { this.konamiNow = false; return; } // the code's last Start: no menu
       if (has("start") && !this.player.moving) { this.openMenu(); return; }
       const codeB = this.kbuf && this.kbuf.slice(-9).join() === KONAMI.slice(0, 9).join(); // the B in the code isn't a photo
@@ -4537,7 +4880,7 @@ class Game {
      Unread pieces shine a little (Staff tab, Pieces you haven't read): a slow, eased sparkle, or a soft green glow that breathes.
      Reading one side of a case dims it; reading both sides (or a painting's placard) stops it. Nothing shines in the dark. */
   readLevel(p, isCase) {
-    const k = this.progress.sides[p.id]; if (!k) return 1;
+    const k = p.tut ? (this.tut ? this.tut.sides[p.id] : { note: 1 }) : this.progress.sides[p.id]; if (!k) return 1;
     if (k.note || (k.front && k.back)) return 0;
     return isCase && (k.front || k.back) ? 0.45 : 1;
   }
@@ -4860,7 +5203,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-18 flash";
+const VERSION = "2026-10-19 tutorial";
 window.GOQ = { ACH_STATS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
