@@ -2764,7 +2764,7 @@ class Game {
       staffTally: p.staffTally || {}, lastBadge: p.lastBadge || null,
       tutorial: typeof p.tutorial === "string" ? p.tutorial : "", // the day you finished (or skipped) the tutorial
       tokens: typeof p.tokens === "number" ? p.tokens : 0, items: Array.isArray(p.items) ? p.items : [], shirt: !!p.shirt, wearShirt: !!p.wearShirt, quest: p.quest || 0,
-      ach: p.ach || {}, visited: Array.isArray(p.visited) ? p.visited : [],
+      ach: p.ach || {}, visited: Array.isArray(p.visited) ? p.visited.filter(v => !/^tut_/.test(v)) : [], // (tutorial rooms never count)
       photos: Array.isArray(p.photos) ? p.photos : [], stamps: Array.isArray(p.stamps) ? p.stamps : [], where: p.where || null, sides: p.sides || {}, wiped: p.wiped || {},
       myNotes: p.myNotes || {}, reactions: p.reactions || {}, noteName: typeof p.noteName === "string" ? p.noteName : "", clientId: typeof p.clientId === "string" ? p.clientId : "" };                    // chores counted per badge while clocked in
   }
@@ -2775,7 +2775,7 @@ class Game {
     if (k === "photos") return t.photos || 0;
     if (k === "bothSides") return Object.values(p.sides || {}).filter(v => v.front && v.back).length;
     if (k === "items") return (p.items || []).length;
-    if (k === "rooms") return (p.visited || []).filter(v => { const [id, z] = v.split(":"), lay = layoutOf(ROOMS[id]); return ROOMS[id] && (lay ? lay.zones.some(q => q.id === z && q.kind === "room") : !z); }).length; // rooms that still exist
+    if (k === "rooms") return (p.visited || []).filter(v => { const [id, z] = v.split(":"), lay = layoutOf(ROOMS[id]); return ROOMS[id] && !ROOMS[id].tutorial && (lay ? lay.zones.some(q => q.id === z && q.kind === "room") : !z); }).length; // rooms that still exist (not the tutorial's)
     if (k === "shirt") return p.shirt ? 1 : 0;
     if (k === "reactions") return Object.keys(p.reactions || {}).length;
     return t[k] || 0;
@@ -4302,7 +4302,7 @@ class Game {
       if (a) { x = a.x; y = a.y; dir = a.dir; } else [x, y, dir] = ROOMS[id].spawn;
     }
     if (!this.rooms[id].solid[y] || this.rooms[id].solid[y][x] === undefined) [x, y, dir] = ROOMS[id].spawn;
-    if (!this.rooms[id].zoneAt) this.visit(id);
+    if (!this.rooms[id].zoneAt && !ROOMS[id].tutorial) this.visit(id); // the tutorial's rooms don't count as places in the museum
     this.room = this.rooms[id]; const p = this.player;
     if (id === "lobby" || id === "staff") this.refreshBoard();
     p.x = x; p.y = y; p.dir = dir; p.moving = false; p.prog = 0; p.sitting = false; this.sip = null; this.path = null; this.pathAct = null;
@@ -5216,7 +5216,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-19 planters 2";
+const VERSION = "2026-10-19 rooms fix";
 window.GOQ = { ACH_STATS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
