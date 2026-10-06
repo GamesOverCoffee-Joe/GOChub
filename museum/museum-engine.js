@@ -74,6 +74,7 @@ const PAL = {
   visitorA:[null, "#e8c098", "#c83838", "#181820"],
   visitorB:[null, "#c89060", "#8850c0", "#181820"],
   visitorC:[null, "#f8e0c0", "#58a048", "#181820"],
+  shirt:   [null, null, "#d8d8d8", null], // just the shirt pixels of the visitor sprites, gray so they tint to any color
 };
 
 /* ---------- Pixel helpers (from the Theater) ---------- */
@@ -769,6 +770,7 @@ const SLOTS = [
   { key: "player", label: "Player", group: "Characters", w: 16, h: 16, layout: "char", pal: "player", gen: GEN.character, note: CHAR_NOTE },
   { key: "visitor_a", label: "Visitor A", group: "Characters", w: 16, h: 16, layout: "char", pal: "visitorA", gen: GEN.character, note: CHAR_NOTE },
   { key: "visitor_b", label: "Visitor B", group: "Characters", w: 16, h: 16, layout: "char", pal: "visitorB", gen: GEN.character, note: CHAR_NOTE },
+  { key: "visitor_shirt", label: "Visitor shirt (placeholder)", group: "Characters", w: 16, h: 16, layout: "char", pal: "shirt", gen: GEN.character, note: "Drawn over Visitors A, B and C in each visitor's shirt color (Visitors tab, Shirt colors). Only the shirt; gray, so it tints. Skipped for a visitor sheet you've replaced with your own art. " + CHAR_NOTE },
   { key: "visitor_c", label: "Visitor C", group: "Characters", w: 16, h: 16, layout: "char", pal: "visitorC", gen: GEN.character, note: CHAR_NOTE },
 
   { key: "lobby_floor", label: "Lobby floor", group: "Lobby", w: 16, h: 16, pal: "lobby", gen: GEN.floor_marble, note: "Tiles seamlessly in every direction." },
@@ -1130,7 +1132,9 @@ function normalizePack(p) {
   const cin = (p.settings && p.settings.curious) || {}, curious = { perDay: Math.max(0, Math.min(10, Math.round(cin.perDay === undefined ? 3 : +cin.perDay || 0))) };
   // Museum life: the chance (0 to 100) that a visitor has a drink (lobby and café), carries a shop bag, or photographs a piece they stop at.
   const lin2 = (p.settings && p.settings.life) || {}, pct = (v, d) => Math.max(0, Math.min(100, Math.round(v === undefined ? d : +v || 0)));
-  const life = { drinks: pct(lin2.drinks, 30), bags: pct(lin2.bags, 20), photos: pct(lin2.photos, 8) };
+  const shirts = (Array.isArray(lin2.shirts) ? lin2.shirts.filter(isHex) : []).slice(0, 10);
+  const life = { drinks: pct(lin2.drinks, 30), bags: pct(lin2.bags, 20), photos: pct(lin2.photos, 8),
+    shirtsOn: lin2.shirtsOn !== false, shirts: shirts.length ? shirts : SHIRT_COLORS.slice() }; // visitors' shirt colors: one is picked at random for each
   // Genres: the museum's rooms (Action, Puzzle...), each welcoming some mindsets. A piece's genre is set by hand, or follows its mindsets.
   const genres = normalizeGenres(p.settings && p.settings.genres, mids), gids = new Set(genres.map(g => g.id));
   pieces.forEach(pc => { if (!gids.has(pc.genre)) pc.genre = ""; if (!gids.has(pc.blend) || pc.blend === pc.genre) pc.blend = ""; });
@@ -1397,6 +1401,8 @@ const ROOMS = {
   },
 };
 const TUT_ROOMS = ["tut_office", "tut_room1", "tut_room2"];
+/* The ten starting shirt colors for visitors (Visitors tab). */
+const SHIRT_COLORS = ["#c83838", "#e07830", "#e8c040", "#58a048", "#3a9a98", "#3a68c8", "#8850c0", "#e070a8", "#8a5a34", "#808898"];
 /* The tutorial's three games, in a row: just a color each. A planter blocks purple's front and another green's back;
    red stands free. Their words are in Words, Tutorial. */
 const TUT_GAMES = [
@@ -1454,6 +1460,7 @@ const TEXT = {
   "tut.notYet":        { g: "Tutorial", l: "The glass door in the middle of training", v: [["You can't leave in the middle of training!"]] },
   "tut.done":          { g: "Tutorial", l: "The speaker, as you leave", v: [["And that's training! Welcome to the team.", "The museum's all yours."]] },
   "tut.welcome":       { g: "Tutorial", l: "Arriving in the lobby after training", v: [["Welcome to the GOQ Museum."]] },
+  "tut.photo":         { g: "Tutorial", l: "Taking your first photo in the tutorial", v: [["Oh yeah, you can take photos.", "They don't help you here, though."]] },
   "tut.door":          { g: "Tutorial", l: "The lobby's Tutorial door", v: [["A door marked TUTORIAL. Take the training again?"]] },
   "tut.red.title":     { g: "Tutorial", l: "The red game's title", v: [["Big Red Racer"]] },
   "tut.red.front":     { g: "Tutorial", l: "The red game's front placard", v: [["This game has a lot of red stuff. There's red cars, red roads, and red trees."]] },
@@ -2637,6 +2644,7 @@ class Game {
   /* ----- the reading panel -----
      Long text (placards, magazines) in big paragraphs you page through: A or right for the next page, left to go back, B to close. */
   read(spec, done) {
+    this.holdToast(); // a toast showing now waits until the placard closes
     const box = this.el.reader; box.style.display = "block"; this.mode = "read";
     box.innerHTML = '<div class="gt-rd-head"></div><div class="gt-rd-body"></div><div class="gt-rd-foot"><span class="gt-rd-n"></span></div>';
     const head = box.querySelector(".gt-rd-head"), body = box.querySelector(".gt-rd-body");
@@ -2703,7 +2711,7 @@ class Game {
   viewPiece(p, side, stampAfter) {
     const gold = p.kind === "episode", img = this.pieceImgs[p.id], secs = [];
     // The observation is always framed as the curator's own view; the headings and that line are in Words, Pieces.
-    const obs = () => { secs.push({ label: this.tx("case.obsLabel").join(" "), text: p.observation }); secs.push({ label: "", text: this.tx("case.obsNote").join(" ") }); };
+    const obs = () => { secs.push({ label: this.tx("case.obsLabel").join(" "), text: p.observation }); if (!p.tut) secs.push({ label: "", text: this.tx("case.obsNote").join(" ") }); };
     const int = () => secs.push({ label: this.tx("case.intLabel").join(" "), text: p.intention });
     if (side === "front") { if (p.observation) obs(); secs.push({ label: "", text: this.tx("case.frontNote").join(" ") }); }
     else if (side === "back") { if (p.intention) int(); secs.push({ label: "", text: this.tx("case.backNote").join(" ") }); }
@@ -3046,7 +3054,7 @@ class Game {
   tutSaid(name, pages) { return pages.map(p => (p.trim() === "..." ? p : name + ": " + p)); }
   tutSpeak(key, vars) { return [...this.tx("tut.speaker"), ...this.tx(key, vars)]; }
   tutPerson(id, name, want, sheet, room, x, y) {
-    return { tutId: id, member: name, tutWant: want, sheet, room, x, y, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 9999, still: true, lines: [["..."]], lineI: -1 };
+    return { tutId: id, member: name, tutWant: want, shirt: { red: "#d84040", blue: "#3a68c8", black: "#2c2c34" }[want], sheet, room, x, y, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 9999, still: true, lines: [["..."]], lineI: -1 };
   }
   tutGame(id) {
     const g = TUT_GAMES.find(q => q.id === id); if (!g) return null;
@@ -3203,7 +3211,7 @@ class Game {
     return true;
   }
   tutRecommend(n, piece) {
-    this.fol = null; n.follow = false; n.still = true; n.tutShown = piece.id; n.dir = OPP[this.player.dir];
+    this.fol = null; n.follow = false; n.still = true; n.tutShown = piece.id; n.cur = null; n.dir = OPP[this.player.dir];
     this.say(this.tutSaid(n.member, this.tx("tut.thanks", { title: piece.title })), () => {
       n.leaving = true; n.leaveT = 0; n.alpha = 1; n.route = null; n.leaveTo = TUT_SPOTS.r1Exit;
       n.onGone = () => { // out through the door they came in by, to wait in the office
@@ -3483,12 +3491,15 @@ class Game {
     this.el.choice.style.display = "block"; this.renderChoice();
   }
   renderChoice() {
-    const c = this.ch; this.el.choice.innerHTML = "";
+    const c = this.ch, box = this.el.choice, top = box.scrollTop; box.innerHTML = "";
     c.options.forEach((o, i) => {
       const d = document.createElement("div"); d.className = "gt-choice-item" + (i === c.i ? " on" : ""); d.textContent = o;
       d.addEventListener("click", e => { e.stopPropagation(); c.i = i; this.endChoice(); });
-      this.el.choice.appendChild(d);
+      box.appendChild(d);
     });
+    // A long list scrolls: keep the cursor's row in view (wrapping from the top to the bottom, or back).
+    box.scrollTop = top; const on = box.children[c.i];
+    if (on) { if (on.offsetTop < box.scrollTop) box.scrollTop = on.offsetTop; else if (on.offsetTop + on.offsetHeight > box.scrollTop + box.clientHeight) box.scrollTop = on.offsetTop + on.offsetHeight - box.clientHeight; }
   }
   endChoice(cancel) {
     const c = this.ch; this.ch = null;
@@ -4044,8 +4055,10 @@ class Game {
     const kind = n.shots >= 3 ? "annoyed" : n.patrol ? "guard" : n.usher ? "bow" : n.still && n.staff && !n.patron ? "busy" : n.follow ? "heart"
       : n.cur && !n.back ? "shy" : n.snapT > 0 ? "snapback" : n.sitting || n.patron ? "wave" : facesArt ? "startled" : "pose";
     const who = n.member || (n.patrol ? "The night guard" : n.usher ? "The usher" : kind === "busy" ? "The conservator" : "A visitor");
-    const face = OPP[p.dir];
+    const face = OPP[p.dir], keep = n.homeDir !== undefined ? n.homeDir : n.dir;
+    if (n.moving) { n.moving = false; n.prog = 0; } // mid-step (the guard on his rounds): they stop where they were, not step toward you
     if (kind === "busy") {} else if (kind === "shy") n.dir = p.dir; else n.dir = face; // the shy turn away; the busy don't look up
+    if (n.still && kind !== "busy") { n.homeDir = keep; n.faceT = (kind === "startled" ? 110 : 90) + 150; } // and turn back a few seconds later
     if (kind === "snapback") n.snapT = 34; // their phone comes up and flashes at you
     n.route = null; n.pose = { kind, t0: now, dur: kind === "startled" ? 110 : 90 };
     this.progress.reactions[kind] = 1;
@@ -4058,7 +4071,9 @@ class Game {
     ph.unshift({ desc: sub.desc, piece: sub.piece || null, room: this.room.name.replace(/\s+/g, " "), thumb: sub.thumb || null, tod: this.tod(), seed: (Math.random() * 1e9) | 0 });
     if (ph.length > 40) ph.length = 40;
     this.progress.tally.photos = (this.progress.tally.photos || 0) + 1;
-    this.saveProgress(); this.phoneT = 34; this.showLoc("Photo saved");
+    this.saveProgress(); this.phoneT = 34;
+    if (!this.tut) this.showLoc("Photo saved");
+    else if (!this.tut.photoTold) { this.tut.photoTold = true; setTimeout(() => { if (this.mode === "walk") this.say(this.tx("tut.photo")); }, 450); } // once per run, then no toast
     if (/napping/.test(sub.desc)) this.quest("catPhoto");
   }
   /* ----- the Start menu: photos, save, save and quit ----- */
@@ -4605,8 +4620,15 @@ class Game {
       if (into) { into.x = fx; into.y = fy; into.moving = false; into.prog = 0; into.route = null; npc = into; }
       else if (out) { out.moving = false; out.prog = 0; out.route = null; npc = out; }
     }
-    if (npc) { npc.timer = 180; if (!npc.still) npc.dir = OPP[p.dir]; if (npc.patrol) npc.pause = 120; this.talkTo(npc); return; }
+    if (npc) { npc.timer = 180; if (!this.deskStaff(npc) && !npc.sitting) this.faceYou(npc, 240); if (npc.patrol) npc.pause = 120; this.talkTo(npc); return; }
     const e = this.room.events[fx + "," + fy]; if (e) this.runEvent(e);
+  }
+  /* Staff behind a desk or counter keep facing their customers. */
+  deskStaff(n) { return !!(n.usher || n.role === "shopkeeper" || n.role === "barista"); }
+  /* Turn to face you. Someone who stands still turns back the way they were facing after t frames (while you're walking). */
+  faceYou(n, t) {
+    if (n.still) { if (n.homeDir === undefined) n.homeDir = n.dir; n.faceT = t; }
+    n.dir = OPP[this.player.dir];
   }
   updateNpcs() {
     const def = ROOMS[this.room.id];
@@ -4616,7 +4638,7 @@ class Game {
       if (n.follow) { this.followStep(n); continue; } // a curious visitor following you around
       if (n.moving) { this.advance(n); continue; }
       if (n.aside) { this.stepAside(n); continue; }
-      if (n.still) continue;
+      if (n.still) { if (n.faceT > 0 && this.mode === "walk" && --n.faceT <= 0 && n.homeDir !== undefined) { n.dir = n.homeDir; n.homeDir = undefined; } continue; }
       if (n.patrol) { this.patrol(n); continue; }
       if (n.bumpT > 0) n.bumpT--;
       if (this.mode !== "walk") continue;
@@ -5128,6 +5150,10 @@ class Game {
       if (bagFirst) this.drawSlot("shop_bag", 0, 0, ...bagAt);
       if (cupFirst) this.drawCup(sx, sy, c);
       this.drawSlot(sheet, c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
+      if (c !== this.player && /^visitor_[abc]$/.test(sheet) && !this.overrides[sheet]) { // their shirt, in their own color
+        const L = this.pack.settings.life, hex = c.shirt || (L.shirtsOn && L.shirts.length ? (c.shirt = L.shirts[Math.floor(Math.random() * L.shirts.length)]) : null);
+        if (hex) this.drawSlot("visitor_shirt@" + hex, c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
+      }
       if (cup && !cupFirst) this.drawCup(sx, sy, c);
       if (bagAt && !bagFirst) this.drawSlot("shop_bag", 0, 0, ...bagAt);
       if (c !== this.player && c.snapT > 0) { // a visitor taking a photo of a piece: phone held up above their head, then a flash
@@ -5141,7 +5167,7 @@ class Game {
         const ox = { down: 4, up: 4, left: 0, right: 8 }[c.dir]; if (c.dir !== "up") this.drawSlot("phone", 0, 0, sx + ox, sy + 4);
       }
       if (c === this.player && this.asleep && this.t % 120 < 90) { const zy = Math.floor((this.t % 120) / 30); ctx.fillStyle = "#f8f8f0"; ctx.font = "6px monospace"; ctx.fillText("z", sx + 12 + zy, sy - zy * 3); }
-      const bub = c.leaving || this.full ? -1 : c.back ? 1 : c.cur && !c.follow ? 0 : -1; // "?" curious, "!" back to tell you how it went
+      const bub = c.leaving || this.full ? -1 : c.tutId ? (c.tutBack ? 1 : !c.tutShown && !c.follow ? 0 : -1) : c.back ? 1 : c.cur && !c.follow ? 0 : -1; // "?" curious, "!" back to tell you how it went
       if (c.react && !this.full) this.drawReaction(c, sx, sy);
       if (c.pose && !this.full) { // the photo reaction's bubble, fading out at the end
         if (pk >= c.pose.dur) c.pose = null;
@@ -5216,8 +5242,8 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-19 rooms fix";
-window.GOQ = { ACH_STATS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
+const VERSION = "2026-10-20 tweaks";
+window.GOQ = { ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
   spotRooms: () => Object.keys(ROOMS).filter(id => (ROOMS[id].spots || []).length).map(id => ({ id, name: ROOMS[id].name, n: ROOMS[id].spots.length })),

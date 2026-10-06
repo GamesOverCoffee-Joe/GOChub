@@ -432,3 +432,11 @@ Goal: character.
 - **Pause** in the tutorial offers only Skip the tutorial, Save and quit (it starts over next time) or Back.
 - **Words → Tutorial** has every line, including the three games' titles and placards. The tutorial's reading, stamps and notes are kept apart from real progress.
 - **Tutorial rooms don't count as visited rooms** (the "rooms" achievement stat). They're never recorded, and any already saved are dropped when progress loads.
+
+**Tweaks (2026-10-20).**
+- **Menus:** a long list (the pause menu on a small screen) scrolls to keep the cursor in view, also when it wraps from top to bottom.
+- **Toasts** showing when a placard opens wait until it closes (the tutorial's "*click* The far door unlocked." was hidden behind it).
+- **Facing you:** everyone you talk to turns toward you except staff behind a desk or counter (usher, shopkeeper, barista) and people sitting down. Someone who stands still (staff included) turns back a few seconds later, after talking or after a photo.
+- **Photos:** someone photographed mid-step stops where they were (the guard used to step into your tile). In the tutorial there's no "Photo saved"; the first photo says "Oh yeah, you can take photos. They don't help you here, though." (Words → Tutorial, `tut.photo`).
+- **Tutorial:** the games' placards skip the "my own impressions" line. Visitors wanting a game show "?", and "!" once they're back in the office, cleared when they tell you. Rosie, Skye and Onyx wear red, blue and black shirts.
+- **Shirt colors** (Visitors tab): each visitor wears one of ten colors at random (`life.shirtsOn`, `life.shirts`). A placeholder: the new *Visitor shirt* art (just the shirt pixels, gray) is drawn over Visitors A, B and C and tinted. A visitor sheet replaced with your own art keeps its own colors.

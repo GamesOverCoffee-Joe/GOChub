@@ -328,7 +328,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-19 rooms fix";
+window.GOQ_WANT = "2026-10-20 tweaks";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -2134,6 +2134,18 @@ function renderVisitors() {
     pctIn("bags", "Visitors with a shop bag", "Anywhere in the museum. The bag's art is under Art, People."),
     pctIn("photos", "Photos of a piece", "The chance a visitor who stops in front of a piece takes a photo of it. Keep it low."),
   ]));
+  // Visitors' shirt colors (a placeholder until the visitor art is replaced): each visitor gets one of these at random.
+  if (!Array.isArray(st.life.shirts) || !st.life.shirts.length) st.life.shirts = GOQ.SHIRT_COLORS.slice();
+  while (st.life.shirts.length < 10) st.life.shirts.push(GOQ.SHIRT_COLORS[st.life.shirts.length]);
+  const shOn = el("input", { type: "checkbox", checked: st.life.shirtsOn !== false }); shOn.addEventListener("change", () => { st.life.shirtsOn = shOn.checked; changed(); });
+  const swatches = el("div", { class: "row", style: "flex-wrap:wrap;gap:6px;margin:6px 0" });
+  const drawSw = () => { swatches.innerHTML = ""; st.life.shirts.forEach((c, i) => { const p = el("input", { type: "color", value: c, "aria-label": "Shirt color " + (i + 1) }); p.addEventListener("input", () => { st.life.shirts[i] = p.value; changed(); }); swatches.appendChild(p); }); };
+  drawSw();
+  wrap.appendChild(el("h3", { text: "Shirt colors", style: "margin:6px 0 4px" }));
+  wrap.appendChild(el("p", { class: "note", text: "Each visitor wears one of these ten colors, picked at random. It's a stand-in: the Visitor shirt art (Art, Characters) is drawn over Visitors A, B and C and tinted. A visitor sheet you replace with your own art keeps its own colors. Press Apply to preview to see changes." }));
+  wrap.appendChild(el("label", { class: "check" }, [shOn, document.createTextNode("Visitors wear random shirt colors")]));
+  wrap.appendChild(swatches);
+  wrap.appendChild(el("div", { class: "row", style: "margin:0 0 14px" }, [el("button", { type: "button", class: "btn small quiet", text: "Back to the ten starting colors", onclick: () => { st.life.shirts = GOQ.SHIRT_COLORS.slice(); drawSw(); changed(); } })]));
   wrap.appendChild(el("h3", { text: "Mindsets", style: "margin:6px 0 4px" }));
   wrap.appendChild(el("p", { class: "note" }, [document.createTextNode("How a visitor likes to play. Each curious visitor has one, and sometimes mentions a second. Put one line per row in each box. \"What they're looking for\" lines start with \"Something...\", since they follow \"I was looking for a game recommendation.\" In the next-day lines, "), phChip("title"), document.createTextNode(" is the game you recommended. \"Liked it\" lines are used when this is the second thing a visitor mentioned. Visitors never see the mindset's name.")]));
   const lines = (m, k, ph) => { const t = el("textarea", { placeholder: ph, style: "min-height:76px" }); t.value = (m[k] || []).join("\n"); t.addEventListener("input", () => { m[k] = t.value.split("\n").map(x => x.trim()).filter(Boolean); changed(); }); return t; };
