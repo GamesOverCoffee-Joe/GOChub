@@ -328,7 +328,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-19 planters";
+window.GOQ_WANT = "2026-10-19 long planter";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -929,7 +929,7 @@ const PLACE_GROUPS = [
     { kind: "spot", name: "Painting spot", key: "wall_frame_wood", note: "Community pieces hang here. Tap the wall; it takes two tiles across both wall rows." },
     { kind: "prop", key: "overflow_screen", name: "Touch screen", note: "The room's extra pieces: episodes of its genre that don't fit in its cases. One per room is plenty." },
   ] },
-  { name: "Furniture", items: ["bench", "plant", "sign_stand", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board"].map(k => ({ kind: "prop", key: k })) },
+  { name: "Furniture", items: ["bench", "plant", "planter_wide", "sign_stand", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board"].map(k => ({ kind: "prop", key: k })) },
   { name: "Shop and café", items: ["shelf_unit", "magazine_rack", "item_rack", "shop_counter", "cafe_counter", "bus_tub", "cafe_table", "cafe_stool", "floor_lamp", "postcard_spinner", "basket", "planter", "cat_bed"].map(k => ({ kind: "prop", key: k }))
     .concat([{ kind: "decal", key: "rug" }]) },
   { name: "Storage and floors", items: [{ kind: "stairs", key: "stair_up", name: "Stairs up", note: "Step on it to change floors. Select it to choose where it leads." },

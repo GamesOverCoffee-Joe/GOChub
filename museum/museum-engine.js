@@ -581,6 +581,15 @@ const GEN = {
     rect(a, 1, 9, 14, 6, 7); rect(a, 1, 9, 14, 1, 3);
     return outline(a, 8);
   },
+  // A long planter box, two tiles wide: a leafy row with a few flowers.
+  planter_wide: () => {
+    const a = mk(32, 16);
+    [[4, 5, 3], [9, 3, 3.5], [14, 5, 3], [19, 3, 3.5], [24, 5, 3], [28, 4, 3], [7, 7, 2.5], [12, 7, 2.5], [17, 7, 2.5], [22, 7, 2.5], [26, 7, 2.5]].forEach(([x, y, r]) => circ(a, x, y, r, 4));
+    fillFn(a, (x, y, v) => (v === 4 && hash(x, y) % 4 === 0 ? 7 : undefined));
+    [[6, 3, 2], [16, 2, 9], [25, 3, 3], [11, 5, 9], [21, 5, 2]].forEach(([x, y, c]) => { px(a, x, y, c); px(a, x + 1, y, c); px(a, x, y + 1, c); px(a, x + 1, y + 1, c); }); // flowers
+    rect(a, 1, 9, 30, 6, 7); rect(a, 1, 9, 30, 1, 3); rect(a, 15, 10, 2, 5, 8);
+    return outline(a, 8);
+  },
   cat_bed: () => {
     const a = mk(16, 16);
     fillFn(a, (x, y) => ((x - 7.5) ** 2 / 49 + (y - 10) ** 2 / 20 <= 1 ? 1 : undefined));
@@ -853,6 +862,7 @@ const SLOTS = [
   { key: "carpet_v", label: "Carpet runner, down", group: "Hallways", w: 16, h: 16, frames: 3, pal: "carpet", gen: GEN.carpet_v, note: "3 frames side by side (48×16): the top end, a middle piece, the bottom end." },
   { key: "wall_sconce", label: "Accent light", group: "Hallways", w: 16, h: 16, pal: "sconce", gen: GEN.wall_sconce, note: "A small wall light, hung on the upper wall row. It glows with the lights on." },
   { key: "rug", label: "Rug", group: "Gift shop and café", w: 48, h: 32, pal: "rug", gen: GEN.rug, note: "Lies on the floor under everything else; you walk over it." },
+  { key: "planter_wide", label: "Long planter", group: "Furniture", w: 32, h: 16, pal: "trinket", gen: GEN.planter_wide, note: "Two tiles wide. A leafy planter box with a few flowers, for dividing a room or blocking a spot." },
   { key: "planter", label: "Planter", group: "Gift shop and café", w: 16, h: 16, pal: "trinket", gen: GEN.planter, note: "A row of these divides the shop from the café." },
   { key: "cat_bed", label: "Cat bed", group: "The cat", w: 16, h: 16, pal: "cat", gen: GEN.cat_bed },
   { key: "cat", label: "The museum cat", group: "The cat", w: 16, h: 16, frames: 3, pal: "cat", gen: GEN.cat, note: "3 frames side by side (48×16): asleep, asleep breathing in, awake for a pet." },
@@ -1357,9 +1367,7 @@ const ROOMS = {
     spawn: [5, 8, "up"], lightSwitch: [2, 2],
     props: [ // planters block the purple game's front and the green game's back
       { key: "planter", x: 3, y: 6, say: ["A planter, right in front of the case.", "You can't read this side from here."] },
-      { key: "planter", x: 6, y: 4, say: ["A row of planters, crowded right up behind the green case.", "No reading the back of this one."] },
-      { key: "planter", x: 7, y: 4, say: ["A planter, tucked right behind the case.", "No reading the back of this one."] }, // hidden behind the case; the two beside it show the row
-      { key: "planter", x: 8, y: 4, say: ["A row of planters, crowded right up behind the green case.", "No reading the back of this one."] },
+      { key: "planter_wide", x: 7, y: 4, say: ["A long planter, pushed right up behind the green case.", "No reading the back of this one."] }, // half of it shows past the case
     ],
     events: [{ x: 5, y: 2, tutDoor: "r1-r2", bump: true }, { x: 5, y: 9, tutDoor: "r1-office", bump: true }],
     light: { dim: 0, spots: 0.5 },
@@ -5208,7 +5216,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-19 planters";
+const VERSION = "2026-10-19 long planter";
 window.GOQ = { ACH_STATS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
