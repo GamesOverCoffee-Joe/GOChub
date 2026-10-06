@@ -68,6 +68,7 @@ const PAL = {
   kitchen: [null, "#e8eef4", "#9fb4c8", "#1a2230", "#e05050", "#58a868", "#d8a050"],
   plaque:  [null, "#e8c870", "#7a4a28", "#2a160c", "#f8f0c0"],
   ui:      ["#f8f8f0", "#b0b0c0", "#505068", "#181820"],
+  emote:   ["#f8f8f0", "#e05a6a", "#181820", "#e8b030", "#7a7a90", "#f29ab0"],
   bag:     [null, "#8a2a3a", "#5a1824", "#181820", "#e8b24a"],
   player:  [null, "#f8e0c0", "#3878c8", "#181820"],
   visitorA:[null, "#e8c098", "#c83838", "#181820"],
@@ -644,6 +645,22 @@ const GEN = {
     spots.forEach(([x, y]) => { circ(a, x, y, 1.6, 0); px(a, x, y, -1); });
     return a;
   },
+  // A visitor's reaction when you photograph them: ! heart peace star dots wave shy annoyed.
+  emote: f => {
+    const a = rows(["........", ".000000.", "00000000", "00000000", "00000000", ".000000.", "...00...", "....0..."]);
+    const G = [
+      [[4, 1, 2], [4, 2, 2], [4, 3, 2], [4, 5, 2]],
+      [[2, 1, 1], [3, 1, 1], [5, 1, 1], [6, 1, 1], [2, 2, 1], [3, 2, 1], [4, 2, 1], [5, 2, 1], [6, 2, 1], [3, 3, 1], [4, 3, 1], [5, 3, 1], [4, 4, 1]],
+      [[3, 1, 2], [5, 1, 2], [3, 2, 2], [5, 2, 2], [3, 3, 2], [4, 3, 2], [5, 3, 2], [3, 4, 2], [4, 4, 2], [5, 4, 2]],
+      [[4, 1, 3], [3, 2, 3], [4, 2, 3], [5, 2, 3], [2, 3, 3], [3, 3, 3], [4, 3, 3], [5, 3, 3], [6, 3, 3], [3, 4, 3], [5, 4, 3], [2, 5, 3], [6, 5, 3]],
+      [[2, 3, 4], [4, 3, 4], [6, 3, 4]],
+      [[2, 1, 3], [4, 1, 3], [6, 1, 3], [2, 2, 3], [3, 2, 3], [4, 2, 3], [5, 2, 3], [6, 2, 3], [2, 3, 3], [3, 3, 3], [4, 3, 3], [5, 3, 3], [6, 3, 3], [3, 4, 3], [4, 4, 3], [5, 4, 3]],
+      [[2, 2, 2], [6, 2, 2], [1, 4, 5], [2, 4, 5], [6, 4, 5], [7, 4, 5], [3, 3, 5], [5, 3, 5]],
+      [[3, 1, 1], [5, 1, 1], [2, 2, 1], [3, 2, 1], [4, 2, 1], [5, 2, 1], [6, 2, 1], [3, 3, 1], [5, 3, 1], [2, 4, 1], [3, 4, 1], [4, 4, 1], [5, 4, 1], [6, 4, 1], [3, 5, 1], [5, 5, 1]],
+    ][f] || [];
+    G.forEach(([x, y, c]) => px(a, x, y, c));
+    return outline(a, 2);
+  },
   bubble: f => {
     const a = rows(["........", ".000000.", "00000000", "00000000", "00000000", ".000000.", "...00...", "....0..."]);
     (f === 0 ? [[3, 1], [4, 1], [5, 2], [4, 3], [4, 5]] : [[4, 1], [4, 2], [4, 3], [4, 5]]).forEach(([x, y]) => px(a, x, y, 3));
@@ -847,6 +864,7 @@ const SLOTS = [
   { key: "bus_tub", label: "Bus tub", group: "Gift shop and café", w: 16, h: 16, pal: "cups", gen: GEN.bus_tub, note: "Where empty cups go." },
   { key: "trash_can", label: "Trash can", group: "Furniture", w: 16, h: 16, pal: "locker", gen: GEN.trash_can, note: "Takes empty cups too." },
   { key: "fingerprints", label: "Fingerprints on glass", group: "Pieces", w: 16, h: 16, frames: 3, pal: "glass", gen: GEN.fingerprints, note: "3 frames side by side (48×16): a few smudges, more, lots. Drawn over a case's glass." },
+  { key: "emote", label: "Photo reactions", group: "People", w: 8, h: 8, frames: 8, pal: "emote", gen: GEN.emote, note: "8 frames (64×8), shown over someone you photograph: ! (startled), heart, peace sign, star (posing), ... (busy), wave, shy, annoyed." },
   { key: "bubble", label: "Visitor's thought bubble", group: "People", w: 8, h: 8, frames: 2, pal: "ui", gen: GEN.bubble, note: "2 frames (16×8): \"?\" over a curious visitor, \"!\" over one who came back to tell you how a game went." },
   { key: "stairs_up", label: "Stairs going up", group: "Floors", w: 32, h: 32, pal: "staffrm", gen: GEN.stairs_up, note: "No longer used: stairs are one tile now." , retired: true },
   { key: "stairs_down", label: "Stairs going down", group: "Floors", w: 32, h: 32, pal: "staffrm", gen: GEN.stairs_down, note: "No longer used: stairs are one tile now.", retired: true },
@@ -1067,6 +1085,9 @@ function normalizePack(p) {
     catName: str(sin.catName, 30) || "Pixel",
     fingerprints: typeof sin.fingerprints === "number" && isFinite(sin.fingerprints) ? Math.max(0, Math.min(1, sin.fingerprints)) : 0.15,
     patronSpeed: typeof sin.patronSpeed === "number" && isFinite(sin.patronSpeed) ? Math.max(0.2, Math.min(1, sin.patronSpeed)) : 0.45,
+    // Pieces you haven't read yet: a slow sparkle or a soft green glow (or off), and how strong (0 to 1).
+    readStyle: ["sparkle", "glow", "off"].includes(sin.readStyle) ? sin.readStyle : "sparkle",
+    readStrength: typeof sin.readStrength === "number" && isFinite(sin.readStrength) ? Math.max(0, Math.min(1, sin.readStrength)) : 0.4,
     eotm: { name: str(eo.name, 40), note: str(eo.note, 200) },
     // Patreon members: they visit the museum as named visitors, and are all listed on the Patron Board.
     members: (Array.isArray(sin.members) ? sin.members : []).slice(0, 1000).map(m => ({ name: str(m && m.name, 32), badge: str(m && m.badge, 12).replace(/\D/g, "") })).filter(m => m.name),
@@ -1304,6 +1325,16 @@ const TEXT = {
   "case.obsLabel":     { g: "Pieces", l: "Heading over the observation (one line)", v: [["THE CURATOR'S OBSERVATION"]] },
   "case.obsNote":      { g: "Pieces", l: "Under every observation: whose view it is", v: [["(These are my own impressions as the curator, from playing it myself. Not the developer's view, and not a verdict on the game.)"]] },
   "case.intLabel":     { g: "Pieces", l: "Heading over the developer's intention (one line)", v: [["THE DEVELOPER'S INTENTION"]] },
+  "react.startled":    { g: "Photo reactions", l: "Someone looking at a piece: startled, then a peace sign ({who})", v: [["{who} jumped, then threw up a peace sign."]] },
+  "react.snapback":    { g: "Photo reactions", l: "Someone taking their own photo: they photograph you back ({who})", v: [["{who} took a photo of you right back."]] },
+  "react.pose":        { g: "Photo reactions", l: "Someone walking around: they stop and pose ({who})", v: [["{who} stopped and struck a pose."]] },
+  "react.wave":        { g: "Photo reactions", l: "Someone sitting down: a little wave ({who})", v: [["{who} gave you a little wave."]] },
+  "react.shy":         { g: "Photo reactions", l: "A curious visitor waiting for a recommendation: shy ({who})", v: [["{who} got shy and hid their face."]] },
+  "react.heart":       { g: "Photo reactions", l: "Someone following you: a heart ({who})", v: [["{who} made a little heart with their hands."]] },
+  "react.bow":         { g: "Photo reactions", l: "The usher: a polite bow ({who})", v: [["{who} gave a polite little bow."]] },
+  "react.busy":        { g: "Photo reactions", l: "The conservator: too busy to look up ({who})", v: [["{who} didn't even look up. Busy."]] },
+  "react.guard":       { g: "Photo reactions", l: "The night guard, startled ({who})", v: [["{who} jumped. \"Oh! It's just you.\""]] },
+  "react.annoyed":     { g: "Photo reactions", l: "The third photo of the same person in a row ({who})", v: [["{who} sighed. \"Okay, that's enough photos.\""]] },
   "note.anon":         { g: "Visitor notes", l: "Heading over a visitor's note without a name", v: [["A VISITOR'S NOTE"]] },
   "note.from":         { g: "Visitor notes", l: "Heading over a visitor's note with a name ({who})", v: [["A NOTE FROM {who}"]] },
   "note.mine":         { g: "Visitor notes", l: "On the placard while your own note waits for the curator", v: [["(Your note is with the curator. It shows up here once they've read it.)"]] },
@@ -1466,7 +1497,7 @@ const ACH_STATS = {
   helped: "Visitors who loved your recommendation", recs: "Games recommended to visitors", pets: "Times petting the cat", closings: "Times closing the museum", photos: "Photos taken",
   bothSides: "Cases read on both sides", stamps: "Stamps collected", cards: "Stamp cards traded", items: "Gift shop items owned",
   drinks: "Drinks ordered", naps: "Bench naps", rooms: "Different rooms visited", microwave: "Microwave incidents", segway: "Segway rides",
-  shirt: "Has the GOQ shirt (1 = yes)", shifts: "Times clocking in", figure: "Photographed the figure in the dark (1 = yes)",
+  reactions: "Different photo reactions caught", shirt: "Has the GOQ shirt (1 = yes)", shifts: "Times clocking in", figure: "Photographed the figure in the dark (1 = yes)",
 };
 const SAMPLE_ACH = [
   { id: "first-dust", name: "Elbow Grease", desc: "Dust a frame for the first time.", stat: "dusted", target: 1 },
@@ -1480,7 +1511,19 @@ const SAMPLE_ACH = [
   { id: "zoom", name: "Up Up Down Down", desc: "Find the Segway.", stat: "segway", target: 1, secret: true },
   { id: "figure", name: "Say Cheese", desc: "Photograph the figure in the dark.", stat: "figure", target: 1, secret: true },
   { id: "shirt", name: "The Shirt That Got Away", desc: "Get the discontinued GOQ shirt.", stat: "shirt", target: 1, secret: true },
+  { id: "paparazzi", name: "Paparazzi", desc: "Catch 10 different reactions on camera.", stat: "reactions", target: 10 },
 ];
+/* Rugs you can size: a border band and corner designs around a plain middle, in any colors (Rooms, select a rug).
+   A rug decal: { key: "rug", x, y, w, h, pattern (border style), motif (corner design), field, border, accent, corner (colors) }. */
+const RUG_BORDERS = { band: "Wide band", double: "Double line", zigzag: "Woven zigzag" };
+const RUG_CORNERS = { diamond: "Diamond", flower: "Flower", knot: "Knot", none: "No corners" };
+const RUG_PRESETS = {
+  "Deep red": { field: "#7a2430", border: "#e2c48c", accent: "#4a1820", corner: "#e8a040" },
+  "Sage": { field: "#6f8a6a", border: "#e8e0c8", accent: "#3e5440", corner: "#c8a060" },
+  "Navy and gold": { field: "#23345e", border: "#d8b45a", accent: "#141f3c", corner: "#f0d080" },
+  "Café brown": { field: "#6a4630", border: "#e8d0a8", accent: "#3e2818", corner: "#c87848" },
+  "Dusk purple": { field: "#4a3a6a", border: "#d8b8e0", accent: "#2a1e40", corner: "#f0a0b0" },
+};
 /* The secret shirt: the museum day from the third magazine, in order. */
 const SHIRT_STEPS = ["cocoa", "finishOnStool", "lobbyTrash", "water", "catPhoto", "stairsB1", "pc", "upperHall", "napUpper", "chat", "chat", "chat"];
 /* A tiny 3×5 pixel font for signs (capitals and digits). */
@@ -1490,7 +1533,7 @@ const PIXEL_FONT = (() => {
   g.split(" ").forEach(e => { const [k, b] = e.split(":"); out[k] = [0, 1, 2, 3, 4].map(i => b.slice(i * 3, i * 3 + 3)); });
   return out;
 })();
-const KONAMI = ["up", "up", "down", "down", "left", "right", "left", "right", "b", "a"];
+const KONAMI = ["up", "up", "down", "down", "left", "right", "left", "right", "b", "a", "start"];
 const REDUCED_MOTION = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 const BROWSE_LINES = [["Hmm. Hmm hmm hmm."], ["Should I get the mug? I should get the mug.", "...Or the tote."], ["I've been standing here a while.", "I'm very close to deciding."], ["Don't rush me. This is a big decision."]];
 const SIT_LINES = [["Best seat in the house."], ["I come here for the café. The art is a bonus."], ["Shh. I'm people-watching."]];
@@ -2406,6 +2449,12 @@ class Game {
   /* Short notices (room names, "Stamp!", "Photo saved"...). They wait while a placard, menu or text box is open,
      then show one at a time. */
   showLoc(name) { (this.toastQ = this.toastQ || []).push(name); this.flushToasts(); }
+  /* A menu is opening over a toast (an achievement, say): put it back at the front of the line to show once the menu closes. */
+  holdToast() {
+    if (!this.toastBusy) return;
+    const el = this.el.loc; clearTimeout(this._locT); (this.toastQ = this.toastQ || []).unshift(el.textContent);
+    el.classList.remove("on"); this.toastBusy = false;
+  }
   flushToasts() {
     if (!this.toastQ || !this.toastQ.length || this.toastBusy || !(this.mode === "walk" || this.mode === "busy")) return;
     const el = this.el.loc; el.textContent = this.toastQ.shift(); el.classList.add("on"); this.toastBusy = true;
@@ -2575,7 +2624,7 @@ class Game {
       tokens: typeof p.tokens === "number" ? p.tokens : 0, items: Array.isArray(p.items) ? p.items : [], shirt: !!p.shirt, wearShirt: !!p.wearShirt, quest: p.quest || 0,
       ach: p.ach || {}, visited: Array.isArray(p.visited) ? p.visited : [],
       photos: Array.isArray(p.photos) ? p.photos : [], stamps: Array.isArray(p.stamps) ? p.stamps : [], where: p.where || null, sides: p.sides || {}, wiped: p.wiped || {},
-      myNotes: p.myNotes || {}, noteName: typeof p.noteName === "string" ? p.noteName : "", clientId: typeof p.clientId === "string" ? p.clientId : "" };                    // chores counted per badge while clocked in
+      myNotes: p.myNotes || {}, reactions: p.reactions || {}, noteName: typeof p.noteName === "string" ? p.noteName : "", clientId: typeof p.clientId === "string" ? p.clientId : "" };                    // chores counted per badge while clocked in
   }
   saveProgress() { this.checkAchievements(); try { if (this.saveKey) localStorage.setItem(this.saveKey, JSON.stringify(this.progress)); } catch (e) {} }
   /* ----- achievements ----- */
@@ -2586,6 +2635,7 @@ class Game {
     if (k === "items") return (p.items || []).length;
     if (k === "rooms") return (p.visited || []).filter(v => { const [id, z] = v.split(":"), lay = layoutOf(ROOMS[id]); return ROOMS[id] && (lay ? lay.zones.some(q => q.id === z && q.kind === "room") : !z); }).length; // rooms that still exist
     if (k === "shirt") return p.shirt ? 1 : 0;
+    if (k === "reactions") return Object.keys(p.reactions || {}).length;
     return t[k] || 0;
   }
   checkAchievements() {
@@ -3647,8 +3697,27 @@ class Game {
     return { desc: "A blurry photo of the floor. Very artsy." + dark, thumb: { slot: art.floor, tile: true, blur: true, dark: dk } };
   }
   photoSrc(ph) { return this.photoThumb(ph).toDataURL(); }
+  /* Someone you photograph reacts, depending on what they're doing: a little pose and a bubble over their head for a moment,
+     and the photo's description says what they did. The third photo of the same person in a row annoys them. */
+  photoReact(n) {
+    const p = this.player, now = this.t, dark = this.isDark(this.room, n.x, n.y);
+    if (dark && !n.patrol) return null; // in the dark, only the night guard can be caught
+    n.shots = n.lastShot && now - n.lastShot < 1800 ? (n.shots || 0) + 1 : 1; n.lastShot = now;
+    const facesArt = !n.moving && (this.room.cases.some(c => c.piece && c.x === n.x && Math.abs(c.y - n.y) === 1) || this.room.hung.some(h => n.y === h.y + 2 && (h.x === n.x || h.x + 1 === n.x)));
+    const kind = n.shots >= 3 ? "annoyed" : n.patrol ? "guard" : n.usher ? "bow" : n.still && n.staff && !n.patron ? "busy" : n.follow ? "heart"
+      : n.cur && !n.back ? "shy" : n.snapT > 0 ? "snapback" : n.sitting || n.patron ? "wave" : facesArt ? "startled" : "pose";
+    const who = n.member || (n.patrol ? "The night guard" : n.usher ? "The usher" : kind === "busy" ? "The conservator" : "A visitor");
+    const face = OPP[p.dir];
+    if (kind === "busy") {} else if (kind === "shy") n.dir = p.dir; else n.dir = face; // the shy turn away; the busy don't look up
+    if (kind === "snapback") n.snapT = 34; // their phone comes up and flashes at you
+    n.route = null; n.pose = { kind, t0: now, dur: kind === "startled" ? 110 : 90 };
+    this.progress.reactions[kind] = 1;
+    return this.tx("react." + kind, { who }).join(" ") + (dark ? " It's very dark." : "");
+  }
   takePhoto() {
     const sub = this.photoSubject(), ph = this.progress.photos || (this.progress.photos = []);
+    { const [dx, dy] = DIRS[this.player.dir], n = this.room.npcs.find(q => q.x === this.player.x + dx && q.y === this.player.y + dy && !q.leaving);
+      const d = n && this.photoReact(n); if (d) sub.desc = d; }
     ph.unshift({ desc: sub.desc, piece: sub.piece || null, room: this.room.name.replace(/\s+/g, " "), thumb: sub.thumb || null, tod: this.tod(), seed: (Math.random() * 1e9) | 0 });
     if (ph.length > 40) ph.length = 40;
     this.progress.tally.photos = (this.progress.tally.photos || 0) + 1;
@@ -3657,6 +3726,7 @@ class Game {
   }
   /* ----- the Start menu: photos, save, save and quit ----- */
   openMenu() {
+    this.holdToast();
     const n = (this.progress.photos || []).length;
     const sc = this.progress.stamps.length + "/" + this.pack.settings.shop.stampSize;
     const an = Object.keys(this.progress.ach || {}).length + "/" + this.pack.settings.achievements.length;
@@ -4043,9 +4113,9 @@ class Game {
   update() {
     this.t++;
     const q = this.queue; this.queue = [];
-    // Up, up, down, down, left, right, left, right, B, A: a Segway. Enter it again to park it.
+    // Up, up, down, down, left, right, left, right, B, A, Start: a Segway. Enter it again to park it. That Start doesn't open the menu.
     if (this.mode === "walk") for (const k of q) if (KONAMI.includes(k)) {
-      (this.kbuf = this.kbuf || []).push(k); if (this.kbuf.length > 10) this.kbuf.shift();
+      (this.kbuf = this.kbuf || []).push(k); if (this.kbuf.length > KONAMI.length) this.kbuf.shift();
       if (this.kbuf.join() === KONAMI.join()) { this.kbuf = []; this.segway = !this.segway; if (this.segway) { this.progress.tally.segway = (this.progress.tally.segway || 0) + 1; this.saveProgress(); } this.konamiNow = true; this.showLoc(this.segway ? "SEGWAY UNLOCKED. Zoom zoom." : "Segway parked."); }
     }
     const has = k => q.includes(k);
@@ -4120,9 +4190,10 @@ class Game {
       }
       this.renderText();
     } else if (this.mode === "walk") {
+      if (this.konamiNow) { this.konamiNow = false; return; } // the code's last Start: no menu
       if (has("start") && !this.player.moving) { this.openMenu(); return; }
       const codeB = this.kbuf && this.kbuf.slice(-9).join() === KONAMI.slice(0, 9).join(); // the B in the code isn't a photo
-      if (this.konamiNow) { this.konamiNow = false; return; }
+      if (has("a") && this.kbuf && this.kbuf.slice(-10).join() === KONAMI.slice(0, 10).join()) return; // nor is its A a look
       if (has("b") && !codeB && !this.player.moving && !this.asleep) { this.takePhoto(); return; }
       this.updatePlayer(has("a"));
     }
@@ -4246,6 +4317,7 @@ class Game {
       if (this.room.zoneAt && n.zone === "cafe" && !n.drink && !n.bag && !n.cur && Math.random() * 100 < this.pack.settings.life.drinks) n.drink = { kind: Math.floor(Math.random() * DRINKS.length), sips: 0, empty: false, t: 300 + Math.random() * 600 };
       else if (!this.binRun(n)) this.maybeSnap(n);
     }
+    if (n.pose && this.t - n.pose.t0 < n.pose.dur) return; // reacting to your photo
     if (n.snapT > 0) return; // taking a photo: hold still
     if (n.timer > 0) { n.timer--; if (n.timer % 90 === 0 && Math.random() < 0.5) n.dir = DIRS_LIST[(Math.random() * 4) | 0]; return; }
     if (this.binRun(n) && n.timer > 0) return;
@@ -4460,6 +4532,81 @@ class Game {
     return;
     this.drawSlot("featured_stand", 0, 0, x, y);
   }
+  /* ----- what you haven't read -----
+     Unread pieces shine a little (Staff tab, Pieces you haven't read): a slow, eased sparkle, or a soft green glow that breathes.
+     Reading one side of a case dims it; reading both sides (or a painting's placard) stops it. Nothing shines in the dark. */
+  readLevel(p, isCase) {
+    const k = this.progress.sides[p.id]; if (!k) return 1;
+    if (k.note || (k.front && k.back)) return 0;
+    return isCase && (k.front || k.back) ? 0.45 : 1;
+  }
+  drawReadMarks(r, cx, cy) {
+    const st = this.pack.settings.staff, s = st.readStrength; if (st.readStyle === "off" || s <= 0) return;
+    const ctx = this.ctx, glow = st.readStyle === "glow";
+    const mark = (p, isCase, x, y, w, h, tx, ty) => {
+      const lv = this.readLevel(p, isCase); if (!lv || this.isDark(r, tx, ty)) return;
+      const seed = strSeed(p.id);
+      if (glow) { // a soft green outline (and the faintest wash) that slowly breathes
+        const b = 0.5 + 0.5 * Math.sin((this.t + seed % 600) / 40), a = Math.min(1, lv * s * (0.55 + 0.45 * b));
+        ctx.fillStyle = "#8be39a";
+        ctx.globalAlpha = a * 0.45; ctx.fillRect(x - 2, y - 2, w + 4, 1); ctx.fillRect(x - 2, y + h + 1, w + 4, 1); ctx.fillRect(x - 2, y - 1, 1, h + 2); ctx.fillRect(x + w + 1, y - 1, 1, h + 2);
+        ctx.globalAlpha = a; ctx.fillRect(x - 1, y - 1, w + 2, 1); ctx.fillRect(x - 1, y + h, w + 2, 1); ctx.fillRect(x - 1, y, 1, h); ctx.fillRect(x + w, y, 1, h);
+        ctx.globalAlpha = a * 0.12; ctx.fillRect(x, y, w, h);
+        ctx.globalAlpha = 1; return;
+      }
+      // Sparkles: twinkles that ease in and out now and then, somewhere new each time. Half-read: one, fainter and rarer.
+      const n = lv < 1 ? 1 : 2, period = Math.round((lv < 1 ? 1.7 : 1) * (600 - 380 * s)), life = 60;
+      for (let i = 0; i < n; i++) {
+        const off = hash(seed, i * 7) % period, tt = this.t + off, ph = tt % period; if (ph >= life) continue;
+        const cyc = Math.floor(tt / period), e = Math.sin(Math.PI * ph / life), a = e * e * Math.min(1, 0.3 + 0.7 * s) * (lv < 1 ? 0.6 : 1);
+        const px = Math.round(x + 1 + hash(seed + cyc, i * 13 + 1) % Math.max(1, w - 2)), py = Math.round(y + 1 + hash(seed + cyc, i * 13 + 2) % Math.max(1, h - 2));
+        ctx.fillStyle = "#fff8dc";
+        ctx.globalAlpha = a; ctx.fillRect(px, py, 1, 1);
+        ctx.globalAlpha = a * 0.65; ctx.fillRect(px - 1, py, 3, 1); ctx.fillRect(px, py - 1, 1, 3);
+        if (e > 0.7) { ctx.globalAlpha = a * 0.3; ctx.fillRect(px - 2, py, 5, 1); ctx.fillRect(px, py - 2, 1, 5); }
+      }
+      ctx.globalAlpha = 1;
+    };
+    for (const c of r.cases) if (c.piece && c.state === "wall") mark(c.piece, true, c.x * T - cx + 2, c.y * T - T - cy + 3, 12, 10, c.x, c.y);
+    for (const h of r.hung) if (h.piece && h.state === "wall") mark(h.piece, false, h.x * T - cx + 4, h.y * T - cy + 4, 24, 18, h.x, h.y + 2);
+  }
+  resetRead() { this.progress.sides = {}; this.saveProgress(); }
+  /* A sized rug: drawn from its border, corner and colors, or (if the Rug art was replaced) that art nine-sliced to fit,
+     so its corners stay crisp and the edges and middle stretch. Custom art keeps its own colors. */
+  rugArt(d) {
+    const W = Math.max(1, Math.min(24, d.w | 0)) * T, H = Math.max(1, Math.min(24, (d.h | 0) || 1)) * T, hex = v => /^#[0-9a-f]{6}$/i.test(v || "");
+    const pre = RUG_PRESETS["Deep red"], col = k => (hex(d[k]) ? d[k] : pre[k]), custom = this.overrides && this.overrides.rug;
+    const key = "rug|" + [W, H, d.pattern, d.motif, col("field"), col("border"), col("accent"), col("corner"), custom ? "c" : ""].join("|");
+    if (this.cache[key]) return this.cache[key];
+    const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d"); x.imageSmoothingEnabled = false;
+    if (custom) {
+      const img = this.sheet("rug"), iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height, k = Math.min(16, Math.floor(iw / 3), Math.floor(ih / 3), Math.floor(W / 2), Math.floor(H / 2));
+      if (k < 2) x.drawImage(img, 0, 0, iw, ih, 0, 0, W, H);
+      else [[0, k, 0, k], [k, iw - 2 * k, k, W - 2 * k], [iw - k, k, W - k, k]].forEach(([sx, sw, dx, dw]) => [[0, k, 0, k], [k, ih - 2 * k, k, H - 2 * k], [ih - k, k, H - k, k]].forEach(([sy, sh, dy, dh]) => { if (dw > 0 && dh > 0) x.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh); }));
+      return (this.cache[key] = c);
+    }
+    const put = (cl, px, py, w, h) => { x.fillStyle = cl; x.fillRect(px, py, w || 1, h || 1); };
+    const frame = (cl, i, t) => { put(cl, i, i, W - 2 * i, t); put(cl, i, H - i - t, W - 2 * i, t); put(cl, i, i, t, H - 2 * i); put(cl, W - i - t, i, t, H - 2 * i); };
+    put(col("field"), 0, 0, W, H);
+    frame(col("accent"), 0, 1);
+    const style = RUG_BORDERS[d.pattern] ? d.pattern : "band";
+    if (style === "band") { frame(col("border"), 2, 3); frame(col("accent"), 5, 1); }
+    else if (style === "double") { frame(col("border"), 2, 1); frame(col("border"), 4, 1); }
+    else { // a woven zigzag inside a band
+      frame(col("border"), 2, 4);
+      for (let i = 2; i < W - 2; i++) { const z = Math.abs((i % 4) - 2); put(col("accent"), i, 3 + z % 3); put(col("accent"), i, H - 4 - z % 3); }
+      for (let j = 2; j < H - 2; j++) { const z = Math.abs((j % 4) - 2); put(col("accent"), 3 + z % 3, j); put(col("accent"), W - 4 - z % 3, j); }
+    }
+    const corner = RUG_CORNERS[d.motif] ? d.motif : "diamond";
+    if (corner !== "none" && W >= 24 && H >= 24) [[0, 0], [1, 0], [0, 1], [1, 1]].forEach(([fx, fy]) => {
+      const ox = fx ? W - 10 : 2, oy = fy ? H - 10 : 2, cc = col("corner"), ac = col("accent"), m = (px, py, cl) => put(cl, ox + px, oy + py); // an 8×8 motif
+      put(col("field"), ox, oy, 8, 8);
+      if (corner === "diamond") { for (let j = 0; j < 7; j++) { const r = 3 - Math.abs(j - 3); for (let i = 3 - r; i <= 3 + r; i++) m(i + 0.5 | 0, j, cc); } m(3, 3, ac); }
+      else if (corner === "flower") { [[3, 0], [3, 1], [3, 5], [3, 6], [0, 3], [1, 3], [5, 3], [6, 3], [2, 2], [4, 2], [2, 4], [4, 4]].forEach(([i, j]) => m(i, j, cc)); [[3, 2], [2, 3], [4, 3], [3, 4]].forEach(([i, j]) => m(i, j, ac)); m(3, 3, cc); }
+      else { for (let i = 0; i < 7; i++) { m(i, 0, cc); m(i, 6, cc); m(0, i, cc); m(6, i, cc); m(3, i, ac); m(i, 3, ac); } m(3, 3, cc); }
+    });
+    return (this.cache[key] = c);
+  }
   /* People walking behind something tall are hidden by its top: redraw the part above each tall thing's base after the people. */
   drawUppers(r, cx, cy) {
     const ctx = this.ctx, clip = (x, y, w, h, fn) => { ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip(); fn(); ctx.restore(); };
@@ -4587,7 +4734,7 @@ class Game {
     if (r.switchAt) this.drawSlot("light_switch", 0, 0, r.switchAt.x * T - cx, r.switchAt.y * T - cy);
     for (const sw of r.switches || []) this.drawSlot("light_switch", 0, 0, sw.x * T - cx, sw.y * T - cy);
     if (r.intercomAt) this.drawSlot("intercom", 0, 0, r.intercomAt.x * T - cx, r.intercomAt.y * T - cy);
-    for (const d of r.decals) this.drawSlot(d.key, 0, 0, d.x * T - cx, d.y * T - cy);
+    for (const d of r.decals) { if (d.key === "rug" && d.w) ctx.drawImage(this.rugArt(d), d.x * T - cx, d.y * T - cy); else this.drawSlot(d.key, 0, 0, d.x * T - cx, d.y * T - cy); }
     for (const ru of r.runners) drawRunner(ctx, this.sheet(ru.k[0] === "v" ? "carpet_v" : "carpet_h"), ru, cx, cy);
     for (const [x, y] of r.lamps) this.drawSlot("wall_sconce", 0, 0, x * T - cx, y * T - cy);
     for (const a of r.arrows) ctx.drawImage(this.arrowArt(a), a.x * T - cx, (a.y || 1) * T - cy);
@@ -4616,7 +4763,8 @@ class Game {
       if (c.alpha !== undefined) ctx.globalAlpha = Math.max(0, c.alpha);
       const sheet = c === this.player ? (this.staff ? "player_staff" : this.progress.wearShirt ? "player_goq_shirt" : c.sheet) : c.sheet;
       if (c === this.player && this.segway && !c.sitting) { const pp3 = this.pos(c); this.drawSlot("segway", 0, 0, Math.round(pp3.x - cx), Math.round(pp3.y - cy - 1)); }
-      const hop = c.react && c.react.how === "loved" && this.t - c.react.t0 < 48 ? Math.round(Math.abs(Math.sin((this.t - c.react.t0) / 8)) * 4) : 0; // a happy hop
+      const pk = c.pose ? this.t - c.pose.t0 : 999, jump = c.pose && /^(startled|guard|pose)$/.test(c.pose.kind) && pk < 14 ? Math.round(Math.sin(Math.PI * pk / 14) * 3) : 0; // a little jump when photographed
+      const hop = (c.react && c.react.how === "loved" && this.t - c.react.t0 < 48 ? Math.round(Math.abs(Math.sin((this.t - c.react.t0) / 8)) * 4) : 0) + jump - (c.pose && c.pose.kind === "bow" && pk > 8 && pk < 50 ? 1 : 0); // a happy hop; the usher's bow dips
       const sx = Math.round(p.x - cx), sy = Math.round(p.y - cy - 4) + (c.sitting ? 2 : 0) - (c === this.player && this.segway && !c.sitting ? 4 : 0) - hop;
       const cup = c === this.player ? this.drink : c.drink, cupFirst = cup && c.dir === "up";
       const bagAt = c.bag && !c.sitting ? [sx + { down: 1, up: 9, left: 9, right: -1 }[c.dir], sy + 9] : null, bagFirst = bagAt && c.dir !== "down"; // a shop bag hangs at their side
@@ -4639,6 +4787,14 @@ class Game {
       if (c === this.player && this.asleep && this.t % 120 < 90) { const zy = Math.floor((this.t % 120) / 30); ctx.fillStyle = "#f8f8f0"; ctx.font = "6px monospace"; ctx.fillText("z", sx + 12 + zy, sy - zy * 3); }
       const bub = c.leaving || this.full ? -1 : c.back ? 1 : c.cur && !c.follow ? 0 : -1; // "?" curious, "!" back to tell you how it went
       if (c.react && !this.full) this.drawReaction(c, sx, sy);
+      if (c.pose && !this.full) { // the photo reaction's bubble, fading out at the end
+        if (pk >= c.pose.dur) c.pose = null;
+        else if (c.pose.kind !== "snapback") {
+          const fr = { startled: pk < 40 ? 0 : 2, guard: 0, heart: 1, pose: 3, busy: 4, wave: 5, shy: 6, annoyed: 7, bow: 3 }[c.pose.kind];
+          ctx.globalAlpha = Math.min(1, (c.pose.dur - pk) / 15) * (c.alpha !== undefined ? Math.max(0, c.alpha) : 1);
+          this.drawSlot("emote", fr, 0, sx + 4, sy - 10 + (Math.floor(this.t / 20) % 2)); ctx.globalAlpha = c.alpha !== undefined ? Math.max(0, c.alpha) : 1;
+        }
+      }
       if (c.member && !c.leaving && !this.full && Math.abs(c.x - this.player.x) + Math.abs(c.y - this.player.y) <= 2) {
         ctx.font = "6px monospace"; const w = Math.ceil(ctx.measureText(c.member).width) + 4, nx = Math.round(sx + 8 - w / 2), ny = sy - (bub >= 0 ? 18 : 8);
         ctx.fillStyle = "rgba(24,24,32,.85)"; ctx.fillRect(nx, ny, w, 8); ctx.fillStyle = "#f8f0c0"; ctx.textBaseline = "top"; ctx.fillText(c.member, nx + 2, ny + 1);
@@ -4648,6 +4804,7 @@ class Game {
     }
     this.drawUppers(r, cx, cy);
     if (full) return;
+    this.drawReadMarks(r, cx, cy);
     this.drawLighting(r, cx, cy, pp);
     if (this.figure && this.isDark(r, this.figure.x, this.figure.y)) {
       ctx.globalAlpha = 0.55 * this.figure.alpha; this.drawSlot("shadow_figure", 0, 0, this.figure.x * T - cx, this.figure.y * T - cy - 4); ctx.globalAlpha = 1;
@@ -4703,8 +4860,8 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-17 notes";
-window.GOQ = { ACH_STATS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
+const VERSION = "2026-10-18 reactions";
+window.GOQ = { ACH_STATS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
   spotRooms: () => Object.keys(ROOMS).filter(id => (ROOMS[id].spots || []).length).map(id => ({ id, name: ROOMS[id].name, n: ROOMS[id].spots.length })),

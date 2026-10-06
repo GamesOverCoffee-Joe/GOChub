@@ -312,6 +312,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
           <button class="btn" type="button" id="timeBtn" title="Pin the time of day in the preview, or follow the clock">Time: clock</button>
           <button class="btn" type="button" id="spooky" aria-pressed="false" title="How often something creepy happens after the lights go out">Spooky: rare</button>
           <button class="btn" type="button" id="recrate" title="Put pieces with a future unveil date back in their crates">Repack crates</button>
+          <button class="btn" type="button" id="reread" title="Forget which placards you've read in the preview, so every piece shines again">Reset what I've read</button>
           <button class="btn" type="button" id="rechore" title="Dust settles, plants get thirsty, the mug goes missing, visitors come back, lights come on">Reset chores</button>
           <button class="btn" type="button" id="figureBtn" title="The figure appears right now, beside or behind you, with this room's lights off. Turn and photograph it before it's gone.">Summon the figure</button>
           <button class="btn" type="button" id="dayBtn" title="Jump the preview to the next day: curious visitors come back, dust settles, the museum opens again">Skip to tomorrow</button>
@@ -327,7 +328,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-17 notes";
+window.GOQ_WANT = "2026-10-18 reactions";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -532,6 +533,7 @@ $("#who").addEventListener("click", e => {
 });
 $("#recrate").addEventListener("click", () => { game.resetHangs(); stage.focus({ preventScroll: true }); });
 $("#rechore").addEventListener("click", () => { game.resetProgress(); stage.focus({ preventScroll: true }); });
+$("#reread").addEventListener("click", () => { game.resetRead(); stage.focus({ preventScroll: true }); });
 // Time: follow the real clock, or pin day, sunset or night to see (and record) the evening details.
 $("#timeBtn").addEventListener("click", e => {
   const order = [null, "day", "sunset", "night"], next = order[(order.indexOf(game.timeOverride) + 1) % order.length];
@@ -828,6 +830,20 @@ function renderStaff() {
     el("p", { class: "note", style: "margin:0 0 12px", text: "Roughly the chance a case has a smudge on a given day. Visitors who stop next to a case now and then leave one more. 0% turns fingerprints off and clears them." }),
     el("label", { class: "range" }, [el("span", { text: "Amount" }), fp, fpOut]),
   ]));
+  // Pieces you haven't read yet: how they're marked in the museum, and how strongly.
+  const rsty = el("select", {}, [["sparkle", "Sparkle"], ["glow", "Soft green highlight"], ["off", "Off"]].map(([v, t]) => el("option", { value: v, text: t })));
+  rsty.value = st.readStyle || "sparkle";
+  const rs = el("input", { type: "range", min: 0, max: 100, step: 1, value: Math.round((st.readStrength === undefined ? 0.4 : st.readStrength) * 100), "aria-label": "How strong the unread mark is" });
+  const rsOut = el("output", { text: rs.value + "%" });
+  const rApply = () => { if (game && game.pack) { game.pack.settings.staff.readStyle = st.readStyle; game.pack.settings.staff.readStrength = st.readStrength; } }; // see it in the preview right away
+  rsty.addEventListener("change", () => { st.readStyle = rsty.value; rApply(); changed(); });
+  rs.addEventListener("input", () => { st.readStrength = +rs.value / 100; rsOut.textContent = rs.value + "%"; rApply(); changed(); });
+  wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
+    el("h3", { text: "Pieces you haven't read", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "Unread pieces shine a little so players can tell at a glance what's left. Reading one side of a case dims it; reading both sides (or a painting's placard) stops it. Preview options, Reset what I've read, shows them all again." }),
+    el("div", { class: "fields", style: "max-width:420px" }, [el("label", {}, [document.createTextNode("Style"), rsty])]),
+    el("label", { class: "range" }, [el("span", { text: "Strength" }), rs, rsOut]),
+  ]));
   const ps = el("input", { type: "range", min: 20, max: 100, step: 5, value: Math.round((st.patronSpeed === undefined ? 0.45 : st.patronSpeed) * 100), "aria-label": "Visitor walking speed" });
   const psOut = el("output", { text: ps.value + "%" });
   ps.addEventListener("input", () => { st.patronSpeed = +ps.value / 100; psOut.textContent = ps.value + "%"; changed(); });
@@ -986,7 +1002,7 @@ function roomItems(d) {
   (d.murals || []).forEach((m, i) => out.push({ type: "mural", i, x: m.x, y: m.y, w: m.w || 1, h: 1, label: "Mural" }));
   (d.lamps || []).forEach((a, i) => out.push({ type: "lamp", i, x: a[0], y: a[1], w: 1, h: 1, label: "Accent light" }));
   (d.arrows || []).forEach((a, i) => out.push({ type: "arrow", i, x: a.x, y: a.y || 1, w: a.w || 4, h: 2, label: "Arrow sign" }));
-  (d.decals || []).forEach((a, i) => out.push({ type: "decal", i, x: a.x, y: a.y, w: sw(a.key), h: sh(a.key), label: (GOQ.SLOT[a.key] || {}).label || a.key }));
+  (d.decals || []).forEach((a, i) => out.push({ type: "decal", i, x: a.x, y: a.y, w: a.w || sw(a.key), h: a.w ? a.h || 1 : sh(a.key), label: (GOQ.SLOT[a.key] || {}).label || a.key }));
   return out;
 }
 function itemAt(d, x, y) { return roomItems(d).find(it => x >= it.x && x < it.x + it.w && y >= it.y && y < it.y + it.h) || null; }
@@ -1317,7 +1333,7 @@ function placeAt(t) {
     if (p.kind === "spot") (d.spots = d.spots || []).push(isLayout(d) ? [t.x, wy] : t.x);
     else (d.wallArt = d.wallArt || []).push(Object.assign({ key: p.key, x: t.x, say: ["(What it says when someone looks at it.)"] }, isLayout(d) ? { y: wy } : {}));
   }
-  else if (p.kind === "decal") (d.decals = d.decals || []).push({ key: p.key, x: t.x, y: t.y });
+  else if (p.kind === "decal") (d.decals = d.decals || []).push(p.key === "rug" ? Object.assign({ key: "rug", x: t.x, y: t.y, w: 3, h: 2, pattern: "band", motif: "diamond" }, GOQ.RUG_PRESETS["Deep red"]) : { key: p.key, x: t.x, y: t.y });
   else if (p.kind === "spawn") d.spawn = [t.x, t.y, (d.spawn && d.spawn[2]) || "down"];
   else if (p.kind === "catSpot") (d.catSpots = d.catSpots || []).push([t.x, t.y]);
   else if (p.kind === "mugSpot") (d.mugSpots = d.mugSpots || []).push([t.x, t.y]);
@@ -1714,6 +1730,23 @@ function renderInspector() {
     const cl = el("input", { type: "color", value: a.color || (genres.find(g => g.id === a.genre) || {}).color || "#c8a070" }); cl.addEventListener("change", () => ed(q => { q.color = cl.value; }));
     box.appendChild(el("div", { class: "rrow" }, [field("Words (optional)", lb), field("Own color (optional)", cl)]));
     if (a.color) box.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small quiet", text: "Use the genre's color", onclick: () => ed(q => { delete q.color; }) })]));
+  }
+  if (it.type === "decal" && d.decals[it.i].key === "rug") {
+    const a = d.decals[it.i], ed = fn => { snapshot(); fn(editable(R.id).decals[it.i]); roomChanged(true); renderInspector(); };
+    if (!a.w) { // an older rug: one fixed size until it's made sizable
+      box.appendChild(el("p", { class: "note", text: "This rug is the fixed-size picture from Art. Make it sizable to pick its size, border, corners and colors." }));
+      box.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small", text: "Make it sizable", onclick: () => ed(q => Object.assign(q, { w: 3, h: 2, pattern: "band", motif: "diamond" }, GOQ.RUG_PRESETS["Deep red"])) })]));
+    } else {
+      const num = (k, v) => { const n = el("input", { type: "number", min: 1, max: 24, value: v }); n.addEventListener("change", () => ed(q => { q[k] = Math.max(1, Math.min(24, +n.value || 1)); })); return n; };
+      box.appendChild(el("div", { class: "rrow" }, [field("Width (tiles)", num("w", a.w)), field("Height (tiles)", num("h", a.h || 1))]));
+      const sel = (opts, k, v) => { const s2 = el("select", {}, Object.entries(opts).map(([val, t]) => el("option", { value: val, text: t }))); s2.value = v; s2.addEventListener("change", () => ed(q => { q[k] = s2.value; })); return s2; };
+      box.appendChild(el("div", { class: "rrow" }, [field("Border", sel(GOQ.RUG_BORDERS, "pattern", a.pattern || "band")), field("Corners", sel(GOQ.RUG_CORNERS, "motif", a.motif || "diamond"), "Corners show on rugs at least 2 tiles each way.")]));
+      box.appendChild(field("Colors", el("div", { class: "row", style: "flex-wrap:wrap;gap:6px" }, Object.entries(GOQ.RUG_PRESETS).map(([name, c]) =>
+        el("button", { type: "button", class: "btn small quiet", title: "Use the " + name + " colors", onclick: () => ed(q => Object.assign(q, c)) }, [el("span", { style: "display:inline-block;width:12px;height:12px;border-radius:2px;background:" + c.field + ";box-shadow:inset 0 0 0 2px " + c.border }), document.createTextNode(name)]))), "A starting point; fine-tune below."));
+      const pick = (k, label) => { const c = el("input", { type: "color", value: a[k] || GOQ.RUG_PRESETS["Deep red"][k] }); c.addEventListener("change", () => ed(q => { q[k] = c.value; })); return field(label, c); };
+      box.appendChild(el("div", { class: "rrow" }, [pick("field", "Middle"), pick("border", "Border"), pick("accent", "Edge lines"), pick("corner", "Corners")]));
+      box.appendChild(el("p", { class: "note", text: "If you replace the Rug art (Art tab), sized rugs use that art instead: its corners stay crisp and its edges stretch, but these colors no longer apply." }));
+    }
   }
   if (it.type === "wallArt") box.appendChild(linesBox(() => (d.wallArt[it.i].say || []).join("\n"), v => { editable(R.id).wallArt[it.i].say = v.split("\n").map(s => s.trim()).filter(Boolean); }));
   if (it.type === "visitor") {
