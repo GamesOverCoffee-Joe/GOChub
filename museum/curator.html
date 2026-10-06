@@ -328,7 +328,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-20 room names";
+window.GOQ_WANT = "2026-10-20 wing names";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -2098,6 +2098,8 @@ function renderGenres(wrap) {
   wrap.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn primary", text: "Add a genre", onclick: () => { list.push({ id: "genre-" + Math.random().toString(36).slice(2, 7), name: "New genre", color: "#a08868", minds: [] }); changed({ now: true }); renderVisitors(); } })]));
 }
 /* Which room an episode is shown in: its mindsets decide, or pick a genre by hand. */
+/* The museum room (wing) that shows a genre, by its current name. */
+function wingOf(gid) { const lay = GOQ.layoutOf(roomDef("museum")), z = lay && lay.zones.find(q => q.rect && q.rect.genre === gid); return z ? z.name : ""; }
 function genreBox(p) {
   const genres = draft.settings.genres || GOQ.SAMPLE_GENRES, auto = GOQ.genreOf(Object.assign({}, p, { genre: "" }), genres), an = (genres.find(g => g.id === auto) || {}).name;
   const s = el("select", {}, [el("option", { value: "", text: "Its mindsets decide" + (an ? " (" + an + ")" : " (no genre: rooms without one)") })].concat(genres.map(g => el("option", { value: g.id, text: g.name }))));
@@ -2298,7 +2300,7 @@ function renderPieces() {
   let ci = 0;
   draft.pieces.forEach((p, i) => {
     const g = p.kind === "episode" ? (draft.settings.genres || GOQ.SAMPLE_GENRES).find(x => x.id === GOQ.genreOf(p, draft.settings.genres || GOQ.SAMPLE_GENRES)) : null;
-    const place = p.kind === "episode" ? label[p.id] || (g ? "ON THE " + (g.short || g.name).toUpperCase() + " SCREEN" : "NOT SHOWN (NO GENRE)") : (ci++ < oldC ? "NOT SHOWN (NO WALL SPOT FREE)" : walls[ci - 1 - oldC]);
+    const place = p.kind === "episode" ? label[p.id] || (g ? "ON THE " + (wingOf(g.id) || g.short || g.name).toUpperCase() + " SCREEN" : "NOT SHOWN (NO GENRE)") : (ci++ < oldC ? "NOT SHOWN (NO WALL SPOT FREE)" : walls[ci - 1 - oldC]);
     wrap.appendChild(pieceRow(p, i, place));
   });
   wrap.appendChild(el("div", { class: "row" }, [el("button", { class: "btn primary", type: "button", text: "Add a piece", onclick: () => {

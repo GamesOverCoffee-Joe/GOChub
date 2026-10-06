@@ -3519,7 +3519,7 @@ class Game {
   fmt(str, vars) { return this.roomNames(str).replace(/\{(\w+)\}/g, (m, k) => (vars && vars[k] !== undefined ? vars[k] : m)); }
   /* {room:upper} in any text: that room's or hallway's name right now (a museum room or hallway by its id, or a room like
      "lobby"), so renaming a room renames it everywhere it's mentioned. */
-  roomNames(str) { return String(str).replace(/\{room:([\w-]+)\}/g, (m, id) => this.roomName(id) || m); }
+  roomNames(str) { return String(str).replace(/\{(room|ROOM):([\w-]+)\}/g, (m, k, id) => { const n = this.roomName(id); return n ? (k === "ROOM" ? n.toUpperCase() : n) : m; }); } // {ROOM:id}: in capitals
   roomName(id) {
     for (const rid in ROOMS) { const lay = layoutOf(ROOMS[rid]), z = lay && lay.zones.find(q => q.id === id); if (z) return z.name; }
     return ROOMS[id] ? ROOMS[id].name.replace(/\s+/g, " ") : "";
@@ -4194,8 +4194,8 @@ class Game {
   overflowScreen() {
     const p = this.player, [dx, dy] = DIRS[p.dir], z = this.zoneAt(this.room, p.x + dx, p.y + dy) || this.zone;
     const g = z && z.rect ? z.rect.genre : "", gen = (this.pack.settings.genres || []).find(x => x.id === g), list = (this.overflow && this.overflow[g]) || [];
-    const title = (gen ? (gen.short || gen.name) : z ? z.name : "This room").toUpperCase();
-    if (!list.length) { this.say(this.tx("screen.empty", { room: gen ? gen.name : z ? z.name : "this room" })); return; }
+    const title = (z ? z.name : gen ? gen.short || gen.name : "This room").toUpperCase(); // the wing's own name
+    if (!list.length) { this.say(this.tx("screen.empty", { room: z ? z.name : gen ? gen.name : "this room" })); return; }
     const show = () => this.openList(title + ": MORE PIECES", [...list.map(q => (q.pick ? { text: q.title, pick: true } : q.title)), "CLOSE"], i => {
       const q = list[i]; if (!q) return;
       const read = () => { this.viewPiece(q); const done = this.rd && this.rd.done; this.rd.done = () => { if (done) done(); show(); }; };
@@ -4410,7 +4410,8 @@ class Game {
   /* An arrow sign's words and color: from its genre (Visitors, Genres), unless it has its own. */
   arrowInfo(a) {
     const g = (this.pack.settings.genres || []).find(g => g.id === a.genre);
-    return { label: a.label || (g ? g.name : "This way"), color: /^#[0-9a-f]{6}$/i.test(a.color || "") ? a.color : g ? g.color : "#c8a070" };
+    const lay = layoutOf(ROOMS[this.room ? this.room.id : "museum"]), z = g && lay && lay.zones.find(q => q.rect && q.rect.genre === g.id);
+    return { label: a.label || (z ? z.name : g ? g.name : "This way"), color: /^#[0-9a-f]{6}$/i.test(a.color || "") ? a.color : g ? g.color : "#c8a070" };
   }
   /* A big arrow painted across the wall (both wall rows, w tiles long) with the room's name on it, in the room's color. */
   arrowArt(a) {
@@ -5249,7 +5250,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-20 room names";
+const VERSION = "2026-10-20 wing names";
 window.GOQ = { ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
