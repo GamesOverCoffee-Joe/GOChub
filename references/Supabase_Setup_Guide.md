@@ -8,6 +8,14 @@
 > 2. Paste the whole updated `supabase-setup.sql` (from the `references` folder) and click **Run**. If it warns about "destructive operations", click **Run this query**. It's safe to run again: your badges, keys and points stay as they are.
 > 3. That's it. Closing up the museum now counts toward the leaderboard. Until you run it, closing only counts in the player's own browser.
 >
+> **For visitor notes (also October 2026),** after step 2, run this one line in a new query, with your own badge number. It lets that badge approve notes in the curator:
+>
+> ```sql
+> select goq.set_curator('0001', true);
+> ```
+>
+> Then open the curator's **Notes** tab and sign in with that badge number and key. Notes visitors leave wait there until you approve them. Until you run the updated file, the museum still offers notes, but they won't send.
+>
 > Everything marked **[UPDATE, October 2026]** below is new or changed.
 
 This connects the museum's staff door to a free Supabase database. Real badges get checked, chores done on shift count toward points, and Employee of the Month picks itself. It takes about 20 minutes, and it all works from `http://localhost:8000`, so you don't need a website yet.

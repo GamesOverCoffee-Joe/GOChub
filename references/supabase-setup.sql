@@ -1,11 +1,13 @@
--- GOQ Museum: staff badges, duty log and leaderboard.
+-- GOQ Museum: staff badges, duty log, leaderboard and visitor notes.
 -- Paste this whole file into Supabase's SQL Editor and press Run. It's safe to run again later.
 --
 -- How it's locked down:
 --   * The tables live in a private schema called "goq". The website can't see that schema at all.
---   * The website can only call three functions: clock_in, log_duty and get_leaderboard.
+--   * The website can only call these functions: clock_in, log_duty, get_leaderboard, and for visitor notes
+--     submit_note, get_notes, curator_notes and moderate_note.
 --   * Badge keys and session tokens are stored scrambled (hashed), never as plain text.
 --   * The leaderboard only ever shows display names and points.
+--   * Visitor notes wait as "pending" until a curator badge approves them. The website only ever reads approved notes.
 --
 -- Your admin helpers (run these yourself in the SQL Editor, the website can't):
 --   select * from goq.add_badge('0002', 'Wower');      -- makes a badge and shows its key ONCE
@@ -13,6 +15,7 @@
 --   select goq.set_active('0002', false);               -- turn a badge off (true turns it back on)
 --   select goq.rename_badge('0002', 'New Name');         -- change the name on the leaderboard
 --   select * from goq.badge_list;                        -- every badge with points this month and all time
+--   select goq.set_curator('0001', true);               -- [UPDATE, October 2026] let this badge approve visitor notes in the curator
 
 create extension if not exists pgcrypto with schema extensions;
 create schema if not exists goq;
@@ -49,10 +52,30 @@ create table if not exists goq.duties (
 create unique index if not exists duties_once_a_day on goq.duties (badge, duty, target, day) where duty <> 'helped';
 create index if not exists duties_by_day on goq.duties (day, badge);
 
+-- [UPDATE, October 2026] Curator badges can approve visitor notes (the curator's Notes tab).
+alter table goq.badges add column if not exists curator boolean not null default false;
+
+-- [UPDATE, October 2026] Visitor notes: a short note on a piece, held until a curator approves it.
+create table if not exists goq.notes (
+  id         bigint generated always as identity primary key,
+  piece      text not null check (length(piece) between 1 and 40),
+  title      text not null default '',
+  name       text not null default '',
+  note       text not null check (length(note) between 1 and 200),
+  client     text not null default '',
+  status     text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  at         timestamptz not null default now(),
+  decided_at timestamptz,
+  decided_by text
+);
+create index if not exists notes_by_status on goq.notes (status, at desc);
+create index if not exists notes_by_client on goq.notes (client, at);
+
 -- Belt and braces: row-level security on, no policies, so nothing gets in except the functions below.
 alter table goq.badges enable row level security;
 alter table goq.sessions enable row level security;
 alter table goq.duties enable row level security;
+alter table goq.notes enable row level security;
 revoke all on all tables in schema goq from public;
 do $$ begin
   if exists (select 1 from pg_roles where rolname = 'anon') then execute 'revoke all on all tables in schema goq from anon'; end if;
@@ -153,15 +176,92 @@ language sql stable security definer set search_path = '' as $$
   );
 $$;
 
--- Only these three can be called by the website.
+-- ---------- [UPDATE, October 2026] Visitor notes ----------
+
+-- Which badge (if any) is a curator, from a login token.
+create or replace function goq.curator_badge(p_token text) returns text
+language sql stable set search_path = '' as $$
+  select b.badge from goq.sessions s join goq.badges b using (badge)
+  where s.token_hash = goq.token_hash(p_token) and s.expires_at > now() and b.active and b.curator;
+$$;
+
+-- Anyone can leave a note. It waits as "pending" until a curator approves it.
+-- Fair limits: 3 notes an hour and 10 a day from one browser, 60 an hour from everyone, and at most 500 waiting.
+create or replace function public.submit_note(p_piece text, p_title text, p_name text, p_note text, p_client text default '') returns json
+language plpgsql security definer set search_path = '' as $$
+declare n  text := btrim(regexp_replace(coalesce(p_note, ''), '\s+', ' ', 'g'));
+        nm text := left(btrim(regexp_replace(coalesce(p_name, ''), '\s+', ' ', 'g')), 24);
+        pc text := left(btrim(coalesce(p_piece, '')), 40);
+        cl text := left(coalesce(p_client, ''), 40);
+begin
+  if pc = '' then return json_build_object('ok', false, 'reason', 'piece'); end if;
+  if length(n) < 2 then return json_build_object('ok', false, 'reason', 'short'); end if;
+  if length(n) > 200 then return json_build_object('ok', false, 'reason', 'long'); end if;
+  if cl <> '' and ((select count(*) from goq.notes where client = cl and at > now() - interval '1 hour') >= 3
+                or (select count(*) from goq.notes where client = cl and at > now() - interval '1 day') >= 10) then
+    return json_build_object('ok', false, 'reason', 'slow');
+  end if;
+  if (select count(*) from goq.notes where at > now() - interval '1 hour') >= 60 then return json_build_object('ok', false, 'reason', 'busy'); end if;
+  if (select count(*) from goq.notes where status = 'pending') >= 500 then return json_build_object('ok', false, 'reason', 'full'); end if;
+  insert into goq.notes (piece, title, name, note, client) values (pc, left(coalesce(p_title, ''), 80), nm, n, cl);
+  delete from goq.notes where status = 'rejected' and at < now() - interval '30 days';
+  return json_build_object('ok', true);
+end $$;
+
+-- Approved notes only, the newest six per piece: { "piece-id": [{ name, note, at }, ...], ... }
+create or replace function public.get_notes() returns json
+language sql stable security definer set search_path = '' as $$
+  select coalesce(json_object_agg(piece, notes), '{}'::json) from (
+    select piece, json_agg(json_build_object('name', name, 'note', note, 'at', at) order by at desc) as notes
+    from (select piece, name, note, at, row_number() over (partition by piece order by at desc) as rn
+          from goq.notes where status = 'approved') x
+    where rn <= 6 group by piece
+  ) y;
+$$;
+
+-- The curator's inbox: notes with one status ('pending', 'approved' or 'rejected'), newest first. Curator badges only.
+create or replace function public.curator_notes(p_token text, p_status text default 'pending') returns json
+language plpgsql stable security definer set search_path = '' as $$
+declare cb text := goq.curator_badge(p_token);
+begin
+  if cb is null then return json_build_object('ok', false, 'reason', 'curator'); end if;
+  return json_build_object('ok', true,
+    'pending', (select count(*) from goq.notes where status = 'pending'),
+    'notes', coalesce((select json_agg(json_build_object('id', id, 'piece', piece, 'title', title, 'name', name, 'note', note, 'status', status, 'at', at) order by at desc)
+      from (select * from goq.notes where status = coalesce(p_status, 'pending') order by at desc limit 200) n), '[]'::json));
+end $$;
+
+-- Approve, reject or delete one note. Curator badges only.
+create or replace function public.moderate_note(p_token text, p_id bigint, p_action text) returns json
+language plpgsql security definer set search_path = '' as $$
+declare cb text := goq.curator_badge(p_token);
+begin
+  if cb is null then return json_build_object('ok', false, 'reason', 'curator'); end if;
+  if p_action = 'delete' then delete from goq.notes where id = p_id;
+  elsif p_action in ('approve', 'reject') then
+    update goq.notes set status = case when p_action = 'approve' then 'approved' else 'rejected' end, decided_at = now(), decided_by = cb where id = p_id;
+  else return json_build_object('ok', false, 'reason', 'action');
+  end if;
+  return json_build_object('ok', found);
+end $$;
+
+-- Only these can be called by the website.
 revoke all on function public.clock_in(text, text) from public;
 revoke all on function public.log_duty(text, text, text) from public;
 revoke all on function public.get_leaderboard() from public;
+revoke all on function public.submit_note(text, text, text, text, text) from public;
+revoke all on function public.get_notes() from public;
+revoke all on function public.curator_notes(text, text) from public;
+revoke all on function public.moderate_note(text, bigint, text) from public;
 do $$ begin
   if exists (select 1 from pg_roles where rolname = 'anon') then
     execute 'grant execute on function public.clock_in(text, text) to anon, authenticated';
     execute 'grant execute on function public.log_duty(text, text, text) to anon, authenticated';
     execute 'grant execute on function public.get_leaderboard() to anon, authenticated';
+    execute 'grant execute on function public.submit_note(text, text, text, text, text) to anon, authenticated';
+    execute 'grant execute on function public.get_notes() to anon, authenticated';
+    execute 'grant execute on function public.curator_notes(text, text) to anon, authenticated';
+    execute 'grant execute on function public.moderate_note(text, bigint, text) to anon, authenticated';
   end if;
 end $$;
 
@@ -209,6 +309,15 @@ begin
   update goq.badges set name = trim(p_name) where badge = p_badge;
   if not found then raise exception 'No badge %', p_badge; end if;
   return p_badge || ' is now ' || trim(p_name);
+end $$;
+
+-- [UPDATE, October 2026] Let a badge approve visitor notes (true), or stop it (false).
+create or replace function goq.set_curator(p_badge text, p_on boolean) returns text
+language plpgsql volatile set search_path = '' as $$
+begin
+  update goq.badges set curator = p_on where badge = p_badge;
+  if not found then raise exception 'No badge %', p_badge; end if;
+  return p_badge || case when p_on then ' can approve notes' else ' can no longer approve notes' end;
 end $$;
 
 create or replace view goq.badge_list as

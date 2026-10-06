@@ -283,9 +283,11 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
       <button role="tab" id="tab-rooms" aria-selected="false" aria-controls="main">Rooms</button>
       <button role="tab" id="tab-words" aria-selected="false" aria-controls="main">Words</button>
       <button role="tab" id="tab-ach" aria-selected="false" aria-controls="main">Achievements</button>
+      <button role="tab" id="tab-notes" aria-selected="false" aria-controls="main">Notes</button>
     </div>
     <div class="actions">
       <span id="saved" role="status"></span>
+      <button class="btn quiet" id="verBtn" type="button" title="Is this the latest engine, and is your draft the museum-pack.json in this folder?">Check version</button>
       <a class="btn quiet" id="batchBtn" href="batch-fill.html" title="Add many pieces at once from YouTube and image files, and crop them to fit">Batch fill</a>
       <label class="btn quiet" for="importFile">Import pack</label>
       <input id="importFile" class="sr-only" type="file" accept=".json,application/json">
@@ -310,6 +312,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
           <button class="btn" type="button" id="timeBtn" title="Pin the time of day in the preview, or follow the clock">Time: clock</button>
           <button class="btn" type="button" id="spooky" aria-pressed="false" title="How often something creepy happens after the lights go out">Spooky: rare</button>
           <button class="btn" type="button" id="recrate" title="Put pieces with a future unveil date back in their crates">Repack crates</button>
+          <button class="btn" type="button" id="reread" title="Forget which placards you've read in the preview, so every piece shines again">Reset what I've read</button>
           <button class="btn" type="button" id="rechore" title="Dust settles, plants get thirsty, the mug goes missing, visitors come back, lights come on">Reset chores</button>
           <button class="btn" type="button" id="figureBtn" title="The figure appears right now, beside or behind you, with this room's lights off. Turn and photograph it before it's gone.">Summon the figure</button>
           <button class="btn" type="button" id="dayBtn" title="Jump the preview to the next day: curious visitors come back, dust settles, the museum opens again">Skip to tomorrow</button>
@@ -325,7 +328,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-16 curator view";
+window.GOQ_WANT = "2026-10-18 flash";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -348,7 +351,7 @@ if (/^https?:$/.test(location.protocol)) fetch("version.json?t=" + Date.now(), {
   };
   s.onerror = () => { if (!retry) load(true); else go(); };
   document.head.appendChild(s);
-})(false);
+})(new URLSearchParams(location.search).has("hard")); // Check version, Reload fresh: skip any cached engine
 </script>
 <script>
 window.goqStart = function () {
@@ -390,6 +393,7 @@ function useDraft(raw) {
 let saveT = 0;
 function changed(opts) {
   opts = opts || {};
+  if (!opts.keepBase) markEdited();
   clearTimeout(saveT);
   saveT = setTimeout(() => {
     try { localStorage.setItem(DRAFT_KEY, JSON.stringify(packOut())); status("Saved in this browser"); }
@@ -397,6 +401,73 @@ function changed(opts) {
     markPending();
   }, opts.now ? 0 : opts.slow ? 1500 : 400); // saving the whole pack takes a moment: after editing rooms, wait until you pause
 }
+/* ---------- Where the draft came from (Check version) ----------
+   The curator edits a draft kept in this browser, so after the folder's museum-pack.json changes (a new export, a git pull),
+   the draft is still the old one until you load the new file. The base record remembers which file the draft started from
+   (a fingerprint of its text and its save date) and whether you've edited since, so Check version can tell you. */
+const BASE_KEY = "goq-curator-base";
+function fingerprint(text) { // a short hash of the file's text (cyrb53): equal files, equal fingerprints
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0; i < text.length; i++) { const c = text.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909); h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36).toUpperCase().padStart(8, "0").slice(-8);
+}
+function getBase() { try { return JSON.parse(localStorage.getItem(BASE_KEY) || "null"); } catch (e) { return null; } }
+function setBase(text, from, savedAt) { try { localStorage.setItem(BASE_KEY, JSON.stringify({ fp: fingerprint(text), from, savedAt: savedAt || "", at: new Date().toISOString(), edited: false })); } catch (e) {} }
+function markEdited() { const b = getBase(); if (b && !b.edited) { b.edited = true; try { localStorage.setItem(BASE_KEY, JSON.stringify(b)); } catch (e) {} } }
+async function folderPack() { // the museum-pack.json next to this page, never from the cache
+  if (!/^https?:$/.test(location.protocol)) return { err: "file" };
+  try {
+    const r = await fetch(SITE_PACK + "?t=" + Date.now(), { cache: "no-store" }); if (!r.ok) return { err: "missing" };
+    const text = await r.text(), j = JSON.parse(text);
+    if (!j || j.format !== GOQ.PACK_FORMAT) return { err: "bad" };
+    return { text, j, fp: fingerprint(text), savedAt: j.savedAt || "", pieces: (j.pieces || []).length, kb: Math.round(text.length / 1024) };
+  } catch (e) { return { err: "bad" }; }
+}
+async function freshVersion() { try { const r = await fetch("version.json?t=" + Date.now(), { cache: "no-store" }); return r.ok ? (await r.json()).version || "" : ""; } catch (e) { return ""; } }
+const when = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d) ? d.toLocaleString([], { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }) : ""; };
+async function loadFolderPack(f) {
+  migrateFloors(f.j); useDraft(f.j); changed({ now: true, keepBase: true }); setBase(f.text, "folder", f.savedAt);
+  await game.setPack(packOut()); render(); status("Loaded museum-pack.json from this folder");
+}
+async function checkVersion() {
+  let dlg = document.getElementById("verDlg");
+  if (!dlg) { dlg = el("dialog", { id: "verDlg", class: "rchooser", "aria-label": "Check version" }); document.body.appendChild(dlg); dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); }); }
+  dlg.innerHTML = ""; dlg.appendChild(el("p", { text: "Checking..." })); if (!dlg.open) dlg.showModal();
+  const [vj, f] = await Promise.all([freshVersion(), folderPack()]), b = getBase();
+  const want = window.GOQ_WANT, have = GOQ.VERSION, engineOk = want === have && (!vj || vj === want);
+  const line = (ok, text) => el("p", { style: "margin:4px 0;" + (ok === false ? "color:var(--warn);font-weight:700" : "") }, [document.createTextNode((ok === true ? "\u2713 " : ok === false ? "\u2717 " : "") + text)]);
+  const kids = [el("h3", { text: "Check version", style: "margin:0 0 8px" }), el("h4", { text: "ENGINE" }),
+    line(engineOk, engineOk ? "Up to date: " + have : "This page wants \u201c" + want + "\u201d, the engine loaded is \u201c" + (have || "?") + "\u201d" + (vj ? ", and this folder's version.json says \u201c" + vj + "\u201d." : ".")),
+    vj ? null : line(null, /^https?:$/.test(location.protocol) ? "No version.json in this folder (it should be next to curator.html)." : "Opened as a file, so the folder can't be checked. Use a local web server (http://localhost)."),
+    engineOk ? null : line(null, vj && vj !== want ? "This page is older than the folder's files: Reload fresh." : "Replace museum-engine.js in this folder with the latest one, then Reload fresh."),
+    el("h4", { text: "PACK" })];
+  let verdict = null, folderOk = !f.err;
+  if (f.err) kids.push(line(false, f.err === "file" ? "Opened as a file, so the curator can't read this folder's museum-pack.json. Use a local web server (http://localhost)." : f.err === "missing" ? "There's no museum-pack.json next to curator.html." : "This folder's museum-pack.json couldn't be read as a museum pack."));
+  else {
+    kids.push(line(null, "This folder's museum-pack.json: " + (f.savedAt ? "exported " + when(f.savedAt) : "no export date (exported before this check existed)") + ", " + f.pieces + " pieces, " + f.kb + " KB, fingerprint " + f.fp + "."));
+    if (!b) verdict = line(null, "Your draft started before this check existed, so it can't say which file it came from. It has " + draft.pieces.length + " pieces; the folder's pack has " + f.pieces + ". Load the folder's pack to be sure.");
+    else {
+      kids.push(line(null, "Your draft (kept in this browser) started from " + (b.from === "folder" ? "this folder's pack" : b.from === "import" ? "an imported file" : b.from === "export" ? "your own export" : "the sample pieces") + (b.savedAt ? " exported " + when(b.savedAt) : "") + " on " + when(b.at) + ", fingerprint " + b.fp + (b.edited ? ", and you've edited it since." : ", unedited.")));
+      verdict = b.fp === f.fp ? line(true, b.edited ? "Same file. Your edits since aren't in the folder yet: Export to save them." : "Up to date: your draft is this folder's museum-pack.json.")
+        : line(false, "The folder's museum-pack.json is a different file from the one your draft started from" + (b.edited ? ". You've also edited your draft since, so export it first if you want to keep those edits." : "."));
+    }
+    kids.push(verdict);
+  }
+  kids.push(el("div", { class: "row", style: "margin-top:12px;flex-wrap:wrap;gap:8px" }, [
+    folderOk ? el("button", { type: "button", class: "btn primary", text: "Load the folder's pack", onclick: async () => {
+      if (b && b.edited && !confirm("Replace your draft with this folder's museum-pack.json? Your edits since " + when(b.at) + " will be lost. Export first to keep them.")) return;
+      if (!b && !confirm("Replace your draft with this folder's museum-pack.json? Export first if you want to keep the current draft.")) return;
+      await loadFolderPack(f); dlg.close();
+    } }) : null,
+    el("button", { type: "button", class: "btn", text: "Export my draft", onclick: () => $("#exportBtn").click() }),
+    el("button", { type: "button", class: "btn", text: "Reload fresh", title: "Reload this page and the engine, skipping the browser's cache", onclick: () => { const u = new URL(location.href); u.searchParams.set("fresh", Date.now()); u.searchParams.set("hard", "1"); location.replace(u.toString()); } }),
+    el("button", { type: "button", class: "btn quiet", text: "Close", onclick: () => dlg.close() }),
+  ]));
+  dlg.innerHTML = ""; kids.forEach(k => k && dlg.appendChild(k));
+}
+$("#verBtn").addEventListener("click", checkVersion);
+
 /* The preview only reloads when you press Apply (so it doesn't reshuffle with every keystroke or drag). */
 let pending = false;
 function markPending() { pending = true; const d = $("#applyDot"); if (d) d.hidden = false; }
@@ -462,6 +533,7 @@ $("#who").addEventListener("click", e => {
 });
 $("#recrate").addEventListener("click", () => { game.resetHangs(); stage.focus({ preventScroll: true }); });
 $("#rechore").addEventListener("click", () => { game.resetProgress(); stage.focus({ preventScroll: true }); });
+$("#reread").addEventListener("click", () => { game.resetRead(); stage.focus({ preventScroll: true }); });
 // Time: follow the real clock, or pin day, sunset or night to see (and record) the evening details.
 $("#timeBtn").addEventListener("click", e => {
   const order = [null, "day", "sunset", "night"], next = order[(order.indexOf(game.timeOverride) + 1) % order.length];
@@ -489,7 +561,7 @@ $("#spooky").addEventListener("click", e => {
 let tab = "art", current = "atlas";
 function setTab(t) {
   tab = t;
-  ["art", "pieces", "staff", "visitors", "shop", "rooms", "words", "ach"].forEach(k => $("#tab-" + k).setAttribute("aria-selected", t === k));
+  ["art", "pieces", "staff", "visitors", "shop", "rooms", "words", "ach", "notes"].forEach(k => $("#tab-" + k).setAttribute("aria-selected", t === k));
   $("#app").classList.toggle("no-side", t !== "art");
   render();
 }
@@ -501,9 +573,10 @@ $("#tab-shop").addEventListener("click", () => setTab("shop"));
 $("#tab-rooms").addEventListener("click", () => setTab("rooms"));
 $("#tab-words").addEventListener("click", () => setTab("words"));
 $("#tab-ach").addEventListener("click", () => setTab("ach"));
+$("#tab-notes").addEventListener("click", () => setTab("notes"));
 // Small screens: the preview sits below the editor; this jumps to it.
 $("#pvJump").addEventListener("click", () => document.querySelector(".preview").scrollIntoView({ behavior: "smooth", block: "start" }));
-function render() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "visitors") renderVisitors(); else if (tab === "shop") renderShop(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else renderPieces(); }
+function render() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "visitors") renderVisitors(); else if (tab === "shop") renderShop(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else if (tab === "notes") renderNotes(); else renderPieces(); }
 
 /* ---------- Image helpers ---------- */
 function readFile(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error("That file couldn't be read.")); r.readAsDataURL(file); }); }
@@ -757,6 +830,20 @@ function renderStaff() {
     el("p", { class: "note", style: "margin:0 0 12px", text: "Roughly the chance a case has a smudge on a given day. Visitors who stop next to a case now and then leave one more. 0% turns fingerprints off and clears them." }),
     el("label", { class: "range" }, [el("span", { text: "Amount" }), fp, fpOut]),
   ]));
+  // Pieces you haven't read yet: how they're marked in the museum, and how strongly.
+  const rsty = el("select", {}, [["sparkle", "Sparkle"], ["glow", "Soft green highlight"], ["off", "Off"]].map(([v, t]) => el("option", { value: v, text: t })));
+  rsty.value = st.readStyle || "sparkle";
+  const rs = el("input", { type: "range", min: 0, max: 100, step: 1, value: Math.round((st.readStrength === undefined ? 0.4 : st.readStrength) * 100), "aria-label": "How strong the unread mark is" });
+  const rsOut = el("output", { text: rs.value + "%" });
+  const rApply = () => { if (game && game.pack) { game.pack.settings.staff.readStyle = st.readStyle; game.pack.settings.staff.readStrength = st.readStrength; } }; // see it in the preview right away
+  rsty.addEventListener("change", () => { st.readStyle = rsty.value; rApply(); changed(); });
+  rs.addEventListener("input", () => { st.readStrength = +rs.value / 100; rsOut.textContent = rs.value + "%"; rApply(); changed(); });
+  wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
+    el("h3", { text: "Pieces you haven't read", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "Unread pieces shine a little so players can tell at a glance what's left. Reading one side of a case dims it; reading both sides (or a painting's placard) stops it. Preview options, Reset what I've read, shows them all again." }),
+    el("div", { class: "fields", style: "max-width:420px" }, [el("label", {}, [document.createTextNode("Style"), rsty])]),
+    el("label", { class: "range" }, [el("span", { text: "Strength" }), rs, rsOut]),
+  ]));
   const ps = el("input", { type: "range", min: 20, max: 100, step: 5, value: Math.round((st.patronSpeed === undefined ? 0.45 : st.patronSpeed) * 100), "aria-label": "Visitor walking speed" });
   const psOut = el("output", { text: ps.value + "%" });
   ps.addEventListener("input", () => { st.patronSpeed = +ps.value / 100; psOut.textContent = ps.value + "%"; changed(); });
@@ -915,7 +1002,7 @@ function roomItems(d) {
   (d.murals || []).forEach((m, i) => out.push({ type: "mural", i, x: m.x, y: m.y, w: m.w || 1, h: 1, label: "Mural" }));
   (d.lamps || []).forEach((a, i) => out.push({ type: "lamp", i, x: a[0], y: a[1], w: 1, h: 1, label: "Accent light" }));
   (d.arrows || []).forEach((a, i) => out.push({ type: "arrow", i, x: a.x, y: a.y || 1, w: a.w || 4, h: 2, label: "Arrow sign" }));
-  (d.decals || []).forEach((a, i) => out.push({ type: "decal", i, x: a.x, y: a.y, w: sw(a.key), h: sh(a.key), label: (GOQ.SLOT[a.key] || {}).label || a.key }));
+  (d.decals || []).forEach((a, i) => out.push({ type: "decal", i, x: a.x, y: a.y, w: a.w || sw(a.key), h: a.w ? a.h || 1 : sh(a.key), label: (GOQ.SLOT[a.key] || {}).label || a.key }));
   return out;
 }
 function itemAt(d, x, y) { return roomItems(d).find(it => x >= it.x && x < it.x + it.w && y >= it.y && y < it.y + it.h) || null; }
@@ -1246,7 +1333,7 @@ function placeAt(t) {
     if (p.kind === "spot") (d.spots = d.spots || []).push(isLayout(d) ? [t.x, wy] : t.x);
     else (d.wallArt = d.wallArt || []).push(Object.assign({ key: p.key, x: t.x, say: ["(What it says when someone looks at it.)"] }, isLayout(d) ? { y: wy } : {}));
   }
-  else if (p.kind === "decal") (d.decals = d.decals || []).push({ key: p.key, x: t.x, y: t.y });
+  else if (p.kind === "decal") (d.decals = d.decals || []).push(p.key === "rug" ? Object.assign({ key: "rug", x: t.x, y: t.y, w: 3, h: 2, pattern: "band", motif: "diamond" }, GOQ.RUG_PRESETS["Deep red"]) : { key: p.key, x: t.x, y: t.y });
   else if (p.kind === "spawn") d.spawn = [t.x, t.y, (d.spawn && d.spawn[2]) || "down"];
   else if (p.kind === "catSpot") (d.catSpots = d.catSpots || []).push([t.x, t.y]);
   else if (p.kind === "mugSpot") (d.mugSpots = d.mugSpots || []).push([t.x, t.y]);
@@ -1644,6 +1731,23 @@ function renderInspector() {
     box.appendChild(el("div", { class: "rrow" }, [field("Words (optional)", lb), field("Own color (optional)", cl)]));
     if (a.color) box.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small quiet", text: "Use the genre's color", onclick: () => ed(q => { delete q.color; }) })]));
   }
+  if (it.type === "decal" && d.decals[it.i].key === "rug") {
+    const a = d.decals[it.i], ed = fn => { snapshot(); fn(editable(R.id).decals[it.i]); roomChanged(true); renderInspector(); };
+    if (!a.w) { // an older rug: one fixed size until it's made sizable
+      box.appendChild(el("p", { class: "note", text: "This rug is the fixed-size picture from Art. Make it sizable to pick its size, border, corners and colors." }));
+      box.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small", text: "Make it sizable", onclick: () => ed(q => Object.assign(q, { w: 3, h: 2, pattern: "band", motif: "diamond" }, GOQ.RUG_PRESETS["Deep red"])) })]));
+    } else {
+      const num = (k, v) => { const n = el("input", { type: "number", min: 1, max: 24, value: v }); n.addEventListener("change", () => ed(q => { q[k] = Math.max(1, Math.min(24, +n.value || 1)); })); return n; };
+      box.appendChild(el("div", { class: "rrow" }, [field("Width (tiles)", num("w", a.w)), field("Height (tiles)", num("h", a.h || 1))]));
+      const sel = (opts, k, v) => { const s2 = el("select", {}, Object.entries(opts).map(([val, t]) => el("option", { value: val, text: t }))); s2.value = v; s2.addEventListener("change", () => ed(q => { q[k] = s2.value; })); return s2; };
+      box.appendChild(el("div", { class: "rrow" }, [field("Border", sel(GOQ.RUG_BORDERS, "pattern", a.pattern || "band")), field("Corners", sel(GOQ.RUG_CORNERS, "motif", a.motif || "diamond"), "Corners show on rugs at least 2 tiles each way.")]));
+      box.appendChild(field("Colors", el("div", { class: "row", style: "flex-wrap:wrap;gap:6px" }, Object.entries(GOQ.RUG_PRESETS).map(([name, c]) =>
+        el("button", { type: "button", class: "btn small quiet", title: "Use the " + name + " colors", onclick: () => ed(q => Object.assign(q, c)) }, [el("span", { style: "display:inline-block;width:12px;height:12px;border-radius:2px;background:" + c.field + ";box-shadow:inset 0 0 0 2px " + c.border }), document.createTextNode(name)]))), "A starting point; fine-tune below."));
+      const pick = (k, label) => { const c = el("input", { type: "color", value: a[k] || GOQ.RUG_PRESETS["Deep red"][k] }); c.addEventListener("change", () => ed(q => { q[k] = c.value; })); return field(label, c); };
+      box.appendChild(el("div", { class: "rrow" }, [pick("field", "Middle"), pick("border", "Border"), pick("accent", "Edge lines"), pick("corner", "Corners")]));
+      box.appendChild(el("p", { class: "note", text: "If you replace the Rug art (Art tab), sized rugs use that art instead: its corners stay crisp and its edges stretch, but these colors no longer apply." }));
+    }
+  }
   if (it.type === "wallArt") box.appendChild(linesBox(() => (d.wallArt[it.i].say || []).join("\n"), v => { editable(R.id).wallArt[it.i].say = v.split("\n").map(s => s.trim()).filter(Boolean); }));
   if (it.type === "visitor") {
     const v = d.visitors[it.i];
@@ -1857,6 +1961,77 @@ function renderWords() {
 }
 
 /* ---------- Achievements ---------- */
+/* ---------- Visitor notes: approve what visitors leave on pieces ----------
+   Notes live in Supabase (Staff tab) and wait there until you approve them. Sign in with a badge marked as a curator
+   (in Supabase's SQL Editor: select goq.set_curator('0001', true);). The login stays in this browser. */
+const NOTES_KEY = "goq-curator-notes";
+let notesView = "pending";
+async function sbCall(name, body) {
+  const on = draft.settings.online || {}, url = (on.url || "").replace(/\/+$/, ""), key = on.key || "";
+  const headers = { "Content-Type": "application/json", apikey: key }; if (/^eyJ/.test(key)) headers.Authorization = "Bearer " + key;
+  const res = await fetch(url + "/rest/v1/rpc/" + name, { method: "POST", headers, body: JSON.stringify(body || {}), cache: "no-store" });
+  if (!res.ok) throw new Error(res.status === 404 ? "Supabase doesn't have visitor notes yet. Run the updated supabase-setup.sql (references folder) once." : "Supabase said " + res.status + ".");
+  return res.json();
+}
+function notesLogin() { try { return JSON.parse(localStorage.getItem(NOTES_KEY) || "null"); } catch (e) { return null; } }
+async function renderNotes() {
+  const main = $("#main"); main.innerHTML = "";
+  const wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
+  wrap.appendChild(el("h2", { class: "title", text: "Visitor notes" }));
+  wrap.appendChild(el("p", { class: "note", text: "Visitors can leave a short note on a piece after reading its placard. Nothing shows in the museum until you approve it here; approved notes appear under the piece's placard (the newest six). The note's prompt and thank-you lines are in Words, Visitor notes." }));
+  const on = draft.settings.online || {};
+  if (!on.url || !on.key) { wrap.appendChild(el("p", { class: "empty", text: "Visitor notes need Supabase. Connect it in the Staff tab first; without it, the museum doesn't offer notes." })); return; }
+  const login = notesLogin();
+  if (!login) {
+    const badge = el("input", { type: "text", inputmode: "numeric", maxlength: 12, autocomplete: "off" }), key = el("input", { type: "text", maxlength: 12, autocomplete: "off", placeholder: "ABC-123" });
+    const msg = el("p", { class: "note" });
+    const go = async () => {
+      msg.textContent = "Checking...";
+      try {
+        const r = await sbCall("clock_in", { p_badge: badge.value, p_key: key.value });
+        if (!r || !r.ok) { msg.textContent = r && r.reason === "locked" ? "Too many tries. Wait 15 minutes." : "That badge number and key don't match."; return; }
+        const c = await sbCall("curator_notes", { p_token: r.token, p_status: "pending" });
+        if (!c || !c.ok) { msg.textContent = "That badge can't approve notes yet. In Supabase's SQL Editor, run: select goq.set_curator('" + r.badge + "', true);"; return; }
+        localStorage.setItem(NOTES_KEY, JSON.stringify({ token: r.token, name: r.name, badge: r.badge })); renderNotes();
+      } catch (err) { msg.textContent = err.message; }
+    };
+    wrap.appendChild(el("div", { class: "prow", style: "display:block;max-width:420px" }, [el("div", { class: "fields" }, [
+      el("label", {}, [document.createTextNode("Curator badge number"), badge]), el("label", {}, [document.createTextNode("Badge key"), key]),
+      el("div", { class: "acts" }, [el("button", { type: "button", class: "btn primary", text: "Sign in", onclick: go })]), msg])]));
+    return;
+  }
+  const bar = el("div", { class: "row", style: "flex-wrap:wrap;gap:8px;align-items:center" });
+  const list = el("div"); wrap.appendChild(bar); wrap.appendChild(list);
+  list.appendChild(el("p", { class: "note", text: "Loading..." }));
+  let r;
+  try { r = await sbCall("curator_notes", { p_token: login.token, p_status: notesView }); } catch (err) { list.innerHTML = ""; list.appendChild(el("p", { class: "empty", text: err.message })); return; }
+  if (tab !== "notes") return;
+  if (!r || !r.ok) { localStorage.removeItem(NOTES_KEY); status("Your curator login ran out. Sign in again.", true); renderNotes(); return; }
+  [["pending", "Waiting" + (r.pending ? " (" + r.pending + ")" : "")], ["approved", "Approved"], ["rejected", "Turned down"]].forEach(([k, label]) =>
+    bar.appendChild(el("button", { type: "button", class: "btn" + (notesView === k ? " primary" : " quiet"), "aria-pressed": notesView === k, text: label, onclick: () => { notesView = k; renderNotes(); } })));
+  bar.appendChild(el("button", { type: "button", class: "btn quiet", text: "Refresh", onclick: () => renderNotes() }));
+  bar.appendChild(el("span", { class: "note", style: "margin-left:auto", text: "Signed in as " + login.name }));
+  bar.appendChild(el("button", { type: "button", class: "btn quiet", text: "Sign out", onclick: () => { localStorage.removeItem(NOTES_KEY); renderNotes(); } }));
+  list.innerHTML = "";
+  if (!r.notes.length) { list.appendChild(el("p", { class: "empty", text: notesView === "pending" ? "No notes waiting. All caught up." : notesView === "approved" ? "No approved notes yet." : "Nothing turned down in the last 30 days." })); return; }
+  const act = async (n, action, card) => {
+    if (action === "delete" && !confirm("Delete this note for good?")) return;
+    try { const x = await sbCall("moderate_note", { p_token: login.token, p_id: n.id, p_action: action }); if (!x || !x.ok) throw new Error("That didn't work. Refresh and try again."); card.remove(); status(action === "approve" ? "Approved: it shows in the museum within a few minutes" : action === "reject" ? "Turned down" : "Deleted"); }
+    catch (err) { status(err.message, true); }
+  };
+  r.notes.forEach(n => {
+    const p = draft.pieces.find(q => q.id === n.piece), card = el("article", { class: "prow", style: "display:block" });
+    card.appendChild(el("p", { style: "margin:0 0 4px;font-weight:700", text: (p ? p.title : n.title || n.piece) + (p ? "" : " (no longer in your pack)") }));
+    card.appendChild(el("p", { style: "margin:0 0 6px;white-space:pre-wrap", text: "\u201c" + n.note + "\u201d" }));
+    card.appendChild(el("p", { class: "note", style: "margin:0 0 8px", text: (n.name ? "From " + n.name : "No name") + " \u00b7 " + new Date(n.at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) }));
+    const acts = el("div", { class: "acts" });
+    if (n.status !== "approved") acts.appendChild(el("button", { type: "button", class: "btn small primary", text: "Approve", onclick: () => act(n, "approve", card) }));
+    if (n.status !== "rejected") acts.appendChild(el("button", { type: "button", class: "btn small", text: n.status === "approved" ? "Take down" : "Turn down", onclick: () => act(n, "reject", card) }));
+    acts.appendChild(el("button", { type: "button", class: "btn small quiet", text: "Delete", onclick: () => act(n, "delete", card) }));
+    card.appendChild(acts); list.appendChild(card);
+  });
+}
+
 function renderAchievements() {
   const main = $("#main"); main.innerHTML = "";
   const st = draft.settings, list = st.achievements = st.achievements || JSON.parse(JSON.stringify(GOQ.SAMPLE_ACH));
@@ -2209,16 +2384,17 @@ function pieceRow(p, i, place) {
 
 /* ---------- Import and export ---------- */
 $("#exportBtn").addEventListener("click", () => {
-  download("museum-pack.json", new Blob([JSON.stringify(packOut())], { type: "application/json" }));
+  const savedAt = new Date().toISOString(), text = JSON.stringify(Object.assign(packOut(), { savedAt })); // the export date, shown by Check version
+  download("museum-pack.json", new Blob([text], { type: "application/json" })); setBase(text, "export", savedAt);
   status("Exported museum-pack.json. Put it next to museum.html on your site, or load it in the museum.");
 });
 $("#importFile").addEventListener("change", async e => {
   const f = e.target.files[0]; e.target.value = ""; if (!f) return;
   try {
-    const j = JSON.parse(await f.text());
+    const text = await f.text(), j = JSON.parse(text);
     if (!j || j.format !== GOQ.PACK_FORMAT) throw new Error("That file isn't a museum pack.");
     if ((Object.keys(draft.assets).length || draft.pieces.length) && !confirm("Replace everything here with this pack? Export first if you want to keep the current one.")) return;
-    migrateFloors(j); useDraft(j); changed({ now: true }); await game.setPack(packOut()); render(); status("Imported " + f.name);
+    migrateFloors(j); useDraft(j); changed({ now: true, keepBase: true }); setBase(text, "import", j.savedAt); await game.setPack(packOut()); render(); status("Imported " + f.name);
   } catch (err) { status(err instanceof SyntaxError ? "That file couldn't be read as JSON." : err.message, true); }
 });
 
@@ -2250,13 +2426,16 @@ function migrateFloors(raw) {
 (async function start() {
   let raw = null;
   try { raw = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); } catch (e) {}
-  if (raw) status("Restored your draft from this browser");
-  else if (/^https?:$/.test(location.protocol)) {
-    try { const r = await fetch(SITE_PACK, { cache: "no-cache" }); const j = r.ok ? await r.json() : null; if (j && j.format === GOQ.PACK_FORMAT) { raw = j; status("Loaded " + SITE_PACK + " from the site"); } } catch (e) {}
+  if (raw) {
+    status("Restored your draft from this browser");
+    folderPack().then(f => { const b = getBase(); if (!f.err && b && b.fp !== f.fp) { status("Heads up: this folder's museum-pack.json has changed since your draft started. Press Check version.", true); } });
+  } else {
+    const f = await folderPack();
+    if (!f.err) { raw = f.j; setBase(f.text, "folder", f.savedAt); status("Loaded " + SITE_PACK + " from this folder"); }
   }
-  if (!raw) { raw = { pieces: GOQ.SAMPLE_PIECES }; status("Started with the sample pieces"); }
+  if (!raw) { raw = { pieces: GOQ.SAMPLE_PIECES }; setBase("", "sample"); status("Started with the sample pieces"); }
   const moved = migrateFloors(raw);
-  useDraft(raw); if (moved) { changed({ now: true }); status("Switched your draft to the one-building layout"); }
+  useDraft(raw); if (moved) { changed({ now: true, keepBase: true }); status("Switched your draft to the one-building layout"); }
   await game.setPack(packOut());
   render();
 })();
