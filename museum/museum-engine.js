@@ -656,14 +656,15 @@ const GEN = {
   // control panel (joystick and buttons on top), purple side art. 2 frames: the screen's glow on the front edge flickers.
   arcade_cabinet: f => {
     const a = mk(16, 32), front = y => (y <= 5 ? 3 : y <= 15 ? 3 + Math.round((y - 6) * 0.25) : y <= 19 ? 0 : 3);
-    for (let y = 1; y <= 30; y++) for (let x = front(y); x <= 13; x++) px(a, x, y, 3);
-    for (let y = 1; y <= 30; y++) { const c = y <= 5 ? 6 : y >= 7 && y <= 15 ? ((y + f) % 3 ? 5 : 4) : 2; px(a, front(y), y, c); px(a, front(y) + 1, y, y <= 5 || (y >= 7 && y <= 15) ? c : 2); } // the front edge: lit marquee, the screen's glow, molding
-    rect(a, 12, 1, 2, 30, 2);
-    for (let i = 0; i < 9; i++) { px(a, 6 + Math.round(i * 0.6), 27 - i * 2, 8); px(a, 7 + Math.round(i * 0.6), 27 - i * 2, 8); px(a, 7 + Math.round(i * 0.6), 26 - i * 2, 7); } // a stripe of side art
-    rect(a, 9, 3, 3, 2, 6); // a little logo
-    rect(a, 0, 16, 5, 1, 3); px(a, 1, 14, 7); px(a, 1, 15, 4); px(a, 3, 15, 8); // joystick and a button on the control panel
-    rect(a, 3, 22, 1, 4, 6); rect(a, 3, 31, 11, 1, 1);
-    return outline(a);
+    for (let y = 1; y <= 31; y++) for (let x = front(y); x <= 13; x++) px(a, x, y, 3);
+    outline(a, 4).forEach((row, y) => row.forEach((v, x) => { a[y][x] = v; })); // a near-black outline (color 4), then the details inside it
+    for (let y = 2; y <= 30; y++) { const c = y <= 5 ? 6 : y >= 7 && y <= 15 ? ((y + f) % 3 ? 5 : 4) : 2; if (a[y][front(y) + 1] !== 4) px(a, front(y) + 1, y, c); if (y <= 15 && a[y][front(y) + 2] !== 4) px(a, front(y) + 2, y, c === 4 ? 5 : c); } // the front edge: lit marquee, the screen's glow, molding
+    rect(a, 11, 2, 2, 29, 2);
+    for (let i = 0; i < 9; i++) { px(a, 6 + Math.round(i * 0.5), 27 - i * 2, 8); px(a, 7 + Math.round(i * 0.5), 27 - i * 2, 8); px(a, 7 + Math.round(i * 0.5), 26 - i * 2, 7); } // a stripe of side art
+    rect(a, 8, 3, 2, 2, 6); // a little logo
+    px(a, 1, 15, 7); px(a, 1, 14, 7); px(a, 3, 16, 8); // joystick and a button on the control panel
+    rect(a, 4, 22, 1, 4, 6);
+    return a;
   },
   // The curator's office: spaceship-panel walls (2 frames: a few lights blink), cluttered desk, white PC with a purple glow.
   ship_wall_upper: f => {
@@ -2972,8 +2973,13 @@ class Game {
 .gt-list-cap{font-size:calc(5.5px * var(--s));color:#505068;margin-top:calc(2px * var(--s));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gt-rd-clip video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s;pointer-events:none}
 .gt-rd-clip iframe{position:absolute;left:-12%;top:-12%;width:124%;height:124%;border:0;opacity:0;transition:opacity .5s;pointer-events:none}
-.gt-reader.clip .gt-rd-head{grid-area:head;flex-direction:column;align-items:stretch;gap:calc(3px * var(--s));border-bottom:0;padding:calc(4px * var(--s)) 0 0}
-.gt-reader.clip .gt-rd-t{flex:none}
+.gt-reader.clip .gt-rd-head{grid-area:head;flex-direction:column;align-items:stretch;gap:calc(2px * var(--s));border-bottom:0;padding:calc(3px * var(--s)) 0 0}
+.gt-reader.clip .gt-rd-t{flex:none;font-size:calc(5.5px * var(--s));line-height:1.25}
+.gt-reader.clip .gt-rd-t > :first-child,.gt-reader.clip .gt-rd-t{overflow-wrap:anywhere}
+.gt-reader.clip .gt-rd-tt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden} /* the pixel font is wide: titles get two lines at most */
+.gt-reader.clip .gt-rd-t small{font-size:calc(4.5px * var(--s));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gt-reader.clip .gt-rd-links a,.gt-reader.clip .gt-rd-links button.note{font-size:calc(4.5px * var(--s));padding:calc(2px * var(--s)) calc(2px * var(--s))}
+.gt-reader.clip .gt-rd-links{gap:calc(2px * var(--s))}
 .gt-reader.clip .gt-rd-links{flex-direction:row;flex-wrap:wrap;margin-left:0}
 .gt-reader.clip .gt-rd-links > *{flex:1}
 .gt-reader.clip .gt-rd-body{grid-area:body;height:calc(110px * var(--s));margin-top:0;font-size:calc(6.5px * var(--s))}
@@ -3101,7 +3107,7 @@ class Game {
       if (clip) this.makeClip(fr, clip);
     }
     else if (spec.img) { const im = document.createElement("img"); im.src = spec.img; im.alt = ""; if (spec.imgClass) im.className = spec.imgClass; head.appendChild(im); }
-    const t = document.createElement("div"); t.className = "gt-rd-t"; t.textContent = spec.title || ""; if (spec.sub) { const sm = document.createElement("small"); sm.textContent = spec.sub; t.appendChild(sm); }
+    const t = document.createElement("div"); t.className = "gt-rd-t"; const tt = document.createElement("span"); tt.className = "gt-rd-tt"; tt.textContent = spec.title || ""; t.appendChild(tt); if (spec.sub) { const sm = document.createElement("small"); sm.textContent = spec.sub; t.appendChild(sm); }
     if (spec.pick) (framed ? box.querySelector(".gt-rd-clip") : t).appendChild(this.pickTag()); head.appendChild(t); // on a framed placard, the pick tag sits on the screen's corner
     const links = (spec.links || []).filter(l => l[0]);
     if (links.length || spec.note) {
@@ -4945,13 +4951,28 @@ class Game {
     const sub = this.photoSubject(), ph = this.progress.photos || (this.progress.photos = []);
     { const [dx, dy] = DIRS[this.player.dir], n = this.room.npcs.find(q => q.x === this.player.x + dx && q.y === this.player.y + dy && !q.leaving);
       const d = n && this.photoReact(n); if (d) sub.desc = d; }
-    ph.unshift({ desc: sub.desc, piece: sub.piece || null, room: (this.room.zoneAt && this.zone ? this.zone.name : this.room.name).replace(/\s+/g, " "), /* the wing or hall, in the museum */ thumb: sub.thumb || null, tod: this.tod(), seed: (Math.random() * 1e9) | 0 });
+    const seed = (Math.random() * 1e9) | 0, shot = sub.piece ? null : this.snapshot(seed); // what's really on screen (a piece keeps its art, close up)
+    ph.unshift({ desc: sub.desc, piece: sub.piece || null, room: (this.room.zoneAt && this.zone ? this.zone.name : this.room.name).replace(/\s+/g, " "), /* the wing or hall, in the museum */ thumb: sub.thumb || null, shot, tod: this.tod(), seed });
     if (ph.length > 40) ph.length = 40;
     this.progress.tally.photos = (this.progress.tally.photos || 0) + 1;
     this.saveProgress(); this.phoneT = 34;
     if (!this.tut) this.showLoc("Photo saved");
     else if (!this.tut.photoTold) { this.tut.photoTold = true; setTimeout(() => { if (this.mode === "walk") this.say(this.tx("tut.photo")); }, 450); } // once per run, then no toast
     if (/napping/.test(sub.desc)) this.quest("catPhoto");
+  }
+  /* The photo itself: a little crop of the screen around what you're facing (36×27), kept with the photo. */
+  snapshot(seed) {
+    try {
+      const p = this.player, [dx, dy] = DIRS[p.dir], cx = (p.x + dx) * T + 8 + dx * 4 - this.camX, cy = (p.y + dy) * T + 4 + dy * 4 - this.camY;
+      const sx = Math.max(0, Math.min(SW - 36, Math.round(cx - 18))), sy = Math.max(0, Math.min(SH - 27, Math.round(cy - 14)));
+      const c = document.createElement("canvas"); c.width = 36; c.height = 27; c.getContext("2d").drawImage(this.canvas, sx, sy, 36, 27, 0, 0, 36, 27);
+      (this.shotImgs = this.shotImgs || {})[seed] = c; return c.toDataURL("image/png");
+    } catch (e) { return null; }
+  }
+  shotImg(ph) { // the snapshot as an image (decoded once; the album redraws when it's ready)
+    const all = this.shotImgs = this.shotImgs || {}; let im = all[ph.seed];
+    if (!im) { im = all[ph.seed] = new Image(); im.onload = () => { for (const k in this.cache) if (k.startsWith("thumb|")) delete this.cache[k]; if (this.mode === "album") this.renderAlbum(); }; im.src = ph.shot; }
+    return im.width && (im.complete === undefined || im.complete) ? im : null;
   }
   /* ----- the Start menu: photos, save, save and quit ----- */
   openMenu() {
@@ -5009,8 +5030,11 @@ class Game {
     const c = document.createElement("canvas"); c.width = 24; c.height = 18; const x = c.getContext("2d"); x.imageSmoothingEnabled = false;
     const th = ph.thumb || (ph.piece ? { piece: ph.piece } : null);
     x.fillStyle = "#d8d0c4"; x.fillRect(0, 0, 24, 18);
+    const shot = ph.shot && !ph.piece ? this.shotImg(ph) : null;
+    if (ph.shot && !ph.piece && !shot) return c; // still decoding: drawn properly once it's ready (not cached)
     const tileBg = key => { if (!SLOT[key]) return; const img = this.sheet(key); for (let yy = 0; yy < 18; yy += 16) for (let xx = 0; xx < 24; xx += 16) x.drawImage(img, 0, 0, 16, 16, xx - 4, yy - 7, 16, 16); };
-    if (th && th.piece) {
+    if (shot) { x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; x.drawImage(shot, 0, 0, 36, 27, 0, 0, 24, 18); x.imageSmoothingEnabled = false; } // the real snapshot
+    else if (th && th.piece) {
       const p = this.pack.pieces.find(q => q.id === th.piece);
       if (p) { const art = this.pieceArt(p), iw = art.naturalWidth || art.width, ih = art.naturalHeight || art.height; x.imageSmoothingEnabled = iw > 48; x.drawImage(art, 0, 0, iw, ih, 0, 0, 24, 18); x.imageSmoothingEnabled = false; }
     } else if (th && th.slot && SLOT[th.slot]) {
@@ -5024,7 +5048,7 @@ class Game {
       }
     } else { x.fillStyle = "#a8a098"; x.fillRect(4, 4, 16, 10); }
     if (th && th.blur) { x.globalAlpha = 0.45; x.drawImage(c, 1, 0); x.drawImage(c, -1, 1); x.globalAlpha = 1; }
-    if (th && th.dark) { x.fillStyle = "rgba(10,8,24,.7)"; x.fillRect(0, 0, 24, 18); }
+    if (th && th.dark && !shot) { x.fillStyle = "rgba(10,8,24,.7)"; x.fillRect(0, 0, 24, 18); } // a snapshot already has the dark in it
     // Like a real snapshot: never quite centered, the light of the hour, darker corners, a little grain.
     const sd = ph.seed || strSeed(ph.desc || ""), ox = (sd % 3) - 1, oy = ((sd >> 3) % 3) - 1;
     if (ox || oy) { const cp = document.createElement("canvas"); cp.width = 24; cp.height = 18; cp.getContext("2d").drawImage(c, 0, 0); x.drawImage(cp, ox, oy); }
@@ -6239,7 +6263,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-02 keypad and arcade";
+const VERSION = "2026-11-03 photo fix";
 window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

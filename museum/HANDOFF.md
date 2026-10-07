@@ -458,6 +458,11 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Photo, placard and cabinet fixes (2026-11-03).**
+- **Photos are real snapshots:** a 36×27 crop of the screen around what you're facing (`snapshot`), saved with the photo as a small PNG (`ph.shot`, about 1 KB, so 40 photos is about 40 KB). Pieces still show their art close up. Older photos keep the old sprite-style picture.
+- **Placards with the real pixel font:** the earlier tests used a fallback font, but Press Start 2P is far wider. On framed placards the title is now 5.5px and at most two lines (`.gt-rd-tt`), the developer is one line with an ellipsis, and the buttons are 4.5px. Every piece was checked at 1.5x to 5x with the real font, and none overflow. To check layouts, test with that font loaded.
+- **Cabinet outline:** `outline()` paints palette color 3 by default, which is a light purple in the arcade's palette. The cabinet now outlines with color 4 (near black) and draws its lit front edge inside the outline.
+
 **Keypad, wooden doors, free arcade (2026-11-02).**
 - **Office keypad:** on B1 Storage's wall beside the office door (`keypadAt: [0, 4]`, a new room key, placeable and movable in Rooms; art *Office keypad*, 3 frames: dark before closing, red after hours, green once open). Using it works like the door.
 - **Side doors:** every door in a side wall (`doorway_side`) is now a wooden door with a gold handle, mirrored on right-hand walls so the handle faces the room.
