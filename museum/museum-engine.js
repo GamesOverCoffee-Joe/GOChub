@@ -66,6 +66,17 @@ const PAL = {
   bulbs:   [null, "#5a4020", "#ffd060", "#fff8e0", "#3a2a18"],
   hposter: [null, "#3a2a20", "#16121a", "#3a2030", "#22303a"],
   aisle:   [null, "#3a2a18", "#ffc860", "#fff2c8"],
+  ship:    [null, "#232a38", "#36405a", "#56627c", "#151a24", "#e04040", "#5a1c1c", "#40d8a8", "#163a30", "#8a96ac"],
+  odesk:   [null, "#6a4a30", "#4a3220", "#2a1c12", "#141418", "#2e2e38", "#c8c8d0", "#e8dcc0", "#8a5a30", "#f0d020", "#f4f4f8"],
+  tower:   [null, "#ececf2", "#c4c4d0", "#8a8a98", "#9a5cff", "#d4b8ff", "#4a4a56"],
+  otv:     [null, "#121216", "#26262e", "#3c3c48", "#1c2a3a", "#4a88b8", "#a0d8f0", "#e05050"],
+  oshelf:  [null, "#5a3a24", "#3a2414", "#24160c", "#c84a3a", "#3a6ac8", "#e0b040", "#4a9a5a", "#9a5ac8", "#e8e0d0"],
+  ochair:  [null, "#24242c", "#3c3c48", "#5a5a68", "#141418"],
+  ocam:    [null, "#18181c", "#2e2e36", "#4a4a54", "#8a8a96", "#0c0c10"],
+  osoft:   [null, "#f4f0e6", "#2a2a30", "#5a5a64", "#d8d0c0"],
+  odeck:   [null, "#6a4a30", "#4a3220", "#1c1c22", "#34445e", "#6a7a9a", "#8a8a96"],
+  clutter: [null, "#2a2a32", "#4a4a56", "#d4d4dc", "#ece4d4", "#7a4a28", "#f0d020", "#b89810", "#ffffff", "#3a7ae0"],
+  joe:     [null, "#acd6ee", "#82b6d6", "#5a8cae", "#34343c", "#9ca2aa", "#6c7078", "#e8fbff", "#5a6a7a", "#6a4028"],
   ledsign: [null, "#0a080c", "#2a2630", "#55505e", "#1c0808"],
   arcade:  [null, "#1a1424", "#3a2a5a", "#5a48a0", "#101018", "#40d0c0", "#f0c040", "#e05050", "#5878c8"],
   mags:    [null, "#f8f0e0", "#8a5a38", "#2a160c", "#e05050", "#5878c8", "#f0c040", "#58a868"],
@@ -639,6 +650,107 @@ const GEN = {
     rect(a, 2, 30, 12, 1, 1);
     return outline(a);
   },
+  // The curator's office: spaceship-panel walls (2 frames: a few lights blink), cluttered desk, white PC with a purple glow.
+  ship_wall_upper: f => {
+    const a = mk(16, 16);
+    rect(a, 0, 0, 16, 16, 2); rect(a, 0, 0, 16, 1, 3); rect(a, 15, 0, 1, 16, 4); px(a, 2, 2, 9); px(a, 12, 2, 9);
+    rect(a, 3, 5, 7, 5, 4); rect(a, 4, 6, 5, 3, 8); rect(a, 4, 6 + f, 3 + f, 1, 7); px(a, 8, 8 - f, 7); // a tiny screen
+    px(a, 12, 6, f ? 5 : 6); px(a, 12, 8, f ? 6 : 5); px(a, 13, 7, 5); // little red buttons
+    return a;
+  },
+  ship_wall_lower: f => {
+    const a = mk(16, 16);
+    rect(a, 0, 0, 16, 16, 1); rect(a, 0, 0, 16, 1, 4); rect(a, 15, 0, 1, 16, 4);
+    rect(a, 2, 3, 11, 3, 2); px(a, 3, 4, 5); px(a, 5, 4, f ? 7 : 8); px(a, 7, 4, f ? 6 : 5); px(a, 9, 4, 7); px(a, 11, 4, 6);
+    for (let y = 9; y < 14; y += 2) rect(a, 3, y, 9, 1, 4); // a vent
+    return a;
+  },
+  office_desk: () => {
+    const a = mk(48, 32);
+    for (const x0 of [5, 25]) { rect(a, x0, 1, 17, 12, 5); rect(a, x0 + 1, 2, 15, 10, 4); px(a, x0 + 3, 3, 5); rect(a, x0 + 7, 13, 3, 2, 5); } // two monitors, off
+    rect(a, 0, 15, 48, 6, 1); rect(a, 0, 15, 48, 1, 2); rect(a, 0, 21, 48, 2, 3);
+    rect(a, 16, 17, 15, 3, 6); rect(a, 34, 18, 3, 2, 6); // keyboard and mouse
+    rect(a, 2, 11, 4, 7, 7); rect(a, 2, 15, 4, 3, 8); rect(a, 4, 8, 1, 4, 10); // a half-finished iced coffee
+    rect(a, 41, 12, 4, 6, 9); rect(a, 41, 14, 4, 1, 3); // a can of yerba mate
+    rect(a, 9, 16, 3, 4, 7); rect(a, 9, 18, 3, 2, 8); // another one
+    rect(a, 1, 23, 3, 9, 2); rect(a, 44, 23, 3, 9, 2); rect(a, 30, 22, 12, 7, 2); rect(a, 35, 25, 2, 1, 3);
+    return a;
+  },
+  pc_tower: () => {
+    const a = mk(16, 32);
+    rect(a, 3, 6, 10, 25, 1); rect(a, 11, 6, 2, 25, 2); rect(a, 3, 6, 10, 1, 3); rect(a, 3, 30, 10, 1, 3);
+    rect(a, 4, 8, 1, 20, 4); px(a, 4, 12, 5); px(a, 4, 20, 5); // the purple light
+    for (let y = 10; y < 16; y += 2) rect(a, 6, y, 4, 1, 6);
+    px(a, 9, 25, 4); rect(a, 4, 31, 2, 1, 6); rect(a, 10, 31, 2, 1, 6);
+    return a;
+  },
+  // The office TV on a low stand: 2 frames (off, on). The picture area is 26×15 at (3, 4); clips play there when it's on.
+  office_tv: f => {
+    const a = mk(32, 32);
+    rect(a, 1, 2, 30, 19, 2); rect(a, 3, 4, 26, 15, f ? 4 : 1);
+    if (!f) { px(a, 6, 6, 2); px(a, 7, 5, 2); px(a, 28, 19, 7); } else for (let x = 3; x < 29; x++) px(a, x, 4 + ((x * 7) % 15), 5);
+    rect(a, 14, 21, 4, 3, 3); rect(a, 2, 24, 28, 7, 3); rect(a, 2, 24, 28, 1, 2); rect(a, 5, 26, 9, 3, 2); rect(a, 18, 26, 9, 3, 2);
+    return a;
+  },
+  office_shelf: () => {
+    const a = mk(32, 32);
+    rect(a, 0, 0, 32, 32, 1); rect(a, 2, 2, 28, 28, 3);
+    for (const y0 of [2, 11, 20]) {
+      let x = 2; while (x < 29) { const w = 2 + (hash(x, y0) % 2), h = 6 + (hash(y0, x) % 3); rect(a, x, y0 + 8 - h, Math.min(w, 30 - x), h, 4 + (hash(x * 3, y0) % 6)); x += w + (hash(x, y0 * 2) % 4 === 0 ? 1 : 0); }
+      rect(a, 1, y0 + 8, 30, 1, 2);
+    }
+    rect(a, 0, 29, 32, 3, 2);
+    return a;
+  },
+  office_chair: () => { const a = mk(16, 16); rect(a, 4, 1, 8, 7, 2); rect(a, 5, 2, 6, 5, 3); rect(a, 3, 8, 10, 3, 1); rect(a, 7, 11, 2, 3, 4); rect(a, 3, 14, 10, 1, 4); px(a, 3, 15, 4); px(a, 12, 15, 4); return a; },
+  camera_tripod: () => {
+    const a = mk(16, 32);
+    rect(a, 4, 6, 9, 6, 1); rect(a, 1, 7, 4, 4, 4); rect(a, 2, 8, 2, 2, 5); rect(a, 6, 4, 5, 2, 2); rect(a, 12, 5, 3, 3, 3); // the camera, facing the desk
+    rect(a, 7, 12, 2, 3, 3);
+    for (let i = 0; i < 16; i++) { px(a, 8 - Math.round(i * 0.35), 15 + i, 2); px(a, 8, 15 + i, 3); px(a, 8 + Math.round(i * 0.35), 15 + i, 2); }
+    return a;
+  },
+  softbox: () => {
+    const a = mk(16, 32);
+    rect(a, 1, 2, 14, 11, 2); rect(a, 2, 3, 12, 9, 1); rect(a, 2, 11, 12, 1, 4);
+    rect(a, 7, 13, 2, 15, 3); for (let i = 0; i < 4; i++) { px(a, 7 - i, 28 + i, 3); px(a, 8 + i, 28 + i, 3); }
+    return a;
+  },
+  deck_table: () => {
+    const a = mk(16, 16);
+    rect(a, 1, 7, 14, 3, 1); rect(a, 1, 10, 14, 1, 2); rect(a, 2, 11, 2, 5, 2); rect(a, 12, 11, 2, 5, 2);
+    rect(a, 2, 3, 12, 5, 3); rect(a, 5, 4, 6, 3, 4); px(a, 6, 5, 5); px(a, 3, 5, 6); px(a, 12, 5, 6); // a Steam Deck
+    return a;
+  },
+  floor_controllers: () => {
+    const a = mk(16, 16);
+    rect(a, 2, 4, 6, 3, 1); px(a, 2, 7, 1); px(a, 7, 7, 1); px(a, 3, 5, 2); px(a, 6, 5, 9);
+    rect(a, 9, 10, 6, 3, 3); px(a, 9, 13, 3); px(a, 14, 13, 3); px(a, 10, 11, 1); px(a, 13, 11, 1);
+    return a;
+  },
+  iced_coffees: () => {
+    const a = mk(16, 16);
+    rect(a, 3, 5, 4, 7, 4); rect(a, 3, 9, 4, 3, 5); rect(a, 5, 2, 1, 4, 8);
+    rect(a, 10, 9, 4, 6, 4); rect(a, 10, 13, 4, 2, 5); rect(a, 12, 6, 1, 4, 8);
+    return a;
+  },
+  mate_can: () => { const a = mk(16, 16); rect(a, 4, 9, 8, 4, 6); rect(a, 4, 12, 8, 1, 7); rect(a, 4, 10, 8, 1, 7); px(a, 3, 10, 7); px(a, 3, 11, 7); return a; },
+  // Joe: a crochet robot. A controller for a head (d-pad and buttons for eyes) floating over a mug of coffee, a little cup in
+  // his right hand, the mug's handle for his left arm, skinny legs, blocky grey feet. 2 frames: the antenna lights up.
+  joe: f => {
+    const a = mk(16, 16);
+    px(a, 8, 0, f ? 7 : 8); px(a, 8, 1, 6); px(a, 8, 2, 6);
+    rect(a, 4, 3, 8, 1, 1); rect(a, 3, 4, 10, 3, 1); rect(a, 4, 7, 3, 1, 2); rect(a, 9, 7, 3, 1, 2); px(a, 3, 6, 3); px(a, 12, 6, 3); rect(a, 4, 3, 1, 1, 2); px(a, 11, 3, 2);
+    px(a, 5, 4, 4); px(a, 4, 5, 4); px(a, 5, 5, 4); px(a, 6, 5, 4); px(a, 5, 6, 4); // d-pad eye
+    px(a, 10, 4, 4); px(a, 9, 5, 4); px(a, 11, 5, 4); px(a, 10, 6, 4);              // button eye
+    px(a, 7, 6, 4); px(a, 8, 6, 4);
+    rect(a, 5, 9, 6, 4, 2); rect(a, 6, 9, 4, 1, 9); rect(a, 5, 12, 6, 1, 3); px(a, 6, 10, 1);   // the mug
+    px(a, 11, 10, 2); px(a, 12, 10, 2); px(a, 12, 11, 2); px(a, 11, 12, 2);                 // its handle: his left arm
+    px(a, 4, 10, 3); px(a, 3, 10, 3); rect(a, 1, 9, 2, 3, 5); px(a, 1, 9, 9);              // his right arm and a little cup
+    px(a, 6, 13, 6); px(a, 6, 14, 6); px(a, 9, 13, 6); px(a, 9, 14, 6);
+    rect(a, 5, 15, 3, 1, 5); rect(a, 8, 15, 3, 1, 5);
+    return a;
+  },
   // A movie poster on the theater hallway's side wall, seen edge on in the dark: a thin frame, two tiles tall (left wall; mirrored on the right).
   hall_poster: () => {
     const a = mk(16, 32);
@@ -933,6 +1045,20 @@ const SLOTS = [
   { key: "marquee_lights", label: "Marquee bulbs", group: "Screening nook", w: 32, h: 32, frames: 2, fps: 3, pal: "bulbs", gen: GEN.marquee_lights, note: "2 frames (64×32), drawn over the doorway and lit even in the dark. Every other bulb lit, so they chase." },
   { key: "led_sign", label: "NOW PLAYING board", group: "Screening nook", w: 64, h: 12, pal: "ledsign", gen: GEN.led_sign, note: "The black board, four tiles wide and one line tall, centered on the wall. The red letters scroll across it from right to left (rows 3 to 7, between x 3 and 60)." },
   { key: "arcade_cabinet", label: "Arcade cabinet", group: "Gift shop and café", w: 16, h: 32, frames: 2, fps: 2, pal: "arcade", gen: GEN.arcade_cabinet, note: "2 frames (32×32), the attract screen flickering. Two tiles tall. Plays the games that have a Play link." },
+  { key: "ship_wall_upper", label: "Office wall, upper row", group: "Curator's office", w: 16, h: 16, frames: 2, fps: 1, pal: "ship", gen: GEN.ship_wall_upper, note: "Spaceship panels. 2 frames (32×16): a few little lights blink between them." },
+  { key: "ship_wall_lower", label: "Office wall, lower row", group: "Curator's office", w: 16, h: 16, frames: 2, fps: 1, pal: "ship", gen: GEN.ship_wall_lower, note: "2 frames (32×16): the control strip blinks a little." },
+  { key: "office_desk", label: "Curator's desk", group: "Curator's office", w: 48, h: 32, pal: "odesk", gen: GEN.office_desk, note: "Three tiles wide, two tall: two monitors (off), keyboard, iced coffees, a can of yerba mate." },
+  { key: "pc_tower", label: "White PC tower", group: "Curator's office", w: 16, h: 32, pal: "tower", gen: GEN.pc_tower, note: "Two tiles tall. A soft purple glow is added around it in the dark." },
+  { key: "office_tv", label: "Office TV", group: "Curator's office", w: 32, h: 32, frames: 2, pal: "otv", gen: GEN.office_tv, note: "2 frames (64×32): off, on. When it's on, gameplay clips play over the picture area, 26×15 at (3, 4)." },
+  { key: "office_shelf", label: "Bookshelf", group: "Curator's office", w: 32, h: 32, pal: "oshelf", gen: GEN.office_shelf, note: "Two tiles wide and tall. The books on it are in Words, Curator's office." },
+  { key: "office_chair", label: "Office chair", group: "Curator's office", w: 16, h: 16, pal: "ochair", gen: GEN.office_chair, note: "Seen from behind, facing the desk." },
+  { key: "camera_tripod", label: "Camera on a tripod", group: "Curator's office", w: 16, h: 32, pal: "ocam", gen: GEN.camera_tripod, note: "Two tiles tall, pointed at the desk." },
+  { key: "softbox", label: "Studio light (soft box)", group: "Curator's office", w: 16, h: 32, pal: "osoft", gen: GEN.softbox, note: "Two tiles tall." },
+  { key: "deck_table", label: "Small table with a Steam Deck", group: "Curator's office", w: 16, h: 16, pal: "odeck", gen: GEN.deck_table },
+  { key: "floor_controllers", label: "Controllers on the floor", group: "Curator's office", w: 16, h: 16, pal: "clutter", gen: GEN.floor_controllers, note: "Floor clutter: walk over it." },
+  { key: "iced_coffees", label: "Half-finished iced coffees", group: "Curator's office", w: 16, h: 16, pal: "clutter", gen: GEN.iced_coffees, note: "Floor clutter: walk over it." },
+  { key: "mate_can", label: "Can of yerba mate", group: "Curator's office", w: 16, h: 16, pal: "clutter", gen: GEN.mate_can, note: "Floor clutter: walk over it." },
+  { key: "joe", label: "Joe (crochet robot)", group: "Curator's office", w: 16, h: 16, frames: 2, fps: 1, pal: "joe", gen: GEN.joe, note: "2 frames (32×16): his antenna lights up. Sits in the office, and now and then turns up somewhere in the museum." },
   { key: "hall_poster", label: "Theater hallway poster", group: "Screening nook", w: 16, h: 32, pal: "hposter", gen: GEN.hall_poster, note: "On the hallway's left wall, seen edge on (mirrored for the right wall). Two tiles tall. It's dark in there; keep it dim." },
   { key: "aisle_light", label: "Hallway floor light", group: "Screening nook", w: 4, h: 3, pal: "aisle", gen: GEN.aisle_light, note: "A little light by the wall along the theater hallway's floor (mirrored on the right). Drawn over the dark, with a soft glow." },
   { key: "theater_screen", label: "Screening nook screen", group: "Screening nook", w: 96, h: 48, frames: 2, pal: "screen", gen: GEN.theater_screen, note: "2 frames (192×48), six tiles wide and three tall (both wall rows and the wall cap above). The picture is the 80×45 window at (8, 2): the episode playing this hour shows there, muted, when it can; otherwise it flickers softly between the frames." },
@@ -1210,7 +1336,8 @@ function normalizePack(p) {
   // Genres: the museum's rooms (Action, Puzzle...), each welcoming some mindsets. A piece's genre is set by hand, or follows its mindsets.
   const genres = normalizeGenres(p.settings && p.settings.genres, mids), gids = new Set(genres.map(g => g.id));
   pieces.forEach(pc => { if (!gids.has(pc.genre)) pc.genre = ""; if (!gids.has(pc.blend) || pc.blend === pc.genre) pc.blend = ""; });
-  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, mindsets, curious, life, genres }, samples: !Array.isArray(p.pieces) };
+  const office = { code: String((p.settings && p.settings.office && p.settings.office.code) || "").replace(/\D/g, "").slice(0, 8) || "40917" }; // the keypad code, the same for everyone
+  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, mindsets, curious, life, genres, office }, samples: !Array.isArray(p.pieces) };
 }
 /* The curator's "Skip to tomorrow" moves every daily system forward together. */
 let DAY_SHIFT = 0;
@@ -1341,7 +1468,7 @@ const ROOMS = {
       "#vvvvvvvvvvvvv#",
       "#.............#",
       "#.............#",
-      "#.............H",
+      "H.............H",
       "#.............#",
       "#.............#",
       "#.............#",
@@ -1361,7 +1488,7 @@ const ROOMS = {
       { key: "trash_can", x: 4, y: 3, event: { trash: true } },
       { key: "someones_pc", x: 12, y: 3, event: { pc: true } },
     ],
-    events: [{ x: 14, y: 5, warp: ["lobby", 13, 5, "left"] }],
+    events: [{ x: 14, y: 5, warp: ["lobby", 13, 5, "left"] }, { x: 0, y: 5, officeDoor: true }],
     light: { dim: 0.35, spots: 0 },
     catSpots: [[12, 6]],
     visitors: [{ sheet: "shop_staff", x: 7, y: 7, still: true, staff: true, role: "conservator", lines: [
@@ -1397,6 +1524,40 @@ const ROOMS = {
     ],
     events: [{ x: 7, y: 9, warp: ["lobby", 12, 3, "down"] }],
     light: { dim: 0, spots: 0 },
+    visitors: [],
+  },
+  // The curator's office: off B1 Storage, behind a keypad. Where the host is when they're "working". A bit of a mess.
+  office: {
+    name: "Curator's Office",
+    art: { top: "staff_wall_top", upper: "ship_wall_upper", lower: "ship_wall_lower", floor: "carpet_floor" },
+    tint: { floor: "#3a3450" },
+    map: [
+      "##########",
+      "#^^^^^^^^#",
+      "#vvvvvvvv#",
+      "#........#",
+      "#........#",
+      "#........H",
+      "#........#",
+      "#........#",
+      "##########",
+    ],
+    spawn: [8, 5, "left"],
+    props: [
+      { key: "office_shelf", x: 1, y: 4, tall: true, blockTop: true, event: { books: true } },
+      { key: "office_desk", x: 3, y: 4, tall: true, blockTop: true, event: { officePc: true } },
+      { key: "pc_tower", x: 6, y: 4, tall: true, blockTop: true, event: { say: "office.tower" } },
+      { key: "office_tv", x: 7, y: 4, tall: true, blockTop: true, event: { officeTv: true } },
+      { key: "office_chair", x: 4, y: 5, sit: "up" },
+      { key: "joe", x: 1, y: 7, event: { joeTalk: true } },
+      { key: "deck_table", x: 5, y: 7, event: { say: "office.deck" } },
+      { key: "camera_tripod", x: 6, y: 7, tall: true, event: { say: "office.camera" } },
+      { key: "softbox", x: 8, y: 7, tall: true, event: { say: "office.light" } },
+    ],
+    decals: [{ key: "floor_controllers", x: 2, y: 5 }, { key: "iced_coffees", x: 6, y: 5 }, { key: "mate_can", x: 3, y: 6 }, { key: "floor_controllers", x: 7, y: 6 }, { key: "iced_coffees", x: 2, y: 7 }, { key: "floor_controllers", x: 4, y: 7 }],
+    colorGlows: [[6, 4, "#9a5cff", 22]],
+    events: [{ x: 9, y: 5, warp: ["storage", 1, 5, "right"] }],
+    light: { dim: 0.12, spots: 0 },
     visitors: [],
   },
   // The screening nook: a little theater off the café's east hallway. Sit down to watch an episode on the big screen.
@@ -1591,6 +1752,23 @@ const TEXT = {
   "screen.marquee":    { g: "Screening nook", l: "The red LED sign out front, before the title (letters, numbers and : - . ! ? ' & , / only)", v: [["NOW PLAYING:"]] },
   "screen.sign":       { g: "Screening nook", l: "Looking at the LED sign out front ({title}: what's playing this hour)", v: [["NOW PLAYING: {title}.", "It changes every hour. The sign is very proud of this."]] },
   "screen.enter":      { g: "Screening nook", l: "The little notice walking in ({title})", v: [["Now playing: {title}"]] },
+  "office.locked":     { g: "Curator's office", l: "The office door's keypad before closing (it only works after hours)", v: [["[Keypad on the office door is dark: hint that it only works after the museum is closed, and that the code is somewhere only a real fan would find it]"]] },
+  "office.keypad":     { g: "Curator's office", l: "The keypad's title, after hours", v: [["KEYPAD"]] },
+  "office.wrong":      { g: "Curator's office", l: "Wrong code on the keypad", v: [["[Wrong code: the keypad buzzes]"]] },
+  "office.open":       { g: "Curator's office", l: "The right code: the office opens for the first time", v: [["[The right code: the door to the curator's office opens for the first time]"]] },
+  "office.digit":      { g: "Curator's office", l: "A wing's touch screen once every piece in it is read front and back ({digit}: this wing's digit, {room}: the wing)", v: [["[Note from the curator on the {room} touch screen: you've read everything here, and this wing's digit is {digit}]"]] },
+  "office.callsheet":  { g: "Curator's office", l: "The call sheet on the staff corkboard, after 5 visitors loved your picks (the wings are listed after it, in the order of the code)", v: [["[Call sheet pinned to the corkboard: the order the wings were shot in. Hint that it's the order of the code]"]] },
+  "office.joe":        { g: "Curator's office", l: "Joe, the crochet robot, when you're clocked in ({name}: your badge name; picks one at random)", v: [["[Joe talks to you by name: {name}]"]] },
+  "office.joeAnon":    { g: "Curator's office", l: "Joe, when you're not clocked in (picks one at random)", v: [["[Joe talks to you when he doesn't know your name]"]] },
+  "office.books":      { g: "Curator's office", l: "The bookshelf: one book each (the first line is the spine, the rest is your note)", v: [["[Book 1 title]", "[Your note about book 1]"], ["[Book 2 title]", "[Your note about book 2]"], ["[Book 3 title]", "[Your note about book 3]"], ["[Book 4 title]", "[Your note about book 4]"], ["[Book 5 title]", "[Your note about book 5]"], ["[Book 6 title]", "[Your note about book 6]"]] },
+  "office.shelf":      { g: "Curator's office", l: "The bookshelf, before picking a book", v: [["[The bookshelf: pick a book]"]] },
+  "office.desk":       { g: "Curator's office", l: "The curator's computer, for anyone without a curator badge", v: [["[The curator's computer: two monitors, both off]"]] },
+  "office.rec":        { g: "Curator's office", l: "The computer, for a curator badge ({state}: on or off)", v: [["[Recording mode is {state}. Hides the pop-ups, the ON SHIFT tag and the touch controls, holds the time of day, skips the tutorial]"]] },
+  "office.tower":      { g: "Curator's office", l: "The white PC tower (picks one at random)", v: [["[The white PC tower with its purple light]"]] },
+  "office.deck":       { g: "Curator's office", l: "The Steam Deck on the small table (picks one at random)", v: [["[The Steam Deck on the small table]"]] },
+  "office.camera":     { g: "Curator's office", l: "The camera on its tripod (picks one at random)", v: [["[The camera on its tripod]"]] },
+  "office.light":      { g: "Curator's office", l: "The studio light with the soft box (picks one at random)", v: [["[The studio light with its soft box]"]] },
+  "office.tvNone":     { g: "Curator's office", l: "The TV when there are no clip files yet", v: [["[The TV has nothing to show yet]"]] },
   "hall.poster":       { g: "Screening nook", l: "Looking at a movie poster in the dark theater hallway (picks one at random)", v: [["[Movie poster in the dark hallway: too dark to make out, so describe what you can almost see]"]] },
   "arcade.title":      { g: "Arcade", l: "The arcade cabinet's list title", v: [["INSERT COIN"]] },
   "arcade.intro":      { g: "Arcade", l: "Walking up to the arcade cabinet ({n}: tokens per play)", v: [["[Arcade intro: what the cabinet is, that it opens a museum game in a new tab, and that a play costs {n} token(s)]"]] },
@@ -1795,7 +1973,7 @@ const ACH_STATS = {
   helped: "Visitors who loved your recommendation", recs: "Games recommended to visitors", pets: "Times petting the cat", closings: "Times closing the museum", photos: "Photos taken",
   bothSides: "Cases read on both sides", stamps: "Stamps collected", cards: "Stamp cards traded", items: "Gift shop items owned",
   drinks: "Drinks ordered", naps: "Bench naps", rooms: "Different rooms visited", microwave: "Microwave incidents", segway: "Segway rides",
-  reactions: "Different photo reactions caught", episodes: "Episodes watched in the screening nook", arcade: "Games started at the café arcade", shirt: "Has the GOQ shirt (1 = yes)", shifts: "Times clocking in", figure: "Photographed the figure in the dark (1 = yes)",
+  reactions: "Different photo reactions caught", episodes: "Episodes watched in the screening nook", arcade: "Games started at the café arcade", office: "Got into the curator's office (1 = yes)", shirt: "Has the GOQ shirt (1 = yes)", shifts: "Times clocking in", figure: "Photographed the figure in the dark (1 = yes)",
 };
 const SAMPLE_ACH = [
   { id: "first-dust", name: "Elbow Grease", desc: "Dust a frame for the first time.", stat: "dusted", target: 1 },
@@ -1812,6 +1990,7 @@ const SAMPLE_ACH = [
   { id: "paparazzi", name: "Paparazzi", desc: "Catch 10 different reactions on camera.", stat: "reactions", target: 10 },
   { id: "couch", name: "Couch Critic", desc: "Watch 5 episodes in the screening nook.", stat: "episodes", target: 5 },
   { id: "quarters", name: "Quarter Muncher", desc: "Start 3 games at the café arcade.", stat: "arcade", target: 3 },
+  { id: "office", name: "Behind the Scenes", desc: "Get into the curator's office.", stat: "office", target: 1, secret: true },
 ];
 /* Rugs you can size: a border band and corner designs around a plain middle, in any colors (Rooms, select a rug).
    A rug decal: { key: "rug", x, y, w, h, pattern (border style), motif (corner design), field, border, accent, corner (colors) }. */
@@ -1979,7 +2158,7 @@ prepLayoutRoom(ROOMS.museum);
    the level editor in curator.html writes them. Rooms are plain data, so a deep copy is enough. */
 const BUILTIN_ROOMS = JSON.parse(JSON.stringify(ROOMS));
 const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "runners", "lamps", "arrows", "murals", "tint", "windowAt", "intercom", "lightSwitch", "eotmAt",
-  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt", "posters", "floorLights", "camAt"];
+  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt", "posters", "floorLights", "camAt", "colorGlows"];
 /* Light checks so a hand-edited or damaged pack can't break the game: rectangular map, sane size, a spawn on the map. */
 function normalizeRoom(id, d) {
   if (d && typeof d === "object" && d.layout) { d = Object.assign({}, d); prepLayoutRoom(d); }
@@ -2231,6 +2410,7 @@ function buildRoom(id, pieces, o) {
   if (def.eotmAt) r.eotmAt = { x: def.eotmAt[0], y: def.eotmAt[1] };
   if (def.screenAt) { const [x, y] = def.screenAt; r.screenAt = { x, y }; for (let i = 0; i < SLOT.theater_screen.w / T; i++) r.events[(x + i) + "," + (y + 1)] = { screen: true }; }
   if (def.posters) { r.posters = def.posters.map(([x, y, side]) => ({ x, y, side })); r.posters.forEach(p => { r.events[p.x + "," + p.y] = r.events[p.x + "," + (p.y + 1)] = { poster: true }; }); }
+  if (def.colorGlows) r.colorGlows = def.colorGlows.map(([x, y, color, rad]) => ({ x, y, color: /^#[0-9a-f]{6}$/i.test(color || "") ? color : "#ffffff", rad: Math.max(4, Math.min(64, +rad || 20)) }));
   if (def.floorLights) r.floorLights = def.floorLights.map(([x, y, side]) => ({ x, y, side }));
   if (def.marqueeAt) { const [x, y] = def.marqueeAt; r.marquee = { x, y }; } // a big arched doorway over two doorway tiles (the screening nook's)
   if (def.nowPlayingAt) { const [x, y] = def.nowPlayingAt; r.nowSign = { x, y }; for (let i = 0; i < SLOT.led_sign.w / T; i++) r.events[(x + i) + "," + (y + 1)] = { nowPlaying: true }; }
@@ -2380,6 +2560,8 @@ class Game {
     const w = this.saveKey && this.progress.where;
     if (w && this.rooms[w.room] && this.rooms[w.room].solid[w.y] && this.rooms[w.room].solid[w.y][w.x] === false) this.enterRoom(w.room, w.x, w.y, w.dir, true);
     else { const sp = ROOMS.lobby.spawn; this.enterRoom("lobby", sp[0], sp[1], sp[2], true); }
+    if (this.staff && this.staff.curator && this.rooms.office && !this.curator) { const sp = ROOMS.office.spawn; this.enterRoom("office", sp[0], sp[1], sp[2], true); } // the curator starts in their office
+    this.applyRecording();
     this.ready = this.setPack(pack); this.updateHud();
     this.ready.then(() => { if (this.needTutorial()) this.startTutorial(); }); // a new player starts with the tutorial
     this.markDay();
@@ -2828,7 +3010,7 @@ class Game {
   }
   /* Short notices (room names, "Stamp!", "Photo saved"...). They wait while a placard, menu or text box is open,
      then show one at a time. */
-  showLoc(name) { (this.toastQ = this.toastQ || []).push(name); this.flushToasts(); }
+  showLoc(name) { if (this.recording()) return; (this.toastQ = this.toastQ || []).push(name); this.flushToasts(); }
   /* A menu is opening over a toast (an achievement, say): put it back at the front of the line to show once the menu closes. */
   holdToast() {
     if (!this.toastBusy) return;
@@ -3050,6 +3232,7 @@ class Game {
     if (k === "items") return (p.items || []).length;
     if (k === "rooms") return (p.visited || []).filter(v => { const [id, z] = v.split(":"), lay = layoutOf(ROOMS[id]); return ROOMS[id] && !ROOMS[id].tutorial && (lay ? lay.zones.some(q => q.id === z && q.kind === "room") : !z); }).length; // rooms that still exist (not the tutorial's)
     if (k === "shirt") return p.shirt ? 1 : 0;
+    if (k === "office") return p.office ? 1 : 0;
     if (k === "reactions") return Object.keys(p.reactions || {}).length;
     return t[k] || 0;
   }
@@ -3258,6 +3441,7 @@ class Game {
     const sk = this.staff ? this.staff.badge + "|" + this.staff.name : "";
     if (this.rooms && this.lastStaffKey !== undefined && sk !== this.lastStaffKey) this.placeMembers();
     const h = this.el.hud, s = this.staff; if (!h) return;
+    if (this.recording()) { h.innerHTML = ""; return; } // recording mode: no ON SHIFT tag or tokens
     const tokens = this.progress.tokens || 0;
     h.innerHTML = "";
     if (s) {
@@ -3294,7 +3478,7 @@ class Game {
     if (!this.online()) return { error: "badge.wrong" };
     try {
       const r = await this.rpc("clock_in", { p_badge: badge, p_key: key });
-      if (r && r.ok && r.token) return { badge: r.badge, name: r.name, token: r.token };
+      if (r && r.ok && r.token) return { badge: r.badge, name: r.name, token: r.token, curator: !!r.curator }; // curator: opens the office (and starts you there)
       return { error: r && r.reason === "locked" ? "badge.locked" : r && r.reason === "inactive" ? "badge.inactive" : "badge.wrong" };
     } catch (err) { return { error: "badge.down" }; }
   }
@@ -3380,6 +3564,94 @@ class Game {
     }
   }
   dropScreen() { const scr = this.scr; if (!scr) return; clearTimeout(scr.ping); scr.box.remove(); this.scr = null; }
+  /* ----- the curator's office -----
+     Off B1 Storage, behind a keypad. "Behind the Scenes": every wing's touch screen gives up one digit once you've read
+     every piece in it front and back; once 5 visitors have loved your picks, a call sheet on the staff corkboard gives the
+     order; and the keypad only works after closing (announcement made, lights out). One code for everyone (curator, Staff
+     tab), so players can trade it. A curator badge always gets in, and starts there. */
+  officeOpen() { return !!(this.progress.office || (this.staff && this.staff.curator) || this.curator); }
+  wings() { // the wings with a category, in the call sheet's order (shuffled by the code, so the order is part of the puzzle)
+    const lay = layoutOf(ROOMS.museum), code = this.pack.settings.office.code, out = [];
+    for (const g of this.pack.settings.genres || []) { const z = lay && lay.zones.find(q => q.rect && q.rect.genre === g.id); if (z) out.push({ id: g.id, name: z.name }); }
+    return out.sort((a, b) => strSeed(code + a.id) - strSeed(code + b.id));
+  }
+  wingDigit(id) { const w = this.wings(), i = w.findIndex(q => q.id === id), code = this.pack.settings.office.code; return i < 0 ? "" : code[i % code.length]; }
+  officeCode() { return this.wings().map(w => this.wingDigit(w.id)).join(""); }
+  wingDone(id) { // every piece in the wing read front and back (once done, it stays done when new pieces arrive)
+    const done = this.progress.wingsDone || (this.progress.wingsDone = {}); if (done[id]) return true;
+    const today = todayISO(), ps = this.pack.pieces.filter(p => genreOf(p, this.pack.settings.genres) === id && !(p.unveil && p.unveil > today));
+    if (!ps.length || !ps.every(p => this.isRead(p))) return false;
+    done[id] = todayISO(); this.saveProgress(); return true;
+  }
+  officeDoor() {
+    if (this.officeOpen()) { this.warp("office", ...ROOMS.office.spawn); return; }
+    if (!this.closed) { this.say(this.tx("office.locked")); return; }
+    const code = this.officeCode(), entered = [];
+    const pad = () => this.openList(this.tx("office.keypad")[0] + "   " + Array.from({ length: code.length }, (_, i) => entered[i] || "_").join(" "),
+      ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "DELETE", "CLOSE"], i => {
+        if (i === 11 || i === undefined) return;
+        if (i === 10) entered.pop(); else entered.push(i === 9 ? "0" : String(i + 1));
+        if (entered.length < code.length) { setTimeout(pad, 0); return; }
+        if (entered.join("") !== code) { this.say(this.tx("office.wrong")); return; }
+        this.progress.office = todayISO(); this.saveProgress(); this.checkAchievements && this.checkAchievements();
+        this.say(this.tx("office.open"), () => this.warp("office", ...ROOMS.office.spawn));
+      });
+    pad();
+  }
+  officeBooks() {
+    const books = (this.pack.settings.text["office.books"] || TEXT["office.books"].v).filter(b => b && b.length);
+    this.choose(this.tx("office.shelf").join(" "), [...books.map(b => b[0]), "Not now"], i => {
+      const b = books[i]; if (!b) return;
+      this.read({ title: b[0].toUpperCase(), sub: "From the curator's shelf", sections: b.slice(1).map(t => ({ label: "", text: t })) }, () => this.officeBooks());
+    });
+  }
+  officePc() {
+    if (!(this.staff && this.staff.curator)) { this.say(this.tx("office.desk")); return; }
+    const on = this.recording();
+    this.ask(this.tx("office.rec", { state: on ? "on" : "off" }).join(" "), [on ? "Turn it off" : "Turn it on", "Leave it"], i => { if (i === 0) this.setRecording(!on); }, 1);
+  }
+  recording() { return !!(this.progress && this.progress.recording && this.staff && this.staff.curator); }
+  setRecording(on) { this.progress.recording = on ? { tod: this.tod() } : null; this.saveProgress(); this.applyRecording(); this.updateHud(); }
+  applyRecording() { // recording mode: holds the time of day; museum.html hides the touch controls (goq-rec on <html>)
+    const rec = this.recording();
+    if (rec) this.timeOverride = this.progress.recording.tod; else if (this.recTod) this.timeOverride = null;
+    this.recTod = rec;
+    if (typeof document !== "undefined" && !this.headless) document.documentElement.classList.toggle("goq-rec", rec);
+  }
+  /* The office TV: off until you turn it on; then the gameplay clips (files in the clips folder) play one after another. */
+  officeTv() {
+    const clips = this.pack.pieces.map(p => this.clipOf(p)).filter(c => c && c.file);
+    if (!this.tvOn && !clips.length) { this.say(this.tx("office.tvNone")); return; }
+    this.tvOn = !this.tvOn; if (!this.tvOn) this.dropTv();
+  }
+  syncTv(r, cx, cy) {
+    const tv = r.props.find(p => p.key === "office_tv"), on = tv && this.tvOn && !this.trans && this.screenVideo !== false && !this.headless;
+    if (!on) { this.dropTv(); return; }
+    if (!this.tvv) {
+      const clips = this.pack.pieces.map(p => this.clipOf(p)).filter(c => c && c.file); if (!clips.length) return;
+      const box = document.createElement("div"); box.className = "gt-scr"; box.setAttribute("aria-hidden", "true");
+      const v = document.createElement("video"); v.muted = true; v.autoplay = true; v.playsInline = true; v.setAttribute("muted", "");
+      v.style.cssText = "position:absolute;inset:0;width:100%;height:100%;object-fit:cover";
+      let i = Math.floor(Math.random() * clips.length); const next = () => { v.src = clips[i++ % clips.length].file; const pr = v.play(); if (pr && pr.catch) pr.catch(() => {}); };
+      v.addEventListener("ended", next); next(); // one after another
+      const fx = document.createElement("div"); fx.className = "gt-scr-fx"; box.append(v, fx); this.canvas.after(box); this.tvv = { box, v, key: "" };
+    }
+    const s = this.scale || 1, gx = tv.x * T + 3 - cx, gy = (tv.y - 1) * T + 4 - cy, key = [gx, gy, s].join();
+    if (this.tvv.key !== key) { const st = this.tvv.box.style; st.left = gx * s + "px"; st.top = gy * s + "px"; st.width = 26 * s + "px"; st.height = 15 * s + "px"; this.tvv.key = key; }
+  }
+  dropTv() { const t = this.tvv; if (!t) return; t.v.pause(); t.v.removeAttribute("src"); t.v.load(); t.box.remove(); this.tvv = null; }
+  /* Joe, out in the museum: now and then he's standing somewhere on the floor. Talk to him and he glitches out and is gone. */
+  placeJoe() {
+    if (this.joeState === undefined) this.joeState = !this.headless && !this.curator && Math.random() < 0.3 ? { spot: null, gone: false } : null; // about one visit in three
+    const st = this.joeState, r = this.rooms.museum; if (!st || st.gone || !r) return;
+    const at = st.spot && this.tileFree(r, st.spot[0], st.spot[1]) ? st.spot : this.freeSpot(r); if (!at) return;
+    st.spot = at; const [x, y] = at; r.joe = { x, y, t: 0 }; r.solid[y][x] = true; r.events[x + "," + y] = { joe: true };
+  }
+  joeGlitch() {
+    const r = this.room; if (!r.joe || r.joe.t) return;
+    r.joe.t = 1; this.mode = "busy"; this.progress.tally.joe = (this.progress.tally.joe || 0) + 1; this.saveProgress();
+    setTimeout(() => { const j = r.joe; if (!j) return; r.solid[j.y][j.x] = false; delete r.events[j.x + "," + j.y]; r.joe = null; this.joeState.gone = true; if (this.mode === "busy") this.mode = "walk"; }, 900);
+  }
   /* ----- gameplay on the placard -----
      A piece with a gameplay clip plays it muted and looping beside the placard's text, fading in over the case's pixel art.
      Best is a short video file in the clips folder (just its name in the curator, e.g. acrobatic-car_1.webm): it shows at
@@ -3497,7 +3769,7 @@ class Game {
      to them, help two more, hear what they thought out in the office, make the closing announcement, turn off both rooms'
      lights and leave by the glass door. Pausing offers only Skip or Save and quit (quitting starts it over next time).
      Nothing in it counts as real reading, stamps or notes. Every line is in Words, Tutorial. */
-  needTutorial() { return !this.curator && !!this.saveKey && !this.headless && !this.progress.tutorial; }
+  needTutorial() { return !this.curator && !this.recording() && !!this.saveKey && !this.headless && !this.progress.tutorial; }
   tutSaid(name, pages) { return pages.map(p => (p.trim() === "..." ? p : name + ": " + p)); }
   tutSpeak(key, vars) { return [...this.tx("tut.speaker"), ...this.tx(key, vars)]; }
   tutPerson(id, name, want, sheet, room, x, y) {
@@ -3716,7 +3988,7 @@ class Game {
     const sh = this.topOf(st.shots); if (sh && sh[1] > 1) add("LIFE", "Most photographed", sh[0] + " (" + sh[1] + " times)");
     add("LIFE", "Notes left", t.notes); add("LIFE", "Drinks ordered", t.drinks);
     const dr = this.topOf(st.drinks), dn = dr && DRINKS.find(d => d.id === dr[0]); if (dn && t.drinks > 1) add("LIFE", "Usual order", dn.name);
-    add("LIFE", "Episodes watched", t.episodes); add("LIFE", "Arcade games started", t.arcade); add("LIFE", "Bench naps", t.naps); add("LIFE", "Microwave incidents", t.microwave); add("LIFE", "Segway rides", t.segway); add("LIFE", "Shifts clocked in", t.shifts);
+    add("LIFE", "Episodes watched", t.episodes); add("LIFE", "Arcade games started", t.arcade); add("LIFE", "Glitchy robot sightings", t.joe); add("LIFE", "Bench naps", t.naps); add("LIFE", "Microwave incidents", t.microwave); add("LIFE", "Segway rides", t.segway); add("LIFE", "Shifts clocked in", t.shifts);
     add("LIFE", "Time in the dark after closing", st.dark >= 60 ? hm(st.dark) : st.dark ? st.dark + "s" : 0);
     return rows;
   }
@@ -4033,7 +4305,8 @@ class Game {
   }
   readCorkboard() {
     const notes = this.pack.settings.staff.corkboard;
-    this.say(notes.length ? [...this.tx("cork.intro"), ...notes] : this.tx("cork.empty"));
+    const sheet = !this.progress.office && (this.progress.tally.helped || 0) >= 5 ? [...this.tx("office.callsheet"), "CALL SHEET\n" + this.wings().map((w, i) => (i + 1) + ". " + w.name).join("\n")] : []; // Behind the Scenes: the order
+    this.say(notes.length ? [...this.tx("cork.intro"), ...notes, ...sheet] : [...this.tx("cork.empty"), ...sheet]);
   }
   readEotm() {
     const e = this.eotmInfo();
@@ -4764,7 +5037,12 @@ class Game {
     const p = this.player, [dx, dy] = DIRS[p.dir], z = this.zoneAt(this.room, p.x + dx, p.y + dy) || this.zone;
     const g = z && z.rect ? z.rect.genre : "", gen = (this.pack.settings.genres || []).find(x => x.id === g), list = (this.overflow && this.overflow[g]) || [];
     const title = (z ? z.name : gen ? gen.short || gen.name : "This room").toUpperCase(); // the wing's own name
-    if (!list.length) { this.say(this.tx("screen.empty", { room: z ? z.name : gen ? gen.name : "this room" })); return; }
+    const digit = g && !this.progress.office && this.wingDone(g) ? this.tx("office.digit", { digit: this.wingDigit(g), room: z ? z.name : gen ? gen.name : "this wing" }) : null; // Behind the Scenes: this wing's digit
+    if (!list.length) { this.say(digit || this.tx("screen.empty", { room: z ? z.name : gen ? gen.name : "this room" })); return; }
+    if (digit) { const d = digit; this.say(d, () => this.overflowList(title, list)); return; }
+    this.overflowList(title, list);
+  }
+  overflowList(title, list) {
     const show = () => this.openList(title + ": MORE PIECES", [...list.map(q => (q.pick ? { text: q.title, pick: true } : q.title)), "CLOSE"], i => {
       const q = list[i]; if (!q) return;
       const read = () => { this.viewPiece(q); const done = this.rd && this.rd.done; this.rd.done = () => { if (done) done(); show(); }; };
@@ -4888,7 +5166,7 @@ class Game {
     // A room's overflow (its genre's episodes that don't fit its cases) is on that room's touch screen.
     this.overflow = {}; cases.archived.forEach(p => { const g = genreOf(p, this.pack.settings.genres); (this.overflow[g] = this.overflow[g] || []).push(p); });
     this.rooms = {}; Object.keys(ROOMS).forEach(id => (this.rooms[id] = buildRoom(id, this.pack.pieces, o)));
-    this.tutDress(); this.seatGuests();
+    this.tutDress(); this.seatGuests(); this.placeJoe();
     this.placeCurious(); this.placeMembers(); this.giveLife();
   }
   enterRoom(id, x, y, dir, quiet) {
@@ -4983,9 +5261,15 @@ class Game {
     else if (e.screen) this.screenAsk();
     else if (e.nowPlaying) { const p = this.nowPlaying(); this.say(p ? this.tx("screen.sign", { title: p.title }) : this.tx("screen.none")); }
     else if (e.arcade) this.arcade();
+    else if (e.officeDoor) this.officeDoor();
+    else if (e.books) this.officeBooks();
+    else if (e.officePc) this.officePc();
+    else if (e.officeTv) this.officeTv();
+    else if (e.joeTalk) this.say(this.tx(this.staff && this.staff.name ? "office.joe" : "office.joeAnon", { name: this.staff ? this.staff.name : "" }, true));
+    else if (e.joe) this.joeGlitch();
     else if (e.poster) this.say(this.tx("hall.poster", null, true));
     else if (e.arrow) { const a = this.arrowInfo(e.arrow); this.say([a.label.toUpperCase() + " " + ({ left: "\u2190", right: "\u2192", up: "\u2191", down: "\u2193" }[e.arrow.dir] || ""), "This way to " + a.label + "."]); }
-    else if (e.say) this.say(e.say);
+    else if (e.say) this.say(typeof e.say === "string" ? this.tx(e.say, null, true) : e.say); // a Words key, or the lines themselves
   }
   /* An arrow sign's words and color: from its genre (Visitors, Genres), unless it has its own. */
   arrowInfo(a) {
@@ -5486,6 +5770,14 @@ class Game {
      red letters on the NOW PLAYING sign (the title scrolls when it's too long for the board). */
   drawMarquee(r, cx, cy) {
     const ctx = this.ctx;
+    if (r.colorGlows) { // a colored light (the office PC's purple), over the room's lighting
+      ctx.globalCompositeOperation = "lighter";
+      for (const l of r.colorGlows) {
+        const x = l.x * T + 8 - cx, y = l.y * T + 2 - cy, [cr, cg, cb] = hexRgb(l.color), g = ctx.createRadialGradient(x, y, 1, x, y, l.rad);
+        g.addColorStop(0, "rgba(" + cr + "," + cg + "," + cb + ",0.30)"); g.addColorStop(1, "rgba(" + cr + "," + cg + "," + cb + ",0)"); ctx.fillStyle = g; ctx.fillRect(x - l.rad, y - l.rad, l.rad * 2, l.rad * 2);
+      }
+      ctx.globalCompositeOperation = "source-over";
+    }
     if (r.floorLights) {
       ctx.globalCompositeOperation = "lighter";
       for (const l of r.floorLights) {
@@ -5523,7 +5815,7 @@ class Game {
   drawProp(p, cx, cy) {
     const ctx = this.ctx, k = p.plant && this.isThirsty(p.plant) ? "plant_thirsty" : p.key;
     const px0 = p.x * T - cx, py0 = p.y * T - (SLOT[k].h - T) - cy;
-    this.drawSlot(k, k === "microwave_counter" ? (this.microwaved ? 1 : 0) : this.frame(k), 0, px0, py0);
+    this.drawSlot(k, k === "microwave_counter" ? (this.microwaved ? 1 : 0) : k === "office_tv" ? (this.tvOn ? 1 : 0) : this.frame(k), 0, px0, py0);
     if (k === "microwave_counter" && this.boomT > 0) { const f = Math.floor((30 - this.boomT) / 5); if (f < 4) { this.drawSlot("sparkle", f, 0, px0 + 2, py0 - 8); this.drawSlot("sparkle", (f + 1) % 4, 0, px0 + 10, py0 - 4); } }
     if (p.unit !== undefined) this.unitGoods(p.unit).forEach((it, k) => {
       const cxs = px0 + [9, 24, 39][k % 3], top = py0 + (k < 3 ? 4 : 18);
@@ -5766,6 +6058,11 @@ class Game {
     for (const st of r.stairs) this.drawSlot(st.kind === "up" ? "stair_up" : "stair_down", 0, 0, st.x * T - cx, st.y * T - cy);
     for (const c of r.cases) this.drawCase(c, cx, cy);
     for (const p of r.props) this.drawProp(p, cx, cy);
+    if (r.joe) { // Joe on the museum floor; glitching out when you talk to him
+      const j = r.joe, x = j.x * T - cx, y = j.y * T - cy, img = this.sheet("joe"), f = this.frame("joe");
+      if (!j.t) this.drawSlot("joe", f, 0, x, y);
+      else if (img) { j.t++; for (let b = 0; b < 16; b += 2) { const off = REDUCED_MOTION ? 0 : ((hash(b, j.t >> 1) % 7) - 3) * (j.t % 6 < 3 ? 1 : 2); ctx.globalAlpha = Math.max(0, 1 - j.t / 55) * (j.t % 4 < 2 ? 1 : 0.6); ctx.drawImage(img, f * 16, b, 16, 2, x + off, y + b, 16, 2); } ctx.globalAlpha = 1; }
+    }
     if (r.cat) {
       const pet = this.petT > 0, f = pet ? 2 : Math.floor(this.t / 50) % 2;
       this.drawSlot("cat", f, 0, r.cat.x * T - cx, r.cat.y * T - cy);
@@ -5830,7 +6127,7 @@ class Game {
     this.drawReadMarks(r, cx, cy);
     this.drawLighting(r, cx, cy, pp);
     this.drawMarquee(r, cx, cy);
-    this.syncScreen(r, cx, cy);
+    this.syncScreen(r, cx, cy); this.syncTv(r, cx, cy);
     if (this.figure && this.isDark(r, this.figure.x, this.figure.y)) {
       ctx.globalAlpha = 0.55 * this.figure.alpha; this.drawSlot("shadow_figure", 0, 0, this.figure.x * T - cx, this.figure.y * T - cy - 4); ctx.globalAlpha = 1;
     }
@@ -5885,7 +6182,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-30 pick on frame";
+const VERSION = "2026-10-31 curator office";
 window.GOQ = { ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

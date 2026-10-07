@@ -124,7 +124,7 @@ begin
   tok := encode(extensions.gen_random_bytes(24), 'hex');
   insert into goq.sessions (token_hash, badge) values (goq.token_hash(tok), nb);
   delete from goq.sessions where expires_at < now();
-  return json_build_object('ok', true, 'badge', nb, 'name', b.name, 'token', tok);
+  return json_build_object('ok', true, 'badge', nb, 'name', b.name, 'token', tok, 'curator', b.curator); -- [UPDATE, October 2026] curator: opens the curator's office in the game
 end $$;
 
 -- Record one chore for whoever owns the token. Fair limits decide whether it counts.

@@ -458,6 +458,19 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**The curator's office (2026-10-31).**
+- **Room:** `office` (built in), off B1 Storage through a new door on Storage's left wall (0, 5), `officeDoor` event. Spaceship-panel walls (`ship_wall_upper/lower`, 2 frames, a few lights blink), purple-tinted carpet, dim 0.12, no light switch.
+- **Furniture:** bookshelf (Words `office.books`: one book per entry, first line is the spine), desk with two monitors off, white PC tower with a purple glow (new room key `colorGlows: [x, y, color, radius]`, drawn over the lighting), TV (off until you turn it on), office chair (sit), Joe, a small table with a Steam Deck, the camera on its tripod (no light) and a soft box. Floor clutter decals: controllers, half-finished iced coffees, a yerba mate can. All of it is placeholder art under Art → Curator's office.
+- **TV:** turned on, it plays every clip *file* (from `clips/`) one after another, muted, over its picture area. It follows Settings → Gameplay video.
+- **Joe:** in the office he talks to you by your badge name (`office.joe`), or `office.joeAnon` when you're not clocked in. He can't be petted and has no photo reaction. Out in the museum, about one page load in three, he's standing somewhere on the floor. Talk to him and he glitches out (row slices jitter and fade) and is gone for that visit. Counts as `tally.joe` ("Glitchy robot sightings" on the PC).
+- **Behind the Scenes** (secret achievement `office`):
+  1. **Digits:** a wing's touch screen shows `office.digit` with that wing's digit once every piece in the wing is read front and back (`wingDone`, remembered in `progress.wingsDone`).
+  2. **Order:** after 5 loved recommendations (`tally.helped`), the staff corkboard adds `office.callsheet` plus the list of wings in code order.
+  3. **After hours:** the keypad only works when `this.closed` (announcement made, lights out). The entry pad is a list (1–9, 0, DELETE, CLOSE). The right code sets `progress.office`, and the door stays open after that.
+  - **The code:** one shared code, `settings.office.code` (curator Staff tab, default 40917). The wing order is shuffled by the code (`wings()`), and each wing's digit is the code's digit at its position, so the code you type is the code itself.
+- **Curator badge:** `clock_in` now returns `curator` (SQL updated; the guide says to re-run it), and `checkBadge` keeps it on `progress.staff.curator`. A curator badge always opens the office, and the game starts there on load. The office computer offers **Recording mode** (curator only, `progress.recording`): it hides toasts, the HUD chips and the touch controls (`html.goq-rec`), holds the time of day, and skips the tutorial. Spooky events stay.
+- **Text:** all new text is bracketed placeholders in Words → Curator's office.
+
 **Framed placards (2026-10-30).**
 - **Every piece's placard** now uses the side-by-side layout (`read({ frame: true })`). The frame shows the piece's art (photos smooth, pixel art pixelated) until the piece has a gameplay clip, so adding a clip later needs no other change. Other readers (magazines, stats, the stamp card) keep the old layout.
 - **The developer's side** (the back of a case) is mirrored (`flip`): text on the left, frame and title on the right. Intention headings are red everywhere (`tone: "red"` on a section, carried through pagination).

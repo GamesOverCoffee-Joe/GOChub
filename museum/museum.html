@@ -67,6 +67,7 @@ body.touch #ver.warn{display:block;position:fixed;left:8px;right:8px;bottom:8px;
 /* On-screen controls, sized from --pad and --btn */
 .gt-controls{display:none;justify-content:space-between;align-items:center;gap:24px;touch-action:none;user-select:none;-webkit-user-select:none;color:var(--text)}
 body.touch .gt-controls{display:flex}
+html.goq-rec .gt-controls{display:none!important} /* recording mode (the curator's office computer): no touch controls */
 .gt-pad{position:relative;width:var(--pad);height:var(--pad);touch-action:none;flex:none}
 .gt-pad span,.gt-pad i{position:absolute;background:var(--surface-2);border:2px solid var(--muted)}
 .gt-pad .u,.gt-pad .d{left:33.3%;width:33.4%;height:34.8%}
@@ -213,7 +214,7 @@ dialog.settings::backdrop{background:rgba(10,5,7,.7)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-30 pick on frame";
+window.GOQ_WANT = "2026-10-31 curator office";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
