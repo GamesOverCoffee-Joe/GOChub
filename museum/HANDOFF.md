@@ -458,6 +458,15 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Live theater screen and plant names (2026-10-25).**
+- **Theater screen video:** in the nook, the hour's NOW PLAYING episode plays muted on the screen itself. It's a YouTube embed (`.gt-scr`) laid over the screen art's 80×45 picture window and repositioned every frame (`syncScreen`). Over it: CSS scanlines, a light pixel grid, a vignette and a slight dim. The player ignores clicks.
+- **Mid-episode start:** on load, YouTube's embed messaging (`listening` / `infoDelivery`) reports the length, and the player seeks to (seconds past the hour) mod length.
+- **Watch it:** opens the full player at the screen's current time (`start=`), with sound and the scrub bar. The small player is removed while the full one is open and when you leave the room.
+- **Fallbacks:** a video that won't embed (`onError`) falls back to the flicker art, as does Settings → Theater screen video (default on).
+- **Untested against real YouTube:** it was tested in a container that can't reach YouTube, against a stand-in page that speaks the same messages. Check it on the live site.
+- **Screen art:** now 96×48 (three rows tall, into the wall cap), with red curtains and a valance. It's still drawn from `screenAt` (one row up).
+- **Plants:** the two museum plants named "plant" are now "snake plant" (29, 8) and "pothos" (30, 8). The PC's favorite plant reads "watered N times".
+
 **Arcade tokens and sign tweaks (2026-10-24).**
 - **Creative text rule (from the curator):** new creative lines go in as bracketed placeholders saying what the line is for, e.g. `[Arcade intro: ...]`. The curator writes the real text in Words.
 - **Doorway:** a square gold frame instead of a round arch. The bulbs run up the sides and across the top.

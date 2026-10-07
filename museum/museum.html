@@ -193,6 +193,10 @@ dialog.settings::backdrop{background:rgba(10,5,7,.7)}
       <div class="txt"><b>Swap A and B</b><small>For Nintendo-style controllers, where A and B are the other way around. Swaps the keyboard's Z and X too.</small></div>
       <input type="checkbox" class="switch" id="optSwap" aria-label="Swap A and B">
     </div>
+    <div class="set-row">
+      <div class="txt"><b>Theater screen video</b><small>The screening nook's screen plays this hour's episode, muted, while you're in there. Turn it off to save data and battery.</small></div>
+      <input type="checkbox" class="switch" id="optVid" aria-label="Theater screen video">
+    </div>
     <div class="set-row" id="rowBuzz" hidden>
       <div class="txt"><b>Vibrate on button presses</b><small>A tiny buzz when you press the D-pad, A or B.</small></div>
       <input type="checkbox" class="switch" id="optBuzz" aria-label="Vibrate on button presses">
@@ -209,7 +213,7 @@ dialog.settings::backdrop{background:rgba(10,5,7,.7)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-24 arcade tokens";
+window.GOQ_WANT = "2026-10-25 live screen";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -264,7 +268,7 @@ window.goqStart = function () {
   GOQ.mountControls(game, document.getElementById("controls"));
   // Sharp pixels: on by default with a mouse, off on touch screens. Swap A and B: off.
   const sharp = () => (typeof set.sharp === "boolean" ? set.sharp : !coarse());
-  game.sharp = sharp(); game.swapAB = !!set.swapAB;
+  game.sharp = sharp(); game.swapAB = !!set.swapAB; game.screenVideo = set.screenVideo !== false;
   window.goqMuseum = game;
 
   function describe(p, from) {
@@ -352,12 +356,13 @@ window.goqStart = function () {
 
   /* ---------- Settings panel ---------- */
   const dlg = document.getElementById("settings"), optTap = document.getElementById("optTap"), optCtl = document.getElementById("optCtl"), optBuzz = document.getElementById("optBuzz");
-  const optSharp = document.getElementById("optSharp"), optSwap = document.getElementById("optSwap");
+  const optSharp = document.getElementById("optSharp"), optSwap = document.getElementById("optSwap"), optVid = document.getElementById("optVid");
+  optVid.addEventListener("change", () => { set.screenVideo = optVid.checked; game.screenVideo = optVid.checked; saveSet(); });
   optSharp.addEventListener("change", () => { set.sharp = optSharp.checked; game.sharp = optSharp.checked; saveSet(); layout(); });
   optSwap.addEventListener("change", () => { set.swapAB = optSwap.checked; game.swapAB = optSwap.checked; saveSet(); });
   if (navigator.vibrate) document.getElementById("rowBuzz").hidden = false;
   document.getElementById("setBtn").addEventListener("click", () => {
-    optTap.checked = tapWalk(); optCtl.value = set.controls || "auto"; optBuzz.checked = set.haptics !== false; optSharp.checked = sharp(); optSwap.checked = !!set.swapAB;
+    optTap.checked = tapWalk(); optCtl.value = set.controls || "auto"; optBuzz.checked = set.haptics !== false; optSharp.checked = sharp(); optSwap.checked = !!set.swapAB; optVid.checked = set.screenVideo !== false;
     if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
   });
   optTap.addEventListener("change", () => { set.tapWalk = optTap.checked; game.tapWalk = optTap.checked; saveSet(); });

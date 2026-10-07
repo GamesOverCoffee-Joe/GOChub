@@ -42,7 +42,7 @@ const PAL = {
   m_canyon: ["#7ab8e0", "#a8d4ec", "#f4f8fc", "#c85a38", "#9a3c24", "#e8b878", "#4a4048", "#f0e0a0"],
   m_storm: ["#48506a", "#6a7490", "#9aa4bc", "#f8f4c0", "#4a7a3a", "#2e5428", "#7aa050", "#d8e0e8"],
   m_volcano: ["#140c24", "#2a1a40", "#fff6d0", "#3a2a30", "#e05030", "#f8a040", "#5a3a3a", "#ffd870"],
-  screen:  ["#1a2030", "#3a4a68", "#7ad0e8", "#d0f4ff", "#6a5240", "#4a382a", "#2a1e16", "#e8b24a"],
+  screen:  ["#1a2030", "#3a4a68", "#7ad0e8", "#d0f4ff", "#6a5240", "#4a382a", "#2a1e16", "#e8b24a", "#6a1a26", "#9a2c3a"],
   m_isles: ["#bfe6e0", "#e8f6f2", "#5aa890", "#3c7a68", "#8a7058", "#a8dcf0", "#ffffff", "#f0d890"],
   m_castle: ["#9cc4e8", "#d8ecf8", "#6a8a4a", "#4a6a38", "#8a8c98", "#5c5e6c", "#c84040", "#e8d8a0"],
   m_forest: ["#1a2240", "#2c3660", "#f4ecc0", "#1e3a2e", "#2c5440", "#f0b860", "#4a3a5a", "#9ab0d8"],
@@ -586,13 +586,17 @@ const GEN = {
     rect(a, 1, 9, 14, 6, 7); rect(a, 1, 9, 14, 1, 3);
     return outline(a, 8);
   },
-  // The screening nook's big screen: six tiles wide across both wall rows, a soft flicker between two frames.
+  // The screening nook's big screen: six tiles wide and three tall (the wall rows and the cap above), between red curtains.
+  // The picture is 80×45 at (8, 2); the episode playing this hour shows there when it can, the flicker when it can't.
   theater_screen: f => {
-    const a = mk(96, 32);
-    rect(a, 0, 1, 96, 30, 0); rect(a, 2, 3, 92, 24, 1);
-    fillFn(a, (x, y, v) => (v === 1 && y >= 4 && y <= 25 && x >= 3 && x <= 92 ? ((x * 7 + y * 3 + f * 5) % 23 === 0 ? 3 : (y + f) % 6 === 0 ? 2 : 1) : undefined));
-    rect(a, 40, 12, 16, 8, 2); px(a, 46, 14, 3); px(a, 46, 15, 3); px(a, 47, 15, 3); px(a, 46, 16, 3); px(a, 47, 16, 3); px(a, 48, 16, 3); px(a, 46, 17, 3); px(a, 47, 17, 3); px(a, 46, 18, 3); // a play symbol
-    rect(a, 20, 28, 6, 3, 4); rect(a, 70, 28, 6, 3, 4); // its stand
+    const a = mk(96, 48);
+    rect(a, 0, 0, 96, 48, 6);
+    for (const x0 of [0, 88]) for (let x = x0; x < x0 + 8; x++) rect(a, x, 0, 1, 48, (x - x0) % 3 === 2 ? 8 : 9); // the curtains
+    rect(a, 0, 0, 96, 2, 8); rect(a, 0, 1, 96, 1, 7);                                                              // the valance
+    rect(a, 8, 2, 80, 45, 1);
+    fillFn(a, (x, y, v) => (v === 1 && y >= 3 && y <= 45 && x >= 9 && x <= 86 ? ((x * 7 + y * 3 + f * 5) % 23 === 0 ? 3 : (y + f) % 6 === 0 ? 2 : 1) : undefined));
+    rect(a, 40, 18, 16, 10, 2); for (let k = 0; k < 5; k++) rect(a, 46, 20 + k, k < 3 ? k + 1 : 5 - k, 1, 3); // a play symbol
+    rect(a, 8, 47, 80, 1, 5);
     return a;
   },
   // The screening nook's doorway from the café hall: one big dark doorway, two tiles wide, in a square gold frame.
@@ -919,7 +923,7 @@ const SLOTS = [
   { key: "marquee_lights", label: "Marquee bulbs", group: "Screening nook", w: 32, h: 32, frames: 2, fps: 3, pal: "bulbs", gen: GEN.marquee_lights, note: "2 frames (64×32), drawn over the doorway and lit even in the dark. Every other bulb lit, so they chase." },
   { key: "led_sign", label: "NOW PLAYING board", group: "Screening nook", w: 64, h: 12, pal: "ledsign", gen: GEN.led_sign, note: "The black board, four tiles wide and one line tall, centered on the wall. The red letters scroll across it from right to left (rows 3 to 7, between x 3 and 60)." },
   { key: "arcade_cabinet", label: "Arcade cabinet", group: "Gift shop and café", w: 16, h: 32, frames: 2, fps: 2, pal: "arcade", gen: GEN.arcade_cabinet, note: "2 frames (32×32), the attract screen flickering. Two tiles tall. Plays the games that have a Play link." },
-  { key: "theater_screen", label: "Screening nook screen", group: "Screening nook", w: 96, h: 32, frames: 2, pal: "screen", gen: GEN.theater_screen, note: "2 frames (192×32), six tiles wide across both wall rows; it flickers softly between them. Sit down in the nook to watch an episode." },
+  { key: "theater_screen", label: "Screening nook screen", group: "Screening nook", w: 96, h: 48, frames: 2, pal: "screen", gen: GEN.theater_screen, note: "2 frames (192×48), six tiles wide and three tall (both wall rows and the wall cap above). The picture is the 80×45 window at (8, 2): the episode playing this hour shows there, muted, when it can; otherwise it flickers softly between the frames." },
   { key: "planter_wide", label: "Long planter", group: "Furniture", w: 32, h: 16, pal: "trinket", gen: GEN.planter_wide, note: "Two tiles wide. A leafy planter box with a few flowers, for dividing a room or blocking a spot." },
   { key: "planter", label: "Planter", group: "Gift shop and café", w: 16, h: 16, pal: "trinket", gen: GEN.planter, note: "A row of these divides the shop from the café." },
   { key: "cat_bed", label: "Cat bed", group: "The cat", w: 16, h: 16, pal: "cat", gen: GEN.cat_bed },
@@ -2365,7 +2369,7 @@ class Game {
     let s = Math.min(maxW / SW, maxH / SH);
     if (this.sharp) s = s >= 1 ? Math.floor(s) : Math.max(0.5, s); // Settings: Sharp pixels (whole numbers; smaller than 1x only if the screen is)
     else s = fine ? (s >= 1 ? Math.floor(s * 4) / 4 : Math.max(0.75, s)) : s >= 2 ? Math.floor(s) : Math.max(0.75, Math.floor(s * 8) / 8);
-    this.wrap.style.setProperty("--s", s);
+    this.wrap.style.setProperty("--s", s); this.scale = s;
   }
 
   /* ----- art ----- */
@@ -2720,6 +2724,9 @@ class Game {
   border:calc(1px * var(--s)) solid #181820;background:#fff;color:#181820;outline:none;resize:none}
 .gt-badge textarea:focus{box-shadow:0 0 0 calc(1px * var(--s)) #e8b24a}
 .gt-note-count{text-align:right;color:#505068;font-size:.85em}
+.gt-scr{position:absolute;overflow:hidden;pointer-events:none;background:#000}
+.gt-scr iframe{position:absolute;left:-6%;top:-6%;width:112%;height:112%;border:0;filter:saturate(.85) brightness(.88) contrast(1.06)}
+.gt-scr-fx{position:absolute;inset:0;background-image:linear-gradient(rgba(0,0,0,0) 50%,rgba(0,0,0,.32) 50%),linear-gradient(90deg,rgba(0,0,0,0) 50%,rgba(0,0,0,.12) 50%);background-size:100% calc(2px * var(--s)),calc(2px * var(--s)) 100%;box-shadow:inset 0 0 calc(5px * var(--s)) rgba(0,0,0,.65)}
 .gt-tv{position:absolute;inset:0;display:none;flex-direction:column;background:#000;z-index:9}
 .gt-tv-bar{display:flex;align-items:center;gap:calc(4px * var(--s));padding:calc(2px * var(--s)) calc(4px * var(--s));color:#f8f0e0;font-size:max(calc(6px * var(--s)), 10px);background:#141018}
 .gt-tv-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -3265,10 +3272,51 @@ class Game {
     const eps = this.episodes(); if (!eps.length) return null;
     const d = new Date(); return eps[strSeed(todayISO() + ":" + d.getHours()) % eps.length];
   }
+  /* The episode playing this hour, on the nook's screen itself: a muted YouTube player laid over the picture (80×45 at
+     (8, 2) of the screen art), started part way in by the clock so it feels like you walked into the middle of it, with
+     scanlines over it. Gone when you leave, during the full player, with Settings → Theater screen video off, or if the
+     video won't embed. "Watch it" picks up the full player where the screen was. */
+  syncScreen(r, cx, cy) {
+    const on = r.screenAt && this.screenVideo !== false && !this.headless && !this.full && !this.trans && this.mode !== "tv" && typeof document !== "undefined";
+    const p = on ? this.nowPlaying() : null, id = p ? this.ytId(p.episodeUrl) : "";
+    if (!id || (this.scrBad && this.scrBad[id])) { this.dropScreen(); return; }
+    if (!this.scr || this.scr.id !== id) this.makeScreen(id);
+    const s = this.scale || 1, x = (r.screenAt.x * T + 8 - cx) * s, y = ((r.screenAt.y - 1) * T + 2 - cy) * s, key = [x, y, s].join();
+    if (this.scr.key !== key) { const st = this.scr.box.style; st.left = x + "px"; st.top = y + "px"; st.width = 80 * s + "px"; st.height = 45 * s + "px"; this.scr.key = key; }
+  }
+  makeScreen(id) {
+    this.dropScreen();
+    const box = document.createElement("div"); box.className = "gt-scr"; box.setAttribute("aria-hidden", "true");
+    const f = document.createElement("iframe"); f.tabIndex = -1; f.allow = "autoplay; encrypted-media"; f.title = "Now playing";
+    f.src = "https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1&mute=1&controls=0&disablekb=1&fs=0&playsinline=1&rel=0&iv_load_policy=3&loop=1&playlist=" + id + "&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
+    const fx = document.createElement("div"); fx.className = "gt-scr-fx";
+    box.append(f, fx); this.canvas.after(box);
+    const scr = this.scr = { id, box, f, key: "", cur: 0, at: 0, seeked: false, pings: 0 };
+    // Ask the player to report its time and length (YouTube's embed messaging), until it answers.
+    const ping = () => { if (this.scr !== scr || scr.at || scr.pings++ > 20) return; try { f.contentWindow.postMessage(JSON.stringify({ event: "listening", id: 1, channel: "widget" }), "*"); } catch (e) {} scr.ping = setTimeout(ping, 500); };
+    f.addEventListener("load", ping);
+    if (!this.scrMsg) { this.scrMsg = true; window.addEventListener("message", e => this.screenMessage(e)); }
+  }
+  screenMessage(e) {
+    const scr = this.scr; if (!scr || e.source !== scr.f.contentWindow) return;
+    let d; try { d = typeof e.data === "string" ? JSON.parse(e.data) : e.data; } catch (err) { return; }
+    if (!d || typeof d !== "object") return;
+    if (d.event === "onError") { (this.scrBad = this.scrBad || {})[scr.id] = 1; this.dropScreen(); return; } // won't embed: the flicker art stays
+    const info = d.info; if (!info || typeof info !== "object") return;
+    if (typeof info.currentTime === "number") { scr.cur = info.currentTime; scr.at = Date.now(); }
+    if (!scr.seeked && info.duration > 30) { // into the middle of it: as far in as the hour is, around and around
+      scr.seeked = true; const h = new Date(); h.setMinutes(0, 0, 0); const off = ((Date.now() - h.getTime()) / 1000) % info.duration;
+      scr.cur = off; scr.at = Date.now();
+      try { scr.f.contentWindow.postMessage(JSON.stringify({ event: "command", func: "seekTo", args: [off, true], id: 1, channel: "widget" }), "*"); } catch (err) {}
+    }
+  }
+  dropScreen() { const scr = this.scr; if (!scr) return; clearTimeout(scr.ping); scr.box.remove(); this.scr = null; }
+  /* Where the screen is in the episode right now (seconds), for picking up in the full player; 0 if it never said. */
+  screenTime(p) { const scr = this.scr; return scr && scr.at && scr.id === this.ytId(p.episodeUrl) ? Math.max(0, scr.cur + (Date.now() - scr.at) / 1000) : 0; }
   /* Sitting down or looking at the screen: stay for what's playing, or pick something else. */
   screenAsk() {
     const p = this.nowPlaying(); if (!p) { this.say(this.tx("screen.none")); return; }
-    this.ask(this.tx("screen.ask", { title: p.title }).join(" "), ["Watch it", "Pick another", "Not now"], i => { if (i === 0) this.playEpisode(p); else if (i === 1) this.pickEpisode(); }, 2);
+    this.ask(this.tx("screen.ask", { title: p.title }).join(" "), ["Watch it", "Pick another", "Not now"], i => { if (i === 0) this.playEpisode(p, this.screenTime(p)); else if (i === 1) this.pickEpisode(); }, 2);
   }
   /* The café's arcade cabinet: every game with a Play link, opened in a new tab. */
   arcade() {
@@ -3294,11 +3342,11 @@ class Game {
     const eps = this.episodes();
     this.openList("NOW SHOWING", [...eps.map(p => p.title), "CLOSE"], i => { const p = eps[i]; if (p) this.playEpisode(p); });
   }
-  playEpisode(p) {
+  playEpisode(p, start) {
     const id = this.ytId(p.episodeUrl), tv = this.el.tv, box = tv.querySelector(".gt-tv-box");
     tv.querySelector(".gt-tv-t").textContent = p.title + " \u00b7 " + p.developer; tv.querySelector(".gt-tv-yt").href = p.episodeUrl;
     box.innerHTML = "";
-    if (id) { const f = document.createElement("iframe"); f.src = "https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1&rel=0"; f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen"; f.allowFullscreen = true; f.title = p.title; box.appendChild(f); }
+    if (id) { const f = document.createElement("iframe"); f.src = "https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1&rel=0" + (start > 0 ? "&start=" + Math.floor(start) : ""); f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen"; f.allowFullscreen = true; f.title = p.title; box.appendChild(f); }
     else { const a = document.createElement("a"); a.href = p.episodeUrl; a.target = "_blank"; a.rel = "noopener"; a.textContent = "This one plays on its own page \u2197"; a.style.color = "#f8f0e0"; box.appendChild(a); }
     tv.style.display = "flex"; this.mode = "tv";
     const st = this.progress.stats; st.episodes = (st.episodes || 0) + 1; this.progress.tally.episodes = (this.progress.tally.episodes || 0) + 1; this.saveProgress();
@@ -3535,7 +3583,7 @@ class Game {
     add("RECOMMENDING", "Games recommended", t.recs); add("RECOMMENDING", "Visitors who loved them", t.helped); add("RECOMMENDING", "Visitors who didn't", st.nope);
     const lg = this.topOf(st.loved), gn = lg && (this.pack.settings.genres || []).find(g => g.id === lg[0]); if (gn) add("RECOMMENDING", "Your best category", gn.name);
     add("CHORES", "Frames dusted", t.dusted); add("CHORES", "Frames straightened", t.straightened); add("CHORES", "Cases wiped", t.wiped); add("CHORES", "Plants watered", t.watered);
-    const pl = this.topOf(st.plants); if (pl && pl[1] > 1) add("CHORES", "Favorite plant", "the " + pl[0] + " (" + pl[1] + " drinks)");
+    const pl = this.topOf(st.plants); if (pl && pl[1] > 1) add("CHORES", "Favorite plant", "the " + pl[0] + " (watered " + pl[1] + " times)");
     add("CHORES", "Mugs found", t.mugs); add("CHORES", "Times you closed the museum", t.closings);
     add("LIFE", "Cat pets", t.pets); add("LIFE", "Photos taken", t.photos); add("LIFE", "Photo reactions caught", this.stat("reactions") ? this.stat("reactions") + " of 10" : 0);
     const sh = this.topOf(st.shots); if (sh && sh[1] > 1) add("LIFE", "Most photographed", sh[0] + " (" + sh[1] + " times)");
@@ -5563,7 +5611,7 @@ class Game {
     if (r.intercomAt) this.drawSlot("intercom", 0, 0, r.intercomAt.x * T - cx, r.intercomAt.y * T - cy);
     if (r.marquee) this.drawSlot("theater_door", 0, 0, r.marquee.x * T - cx, r.marquee.y * T - cy);
     if (r.nowSign) this.drawSlot("led_sign", 0, 0, r.nowSign.x * T - cx, r.nowSign.y * T + 10 - cy);
-    if (r.screenAt) this.drawSlot("theater_screen", Math.floor(this.t / 45) % 2, 0, r.screenAt.x * T - cx, r.screenAt.y * T - cy); // the big screen, flickering softly
+    if (r.screenAt) this.drawSlot("theater_screen", Math.floor(this.t / 45) % 2, 0, r.screenAt.x * T - cx, (r.screenAt.y - 1) * T - cy); // the big screen, flickering softly (the video goes over it)
     for (const d of r.decals) { if (d.key === "rug" && d.w) ctx.drawImage(this.rugArt(d), d.x * T - cx, d.y * T - cy); else this.drawSlot(d.key, 0, 0, d.x * T - cx, d.y * T - cy); }
     for (const ru of r.runners) drawRunner(ctx, this.sheet(ru.k[0] === "v" ? "carpet_v" : "carpet_h"), ru, cx, cy);
     for (const [x, y] of r.lamps) this.drawSlot("wall_sconce", 0, 0, x * T - cx, y * T - cy);
@@ -5640,6 +5688,7 @@ class Game {
     this.drawReadMarks(r, cx, cy);
     this.drawLighting(r, cx, cy, pp);
     this.drawMarquee(r, cx, cy);
+    this.syncScreen(r, cx, cy);
     if (this.figure && this.isDark(r, this.figure.x, this.figure.y)) {
       ctx.globalAlpha = 0.55 * this.figure.alpha; this.drawSlot("shadow_figure", 0, 0, this.figure.x * T - cx, this.figure.y * T - cy - 4); ctx.globalAlpha = 1;
     }
@@ -5694,7 +5743,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-24 arcade tokens";
+const VERSION = "2026-10-25 live screen";
 window.GOQ = { ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
