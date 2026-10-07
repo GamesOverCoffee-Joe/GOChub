@@ -458,6 +458,14 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Keypad, wooden doors, free arcade (2026-11-02).**
+- **Office keypad:** on B1 Storage's wall beside the office door (`keypadAt: [0, 4]`, a new room key, placeable and movable in Rooms; art *Office keypad*, 3 frames: dark before closing, red after hours, green once open). Using it works like the door.
+- **Side doors:** every door in a side wall (`doorway_side`) is now a wooden door with a gold handle, mirrored on right-hand walls so the handle faces the room.
+- **Hack resistance:** the code is never plain in the pack. `settings.office.lock` is a scrambled form (`officeLock` / `officeUnlock`, exported on GOQ for the curator; an old plain `code` is converted on load). Three wrong tries lock the keypad until tomorrow (`progress.keypad`, `office.lockout`). Someone with the browser's developer tools can still get in; nothing in the browser can stop that.
+- **Arcade:** free. The token price, `arcade.free` and `arcade.broke` are gone, `arcade.intro` is a new placeholder, and the choice is Play / Not now. The game list shows the highlighted game's clip file (or its art) and developer beside it (`openList(..., preview)`, `listPreview`).
+- **The cabinet:** redrawn seen from its right side, facing left.
+- **Lists:** they keep their scroll position between moves (the cursor no longer jumps to the bottom when you go back up), and `closeList()` clears the list so a preview clip stops.
+
 **Curator nicknames (2026-11-01).**
 - **Nicknames:** with a curator badge clocked in, personal greetings call you one of `settings.office.nicknames` at random (curator Staff tab, "What people call you"; default DeVaughn, Boss, Mr. curator sir) via `callName()`. That covers the `{name}` in talk lines, Joe, the usher's "already clocked in", and clocking out.
 - **Official name:** the HUD, "Clocked in:", leaderboard, lockers and Employee of the Month keep the badge's own name, which is set in Supabase (`goq.rename_badge`).

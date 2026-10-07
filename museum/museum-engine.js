@@ -77,6 +77,8 @@ const PAL = {
   odeck:   [null, "#6a4a30", "#4a3220", "#1c1c22", "#34445e", "#6a7a9a", "#8a8a96"],
   clutter: [null, "#2a2a32", "#4a4a56", "#d4d4dc", "#ece4d4", "#7a4a28", "#f0d020", "#b89810", "#ffffff", "#3a7ae0"],
   joe:     [null, "#acd6ee", "#82b6d6", "#5a8cae", "#34343c", "#9ca2aa", "#6c7078", "#e8fbff", "#5a6a7a", "#6a4028"],
+  wdoor:   [null, "#3a2414", "#7a4e2a", "#9a6a3a", "#5a381c", "#e8b84a", "#fff0a0", "#a07020"],
+  keypad:  [null, "#2a2a32", "#4a4a56", "#8a8a96", "#1a1a20", "#000000", "#ff3a30", "#40e070"],
   ledsign: [null, "#0a080c", "#2a2630", "#55505e", "#1c0808"],
   arcade:  [null, "#1a1424", "#3a2a5a", "#5a48a0", "#101018", "#40d0c0", "#f0c040", "#e05050", "#5878c8"],
   mags:    [null, "#f8f0e0", "#8a5a38", "#2a160c", "#e05050", "#5878c8", "#f0c040", "#58a868"],
@@ -168,7 +170,20 @@ const GEN = {
   staff_lower: () => fillFn(mk(16, 16), (x, y) => (x >= 3 && x <= 12 ? (x === 3 || x === 12 || y === 15 ? 3 : x === 10 && (y === 3 || y === 4) ? 0 : 2) : undefined)),
   exit_door: () => fillFn(mk(16, 16), (x, y) => (x >= 2 && x <= 13 && y >= 1 ? (x === 2 || x === 13 || y === 1 || x === 7 || x === 8 ? 2 : (x - y + 32) % 7 === 0 ? 4 : 1) : undefined)),
   // Seen from above, a doorway in a side wall: the frame runs across (top and bottom), the opening goes through the wall.
-  doorway_side: () => fillFn(mk(16, 16), (x, y) => (y >= 1 && y <= 14 ? (y <= 2 || y >= 13 ? (y === 1 || y === 14 ? 5 : 4) : x <= 1 || x >= 14 ? 4 : 3) : undefined)),
+  // A wooden door in a side wall, its gold handle toward the room (drawn mirrored on a right-hand wall).
+  doorway_side: () => {
+    const a = mk(16, 16);
+    rect(a, 1, 0, 14, 16, 1); rect(a, 3, 1, 10, 14, 2); for (const x of [6, 9]) rect(a, x, 1, 1, 14, 4); rect(a, 3, 1, 1, 14, 3); rect(a, 4, 3, 2, 4, 3); rect(a, 4, 9, 2, 4, 3);
+    rect(a, 11, 7, 2, 2, 5); px(a, 11, 7, 6); px(a, 12, 9, 7); // the gold handle
+    return a;
+  },
+  // The office door's keypad, on the wall beside it: 3 frames (dark before closing, red after hours, green once it's open).
+  office_keypad: f => {
+    const a = mk(16, 16);
+    rect(a, 9, 3, 6, 10, 1); rect(a, 10, 4, 4, 8, 2); px(a, 11, 5, f === 2 ? 7 : f === 1 ? 6 : 4);
+    for (let y = 7; y < 12; y += 2) { px(a, 10, y, 3); px(a, 12, y, 3); }
+    return a;
+  },
   doorway_bottom: () => fillFn(mk(16, 16), (x, y) => (x >= 1 && x <= 14 ? (x <= 2 || x >= 13 ? (x === 1 || x === 14 ? 5 : 4) : y <= 1 ? 4 : 3) : undefined)),
   plant: () => {
     let a = mk(16, 16);
@@ -637,17 +652,17 @@ const GEN = {
     fillFn(a, (x, y, v) => (v === 1 && x >= 3 && x <= 60 && y >= 3 && y <= 8 && (x + y) % 2 === 0 ? 4 : undefined)); // the unlit LEDs
     return a;
   },
-  // The café's arcade cabinet: a lit marquee, a little attract screen (2 frames), a joystick and two buttons.
+  // The café's arcade cabinet, seen from its right side, facing left: the marquee and screen lean out over the
+  // control panel (joystick and buttons on top), purple side art. 2 frames: the screen's glow on the front edge flickers.
   arcade_cabinet: f => {
-    const a = mk(16, 32);
-    rect(a, 2, 1, 12, 30, 2); rect(a, 2, 1, 1, 30, 3); rect(a, 13, 1, 1, 30, 1);
-    rect(a, 3, 2, 10, 4, 6); rect(a, 4, 3, 2, 2, 7); rect(a, 7, 3, 2, 2, 8); rect(a, 10, 3, 2, 2, 7); // the marquee
-    rect(a, 3, 7, 10, 10, 4);
-    fillFn(a, (x, y) => (x >= 4 && x <= 11 && y >= 8 && y <= 15 ? ((x + y * 3 + f * 2) % 7 === 0 ? 5 : y === 12 - f && x > 5 && x < 10 ? 6 : (x * 5 + y + f) % 11 === 0 ? 7 : 4) : undefined));
-    rect(a, 1, 17, 14, 4, 3); rect(a, 1, 20, 14, 1, 1); // the control panel
-    rect(a, 4, 16, 2, 2, 7); px(a, 4, 18, 4); px(a, 5, 18, 4); px(a, 9, 18, 7); px(a, 11, 18, 8);
-    rect(a, 6, 23, 4, 4, 1); px(a, 7, 24, 6); px(a, 8, 24, 6); px(a, 7, 25, 7); px(a, 8, 25, 7); // the coin door
-    rect(a, 2, 30, 12, 1, 1);
+    const a = mk(16, 32), front = y => (y <= 5 ? 3 : y <= 15 ? 3 + Math.round((y - 6) * 0.25) : y <= 19 ? 0 : 3);
+    for (let y = 1; y <= 30; y++) for (let x = front(y); x <= 13; x++) px(a, x, y, 3);
+    for (let y = 1; y <= 30; y++) { const c = y <= 5 ? 6 : y >= 7 && y <= 15 ? ((y + f) % 3 ? 5 : 4) : 2; px(a, front(y), y, c); px(a, front(y) + 1, y, y <= 5 || (y >= 7 && y <= 15) ? c : 2); } // the front edge: lit marquee, the screen's glow, molding
+    rect(a, 12, 1, 2, 30, 2);
+    for (let i = 0; i < 9; i++) { px(a, 6 + Math.round(i * 0.6), 27 - i * 2, 8); px(a, 7 + Math.round(i * 0.6), 27 - i * 2, 8); px(a, 7 + Math.round(i * 0.6), 26 - i * 2, 7); } // a stripe of side art
+    rect(a, 9, 3, 3, 2, 6); // a little logo
+    rect(a, 0, 16, 5, 1, 3); px(a, 1, 14, 7); px(a, 1, 15, 4); px(a, 3, 15, 8); // joystick and a button on the control panel
+    rect(a, 3, 22, 1, 4, 6); rect(a, 3, 31, 11, 1, 1);
     return outline(a);
   },
   // The curator's office: spaceship-panel walls (2 frames: a few lights blink), cluttered desk, white PC with a purple glow.
@@ -1069,7 +1084,8 @@ const SLOTS = [
   { key: "heart", label: "Heart", group: "The cat", w: 8, h: 8, pal: "cat", gen: GEN.heart, note: "Floats up when you pet the cat." },
   { key: "collection_cabinet", label: "Collection cabinet", group: "Staff", w: 48, h: 32, pal: "locker", gen: GEN.collection_cabinet, note: "In the staff room. Stands two tiles tall. Everything you've bought sits on its three shelves, four per shelf, as 8×8 icons: rows at y 2, 11 and 20; x at 4, 13, 27 and 36." },
   { key: "display_case", label: "Episode display case", group: "Pieces", w: 16, h: 32, pal: "glass", gen: GEN.display_case, note: "Stands two tiles tall in the middle of a room. The game's art is drawn behind the glass at (2,3) to (13,13), so leave the glass see-through. The front is the bottom side." },
-  { key: "doorway_side", label: "Doorway in a side wall", group: "Doors", w: 16, h: 16, pal: "door", gen: GEN.doorway_side, note: "In the left or right wall. " + OVER_NOTE },
+  { key: "doorway_side", label: "Door in a side wall", group: "Doors", w: 16, h: 16, pal: "wdoor", gen: GEN.doorway_side, note: "A wooden door in the left or right wall, drawn for a left wall (handle on the right); it's mirrored on right walls. " + OVER_NOTE },
+  { key: "office_keypad", label: "Office keypad", group: "Curator's office", w: 16, h: 16, frames: 3, pal: "keypad", gen: GEN.office_keypad, note: "3 frames (48×16): dark before closing, red after hours, green once the office is open. On the side wall beside the office door, against the tile's right edge (mirrored on a right wall)." },
   { key: "cup_empty", label: "Empty cup in hand", group: "Gift shop and café", w: 8, h: 8, pal: "cups", gen: GEN.cup_empty, note: "What you're left holding after the last sip." },
   { key: "bus_tub", label: "Bus tub", group: "Gift shop and café", w: 16, h: 16, pal: "cups", gen: GEN.bus_tub, note: "Where empty cups go." },
   { key: "trash_can", label: "Trash can", group: "Furniture", w: 16, h: 16, pal: "locker", gen: GEN.trash_can, note: "Takes empty cups too." },
@@ -1311,7 +1327,7 @@ function normalizePack(p) {
   const stampSize = Math.max(3, Math.min(40, Math.round(+shin.stampSize || 10)));
   const stampItems = (Array.isArray(shin.stampItems) ? shin.stampItems : []).filter(id => items.some(it => it.id === id));
   const shop = { items, stampSize, stampItems, featured: items.some(it => it.id === shin.featured) ? shin.featured : (items[0] ? items[0].id : ""),
-    drinkPrice: Math.max(0, Math.min(99, Math.round(+shin.drinkPrice || 0))), arcadePrice: Math.max(0, Math.min(99, Math.round(shin.arcadePrice === undefined ? 1 : +shin.arcadePrice || 0))) };
+    drinkPrice: Math.max(0, Math.min(99, Math.round(+shin.drinkPrice || 0))) };
   const rooms = p.rooms && typeof p.rooms === "object" ? p.rooms : {};
   const vlist = v => (Array.isArray(v) ? v.filter(Array.isArray).map(pg => pg.map(x => str(x, 400)).filter(Boolean)).filter(pg => pg.length).slice(0, 30) : null);
   const textIn = (p.settings && p.settings.text) || {}, text = {};
@@ -1337,7 +1353,7 @@ function normalizePack(p) {
   const genres = normalizeGenres(p.settings && p.settings.genres, mids), gids = new Set(genres.map(g => g.id));
   pieces.forEach(pc => { if (!gids.has(pc.genre)) pc.genre = ""; if (!gids.has(pc.blend) || pc.blend === pc.genre) pc.blend = ""; });
   const ofin = (p.settings && p.settings.office) || {};
-  const office = { code: String(ofin.code || "").replace(/\D/g, "").slice(0, 8) || "40917", // the keypad code, the same for everyone
+  const office = { lock: officeLock(officeUnlock(ofin.lock) || String(ofin.code || "").replace(/\D/g, "").slice(0, 8) || "40917"), // the keypad code, scrambled (never plain in the pack)
     nicknames: Array.isArray(ofin.nicknames) ? ofin.nicknames.map(n => str(n, 40)).filter(Boolean).slice(0, 12) : ["DeVaughn", "Boss", "Mr. curator sir"] }; // what people call a curator badge
   return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, mindsets, curious, life, genres, office }, samples: !Array.isArray(p.pieces) };
 }
@@ -1490,7 +1506,7 @@ const ROOMS = {
       { key: "trash_can", x: 4, y: 3, event: { trash: true } },
       { key: "someones_pc", x: 12, y: 3, event: { pc: true } },
     ],
-    events: [{ x: 14, y: 5, warp: ["lobby", 13, 5, "left"] }, { x: 0, y: 5, officeDoor: true }],
+    events: [{ x: 14, y: 5, warp: ["lobby", 13, 5, "left"] }, { x: 0, y: 5, officeDoor: true }], keypadAt: [0, 4],
     light: { dim: 0.35, spots: 0 },
     catSpots: [[12, 6]],
     visitors: [{ sheet: "shop_staff", x: 7, y: 7, still: true, staff: true, role: "conservator", lines: [
@@ -1757,6 +1773,7 @@ const TEXT = {
   "office.locked":     { g: "Curator's office", l: "The office door's keypad before closing (it only works after hours)", v: [["[Keypad on the office door is dark: hint that it only works after the museum is closed, and that the code is somewhere only a real fan would find it]"]] },
   "office.keypad":     { g: "Curator's office", l: "The keypad's title, after hours", v: [["KEYPAD"]] },
   "office.wrong":      { g: "Curator's office", l: "Wrong code on the keypad", v: [["[Wrong code: the keypad buzzes]"]] },
+  "office.lockout":    { g: "Curator's office", l: "Third wrong code today: the keypad locks until tomorrow", v: [["[Third wrong code: the keypad locks itself until tomorrow]"]] },
   "office.open":       { g: "Curator's office", l: "The right code: the office opens for the first time", v: [["[The right code: the door to the curator's office opens for the first time]"]] },
   "office.digit":      { g: "Curator's office", l: "A wing's touch screen once every piece in it is read front and back ({digit}: this wing's digit, {room}: the wing)", v: [["[Note from the curator on the {room} touch screen: you've read everything here, and this wing's digit is {digit}]"]] },
   "office.callsheet":  { g: "Curator's office", l: "The call sheet on the staff corkboard, after 5 visitors loved your picks (the wings are listed after it, in the order of the code)", v: [["[Call sheet pinned to the corkboard: the order the wings were shot in. Hint that it's the order of the code]"]] },
@@ -1773,10 +1790,8 @@ const TEXT = {
   "office.tvNone":     { g: "Curator's office", l: "The TV when there are no clip files yet", v: [["[The TV has nothing to show yet]"]] },
   "hall.poster":       { g: "Screening nook", l: "Looking at a movie poster in the dark theater hallway (picks one at random)", v: [["[Movie poster in the dark hallway: too dark to make out, so describe what you can almost see]"]] },
   "arcade.title":      { g: "Arcade", l: "The arcade cabinet's list title", v: [["INSERT COIN"]] },
-  "arcade.intro":      { g: "Arcade", l: "Walking up to the arcade cabinet ({n}: tokens per play)", v: [["[Arcade intro: what the cabinet is, that it opens a museum game in a new tab, and that a play costs {n} token(s)]"]] },
-  "arcade.free":       { g: "Arcade", l: "Walking up to the arcade cabinet when plays are free (Gift shop: arcade price 0)", v: [["[Arcade intro when it's free: what the cabinet is, and that it opens a museum game in a new tab]"]] },
-  "arcade.broke":      { g: "Arcade", l: "Not enough tokens to play ({n}: tokens per play, {have}: tokens you have)", v: [["[Not enough tokens: a play costs {n}, you have {have}; chores earn tokens]"]] },
-  "arcade.go":         { g: "Arcade", l: "Starting a game ({title})", v: [["[Starting a game: the token goes in and {title} opens in a new tab]"]] },
+  "arcade.intro":      { g: "Arcade", l: "Walking up to the arcade cabinet", v: [["[Arcade intro: what the cabinet is, that it's free, and that it opens a museum game in a new tab]"]] },
+  "arcade.go":         { g: "Arcade", l: "Starting a game ({title})", v: [["[Starting a game: {title} opens in a new tab]"]] },
   "arcade.blocked":    { g: "Arcade", l: "The browser blocked the new tab ({title})", v: [["The cabinet blinks. Tap PLAY to start {title}."]] },
   "arcade.none":       { g: "Arcade", l: "No games with a Play link", v: [["The screen says GAME OVER. It's been saying that all day."]] },
   "screen.none":       { g: "Screening nook", l: "No episodes to show", v: [["Nothing's queued up. The screen just hums."]] },
@@ -2007,6 +2022,14 @@ const RUG_PRESETS = {
 };
 /* The secret shirt: the museum day from the third magazine, in order. */
 const SHIRT_STEPS = ["cocoa", "finishOnStool", "lobbyTrash", "water", "catPhoto", "stairsB1", "pc", "upperHall", "napUpper", "chat", "chat", "chat"];
+/* The office keypad's code is kept scrambled in the pack, so it isn't sitting there in plain sight. */
+const LOCK_ABC = "QWERTYUPASDFGHJKLZXCVBNM";
+function officeLock(code) { return "v1" + [...String(code)].map((d, i) => LOCK_ABC[(+d + strSeed("goq-office" + i) % 24) % 24]).join(""); }
+function officeUnlock(lock) {
+  if (typeof lock !== "string" || !/^v1[A-Z]{1,8}$/.test(lock)) return "";
+  const out = [...lock.slice(2)].map((c, i) => (LOCK_ABC.indexOf(c) - strSeed("goq-office" + i) % 24 + 48) % 24);
+  return out.every(d => d >= 0 && d < 10) ? out.join("") : "";
+}
 /* A tiny 3×5 pixel font for signs (capitals and digits). */
 const PIXEL_FONT = (() => {
   const g = "A:010101111101101 B:110101110101110 C:011100100100011 D:110101101101110 E:111100110100111 F:111100110100100 G:011100101101011 H:101101111101101 I:111010010010111 J:001001001101010 K:101101110101101 L:100100100100111 M:101111111101101 N:110101101101101 O:010101101101010 P:110101110100100 Q:010101101110011 R:110101110101101 S:011100010001110 T:111010010010010 U:101101101101111 V:101101101101010 W:101101111111101 X:101101010101101 Y:101101010010010 Z:111001010100111 0:111101101101111 1:010110010010111 2:110001010100111 3:110001010001110 4:101101111001001 5:111100110001110 6:011100111101111 7:111001010010010 8:111101111101111 9:111101111001110";
@@ -2160,7 +2183,7 @@ prepLayoutRoom(ROOMS.museum);
    the level editor in curator.html writes them. Rooms are plain data, so a deep copy is enough. */
 const BUILTIN_ROOMS = JSON.parse(JSON.stringify(ROOMS));
 const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "runners", "lamps", "arrows", "murals", "tint", "windowAt", "intercom", "lightSwitch", "eotmAt",
-  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt", "posters", "floorLights", "camAt", "colorGlows"];
+  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt", "posters", "floorLights", "camAt", "colorGlows", "keypadAt"];
 /* Light checks so a hand-edited or damaged pack can't break the game: rectangular map, sane size, a spawn on the map. */
 function normalizeRoom(id, d) {
   if (d && typeof d === "object" && d.layout) { d = Object.assign({}, d); prepLayoutRoom(d); }
@@ -2412,6 +2435,7 @@ function buildRoom(id, pieces, o) {
   if (def.eotmAt) r.eotmAt = { x: def.eotmAt[0], y: def.eotmAt[1] };
   if (def.screenAt) { const [x, y] = def.screenAt; r.screenAt = { x, y }; for (let i = 0; i < SLOT.theater_screen.w / T; i++) r.events[(x + i) + "," + (y + 1)] = { screen: true }; }
   if (def.posters) { r.posters = def.posters.map(([x, y, side]) => ({ x, y, side })); r.posters.forEach(p => { r.events[p.x + "," + p.y] = r.events[p.x + "," + (p.y + 1)] = { poster: true }; }); }
+  if (def.keypadAt) { const [x, y] = def.keypadAt; r.keypadAt = { x, y }; r.events[x + "," + y] = { officeDoor: true }; } // the office keypad, beside its door
   if (def.colorGlows) r.colorGlows = def.colorGlows.map(([x, y, color, rad]) => ({ x, y, color: /^#[0-9a-f]{6}$/i.test(color || "") ? color : "#ffffff", rad: Math.max(4, Math.min(64, +rad || 20)) }));
   if (def.floorLights) r.floorLights = def.floorLights.map(([x, y, side]) => ({ x, y, side }));
   if (def.marqueeAt) { const [x, y] = def.marqueeAt; r.marquee = { x, y }; } // a big arched doorway over two doorway tiles (the screening nook's)
@@ -2942,6 +2966,10 @@ class Game {
 .gt-reader.clip{grid-template-columns:calc(112px * var(--s)) minmax(0,1fr);grid-template-rows:calc(63px * var(--s)) minmax(0,1fr) auto;grid-template-areas:"clip body" "head body" "foot foot";column-gap:calc(6px * var(--s));padding-top:calc(4px * var(--s))}
 .gt-rd-clip{grid-area:clip;position:relative;overflow:hidden;background:#000;outline:calc(1px * var(--s)) solid #181820}
 .gt-rd-clip > img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+.gt-list-split{display:grid;grid-template-columns:minmax(0,1fr) calc(104px * var(--s));gap:calc(5px * var(--s));align-items:start}
+.gt-list-split .gt-shop-row .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gt-list-prev .gt-rd-clip{position:relative;width:100%;aspect-ratio:16/9}
+.gt-list-cap{font-size:calc(5.5px * var(--s));color:#505068;margin-top:calc(2px * var(--s));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gt-rd-clip video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s;pointer-events:none}
 .gt-rd-clip iframe{position:absolute;left:-12%;top:-12%;width:124%;height:124%;border:0;opacity:0;transition:opacity .5s;pointer-events:none}
 .gt-reader.clip .gt-rd-head{grid-area:head;flex-direction:column;align-items:stretch;gap:calc(3px * var(--s));border-bottom:0;padding:calc(4px * var(--s)) 0 0}
@@ -3579,11 +3607,11 @@ class Game {
   }
   officeOpen() { return !!(this.progress.office || (this.staff && this.staff.curator) || this.curator); }
   wings() { // the wings with a category, in the call sheet's order (shuffled by the code, so the order is part of the puzzle)
-    const lay = layoutOf(ROOMS.museum), code = this.pack.settings.office.code, out = [];
+    const lay = layoutOf(ROOMS.museum), code = officeUnlock(this.pack.settings.office.lock), out = [];
     for (const g of this.pack.settings.genres || []) { const z = lay && lay.zones.find(q => q.rect && q.rect.genre === g.id); if (z) out.push({ id: g.id, name: z.name }); }
     return out.sort((a, b) => strSeed(code + a.id) - strSeed(code + b.id));
   }
-  wingDigit(id) { const w = this.wings(), i = w.findIndex(q => q.id === id), code = this.pack.settings.office.code; return i < 0 ? "" : code[i % code.length]; }
+  wingDigit(id) { const w = this.wings(), i = w.findIndex(q => q.id === id), code = officeUnlock(this.pack.settings.office.lock); return i < 0 ? "" : code[i % code.length]; }
   officeCode() { return this.wings().map(w => this.wingDigit(w.id)).join(""); }
   wingDone(id) { // every piece in the wing read front and back (once done, it stays done when new pieces arrive)
     const done = this.progress.wingsDone || (this.progress.wingsDone = {}); if (done[id]) return true;
@@ -3594,18 +3622,23 @@ class Game {
   officeDoor() {
     if (this.officeOpen()) { this.warp("office", ...ROOMS.office.spawn); return; }
     if (!this.closed) { this.say(this.tx("office.locked")); return; }
+    if (this.keypadLocked()) { this.say(this.tx("office.lockout")); return; }
     const code = this.officeCode(), entered = [];
     const pad = () => this.openList(this.tx("office.keypad")[0] + "   " + Array.from({ length: code.length }, (_, i) => entered[i] || "_").join(" "),
       ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "DELETE", "CLOSE"], i => {
         if (i === 11 || i === undefined) return;
         if (i === 10) entered.pop(); else entered.push(i === 9 ? "0" : String(i + 1));
         if (entered.length < code.length) { setTimeout(pad, 0); return; }
-        if (entered.join("") !== code) { this.say(this.tx("office.wrong")); return; }
+        if (entered.join("") !== code) { // three wrong tries and it locks until tomorrow
+          const k = this.progress.keypad = this.progress.keypad && this.progress.keypad.day === todayISO() ? this.progress.keypad : { day: todayISO(), fails: 0 };
+          k.fails++; this.saveProgress(); this.say(this.tx(k.fails >= 3 ? "office.lockout" : "office.wrong")); return;
+        }
         this.progress.office = todayISO(); this.saveProgress(); this.checkAchievements && this.checkAchievements();
         this.say(this.tx("office.open"), () => this.warp("office", ...ROOMS.office.spawn));
       });
     pad();
   }
+  keypadLocked() { const k = this.progress.keypad; return !!(k && k.day === todayISO() && k.fails >= 3); }
   officeBooks() {
     const books = (this.pack.settings.text["office.books"] || TEXT["office.books"].v).filter(b => b && b.length);
     this.choose(this.tx("office.shelf").join(" "), [...books.map(b => b[0]), "Not now"], i => {
@@ -3729,17 +3762,14 @@ class Game {
   arcade() {
     const games = this.pack.pieces.filter(p => p.gameUrl);
     if (!games.length) { this.say(this.tx("arcade.none")); return; }
-    const n = this.pack.settings.shop.arcadePrice, have = this.progress.tokens || 0;
-    const pages = this.tx(n ? "arcade.intro" : "arcade.free", { n }), last = pages.pop();
-    this.say(pages, () => this.choose(last, [n ? "Insert " + n + " token" + (n > 1 ? "s" : "") : "Play", "Not now"], i => {
+    const pages = this.tx("arcade.intro"), last = pages.pop();
+    this.say(pages, () => this.choose(last, ["Play", "Not now"], i => {
       if (i !== 0) return;
-      if (have < n) { this.say(this.tx("arcade.broke", { n, have })); return; }
-      this.openList(this.tx("arcade.title")[0], [...games.map(p => p.title), "CLOSE"], k => { const p = games[k]; if (p) this.playGame(p, n); });
+      this.openList(this.tx("arcade.title")[0], [...games.map(p => p.title), "CLOSE"], k => { const p = games[k]; if (p) this.playGame(p); }, k => games[k]); // the highlighted game's clip plays beside the list
     }, 1));
   }
-  /* A token per play (Gift shop: arcade price), taken once you pick a game. */
-  playGame(p, n) {
-    if (n) { this.progress.tokens = Math.max(0, (this.progress.tokens || 0) - n); this.updateHud(true); }
+  /* Free to play: the game opens in a new tab. */
+  playGame(p) {
     const st = this.progress.stats; st.arcade = (st.arcade || 0) + 1; this.progress.tally.arcade = (this.progress.tally.arcade || 0) + 1; this.saveProgress();
     let w = null; try { w = window.open(p.gameUrl, "_blank"); if (w) w.opener = null; } catch (e) { w = null; }
     if (w) this.say(this.tx("arcade.go", { title: p.title }));
@@ -5086,13 +5116,17 @@ class Game {
     if (!small) s.appendChild(document.createTextNode("CURATOR'S PICK"));
     return s;
   }
-  openList(title, rows, pick) {
-    this.mode = "list"; this.list = { title, rows, pick, i: 0 }; this.el.album.style.display = "block"; this.renderList();
+  openList(title, rows, pick, preview) { // preview(i): a piece to show beside the list (its clip, or its art)
+    this.mode = "list"; this.list = { title, rows, pick, i: 0, preview, top: 0 }; this.el.album.style.display = "block"; this.renderList();
   }
+  closeList() { this.el.album.style.display = "none"; this.el.album.innerHTML = ""; this.mode = "walk"; this.inputLock = true; this.list = null; } // clearing it stops a preview clip
   renderList() {
-    const L = this.list, box = this.el.album; box.innerHTML = "";
+    const L = this.list, box = this.el.album, old = box.querySelector(".gt-shop-list"); if (old) L.top = old.scrollTop; // keep the scroll where it was
+    const keep = L.prev && L.prev.i === L.i ? L.prev.node : null; box.innerHTML = "";
     const head = document.createElement("div"); head.className = "gt-shop-head"; head.textContent = L.title; box.appendChild(head);
-    const wrap = document.createElement("div"); wrap.className = "gt-shop-list"; wrap.style.maxHeight = "calc(112px * var(--s))"; box.appendChild(wrap);
+    const body = document.createElement("div"); body.className = L.preview ? "gt-list-split" : ""; box.appendChild(body);
+    const wrap = document.createElement("div"); wrap.className = "gt-shop-list"; wrap.style.maxHeight = "calc(112px * var(--s))"; body.appendChild(wrap);
+    if (L.preview) { const node = keep || this.listPreview(L.preview(L.i)); L.prev = { i: L.i, node }; body.appendChild(node); }
     L.rows.forEach((r, i) => {
       const row = document.createElement("div"); row.className = "gt-shop-row" + (i === L.i ? " on" : "");
       const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = typeof r === "object" ? r.text : r; row.appendChild(nm);
@@ -5100,9 +5134,20 @@ class Game {
       row.addEventListener("click", e => { e.stopPropagation(); if (L.i === i) this.listPick(); else { L.i = i; this.renderList(); } });
       wrap.appendChild(row);
     });
-    const sel = wrap.children[L.i]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: "nearest" });
+    wrap.scrollTop = L.top; const on = wrap.children[L.i]; // then only as far as the highlighted row needs
+    if (on) { if (on.offsetTop < wrap.scrollTop) wrap.scrollTop = on.offsetTop; else if (on.offsetTop + on.offsetHeight > wrap.scrollTop + wrap.clientHeight) wrap.scrollTop = on.offsetTop + on.offsetHeight - wrap.clientHeight; }
   }
-  listPick() { const L = this.list; this.el.album.style.display = "none"; this.mode = "walk"; this.inputLock = true; this.list = null; L.pick(L.i); }
+  /* Beside the arcade's list: the highlighted game's clip (a clip file), or its art, with its developer under it. */
+  listPreview(p) {
+    const box = document.createElement("div"); box.className = "gt-list-prev"; if (!p) return box;
+    const fr = document.createElement("div"); fr.className = "gt-rd-clip"; box.appendChild(fr);
+    const im = document.createElement("img"); im.src = this.pieceImgs[p.id] ? p.image : this.pieceArt(p).toDataURL(); im.alt = ""; if (this.pieceImgs[p.id]) im.className = "photo"; fr.appendChild(im);
+    const c = this.clipOf(p);
+    if (c && c.file) { const v = document.createElement("video"); v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true; v.setAttribute("muted", ""); v.addEventListener("playing", () => { v.style.opacity = 1; }); v.addEventListener("error", () => v.remove()); v.src = c.file; fr.appendChild(v); const pr = v.play(); if (pr && pr.catch) pr.catch(() => {}); }
+    const cap = document.createElement("div"); cap.className = "gt-list-cap"; cap.textContent = "By " + p.developer; box.appendChild(cap);
+    return box;
+  }
+  listPick() { const L = this.list; this.closeList(); L.pick(L.i); }
   /* The microwave runs once per opened museum. It does not go well. */
   microwave() {
     if (this.microwaved) { this.say(this.tx("microwave.after")); return; }
@@ -5399,7 +5444,7 @@ class Game {
     if (this.mode === "list") {
       const L = this.list, n = L.rows.length;
       if (has("up") || has("down")) { L.i = (L.i + (has("up") ? n - 1 : 1)) % n; this.renderList(); }
-      if (has("a")) this.listPick(); else if (has("b") || has("start")) { this.el.album.style.display = "none"; this.mode = "walk"; this.inputLock = true; this.list = null; }
+      if (has("a")) this.listPick(); else if (has("b") || has("start")) this.closeList();
       return;
     }
     if (this.mode === "album") {
@@ -5808,9 +5853,9 @@ class Game {
     ctx.drawImage(line, x0 + 3 + win - o, y0 + 2);
     ctx.restore();
   }
-  drawFlip(key, flip, x, y) { // a slot mirrored left to right (one piece of art for both walls)
-    if (!flip) { this.drawSlot(key, 0, 0, x, y); return; }
-    const ctx = this.ctx; ctx.save(); ctx.translate(x + SLOT[key].w, 0); ctx.scale(-1, 1); this.drawSlot(key, 0, 0, 0, y); ctx.restore();
+  drawFlip(key, flip, x, y, f) { // a slot mirrored left to right (one piece of art for both walls)
+    if (!flip) { this.drawSlot(key, f || 0, 0, x, y); return; }
+    const ctx = this.ctx; ctx.save(); ctx.translate(x + SLOT[key].w, 0); ctx.scale(-1, 1); this.drawSlot(key, f || 0, 0, 0, y); ctx.restore();
   }
   /* A line of glowing red LED letters (the pixel font, with a soft halo), cached. */
   ledText(s) {
@@ -5998,7 +6043,7 @@ class Game {
     for (let y = ty0; y <= ty1; y++) for (let x = tx0; x <= tx1; x++) {
       const sx = x * T - cx, sy = y * T - cy;
       if (r.tiles[y][x]) this.drawSlot(r.tiles[y][x], this.frame(r.tiles[y][x]), 0, sx, sy);
-      if (r.over[y][x] && !this.underMarquee(r, x, y)) this.drawSlot(r.over[y][x], this.frame(r.over[y][x]), 0, sx, sy);
+      if (r.over[y][x] && !this.underMarquee(r, x, y)) { const o = r.over[y][x]; if (o === "doorway_side") this.drawFlip(o, r.solid[y][x + 1] !== false, sx, sy); else this.drawSlot(o, this.frame(o), 0, sx, sy); } // side doors: handle toward the room
     }
     for (const h of r.hung) {
       const x = h.x * T - cx, y = h.y * T - cy;
@@ -6054,6 +6099,7 @@ class Game {
     for (const sw of r.switches || []) this.drawSlot("light_switch", 0, 0, sw.x * T - cx, sw.y * T - cy);
     if (r.intercomAt) this.drawSlot("intercom", 0, 0, r.intercomAt.x * T - cx, r.intercomAt.y * T - cy);
     for (const p of r.posters || []) this.drawFlip("hall_poster", p.side === "r", p.x * T - cx, p.y * T - cy);
+    if (r.keypadAt) { const k = r.keypadAt; this.drawFlip("office_keypad", r.solid[k.y][k.x + 1] !== false, k.x * T - cx, k.y * T - cy, this.officeOpen() ? 2 : this.closed && !this.keypadLocked() ? 1 : 0); }
     if (r.marquee) this.drawSlot("theater_door", 0, 0, r.marquee.x * T - cx, r.marquee.y * T - cy);
     if (r.nowSign) this.drawSlot("led_sign", 0, 0, r.nowSign.x * T - cx, r.nowSign.y * T + 10 - cy);
     if (r.screenAt) this.drawSlot("theater_screen", Math.floor(this.t / 45) % 2, 0, r.screenAt.x * T - cx, (r.screenAt.y - 1) * T - cy); // the big screen, flickering softly (the video goes over it)
@@ -6193,8 +6239,8 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-01 nicknames";
-window.GOQ = { ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
+const VERSION = "2026-11-02 keypad and arcade";
+window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
   spotRooms: () => Object.keys(ROOMS).filter(id => (ROOMS[id].spots || []).length).map(id => ({ id, name: ROOMS[id].name, n: ROOMS[id].spots.length })),
