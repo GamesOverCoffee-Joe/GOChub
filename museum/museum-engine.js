@@ -2757,7 +2757,7 @@ class Game {
 .gt-scr-fx{position:absolute;inset:0;background-image:linear-gradient(rgba(0,0,0,0) 50%,rgba(0,0,0,.32) 50%),linear-gradient(90deg,rgba(0,0,0,0) 50%,rgba(0,0,0,.12) 50%);background-size:100% calc(2px * var(--s)),calc(2px * var(--s)) 100%;box-shadow:inset 0 0 calc(5px * var(--s)) rgba(0,0,0,.65)}
 .gt-reader.clip{grid-template-columns:calc(112px * var(--s)) minmax(0,1fr);grid-template-rows:calc(63px * var(--s)) minmax(0,1fr) auto;grid-template-areas:"clip body" "head body" "foot foot";column-gap:calc(6px * var(--s));padding-top:calc(4px * var(--s))}
 .gt-rd-clip{grid-area:clip;position:relative;overflow:hidden;background:#000;outline:calc(1px * var(--s)) solid #181820}
-.gt-rd-clip img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+.gt-rd-clip > img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
 .gt-rd-clip video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s;pointer-events:none}
 .gt-rd-clip iframe{position:absolute;left:-12%;top:-12%;width:124%;height:124%;border:0;opacity:0;transition:opacity .5s;pointer-events:none}
 .gt-reader.clip .gt-rd-head{grid-area:head;flex-direction:column;align-items:stretch;gap:calc(3px * var(--s));border-bottom:0;padding:calc(4px * var(--s)) 0 0}
@@ -2767,7 +2767,8 @@ class Game {
 .gt-reader.clip .gt-rd-body{grid-area:body;height:calc(110px * var(--s));margin-top:0;font-size:calc(6.5px * var(--s))}
 .gt-reader.clip .gt-rd-foot{grid-area:foot}
 .gt-reader.clip.flip{grid-template-columns:minmax(0,1fr) calc(112px * var(--s));grid-template-areas:"body clip" "body head" "foot foot"}
-.gt-rd-clip img.photo{image-rendering:auto}
+.gt-rd-clip > img.photo{image-rendering:auto}
+.gt-rd-clip .gt-pick{position:absolute;left:calc(2px * var(--s));bottom:calc(2px * var(--s));z-index:2;margin:0;padding:calc(1px * var(--s)) calc(2px * var(--s));background:rgba(248,244,236,.92);border:calc(.5px * var(--s)) solid #181820}
 .gt-rd-body b.red{color:#a8322a}
 .gt-tv{position:absolute;inset:0;display:none;flex-direction:column;background:#000;z-index:9}
 .gt-tv-bar{display:flex;align-items:center;gap:calc(4px * var(--s));padding:calc(2px * var(--s)) calc(4px * var(--s));color:#f8f0e0;font-size:max(calc(6px * var(--s)), 10px);background:#141018}
@@ -2889,7 +2890,7 @@ class Game {
     }
     else if (spec.img) { const im = document.createElement("img"); im.src = spec.img; im.alt = ""; if (spec.imgClass) im.className = spec.imgClass; head.appendChild(im); }
     const t = document.createElement("div"); t.className = "gt-rd-t"; t.textContent = spec.title || ""; if (spec.sub) { const sm = document.createElement("small"); sm.textContent = spec.sub; t.appendChild(sm); }
-    if (spec.pick) t.appendChild(this.pickTag()); head.appendChild(t);
+    if (spec.pick) (framed ? box.querySelector(".gt-rd-clip") : t).appendChild(this.pickTag()); head.appendChild(t); // on a framed placard, the pick tag sits on the screen's corner
     const links = (spec.links || []).filter(l => l[0]);
     if (links.length || spec.note) {
       const lw = document.createElement("div"); lw.className = "gt-rd-links"; head.appendChild(lw);
@@ -5884,7 +5885,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-30 framed placards";
+const VERSION = "2026-10-30 pick on frame";
 window.GOQ = { ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

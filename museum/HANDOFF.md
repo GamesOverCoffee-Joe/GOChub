@@ -462,6 +462,7 @@ Goal: character.
 - **Every piece's placard** now uses the side-by-side layout (`read({ frame: true })`). The frame shows the piece's art (photos smooth, pixel art pixelated) until the piece has a gameplay clip, so adding a clip later needs no other change. Other readers (magazines, stats, the stamp card) keep the old layout.
 - **The developer's side** (the back of a case) is mirrored (`flip`): text on the left, frame and title on the right. Intention headings are red everywhere (`tone: "red"` on a section, carried through pagination).
 - The note button reads "ADD NOTE +" on framed placards.
+- On framed placards the CURATOR'S PICK tag sits on the screen's bottom-left corner, so it no longer pushes the buttons into the footer (frame image rules are scoped to `.gt-rd-clip > img`).
 
 **Clip files (2026-10-29).**
 - **Clip files:** the gameplay clip can be a video file in the repo's root `clips/` folder. The curator takes just its name (e.g. `acrobatic-car_1.webm`), and the engine loads `../clips/<name>` relative to `museum/`. Full https URLs to .webm or .mp4 files also work. A file plays in a muted, looping `<video>` that fades in over the pixel art as soon as it plays, with no crop, no scanlines and no YouTube chrome. It only downloads when its placard opens, and closing the placard stops it.
