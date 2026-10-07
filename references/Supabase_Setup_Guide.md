@@ -18,6 +18,8 @@
 >
 > **For the curator's office (also October 2026),** paste and run the updated `supabase-setup.sql` once more (step 2). Then a badge you've made a curator with the line above also opens the curator's office in the game and starts you there, with Recording mode on the office computer. Badges clocked in before you run it need to clock in again.
 >
+> **Curators off the leaderboard (also October 2026):** run the updated `get_leaderboard` from `supabase-setup.sql` (or the whole file again). Curator badges no longer show up as Employee of the Month or in the top ten.
+>
 > Everything marked **[UPDATE, October 2026]** below is new or changed.
 
 This connects the museum's staff door to a free Supabase database. Real badges get checked, chores done on shift count toward points, and Employee of the Month picks itself. It takes about 20 minutes, and it all works from `http://localhost:8000`, so you don't need a website yet.

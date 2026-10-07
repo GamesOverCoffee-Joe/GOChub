@@ -458,6 +458,8 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Curators off the leaderboard (2026-11-06).** `get_leaderboard` (Supabase) leaves out curator badges (`not b.curator`), so the curator is never Employee of the Month or in the top ten. It needs the SQL run again.
+
 **Photo perspective and preview options (2026-11-05).**
 - **Photos are 48×36 now** (they were 24×18; the album and close-up showed them bigger anyway). Scenes are drawn at full size; older single-sprite photos are drawn at 24×18 and doubled, so they look as before. The locker frame crop scales with the size.
 - **People** (`personScene`, built in `takePhoto` after they react): a classic close-up, drawn at 24×18 on the floor tile they stand on and then doubled (`thumb.close`). They face the camera (the shy turn their back), with their reaction bubble beside their head. Nothing behind them, so it reads as if the camera were right in front of them. (A backdrop of the walls, cases and furniture behind them was tried on 2026-11-05 and removed.)
