@@ -458,6 +458,13 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Curator tidy (2026-11-08).** A cleanup pass on curator.html; no pack or engine changes.
+- **Header:** only the save status, **More** and **Export pack** stay out. More holds Check version, Import pack, Batch fill (local only, and `batch-fill.html` isn't in the repo) and the GOC link grabber.
+- **Pieces fold:** each piece is a one-line row (thumb, title, developer, where it hangs, tags for Painting / Pick / Unveils / Clip / No episode link). Click to open. Which ones are open is kept for the tab session (`goq-open-pieces` in sessionStorage). There's a search box (title or developer) and Open all / Close all. A new piece opens itself and focuses its title. The tab went from about 43,600px tall to about 3,100px.
+- **Intros:** a tab's opening paragraphs longer than 220 characters fold into a "How this works" toggle (`tidyTab()`, run after every render).
+- **Jump chips:** tabs with four or more sections (Staff, Visitors) get chips at the top that scroll to each section. Rooms and Art are skipped.
+- **Checkboxes:** they now sit beside their labels instead of above them.
+
 **GOC link grabber (2026-11-07).** `museum/goc-links.html` (linked from Staff → Friday features) makes `Title | https://youtu.be/ID` lines.
 - **Bookmark:** drag it to the bookmarks bar, then click it on a YouTube Videos tab or playlist. It copies every loaded video, skipping Shorts and duplicates, and shows the list to copy by hand if the clipboard is blocked.
 - **Paste box:** finds video ids in any text and looks up titles through YouTube's oEmbed. A title that can't be fetched becomes "Games Over Coffee".
