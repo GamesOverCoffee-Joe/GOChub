@@ -16,6 +16,8 @@
 >
 > Then open the curator's **Notes** tab and sign in with that badge number and key. Notes visitors leave wait there until you approve them. Until you run the updated file, the museum still offers notes, but they won't send.
 >
+> **For the curator's office (also October 2026),** paste and run the updated `supabase-setup.sql` once more (step 2). Then a badge you've made a curator with the line above also opens the curator's office in the game and starts you there, with Recording mode on the office computer. Badges clocked in before you run it need to clock in again.
+>
 > Everything marked **[UPDATE, October 2026]** below is new or changed.
 
 This connects the museum's staff door to a free Supabase database. Real badges get checked, chores done on shift count toward points, and Employee of the Month picks itself. It takes about 20 minutes, and it all works from `http://localhost:8000`, so you don't need a website yet.

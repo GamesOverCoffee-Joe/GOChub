@@ -328,7 +328,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-20 wing names";
+window.GOQ_WANT = "2026-11-02 keypad and arcade";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -376,6 +376,8 @@ function packOut() {
     else { o.guestWriter = p.guestWriter; o.guestNote = p.guestNote; }
     if (p.episodeUrl) o.episodeUrl = p.episodeUrl;
     if (p.gameUrl) o.gameUrl = p.gameUrl;
+    if (p.clipUrl) o.clipUrl = p.clipUrl;
+    if (p.clipLoop) o.clipLoop = p.clipLoop;
     if (p.hint) o.hint = p.hint;
     if (p.minds && p.minds.length) o.minds = p.minds;
     if (p.genre) o.genre = p.genre;
@@ -815,6 +817,22 @@ function renderStaff() {
     el("p", { class: "note", style: "margin:0 0 12px", text: "One per line: their name, then a comma and their badge number if they have one. When a member clocks in with their badge, they're never also in the staff room, since they're the one playing. Names are public on your site, so use the names members are happy to show." }),
     el("label", { class: "sr-only", for: "memText", text: "Patreon members" }), mem, memCount,
   ]));
+  draft.settings.office = draft.settings.office || { lock: GOQ.officeLock("40917") };
+  const ocode = el("input", { type: "text", inputmode: "numeric", value: GOQ.officeUnlock(draft.settings.office.lock) || "", placeholder: "40917", maxlength: 8 });
+  ocode.addEventListener("input", () => { const v = ocode.value.replace(/\D/g, "").slice(0, 8); if (v !== ocode.value) ocode.value = v; draft.settings.office.lock = GOQ.officeLock(v || "40917"); changed(); }); // saved scrambled
+  wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
+    el("h3", { text: "Curator's office keypad", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "The code on the office door in B1, the same for everyone so players can trade it. One digit per wing: each wing's touch screen gives its digit once every piece in it is read front and back, and the call sheet on the staff corkboard (after 5 visitors love a pick) gives the order. With five wings, it's the first five digits. It's saved scrambled in the pack, and the keypad locks for the day after three wrong tries. A curator badge always gets in." }),
+    el("div", { class: "fields", style: "max-width:420px" }, [el("label", {}, [document.createTextNode("Code"), ocode])]),
+  ]));
+  if (!Array.isArray(draft.settings.office.nicknames)) draft.settings.office.nicknames = ["DeVaughn", "Boss", "Mr. curator sir"];
+  const nicks = el("textarea", { rows: 3, style: "max-width:420px;width:100%" }); nicks.value = draft.settings.office.nicknames.join("\n");
+  nicks.addEventListener("input", () => { draft.settings.office.nicknames = nicks.value.split("\n").map(x => x.trim()).filter(Boolean).slice(0, 12); changed(); });
+  wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
+    el("h3", { text: "What people call you", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "One per line. When you're clocked in with a curator badge, personal greetings (staff, Joe, the usher, clocking out) call you one of these at random. Badges, the ON SHIFT tag, the leaderboard and Employee of the Month keep your badge's name." }),
+    el("label", { class: "sr-only", text: "Nicknames" }), nicks,
+  ]));
   const cat = el("input", { type: "text", value: st.catName || "Pixel", placeholder: "Pixel", maxlength: 30 });
   cat.addEventListener("input", () => { st.catName = cat.value.trim() || "Pixel"; changed(); });
   wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
@@ -946,6 +964,8 @@ const PLACE_GROUPS = [
     { kind: "catSpot", name: "Cat nap spot", key: "cat" }, { kind: "mugSpot", name: "Mug spot", key: "mug" },
     { kind: "lightSwitch", name: "Light switch", key: "light_switch", note: "On the lower wall row. Rooms with a switch must be dark to close the museum." },
     { kind: "intercom", name: "Intercom", key: "intercom" },
+    { kind: "marqueeAt", name: "Marquee doorway", key: "theater_door", note: "One big arched doorway with chasing bulbs. Tap the upper-left of a two-tile-wide doorway (both wall rows)." },
+    { kind: "nowPlayingAt", name: "NOW PLAYING sign", key: "led_sign", note: "The red LED sign: four tiles wide across both wall rows. Tap the upper wall row where its left end goes. It shows a random episode each hour." },
     { kind: "glow", name: "Light", key: "floor_lamp", note: "A warm pool of light. Pieces get their own spotlights automatically; these are for lamps and corners." },
   ] },
   { name: "People", items: ["visitor_a", "visitor_b", "visitor_c", "shop_staff", "guard"].map(k => ({ kind: "visitor", key: k })) },
@@ -990,7 +1010,7 @@ function roomItems(d) {
   (d.catSpots || []).forEach((p, i) => out.push({ type: "catSpot", i, x: p[0], y: p[1], w: 1, h: 1, label: "Cat nap spot" }));
   (d.glows || []).forEach((p, i) => out.push({ type: "glow", i, x: p[0], y: p[1], w: 1, h: 1, label: "Light" }));
   (d.mugSpots || []).forEach((p, i) => out.push({ type: "mugSpot", i, x: p[0], y: p[1], w: 1, h: 1, label: "Mug spot" }));
-  [["lightSwitch", "Light switch", 1, 1], ["intercom", "Intercom", 1, 1], ["timeClock", "Time clock", 1, 1]].forEach(([k, l, w, h]) => { if (d[k]) out.push({ type: "fixed", key: k, x: d[k][0], y: d[k][1], w, h, label: l }); });
+  [["lightSwitch", "Light switch", 1, 1], ["intercom", "Intercom", 1, 1], ["timeClock", "Time clock", 1, 1], ["keypadAt", "Office keypad", 1, 1], ["marqueeAt", "Marquee doorway", 2, 2], ["nowPlayingAt", "NOW PLAYING sign", 4, 2]].forEach(([k, l, w, h]) => { if (d[k]) out.push({ type: "fixed", key: k, x: d[k][0], y: d[k][1], w, h, label: l }); });
   [["windowAt", "Window"], ["eotmAt", "Employee of the Month"], ["corkboardAt", "Corkboard"], ["leaderboardAt", "Staff leaderboard"]].forEach(([k, l]) => { if (d[k]) out.push({ type: "fixed", key: k, x: d[k][0], y: 1, w: 2, h: 2, label: l }); });
   if (d.featuredAt) out.push({ type: "fixed", key: "featuredAt", x: d.featuredAt[0], y: d.featuredAt[1] - 1, w: 1, h: 2, label: "Featured item stand" });
   (d.stairs || []).forEach((st, i) => out.push({ type: "stairs", i, x: st.x, y: st.y, w: 1, h: 1, label: st.kind === "up" ? "Stairs up" : "Stairs down" }));
@@ -1339,6 +1359,7 @@ function placeAt(t) {
   else if (p.kind === "mugSpot") (d.mugSpots = d.mugSpots || []).push([t.x, t.y]);
   else if (p.kind === "lightSwitch") d.lightSwitch = [t.x, t.y];
   else if (p.kind === "intercom") d.intercom = [t.x, t.y];
+  else if (p.kind === "marqueeAt" || p.kind === "nowPlayingAt") d[p.kind] = [t.x, t.y];
   else if (p.kind === "glow") (d.glows = d.glows || []).push([t.x, t.y]);
   else if (p.kind === "visitor") (d.visitors = d.visitors || []).push({ sheet: p.key, x: t.x, y: t.y, dir: "down", lines: [["Hello!"]] });
   else if (p.kind === "stairs") (d.stairs = d.stairs || []).push({ x: t.x, y: t.y, kind: p.key === "stair_up" ? "up" : "down", to: null });
@@ -2383,6 +2404,8 @@ function pieceRow(p, i, place) {
     p.kind === "episode" ? blendBox(p) : null,
     f("YouTube episode", link("episodeUrl", "https://youtube.com/watch?v=..."), false, "Shown as \"Watch the episode\""),
     f("The game", link("gameUrl", "https://store.steampowered.com/... or itch.io"), false, "Shown as \"Play the game\""),
+    f("Gameplay clip", text("clipUrl", "acrobatic-car_1.webm or https://youtu.be/..."), false, "Plays muted and looping beside the placard's text. Best: a short .webm or .mp4 in the clips folder (type just its name; about 320×180, no sound). A YouTube link works too, but YouTube's overlay shows each time it loops."),
+    f("Clip loop (YouTube only)", text("clipLoop", "12:53-13:00"), false, "From and to, in the YouTube video. That stretch loops. A clip file loops by itself and ignores this."),
     el("div", { class: "acts" }, [
       el("button", { class: "btn small quiet", type: "button", text: "Move up", disabled: i === 0, onclick: () => move(-1) }),
       el("button", { class: "btn small quiet", type: "button", text: "Move down", disabled: i === draft.pieces.length - 1, onclick: () => move(1) }),

@@ -445,3 +445,104 @@ Goal: character.
 - **The mug** was see-through: its body used palette color 0, which was transparent. It's opaque cream now.
 - **Live room names:** any text (Words, or what a prop says) can write `{room:ID}` for a museum room or hallway (its zone id, e.g. `upper`, `puzzle`) or a room (e.g. `lobby`), and it shows that place's current name. Magazine 3's shirt riddle and the two hall benches use it. Photo album entries now name the wing or hall, not just "Museum". The engine's built-in fallback layout uses the same names as the pack (Wolpaw, Meier, Nishikado, Roberta Williams Wings; North, South, West, East Halls). The curator's Go to room list refreshes once the pack loads.
 - **Wing names everywhere (2026-10-20):** `{ROOM:id}` is the same as `{room:id}` in capitals; the five room signs open with it, so they always show the wing's current name. A room's touch screen is titled with the wing's name ("NISHIKADO WING: MORE PIECES"), and so is the curator's "ON THE NISHIKADO WING SCREEN". An arrow with no words of its own says the name of the wing for its genre.
+
+**Note button (2026-10-21).** Leaving a note is now a yellow **NOTE +** button under WATCH and PLAY on a placard (Up does the same). The old "Leave a note?" question after the last page is gone (and its Words line, `note.ask`); A on the last page just closes the placard. With three buttons, they're drawn a little tighter so the placard's footer still fits.
+
+**Controls, menus and stats (2026-10-21).**
+- **Keys:** Esc pauses (like Enter and P). X is B: photos, and back in menus. K and Backspace go back in menus but never take a photo (they're the "bk" key, dropped while walking).
+- **Controller** (Gamepad API, standard layout), polled every frame through the same path as the touch buttons: D-pad or left stick, bottom button A, right button B, Start or Select pauses. "Controller connected" shows on first use.
+- **Settings (museum.html):** **Sharp pixels** (whole-number zoom only; default on with a mouse, off on touch) and **Swap A and B** (controllers, and the keyboard's Z/X).
+- **Pause menu:** My Stuff (Photos, Stamp card, Achievements, Wardrobe), Controls (keyboard, touch and controller pages; the one you're using first), Respawn, Save, Save and quit, Back.
+- **Notes with a controller:** the note card shows a keyboard (three rows of letters and . , ! ?, then Caps, ', Space, Del, Done). D-pad picks, A types, B deletes (on an empty note it puts the card away), Done moves to the name, Start sends. Only when the last input was a controller; phones keep their own keyboard.
+- **Stats on Someone's PC (B1):** it boots PLAYER_STATS.EXE: a staff profile (up to three titles you've earned, best first), then Visits, Reading, Recommending, Chores and Life. New counters in `progress.stats`: days visited, streak and best streak, time in the museum, time in the dark after closing, steps, walking into walls, drinks and plants by kind, who you photograph most, loved recommendations by genre, misses. Turning the PC on still counts for the shirt riddle.
+- **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
+- **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
+
+**Keypad, wooden doors, free arcade (2026-11-02).**
+- **Office keypad:** on B1 Storage's wall beside the office door (`keypadAt: [0, 4]`, a new room key, placeable and movable in Rooms; art *Office keypad*, 3 frames: dark before closing, red after hours, green once open). Using it works like the door.
+- **Side doors:** every door in a side wall (`doorway_side`) is now a wooden door with a gold handle, mirrored on right-hand walls so the handle faces the room.
+- **Hack resistance:** the code is never plain in the pack. `settings.office.lock` is a scrambled form (`officeLock` / `officeUnlock`, exported on GOQ for the curator; an old plain `code` is converted on load). Three wrong tries lock the keypad until tomorrow (`progress.keypad`, `office.lockout`). Someone with the browser's developer tools can still get in; nothing in the browser can stop that.
+- **Arcade:** free. The token price, `arcade.free` and `arcade.broke` are gone, `arcade.intro` is a new placeholder, and the choice is Play / Not now. The game list shows the highlighted game's clip file (or its art) and developer beside it (`openList(..., preview)`, `listPreview`).
+- **The cabinet:** redrawn seen from its right side, facing left.
+- **Lists:** they keep their scroll position between moves (the cursor no longer jumps to the bottom when you go back up), and `closeList()` clears the list so a preview clip stops.
+
+**Curator nicknames (2026-11-01).**
+- **Nicknames:** with a curator badge clocked in, personal greetings call you one of `settings.office.nicknames` at random (curator Staff tab, "What people call you"; default DeVaughn, Boss, Mr. curator sir) via `callName()`. That covers the `{name}` in talk lines, Joe, the usher's "already clocked in", and clocking out.
+- **Official name:** the HUD, "Clocked in:", leaderboard, lockers and Employee of the Month keep the badge's own name, which is set in Supabase (`goq.rename_badge`).
+
+**The curator's office (2026-10-31).**
+- **Room:** `office` (built in), off B1 Storage through a new door on Storage's left wall (0, 5), `officeDoor` event. Spaceship-panel walls (`ship_wall_upper/lower`, 2 frames, a few lights blink), purple-tinted carpet, dim 0.12, no light switch.
+- **Furniture:** bookshelf (Words `office.books`: one book per entry, first line is the spine), desk with two monitors off, white PC tower with a purple glow (new room key `colorGlows: [x, y, color, radius]`, drawn over the lighting), TV (off until you turn it on), office chair (sit), Joe, a small table with a Steam Deck, the camera on its tripod (no light) and a soft box. Floor clutter decals: controllers, half-finished iced coffees, a yerba mate can. All of it is placeholder art under Art → Curator's office.
+- **TV:** turned on, it plays every clip *file* (from `clips/`) one after another, muted, over its picture area. It follows Settings → Gameplay video.
+- **Joe:** in the office he talks to you by your badge name (`office.joe`), or `office.joeAnon` when you're not clocked in. He can't be petted and has no photo reaction. Out in the museum, about one page load in three, he's standing somewhere on the floor. Talk to him and he glitches out (row slices jitter and fade) and is gone for that visit. Counts as `tally.joe` ("Glitchy robot sightings" on the PC).
+- **Behind the Scenes** (secret achievement `office`):
+  1. **Digits:** a wing's touch screen shows `office.digit` with that wing's digit once every piece in the wing is read front and back (`wingDone`, remembered in `progress.wingsDone`).
+  2. **Order:** after 5 loved recommendations (`tally.helped`), the staff corkboard adds `office.callsheet` plus the list of wings in code order.
+  3. **After hours:** the keypad only works when `this.closed` (announcement made, lights out). The entry pad is a list (1–9, 0, DELETE, CLOSE). The right code sets `progress.office`, and the door stays open after that.
+  - **The code:** one shared code, `settings.office.code` (curator Staff tab, default 40917). The wing order is shuffled by the code (`wings()`), and each wing's digit is the code's digit at its position, so the code you type is the code itself.
+- **Curator badge:** `clock_in` now returns `curator` (SQL updated; the guide says to re-run it), and `checkBadge` keeps it on `progress.staff.curator`. A curator badge always opens the office, and the game starts there on load. The office computer offers **Recording mode** (curator only, `progress.recording`): it hides toasts, the HUD chips and the touch controls (`html.goq-rec`), holds the time of day, and skips the tutorial. Spooky events stay.
+- **Text:** all new text is bracketed placeholders in Words → Curator's office.
+- **Old saved badges:** the one-press "Clock in as …?" reuse (`lastBadge()`) ignores a badge saved before curator support (an online badge with no `curator` field), so that badge asks for its key once and picks up its curator status.
+
+**Framed placards (2026-10-30).**
+- **Every piece's placard** now uses the side-by-side layout (`read({ frame: true })`). The frame shows the piece's art (photos smooth, pixel art pixelated) until the piece has a gameplay clip, so adding a clip later needs no other change. Other readers (magazines, stats, the stamp card) keep the old layout.
+- **The developer's side** (the back of a case) is mirrored (`flip`): text on the left, frame and title on the right. Intention headings are red everywhere (`tone: "red"` on a section, carried through pagination).
+- The note button reads "ADD NOTE +" on framed placards.
+- On framed placards the CURATOR'S PICK tag sits on the screen's bottom-left corner, so it no longer pushes the buttons into the footer (frame image rules are scoped to `.gt-rd-clip > img`).
+
+**Clip files (2026-10-29).**
+- **Clip files:** the gameplay clip can be a video file in the repo's root `clips/` folder. The curator takes just its name (e.g. `acrobatic-car_1.webm`), and the engine loads `../clips/<name>` relative to `museum/`. Full https URLs to .webm or .mp4 files also work. A file plays in a muted, looping `<video>` that fades in over the pixel art as soon as it plays, with no crop, no scanlines and no YouTube chrome. It only downloads when its placard opens, and closing the placard stops it.
+- **Acrobatic Car:** uses `acrobatic-car_1.webm` (320×180 VP9, about 17.5 s, 234 KB).
+- **YouTube:** links still work as a fallback, with Clip loop; the overlay returns on each loop.
+- **Making clips:** about 320×180, no audio, VP9 webm: `ffmpeg -ss A -to B -i src.mp4 -vf "scale=320:-2,fps=24" -an -c:v libvpx-vp9 -crf 40 -b:v 0 name.webm`.
+
+**Gameplay on placards (2026-10-28), trial on Acrobatic Car.**
+- **The fields:** a piece can have a gameplay clip, set in the curator (Pieces): `clipUrl` (YouTube) and `clipLoop` ("12:53-13:00"; empty = play from the start). Acrobatic Car is set to its episode, 12:53 to 13:00.
+- **Layout:** a placard for such a piece switches to a side-by-side layout (`.gt-reader.clip`, a CSS grid). The clip frame is 112×63 at top left, with the title, developer and WATCH/PLAY/NOTE under it. The text is in the right column (6.5px, paged as before) and the footer spans both columns.
+- **Playback:** the clip plays muted, with scanlines. The case's pixel art holds the frame until the clip has been playing for 3 s (8 s if the player never answers), then it fades in. At the end of the stretch it seeks back to the start. It stops when the placard closes. If the video won't embed, the pixel art stays.
+- **Setting:** Settings "Theater screen video" is now "Gameplay video" and covers both (`screenVideo`).
+- **Code:** `ytPost` and `listenYt` are shared by the screen and the clip. Untested against real YouTube (container can't reach it).
+
+**One theater room (2026-10-27).**
+- **Merged:** the hallway is now part of the `screening` room. The nook is on top (rows 0 to 7), and the 20-tile corridor runs below it (x 5 to 7, rows 8 to 27, alcoves at rows 12, 17 and 22), with black outside the corridor walls. `theater_hall` and `preScreen` are gone.
+- **Doors:** the only door is at the bottom, (6, 28), out to the museum. The marquee doors arrive you at (6, 27) facing up.
+- **Camera:** a new room key `camAt` (0.75 here) sets where the camera keeps you on screen, from the top (default 0.5). Here you're low on the screen, so you see the corridor ahead and the whole screen from anywhere in the nook.
+- **Screen video:** it loads as soon as you enter, and is clipped (`clip-path`) to the part of the screen that's in view. It only shows once the screen is visible and clean.
+- **Lighting:** dim 0.4 for the whole room.
+
+**Theater hallway (2026-10-26).**
+- **The room:** `theater_hall` (built in), a 3-wide, 20-tile dark corridor between the marquee door and the screening nook. The museum layout doors `screening-1/2` now warp to (3, 22) facing up, the top door leads into the nook, and the nook's doors lead back to (3, 3). It has 3 trash can alcoves, and 8 posters seen edge on (`posters: [x, y, "l"|"r"]`, art *Theater hallway poster*, mirrored for the right wall; looking at one reads `hall.poster`, a placeholder). Floor lights run every 2 tiles along both edges (`floorLights`, art *Hallway floor light*, drawn over the dark with a glow). Dim 0.55, no light switch.
+- **Preload:** a room with `preScreen: true` (the hallway) loads the nook's video out of sight, so it's already playing on arrival (a walk is about 5 s). The screen only shows the video once it has been playing for 4 s since it started or jumped (`screenClean`); until then the flicker art stays. If the player never answers at all, the video shows after 9 s. Going in cold just flickers a few seconds.
+- **Captions and crop:** captions are switched off by message (`unloadModule captions/cc`, plus `cc_load_policy=0`). The overscan crop is now 124%, to hide the title strip and the logo.
+- The "Now playing" notice shows on entering the hallway from the museum.
+
+**Live theater screen and plant names (2026-10-25).**
+- **Theater screen video:** in the nook, the hour's NOW PLAYING episode plays muted on the screen itself. It's a YouTube embed (`.gt-scr`) laid over the screen art's 80×45 picture window and repositioned every frame (`syncScreen`). Over it: CSS scanlines, a light pixel grid, a vignette and a slight dim. The player ignores clicks.
+- **Mid-episode start:** on load, YouTube's embed messaging (`listening` / `infoDelivery`) reports the length, and the player seeks to (seconds past the hour) mod length.
+- **Watch it:** opens the full player at the screen's current time (`start=`), with sound and the scrub bar. The small player is removed while the full one is open and when you leave the room.
+- **Fallbacks:** a video that won't embed (`onError`) falls back to the flicker art, as does Settings → Theater screen video (default on).
+- **Untested against real YouTube:** it was tested in a container that can't reach YouTube, against a stand-in page that speaks the same messages. Check it on the live site.
+- **Screen art:** now 96×48 (three rows tall, into the wall cap), with red curtains and a valance. It's still drawn from `screenAt` (one row up).
+- **Plants:** the two museum plants named "plant" are now "snake plant" (29, 8) and "pothos" (30, 8). The PC's favorite plant reads "watered N times".
+
+**Arcade tokens and sign tweaks (2026-10-24).**
+- **Creative text rule (from the curator):** new creative lines go in as bracketed placeholders saying what the line is for, e.g. `[Arcade intro: ...]`. The curator writes the real text in Words.
+- **Doorway:** a square gold frame instead of a round arch. The bulbs run up the sides and across the top.
+- **NOW PLAYING sign:** half as tall (64×12, one line). `screen.marquee` (default "NOW PLAYING:") plus the title scroll right to left like an LED ticker, two columns at a time every 8 frames. With reduced motion it holds still.
+- **Arcade:** walking up shows `arcade.intro` (or `arcade.free` when free) with Insert N token(s) / Not now. Without enough tokens you get `arcade.broke`. The token is taken when you pick a game. Price is set in Gift shop → "Café arcade costs" (`shop.arcadePrice`, default 1, 0 = free). `arcade.go` is now a placeholder too.
+- The pixel font gained `/`.
+
+**Now playing and the café arcade (2026-10-23).**
+- **Screening nook door:** the two doorway tiles in the café east hall now draw as one big dark arch (`marqueeAt: [40, 28]` on the museum room; art *Screening nook doorway*) with chasing gold bulbs around it (*Marquee bulbs*, 2 frames, drawn over the room's lighting so they glow in the dark). The doorway overlays and doormats under it are skipped. The nook has no light switch anymore (it doesn't count toward closing).
+- **NOW PLAYING sign:** a black board with red LED letters, four tiles across the hall wall (`nowPlayingAt: [42, 28]`; art *NOW PLAYING board*; letters glow in the dark). Top line from Words (`screen.marquee`), bottom line the episode playing this hour: a random pick from the pieces with episode links, the same for everyone until the hour turns (`nowPlaying()`); long titles scroll. Looking at it reads `screen.sign`. To make room, painting spot [42, 28] and the hall lamp [44, 28] were removed. Both are placeable/movable in Rooms → Spots.
+- **In the nook:** walking in shows "Now playing: …" (`screen.enter`). Sitting down or looking at the screen asks `screen.ask` with Watch it / Pick another / Not now.
+- **Arcade cabinet** in the café between the magazine stands (36, 35; the lower stand moved down one to 36, 37). Lists every piece with a Play link (title from `arcade.title`) and opens the game in a new tab; if the browser blocks it, a card with a PLAY button. Counts as `arcade`; new achievement **Quarter Muncher** (3). Words → Arcade.
+- Pixel font gained : - . ! ? ' & , for signs.
+
+**Screening nook and tweaks (2026-10-22).**
+- **Screening nook** (`screening`, built in): a small theater through a wide two-tile door in the café east hallway's north wall (layout doors `screening-1/2` on zone `cafe-east`, at 5 and 6; the hall lamp there moved to x44). A big flickering screen (`screenAt`, art *Screening nook screen*), four benches facing it, dim lights, its own light switch (so closing up includes it). One or two visitors are usually already seated (Words → Screening nook). Sitting down, or looking at the screen, offers NOW SHOWING: every piece with an episode link, newest first. The episode plays over the game (privacy-friendly YouTube player) with a YouTube ↗ link and Close (B/Start). Counts as `episodes`; new achievement **Couch Critic** (5).
+- **Placards:** Up and Down highlight WATCH, PLAY and NOTE in turn (past either end, nothing); A uses the highlighted one. A key press opens links directly; a controller press may be blocked by the browser, and then a toast says to click it.
+- **Note keyboard:** "Type with my keyboard" under it, or just start typing on a real keyboard, switches to normal typing.
+- **K** takes photos again (with X). Backspace still only goes back.
+- **Patrons** now and then mention a game from the museum they enjoyed (Words → Staff, `patron.enjoyed`).
+- **Stats** on the PC: one line each, indented (`read({ pre: true })` keeps line breaks and indents).
