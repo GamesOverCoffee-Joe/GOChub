@@ -62,6 +62,10 @@ const PAL = {
   g3fl:    ["#c89868", "#a87848", "#7a5030", "#2a1a0e", "#dcb080"],
   pc:      [null, "#d8d8d0", "#909098", "#303038", "#68a8d8", "#c8f0ff"],
   shelf:   [null, "#e8e4dc", "#7c7c80", "#181820", "#fbf6ea"],
+  tdoor:   [null, "#08060c", "#141018", "#221a28", "#5a1a26", "#6a4a24", "#a8823c", "#e0c070"],
+  bulbs:   [null, "#5a4020", "#ffd060", "#fff8e0", "#3a2a18"],
+  ledsign: [null, "#0a080c", "#2a2630", "#55505e", "#1c0808"],
+  arcade:  [null, "#1a1424", "#3a2a5a", "#5a48a0", "#101018", "#40d0c0", "#f0c040", "#e05050", "#5878c8"],
   mags:    [null, "#f8f0e0", "#8a5a38", "#2a160c", "#e05050", "#5878c8", "#f0c040", "#58a868"],
   segway:  [null, "#f8f8f0", "#b0b0c0", "#181820"],
   goqshirt:[null, "#f8e0c0", "#2a2030", "#181820", "#e8b24a"],
@@ -591,6 +595,47 @@ const GEN = {
     rect(a, 20, 28, 6, 3, 4); rect(a, 70, 28, 6, 3, 4); // its stand
     return a;
   },
+  // The screening nook's doorway from the café hall: one big dark arch, two tiles wide, with a gold frame.
+  theater_door: () => fillFn(mk(32, 32), (x, y) => {
+    const dx = x - 15.5, r = y < 15 ? Math.hypot(dx, y - 15) : Math.abs(dx);
+    if (r > 14.5) return undefined;
+    if (r > 11.5) return r > 14 ? 5 : r < 12 ? 5 : y < 15 && y - 15 < -Math.abs(dx) * 0.2 && r < 13.5 ? 7 : 6; // the frame
+    const edge = 11.5 - r;
+    if (y >= 20 && Math.abs(dx) < (y - 17) * 0.55) return 4;                     // a red carpet running into the dark
+    return edge < 1.5 ? 3 : edge < 3.5 ? 2 : y > 26 ? 2 : 1;
+  }),
+  // Marquee bulbs around the arch: 2 frames, every other bulb lit, so they chase. Drawn over the dark, so they glow.
+  marquee_lights: f => {
+    const a = mk(32, 32), pts = [];
+    for (let i = 0; i <= 8; i++) { const t = Math.PI * i / 8; pts.push([15.5 - 13 * Math.cos(t), 15 - 13 * Math.sin(t)]); }
+    for (const y of [19, 23, 27]) { pts.unshift([2.5, y]); pts.push([28.5, y]); }
+    pts.forEach(([x, y], i) => {
+      const bx = Math.round(x - 1), by = Math.round(y - 1), on = (i + f) % 2 === 0;
+      rect(a, bx, by, 2, 2, on ? 2 : 1); if (on) px(a, bx, by, 3);
+    });
+    return a;
+  },
+  // The black LED board for NOW PLAYING: four tiles wide, the red letters are drawn on it as it runs.
+  led_sign: () => {
+    const a = mk(64, 24);
+    rect(a, 0, 0, 64, 24, 3); rect(a, 1, 1, 62, 22, 2); rect(a, 2, 2, 60, 20, 1);
+    fillFn(a, (x, y, v) => (v === 1 && x >= 3 && x <= 60 && y >= 3 && y <= 20 && (x + y) % 2 === 0 ? 4 : undefined)); // the unlit LEDs
+    rect(a, 3, 0, 2, 1, 2); rect(a, 59, 0, 2, 1, 2); // where it hangs
+    return a;
+  },
+  // The café's arcade cabinet: a lit marquee, a little attract screen (2 frames), a joystick and two buttons.
+  arcade_cabinet: f => {
+    const a = mk(16, 32);
+    rect(a, 2, 1, 12, 30, 2); rect(a, 2, 1, 1, 30, 3); rect(a, 13, 1, 1, 30, 1);
+    rect(a, 3, 2, 10, 4, 6); rect(a, 4, 3, 2, 2, 7); rect(a, 7, 3, 2, 2, 8); rect(a, 10, 3, 2, 2, 7); // the marquee
+    rect(a, 3, 7, 10, 10, 4);
+    fillFn(a, (x, y) => (x >= 4 && x <= 11 && y >= 8 && y <= 15 ? ((x + y * 3 + f * 2) % 7 === 0 ? 5 : y === 12 - f && x > 5 && x < 10 ? 6 : (x * 5 + y + f) % 11 === 0 ? 7 : 4) : undefined));
+    rect(a, 1, 17, 14, 4, 3); rect(a, 1, 20, 14, 1, 1); // the control panel
+    rect(a, 4, 16, 2, 2, 7); px(a, 4, 18, 4); px(a, 5, 18, 4); px(a, 9, 18, 7); px(a, 11, 18, 8);
+    rect(a, 6, 23, 4, 4, 1); px(a, 7, 24, 6); px(a, 8, 24, 6); px(a, 7, 25, 7); px(a, 8, 25, 7); // the coin door
+    rect(a, 2, 30, 12, 1, 1);
+    return outline(a);
+  },
   // A long planter box, two tiles wide: a leafy row with a few flowers.
   planter_wide: () => {
     const a = mk(32, 16);
@@ -873,6 +918,10 @@ const SLOTS = [
   { key: "carpet_v", label: "Carpet runner, down", group: "Hallways", w: 16, h: 16, frames: 3, pal: "carpet", gen: GEN.carpet_v, note: "3 frames side by side (48×16): the top end, a middle piece, the bottom end." },
   { key: "wall_sconce", label: "Accent light", group: "Hallways", w: 16, h: 16, pal: "sconce", gen: GEN.wall_sconce, note: "A small wall light, hung on the upper wall row. It glows with the lights on." },
   { key: "rug", label: "Rug", group: "Gift shop and café", w: 48, h: 32, pal: "rug", gen: GEN.rug, note: "Lies on the floor under everything else; you walk over it." },
+  { key: "theater_door", label: "Screening nook doorway", group: "Screening nook", w: 32, h: 32, pal: "tdoor", gen: GEN.theater_door, note: "One big dark arch across both doorway tiles in the café hall. Leave the corners transparent so the wall shows." },
+  { key: "marquee_lights", label: "Marquee bulbs", group: "Screening nook", w: 32, h: 32, frames: 2, fps: 3, pal: "bulbs", gen: GEN.marquee_lights, note: "2 frames (64×32), drawn over the doorway and lit even in the dark. Every other bulb lit, so they chase." },
+  { key: "led_sign", label: "NOW PLAYING board", group: "Screening nook", w: 64, h: 24, pal: "ledsign", gen: GEN.led_sign, note: "The black board, four tiles wide, centered on both wall rows. The red letters are drawn on top: NOW PLAYING on the top line (y 4 to 8), the title on the bottom one (y 13 to 17, scrolls when long)." },
+  { key: "arcade_cabinet", label: "Arcade cabinet", group: "Gift shop and café", w: 16, h: 32, frames: 2, fps: 2, pal: "arcade", gen: GEN.arcade_cabinet, note: "2 frames (32×32), the attract screen flickering. Two tiles tall. Plays the games that have a Play link." },
   { key: "theater_screen", label: "Screening nook screen", group: "Screening nook", w: 96, h: 32, frames: 2, pal: "screen", gen: GEN.theater_screen, note: "2 frames (192×32), six tiles wide across both wall rows; it flickers softly between them. Sit down in the nook to watch an episode." },
   { key: "planter_wide", label: "Long planter", group: "Furniture", w: 32, h: 16, pal: "trinket", gen: GEN.planter_wide, note: "Two tiles wide. A leafy planter box with a few flowers, for dividing a room or blocking a spot." },
   { key: "planter", label: "Planter", group: "Gift shop and café", w: 16, h: 16, pal: "trinket", gen: GEN.planter, note: "A row of these divides the shop from the café." },
@@ -1353,7 +1402,7 @@ const ROOMS = {
       "#..........#",
       "#####BB#####",
     ],
-    spawn: [5, 7, "up"], lightSwitch: [10, 2], screenAt: [3, 1],
+    spawn: [5, 7, "up"], screenAt: [3, 1],
     props: [
       { key: "bench", x: 2, y: 4, sit: "up" }, { key: "bench", x: 8, y: 4, sit: "up" },
       { key: "bench", x: 2, y: 6, sit: "up" }, { key: "bench", x: 8, y: 6, sit: "up" },
@@ -1512,7 +1561,14 @@ const TEXT = {
   "tut.green.back":    { g: "Tutorial", l: "The green game's back placard (blocked, so nobody reads it)", v: [["The developer wanted every corner of it to feel fresh and green, like a spring morning."]] },
   "patron.enjoyed":    { g: "Staff", l: "A Patreon member mentioning a game they enjoyed ({title}: a random game; one picked at random)", v: [["I played {title} last week. Really enjoyed it."], ["Have you tried {title}? I keep thinking about it."], ["{title} was so good. No notes."], ["I finally got around to {title}. Worth it."], ["Okay, {title}. Why didn't anyone tell me sooner?"]] },
   "screen.guest":      { g: "Screening nook", l: "Someone sitting in the screening nook (takes turns)", v: [["Shh. It's getting to the good part."], ["I've seen this one four times."], ["The host talks fast. I like it."], ["Is there popcorn? There should be popcorn."], ["I came in for five minutes. That was an hour ago."]] },
-  "screen.ask":        { g: "Screening nook", l: "Sitting down in the screening nook", v: [["The screen flickers, waiting. Watch an episode?"]] },
+  "screen.ask":        { g: "Screening nook", l: "Sitting down or looking at the screen ({title}: what's playing this hour)", v: [["Now playing: {title}. Stay for it?"]] },
+  "screen.marquee":    { g: "Screening nook", l: "The top line of the red LED sign out front (letters, numbers and : - . ! ? ' & only)", v: [["NOW PLAYING"]] },
+  "screen.sign":       { g: "Screening nook", l: "Looking at the LED sign out front ({title}: what's playing this hour)", v: [["NOW PLAYING: {title}.", "It changes every hour. The sign is very proud of this."]] },
+  "screen.enter":      { g: "Screening nook", l: "The little notice walking in ({title})", v: [["Now playing: {title}"]] },
+  "arcade.title":      { g: "Arcade", l: "The arcade cabinet's list title", v: [["INSERT COIN"]] },
+  "arcade.go":         { g: "Arcade", l: "Starting a game ({title})", v: [["You feed it an imaginary quarter.", "{title} opens in a new tab."]] },
+  "arcade.blocked":    { g: "Arcade", l: "The browser blocked the new tab ({title})", v: [["The cabinet blinks. Tap PLAY to start {title}."]] },
+  "arcade.none":       { g: "Arcade", l: "No games with a Play link", v: [["The screen says GAME OVER. It's been saying that all day."]] },
   "screen.none":       { g: "Screening nook", l: "No episodes to show", v: [["Nothing's queued up. The screen just hums."]] },
   "screen.look":       { g: "Screening nook", l: "Looking at the screen", v: [["The big screen. Have a seat to watch something."]] },
   "react.startled":    { g: "Photo reactions", l: "Someone looking at a piece: startled, then a peace sign ({who})", v: [["{who} jumped, then threw up a peace sign."]] },
@@ -1709,7 +1765,7 @@ const ACH_STATS = {
   helped: "Visitors who loved your recommendation", recs: "Games recommended to visitors", pets: "Times petting the cat", closings: "Times closing the museum", photos: "Photos taken",
   bothSides: "Cases read on both sides", stamps: "Stamps collected", cards: "Stamp cards traded", items: "Gift shop items owned",
   drinks: "Drinks ordered", naps: "Bench naps", rooms: "Different rooms visited", microwave: "Microwave incidents", segway: "Segway rides",
-  reactions: "Different photo reactions caught", episodes: "Episodes watched in the screening nook", shirt: "Has the GOQ shirt (1 = yes)", shifts: "Times clocking in", figure: "Photographed the figure in the dark (1 = yes)",
+  reactions: "Different photo reactions caught", episodes: "Episodes watched in the screening nook", arcade: "Games started at the café arcade", shirt: "Has the GOQ shirt (1 = yes)", shifts: "Times clocking in", figure: "Photographed the figure in the dark (1 = yes)",
 };
 const SAMPLE_ACH = [
   { id: "first-dust", name: "Elbow Grease", desc: "Dust a frame for the first time.", stat: "dusted", target: 1 },
@@ -1725,6 +1781,7 @@ const SAMPLE_ACH = [
   { id: "shirt", name: "The Shirt That Got Away", desc: "Get the discontinued GOQ shirt.", stat: "shirt", target: 1, secret: true },
   { id: "paparazzi", name: "Paparazzi", desc: "Catch 10 different reactions on camera.", stat: "reactions", target: 10 },
   { id: "couch", name: "Couch Critic", desc: "Watch 5 episodes in the screening nook.", stat: "episodes", target: 5 },
+  { id: "quarters", name: "Quarter Muncher", desc: "Start 3 games at the café arcade.", stat: "arcade", target: 3 },
 ];
 /* Rugs you can size: a border band and corner designs around a plain middle, in any colors (Rooms, select a rug).
    A rug decal: { key: "rug", x, y, w, h, pattern (border style), motif (corner design), field, border, accent, corner (colors) }. */
@@ -1742,7 +1799,8 @@ const SHIRT_STEPS = ["cocoa", "finishOnStool", "lobbyTrash", "water", "catPhoto"
 /* A tiny 3×5 pixel font for signs (capitals and digits). */
 const PIXEL_FONT = (() => {
   const g = "A:010101111101101 B:110101110101110 C:011100100100011 D:110101101101110 E:111100110100111 F:111100110100100 G:011100101101011 H:101101111101101 I:111010010010111 J:001001001101010 K:101101110101101 L:100100100100111 M:101111111101101 N:110101101101101 O:010101101101010 P:110101110100100 Q:010101101110011 R:110101110101101 S:011100010001110 T:111010010010010 U:101101101101111 V:101101101101010 W:101101111111101 X:101101010101101 Y:101101010010010 Z:111001010100111 0:111101101101111 1:010110010010111 2:110001010100111 3:110001010001110 4:101101111001001 5:111100110001110 6:011100111101111 7:111001010010010 8:111101111101111 9:111101111001110";
-  const out = { " ": ["000", "000", "000", "000", "000"] };
+  const out = { " ": ["000", "000", "000", "000", "000"], ":": ["000", "010", "000", "010", "000"], "-": ["000", "000", "111", "000", "000"], ".": ["000", "000", "000", "000", "010"],
+    "!": ["010", "010", "010", "000", "010"], "?": ["110", "001", "010", "000", "010"], "'": ["010", "010", "000", "000", "000"], "&": ["010", "101", "010", "101", "011"], ",": ["000", "000", "000", "010", "100"] };
   g.split(" ").forEach(e => { const [k, b] = e.split(":"); out[k] = [0, 1, 2, 3, 4].map(i => b.slice(i * 3, i * 3 + 3)); });
   return out;
 })();
@@ -1891,7 +1949,7 @@ prepLayoutRoom(ROOMS.museum);
    the level editor in curator.html writes them. Rooms are plain data, so a deep copy is enough. */
 const BUILTIN_ROOMS = JSON.parse(JSON.stringify(ROOMS));
 const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "runners", "lamps", "arrows", "murals", "tint", "windowAt", "intercom", "lightSwitch", "eotmAt",
-  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "tutorial", "screenAt"];
+  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt"];
 /* Light checks so a hand-edited or damaged pack can't break the game: rectangular map, sane size, a spawn on the map. */
 function normalizeRoom(id, d) {
   if (d && typeof d === "object" && d.layout) { d = Object.assign({}, d); prepLayoutRoom(d); }
@@ -2142,6 +2200,8 @@ function buildRoom(id, pieces, o) {
   if (def.timeClock) { const [x, y] = def.timeClock; r.clockAt = { x, y }; r.events[x + "," + y] = { timeClock: true }; }
   if (def.eotmAt) r.eotmAt = { x: def.eotmAt[0], y: def.eotmAt[1] };
   if (def.screenAt) { const [x, y] = def.screenAt; r.screenAt = { x, y }; for (let i = 0; i < SLOT.theater_screen.w / T; i++) r.events[(x + i) + "," + (y + 1)] = { screen: true }; }
+  if (def.marqueeAt) { const [x, y] = def.marqueeAt; r.marquee = { x, y }; } // a big arched doorway over two doorway tiles (the screening nook's)
+  if (def.nowPlayingAt) { const [x, y] = def.nowPlayingAt; r.nowSign = { x, y }; for (let i = 0; i < SLOT.led_sign.w / T; i++) r.events[(x + i) + "," + (y + 1)] = { nowPlaying: true }; }
   if (def.intercom) { const [x, y] = def.intercom; r.intercomAt = { x, y }; r.events[x + "," + y] = { announce: true }; }
   if (def.wallArt) {
     r.wallArt = def.wallArt;
@@ -3200,6 +3260,28 @@ class Game {
      often already sitting there. */
   episodes() { return this.pack.pieces.filter(p => p.episodeUrl).slice().reverse(); } // newest first
   ytId(url) { const m = String(url || "").match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/); return m ? m[1] : ""; }
+  /* What the screening nook is showing this hour: a random episode, the same for everyone until the hour turns. */
+  nowPlaying() {
+    const eps = this.episodes(); if (!eps.length) return null;
+    const d = new Date(); return eps[strSeed(todayISO() + ":" + d.getHours()) % eps.length];
+  }
+  /* Sitting down or looking at the screen: stay for what's playing, or pick something else. */
+  screenAsk() {
+    const p = this.nowPlaying(); if (!p) { this.say(this.tx("screen.none")); return; }
+    this.ask(this.tx("screen.ask", { title: p.title }).join(" "), ["Watch it", "Pick another", "Not now"], i => { if (i === 0) this.playEpisode(p); else if (i === 1) this.pickEpisode(); }, 2);
+  }
+  /* The café's arcade cabinet: every game with a Play link, opened in a new tab. */
+  arcade() {
+    const games = this.pack.pieces.filter(p => p.gameUrl);
+    if (!games.length) { this.say(this.tx("arcade.none")); return; }
+    this.openList(this.tx("arcade.title")[0], [...games.map(p => p.title), "CLOSE"], i => { const p = games[i]; if (p) this.playGame(p); });
+  }
+  playGame(p) {
+    const st = this.progress.stats; st.arcade = (st.arcade || 0) + 1; this.progress.tally.arcade = (this.progress.tally.arcade || 0) + 1; this.saveProgress();
+    let w = null; try { w = window.open(p.gameUrl, "_blank"); if (w) w.opener = null; } catch (e) { w = null; }
+    if (w) this.say(this.tx("arcade.go", { title: p.title }));
+    else this.read({ title: p.title.toUpperCase(), sub: "Arcade", sections: [{ label: "", text: this.tx("arcade.blocked", { title: p.title }).join(" ") }], links: [[p.gameUrl, "Play the game", "PLAY"]] });
+  }
   pickEpisode() {
     const eps = this.episodes();
     this.openList("NOW SHOWING", [...eps.map(p => p.title), "CLOSE"], i => { const p = eps[i]; if (p) this.playEpisode(p); });
@@ -3451,7 +3533,7 @@ class Game {
     const sh = this.topOf(st.shots); if (sh && sh[1] > 1) add("LIFE", "Most photographed", sh[0] + " (" + sh[1] + " times)");
     add("LIFE", "Notes left", t.notes); add("LIFE", "Drinks ordered", t.drinks);
     const dr = this.topOf(st.drinks), dn = dr && DRINKS.find(d => d.id === dr[0]); if (dn && t.drinks > 1) add("LIFE", "Usual order", dn.name);
-    add("LIFE", "Episodes watched", t.episodes); add("LIFE", "Bench naps", t.naps); add("LIFE", "Microwave incidents", t.microwave); add("LIFE", "Segway rides", t.segway); add("LIFE", "Shifts clocked in", t.shifts);
+    add("LIFE", "Episodes watched", t.episodes); add("LIFE", "Arcade games started", t.arcade); add("LIFE", "Bench naps", t.naps); add("LIFE", "Microwave incidents", t.microwave); add("LIFE", "Segway rides", t.segway); add("LIFE", "Shifts clocked in", t.shifts);
     add("LIFE", "Time in the dark after closing", st.dark >= 60 ? hm(st.dark) : st.dark ? st.dark + "s" : 0);
     return rows;
   }
@@ -4593,7 +4675,7 @@ class Game {
     p.sitFrom = [p.x, p.y]; p.x = e.x; p.y = e.y; p.dir = e.sit; p.sitting = true; p.moving = false; this.sipClock = 60; this.inputLock = true;
     p.bench = !!e.bench; this.sitIdle = 0; this.asleep = false;
     if (!this.drink && e.say) this.say(e.say);
-    else if (this.room.screenAt && this.episodes().length) this.ask(this.tx("screen.ask").join(" "), ["Pick an episode", "Not now"], i => { if (i === 0) this.pickEpisode(); }, 1); // the screening nook
+    else if (this.room.screenAt && this.episodes().length) this.screenAsk(); // the screening nook
   }
   standUp(d) {
     const p = this.player; [p.x, p.y] = p.sitFrom; p.sitting = false; p.dir = d || p.dir; this.sip = null; this.inputLock = true;
@@ -4658,7 +4740,9 @@ class Game {
     this.visit(this.room.id + ":" + z.id);
     if (!quiet) this.showLoc(z.name);
   }
-  warp(to, x, y, dir, after) { this.mode = "busy"; this.trans = { t: 0, dur: 14, switched: false, fn: () => this.enterRoom(to, x, y, dir), after }; }
+  warp(to, x, y, dir, after) {
+    if (to === "screening" && this.room && this.room.id !== "screening") { const a = after, p = this.nowPlaying(); after = () => { if (p) this.showLoc(this.tx("screen.enter", { title: p.title })[0]); if (a) a(); }; }
+    this.mode = "busy"; this.trans = { t: 0, dur: 14, switched: false, fn: () => this.enterRoom(to, x, y, dir), after }; }
   runEvent(e) {
     if (ROOMS[this.room.id] && ROOMS[this.room.id].tutorial && this.tutEvent(e)) return;
     if (e.tutorial) { this.choose(this.tx("tut.door").join(" "), ["Yes", "Not now"], i => { if (i === 0) this.startTutorial(true); }, 1); return; }
@@ -4713,7 +4797,9 @@ class Game {
     else if (e.roofStairs) this.say(this.tx("stairs.roof"), () => { const p = this.player; p.dir = OPP[p.dir]; });
     else if (e.directory) this.readDirectory();
     else if (e.kiosk) this.overflowScreen();
-    else if (e.screen) { if (this.episodes().length) this.pickEpisode(); else this.say(this.tx("screen.none")); }
+    else if (e.screen) this.screenAsk();
+    else if (e.nowPlaying) { const p = this.nowPlaying(); this.say(p ? this.tx("screen.sign", { title: p.title }) : this.tx("screen.none")); }
+    else if (e.arcade) this.arcade();
     else if (e.arrow) { const a = this.arrowInfo(e.arrow); this.say([a.label.toUpperCase() + " " + ({ left: "\u2190", right: "\u2192", up: "\u2191", down: "\u2193" }[e.arrow.dir] || ""), "This way to " + a.label + "."]); }
     else if (e.say) this.say(e.say);
   }
@@ -5212,6 +5298,31 @@ class Game {
       [[-6, 0, 0], [10, -4, 8], [12, 12, 16]].forEach(([dx, dy, d]) => { const f = Math.floor((t - d) / 4); if (f >= 0 && f < 4) this.drawSlot("sparkle", f, 0, x + dx, y + dy); });
     }
   }
+  /* The lit bits out front of the screening nook, drawn over the room's lighting so they glow: the marquee bulbs and the
+     red letters on the NOW PLAYING sign (the title scrolls when it's too long for the board). */
+  drawMarquee(r, cx, cy) {
+    const ctx = this.ctx;
+    if (r.marquee) this.drawSlot("marquee_lights", REDUCED_MOTION ? 0 : this.frame("marquee_lights"), 0, r.marquee.x * T - cx, r.marquee.y * T - cy);
+    if (!r.nowSign) return;
+    const x0 = r.nowSign.x * T - cx, y0 = r.nowSign.y * T + 4 - cy, p = this.nowPlaying();
+    const top = this.ledText(this.tx("screen.marquee")[0] || ""), bot = this.ledText(p ? p.title : "COMING SOON"), win = 56;
+    ctx.drawImage(top, x0 + 32 - Math.floor(top.width / 2), y0 + 3);
+    ctx.save(); ctx.beginPath(); ctx.rect(x0 + 3, y0 + 11, 58, 9); ctx.clip();
+    if (bot.width - 2 <= win) ctx.drawImage(bot, x0 + 32 - Math.floor(bot.width / 2), y0 + 12);
+    else { const span = bot.width + 20, o = REDUCED_MOTION ? 0 : Math.floor(this.t / 3) % span; ctx.drawImage(bot, x0 + 4 - o, y0 + 12); ctx.drawImage(bot, x0 + 4 - o + span, y0 + 12); }
+    ctx.restore();
+  }
+  /* A line of glowing red LED letters (the pixel font, with a soft halo), cached. */
+  ledText(s) {
+    s = String(s).toUpperCase().replace(/[^A-Z0-9 :\-.!?'&,]/g, "");
+    const cache = this.ledCache || (this.ledCache = new Map()); if (cache.has(s)) return cache.get(s);
+    const w = Math.max(1, s.length * 4 - 1), c = document.createElement("canvas"); c.width = w + 2; c.height = 7; const x = c.getContext("2d");
+    const lit = new Set(); [...s].forEach((ch, i) => (PIXEL_FONT[ch] || []).forEach((row, yy) => [...row].forEach((v, xx) => { if (v === "1") lit.add((i * 4 + xx + 1) + "," + (yy + 1)); })));
+    x.fillStyle = "rgba(255,40,24,0.28)";
+    for (const k of lit) { const [px, py] = k.split(",").map(Number); for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) if (!lit.has((px + dx) + "," + (py + dy))) x.fillRect(px + dx, py + dy, 1, 1); }
+    x.fillStyle = "#ff4030"; for (const k of lit) { const [px, py] = k.split(",").map(Number); x.fillRect(px, py, 1, 1); }
+    cache.set(s, c); return c;
+  }
   drawProp(p, cx, cy) {
     const ctx = this.ctx, k = p.plant && this.isThirsty(p.plant) ? "plant_thirsty" : p.key;
     const px0 = p.x * T - cx, py0 = p.y * T - (SLOT[k].h - T) - cy;
@@ -5353,10 +5464,11 @@ class Game {
     for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) {
       const o = r.over[y][x]; if (!o) continue;
       const at = /doorway_lower|staff_door_lower/.test(o) ? [x, y + 1] : /doorway_bottom|exit_door/.test(o) ? [x, y - 1] : o === "doorway_side" ? [r.solid[y][x + 1] === false ? x + 1 : x - 1, y] : null;
-      if (at && r.solid[at[1]] && !r.solid[at[1]][at[0]]) out.push(at);
+      if (at && r.solid[at[1]] && !r.solid[at[1]][at[0]] && !this.underMarquee(r, x, y)) out.push(at);
     }
     return (r._mats = out);
   }
+  underMarquee(r, x, y) { const m = r.marquee; return !!m && x >= m.x && x < m.x + 2 && y >= m.y && y < m.y + 2; }
   doorTiles(r) {
     if (r._doors) return r._doors;
     const out = [];
@@ -5386,7 +5498,7 @@ class Game {
     for (let y = ty0; y <= ty1; y++) for (let x = tx0; x <= tx1; x++) {
       const sx = x * T - cx, sy = y * T - cy;
       if (r.tiles[y][x]) this.drawSlot(r.tiles[y][x], this.frame(r.tiles[y][x]), 0, sx, sy);
-      if (r.over[y][x]) this.drawSlot(r.over[y][x], this.frame(r.over[y][x]), 0, sx, sy);
+      if (r.over[y][x] && !this.underMarquee(r, x, y)) this.drawSlot(r.over[y][x], this.frame(r.over[y][x]), 0, sx, sy);
     }
     for (const h of r.hung) {
       const x = h.x * T - cx, y = h.y * T - cy;
@@ -5441,6 +5553,8 @@ class Game {
     if (r.switchAt) this.drawSlot("light_switch", 0, 0, r.switchAt.x * T - cx, r.switchAt.y * T - cy);
     for (const sw of r.switches || []) this.drawSlot("light_switch", 0, 0, sw.x * T - cx, sw.y * T - cy);
     if (r.intercomAt) this.drawSlot("intercom", 0, 0, r.intercomAt.x * T - cx, r.intercomAt.y * T - cy);
+    if (r.marquee) this.drawSlot("theater_door", 0, 0, r.marquee.x * T - cx, r.marquee.y * T - cy);
+    if (r.nowSign) this.drawSlot("led_sign", 0, 0, r.nowSign.x * T - cx, r.nowSign.y * T + 4 - cy);
     if (r.screenAt) this.drawSlot("theater_screen", Math.floor(this.t / 45) % 2, 0, r.screenAt.x * T - cx, r.screenAt.y * T - cy); // the big screen, flickering softly
     for (const d of r.decals) { if (d.key === "rug" && d.w) ctx.drawImage(this.rugArt(d), d.x * T - cx, d.y * T - cy); else this.drawSlot(d.key, 0, 0, d.x * T - cx, d.y * T - cy); }
     for (const ru of r.runners) drawRunner(ctx, this.sheet(ru.k[0] === "v" ? "carpet_v" : "carpet_h"), ru, cx, cy);
@@ -5517,6 +5631,7 @@ class Game {
     if (full) return;
     this.drawReadMarks(r, cx, cy);
     this.drawLighting(r, cx, cy, pp);
+    this.drawMarquee(r, cx, cy);
     if (this.figure && this.isDark(r, this.figure.x, this.figure.y)) {
       ctx.globalAlpha = 0.55 * this.figure.alpha; this.drawSlot("shadow_figure", 0, 0, this.figure.x * T - cx, this.figure.y * T - cy - 4); ctx.globalAlpha = 1;
     }
@@ -5571,7 +5686,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-22 screening nook";
+const VERSION = "2026-10-23 now playing";
 window.GOQ = { ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
