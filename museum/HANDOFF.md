@@ -458,6 +458,12 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Clip files (2026-10-29).**
+- **Clip files:** the gameplay clip can be a video file in the repo's root `clips/` folder. The curator takes just its name (e.g. `acrobatic-car_1.webm`), and the engine loads `../clips/<name>` relative to `museum/`. Full https URLs to .webm or .mp4 files also work. A file plays in a muted, looping `<video>` that fades in over the pixel art as soon as it plays, with no crop, no scanlines and no YouTube chrome. It only downloads when its placard opens, and closing the placard stops it.
+- **Acrobatic Car:** uses `acrobatic-car_1.webm` (320×180 VP9, about 17.5 s, 234 KB).
+- **YouTube:** links still work as a fallback, with Clip loop; the overlay returns on each loop.
+- **Making clips:** about 320×180, no audio, VP9 webm: `ffmpeg -ss A -to B -i src.mp4 -vf "scale=320:-2,fps=24" -an -c:v libvpx-vp9 -crf 40 -b:v 0 name.webm`.
+
 **Gameplay on placards (2026-10-28), trial on Acrobatic Car.**
 - **The fields:** a piece can have a gameplay clip, set in the curator (Pieces): `clipUrl` (YouTube) and `clipLoop` ("12:53-13:00"; empty = play from the start). Acrobatic Car is set to its episode, 12:53 to 13:00.
 - **Layout:** a placard for such a piece switches to a side-by-side layout (`.gt-reader.clip`, a CSS grid). The clip frame is 112×63 at top left, with the title, developer and WATCH/PLAY/NOTE under it. The text is in the right column (6.5px, paged as before) and the footer spans both columns.

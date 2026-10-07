@@ -1140,7 +1140,7 @@ function normalizePiece(p, i) {
     id: str(p.id, 60) || "piece-" + (i + 1), kind: p.kind === "community" ? "community" : "episode",
     title: str(p.title, 80) || "Untitled", developer: str(p.developer, 80) || "Unknown developer",
     observation: str(p.observation), intention: str(p.intention), guestWriter: str(p.guestWriter, 80), guestNote: str(p.guestNote),
-    episodeUrl: safeUrl(p.episodeUrl), gameUrl: safeUrl(p.gameUrl), clipUrl: safeUrl(p.clipUrl), clipLoop: str(p.clipLoop, 30), image: str(p.image, 20000000) || null,
+    episodeUrl: safeUrl(p.episodeUrl), gameUrl: safeUrl(p.gameUrl), clipUrl: safeUrl(p.clipUrl) || (/^[\w.-]{1,80}\.(webm|mp4)$/i.test(String(p.clipUrl || "").trim()) ? String(p.clipUrl).trim() : ""), clipLoop: str(p.clipLoop, 30), image: str(p.image, 20000000) || null,
     unveil: /^\d{4}-\d{2}-\d{2}$/.test(p.unveil || "") ? p.unveil : "",
     hint: str(p.hint, 160), pick: !!p.pick, minds: Array.isArray(p.minds) ? p.minds.map(x => str(x, 30)).filter(Boolean).slice(0, 8) : [], genre: str(p.genre, 30), blend: str(p.blend, 30), // blend: a second category it also belongs to
     colors: colors.length >= 2 ? colors : ["#f0ecf8", "#a898d0", "#584a88", "#1a1430"],
@@ -2758,6 +2758,7 @@ class Game {
 .gt-reader.clip{grid-template-columns:calc(112px * var(--s)) minmax(0,1fr);grid-template-rows:calc(63px * var(--s)) minmax(0,1fr) auto;grid-template-areas:"clip body" "head body" "foot foot";column-gap:calc(6px * var(--s));padding-top:calc(4px * var(--s))}
 .gt-rd-clip{grid-area:clip;position:relative;overflow:hidden;background:#000;outline:calc(1px * var(--s)) solid #181820}
 .gt-rd-clip img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+.gt-rd-clip video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s;pointer-events:none}
 .gt-rd-clip iframe{position:absolute;left:-12%;top:-12%;width:124%;height:124%;border:0;opacity:0;transition:opacity .5s;pointer-events:none}
 .gt-reader.clip .gt-rd-head{grid-area:head;flex-direction:column;align-items:stretch;gap:calc(3px * var(--s));border-bottom:0;padding:calc(4px * var(--s)) 0 0}
 .gt-reader.clip .gt-rd-t{flex:none}
@@ -3352,7 +3353,7 @@ class Game {
   }
   screenCmd(func, args) { if (this.scr) this.ytPost(this.scr.f, func, args); }
   screenMessage(e) {
-    const scr = this.scr, k = this.clip, mine = (scr && e.source === scr.f.contentWindow) || (k && e.source === k.f.contentWindow); if (!mine) return;
+    const scr = this.scr, k = this.clip && this.clip.f ? this.clip : null, mine = (scr && e.source === scr.f.contentWindow) || (k && e.source === k.f.contentWindow); if (!mine) return;
     let d; try { d = typeof e.data === "string" ? JSON.parse(e.data) : e.data; } catch (err) { return; }
     if (!d || typeof d !== "object") return;
     if (k && e.source === k.f.contentWindow) { this.clipMessage(d); return; }
@@ -3370,11 +3371,15 @@ class Game {
   }
   dropScreen() { const scr = this.scr; if (!scr) return; clearTimeout(scr.ping); scr.box.remove(); this.scr = null; }
   /* ----- gameplay on the placard -----
-     A piece with a gameplay clip (a YouTube link and a from-to loop, in the curator) plays it muted beside the placard's
-     text. The case's pixel art holds the frame until the clip has played clean for 3 seconds (YouTube's title and play
-     button fade by then), then the gameplay takes over, looping. Off with Settings → Gameplay video. */
+     A piece with a gameplay clip plays it muted and looping beside the placard's text, fading in over the case's pixel art.
+     Best is a short video file in the clips folder (just its name in the curator, e.g. acrobatic-car_1.webm): it shows at
+     once and loops seamlessly. A YouTube link with a from-to loop works too, but the pixel art has to hold the frame for
+     3 seconds while YouTube's title and play button fade, and they come back each time it loops. Off with Settings →
+     Gameplay video. */
   clipOf(p) {
-    const id = this.ytId(p.clipUrl); if (!id || this.screenVideo === false || this.headless) return null;
+    if (!p.clipUrl || this.screenVideo === false || this.headless) return null;
+    if (/\.(webm|mp4)(\?.*)?$/i.test(p.clipUrl)) return { file: /^https?:/i.test(p.clipUrl) ? p.clipUrl : "../clips/" + p.clipUrl };
+    const id = this.ytId(p.clipUrl); if (!id) return null;
     const t = s => { const n = String(s).trim().split(":").map(Number); return n.some(isNaN) ? NaN : n.reduce((a, v) => a * 60 + v, 0); };
     const [a, b] = String(p.clipLoop || "").split(/\s*[-–]\s*/).map(t);
     return { id, a: a >= 0 ? Math.floor(a) : 0, b: b > a ? b : 0 };
@@ -3382,6 +3387,14 @@ class Game {
   makeClip(frame, c, poster) {
     this.dropClip();
     if (poster) { const im = document.createElement("img"); im.src = poster; im.alt = ""; frame.appendChild(im); }
+    if (c.file) { // a video file: plays at once and loops by itself
+      const v = document.createElement("video"); v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true; v.setAttribute("muted", ""); v.preload = "auto";
+      v.addEventListener("playing", () => { v.style.opacity = 1; });
+      v.addEventListener("error", () => v.remove()); // missing or unplayable: the pixel art stays
+      v.src = c.file; frame.appendChild(v); this.clip = { v };
+      const pr = v.play(); if (pr && pr.catch) pr.catch(() => {});
+      return;
+    }
     const f = document.createElement("iframe"); f.tabIndex = -1; f.allow = "autoplay; encrypted-media"; f.title = "Gameplay";
     f.src = "https://www.youtube-nocookie.com/embed/" + c.id + "?autoplay=1&mute=1&controls=0&disablekb=1&fs=0&playsinline=1&rel=0&iv_load_policy=3&cc_load_policy=0&start=" + c.a + "&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
     const fx = document.createElement("div"); fx.className = "gt-scr-fx";
@@ -3395,7 +3408,11 @@ class Game {
       if (k.b && k.at && k.cur + (now - k.at) / 1000 >= k.b) { k.cur = k.a; k.at = now; this.ytPost(f, "seekTo", [k.a, true]); }
     }, 150);
   }
-  dropClip() { const k = this.clip; if (!k) return; clearTimeout(k.ping); clearInterval(k.tick); k.f.remove(); this.clip = null; }
+  dropClip() {
+    const k = this.clip; if (!k) return; this.clip = null;
+    if (k.v) { k.v.pause(); k.v.removeAttribute("src"); k.v.load(); k.v.remove(); return; } // stop the download too
+    clearTimeout(k.ping); clearInterval(k.tick); k.f.remove();
+  }
   clipMessage(d) {
     const k = this.clip;
     if (d.event === "onError") { this.dropClip(); return; } // won't embed: the pixel art stays
@@ -5859,7 +5876,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-28 gameplay placards";
+const VERSION = "2026-10-29 clip files";
 window.GOQ = { ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
