@@ -458,6 +458,8 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Nap fix (2026-11-06).** Leaving a seat any way other than walking off (changing rooms, respawning) left `asleep` on, so the Zzz followed you around. `standUp` and `enterRoom` now clear it, and the Zzz only draws while you're seated.
+
 **Curators off the leaderboard (2026-11-06).** `get_leaderboard` (Supabase) leaves out curator badges (`not b.curator`), so the curator is never Employee of the Month or in the top ten. It needs the SQL run again.
 
 **Photo perspective and preview options (2026-11-05).**
