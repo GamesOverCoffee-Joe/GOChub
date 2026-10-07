@@ -847,6 +847,7 @@ function renderStaff() {
   wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
     el("h3", { text: "Friday features", style: "margin:0 0 4px" }),
     el("p", { class: "note", style: "margin:0 0 12px", text: "One per line: the title, a | and the YouTube link. On Fridays the screening nook plays a random one each hour (the sign says FRIDAY FEATURE), and they're at the top of its list." }),
+    el("p", { class: "note", style: "margin:0 0 8px" }, [el("a", { href: "goc-links.html", target: "_blank", rel: "noopener", text: "GOC link grabber" }), document.createTextNode(": copies your channel's videos in this format.")]),
     el("label", { class: "sr-only", text: "Friday features" }), fri,
   ]));
   if (!Array.isArray(draft.settings.office.nicknames)) draft.settings.office.nicknames = ["DeVaughn", "Boss", "Mr. curator sir"];

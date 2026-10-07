@@ -458,6 +458,11 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**GOC link grabber (2026-11-07).** `museum/goc-links.html` (linked from Staff → Friday features) makes `Title | https://youtu.be/ID` lines.
+- **Bookmark:** drag it to the bookmarks bar, then click it on a YouTube Videos tab or playlist. It copies every loaded video, skipping Shorts and duplicates, and shows the list to copy by hand if the clipboard is blocked.
+- **Paste box:** finds video ids in any text and looks up titles through YouTube's oEmbed. A title that can't be fetched becomes "Games Over Coffee".
+- **Pipes:** "|" in titles becomes "/" so the line format holds.
+
 **Days of the week (2026-11-07).** Something small and different each day, by the player's local day of the week (`weekday()`, which follows `todayISO()` so Skip to tomorrow works). Today's progress is kept in `progress.day` (keyed by date and weekday), so reloading doesn't reshuffle it. `placeDay()` runs after every build; `dayTalk()` runs before the usual talk. All lines are bracketed placeholders in Words → Days of the week.
 - **Day board** (`day_board`, 32×16): in the lobby at (5, 2), left of the museum door. Today's day is chalked on it (SUN., MON., TUES., WED., THURS., FRI., SAT.); looking at it reads `day.board.<0-6>`. The lobby light switch moved from (5, 2) to (1, 2) to make room.
 - **Mon:** five misplaced boxes (`lost_box`) on random open floor in the museum, with labels from `mon.labels`. Talking to the conservator gives a hint (the wing one is in); after all five, 5 tokens.
