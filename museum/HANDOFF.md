@@ -458,6 +458,17 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Photos drawn as little scenes again (2026-11-04).**
+- **Back to scenes:** the screen-snapshot photos from 2026-11-03 are gone (`ph.shot` is dropped on load, so those photos are drawn from their subject again). Photos are composed scenes once more, built from the room as it is: `thumb.layers` (`[key, col, row, x, y, flip]`, drawn into a `w×h` box), plus `bg`, a tinted floor or wall tile.
+- **What's in a scene:**
+  - People: their sheet, turned toward you, with their shirt color.
+  - Doors and stairs: the actual wall tiles with their door overlay. Side doors are mirrored, and two-tile doors show both halves.
+  - Theater: the marquee doorway with its bulbs, and the NOW PLAYING board with the hour's title in LED letters.
+  - Office and props: the keypad in its current state, the TV on or off, and any prop with its current art.
+  - Also: the theater screen, hallway posters, café wall art, floor-Joe, the cat and the mug.
+  - Walls and floors use the room's tinted tiles.
+- **Unchanged:** pieces still show their art close up, and older photos with the old `slot` thumbs still draw.
+
 **Photo, placard and cabinet fixes (2026-11-03).**
 - **Photos are real snapshots:** a 36×27 crop of the screen around what you're facing (`snapshot`), saved with the photo as a small PNG (`ph.shot`, about 1 KB, so 40 photos is about 40 KB). Pieces still show their art close up. Older photos keep the old sprite-style picture.
 - **Placards with the real pixel font:** the earlier tests used a fallback font, but Press Start 2P is far wider. On framed placards the title is now 5.5px and at most two lines (`.gt-rd-tt`), the developer is one line with an ellipsis, and the buttons are 4.5px. Every piece was checked at 1.5x to 5x with the real font, and none overflow. To check layouts, test with that font loaded.
