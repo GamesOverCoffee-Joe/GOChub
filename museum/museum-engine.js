@@ -64,6 +64,8 @@ const PAL = {
   shelf:   [null, "#e8e4dc", "#7c7c80", "#181820", "#fbf6ea"],
   tdoor:   [null, "#08060c", "#141018", "#221a28", "#5a1a26", "#6a4a24", "#a8823c", "#e0c070"],
   bulbs:   [null, "#5a4020", "#ffd060", "#fff8e0", "#3a2a18"],
+  hposter: [null, "#3a2a20", "#16121a", "#3a2030", "#22303a"],
+  aisle:   [null, "#3a2a18", "#ffc860", "#fff2c8"],
   ledsign: [null, "#0a080c", "#2a2630", "#55505e", "#1c0808"],
   arcade:  [null, "#1a1424", "#3a2a5a", "#5a48a0", "#101018", "#40d0c0", "#f0c040", "#e05050", "#5878c8"],
   mags:    [null, "#f8f0e0", "#8a5a38", "#2a160c", "#e05050", "#5878c8", "#f0c040", "#58a868"],
@@ -637,6 +639,14 @@ const GEN = {
     rect(a, 2, 30, 12, 1, 1);
     return outline(a);
   },
+  // A movie poster on the theater hallway's side wall, seen edge on in the dark: a thin frame, two tiles tall (left wall; mirrored on the right).
+  hall_poster: () => {
+    const a = mk(16, 32);
+    rect(a, 11, 2, 5, 28, 1); rect(a, 12, 3, 4, 26, 2); rect(a, 13, 5, 2, 9, 3); rect(a, 13, 16, 2, 6, 4); px(a, 13, 25, 3);
+    return a;
+  },
+  // A little light on the hallway floor, by the wall: lit even in the dark (left side; mirrored on the right).
+  aisle_light: () => { const a = mk(4, 3); rect(a, 0, 0, 4, 3, 1); rect(a, 1, 0, 2, 2, 2); px(a, 1, 0, 3); return a; },
   // A long planter box, two tiles wide: a leafy row with a few flowers.
   planter_wide: () => {
     const a = mk(32, 16);
@@ -923,6 +933,8 @@ const SLOTS = [
   { key: "marquee_lights", label: "Marquee bulbs", group: "Screening nook", w: 32, h: 32, frames: 2, fps: 3, pal: "bulbs", gen: GEN.marquee_lights, note: "2 frames (64×32), drawn over the doorway and lit even in the dark. Every other bulb lit, so they chase." },
   { key: "led_sign", label: "NOW PLAYING board", group: "Screening nook", w: 64, h: 12, pal: "ledsign", gen: GEN.led_sign, note: "The black board, four tiles wide and one line tall, centered on the wall. The red letters scroll across it from right to left (rows 3 to 7, between x 3 and 60)." },
   { key: "arcade_cabinet", label: "Arcade cabinet", group: "Gift shop and café", w: 16, h: 32, frames: 2, fps: 2, pal: "arcade", gen: GEN.arcade_cabinet, note: "2 frames (32×32), the attract screen flickering. Two tiles tall. Plays the games that have a Play link." },
+  { key: "hall_poster", label: "Theater hallway poster", group: "Screening nook", w: 16, h: 32, pal: "hposter", gen: GEN.hall_poster, note: "On the hallway's left wall, seen edge on (mirrored for the right wall). Two tiles tall. It's dark in there; keep it dim." },
+  { key: "aisle_light", label: "Hallway floor light", group: "Screening nook", w: 4, h: 3, pal: "aisle", gen: GEN.aisle_light, note: "A little light by the wall along the theater hallway's floor (mirrored on the right). Drawn over the dark, with a soft glow." },
   { key: "theater_screen", label: "Screening nook screen", group: "Screening nook", w: 96, h: 48, frames: 2, pal: "screen", gen: GEN.theater_screen, note: "2 frames (192×48), six tiles wide and three tall (both wall rows and the wall cap above). The picture is the 80×45 window at (8, 2): the episode playing this hour shows there, muted, when it can; otherwise it flickers softly between the frames." },
   { key: "planter_wide", label: "Long planter", group: "Furniture", w: 32, h: 16, pal: "trinket", gen: GEN.planter_wide, note: "Two tiles wide. A leafy planter box with a few flowers, for dividing a room or blocking a spot." },
   { key: "planter", label: "Planter", group: "Gift shop and café", w: 16, h: 16, pal: "trinket", gen: GEN.planter, note: "A row of these divides the shop from the café." },
@@ -1387,6 +1399,36 @@ const ROOMS = {
     light: { dim: 0, spots: 0 },
     visitors: [],
   },
+  // The long dark hallway from the marquee door to the screening nook: 20 tiles of carpet, trash can alcoves, posters
+  // too dark to make out, and little lights along the floor. The nook's episode starts loading as you walk in, so it's
+  // playing by the time you get there.
+  theater_hall: {
+    name: "Theater Hallway",
+    art: { top: "staff_wall_top", upper: "staff_wall_upper", lower: "staff_wall_lower", floor: "carpet_floor" },
+    tint: { floor: "#3a2430", wall: "#2c2630" },
+    map: [
+      "#######",
+      "##^D^##",
+      "##vdv##",
+      "##...##", "##...##", "##...##", "##...##",
+      "#....##",                                   // a trash can alcove
+      "##...##", "##...##", "##...##", "##...##",
+      "##....#",                                   // and another
+      "##...##", "##...##", "##...##", "##...##",
+      "#....##",
+      "##...##", "##...##", "##...##", "##...##", "##...##",
+      "###B###",
+    ],
+    spawn: [3, 22, "up"], preScreen: true,
+    props: [
+      { key: "trash_can", x: 1, y: 7, event: { trash: true } }, { key: "trash_can", x: 5, y: 12, event: { trash: true } }, { key: "trash_can", x: 1, y: 17, event: { trash: true } },
+    ],
+    posters: [[1, 4, "l"], [5, 5, "r"], [1, 10, "l"], [5, 8, "r"], [1, 13, "l"], [5, 15, "r"], [1, 19, "l"], [5, 19, "r"]],
+    floorLights: [4, 6, 8, 10, 12, 14, 16, 18, 20, 22].flatMap(y => [[2, y, "l"], [4, y, "r"]]),
+    events: [{ x: 3, y: 2, warp: ["screening", 5, 7, "up"] }, { x: 3, y: 23, warp: ["museum", 40, 30, "down"] }],
+    light: { dim: 0.55, spots: 0 },
+    visitors: [],
+  },
   // The screening nook: a little theater off the café's east hallway. Sit down to watch an episode on the big screen.
   screening: {
     name: "Screening Nook",
@@ -1409,7 +1451,7 @@ const ROOMS = {
       { key: "bench", x: 2, y: 6, sit: "up" }, { key: "bench", x: 8, y: 6, sit: "up" },
       { key: "planter", x: 1, y: 3, say: ["A planter. It's seen every episode."] }, { key: "planter", x: 10, y: 3, say: ["A planter, facing the screen. Of course."] },
     ],
-    events: [{ x: 5, y: 8, warp: ["museum", 40, 30, "down"] }, { x: 6, y: 8, warp: ["museum", 41, 30, "down"] }],
+    events: [{ x: 5, y: 8, warp: ["theater_hall", 3, 3, "down"] }, { x: 6, y: 8, warp: ["theater_hall", 3, 3, "down"] }],
     light: { dim: 0.35, spots: 0 },
     visitors: [],
   },
@@ -1566,6 +1608,7 @@ const TEXT = {
   "screen.marquee":    { g: "Screening nook", l: "The red LED sign out front, before the title (letters, numbers and : - . ! ? ' & , / only)", v: [["NOW PLAYING:"]] },
   "screen.sign":       { g: "Screening nook", l: "Looking at the LED sign out front ({title}: what's playing this hour)", v: [["NOW PLAYING: {title}.", "It changes every hour. The sign is very proud of this."]] },
   "screen.enter":      { g: "Screening nook", l: "The little notice walking in ({title})", v: [["Now playing: {title}"]] },
+  "hall.poster":       { g: "Screening nook", l: "Looking at a movie poster in the dark theater hallway (picks one at random)", v: [["[Movie poster in the dark hallway: too dark to make out, so describe what you can almost see]"]] },
   "arcade.title":      { g: "Arcade", l: "The arcade cabinet's list title", v: [["INSERT COIN"]] },
   "arcade.intro":      { g: "Arcade", l: "Walking up to the arcade cabinet ({n}: tokens per play)", v: [["[Arcade intro: what the cabinet is, that it opens a museum game in a new tab, and that a play costs {n} token(s)]"]] },
   "arcade.free":       { g: "Arcade", l: "Walking up to the arcade cabinet when plays are free (Gift shop: arcade price 0)", v: [["[Arcade intro when it's free: what the cabinet is, and that it opens a museum game in a new tab]"]] },
@@ -1953,7 +1996,7 @@ prepLayoutRoom(ROOMS.museum);
    the level editor in curator.html writes them. Rooms are plain data, so a deep copy is enough. */
 const BUILTIN_ROOMS = JSON.parse(JSON.stringify(ROOMS));
 const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "runners", "lamps", "arrows", "murals", "tint", "windowAt", "intercom", "lightSwitch", "eotmAt",
-  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt"];
+  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt", "preScreen", "posters", "floorLights"];
 /* Light checks so a hand-edited or damaged pack can't break the game: rectangular map, sane size, a spawn on the map. */
 function normalizeRoom(id, d) {
   if (d && typeof d === "object" && d.layout) { d = Object.assign({}, d); prepLayoutRoom(d); }
@@ -2204,6 +2247,9 @@ function buildRoom(id, pieces, o) {
   if (def.timeClock) { const [x, y] = def.timeClock; r.clockAt = { x, y }; r.events[x + "," + y] = { timeClock: true }; }
   if (def.eotmAt) r.eotmAt = { x: def.eotmAt[0], y: def.eotmAt[1] };
   if (def.screenAt) { const [x, y] = def.screenAt; r.screenAt = { x, y }; for (let i = 0; i < SLOT.theater_screen.w / T; i++) r.events[(x + i) + "," + (y + 1)] = { screen: true }; }
+  if (def.posters) { r.posters = def.posters.map(([x, y, side]) => ({ x, y, side })); r.posters.forEach(p => { r.events[p.x + "," + p.y] = r.events[p.x + "," + (p.y + 1)] = { poster: true }; }); }
+  if (def.floorLights) r.floorLights = def.floorLights.map(([x, y, side]) => ({ x, y, side }));
+  r.preScreen = !!def.preScreen;
   if (def.marqueeAt) { const [x, y] = def.marqueeAt; r.marquee = { x, y }; } // a big arched doorway over two doorway tiles (the screening nook's)
   if (def.nowPlayingAt) { const [x, y] = def.nowPlayingAt; r.nowSign = { x, y }; for (let i = 0; i < SLOT.led_sign.w / T; i++) r.events[(x + i) + "," + (y + 1)] = { nowPlaying: true }; }
   if (def.intercom) { const [x, y] = def.intercom; r.intercomAt = { x, y }; r.events[x + "," + y] = { announce: true }; }
@@ -2725,7 +2771,7 @@ class Game {
 .gt-badge textarea:focus{box-shadow:0 0 0 calc(1px * var(--s)) #e8b24a}
 .gt-note-count{text-align:right;color:#505068;font-size:.85em}
 .gt-scr{position:absolute;overflow:hidden;pointer-events:none;background:#000}
-.gt-scr iframe{position:absolute;left:-6%;top:-6%;width:112%;height:112%;border:0;filter:saturate(.85) brightness(.88) contrast(1.06)}
+.gt-scr iframe{position:absolute;left:-12%;top:-12%;width:124%;height:124%;border:0;filter:saturate(.85) brightness(.88) contrast(1.06)}
 .gt-scr-fx{position:absolute;inset:0;background-image:linear-gradient(rgba(0,0,0,0) 50%,rgba(0,0,0,.32) 50%),linear-gradient(90deg,rgba(0,0,0,0) 50%,rgba(0,0,0,.12) 50%);background-size:100% calc(2px * var(--s)),calc(2px * var(--s)) 100%;box-shadow:inset 0 0 calc(5px * var(--s)) rgba(0,0,0,.65)}
 .gt-tv{position:absolute;inset:0;display:none;flex-direction:column;background:#000;z-index:9}
 .gt-tv-bar{display:flex;align-items:center;gap:calc(4px * var(--s));padding:calc(2px * var(--s)) calc(4px * var(--s));color:#f8f0e0;font-size:max(calc(6px * var(--s)), 10px);background:#141018}
@@ -3277,25 +3323,38 @@ class Game {
      scanlines over it. Gone when you leave, during the full player, with Settings → Theater screen video off, or if the
      video won't embed. "Watch it" picks up the full player where the screen was. */
   syncScreen(r, cx, cy) {
-    const on = r.screenAt && this.screenVideo !== false && !this.headless && !this.full && !this.trans && this.mode !== "tv" && typeof document !== "undefined";
+    const on = (r.screenAt || r.preScreen) && this.screenVideo !== false && !this.headless && !this.full && this.mode !== "tv" && typeof document !== "undefined";
     const p = on ? this.nowPlaying() : null, id = p ? this.ytId(p.episodeUrl) : "";
     if (!id || (this.scrBad && this.scrBad[id])) { this.dropScreen(); return; }
     if (!this.scr || this.scr.id !== id) this.makeScreen(id);
-    const s = this.scale || 1, x = (r.screenAt.x * T + 8 - cx) * s, y = ((r.screenAt.y - 1) * T + 2 - cy) * s, key = [x, y, s].join();
-    if (this.scr.key !== key) { const st = this.scr.box.style; st.left = x + "px"; st.top = y + "px"; st.width = 80 * s + "px"; st.height = 45 * s + "px"; this.scr.key = key; }
+    const scr = this.scr, s = this.scale || 1, show = !!r.screenAt && !this.trans && this.screenClean();
+    const x = r.screenAt ? (r.screenAt.x * T + 8 - cx) * s : 0, y = r.screenAt ? ((r.screenAt.y - 1) * T + 2 - cy) * s : 0, key = [x, y, s, show].join();
+    if (scr.key !== key) { const st = scr.box.style; st.left = x + "px"; st.top = y + "px"; st.width = 80 * s + "px"; st.height = 45 * s + "px"; st.opacity = show ? 1 : 0; scr.key = key; }
+  }
+  /* Ready to show: playing for 4 seconds since it last started or jumped (YouTube's title and play button have faded by
+     then). Until then the screen art keeps flickering over it, and in the hallway it loads out of sight. If the player never
+     answers at all, show it after 9 seconds anyway. */
+  screenClean() {
+    const scr = this.scr; if (!scr) return false;
+    return scr.at ? !!scr.playT && scr.seeked && Date.now() - scr.playT > 4000 : Date.now() - scr.made > 9000;
   }
   makeScreen(id) {
     this.dropScreen();
-    const box = document.createElement("div"); box.className = "gt-scr"; box.setAttribute("aria-hidden", "true");
+    const box = document.createElement("div"); box.className = "gt-scr"; box.setAttribute("aria-hidden", "true"); box.style.opacity = 0;
     const f = document.createElement("iframe"); f.tabIndex = -1; f.allow = "autoplay; encrypted-media"; f.title = "Now playing";
-    f.src = "https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1&mute=1&controls=0&disablekb=1&fs=0&playsinline=1&rel=0&iv_load_policy=3&loop=1&playlist=" + id + "&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
+    f.src = "https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1&mute=1&controls=0&disablekb=1&fs=0&playsinline=1&rel=0&iv_load_policy=3&cc_load_policy=0&loop=1&playlist=" + id + "&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
     const fx = document.createElement("div"); fx.className = "gt-scr-fx";
     box.append(f, fx); this.canvas.after(box);
-    const scr = this.scr = { id, box, f, key: "", cur: 0, at: 0, seeked: false, pings: 0 };
-    // Ask the player to report its time and length (YouTube's embed messaging), until it answers.
-    const ping = () => { if (this.scr !== scr || scr.at || scr.pings++ > 20) return; try { f.contentWindow.postMessage(JSON.stringify({ event: "listening", id: 1, channel: "widget" }), "*"); } catch (e) {} scr.ping = setTimeout(ping, 500); };
+    const scr = this.scr = { id, box, f, key: "", cur: 0, at: 0, seeked: false, pings: 0, playT: 0, made: Date.now(), cc: 0 };
+    // Ask the player to report its time, length and state (YouTube's embed messaging), until it answers.
+    const ping = () => { if (this.scr !== scr || scr.at || scr.pings++ > 20) return; this.screenCmd("listening"); scr.ping = setTimeout(ping, 500); };
     f.addEventListener("load", ping);
     if (!this.scrMsg) { this.scrMsg = true; window.addEventListener("message", e => this.screenMessage(e)); }
+  }
+  screenCmd(func, args) {
+    const scr = this.scr; if (!scr) return;
+    const m = func === "listening" ? { event: "listening", id: 1, channel: "widget" } : { event: "command", func, args: args || [], id: 1, channel: "widget" };
+    try { scr.f.contentWindow.postMessage(JSON.stringify(m), "*"); } catch (e) {}
   }
   screenMessage(e) {
     const scr = this.scr; if (!scr || e.source !== scr.f.contentWindow) return;
@@ -3303,11 +3362,14 @@ class Game {
     if (!d || typeof d !== "object") return;
     if (d.event === "onError") { (this.scrBad = this.scrBad || {})[scr.id] = 1; this.dropScreen(); return; } // won't embed: the flicker art stays
     const info = d.info; if (!info || typeof info !== "object") return;
+    if (scr.cc < 6) { scr.cc++; this.screenCmd("unloadModule", ["captions"]); this.screenCmd("unloadModule", ["cc"]); } // captions off (they load a bit late, so a few times)
     if (typeof info.currentTime === "number") { scr.cur = info.currentTime; scr.at = Date.now(); }
-    if (!scr.seeked && info.duration > 30) { // into the middle of it: as far in as the hour is, around and around
-      scr.seeked = true; const h = new Date(); h.setMinutes(0, 0, 0); const off = ((Date.now() - h.getTime()) / 1000) % info.duration;
-      scr.cur = off; scr.at = Date.now();
-      try { scr.f.contentWindow.postMessage(JSON.stringify({ event: "command", func: "seekTo", args: [off, true], id: 1, channel: "widget" }), "*"); } catch (err) {}
+    if (typeof info.playerState === "number") { if (info.playerState !== 1) scr.playT = 0; else if (!scr.playT) scr.playT = Date.now(); }
+    if (!scr.seeked && info.duration > 0) { // into the middle of it: as far in as the hour is, around and around
+      scr.seeked = true; if (info.duration <= 30) return;
+      const h = new Date(); h.setMinutes(0, 0, 0); const off = ((Date.now() - h.getTime()) / 1000) % info.duration;
+      scr.cur = off; scr.at = Date.now(); if (scr.playT) scr.playT = Date.now(); // wait out anything the jump brings up
+      this.screenCmd("seekTo", [off, true]);
     }
   }
   dropScreen() { const scr = this.scr; if (!scr) return; clearTimeout(scr.ping); scr.box.remove(); this.scr = null; }
@@ -4797,7 +4859,7 @@ class Game {
     if (!quiet) this.showLoc(z.name);
   }
   warp(to, x, y, dir, after) {
-    if (to === "screening" && this.room && this.room.id !== "screening") { const a = after, p = this.nowPlaying(); after = () => { if (p) this.showLoc(this.tx("screen.enter", { title: p.title })[0]); if (a) a(); }; }
+    if (to === "theater_hall" && this.room && this.room.id === "museum") { const a = after, p = this.nowPlaying(); after = () => { if (p) this.showLoc(this.tx("screen.enter", { title: p.title })[0]); if (a) a(); }; }
     this.mode = "busy"; this.trans = { t: 0, dur: 14, switched: false, fn: () => this.enterRoom(to, x, y, dir), after }; }
   runEvent(e) {
     if (ROOMS[this.room.id] && ROOMS[this.room.id].tutorial && this.tutEvent(e)) return;
@@ -4856,6 +4918,7 @@ class Game {
     else if (e.screen) this.screenAsk();
     else if (e.nowPlaying) { const p = this.nowPlaying(); this.say(p ? this.tx("screen.sign", { title: p.title }) : this.tx("screen.none")); }
     else if (e.arcade) this.arcade();
+    else if (e.poster) this.say(this.tx("hall.poster", null, true));
     else if (e.arrow) { const a = this.arrowInfo(e.arrow); this.say([a.label.toUpperCase() + " " + ({ left: "\u2190", right: "\u2192", up: "\u2191", down: "\u2193" }[e.arrow.dir] || ""), "This way to " + a.label + "."]); }
     else if (e.say) this.say(e.say);
   }
@@ -5358,6 +5421,15 @@ class Game {
      red letters on the NOW PLAYING sign (the title scrolls when it's too long for the board). */
   drawMarquee(r, cx, cy) {
     const ctx = this.ctx;
+    if (r.floorLights) {
+      ctx.globalCompositeOperation = "lighter";
+      for (const l of r.floorLights) {
+        const x = l.x * T + (l.side === "r" ? 13 : 3) - cx, y = l.y * T + 9 - cy, g = ctx.createRadialGradient(x, y, 1, x, y, 9);
+        g.addColorStop(0, "rgba(255,190,110,0.32)"); g.addColorStop(1, "rgba(255,190,110,0)"); ctx.fillStyle = g; ctx.fillRect(x - 9, y - 9, 18, 18);
+      }
+      ctx.globalCompositeOperation = "source-over";
+      for (const l of r.floorLights) this.drawFlip("aisle_light", l.side === "r", l.x * T + (l.side === "r" ? 11 : 1) - cx, l.y * T + 8 - cy);
+    }
     if (r.marquee) this.drawSlot("marquee_lights", REDUCED_MOTION ? 0 : this.frame("marquee_lights"), 0, r.marquee.x * T - cx, r.marquee.y * T - cy);
     if (!r.nowSign) return;
     // One line, scrolling right to left like an LED ticker: it jumps two columns at a time, a little chunky.
@@ -5367,6 +5439,10 @@ class Game {
     ctx.save(); ctx.beginPath(); ctx.rect(x0 + 3, y0 + 2, win, 8); ctx.clip();
     ctx.drawImage(line, x0 + 3 + win - o, y0 + 2);
     ctx.restore();
+  }
+  drawFlip(key, flip, x, y) { // a slot mirrored left to right (one piece of art for both walls)
+    if (!flip) { this.drawSlot(key, 0, 0, x, y); return; }
+    const ctx = this.ctx; ctx.save(); ctx.translate(x + SLOT[key].w, 0); ctx.scale(-1, 1); this.drawSlot(key, 0, 0, 0, y); ctx.restore();
   }
   /* A line of glowing red LED letters (the pixel font, with a soft halo), cached. */
   ledText(s) {
@@ -5609,6 +5685,7 @@ class Game {
     if (r.switchAt) this.drawSlot("light_switch", 0, 0, r.switchAt.x * T - cx, r.switchAt.y * T - cy);
     for (const sw of r.switches || []) this.drawSlot("light_switch", 0, 0, sw.x * T - cx, sw.y * T - cy);
     if (r.intercomAt) this.drawSlot("intercom", 0, 0, r.intercomAt.x * T - cx, r.intercomAt.y * T - cy);
+    for (const p of r.posters || []) this.drawFlip("hall_poster", p.side === "r", p.x * T - cx, p.y * T - cy);
     if (r.marquee) this.drawSlot("theater_door", 0, 0, r.marquee.x * T - cx, r.marquee.y * T - cy);
     if (r.nowSign) this.drawSlot("led_sign", 0, 0, r.nowSign.x * T - cx, r.nowSign.y * T + 10 - cy);
     if (r.screenAt) this.drawSlot("theater_screen", Math.floor(this.t / 45) % 2, 0, r.screenAt.x * T - cx, (r.screenAt.y - 1) * T - cy); // the big screen, flickering softly (the video goes over it)
@@ -5743,7 +5820,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-25 live screen";
+const VERSION = "2026-10-26 theater hallway";
 window.GOQ = { ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

@@ -458,6 +458,12 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Theater hallway (2026-10-26).**
+- **The room:** `theater_hall` (built in), a 3-wide, 20-tile dark corridor between the marquee door and the screening nook. The museum layout doors `screening-1/2` now warp to (3, 22) facing up, the top door leads into the nook, and the nook's doors lead back to (3, 3). It has 3 trash can alcoves, and 8 posters seen edge on (`posters: [x, y, "l"|"r"]`, art *Theater hallway poster*, mirrored for the right wall; looking at one reads `hall.poster`, a placeholder). Floor lights run every 2 tiles along both edges (`floorLights`, art *Hallway floor light*, drawn over the dark with a glow). Dim 0.55, no light switch.
+- **Preload:** a room with `preScreen: true` (the hallway) loads the nook's video out of sight, so it's already playing on arrival (a walk is about 5 s). The screen only shows the video once it has been playing for 4 s since it started or jumped (`screenClean`); until then the flicker art stays. If the player never answers at all, the video shows after 9 s. Going in cold just flickers a few seconds.
+- **Captions and crop:** captions are switched off by message (`unloadModule captions/cc`, plus `cc_load_policy=0`). The overscan crop is now 124%, to hide the title strip and the logo.
+- The "Now playing" notice shows on entering the hallway from the museum.
+
 **Live theater screen and plant names (2026-10-25).**
 - **Theater screen video:** in the nook, the hour's NOW PLAYING episode plays muted on the screen itself. It's a YouTube embed (`.gt-scr`) laid over the screen art's 80×45 picture window and repositioned every frame (`syncScreen`). Over it: CSS scanlines, a light pixel grid, a vignette and a slight dim. The player ignores clicks.
 - **Mid-episode start:** on load, YouTube's embed messaging (`listening` / `infoDelivery`) reports the length, and the player seeks to (seconds past the hour) mod length.
