@@ -458,6 +458,10 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Curator nicknames (2026-11-01).**
+- **Nicknames:** with a curator badge clocked in, personal greetings call you one of `settings.office.nicknames` at random (curator Staff tab, "What people call you"; default DeVaughn, Boss, Mr. curator sir) via `callName()`. That covers the `{name}` in talk lines, Joe, the usher's "already clocked in", and clocking out.
+- **Official name:** the HUD, "Clocked in:", leaderboard, lockers and Employee of the Month keep the badge's own name, which is set in Supabase (`goq.rename_badge`).
+
 **The curator's office (2026-10-31).**
 - **Room:** `office` (built in), off B1 Storage through a new door on Storage's left wall (0, 5), `officeDoor` event. Spaceship-panel walls (`ship_wall_upper/lower`, 2 frames, a few lights blink), purple-tinted carpet, dim 0.12, no light switch.
 - **Furniture:** bookshelf (Words `office.books`: one book per entry, first line is the spine), desk with two monitors off, white PC tower with a purple glow (new room key `colorGlows: [x, y, color, radius]`, drawn over the lighting), TV (off until you turn it on), office chair (sit), Joe, a small table with a Steam Deck, the camera on its tripod (no light) and a soft box. Floor clutter decals: controllers, half-finished iced coffees, a yerba mate can. All of it is placeholder art under Art → Curator's office.

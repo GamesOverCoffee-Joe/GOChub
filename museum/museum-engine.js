@@ -1336,7 +1336,9 @@ function normalizePack(p) {
   // Genres: the museum's rooms (Action, Puzzle...), each welcoming some mindsets. A piece's genre is set by hand, or follows its mindsets.
   const genres = normalizeGenres(p.settings && p.settings.genres, mids), gids = new Set(genres.map(g => g.id));
   pieces.forEach(pc => { if (!gids.has(pc.genre)) pc.genre = ""; if (!gids.has(pc.blend) || pc.blend === pc.genre) pc.blend = ""; });
-  const office = { code: String((p.settings && p.settings.office && p.settings.office.code) || "").replace(/\D/g, "").slice(0, 8) || "40917" }; // the keypad code, the same for everyone
+  const ofin = (p.settings && p.settings.office) || {};
+  const office = { code: String(ofin.code || "").replace(/\D/g, "").slice(0, 8) || "40917", // the keypad code, the same for everyone
+    nicknames: Array.isArray(ofin.nicknames) ? ofin.nicknames.map(n => str(n, 40)).filter(Boolean).slice(0, 12) : ["DeVaughn", "Boss", "Mr. curator sir"] }; // what people call a curator badge
   return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, mindsets, curious, life, genres, office }, samples: !Array.isArray(p.pieces) };
 }
 /* The curator's "Skip to tomorrow" moves every daily system forward together. */
@@ -1690,7 +1692,7 @@ const TUT_SPOTS = { r1Exit: [5, 8], glass: [6, 8], office: { rosie: [3, 6], skye
 /* ---------- Words ----------
    Every line the museum says (that isn't already part of a piece, a room or a shop item) lives here, so the curator's Words tab can change it.
    Each entry is a list of variants; each variant is a list of pages. When there are several variants, they take turns (or one is picked at random).
-   Placeholders: {name} (who's clocked in, or "friend"), {cat}, {catRoom}, {title}, {date}, {drink}, {n}, {room}, {hint}, {floor}, {locker}. */
+   Placeholders: {name} (who's clocked in, or "friend"; a curator badge gets one of the curator's nicknames), {cat}, {catRoom}, {title}, {date}, {drink}, {n}, {room}, {hint}, {floor}, {locker}. */
 const TEXT = {
   "case.empty":        { g: "Pieces", l: "Empty display case", v: [["An empty display case, waiting for a game."]] },
   "case.covered":      { g: "Pieces", l: "Case under a cloth (unveiling soon)", v: [["Something is under a cloth in this case.", "The card says it will be unveiled on {date}."]] },
@@ -3569,6 +3571,12 @@ class Game {
      every piece in it front and back; once 5 visitors have loved your picks, a call sheet on the staff corkboard gives the
      order; and the keypad only works after closing (announcement made, lights out). One code for everyone (curator, Staff
      tab), so players can trade it. A curator badge always gets in, and starts there. */
+  /* What people call you to your face: your badge name, or for a curator badge one of the curator's nicknames (Staff tab).
+     Official things (the ON SHIFT tag, clocking in, the leaderboard, lockers, Employee of the Month) keep the badge name. */
+  callName() {
+    const s = this.staff; if (!s) return "";
+    const nn = s.curator ? this.pack.settings.office.nicknames : []; return nn.length ? nn[Math.floor(Math.random() * nn.length)] : s.name;
+  }
   officeOpen() { return !!(this.progress.office || (this.staff && this.staff.curator) || this.curator); }
   wings() { // the wings with a category, in the call sheet's order (shuffled by the code, so the order is part of the puzzle)
     const lay = layoutOf(ROOMS.museum), code = this.pack.settings.office.code, out = [];
@@ -3822,7 +3830,7 @@ class Game {
     if (!t) { this.say(["The training desk."]); return; }
     if (t.step !== "intro") { const k = { signin: "go", room1: "go", feedback: "feedback", closing: "closing", lights: "lights" }[t.step] || "go"; this.say(U(this.tx("tut.usher." + k))); return; }
     t.step = "signin";
-    if (this.staff) { this.say(U(this.tx("tut.already", { name: this.staff.name })), () => this.tutGo()); return; }
+    if (this.staff) { this.say(U(this.tx("tut.already", { name: this.callName() })), () => this.tutGo()); return; }
     const hello = U(this.tx("tut.hello")), q = hello.pop();
     this.say(hello, () => this.ask(q, ["Here's my badge", "I don't have one"], i => (i === 0 ? this.tutBadge() : this.tutNoBadge()), 1));
   }
@@ -4259,7 +4267,7 @@ class Game {
     this.choose("On shift as " + this.staff.name + ". " + n + " point" + (n === 1 ? "" : "s") + " on your tally. Clock out?",
       ["Clock out", "Keep working"], i => {
         if (i !== 0) return;
-        const name = this.staff.name; this.progress.staff = null; this.saveProgress(); this.updateHud();
+        const name = this.callName(); this.progress.staff = null; this.saveProgress(); this.updateHud();
         this.say(this.tx("clock.out", { name }));
       });
   }
@@ -4357,7 +4365,7 @@ class Game {
   }
   baseVars() {
     const catRoom = Object.values(this.rooms || {}).find(r => r.cat);
-    return { name: this.staff ? this.staff.name : "friend", cat: this.pack.settings.staff.catName, catRoom: catRoom ? catRoom.name.replace(/\s+/g, " ") : "somewhere", drink: this.drink ? this.drink.name.toLowerCase() : "drink" };
+    return { name: this.staff ? this.callName() : "friend", cat: this.pack.settings.staff.catName, catRoom: catRoom ? catRoom.name.replace(/\s+/g, " ") : "somewhere", drink: this.drink ? this.drink.name.toLowerCase() : "drink" };
   }
   /* The pages for one entry in the Words list, with its placeholders filled in. Several variants take turns; random: true picks one. */
   tx(key, vars, random) {
@@ -5268,7 +5276,7 @@ class Game {
     else if (e.books) this.officeBooks();
     else if (e.officePc) this.officePc();
     else if (e.officeTv) this.officeTv();
-    else if (e.joeTalk) this.say(this.tx(this.staff && this.staff.name ? "office.joe" : "office.joeAnon", { name: this.staff ? this.staff.name : "" }, true));
+    else if (e.joeTalk) this.say(this.tx(this.staff && this.staff.name ? "office.joe" : "office.joeAnon", { name: this.staff ? this.callName() : "" }, true));
     else if (e.joe) this.joeGlitch();
     else if (e.poster) this.say(this.tx("hall.poster", null, true));
     else if (e.arrow) { const a = this.arrowInfo(e.arrow); this.say([a.label.toUpperCase() + " " + ({ left: "\u2190", right: "\u2192", up: "\u2191", down: "\u2193" }[e.arrow.dir] || ""), "This way to " + a.label + "."]); }
@@ -6185,7 +6193,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-31 badge refresh";
+const VERSION = "2026-11-01 nicknames";
 window.GOQ = { ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

@@ -328,7 +328,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-31 badge refresh";
+window.GOQ_WANT = "2026-11-01 nicknames";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -824,6 +824,14 @@ function renderStaff() {
     el("h3", { text: "Curator's office keypad", style: "margin:0 0 4px" }),
     el("p", { class: "note", style: "margin:0 0 12px", text: "The code on the office door in B1, the same for everyone so players can trade it. One digit per wing: each wing's touch screen gives its digit once every piece in it is read front and back, and the call sheet on the staff corkboard (after 5 visitors love a pick) gives the order. With five wings, it's the first five digits. A curator badge always gets in." }),
     el("div", { class: "fields", style: "max-width:420px" }, [el("label", {}, [document.createTextNode("Code"), ocode])]),
+  ]));
+  if (!Array.isArray(draft.settings.office.nicknames)) draft.settings.office.nicknames = ["DeVaughn", "Boss", "Mr. curator sir"];
+  const nicks = el("textarea", { rows: 3, style: "max-width:420px;width:100%" }); nicks.value = draft.settings.office.nicknames.join("\n");
+  nicks.addEventListener("input", () => { draft.settings.office.nicknames = nicks.value.split("\n").map(x => x.trim()).filter(Boolean).slice(0, 12); changed(); });
+  wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
+    el("h3", { text: "What people call you", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "One per line. When you're clocked in with a curator badge, personal greetings (staff, Joe, the usher, clocking out) call you one of these at random. Badges, the ON SHIFT tag, the leaderboard and Employee of the Month keep your badge's name." }),
+    el("label", { class: "sr-only", text: "Nicknames" }), nicks,
   ]));
   const cat = el("input", { type: "text", value: st.catName || "Pixel", placeholder: "Pixel", maxlength: 30 });
   cat.addEventListener("input", () => { st.catName = cat.value.trim() || "Pixel"; changed(); });
