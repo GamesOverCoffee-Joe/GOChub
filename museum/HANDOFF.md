@@ -458,6 +458,20 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Photo perspective and preview options (2026-11-05).**
+- **Photos are 48×36 now** (they were 24×18; the album and close-up showed them bigger anyway). Scenes are drawn at full size; older single-sprite photos are drawn at 24×18 and doubled, so they look as before. The locker frame crop scales with the size.
+- **People** (`personScene`, built in `takePhoto` after they react):
+  - They face the camera; the shy turn their back. Seated people face front too.
+  - Their reaction bubble is in the photo.
+  - Behind them is whatever is further on in the direction you're facing: a 3×2 block of tiles with their overlays, hung paintings (`piece:` layer), wall art, furniture and display cases (`case:` layer), then the floor they stand on.
+- **Hallway posters:** the flash reveals a museum game on each poster (`poster:` layer, the same game per poster: `strSeed(room:x,y)`).
+- **Joe:** photos of him come out as a full-frame scramble of bits of the museum's own sprites (`thumb.glitch`), MissingNo style.
+- **Preview options** (curator):
+  - Settings are segmented rows: View as Curator/Visitor, Time Clock/Day/Sunset/Night, Spooky Rare/Every closing, Test pieces Off/60 placeholders.
+  - "Make it happen" holds the figure, **Joe** (`summonJoe()`: he appears near you, in any room) and Tomorrow.
+  - "Start fresh" holds Re-crate upcoming, Unread everything, and **Start the visit over**. That button was "Reset chores", but it forgets everything done in the preview.
+  - The menu opens in place under the buttons, and the preview no longer gets squashed.
+
 **Photos drawn as little scenes again (2026-11-04).**
 - **Back to scenes:** the screen-snapshot photos from 2026-11-03 are gone (`ph.shot` is dropped on load, so those photos are drawn from their subject again). Photos are composed scenes once more, built from the room as it is: `thumb.layers` (`[key, col, row, x, y, flip]`, drawn into a `w×h` box), plus `bg`, a tinted floor or wall tile.
 - **What's in a scene:**

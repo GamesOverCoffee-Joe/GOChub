@@ -236,7 +236,19 @@ input[type=range]{accent-color:var(--gold);width:100%}
 .pvmore>summary,.rmore>summary{list-style:none;cursor:pointer}
 .pvmore>summary::-webkit-details-marker,.rmore>summary::-webkit-details-marker{display:none}
 .pvmenu,.rmenu{position:absolute;right:0;top:calc(100% + 6px);display:flex;flex-direction:column;gap:6px;padding:8px;border:2px solid var(--line);border-radius:4px;background:var(--surface);z-index:20;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
-.pvmenu{background:#281a1f;border-color:#4b343b}
+.pvmenu{background:#281a1f;border-color:#4b343b;gap:10px;position:static;margin-top:8px;min-width:0;box-shadow:none} /* opens in place, under the buttons */
+.pvmore[open]{flex-basis:100%;width:100%}
+.preview > *{flex-shrink:0} /* the open menu scrolls the panel instead of squashing the preview */
+.pvmore[open]>summary{margin-left:auto;width:max-content}
+.pvsec{display:flex;flex-direction:column;gap:4px}
+.pvh{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted, #b8a8a0)}
+.seg{display:flex;border:2px solid #4b343b;border-radius:4px;overflow:hidden}
+.seg button{flex:1;font:inherit;font-size:.8rem;font-weight:600;padding:.35em .4em;background:transparent;color:inherit;border:0;border-left:1px solid #4b343b;cursor:pointer;min-height:32px}
+.seg button:first-child{border-left:0}
+.seg button[aria-pressed="true"]{background:#e8b24a;color:#1a1014}
+.seg button:focus-visible{outline:2px solid #e8b24a;outline-offset:-2px}
+.pvgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.pvgrid .btn{justify-content:center;font-size:.78rem;padding:.35em .3em;min-height:32px}
 .rmenu .btn{justify-content:flex-start}
 .wrow{margin:10px 0 14px}
 .wrow textarea,.wtalk textarea{width:100%;min-height:64px;margin-top:4px}
@@ -308,15 +320,26 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
       <details class="pvmore">
         <summary class="btn">Preview options</summary>
         <div class="pvmenu">
-          <button class="btn" type="button" id="who" aria-pressed="true">Viewing as curator</button>
-          <button class="btn" type="button" id="timeBtn" title="Pin the time of day in the preview, or follow the clock">Time: clock</button>
-          <button class="btn" type="button" id="spooky" aria-pressed="false" title="How often something creepy happens after the lights go out">Spooky: rare</button>
-          <button class="btn" type="button" id="recrate" title="Put pieces with a future unveil date back in their crates">Repack crates</button>
-          <button class="btn" type="button" id="reread" title="Forget which placards you've read in the preview, so every piece shines again">Reset what I've read</button>
-          <button class="btn" type="button" id="rechore" title="Dust settles, plants get thirsty, the mug goes missing, visitors come back, lights come on">Reset chores</button>
-          <button class="btn" type="button" id="figureBtn" title="The figure appears right now, beside or behind you, with this room's lights off. Turn and photograph it before it's gone.">Summon the figure</button>
-          <button class="btn" type="button" id="dayBtn" title="Jump the preview to the next day: curious visitors come back, dust settles, the museum opens again">Skip to tomorrow</button>
-          <button class="btn" type="button" id="testPcs" aria-pressed="false" title="Fill the preview with 60 placeholder pieces so the oldest go to the rooms' touch screens. Never saved to the pack.">Test pieces: off</button>
+          <div class="pvsec"><span class="pvh">View as</span>
+            <div class="seg" id="segWho" role="group" aria-label="View the preview as"><button type="button" data-v="curator" title="Hang crates, see everything, notes off">Curator</button><button type="button" data-v="visitor" title="What a player sees">Visitor</button></div></div>
+          <div class="pvsec"><span class="pvh">Time of day</span>
+            <div class="seg" id="segTime" role="group" aria-label="Time of day"><button type="button" data-v="" title="Follow the real clock">Clock</button><button type="button" data-v="day">Day</button><button type="button" data-v="sunset">Sunset</button><button type="button" data-v="night">Night</button></div></div>
+          <div class="pvsec"><span class="pvh">Spooky moments</span>
+            <div class="seg" id="segSpook" role="group" aria-label="Spooky moments"><button type="button" data-v="rare" title="About one closing in five, as players get it">Rare</button><button type="button" data-v="always" title="Every time the lights go out (handy for recording)">Every closing</button></div></div>
+          <div class="pvsec"><span class="pvh">Test pieces</span>
+            <div class="seg" id="segTest" role="group" aria-label="Test pieces"><button type="button" data-v="off">Off</button><button type="button" data-v="on" title="60 placeholder pieces, so the oldest go to the rooms' touch screens. Never saved to the pack.">60 placeholders</button></div></div>
+          <div class="pvsec"><span class="pvh">Make it happen</span>
+            <div class="pvgrid">
+              <button class="btn" type="button" id="figureBtn" title="The figure appears right now, beside or behind you, with this room's lights off. Turn and photograph it before it's gone.">The figure</button>
+              <button class="btn" type="button" id="joeBtn" title="Joe turns up on the floor near you. Talk to him (or photograph him) to see the glitch.">Joe</button>
+              <button class="btn" type="button" id="dayBtn" title="The next day: curious visitors come back, dust settles, the museum opens again">Tomorrow</button>
+            </div></div>
+          <div class="pvsec"><span class="pvh">Start fresh</span>
+            <div class="pvgrid">
+              <button class="btn" type="button" id="recrate" title="Pieces with a future unveil date go back in their crates, so you can hang them again">Re-crate upcoming</button>
+              <button class="btn" type="button" id="reread" title="Forget which placards you've read, so every piece shines again">Unread everything</button>
+              <button class="btn" type="button" id="rechore" title="Forget everything done in this preview: chores, tokens, photos, stamps, achievements, the office. The lights come back on and visitors return. (The preview never saves; players' saves aren't touched.)">Start the visit over</button>
+            </div></div>
         </div>
       </details>
     </div>
@@ -328,7 +351,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-04 photo scenes";
+window.GOQ_WANT = "2026-11-05 photo perspective";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -528,35 +551,25 @@ function fitPreview() {
 }
 window.addEventListener("resize", fitPreview); fitPreview();
 fillRoomPicker();
-$("#who").addEventListener("click", e => {
-  const on = !game.curator; game.setCurator(on);
-  e.currentTarget.textContent = on ? "Viewing as curator" : "Viewing as a visitor"; e.currentTarget.setAttribute("aria-pressed", on);
-  stage.focus({ preventScroll: true });
-});
+/* Preview options: each setting is a row of choices (the lit one is on); the one-off actions are buttons. */
+const seg = (id, val, pick) => { const box = $("#" + id), show = v => box.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === v)); show(val);
+  box.addEventListener("click", async e => { const b = e.target.closest("button"); if (!b) return; show(b.dataset.v); await pick(b.dataset.v); stage.focus({ preventScroll: true }); }); };
+seg("segWho", game.curator ? "curator" : "visitor", v => game.setCurator(v === "curator"));
+seg("segTime", game.timeOverride || "", v => game.setTime(v || null)); // pin day, sunset or night to see (and record) the evening details
+seg("segSpook", game.forceSpook ? "always" : "rare", v => { game.forceSpook = v === "always"; game.spook = null; });
+seg("segTest", testPieces ? "on" : "off", async v => { testPieces = v === "on"; await refreshPreview(); status(testPieces ? "Preview has 60 test pieces; the oldest are on the rooms' touch screens" : "Test pieces removed from the preview"); });
 $("#recrate").addEventListener("click", () => { game.resetHangs(); stage.focus({ preventScroll: true }); });
-$("#rechore").addEventListener("click", () => { game.resetProgress(); stage.focus({ preventScroll: true }); });
+$("#rechore").addEventListener("click", () => { game.resetProgress(); status("The preview's visit starts over"); stage.focus({ preventScroll: true }); });
 $("#reread").addEventListener("click", () => { game.resetRead(); stage.focus({ preventScroll: true }); });
-// Time: follow the real clock, or pin day, sunset or night to see (and record) the evening details.
-$("#timeBtn").addEventListener("click", e => {
-  const order = [null, "day", "sunset", "night"], next = order[(order.indexOf(game.timeOverride) + 1) % order.length];
-  game.setTime(next); e.currentTarget.textContent = "Time: " + (next || "clock"); stage.focus({ preventScroll: true });
-});
 $("#figureBtn").addEventListener("click", () => {
   game.closeAll(); if (!game.summonFigure()) status("No room for the figure here. Try a bigger room.", true);
   stage.focus({ preventScroll: true });
 });
+$("#joeBtn").addEventListener("click", () => {
+  game.closeAll(); if (!game.summonJoe()) status("No floor free near you for Joe. Try somewhere roomier.", true);
+  stage.focus({ preventScroll: true });
+});
 $("#dayBtn").addEventListener("click", () => { game.closeAll(); game.skipDay(); stage.focus({ preventScroll: true }); });
-$("#testPcs").addEventListener("click", async e => {
-  testPieces = !testPieces; e.currentTarget.textContent = "Test pieces: " + (testPieces ? "on" : "off"); e.currentTarget.setAttribute("aria-pressed", testPieces);
-  await refreshPreview(); status(testPieces ? "Preview has 60 test pieces; the oldest are on the rooms' touch screens" : "Test pieces removed from the preview");
-  stage.focus({ preventScroll: true });
-});
-// Spooky: "always" makes the rare creepy moment happen on every closing, handy for recording an end-card.
-$("#spooky").addEventListener("click", e => {
-  game.forceSpook = !game.forceSpook; game.spook = null;
-  e.currentTarget.textContent = game.forceSpook ? "Spooky: always" : "Spooky: rare"; e.currentTarget.setAttribute("aria-pressed", game.forceSpook);
-  stage.focus({ preventScroll: true });
-});
 // "Reset chores" also reopens the museum: visitors come back and the lights come on.
 
 /* ---------- Tabs ---------- */

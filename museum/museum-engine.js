@@ -3690,9 +3690,15 @@ class Game {
   /* Joe, out in the museum: now and then he's standing somewhere on the floor. Talk to him and he glitches out and is gone. */
   placeJoe() {
     if (this.joeState === undefined) this.joeState = !this.headless && !this.curator && Math.random() < 0.3 ? { spot: null, gone: false } : null; // about one visit in three
-    const st = this.joeState, r = this.rooms.museum; if (!st || st.gone || !r) return;
+    const st = this.joeState, r = st && this.rooms[st.room || "museum"]; if (!st || st.gone || !r) return;
     const at = st.spot && this.tileFree(r, st.spot[0], st.spot[1]) ? st.spot : this.freeSpot(r); if (!at) return;
     st.spot = at; const [x, y] = at; r.joe = { x, y, t: 0 }; r.solid[y][x] = true; r.events[x + "," + y] = { joe: true };
+  }
+  summonJoe() { // the curator's preview: Joe, right now, near you
+    const r = this.room, p = this.player; if (r.joe) return true;
+    const at = this.freeSpot(r, [p.x, p.y, 3]) || this.freeSpot(r); if (!at) return false;
+    this.joeState = { room: r.id, spot: at, gone: false }; const [x, y] = at; r.joe = { x, y, t: 0 }; r.solid[y][x] = true; r.events[x + "," + y] = { joe: true };
+    return true;
   }
   joeGlitch() {
     const r = this.room; if (!r.joe || r.joe.t) return;
@@ -4926,14 +4932,13 @@ class Game {
       const ahead = (fg.x - p.x) * dx + (fg.y - p.y) * dy, side = Math.abs((fg.x - p.x) * dy) + Math.abs((fg.y - p.y) * dx);
       if (ahead >= 1 && ahead <= 7 && side <= 1) { fg.leaving = true; this.progress.tally.figure = 1; return { desc: this.tx("figure.photo").join(" "), thumb: { slot: "shadow_figure", bg: floorAt(fg.x, fg.y), dark: true } }; }
     }
-    if (npc) { // as they look right now, shirt and all
-      const row = DIR_ROW[npc.sitting ? npc.dir : OPP[p.dir]] || 0, th = one(npc.sheet, fx, fy, 0, row); // turned toward the camera (unless seated)
-      if (/^visitor_[abc]$/.test(npc.sheet) && !this.overrides[npc.sheet] && npc.shirt) th.layers.push(["visitor_shirt@" + npc.shirt, 0, row, 0, 0]);
+    if (npc) { // the picture itself is made after they react (personScene, in takePhoto)
+      const th = { person: true, dark: dk };
       if (npc.member) return { desc: npc.member + (npc.patron ? ", on a break in the staff room." : npc.follow ? ", following you around the museum." : npc.cur ? ", looking curious." : npc.back ? ", back to tell you how a game went." : ", enjoying the museum.") + dark, thumb: th };
       return { desc: (npc.patrol ? "The night guard, mid-rounds. They gave a little wave." : npc.usher ? "The usher at the front desk, smiling politely." : npc.still && npc.staff ? "The conservator, busy with something delicate." : npc.sitting ? "A visitor relaxing at the café." : npc.still ? "A visitor, deep in thought about a purchase." : "A visitor admiring the museum.") + dark, thumb: th };
     }
     if (r.cat && r.cat.x === fx && r.cat.y === fy) return { desc: this.pack.settings.staff.catName + ", napping. Adorable." + dark, thumb: one("cat", fx, fy) };
-    if (r.joe && r.joe.x === fx && r.joe.y === fy) return { desc: "A little crochet robot, standing on the floor. Odd." + dark, thumb: one("joe", fx, fy, 1) };
+    if (r.joe && r.joe.x === fx && r.joe.y === fy) return { desc: "The photo came out... wrong.", thumb: { glitch: true } }; // Joe doesn't photograph
     if (r.mug && r.mug.x === fx && r.mug.y === fy) return { desc: "The curator's coffee mug, abandoned again." + dark, thumb: one("mug", fx, fy) };
     if (e && e.caseAt && e.caseAt.piece && e.caseAt.state === "wall") return { desc: e.caseAt.piece.title + ", in its glass case." + dark, piece: e.caseAt.piece.id, thumb: { piece: e.caseAt.piece.id, dark: dk } };
     if (e && e.spot && e.spot.piece && e.spot.state === "wall") return { desc: e.spot.piece.title + ", hanging on the wall." + dark, piece: e.spot.piece.id, thumb: { piece: e.spot.piece.id, dark: dk } };
@@ -4942,7 +4947,9 @@ class Game {
     const k = r.keypadAt; if (k && k.x === fx && k.y === fy) return { desc: "A keypad by the door. It isn't telling." + dark, thumb: wallScene(fx, fy, 1, 1, { layers: [["office_keypad", this.officeOpen() ? 2 : this.closed ? 1 : 0, 0, 0, 0, r.solid[fy][fx + 1] !== false ? 1 : 0]] }) };
     const ns = r.nowSign; if (ns && fx >= ns.x && fx < ns.x + 4 && (fy === ns.y || fy === ns.y + 1)) { const np = this.nowPlaying(); return { desc: "The NOW PLAYING sign" + (np ? ": " + np.title + "." : ".") + dark, thumb: wallScene(ns.x, ns.y, 4, 2, { layers: [["led_sign", 0, 0, 0, 10], ["led:" + (np ? np.title : (this.tx("screen.marquee")[0] || "")), 0, 0, 4, 12]] }) }; }
     if (r.screenAt && e && e.screen) return { desc: "The big screen in the screening nook." + dark, thumb: { layers: [["theater_screen", 0, 0, 0, 0]], w: 96, h: 48, bg: tile(r.screenAt.x, r.screenAt.y), dark: dk } };
-    const po = (r.posters || []).find(q => q.x === fx && (q.y === fy || q.y + 1 === fy)); if (po) return { desc: "A movie poster. Too dark to make out." + dark, thumb: wallScene(po.x, po.y, 1, 2, { layers: [["hall_poster", 0, 0, 0, 0, po.side === "r" ? 1 : 0]] }) };
+    const po = (r.posters || []).find(q => q.x === fx && (q.y === fy || q.y + 1 === fy));
+    if (po) { const ps = this.pack.pieces.filter(q => !q.tut), pc = ps.length ? ps[strSeed(r.id + ":" + po.x + "," + po.y) % ps.length] : null; // the flash lights it up: always the same game for this poster
+      return { desc: pc ? "The flash lights up a poster: " + pc.title + "." : "A movie poster. Too dark to make out." + dark, thumb: wallScene(po.x, po.y, 1, 2, { layers: pc ? [["poster:" + pc.id, 0, 0, 0, 0]] : [["hall_poster", 0, 0, 0, 0, po.side === "r" ? 1 : 0]] }) }; }
     const wa = (r.wallArt || []).find(w => fx >= w.x && fx < w.x + SLOT[w.key].w / T && (fy === (w.y || 1) || fy === (w.y || 1) + 1)); if (wa) return { desc: "The " + SLOT[wa.key].label.toLowerCase().replace(/^(the|a|an) /, "") + " on the wall." + dark, thumb: wallScene(wa.x, wa.y || 1, SLOT[wa.key].w / T, 2, { layers: [[wa.key, 0, 0, 0, 0]] }) };
     if (e && (e.warp || e.frontDoor || e.shopDoor || e.staffDoor || e.officeDoor)) { // the door as it's drawn now, with the wall around it
       const o = r.over[fy] && r.over[fy][fx], tall = o && /_lower$/.test(o);
@@ -4952,6 +4959,28 @@ class Game {
     if (prop) return { desc: "The " + SLOT[prop.key].label.toLowerCase().replace(/^(the|a|an) /, "") + "." + dark, thumb: one(prop.key, prop.x, prop.y, prop.key === "office_tv" && this.tvOn ? 1 : 0) };
     if (r.solid[fy] && r.solid[fy][fx]) return { desc: "A wall. Nicely painted, at least." + dark, thumb: { slot: tile(fx, fy), tile: true, dark: dk } };
     return { desc: "A blurry photo of the floor. Very artsy." + dark, thumb: { slot: tile(fx, fy), tile: true, blur: true, dark: dk } };
+  }
+  /* Someone in a photo: facing the camera (the shy turn their back), their bubble if they reacted, and behind them whatever is
+     further on in that direction: the wall and its paintings, the counter, more floor. */
+  personScene(n, dk) {
+    const p = this.player, [dx, dy] = DIRS[p.dir], r = this.room, bx = n.x + dx, by = n.y + dy, L = [], art = ROOMS[r.id].art || {};
+    const tile = (x, y) => (r.tiles[y] && r.tiles[y][x]) || art.floor || "staff_floor", x0 = bx - 1, y0 = by - 1;
+    for (let y = y0; y <= by; y++) for (let x = x0; x <= bx + 1; x++) {
+      L.push([tile(x, y), 0, 0, (x - x0) * T, (y - y0) * T - 6]);
+      const o = r.over[y] && r.over[y][x]; if (o) L.push([o, 0, 0, (x - x0) * T, (y - y0) * T - 6, o === "doorway_side" && r.solid[y][x + 1] !== false ? 1 : 0]);
+    }
+    for (const h of r.hung) if (h.state === "wall" && h.piece && h.x <= bx + 1 && h.x + 1 >= x0 && h.y <= by && h.y + 1 >= y0) L.push(["piece:" + h.piece.id, 0, 0, (h.x - x0) * T, (h.y - y0) * T - 6]);
+    for (const w of r.wallArt || []) { const wy = w.y || 1, ww = SLOT[w.key].w / T; if (w.x <= bx + 1 && w.x + ww - 1 >= x0 && wy <= by && wy + 1 >= y0) L.push([w.key, 0, 0, (w.x - x0) * T, (wy - y0) * T - 6]); }
+    const things = []; // furniture and display cases back there, nearest last
+    for (const q of r.props) { const s = SLOT[q.key], tw = s.w / T; if (q.x <= bx + 1 && q.x + tw - 1 >= x0 && q.y >= y0 && q.y <= by) things.push([q.y, [q.key, 0, 0, (q.x - x0) * T, (q.y - y0) * T - (s.h - T) - 6]]); }
+    for (const c of r.cases) if (c.piece && c.state === "wall" && c.x >= x0 && c.x <= bx + 1 && c.y >= y0 && c.y <= by) things.push([c.y, ["case:" + c.piece.id, 0, 0, (c.x - x0) * T, (c.y - 1 - y0) * T - 6]]);
+    things.sort((a, b) => a[0] - b[0]).forEach(t => L.push(t[1]));
+    for (let x = n.x - 1; x <= n.x + 1; x++) L.push([tile(x, n.y), 0, 0, (x - n.x + 1) * T, 26]); // the floor they're standing on
+    const kind = n.pose && n.pose.kind, row = DIR_ROW[kind === "shy" ? "up" : "down"];
+    L.push([n.sheet, 0, row, 16, 18]);
+    if (/^visitor_[abc]$/.test(n.sheet) && !this.overrides[n.sheet] && n.shirt) L.push(["visitor_shirt@" + n.shirt, 0, row, 16, 18]);
+    const fr = { startled: 0, guard: 0, heart: 1, pose: 3, busy: 4, wave: 5, shy: 6, annoyed: 7, bow: 3 }[kind]; if (fr !== undefined) L.push(["emote", fr, 0, 20, 8]); // caught mid-reaction
+    return { layers: L, w: 48, h: 36, full: true, dark: dk };
   }
   photoSrc(ph) { return this.photoThumb(ph).toDataURL(); }
   /* Someone you photograph reacts, depending on what they're doing: a little pose and a bubble over their head for a moment,
@@ -4976,7 +5005,8 @@ class Game {
   takePhoto() {
     const sub = this.photoSubject(), ph = this.progress.photos || (this.progress.photos = []);
     { const [dx, dy] = DIRS[this.player.dir], n = this.room.npcs.find(q => q.x === this.player.x + dx && q.y === this.player.y + dy && !q.leaving);
-      const d = n && this.photoReact(n); if (d) sub.desc = d; }
+      const d = n && this.photoReact(n); if (d) sub.desc = d;
+      if (n && sub.thumb && sub.thumb.person) sub.thumb = this.personScene(n, sub.thumb.dark); }
     ph.unshift({ desc: sub.desc, piece: sub.piece || null, room: (this.room.zoneAt && this.zone ? this.zone.name : this.room.name).replace(/\s+/g, " "), /* the wing or hall, in the museum */ thumb: sub.thumb || null, tod: this.tod(), seed: (Math.random() * 1e9) | 0 });
     if (ph.length > 40) ph.length = 40;
     this.progress.tally.photos = (this.progress.tally.photos || 0) + 1;
@@ -5035,46 +5065,67 @@ class Game {
   /* ----- the photo album -----
      A grid of little snapshots, newest first, with the selected photo's description underneath.
      Arrows (or tap) to choose, A to look closer or delete, B to close. */
+  /* A photo: 48×36. Scenes (thumb.layers) are drawn at full size; older single-sprite photos are drawn at 24×18 and doubled, so
+     they look as they always did. Then it's made to look like a real snapshot. */
   photoThumb(ph) {
     const ck = "thumb|" + JSON.stringify(ph.thumb || ph.piece || "x") + "|" + (ph.seed || ph.desc) + "|" + (ph.tod || "");
     if (this.cache[ck]) return this.cache[ck];
-    const c = document.createElement("canvas"); c.width = 24; c.height = 18; const x = c.getContext("2d"); x.imageSmoothingEnabled = false;
-    const th = ph.thumb || (ph.piece ? { piece: ph.piece } : null);
-    x.fillStyle = "#d8d0c4"; x.fillRect(0, 0, 24, 18);
-    const tileBg = key => { if (!SLOT[key.split("@")[0]]) return; const img = this.sheet(key); for (let yy = 0; yy < 18; yy += 16) for (let xx = 0; xx < 24; xx += 16) x.drawImage(img, 0, 0, 16, 16, xx - 4, yy - 7, 16, 16); };
-    if (th && th.layers) { // a little scene: the subject as it is now (its current art, the room's colors), on its floor or wall
-      if (th.bg) tileBg(th.bg);
+    const W = 48, H = 36, F = document.createElement("canvas"); F.width = W; F.height = H; const X = F.getContext("2d"); X.imageSmoothingEnabled = false;
+    const th = ph.thumb || (ph.piece ? { piece: ph.piece } : null), sd = ph.seed || strSeed(ph.desc || "");
+    X.fillStyle = "#d8d0c4"; X.fillRect(0, 0, W, H);
+    const tileBg = (x, key, w, h) => { if (!SLOT[key.split("@")[0]]) return; const img = this.sheet(key); for (let yy = 0; yy < h + 16; yy += 16) for (let xx = 0; xx < w + 16; xx += 16) x.drawImage(img, 0, 0, 16, 16, xx - 4, yy - 7, 16, 16); };
+    if (th && th.glitch) { // Joe doesn't photograph: the whole picture comes out as scrambled bits of the museum's own art
+      const keys = SLOTS.map(q => q.key).filter(k => !/^(sky_|photo|emote)/.test(k));
+      for (let by = 0; by < H; by += 4) for (let bx = 0; bx < W; bx += 4) {
+        const h = hash(sd + bx * 7, by * 13), k = keys[h % keys.length], img = this.sheet(k), s = SLOT[k];
+        if (h % 5 === 0) { X.fillStyle = ["#f8f8f8", "#101010", "#c8a8f8", "#f8d8a8"][h % 4]; X.fillRect(bx, by, 4, 4); continue; }
+        X.drawImage(img, (h >> 3) % Math.max(1, s.w - 4), (h >> 9) % Math.max(1, s.h - 4), 4, 4, bx, by, 4, 4);
+        if (h % 3 === 0 && bx + 4 < W) X.drawImage(F, bx, by, 4, 4, bx + 4, by, 4, 4); // columns of repeats, like a broken sprite
+      }
+      return (this.cache[ck] = F);
+    }
+    if (th && th.layers) { // a little scene: the subject as it is now (its current art, the room's colors)
+      if (th.bg) tileBg(X, th.bg, W, H);
       const sc = document.createElement("canvas"); sc.width = th.w; sc.height = th.h; const sx = sc.getContext("2d"); sx.imageSmoothingEnabled = false;
       for (const [k, col, row, lx, ly, flip] of th.layers) {
         if (/^led:/.test(k)) { sx.drawImage(this.ledText(k.slice(4)), lx, ly); continue; }
+        const pid = (k.match(/^(piece|poster|case):(.+)$/) || [])[2], pc = pid && this.pack.pieces.find(q => q.id === pid);
+        if (/^piece:/.test(k)) { if (pc) sx.drawImage(this.pieceOnWall(pc), lx, ly); continue; } // a painting on the wall behind
+        if (/^case:/.test(k)) { const cid = k.slice(5), cp2 = this.pack.pieces.find(q => q.id === cid); if (cp2) { const art = this.pieceArt(cp2), iw = art.naturalWidth || art.width, ih = art.naturalHeight || art.height; sx.imageSmoothingEnabled = iw > 48; sx.drawImage(art, 0, 0, iw, ih, lx + 2, ly + 3, 12, 10); sx.imageSmoothingEnabled = false; } const ci = this.sheet("display_case"); sx.drawImage(ci, 0, 0, 16, 32, lx, ly, 16, 32); continue; } // a display case behind
+        if (/^poster:/.test(k)) { // a hallway poster, lit up by the flash: a game from the museum
+          sx.fillStyle = "#1a1418"; sx.fillRect(lx + 1, ly + 1, 14, 30); sx.fillStyle = "#c8a050"; sx.fillRect(lx + 1, ly + 1, 14, 1); sx.fillRect(lx + 1, ly + 30, 14, 1);
+          if (pc) { const art = this.pieceArt(pc), iw = art.naturalWidth || art.width, ih = art.naturalHeight || art.height, cw = Math.min(iw, ih * 12 / 22); sx.imageSmoothingEnabled = iw > 48; sx.drawImage(art, (iw - cw) / 2, 0, cw, ih, lx + 2, ly + 3, 12, 22); sx.imageSmoothingEnabled = false; }
+          sx.fillStyle = "#e8dcc0"; sx.fillRect(lx + 3, ly + 27, 10, 1); continue;
+        }
         const base = k.split("@")[0], s = SLOT[base]; if (!s) continue;
         const img = this.sheet(k); sx.save(); if (flip) { sx.translate(lx * 2 + s.w, 0); sx.scale(-1, 1); }
         sx.drawImage(img, (col || 0) * s.w, (row || 0) * s.h, s.w, s.h, lx, ly, s.w, s.h); sx.restore();
       }
-      const k = Math.min(1, 22 / th.w, 16 / th.h); x.imageSmoothingEnabled = k < 0.5; x.drawImage(sc, 0, 0, th.w, th.h, Math.round(12 - (th.w * k) / 2), Math.round(17 - th.h * k), Math.round(th.w * k), Math.round(th.h * k)); x.imageSmoothingEnabled = false;
+      if (th.full) X.drawImage(sc, 0, 0);
+      else { const k = Math.min(1, 44 / th.w, 32 / th.h); X.imageSmoothingEnabled = k < 0.5; X.drawImage(sc, 0, 0, th.w, th.h, Math.round(W / 2 - (th.w * k) / 2), Math.round(H - 2 - th.h * k), Math.round(th.w * k), Math.round(th.h * k)); X.imageSmoothingEnabled = false; }
     }
     else if (th && th.piece) {
       const p = this.pack.pieces.find(q => q.id === th.piece);
-      if (p) { const art = this.pieceArt(p), iw = art.naturalWidth || art.width, ih = art.naturalHeight || art.height; x.imageSmoothingEnabled = iw > 48; x.drawImage(art, 0, 0, iw, ih, 0, 0, 24, 18); x.imageSmoothingEnabled = false; }
-    } else if (th && th.slot && SLOT[th.slot.split("@")[0]]) {
-      const s = SLOT[th.slot.split("@")[0]];
-      if (th.tile) tileBg(th.slot);
-      else if (/^sky_/.test(th.slot)) x.drawImage(this.sheet(th.slot), 0, 0, s.w, s.h, 0, 0, 24, 18);
-      else {
-        if (th.bg) tileBg(th.bg);
-        const w = Math.min(s.w, 32), h = Math.min(s.h, 32), k = Math.min(1, 22 / w, 16 / h) * (s.w <= 16 && s.h <= 16 ? 1 : 1);
-        x.drawImage(this.sheet(th.slot), 0, 0, w, h, Math.round(12 - (w * k) / 2), Math.round(17 - h * k), Math.round(w * k), Math.round(h * k));
-      }
-    } else { x.fillStyle = "#a8a098"; x.fillRect(4, 4, 16, 10); }
-    if (th && th.blur) { x.globalAlpha = 0.45; x.drawImage(c, 1, 0); x.drawImage(c, -1, 1); x.globalAlpha = 1; }
-    if (th && th.dark) { x.fillStyle = "rgba(10,8,24,.7)"; x.fillRect(0, 0, 24, 18); } // a snapshot already has the dark in it
+      if (p) { const art = this.pieceArt(p), iw = art.naturalWidth || art.width, ih = art.naturalHeight || art.height; X.imageSmoothingEnabled = iw > 48; X.drawImage(art, 0, 0, iw, ih, 0, 0, W, H); X.imageSmoothingEnabled = false; }
+    } else { // an older photo: one sprite on a tiled background, at 24×18, doubled
+      const c = document.createElement("canvas"); c.width = 24; c.height = 18; const x = c.getContext("2d"); x.imageSmoothingEnabled = false; x.fillStyle = "#d8d0c4"; x.fillRect(0, 0, 24, 18);
+      if (th && th.slot && SLOT[th.slot.split("@")[0]]) {
+        const s = SLOT[th.slot.split("@")[0]];
+        if (th.tile) tileBg(x, th.slot, 24, 18);
+        else if (/^sky_/.test(th.slot)) x.drawImage(this.sheet(th.slot), 0, 0, s.w, s.h, 0, 0, 24, 18);
+        else { if (th.bg) tileBg(x, th.bg, 24, 18); const w = Math.min(s.w, 32), h = Math.min(s.h, 32), k = Math.min(1, 22 / w, 16 / h); x.drawImage(this.sheet(th.slot), 0, 0, w, h, Math.round(12 - (w * k) / 2), Math.round(17 - h * k), Math.round(w * k), Math.round(h * k)); }
+      } else { x.fillStyle = "#a8a098"; x.fillRect(4, 4, 16, 10); }
+      X.drawImage(c, 0, 0, W, H);
+    }
+    if (th && th.blur) { X.globalAlpha = 0.45; X.drawImage(F, 2, 0); X.drawImage(F, -2, 2); X.globalAlpha = 1; }
+    if (th && th.dark) { X.fillStyle = "rgba(10,8,24,.7)"; X.fillRect(0, 0, W, H); }
     // Like a real snapshot: never quite centered, the light of the hour, darker corners, a little grain.
-    const sd = ph.seed || strSeed(ph.desc || ""), ox = (sd % 3) - 1, oy = ((sd >> 3) % 3) - 1;
-    if (ox || oy) { const cp = document.createElement("canvas"); cp.width = 24; cp.height = 18; cp.getContext("2d").drawImage(c, 0, 0); x.drawImage(cp, ox, oy); }
-    x.fillStyle = { day: "rgba(255,226,170,.10)", sunset: "rgba(255,150,90,.18)", night: "rgba(70,90,170,.20)" }[ph.tod] || "rgba(255,226,170,.10)"; x.fillRect(0, 0, 24, 18);
-    const vg = x.createRadialGradient(12, 9, 6, 12, 9, 15); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(20,12,8,.42)"); x.fillStyle = vg; x.fillRect(0, 0, 24, 18);
-    for (let i = 0; i < 14; i++) { const h = hash(sd, i); x.fillStyle = h & 1 ? "rgba(255,255,255,.14)" : "rgba(0,0,0,.14)"; x.fillRect(h % 24, (h >> 5) % 18, 1, 1); }
-    return (this.cache[ck] = c);
+    const ox = ((sd % 3) - 1) * 2, oy = (((sd >> 3) % 3) - 1) * 2;
+    if (ox || oy) { const cp = document.createElement("canvas"); cp.width = W; cp.height = H; cp.getContext("2d").drawImage(F, 0, 0); X.drawImage(cp, ox, oy); }
+    X.fillStyle = { day: "rgba(255,226,170,.10)", sunset: "rgba(255,150,90,.18)", night: "rgba(70,90,170,.20)" }[ph.tod] || "rgba(255,226,170,.10)"; X.fillRect(0, 0, W, H);
+    const vg = X.createRadialGradient(24, 18, 12, 24, 18, 30); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(20,12,8,.42)"); X.fillStyle = vg; X.fillRect(0, 0, W, H);
+    for (let i = 0; i < 28; i++) { const h = hash(sd, i); X.fillStyle = h & 1 ? "rgba(255,255,255,.14)" : "rgba(0,0,0,.14)"; X.fillRect(h % W, (h >> 5) % H, 1, 1); }
+    return (this.cache[ck] = F);
   }
   openAlbum() { this.mode = "album"; this.albumSel = 0; this.el.album.style.display = "block"; this.renderAlbum(); }
   closeAlbum() { this.el.album.style.display = "none"; this.mode = "walk"; this.inputLock = true; this.albumPick = null; }
@@ -6121,7 +6172,7 @@ class Game {
     if (li >= 0 && def.lockers[li] !== undefined) { // a little frame on your locker door: a photo of you, or one of yours
       const fx = def.lockers[li] * T + 2 - cx, fy = T + 8 - cy, im = this.framePhoto();
       ctx.fillStyle = "#181820"; ctx.fillRect(fx, fy, 11, 9); ctx.fillStyle = "#e8b24a"; ctx.fillRect(fx + 1, fy + 1, 9, 7);
-      ctx.imageSmoothingEnabled = true; ctx.drawImage(im, 5, 3, 14, 10, fx + 2, fy + 2, 7, 5); ctx.imageSmoothingEnabled = false; // the middle, so it reads at this size
+      const q = (im.width || 24) / 24; ctx.imageSmoothingEnabled = true; ctx.drawImage(im, 5 * q, 3 * q, 14 * q, 10 * q, fx + 2, fy + 2, 7, 5); ctx.imageSmoothingEnabled = false; // the middle, so it reads at this size
     }
     if (r.corkAt) this.drawSlot("corkboard", 0, 0, r.corkAt.x * T - cx, T - cy);
     if (r.boardAt) this.drawSlot("leaderboard", 0, 0, r.boardAt.x * T - cx, T - cy);
@@ -6282,7 +6333,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-04 photo scenes";
+const VERSION = "2026-11-05 photo perspective";
 window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
