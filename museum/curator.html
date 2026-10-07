@@ -328,7 +328,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-27 one theater";
+window.GOQ_WANT = "2026-10-28 gameplay placards";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -376,6 +376,8 @@ function packOut() {
     else { o.guestWriter = p.guestWriter; o.guestNote = p.guestNote; }
     if (p.episodeUrl) o.episodeUrl = p.episodeUrl;
     if (p.gameUrl) o.gameUrl = p.gameUrl;
+    if (p.clipUrl) o.clipUrl = p.clipUrl;
+    if (p.clipLoop) o.clipLoop = p.clipLoop;
     if (p.hint) o.hint = p.hint;
     if (p.minds && p.minds.length) o.minds = p.minds;
     if (p.genre) o.genre = p.genre;
@@ -2389,6 +2391,8 @@ function pieceRow(p, i, place) {
     p.kind === "episode" ? blendBox(p) : null,
     f("YouTube episode", link("episodeUrl", "https://youtube.com/watch?v=..."), false, "Shown as \"Watch the episode\""),
     f("The game", link("gameUrl", "https://store.steampowered.com/... or itch.io"), false, "Shown as \"Play the game\""),
+    f("Gameplay clip", link("clipUrl", "https://youtu.be/..."), false, "A YouTube video. Plays muted beside the placard's text while visitors read."),
+    f("Clip loop", text("clipLoop", "12:53-13:00"), false, "From and to, in the video. That stretch loops on the placard. Leave empty to play from the start."),
     el("div", { class: "acts" }, [
       el("button", { class: "btn small quiet", type: "button", text: "Move up", disabled: i === 0, onclick: () => move(-1) }),
       el("button", { class: "btn small quiet", type: "button", text: "Move down", disabled: i === draft.pieces.length - 1, onclick: () => move(1) }),

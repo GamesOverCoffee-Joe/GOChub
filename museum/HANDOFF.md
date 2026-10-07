@@ -458,6 +458,13 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Gameplay on placards (2026-10-28), trial on Acrobatic Car.**
+- **The fields:** a piece can have a gameplay clip, set in the curator (Pieces): `clipUrl` (YouTube) and `clipLoop` ("12:53-13:00"; empty = play from the start). Acrobatic Car is set to its episode, 12:53 to 13:00.
+- **Layout:** a placard for such a piece switches to a side-by-side layout (`.gt-reader.clip`, a CSS grid). The clip frame is 112×63 at top left, with the title, developer and WATCH/PLAY/NOTE under it. The text is in the right column (6.5px, paged as before) and the footer spans both columns.
+- **Playback:** the clip plays muted, with scanlines. The case's pixel art holds the frame until the clip has been playing for 3 s (8 s if the player never answers), then it fades in. At the end of the stretch it seeks back to the start. It stops when the placard closes. If the video won't embed, the pixel art stays.
+- **Setting:** Settings "Theater screen video" is now "Gameplay video" and covers both (`screenVideo`).
+- **Code:** `ytPost` and `listenYt` are shared by the screen and the clip. Untested against real YouTube (container can't reach it).
+
 **One theater room (2026-10-27).**
 - **Merged:** the hallway is now part of the `screening` room. The nook is on top (rows 0 to 7), and the 20-tile corridor runs below it (x 5 to 7, rows 8 to 27, alcoves at rows 12, 17 and 22), with black outside the corridor walls. `theater_hall` and `preScreen` are gone.
 - **Doors:** the only door is at the bottom, (6, 28), out to the museum. The marquee doors arrive you at (6, 27) facing up.

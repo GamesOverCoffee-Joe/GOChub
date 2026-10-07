@@ -1140,7 +1140,7 @@ function normalizePiece(p, i) {
     id: str(p.id, 60) || "piece-" + (i + 1), kind: p.kind === "community" ? "community" : "episode",
     title: str(p.title, 80) || "Untitled", developer: str(p.developer, 80) || "Unknown developer",
     observation: str(p.observation), intention: str(p.intention), guestWriter: str(p.guestWriter, 80), guestNote: str(p.guestNote),
-    episodeUrl: safeUrl(p.episodeUrl), gameUrl: safeUrl(p.gameUrl), image: str(p.image, 20000000) || null,
+    episodeUrl: safeUrl(p.episodeUrl), gameUrl: safeUrl(p.gameUrl), clipUrl: safeUrl(p.clipUrl), clipLoop: str(p.clipLoop, 30), image: str(p.image, 20000000) || null,
     unveil: /^\d{4}-\d{2}-\d{2}$/.test(p.unveil || "") ? p.unveil : "",
     hint: str(p.hint, 160), pick: !!p.pick, minds: Array.isArray(p.minds) ? p.minds.map(x => str(x, 30)).filter(Boolean).slice(0, 8) : [], genre: str(p.genre, 30), blend: str(p.blend, 30), // blend: a second category it also belongs to
     colors: colors.length >= 2 ? colors : ["#f0ecf8", "#a898d0", "#584a88", "#1a1430"],
@@ -2755,6 +2755,16 @@ class Game {
 .gt-scr{position:absolute;overflow:hidden;pointer-events:none;background:#000}
 .gt-scr iframe{position:absolute;left:-12%;top:-12%;width:124%;height:124%;border:0;filter:saturate(.85) brightness(.88) contrast(1.06)}
 .gt-scr-fx{position:absolute;inset:0;background-image:linear-gradient(rgba(0,0,0,0) 50%,rgba(0,0,0,.32) 50%),linear-gradient(90deg,rgba(0,0,0,0) 50%,rgba(0,0,0,.12) 50%);background-size:100% calc(2px * var(--s)),calc(2px * var(--s)) 100%;box-shadow:inset 0 0 calc(5px * var(--s)) rgba(0,0,0,.65)}
+.gt-reader.clip{grid-template-columns:calc(112px * var(--s)) minmax(0,1fr);grid-template-rows:calc(63px * var(--s)) minmax(0,1fr) auto;grid-template-areas:"clip body" "head body" "foot foot";column-gap:calc(6px * var(--s));padding-top:calc(4px * var(--s))}
+.gt-rd-clip{grid-area:clip;position:relative;overflow:hidden;background:#000;outline:calc(1px * var(--s)) solid #181820}
+.gt-rd-clip img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+.gt-rd-clip iframe{position:absolute;left:-12%;top:-12%;width:124%;height:124%;border:0;opacity:0;transition:opacity .5s;pointer-events:none}
+.gt-reader.clip .gt-rd-head{grid-area:head;flex-direction:column;align-items:stretch;gap:calc(3px * var(--s));border-bottom:0;padding:calc(4px * var(--s)) 0 0}
+.gt-reader.clip .gt-rd-t{flex:none}
+.gt-reader.clip .gt-rd-links{flex-direction:row;flex-wrap:wrap;margin-left:0}
+.gt-reader.clip .gt-rd-links > *{flex:1}
+.gt-reader.clip .gt-rd-body{grid-area:body;height:calc(110px * var(--s));margin-top:0;font-size:calc(6.5px * var(--s))}
+.gt-reader.clip .gt-rd-foot{grid-area:foot}
 .gt-tv{position:absolute;inset:0;display:none;flex-direction:column;background:#000;z-index:9}
 .gt-tv-bar{display:flex;align-items:center;gap:calc(4px * var(--s));padding:calc(2px * var(--s)) calc(4px * var(--s));color:#f8f0e0;font-size:max(calc(6px * var(--s)), 10px);background:#141018}
 .gt-tv-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -2862,11 +2872,13 @@ class Game {
      Long text (placards, magazines) in big paragraphs you page through: A or right for the next page, left to go back, B to close. */
   read(spec, done) {
     this.holdToast(); // a toast showing now waits until the placard closes
-    const box = this.el.reader; box.style.display = "block"; this.mode = "read";
-    box.innerHTML = '<div class="gt-rd-head"></div><div class="gt-rd-body"></div><div class="gt-rd-foot"><span class="gt-rd-n"></span></div>';
+    const box = this.el.reader, clip = spec.clip || null; box.style.display = clip ? "grid" : "block"; this.mode = "read";
+    box.innerHTML = (clip ? '<div class="gt-rd-clip"></div>' : "") + '<div class="gt-rd-head"></div><div class="gt-rd-body"></div><div class="gt-rd-foot"><span class="gt-rd-n"></span></div>';
     box.classList.toggle("gt-rd-pre", !!spec.pre); // line breaks and indents kept (the stats)
+    box.classList.toggle("clip", !!clip); // gameplay beside the text: the clip and the title on the left, the placard on the right
     const head = box.querySelector(".gt-rd-head"), body = box.querySelector(".gt-rd-body");
-    if (spec.img) { const im = document.createElement("img"); im.src = spec.img; im.alt = ""; if (spec.imgClass) im.className = spec.imgClass; head.appendChild(im); }
+    if (clip) this.makeClip(box.querySelector(".gt-rd-clip"), clip, spec.img);
+    else if (spec.img) { const im = document.createElement("img"); im.src = spec.img; im.alt = ""; if (spec.imgClass) im.className = spec.imgClass; head.appendChild(im); }
     const t = document.createElement("div"); t.className = "gt-rd-t"; t.textContent = spec.title || ""; if (spec.sub) { const sm = document.createElement("small"); sm.textContent = spec.sub; t.appendChild(sm); }
     if (spec.pick) t.appendChild(this.pickTag()); head.appendChild(t);
     const links = (spec.links || []).filter(l => l[0]);
@@ -2902,7 +2914,7 @@ class Game {
     body.innerHTML = ""; if (pg.label) { const b = document.createElement("b"); b.textContent = pg.label; body.appendChild(b); } body.appendChild(document.createTextNode(pg.text));
     this.el.reader.querySelector(".gt-rd-n").textContent = (r.pages.length > 1 ? (r.i + 1) + " / " + r.pages.length + "   " : "") + (r.sel >= 0 ? "A: open" : r.i < r.pages.length - 1 ? "A: next" : "A: done") + "   B: close" + (this.rdButtons().length ? "   \u2191\u2193: buttons" : "");
   }
-  closeRead() { this.el.reader.style.display = "none"; const d = this.rd && this.rd.done; this.rd = null; this.mode = "walk"; this.inputLock = true; if (d) d(); }
+  closeRead() { this.dropClip(); this.el.reader.style.display = "none"; const d = this.rd && this.rd.done; this.rd = null; this.mode = "walk"; this.inputLock = true; if (d) d(); }
   /* Up and Down highlight the placard's buttons (Watch, Play, Note) in turn; A uses the highlighted one. */
   rdButtons() { return this.rd ? [...this.el.reader.querySelectorAll(".gt-rd-links > *")] : []; }
   rdPick(d) {
@@ -2961,7 +2973,7 @@ class Game {
     const notes = side !== "back" && side !== "end" && (this.online() || !!p.tut); // visitors' notes: under the front placard, or with the whole piece
     if (notes) { const ns = this.notesFor(p); if (side === "front") secs.splice(secs.length - 1, 0, ...ns); else secs.push(...ns); this.refreshNotes(); } // before the "other side" line
     this.read({ img: img ? p.image : this.pieceArt(p).toDataURL(), imgClass: img && img.naturalWidth > 160 ? "photo" : "", title: p.title.toUpperCase(), sub: "By " + p.developer,
-      sections: secs, pick: p.pick, note: notes && !this.curator ? p : null, links: [[p.episodeUrl, "Watch the episode", "WATCH"], [p.gameUrl, "Play the game", "PLAY"]] }, () => {
+      sections: secs, pick: p.pick, clip: this.clipOf(p), note: notes && !this.curator ? p : null, links: [[p.episodeUrl, "Watch the episode", "WATCH"], [p.gameUrl, "Play the game", "PLAY"]] }, () => {
       if (side === undefined) { const k = (this.progress.sides || (this.progress.sides = {}))[p.id] || (this.progress.sides[p.id] = {}); if (gold) k.front = k.back = 1; else k.note = 1; this.saveProgress(); }
       if (stampAfter) this.stamp(p);
     });
@@ -3336,17 +3348,14 @@ class Game {
     // Ask the player to report its time, length and state (YouTube's embed messaging), until it answers.
     const ping = () => { if (this.scr !== scr || scr.at || scr.pings++ > 20) return; this.screenCmd("listening"); scr.ping = setTimeout(ping, 500); };
     f.addEventListener("load", ping);
-    if (!this.scrMsg) { this.scrMsg = true; window.addEventListener("message", e => this.screenMessage(e)); }
+    this.listenYt();
   }
-  screenCmd(func, args) {
-    const scr = this.scr; if (!scr) return;
-    const m = func === "listening" ? { event: "listening", id: 1, channel: "widget" } : { event: "command", func, args: args || [], id: 1, channel: "widget" };
-    try { scr.f.contentWindow.postMessage(JSON.stringify(m), "*"); } catch (e) {}
-  }
+  screenCmd(func, args) { if (this.scr) this.ytPost(this.scr.f, func, args); }
   screenMessage(e) {
-    const scr = this.scr; if (!scr || e.source !== scr.f.contentWindow) return;
+    const scr = this.scr, k = this.clip, mine = (scr && e.source === scr.f.contentWindow) || (k && e.source === k.f.contentWindow); if (!mine) return;
     let d; try { d = typeof e.data === "string" ? JSON.parse(e.data) : e.data; } catch (err) { return; }
     if (!d || typeof d !== "object") return;
+    if (k && e.source === k.f.contentWindow) { this.clipMessage(d); return; }
     if (d.event === "onError") { (this.scrBad = this.scrBad || {})[scr.id] = 1; this.dropScreen(); return; } // won't embed: the flicker art stays
     const info = d.info; if (!info || typeof info !== "object") return;
     if (scr.cc < 6) { scr.cc++; this.screenCmd("unloadModule", ["captions"]); this.screenCmd("unloadModule", ["cc"]); } // captions off (they load a bit late, so a few times)
@@ -3360,6 +3369,49 @@ class Game {
     }
   }
   dropScreen() { const scr = this.scr; if (!scr) return; clearTimeout(scr.ping); scr.box.remove(); this.scr = null; }
+  /* ----- gameplay on the placard -----
+     A piece with a gameplay clip (a YouTube link and a from-to loop, in the curator) plays it muted beside the placard's
+     text. The case's pixel art holds the frame until the clip has played clean for 3 seconds (YouTube's title and play
+     button fade by then), then the gameplay takes over, looping. Off with Settings → Gameplay video. */
+  clipOf(p) {
+    const id = this.ytId(p.clipUrl); if (!id || this.screenVideo === false || this.headless) return null;
+    const t = s => { const n = String(s).trim().split(":").map(Number); return n.some(isNaN) ? NaN : n.reduce((a, v) => a * 60 + v, 0); };
+    const [a, b] = String(p.clipLoop || "").split(/\s*[-–]\s*/).map(t);
+    return { id, a: a >= 0 ? Math.floor(a) : 0, b: b > a ? b : 0 };
+  }
+  makeClip(frame, c, poster) {
+    this.dropClip();
+    if (poster) { const im = document.createElement("img"); im.src = poster; im.alt = ""; frame.appendChild(im); }
+    const f = document.createElement("iframe"); f.tabIndex = -1; f.allow = "autoplay; encrypted-media"; f.title = "Gameplay";
+    f.src = "https://www.youtube-nocookie.com/embed/" + c.id + "?autoplay=1&mute=1&controls=0&disablekb=1&fs=0&playsinline=1&rel=0&iv_load_policy=3&cc_load_policy=0&start=" + c.a + "&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
+    const fx = document.createElement("div"); fx.className = "gt-scr-fx";
+    frame.append(f, fx);
+    const k = this.clip = { f, a: c.a, b: c.b, cur: c.a, at: 0, playT: 0, made: Date.now(), cc: 0, pings: 0 };
+    const ping = () => { if (this.clip !== k || k.at || k.pings++ > 20) return; this.ytPost(f, "listening"); k.ping = setTimeout(ping, 500); };
+    f.addEventListener("load", ping); this.listenYt();
+    k.tick = setInterval(() => { // show it once it's clean; loop back at the end of the stretch
+      const now = Date.now();
+      if (k.at ? k.playT && now - k.playT > 3000 : now - k.made > 8000) f.style.opacity = 1;
+      if (k.b && k.at && k.cur + (now - k.at) / 1000 >= k.b) { k.cur = k.a; k.at = now; this.ytPost(f, "seekTo", [k.a, true]); }
+    }, 150);
+  }
+  dropClip() { const k = this.clip; if (!k) return; clearTimeout(k.ping); clearInterval(k.tick); k.f.remove(); this.clip = null; }
+  clipMessage(d) {
+    const k = this.clip;
+    if (d.event === "onError") { this.dropClip(); return; } // won't embed: the pixel art stays
+    const info = d.info; if (!info || typeof info !== "object") return;
+    if (k.cc < 6) { k.cc++; this.ytPost(k.f, "unloadModule", ["captions"]); this.ytPost(k.f, "unloadModule", ["cc"]); }
+    if (typeof info.currentTime === "number") { k.cur = info.currentTime; k.at = Date.now(); }
+    if (typeof info.playerState === "number") {
+      if (info.playerState === 0) { this.ytPost(k.f, "seekTo", [k.a, true]); this.ytPost(k.f, "playVideo"); } // ran off the end of the video: around again
+      else if (info.playerState !== 1) k.playT = k.playT && info.playerState === 3 ? k.playT : 0; else if (!k.playT) k.playT = Date.now();
+    }
+  }
+  ytPost(f, func, args) {
+    const m = func === "listening" ? { event: "listening", id: 1, channel: "widget" } : { event: "command", func, args: args || [], id: 1, channel: "widget" };
+    try { f.contentWindow.postMessage(JSON.stringify(m), "*"); } catch (e) {}
+  }
+  listenYt() { if (!this.scrMsg) { this.scrMsg = true; window.addEventListener("message", e => this.screenMessage(e)); } }
   /* Where the screen is in the episode right now (seconds), for picking up in the full player; 0 if it never said. */
   screenTime(p) { const scr = this.scr; return scr && scr.at && scr.id === this.ytId(p.episodeUrl) ? Math.max(0, scr.cur + (Date.now() - scr.at) / 1000) : 0; }
   /* Sitting down or looking at the screen: stay for what's playing, or pick something else. */
@@ -5807,7 +5859,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-27 one theater";
+const VERSION = "2026-10-28 gameplay placards";
 window.GOQ = { ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
