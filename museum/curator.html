@@ -243,7 +243,7 @@ input[type=range]{accent-color:var(--gold);width:100%}
 .pvsec{display:flex;flex-direction:column;gap:4px}
 .pvh{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted, #b8a8a0)}
 .seg{display:flex;border:2px solid #4b343b;border-radius:4px;overflow:hidden}
-.seg button{flex:1;font:inherit;font-size:.8rem;font-weight:600;padding:.35em .4em;background:transparent;color:inherit;border:0;border-left:1px solid #4b343b;cursor:pointer;min-height:32px}
+.seg button{flex:1;min-width:0;font:inherit;font-size:.8rem;font-weight:600;padding:.35em .4em;background:transparent;color:inherit;border:0;border-left:1px solid #4b343b;cursor:pointer;min-height:32px}
 .seg button:first-child{border-left:0}
 .seg button[aria-pressed="true"]{background:#e8b24a;color:#1a1014}
 .seg button:focus-visible{outline:2px solid #e8b24a;outline-offset:-2px}
@@ -324,6 +324,8 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
             <div class="seg" id="segWho" role="group" aria-label="View the preview as"><button type="button" data-v="curator" title="Hang crates, see everything, notes off">Curator</button><button type="button" data-v="visitor" title="What a player sees">Visitor</button></div></div>
           <div class="pvsec"><span class="pvh">Time of day</span>
             <div class="seg" id="segTime" role="group" aria-label="Time of day"><button type="button" data-v="" title="Follow the real clock">Clock</button><button type="button" data-v="day">Day</button><button type="button" data-v="sunset">Sunset</button><button type="button" data-v="night">Night</button></div></div>
+          <div class="pvsec"><span class="pvh">Day of the week</span>
+            <div class="seg" id="segDay" role="group" aria-label="Day of the week"><button type="button" data-v="" title="Follow the real calendar">Auto</button><button type="button" data-v="1">Mon</button><button type="button" data-v="2">Tue</button><button type="button" data-v="3">Wed</button><button type="button" data-v="4">Thu</button><button type="button" data-v="5">Fri</button><button type="button" data-v="6">Sat</button><button type="button" data-v="0">Sun</button></div></div>
           <div class="pvsec"><span class="pvh">Spooky moments</span>
             <div class="seg" id="segSpook" role="group" aria-label="Spooky moments"><button type="button" data-v="rare" title="About one closing in five, as players get it">Rare</button><button type="button" data-v="always" title="Every time the lights go out (handy for recording)">Every closing</button></div></div>
           <div class="pvsec"><span class="pvh">Test pieces</span>
@@ -351,7 +353,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-06 nap fix";
+window.GOQ_WANT = "2026-11-07 days of the week";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -556,6 +558,7 @@ const seg = (id, val, pick) => { const box = $("#" + id), show = v => box.queryS
   box.addEventListener("click", async e => { const b = e.target.closest("button"); if (!b) return; show(b.dataset.v); await pick(b.dataset.v); stage.focus({ preventScroll: true }); }); };
 seg("segWho", game.curator ? "curator" : "visitor", v => game.setCurator(v === "curator"));
 seg("segTime", game.timeOverride || "", v => game.setTime(v || null)); // pin day, sunset or night to see (and record) the evening details
+seg("segDay", "", v => game.setDay(v === "" ? null : +v)); // try any day's event without waiting for it
 seg("segSpook", game.forceSpook ? "always" : "rare", v => { game.forceSpook = v === "always"; game.spook = null; });
 seg("segTest", testPieces ? "on" : "off", async v => { testPieces = v === "on"; await refreshPreview(); status(testPieces ? "Preview has 60 test pieces; the oldest are on the rooms' touch screens" : "Test pieces removed from the preview"); });
 $("#recrate").addEventListener("click", () => { game.resetHangs(); stage.focus({ preventScroll: true }); });
@@ -837,6 +840,14 @@ function renderStaff() {
     el("h3", { text: "Curator's office keypad", style: "margin:0 0 4px" }),
     el("p", { class: "note", style: "margin:0 0 12px", text: "The code on the office door in B1, the same for everyone so players can trade it. One digit per wing: each wing's touch screen gives its digit once every piece in it is read front and back, and the call sheet on the staff corkboard (after 5 visitors love a pick) gives the order. With five wings, it's the first five digits. It's saved scrambled in the pack, and the keypad locks for the day after three wrong tries. A curator badge always gets in." }),
     el("div", { class: "fields", style: "max-width:420px" }, [el("label", {}, [document.createTextNode("Code"), ocode])]),
+  ]));
+  draft.settings.friday = Array.isArray(draft.settings.friday) ? draft.settings.friday : [];
+  const fri = el("textarea", { rows: 4, style: "max-width:520px;width:100%", placeholder: "Episode title | https://youtu.be/..." }); fri.value = draft.settings.friday.map(e => e.title + " | " + e.url).join("\n");
+  fri.addEventListener("input", () => { draft.settings.friday = fri.value.split("\n").map(l => { const url = (l.match(/https?:\/\/\S+/) || [])[0], title = url ? l.replace(url, "").replace(/\|/g, "").trim() : ""; return url ? { title: title || "Games Over Coffee", url } : null; }).filter(Boolean); changed(); }); // the link from anywhere on the line; the rest is the title
+  wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
+    el("h3", { text: "Friday features", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "One per line: the title, a | and the YouTube link. On Fridays the screening nook plays a random one each hour (the sign says FRIDAY FEATURE), and they're at the top of its list." }),
+    el("label", { class: "sr-only", text: "Friday features" }), fri,
   ]));
   if (!Array.isArray(draft.settings.office.nicknames)) draft.settings.office.nicknames = ["DeVaughn", "Boss", "Mr. curator sir"];
   const nicks = el("textarea", { rows: 3, style: "max-width:420px;width:100%" }); nicks.value = draft.settings.office.nicknames.join("\n");
