@@ -1399,41 +1399,14 @@ const ROOMS = {
     light: { dim: 0, spots: 0 },
     visitors: [],
   },
-  // The long dark hallway from the marquee door to the screening nook: 20 tiles of carpet, trash can alcoves, posters
-  // too dark to make out, and little lights along the floor. The nook's episode starts loading as you walk in, so it's
-  // playing by the time you get there.
-  theater_hall: {
-    name: "Theater Hallway",
-    art: { top: "staff_wall_top", upper: "staff_wall_upper", lower: "staff_wall_lower", floor: "carpet_floor" },
-    tint: { floor: "#3a2430", wall: "#2c2630" },
-    map: [
-      "#######",
-      "##^D^##",
-      "##vdv##",
-      "##...##", "##...##", "##...##", "##...##",
-      "#....##",                                   // a trash can alcove
-      "##...##", "##...##", "##...##", "##...##",
-      "##....#",                                   // and another
-      "##...##", "##...##", "##...##", "##...##",
-      "#....##",
-      "##...##", "##...##", "##...##", "##...##", "##...##",
-      "###B###",
-    ],
-    spawn: [3, 22, "up"], preScreen: true,
-    props: [
-      { key: "trash_can", x: 1, y: 7, event: { trash: true } }, { key: "trash_can", x: 5, y: 12, event: { trash: true } }, { key: "trash_can", x: 1, y: 17, event: { trash: true } },
-    ],
-    posters: [[1, 4, "l"], [5, 5, "r"], [1, 10, "l"], [5, 8, "r"], [1, 13, "l"], [5, 15, "r"], [1, 19, "l"], [5, 19, "r"]],
-    floorLights: [4, 6, 8, 10, 12, 14, 16, 18, 20, 22].flatMap(y => [[2, y, "l"], [4, y, "r"]]),
-    events: [{ x: 3, y: 2, warp: ["screening", 5, 7, "up"] }, { x: 3, y: 23, warp: ["museum", 40, 30, "down"] }],
-    light: { dim: 0.55, spots: 0 },
-    visitors: [],
-  },
   // The screening nook: a little theater off the café's east hallway. Sit down to watch an episode on the big screen.
   screening: {
     name: "Screening Nook",
     art: { top: "staff_wall_top", upper: "staff_wall_upper", lower: "staff_wall_lower", floor: "carpet_floor" },
     tint: { floor: "#3a2430", wall: "#2c2630" },
+    // The nook up top; below it, the long dark hallway from the marquee door (20 tiles, trash can alcoves, posters too dark
+    // to make out, little lights along the floor). One room, so you walk straight in, and the episode has started loading
+    // by the time the screen scrolls into view.
     map: [
       "############",
       "#^^^^^^^^^^#",
@@ -1443,16 +1416,26 @@ const ROOMS = {
       "#..........#",
       "#..........#",
       "#..........#",
-      "#####BB#####",
+      "#####...####", "    #...#   ", "    #...#   ", "    #...#   ",
+      "   #....#   ",                                 // a trash can alcove
+      "    #...#   ", "    #...#   ", "    #...#   ", "    #...#   ",
+      "    #....#  ",                                 // and another
+      "    #...#   ", "    #...#   ", "    #...#   ", "    #...#   ",
+      "   #....#   ",
+      "    #...#   ", "    #...#   ", "    #...#   ", "    #...#   ", "    #...#   ",
+      "    ##B##   ",
     ],
-    spawn: [5, 7, "up"], screenAt: [3, 1],
+    spawn: [6, 27, "up"], screenAt: [3, 1], camAt: 0.75, // the camera keeps you low on the screen, so you see ahead (and the whole screen from the seats)
     props: [
       { key: "bench", x: 2, y: 4, sit: "up" }, { key: "bench", x: 8, y: 4, sit: "up" },
       { key: "bench", x: 2, y: 6, sit: "up" }, { key: "bench", x: 8, y: 6, sit: "up" },
       { key: "planter", x: 1, y: 3, say: ["A planter. It's seen every episode."] }, { key: "planter", x: 10, y: 3, say: ["A planter, facing the screen. Of course."] },
+      { key: "trash_can", x: 4, y: 12, event: { trash: true } }, { key: "trash_can", x: 8, y: 17, event: { trash: true } }, { key: "trash_can", x: 4, y: 22, event: { trash: true } },
     ],
-    events: [{ x: 5, y: 8, warp: ["theater_hall", 3, 3, "down"] }, { x: 6, y: 8, warp: ["theater_hall", 3, 3, "down"] }],
-    light: { dim: 0.35, spots: 0 },
+    posters: [[4, 9, "l"], [8, 10, "r"], [4, 15, "l"], [8, 13, "r"], [4, 18, "l"], [8, 20, "r"], [4, 24, "l"], [8, 24, "r"]],
+    floorLights: [9, 11, 13, 15, 17, 19, 21, 23, 25, 27].flatMap(y => [[5, y, "l"], [7, y, "r"]]),
+    events: [{ x: 6, y: 28, warp: ["museum", 40, 30, "down"] }],
+    light: { dim: 0.4, spots: 0 },
     visitors: [],
   },
   // The tutorial (see "the tutorial" in the Game class): the staff office, then two small training rooms.
@@ -1996,7 +1979,7 @@ prepLayoutRoom(ROOMS.museum);
    the level editor in curator.html writes them. Rooms are plain data, so a deep copy is enough. */
 const BUILTIN_ROOMS = JSON.parse(JSON.stringify(ROOMS));
 const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "runners", "lamps", "arrows", "murals", "tint", "windowAt", "intercom", "lightSwitch", "eotmAt",
-  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt", "preScreen", "posters", "floorLights"];
+  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt", "posters", "floorLights", "camAt"];
 /* Light checks so a hand-edited or damaged pack can't break the game: rectangular map, sane size, a spawn on the map. */
 function normalizeRoom(id, d) {
   if (d && typeof d === "object" && d.layout) { d = Object.assign({}, d); prepLayoutRoom(d); }
@@ -2249,7 +2232,6 @@ function buildRoom(id, pieces, o) {
   if (def.screenAt) { const [x, y] = def.screenAt; r.screenAt = { x, y }; for (let i = 0; i < SLOT.theater_screen.w / T; i++) r.events[(x + i) + "," + (y + 1)] = { screen: true }; }
   if (def.posters) { r.posters = def.posters.map(([x, y, side]) => ({ x, y, side })); r.posters.forEach(p => { r.events[p.x + "," + p.y] = r.events[p.x + "," + (p.y + 1)] = { poster: true }; }); }
   if (def.floorLights) r.floorLights = def.floorLights.map(([x, y, side]) => ({ x, y, side }));
-  r.preScreen = !!def.preScreen;
   if (def.marqueeAt) { const [x, y] = def.marqueeAt; r.marquee = { x, y }; } // a big arched doorway over two doorway tiles (the screening nook's)
   if (def.nowPlayingAt) { const [x, y] = def.nowPlayingAt; r.nowSign = { x, y }; for (let i = 0; i < SLOT.led_sign.w / T; i++) r.events[(x + i) + "," + (y + 1)] = { nowPlaying: true }; }
   if (def.intercom) { const [x, y] = def.intercom; r.intercomAt = { x, y }; r.events[x + "," + y] = { announce: true }; }
@@ -3323,16 +3305,21 @@ class Game {
      scanlines over it. Gone when you leave, during the full player, with Settings → Theater screen video off, or if the
      video won't embed. "Watch it" picks up the full player where the screen was. */
   syncScreen(r, cx, cy) {
-    const on = (r.screenAt || r.preScreen) && this.screenVideo !== false && !this.headless && !this.full && this.mode !== "tv" && typeof document !== "undefined";
+    const on = r.screenAt && this.screenVideo !== false && !this.headless && !this.full && this.mode !== "tv" && typeof document !== "undefined";
     const p = on ? this.nowPlaying() : null, id = p ? this.ytId(p.episodeUrl) : "";
     if (!id || (this.scrBad && this.scrBad[id])) { this.dropScreen(); return; }
     if (!this.scr || this.scr.id !== id) this.makeScreen(id);
-    const scr = this.scr, s = this.scale || 1, show = !!r.screenAt && !this.trans && this.screenClean();
-    const x = r.screenAt ? (r.screenAt.x * T + 8 - cx) * s : 0, y = r.screenAt ? ((r.screenAt.y - 1) * T + 2 - cy) * s : 0, key = [x, y, s, show].join();
-    if (scr.key !== key) { const st = scr.box.style; st.left = x + "px"; st.top = y + "px"; st.width = 80 * s + "px"; st.height = 45 * s + "px"; st.opacity = show ? 1 : 0; scr.key = key; }
+    // Where the picture is on screen (game pixels); the part outside the view is clipped, so down the hallway it's hidden.
+    const scr = this.scr, s = this.scale || 1, gx = r.screenAt.x * T + 8 - cx, gy = (r.screenAt.y - 1) * T + 2 - cy;
+    const ct = Math.max(0, -gy), cb = Math.max(0, gy + 45 - SH), cl = Math.max(0, -gx), cr = Math.max(0, gx + 80 - SW);
+    const show = !this.trans && ct + cb < 45 && cl + cr < 80 && this.screenClean(), key = [gx, gy, s, show].join();
+    if (scr.key !== key) {
+      const st = scr.box.style; st.left = gx * s + "px"; st.top = gy * s + "px"; st.width = 80 * s + "px"; st.height = 45 * s + "px"; st.opacity = show ? 1 : 0;
+      st.clipPath = ct + cb + cl + cr ? "inset(" + [ct, cr, cb, cl].map(v => v * s + "px").join(" ") + ")" : ""; scr.key = key;
+    }
   }
   /* Ready to show: playing for 4 seconds since it last started or jumped (YouTube's title and play button have faded by
-     then). Until then the screen art keeps flickering over it, and in the hallway it loads out of sight. If the player never
+     then). Until then the screen art keeps flickering over it (it loads out of sight while you're down the hallway). If the player never
      answers at all, show it after 9 seconds anyway. */
   screenClean() {
     const scr = this.scr; if (!scr) return false;
@@ -4859,7 +4846,7 @@ class Game {
     if (!quiet) this.showLoc(z.name);
   }
   warp(to, x, y, dir, after) {
-    if (to === "theater_hall" && this.room && this.room.id === "museum") { const a = after, p = this.nowPlaying(); after = () => { if (p) this.showLoc(this.tx("screen.enter", { title: p.title })[0]); if (a) a(); }; }
+    if (to === "screening" && this.room && this.room.id === "museum") { const a = after, p = this.nowPlaying(); after = () => { if (p) this.showLoc(this.tx("screen.enter", { title: p.title })[0]); if (a) a(); }; }
     this.mode = "busy"; this.trans = { t: 0, dur: 14, switched: false, fn: () => this.enterRoom(to, x, y, dir), after }; }
   runEvent(e) {
     if (ROOMS[this.room.id] && ROOMS[this.room.id].tutorial && this.tutEvent(e)) return;
@@ -5624,7 +5611,7 @@ class Game {
     ctx.fillStyle = "#000"; ctx.fillRect(0, 0, VWp, VHp);
     const rw = r.w * T, rh = r.h * T;
     const cx = full ? 0 : Math.round(rw <= SW ? (rw - SW) / 2 : Math.max(0, Math.min(rw - SW, pp.x + 8 - SW / 2)));
-    const cy = full ? 0 : Math.round(rh <= SH ? (rh - SH) / 2 : Math.max(0, Math.min(rh - SH, pp.y + 8 - SH / 2)));
+    const cy = full ? 0 : Math.round(rh <= SH ? (rh - SH) / 2 : Math.max(0, Math.min(rh - SH, pp.y + 8 - SH * (ROOMS[r.id].camAt || 0.5))));
     if (!full) { this.camX = cx; this.camY = cy; }
     const tx0 = Math.max(0, Math.floor(cx / T)), ty0 = Math.max(0, Math.floor(cy / T)), tx1 = Math.min(r.w - 1, Math.floor((cx + VWp) / T)), ty1 = Math.min(r.h - 1, Math.floor((cy + VHp) / T));
     for (let y = ty0; y <= ty1; y++) for (let x = tx0; x <= tx1; x++) {
@@ -5820,7 +5807,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-26 theater hallway";
+const VERSION = "2026-10-27 one theater";
 window.GOQ = { ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

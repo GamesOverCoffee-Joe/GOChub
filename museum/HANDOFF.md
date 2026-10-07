@@ -458,6 +458,13 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**One theater room (2026-10-27).**
+- **Merged:** the hallway is now part of the `screening` room. The nook is on top (rows 0 to 7), and the 20-tile corridor runs below it (x 5 to 7, rows 8 to 27, alcoves at rows 12, 17 and 22), with black outside the corridor walls. `theater_hall` and `preScreen` are gone.
+- **Doors:** the only door is at the bottom, (6, 28), out to the museum. The marquee doors arrive you at (6, 27) facing up.
+- **Camera:** a new room key `camAt` (0.75 here) sets where the camera keeps you on screen, from the top (default 0.5). Here you're low on the screen, so you see the corridor ahead and the whole screen from anywhere in the nook.
+- **Screen video:** it loads as soon as you enter, and is clipped (`clip-path`) to the part of the screen that's in view. It only shows once the screen is visible and clean.
+- **Lighting:** dim 0.4 for the whole room.
+
 **Theater hallway (2026-10-26).**
 - **The room:** `theater_hall` (built in), a 3-wide, 20-tile dark corridor between the marquee door and the screening nook. The museum layout doors `screening-1/2` now warp to (3, 22) facing up, the top door leads into the nook, and the nook's doors lead back to (3, 3). It has 3 trash can alcoves, and 8 posters seen edge on (`posters: [x, y, "l"|"r"]`, art *Theater hallway poster*, mirrored for the right wall; looking at one reads `hall.poster`, a placeholder). Floor lights run every 2 tiles along both edges (`floorLights`, art *Hallway floor light*, drawn over the dark with a glow). Dim 0.55, no light switch.
 - **Preload:** a room with `preScreen: true` (the hallway) loads the nook's video out of sight, so it's already playing on arrival (a walk is about 5 s). The screen only shows the video once it has been playing for 4 s since it started or jumped (`screenClean`); until then the flicker art stays. If the player never answers at all, the video shows after 9 s. Going in cold just flickers a few seconds.
