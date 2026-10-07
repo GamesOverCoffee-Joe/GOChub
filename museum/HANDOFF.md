@@ -470,6 +470,7 @@ Goal: character.
   - **The code:** one shared code, `settings.office.code` (curator Staff tab, default 40917). The wing order is shuffled by the code (`wings()`), and each wing's digit is the code's digit at its position, so the code you type is the code itself.
 - **Curator badge:** `clock_in` now returns `curator` (SQL updated; the guide says to re-run it), and `checkBadge` keeps it on `progress.staff.curator`. A curator badge always opens the office, and the game starts there on load. The office computer offers **Recording mode** (curator only, `progress.recording`): it hides toasts, the HUD chips and the touch controls (`html.goq-rec`), holds the time of day, and skips the tutorial. Spooky events stay.
 - **Text:** all new text is bracketed placeholders in Words → Curator's office.
+- **Old saved badges:** the one-press "Clock in as …?" reuse (`lastBadge()`) ignores a badge saved before curator support (an online badge with no `curator` field), so that badge asks for its key once and picks up its curator status.
 
 **Framed placards (2026-10-30).**
 - **Every piece's placard** now uses the side-by-side layout (`read({ frame: true })`). The frame shows the piece's art (photos smooth, pixel art pixelated) until the piece has a gameplay clip, so adding a clip later needs no other change. Other readers (magazines, stats, the stamp card) keep the old layout.

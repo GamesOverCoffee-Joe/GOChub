@@ -4145,11 +4145,14 @@ class Game {
     if (at >= 0) pages.push(...this.tx("board.you", { rank: at + 1, points: top[at].points }));
     this.say(pages); this.refreshBoard();
   }
+  /* The badge you last clocked in with, for clocking in again with one press. One saved before badges could be curators
+     (October 2026) asks for the key once more, so a curator badge picks up its office. */
+  lastBadge() { const b = this.progress.lastBadge; return b && (!b.token || b.curator !== undefined) ? b : null; }
   staffDoor(e) {
     const to = (e && e.warp) || ["staff", 7, 8, "up"];
     this.staffTo = to;
     if (this.staff || this.curator) { this.warp(...to); return; }
-    const last = this.progress.lastBadge;
+    const last = this.lastBadge();
     if (last) {
       this.choose("Staff only. Clock in as " + last.name + "?", ["Clock in", "Different badge", "Not now"], i => {
         if (i === 0) { this.progress.staff = last; this.saveProgress(); this.updateHud(); this.showLoc("Clocked in: " + last.name); this.warp(...to); }
@@ -4244,7 +4247,7 @@ class Game {
   timeClock() {
     if (this.curator && !this.staff) { this.say(this.tx("clock.curator")); return; }
     if (!this.staff) {
-      const last = this.progress.lastBadge;
+      const last = this.lastBadge();
       this.choose("You're off shift." + (last ? " Clock in as " + last.name + "?" : " Clock in with your badge?"), ["Clock in", "Not now"], i => {
         if (i !== 0) return;
         if (!last) { this.openBadge(); return; }
@@ -6182,7 +6185,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-31 curator office";
+const VERSION = "2026-10-31 badge refresh";
 window.GOQ = { ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
