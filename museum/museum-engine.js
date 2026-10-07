@@ -4960,27 +4960,13 @@ class Game {
     if (r.solid[fy] && r.solid[fy][fx]) return { desc: "A wall. Nicely painted, at least." + dark, thumb: { slot: tile(fx, fy), tile: true, dark: dk } };
     return { desc: "A blurry photo of the floor. Very artsy." + dark, thumb: { slot: tile(fx, fy), tile: true, blur: true, dark: dk } };
   }
-  /* Someone in a photo: facing the camera (the shy turn their back), their bubble if they reacted, and behind them whatever is
-     further on in that direction: the wall and its paintings, the counter, more floor. */
+  /* Someone in a photo: close up, right in front of the camera, on the floor they're standing on. They face you (the shy turn
+     their back), with their reaction bubble beside their head if they reacted. */
   personScene(n, dk) {
-    const p = this.player, [dx, dy] = DIRS[p.dir], r = this.room, bx = n.x + dx, by = n.y + dy, L = [], art = ROOMS[r.id].art || {};
-    const tile = (x, y) => (r.tiles[y] && r.tiles[y][x]) || art.floor || "staff_floor", x0 = bx - 1, y0 = by - 1;
-    for (let y = y0; y <= by; y++) for (let x = x0; x <= bx + 1; x++) {
-      L.push([tile(x, y), 0, 0, (x - x0) * T, (y - y0) * T - 6]);
-      const o = r.over[y] && r.over[y][x]; if (o) L.push([o, 0, 0, (x - x0) * T, (y - y0) * T - 6, o === "doorway_side" && r.solid[y][x + 1] !== false ? 1 : 0]);
-    }
-    for (const h of r.hung) if (h.state === "wall" && h.piece && h.x <= bx + 1 && h.x + 1 >= x0 && h.y <= by && h.y + 1 >= y0) L.push(["piece:" + h.piece.id, 0, 0, (h.x - x0) * T, (h.y - y0) * T - 6]);
-    for (const w of r.wallArt || []) { const wy = w.y || 1, ww = SLOT[w.key].w / T; if (w.x <= bx + 1 && w.x + ww - 1 >= x0 && wy <= by && wy + 1 >= y0) L.push([w.key, 0, 0, (w.x - x0) * T, (wy - y0) * T - 6]); }
-    const things = []; // furniture and display cases back there, nearest last
-    for (const q of r.props) { const s = SLOT[q.key], tw = s.w / T; if (q.x <= bx + 1 && q.x + tw - 1 >= x0 && q.y >= y0 && q.y <= by) things.push([q.y, [q.key, 0, 0, (q.x - x0) * T, (q.y - y0) * T - (s.h - T) - 6]]); }
-    for (const c of r.cases) if (c.piece && c.state === "wall" && c.x >= x0 && c.x <= bx + 1 && c.y >= y0 && c.y <= by) things.push([c.y, ["case:" + c.piece.id, 0, 0, (c.x - x0) * T, (c.y - 1 - y0) * T - 6]]);
-    things.sort((a, b) => a[0] - b[0]).forEach(t => L.push(t[1]));
-    for (let x = n.x - 1; x <= n.x + 1; x++) L.push([tile(x, n.y), 0, 0, (x - n.x + 1) * T, 26]); // the floor they're standing on
-    const kind = n.pose && n.pose.kind, row = DIR_ROW[kind === "shy" ? "up" : "down"];
-    L.push([n.sheet, 0, row, 16, 18]);
-    if (/^visitor_[abc]$/.test(n.sheet) && !this.overrides[n.sheet] && n.shirt) L.push(["visitor_shirt@" + n.shirt, 0, row, 16, 18]);
-    const fr = { startled: 0, guard: 0, heart: 1, pose: 3, busy: 4, wave: 5, shy: 6, annoyed: 7, bow: 3 }[kind]; if (fr !== undefined) L.push(["emote", fr, 0, 20, 8]); // caught mid-reaction
-    return { layers: L, w: 48, h: 36, full: true, dark: dk };
+    const r = this.room, kind = n.pose && n.pose.kind, row = DIR_ROW[kind === "shy" ? "up" : "down"], L = [[n.sheet, 0, row, 4, 1]];
+    if (/^visitor_[abc]$/.test(n.sheet) && !this.overrides[n.sheet] && n.shirt) L.push(["visitor_shirt@" + n.shirt, 0, row, 4, 1]);
+    const fr = { startled: 0, guard: 0, heart: 1, pose: 3, busy: 4, wave: 5, shy: 6, annoyed: 7, bow: 3 }[kind]; if (fr !== undefined) L.push(["emote", fr, 0, 15, 0]); // caught mid-reaction
+    return { layers: L, w: 24, h: 18, close: true, bg: (r.tiles[n.y] && r.tiles[n.y][n.x]) || (ROOMS[r.id].art || {}).floor || "staff_floor", dark: dk };
   }
   photoSrc(ph) { return this.photoThumb(ph).toDataURL(); }
   /* Someone you photograph reacts, depending on what they're doing: a little pose and a bubble over their head for a moment,
@@ -5084,14 +5070,18 @@ class Game {
       }
       return (this.cache[ck] = F);
     }
-    if (th && th.layers) { // a little scene: the subject as it is now (its current art, the room's colors)
+    if (th && th.layers && th.close) { // a close-up (people): drawn at 24×18 on their floor, then doubled, like the classic photos
+      const c = document.createElement("canvas"); c.width = 24; c.height = 18; const x = c.getContext("2d"); x.imageSmoothingEnabled = false;
+      if (th.bg) tileBg(x, th.bg, 24, 18);
+      for (const [k, col, row, lx, ly] of th.layers) { const s = SLOT[k.split("@")[0]]; if (s) x.drawImage(this.sheet(k), (col || 0) * s.w, (row || 0) * s.h, s.w, s.h, lx, ly, s.w, s.h); }
+      X.drawImage(c, 0, 0, W, H);
+    }
+    else if (th && th.layers) { // a little scene: the subject as it is now (its current art, the room's colors)
       if (th.bg) tileBg(X, th.bg, W, H);
       const sc = document.createElement("canvas"); sc.width = th.w; sc.height = th.h; const sx = sc.getContext("2d"); sx.imageSmoothingEnabled = false;
       for (const [k, col, row, lx, ly, flip] of th.layers) {
         if (/^led:/.test(k)) { sx.drawImage(this.ledText(k.slice(4)), lx, ly); continue; }
-        const pid = (k.match(/^(piece|poster|case):(.+)$/) || [])[2], pc = pid && this.pack.pieces.find(q => q.id === pid);
-        if (/^piece:/.test(k)) { if (pc) sx.drawImage(this.pieceOnWall(pc), lx, ly); continue; } // a painting on the wall behind
-        if (/^case:/.test(k)) { const cid = k.slice(5), cp2 = this.pack.pieces.find(q => q.id === cid); if (cp2) { const art = this.pieceArt(cp2), iw = art.naturalWidth || art.width, ih = art.naturalHeight || art.height; sx.imageSmoothingEnabled = iw > 48; sx.drawImage(art, 0, 0, iw, ih, lx + 2, ly + 3, 12, 10); sx.imageSmoothingEnabled = false; } const ci = this.sheet("display_case"); sx.drawImage(ci, 0, 0, 16, 32, lx, ly, 16, 32); continue; } // a display case behind
+        const pid = (k.match(/^poster:(.+)$/) || [])[1], pc = pid && this.pack.pieces.find(q => q.id === pid);
         if (/^poster:/.test(k)) { // a hallway poster, lit up by the flash: a game from the museum
           sx.fillStyle = "#1a1418"; sx.fillRect(lx + 1, ly + 1, 14, 30); sx.fillStyle = "#c8a050"; sx.fillRect(lx + 1, ly + 1, 14, 1); sx.fillRect(lx + 1, ly + 30, 14, 1);
           if (pc) { const art = this.pieceArt(pc), iw = art.naturalWidth || art.width, ih = art.naturalHeight || art.height, cw = Math.min(iw, ih * 12 / 22); sx.imageSmoothingEnabled = iw > 48; sx.drawImage(art, (iw - cw) / 2, 0, cw, ih, lx + 2, ly + 3, 12, 22); sx.imageSmoothingEnabled = false; }
@@ -5101,8 +5091,7 @@ class Game {
         const img = this.sheet(k); sx.save(); if (flip) { sx.translate(lx * 2 + s.w, 0); sx.scale(-1, 1); }
         sx.drawImage(img, (col || 0) * s.w, (row || 0) * s.h, s.w, s.h, lx, ly, s.w, s.h); sx.restore();
       }
-      if (th.full) X.drawImage(sc, 0, 0);
-      else { const k = Math.min(1, 44 / th.w, 32 / th.h); X.imageSmoothingEnabled = k < 0.5; X.drawImage(sc, 0, 0, th.w, th.h, Math.round(W / 2 - (th.w * k) / 2), Math.round(H - 2 - th.h * k), Math.round(th.w * k), Math.round(th.h * k)); X.imageSmoothingEnabled = false; }
+      { const k = Math.min(1, 44 / th.w, 32 / th.h); X.imageSmoothingEnabled = k < 0.5; X.drawImage(sc, 0, 0, th.w, th.h, Math.round(W / 2 - (th.w * k) / 2), Math.round(H - 2 - th.h * k), Math.round(th.w * k), Math.round(th.h * k)); X.imageSmoothingEnabled = false; }
     }
     else if (th && th.piece) {
       const p = this.pack.pieces.find(q => q.id === th.piece);
@@ -6333,7 +6322,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-05 photo perspective";
+const VERSION = "2026-11-06 photo close-ups";
 window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

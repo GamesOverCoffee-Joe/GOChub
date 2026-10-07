@@ -460,10 +460,7 @@ Goal: character.
 
 **Photo perspective and preview options (2026-11-05).**
 - **Photos are 48×36 now** (they were 24×18; the album and close-up showed them bigger anyway). Scenes are drawn at full size; older single-sprite photos are drawn at 24×18 and doubled, so they look as before. The locker frame crop scales with the size.
-- **People** (`personScene`, built in `takePhoto` after they react):
-  - They face the camera; the shy turn their back. Seated people face front too.
-  - Their reaction bubble is in the photo.
-  - Behind them is whatever is further on in the direction you're facing: a 3×2 block of tiles with their overlays, hung paintings (`piece:` layer), wall art, furniture and display cases (`case:` layer), then the floor they stand on.
+- **People** (`personScene`, built in `takePhoto` after they react): a classic close-up, drawn at 24×18 on the floor tile they stand on and then doubled (`thumb.close`). They face the camera (the shy turn their back), with their reaction bubble beside their head. Nothing behind them, so it reads as if the camera were right in front of them. (A backdrop of the walls, cases and furniture behind them was tried on 2026-11-05 and removed.)
 - **Hallway posters:** the flash reveals a museum game on each poster (`poster:` layer, the same game per poster: `strSeed(room:x,y)`).
 - **Joe:** photos of him come out as a full-frame scramble of bits of the museum's own sprites (`thumb.glitch`), MissingNo style.
 - **Preview options** (curator):
