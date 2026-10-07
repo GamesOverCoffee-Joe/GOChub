@@ -458,6 +458,11 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Framed placards (2026-10-30).**
+- **Every piece's placard** now uses the side-by-side layout (`read({ frame: true })`). The frame shows the piece's art (photos smooth, pixel art pixelated) until the piece has a gameplay clip, so adding a clip later needs no other change. Other readers (magazines, stats, the stamp card) keep the old layout.
+- **The developer's side** (the back of a case) is mirrored (`flip`): text on the left, frame and title on the right. Intention headings are red everywhere (`tone: "red"` on a section, carried through pagination).
+- The note button reads "ADD NOTE +" on framed placards.
+
 **Clip files (2026-10-29).**
 - **Clip files:** the gameplay clip can be a video file in the repo's root `clips/` folder. The curator takes just its name (e.g. `acrobatic-car_1.webm`), and the engine loads `../clips/<name>` relative to `museum/`. Full https URLs to .webm or .mp4 files also work. A file plays in a muted, looping `<video>` that fades in over the pixel art as soon as it plays, with no crop, no scanlines and no YouTube chrome. It only downloads when its placard opens, and closing the placard stops it.
 - **Acrobatic Car:** uses `acrobatic-car_1.webm` (320×180 VP9, about 17.5 s, 234 KB).

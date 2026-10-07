@@ -2766,6 +2766,9 @@ class Game {
 .gt-reader.clip .gt-rd-links > *{flex:1}
 .gt-reader.clip .gt-rd-body{grid-area:body;height:calc(110px * var(--s));margin-top:0;font-size:calc(6.5px * var(--s))}
 .gt-reader.clip .gt-rd-foot{grid-area:foot}
+.gt-reader.clip.flip{grid-template-columns:minmax(0,1fr) calc(112px * var(--s));grid-template-areas:"body clip" "body head" "foot foot"}
+.gt-rd-clip img.photo{image-rendering:auto}
+.gt-rd-body b.red{color:#a8322a}
 .gt-tv{position:absolute;inset:0;display:none;flex-direction:column;background:#000;z-index:9}
 .gt-tv-bar{display:flex;align-items:center;gap:calc(4px * var(--s));padding:calc(2px * var(--s)) calc(4px * var(--s));color:#f8f0e0;font-size:max(calc(6px * var(--s)), 10px);background:#141018}
 .gt-tv-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -2873,12 +2876,17 @@ class Game {
      Long text (placards, magazines) in big paragraphs you page through: A or right for the next page, left to go back, B to close. */
   read(spec, done) {
     this.holdToast(); // a toast showing now waits until the placard closes
-    const box = this.el.reader, clip = spec.clip || null; box.style.display = clip ? "grid" : "block"; this.mode = "read";
-    box.innerHTML = (clip ? '<div class="gt-rd-clip"></div>' : "") + '<div class="gt-rd-head"></div><div class="gt-rd-body"></div><div class="gt-rd-foot"><span class="gt-rd-n"></span></div>';
+    const box = this.el.reader, clip = spec.clip || null, framed = !!(spec.frame || clip); box.style.display = framed ? "grid" : "block"; this.mode = "read";
+    box.innerHTML = (framed ? '<div class="gt-rd-clip"></div>' : "") + '<div class="gt-rd-head"></div><div class="gt-rd-body"></div><div class="gt-rd-foot"><span class="gt-rd-n"></span></div>';
     box.classList.toggle("gt-rd-pre", !!spec.pre); // line breaks and indents kept (the stats)
-    box.classList.toggle("clip", !!clip); // gameplay beside the text: the clip and the title on the left, the placard on the right
+    box.classList.toggle("clip", framed); // a piece: its screen (gameplay, or its art until it has a clip) and title on one side, the placard on the other
+    box.classList.toggle("flip", framed && !!spec.flip); // the developer's side: mirrored
     const head = box.querySelector(".gt-rd-head"), body = box.querySelector(".gt-rd-body");
-    if (clip) this.makeClip(box.querySelector(".gt-rd-clip"), clip, spec.img);
+    if (framed) {
+      const fr = box.querySelector(".gt-rd-clip");
+      if (spec.img) { const im = document.createElement("img"); im.src = spec.img; im.alt = ""; if (spec.imgClass) im.className = spec.imgClass; fr.appendChild(im); }
+      if (clip) this.makeClip(fr, clip);
+    }
     else if (spec.img) { const im = document.createElement("img"); im.src = spec.img; im.alt = ""; if (spec.imgClass) im.className = spec.imgClass; head.appendChild(im); }
     const t = document.createElement("div"); t.className = "gt-rd-t"; t.textContent = spec.title || ""; if (spec.sub) { const sm = document.createElement("small"); sm.textContent = spec.sub; t.appendChild(sm); }
     if (spec.pick) t.appendChild(this.pickTag()); head.appendChild(t);
@@ -2887,7 +2895,7 @@ class Game {
       const lw = document.createElement("div"); lw.className = "gt-rd-links"; head.appendChild(lw);
       links.forEach(([href, label, short]) => { const a = document.createElement("a"); a.href = href; a.target = "_blank"; a.rel = "noopener"; a.textContent = (short || label) + " \u2197"; a.setAttribute("aria-label", label + " (opens in a new tab)"); a.title = label + " (opens in a new tab)"; a.className = /watch/i.test(label) ? "watch" : "play"; a.addEventListener("click", e => e.stopPropagation()); lw.appendChild(a); });
       if (spec.note) { // a yellow button under Watch and Play: leave a note on this piece (Up does it too)
-        const nb = document.createElement("button"); nb.type = "button"; nb.className = "note"; nb.textContent = "NOTE +";
+        const nb = document.createElement("button"); nb.type = "button"; nb.className = "note"; nb.textContent = spec.frame || spec.clip ? "ADD NOTE +" : "NOTE +";
         nb.setAttribute("aria-label", "Leave a note"); nb.title = "Leave a note for other visitors";
         nb.addEventListener("click", e => { e.stopPropagation(); this.noteFromReader(); }); lw.appendChild(nb);
       }
@@ -2905,6 +2913,7 @@ class Game {
         else cur += w;
       }
       if (cur.trim()) pages.push({ label: first ? sec.label : (sec.label ? sec.label + " (CONTINUED)" : ""), text: trim(cur) });
+      pages.forEach(p => { if (p.tone === undefined) p.tone = sec.tone || ""; });
     }
     if (!pages.length) pages.push({ label: "", text: "" });
     this.rd = { pages, i: 0, done, note: spec.note || null, sel: -1 }; // note: a piece you can leave a note on (its NOTE button); sel: the highlighted button
@@ -2912,7 +2921,7 @@ class Game {
   }
   renderRead() {
     const r = this.rd, pg = r.pages[r.i], body = this.el.reader.querySelector(".gt-rd-body");
-    body.innerHTML = ""; if (pg.label) { const b = document.createElement("b"); b.textContent = pg.label; body.appendChild(b); } body.appendChild(document.createTextNode(pg.text));
+    body.innerHTML = ""; if (pg.label) { const b = document.createElement("b"); b.textContent = pg.label; if (pg.tone) b.className = pg.tone; body.appendChild(b); } body.appendChild(document.createTextNode(pg.text));
     this.el.reader.querySelector(".gt-rd-n").textContent = (r.pages.length > 1 ? (r.i + 1) + " / " + r.pages.length + "   " : "") + (r.sel >= 0 ? "A: open" : r.i < r.pages.length - 1 ? "A: next" : "A: done") + "   B: close" + (this.rdButtons().length ? "   \u2191\u2193: buttons" : "");
   }
   closeRead() { this.dropClip(); this.el.reader.style.display = "none"; const d = this.rd && this.rd.done; this.rd = null; this.mode = "walk"; this.inputLock = true; if (d) d(); }
@@ -2965,7 +2974,7 @@ class Game {
     const gold = p.kind === "episode", img = this.pieceImgs[p.id], secs = [];
     // The observation is always framed as the curator's own view; the headings and that line are in Words, Pieces.
     const obs = () => { secs.push({ label: this.tx("case.obsLabel").join(" "), text: p.observation }); if (!p.tut) secs.push({ label: "", text: this.tx("case.obsNote").join(" ") }); };
-    const int = () => secs.push({ label: this.tx("case.intLabel").join(" "), text: p.intention });
+    const int = () => secs.push({ label: this.tx("case.intLabel").join(" "), text: p.intention, tone: "red" }); // the developer's words: red headings
     if (side === "front") { if (p.observation) obs(); secs.push({ label: "", text: this.tx("case.frontNote").join(" ") }); }
     else if (side === "back") { if (p.intention) int(); secs.push({ label: "", text: this.tx("case.backNote").join(" ") }); }
     else if (side === "end") secs.push({ label: "", text: this.tx("case.ends").join(" ") });
@@ -2974,7 +2983,7 @@ class Game {
     const notes = side !== "back" && side !== "end" && (this.online() || !!p.tut); // visitors' notes: under the front placard, or with the whole piece
     if (notes) { const ns = this.notesFor(p); if (side === "front") secs.splice(secs.length - 1, 0, ...ns); else secs.push(...ns); this.refreshNotes(); } // before the "other side" line
     this.read({ img: img ? p.image : this.pieceArt(p).toDataURL(), imgClass: img && img.naturalWidth > 160 ? "photo" : "", title: p.title.toUpperCase(), sub: "By " + p.developer,
-      sections: secs, pick: p.pick, clip: this.clipOf(p), note: notes && !this.curator ? p : null, links: [[p.episodeUrl, "Watch the episode", "WATCH"], [p.gameUrl, "Play the game", "PLAY"]] }, () => {
+      sections: secs, pick: p.pick, frame: true, clip: this.clipOf(p), flip: side === "back", note: notes && !this.curator ? p : null, links: [[p.episodeUrl, "Watch the episode", "WATCH"], [p.gameUrl, "Play the game", "PLAY"]] }, () => {
       if (side === undefined) { const k = (this.progress.sides || (this.progress.sides = {}))[p.id] || (this.progress.sides[p.id] = {}); if (gold) k.front = k.back = 1; else k.note = 1; this.saveProgress(); }
       if (stampAfter) this.stamp(p);
     });
@@ -3384,9 +3393,8 @@ class Game {
     const [a, b] = String(p.clipLoop || "").split(/\s*[-–]\s*/).map(t);
     return { id, a: a >= 0 ? Math.floor(a) : 0, b: b > a ? b : 0 };
   }
-  makeClip(frame, c, poster) {
+  makeClip(frame, c) {
     this.dropClip();
-    if (poster) { const im = document.createElement("img"); im.src = poster; im.alt = ""; frame.appendChild(im); }
     if (c.file) { // a video file: plays at once and loops by itself
       const v = document.createElement("video"); v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true; v.setAttribute("muted", ""); v.preload = "auto";
       v.addEventListener("playing", () => { v.style.opacity = 1; });
@@ -5876,7 +5884,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-29 clip files";
+const VERSION = "2026-10-30 framed placards";
 window.GOQ = { ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
