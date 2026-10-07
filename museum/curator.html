@@ -328,7 +328,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-10-23 now playing";
+window.GOQ_WANT = "2026-10-24 arcade tokens";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -2225,6 +2225,9 @@ function renderShop() {
   const price = el("input", { type: "number", min: 0, max: 99, value: sh.drinkPrice || 0, style: "max-width:120px" });
   price.addEventListener("input", () => { sh.drinkPrice = Math.max(0, Math.min(99, Math.round(+price.value || 0))); changed(); });
   wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:10px 0 6px" }, [el("label", {}, [document.createTextNode("Café drinks cost (tokens)"), el("small", { text: "0 means coffee, tea and cocoa are free." }), price])]));
+  const aprice = el("input", { type: "number", min: 0, max: 99, value: sh.arcadePrice === undefined ? 1 : sh.arcadePrice, style: "max-width:120px" });
+  aprice.addEventListener("input", () => { sh.arcadePrice = Math.max(0, Math.min(99, Math.round(+aprice.value || 0))); changed(); });
+  wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:6px 0 6px" }, [el("label", {}, [document.createTextNode("Café arcade costs (tokens per play)"), el("small", { text: "Taken when a visitor picks a game. 0 means the arcade is free." }), aprice])]));
   // Stamp card: reading a piece's placard stamps it; a full card trades for one prize item (ticked below).
   sh.stampItems = sh.stampItems || [];
   const ssize = el("input", { type: "number", min: 3, max: 40, value: sh.stampSize || 10, style: "max-width:120px" });

@@ -595,32 +595,29 @@ const GEN = {
     rect(a, 20, 28, 6, 3, 4); rect(a, 70, 28, 6, 3, 4); // its stand
     return a;
   },
-  // The screening nook's doorway from the café hall: one big dark arch, two tiles wide, with a gold frame.
+  // The screening nook's doorway from the café hall: one big dark doorway, two tiles wide, in a square gold frame.
   theater_door: () => fillFn(mk(32, 32), (x, y) => {
-    const dx = x - 15.5, r = y < 15 ? Math.hypot(dx, y - 15) : Math.abs(dx);
-    if (r > 14.5) return undefined;
-    if (r > 11.5) return r > 14 ? 5 : r < 12 ? 5 : y < 15 && y - 15 < -Math.abs(dx) * 0.2 && r < 13.5 ? 7 : 6; // the frame
-    const edge = 11.5 - r;
-    if (y >= 20 && Math.abs(dx) < (y - 17) * 0.55) return 4;                     // a red carpet running into the dark
-    return edge < 1.5 ? 3 : edge < 3.5 ? 2 : y > 26 ? 2 : 1;
+    if (x < 1 || x > 30 || y < 1) return undefined;
+    const band = Math.min(x - 1, 30 - x, y - 1);                                 // how far into the frame
+    if (band < 4 && !(x >= 5 && x <= 26 && y >= 5)) return band === 0 ? 5 : band === 3 ? 7 : 6;
+    const edge = Math.min(x - 5, 26 - x, y - 5);
+    if (y >= 20 && Math.abs(x - 15.5) < (y - 17) * 0.55) return 4;               // a red carpet running into the dark
+    return edge < 1 ? 3 : edge < 3 ? 2 : y > 26 ? 2 : 1;
   }),
-  // Marquee bulbs around the arch: 2 frames, every other bulb lit, so they chase. Drawn over the dark, so they glow.
+  // Marquee bulbs around the frame: 2 frames, every other bulb lit, so they chase. Drawn over the dark, so they glow.
   marquee_lights: f => {
     const a = mk(32, 32), pts = [];
-    for (let i = 0; i <= 8; i++) { const t = Math.PI * i / 8; pts.push([15.5 - 13 * Math.cos(t), 15 - 13 * Math.sin(t)]); }
-    for (const y of [19, 23, 27]) { pts.unshift([2.5, y]); pts.push([28.5, y]); }
-    pts.forEach(([x, y], i) => {
-      const bx = Math.round(x - 1), by = Math.round(y - 1), on = (i + f) % 2 === 0;
-      rect(a, bx, by, 2, 2, on ? 2 : 1); if (on) px(a, bx, by, 3);
-    });
+    for (const y of [26, 20, 14, 8]) pts.push([2, y]);
+    for (const x of [2, 7, 12, 18, 23, 28]) pts.push([x, 2]);
+    for (const y of [8, 14, 20, 26]) pts.push([28, y]);
+    pts.forEach(([bx, by], i) => { const on = (i + f) % 2 === 0; rect(a, bx, by, 2, 2, on ? 2 : 1); if (on) px(a, bx, by, 3); });
     return a;
   },
-  // The black LED board for NOW PLAYING: four tiles wide, the red letters are drawn on it as it runs.
+  // The black LED board for NOW PLAYING: four tiles wide, one line tall. The red letters are drawn on it as they scroll.
   led_sign: () => {
-    const a = mk(64, 24);
-    rect(a, 0, 0, 64, 24, 3); rect(a, 1, 1, 62, 22, 2); rect(a, 2, 2, 60, 20, 1);
-    fillFn(a, (x, y, v) => (v === 1 && x >= 3 && x <= 60 && y >= 3 && y <= 20 && (x + y) % 2 === 0 ? 4 : undefined)); // the unlit LEDs
-    rect(a, 3, 0, 2, 1, 2); rect(a, 59, 0, 2, 1, 2); // where it hangs
+    const a = mk(64, 12);
+    rect(a, 0, 0, 64, 12, 3); rect(a, 1, 1, 62, 10, 2); rect(a, 2, 2, 60, 8, 1);
+    fillFn(a, (x, y, v) => (v === 1 && x >= 3 && x <= 60 && y >= 3 && y <= 8 && (x + y) % 2 === 0 ? 4 : undefined)); // the unlit LEDs
     return a;
   },
   // The café's arcade cabinet: a lit marquee, a little attract screen (2 frames), a joystick and two buttons.
@@ -918,9 +915,9 @@ const SLOTS = [
   { key: "carpet_v", label: "Carpet runner, down", group: "Hallways", w: 16, h: 16, frames: 3, pal: "carpet", gen: GEN.carpet_v, note: "3 frames side by side (48×16): the top end, a middle piece, the bottom end." },
   { key: "wall_sconce", label: "Accent light", group: "Hallways", w: 16, h: 16, pal: "sconce", gen: GEN.wall_sconce, note: "A small wall light, hung on the upper wall row. It glows with the lights on." },
   { key: "rug", label: "Rug", group: "Gift shop and café", w: 48, h: 32, pal: "rug", gen: GEN.rug, note: "Lies on the floor under everything else; you walk over it." },
-  { key: "theater_door", label: "Screening nook doorway", group: "Screening nook", w: 32, h: 32, pal: "tdoor", gen: GEN.theater_door, note: "One big dark arch across both doorway tiles in the café hall. Leave the corners transparent so the wall shows." },
+  { key: "theater_door", label: "Screening nook doorway", group: "Screening nook", w: 32, h: 32, pal: "tdoor", gen: GEN.theater_door, note: "One big dark doorway in a square frame, across both doorway tiles in the café hall (both wall rows)." },
   { key: "marquee_lights", label: "Marquee bulbs", group: "Screening nook", w: 32, h: 32, frames: 2, fps: 3, pal: "bulbs", gen: GEN.marquee_lights, note: "2 frames (64×32), drawn over the doorway and lit even in the dark. Every other bulb lit, so they chase." },
-  { key: "led_sign", label: "NOW PLAYING board", group: "Screening nook", w: 64, h: 24, pal: "ledsign", gen: GEN.led_sign, note: "The black board, four tiles wide, centered on both wall rows. The red letters are drawn on top: NOW PLAYING on the top line (y 4 to 8), the title on the bottom one (y 13 to 17, scrolls when long)." },
+  { key: "led_sign", label: "NOW PLAYING board", group: "Screening nook", w: 64, h: 12, pal: "ledsign", gen: GEN.led_sign, note: "The black board, four tiles wide and one line tall, centered on the wall. The red letters scroll across it from right to left (rows 3 to 7, between x 3 and 60)." },
   { key: "arcade_cabinet", label: "Arcade cabinet", group: "Gift shop and café", w: 16, h: 32, frames: 2, fps: 2, pal: "arcade", gen: GEN.arcade_cabinet, note: "2 frames (32×32), the attract screen flickering. Two tiles tall. Plays the games that have a Play link." },
   { key: "theater_screen", label: "Screening nook screen", group: "Screening nook", w: 96, h: 32, frames: 2, pal: "screen", gen: GEN.theater_screen, note: "2 frames (192×32), six tiles wide across both wall rows; it flickers softly between them. Sit down in the nook to watch an episode." },
   { key: "planter_wide", label: "Long planter", group: "Furniture", w: 32, h: 16, pal: "trinket", gen: GEN.planter_wide, note: "Two tiles wide. A leafy planter box with a few flowers, for dividing a room or blocking a spot." },
@@ -1172,7 +1169,7 @@ function normalizePack(p) {
   const stampSize = Math.max(3, Math.min(40, Math.round(+shin.stampSize || 10)));
   const stampItems = (Array.isArray(shin.stampItems) ? shin.stampItems : []).filter(id => items.some(it => it.id === id));
   const shop = { items, stampSize, stampItems, featured: items.some(it => it.id === shin.featured) ? shin.featured : (items[0] ? items[0].id : ""),
-    drinkPrice: Math.max(0, Math.min(99, Math.round(+shin.drinkPrice || 0))) };
+    drinkPrice: Math.max(0, Math.min(99, Math.round(+shin.drinkPrice || 0))), arcadePrice: Math.max(0, Math.min(99, Math.round(shin.arcadePrice === undefined ? 1 : +shin.arcadePrice || 0))) };
   const rooms = p.rooms && typeof p.rooms === "object" ? p.rooms : {};
   const vlist = v => (Array.isArray(v) ? v.filter(Array.isArray).map(pg => pg.map(x => str(x, 400)).filter(Boolean)).filter(pg => pg.length).slice(0, 30) : null);
   const textIn = (p.settings && p.settings.text) || {}, text = {};
@@ -1562,11 +1559,14 @@ const TEXT = {
   "patron.enjoyed":    { g: "Staff", l: "A Patreon member mentioning a game they enjoyed ({title}: a random game; one picked at random)", v: [["I played {title} last week. Really enjoyed it."], ["Have you tried {title}? I keep thinking about it."], ["{title} was so good. No notes."], ["I finally got around to {title}. Worth it."], ["Okay, {title}. Why didn't anyone tell me sooner?"]] },
   "screen.guest":      { g: "Screening nook", l: "Someone sitting in the screening nook (takes turns)", v: [["Shh. It's getting to the good part."], ["I've seen this one four times."], ["The host talks fast. I like it."], ["Is there popcorn? There should be popcorn."], ["I came in for five minutes. That was an hour ago."]] },
   "screen.ask":        { g: "Screening nook", l: "Sitting down or looking at the screen ({title}: what's playing this hour)", v: [["Now playing: {title}. Stay for it?"]] },
-  "screen.marquee":    { g: "Screening nook", l: "The top line of the red LED sign out front (letters, numbers and : - . ! ? ' & only)", v: [["NOW PLAYING"]] },
+  "screen.marquee":    { g: "Screening nook", l: "The red LED sign out front, before the title (letters, numbers and : - . ! ? ' & , / only)", v: [["NOW PLAYING:"]] },
   "screen.sign":       { g: "Screening nook", l: "Looking at the LED sign out front ({title}: what's playing this hour)", v: [["NOW PLAYING: {title}.", "It changes every hour. The sign is very proud of this."]] },
   "screen.enter":      { g: "Screening nook", l: "The little notice walking in ({title})", v: [["Now playing: {title}"]] },
   "arcade.title":      { g: "Arcade", l: "The arcade cabinet's list title", v: [["INSERT COIN"]] },
-  "arcade.go":         { g: "Arcade", l: "Starting a game ({title})", v: [["You feed it an imaginary quarter.", "{title} opens in a new tab."]] },
+  "arcade.intro":      { g: "Arcade", l: "Walking up to the arcade cabinet ({n}: tokens per play)", v: [["[Arcade intro: what the cabinet is, that it opens a museum game in a new tab, and that a play costs {n} token(s)]"]] },
+  "arcade.free":       { g: "Arcade", l: "Walking up to the arcade cabinet when plays are free (Gift shop: arcade price 0)", v: [["[Arcade intro when it's free: what the cabinet is, and that it opens a museum game in a new tab]"]] },
+  "arcade.broke":      { g: "Arcade", l: "Not enough tokens to play ({n}: tokens per play, {have}: tokens you have)", v: [["[Not enough tokens: a play costs {n}, you have {have}; chores earn tokens]"]] },
+  "arcade.go":         { g: "Arcade", l: "Starting a game ({title})", v: [["[Starting a game: the token goes in and {title} opens in a new tab]"]] },
   "arcade.blocked":    { g: "Arcade", l: "The browser blocked the new tab ({title})", v: [["The cabinet blinks. Tap PLAY to start {title}."]] },
   "arcade.none":       { g: "Arcade", l: "No games with a Play link", v: [["The screen says GAME OVER. It's been saying that all day."]] },
   "screen.none":       { g: "Screening nook", l: "No episodes to show", v: [["Nothing's queued up. The screen just hums."]] },
@@ -1800,7 +1800,7 @@ const SHIRT_STEPS = ["cocoa", "finishOnStool", "lobbyTrash", "water", "catPhoto"
 const PIXEL_FONT = (() => {
   const g = "A:010101111101101 B:110101110101110 C:011100100100011 D:110101101101110 E:111100110100111 F:111100110100100 G:011100101101011 H:101101111101101 I:111010010010111 J:001001001101010 K:101101110101101 L:100100100100111 M:101111111101101 N:110101101101101 O:010101101101010 P:110101110100100 Q:010101101110011 R:110101110101101 S:011100010001110 T:111010010010010 U:101101101101111 V:101101101101010 W:101101111111101 X:101101010101101 Y:101101010010010 Z:111001010100111 0:111101101101111 1:010110010010111 2:110001010100111 3:110001010001110 4:101101111001001 5:111100110001110 6:011100111101111 7:111001010010010 8:111101111101111 9:111101111001110";
   const out = { " ": ["000", "000", "000", "000", "000"], ":": ["000", "010", "000", "010", "000"], "-": ["000", "000", "111", "000", "000"], ".": ["000", "000", "000", "000", "010"],
-    "!": ["010", "010", "010", "000", "010"], "?": ["110", "001", "010", "000", "010"], "'": ["010", "010", "000", "000", "000"], "&": ["010", "101", "010", "101", "011"], ",": ["000", "000", "000", "010", "100"] };
+    "!": ["010", "010", "010", "000", "010"], "?": ["110", "001", "010", "000", "010"], "'": ["010", "010", "000", "000", "000"], "&": ["010", "101", "010", "101", "011"], ",": ["000", "000", "000", "010", "100"], "/": ["001", "001", "010", "100", "100"] };
   g.split(" ").forEach(e => { const [k, b] = e.split(":"); out[k] = [0, 1, 2, 3, 4].map(i => b.slice(i * 3, i * 3 + 3)); });
   return out;
 })();
@@ -3274,9 +3274,17 @@ class Game {
   arcade() {
     const games = this.pack.pieces.filter(p => p.gameUrl);
     if (!games.length) { this.say(this.tx("arcade.none")); return; }
-    this.openList(this.tx("arcade.title")[0], [...games.map(p => p.title), "CLOSE"], i => { const p = games[i]; if (p) this.playGame(p); });
+    const n = this.pack.settings.shop.arcadePrice, have = this.progress.tokens || 0;
+    const pages = this.tx(n ? "arcade.intro" : "arcade.free", { n }), last = pages.pop();
+    this.say(pages, () => this.choose(last, [n ? "Insert " + n + " token" + (n > 1 ? "s" : "") : "Play", "Not now"], i => {
+      if (i !== 0) return;
+      if (have < n) { this.say(this.tx("arcade.broke", { n, have })); return; }
+      this.openList(this.tx("arcade.title")[0], [...games.map(p => p.title), "CLOSE"], k => { const p = games[k]; if (p) this.playGame(p, n); });
+    }, 1));
   }
-  playGame(p) {
+  /* A token per play (Gift shop: arcade price), taken once you pick a game. */
+  playGame(p, n) {
+    if (n) { this.progress.tokens = Math.max(0, (this.progress.tokens || 0) - n); this.updateHud(true); }
     const st = this.progress.stats; st.arcade = (st.arcade || 0) + 1; this.progress.tally.arcade = (this.progress.tally.arcade || 0) + 1; this.saveProgress();
     let w = null; try { w = window.open(p.gameUrl, "_blank"); if (w) w.opener = null; } catch (e) { w = null; }
     if (w) this.say(this.tx("arcade.go", { title: p.title }));
@@ -5304,17 +5312,17 @@ class Game {
     const ctx = this.ctx;
     if (r.marquee) this.drawSlot("marquee_lights", REDUCED_MOTION ? 0 : this.frame("marquee_lights"), 0, r.marquee.x * T - cx, r.marquee.y * T - cy);
     if (!r.nowSign) return;
-    const x0 = r.nowSign.x * T - cx, y0 = r.nowSign.y * T + 4 - cy, p = this.nowPlaying();
-    const top = this.ledText(this.tx("screen.marquee")[0] || ""), bot = this.ledText(p ? p.title : "COMING SOON"), win = 56;
-    ctx.drawImage(top, x0 + 32 - Math.floor(top.width / 2), y0 + 3);
-    ctx.save(); ctx.beginPath(); ctx.rect(x0 + 3, y0 + 11, 58, 9); ctx.clip();
-    if (bot.width - 2 <= win) ctx.drawImage(bot, x0 + 32 - Math.floor(bot.width / 2), y0 + 12);
-    else { const span = bot.width + 20, o = REDUCED_MOTION ? 0 : Math.floor(this.t / 3) % span; ctx.drawImage(bot, x0 + 4 - o, y0 + 12); ctx.drawImage(bot, x0 + 4 - o + span, y0 + 12); }
+    // One line, scrolling right to left like an LED ticker: it jumps two columns at a time, a little chunky.
+    const x0 = r.nowSign.x * T - cx, y0 = r.nowSign.y * T + 10 - cy, p = this.nowPlaying();
+    const line = this.ledText((this.tx("screen.marquee")[0] || "") + " " + (p ? p.title : "")), win = 58, span = line.width + win;
+    const o = REDUCED_MOTION ? win : Math.floor(this.t / 8) * 2 % span; // with reduced motion it holds still at the start
+    ctx.save(); ctx.beginPath(); ctx.rect(x0 + 3, y0 + 2, win, 8); ctx.clip();
+    ctx.drawImage(line, x0 + 3 + win - o, y0 + 2);
     ctx.restore();
   }
   /* A line of glowing red LED letters (the pixel font, with a soft halo), cached. */
   ledText(s) {
-    s = String(s).toUpperCase().replace(/[^A-Z0-9 :\-.!?'&,]/g, "");
+    s = String(s).toUpperCase().replace(/[^A-Z0-9 :\-.!?'&,/]/g, "");
     const cache = this.ledCache || (this.ledCache = new Map()); if (cache.has(s)) return cache.get(s);
     const w = Math.max(1, s.length * 4 - 1), c = document.createElement("canvas"); c.width = w + 2; c.height = 7; const x = c.getContext("2d");
     const lit = new Set(); [...s].forEach((ch, i) => (PIXEL_FONT[ch] || []).forEach((row, yy) => [...row].forEach((v, xx) => { if (v === "1") lit.add((i * 4 + xx + 1) + "," + (yy + 1)); })));
@@ -5554,7 +5562,7 @@ class Game {
     for (const sw of r.switches || []) this.drawSlot("light_switch", 0, 0, sw.x * T - cx, sw.y * T - cy);
     if (r.intercomAt) this.drawSlot("intercom", 0, 0, r.intercomAt.x * T - cx, r.intercomAt.y * T - cy);
     if (r.marquee) this.drawSlot("theater_door", 0, 0, r.marquee.x * T - cx, r.marquee.y * T - cy);
-    if (r.nowSign) this.drawSlot("led_sign", 0, 0, r.nowSign.x * T - cx, r.nowSign.y * T + 4 - cy);
+    if (r.nowSign) this.drawSlot("led_sign", 0, 0, r.nowSign.x * T - cx, r.nowSign.y * T + 10 - cy);
     if (r.screenAt) this.drawSlot("theater_screen", Math.floor(this.t / 45) % 2, 0, r.screenAt.x * T - cx, r.screenAt.y * T - cy); // the big screen, flickering softly
     for (const d of r.decals) { if (d.key === "rug" && d.w) ctx.drawImage(this.rugArt(d), d.x * T - cx, d.y * T - cy); else this.drawSlot(d.key, 0, 0, d.x * T - cx, d.y * T - cy); }
     for (const ru of r.runners) drawRunner(ctx, this.sheet(ru.k[0] === "v" ? "carpet_v" : "carpet_h"), ru, cx, cy);
@@ -5686,7 +5694,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-10-23 now playing";
+const VERSION = "2026-10-24 arcade tokens";
 window.GOQ = { ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

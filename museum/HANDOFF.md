@@ -458,6 +458,13 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Arcade tokens and sign tweaks (2026-10-24).**
+- **Creative text rule (from the curator):** new creative lines go in as bracketed placeholders saying what the line is for, e.g. `[Arcade intro: ...]`. The curator writes the real text in Words.
+- **Doorway:** a square gold frame instead of a round arch. The bulbs run up the sides and across the top.
+- **NOW PLAYING sign:** half as tall (64×12, one line). `screen.marquee` (default "NOW PLAYING:") plus the title scroll right to left like an LED ticker, two columns at a time every 8 frames. With reduced motion it holds still.
+- **Arcade:** walking up shows `arcade.intro` (or `arcade.free` when free) with Insert N token(s) / Not now. Without enough tokens you get `arcade.broke`. The token is taken when you pick a game. Price is set in Gift shop → "Café arcade costs" (`shop.arcadePrice`, default 1, 0 = free). `arcade.go` is now a placeholder too.
+- The pixel font gained `/`.
+
 **Now playing and the café arcade (2026-10-23).**
 - **Screening nook door:** the two doorway tiles in the café east hall now draw as one big dark arch (`marqueeAt: [40, 28]` on the museum room; art *Screening nook doorway*) with chasing gold bulbs around it (*Marquee bulbs*, 2 frames, drawn over the room's lighting so they glow in the dark). The doorway overlays and doormats under it are skipped. The nook has no light switch anymore (it doesn't count toward closing).
 - **NOW PLAYING sign:** a black board with red LED letters, four tiles across the hall wall (`nowPlayingAt: [42, 28]`; art *NOW PLAYING board*; letters glow in the dark). Top line from Words (`screen.marquee`), bottom line the episode playing this hour: a random pick from the pieces with episode links, the same for everyone until the hour turns (`nowPlaying()`); long titles scroll. Looking at it reads `screen.sign`. To make room, painting spot [42, 28] and the hall lamp [44, 28] were removed. Both are placeable/movable in Rooms → Spots.
