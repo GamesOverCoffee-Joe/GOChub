@@ -458,6 +458,8 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**How updates reach players:** see `museum/UPDATING.md` (caching, version strings, custom art and exporting). Keep it current when any of that changes.
+
 **Curator tidy (2026-11-08).** A cleanup pass on curator.html; no pack or engine changes.
 - **Header:** only the save status, **More** and **Export pack** stay out. More holds Check version, Import pack, Batch fill (local only, and `batch-fill.html` isn't in the repo) and the GOC link grabber.
 - **Pieces fold:** each piece is a one-line row (thumb, title, developer, where it hangs, tags for Painting / Pick / Unveils / Clip / No episode link). Click to open. Which ones are open is kept for the tab session (`goq-open-pieces` in sessionStorage). There's a search box (title or developer) and Open all / Close all. A new piece opens itself and focuses its title. The tab went from about 43,600px tall to about 3,100px.
