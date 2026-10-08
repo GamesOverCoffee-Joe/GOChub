@@ -1356,6 +1356,7 @@ function normalizePack(p) {
   const items = (Array.isArray(shin.items) ? shin.items : SAMPLE_ITEMS).slice(0, 40).map((it, i) => ({
     id: str(it && it.id, 60) || "item-" + (i + 1), name: str(it && it.name, 60) || "Untitled item",
     price: Math.max(0, Math.min(999, Math.round(+(it && it.price) || 0))), description: str(it && it.description, 240), image: str(it && it.image, 2000000) || null,
+    gift: str(it && it.gift, 60), // a piece's id: this item is that piece's unveil gift (in the shop only as the gift of the week)
   }));
   const stampSize = Math.max(3, Math.min(40, Math.round(+shin.stampSize || 10)));
   const stampItems = (Array.isArray(shin.stampItems) ? shin.stampItems : []).filter(id => items.some(it => it.id === id));
@@ -1389,6 +1390,8 @@ function normalizePack(p) {
   const ofin = (p.settings && p.settings.office) || {};
   const office = { lock: officeLock(officeUnlock(ofin.lock) || String(ofin.code || "").replace(/\D/g, "").slice(0, 8) || "40917"), // the keypad code, scrambled (never plain in the pack)
     nicknames: Array.isArray(ofin.nicknames) ? ofin.nicknames.map(n => str(n, 40)).filter(Boolean).slice(0, 12) : ["DeVaughn", "Boss", "Mr. curator sir"] }; // what people call a curator badge
+  // Gifts set on the piece itself (before gifts were shop items) become shop items.
+  pieces.forEach(pc => { if (pc.gift && pc.gift.name && !items.some(it => it.gift === pc.id)) items.push({ id: "gift-" + pc.id, name: pc.gift.name, price: pc.gift.price, description: pc.gift.description, image: null, gift: pc.id }); delete pc.gift; });
   return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, mindsets, curious, life, genres, office, friday }, samples: !Array.isArray(p.pieces) };
 }
 /* The curator's "Skip to tomorrow" moves every daily system forward together. */
@@ -3282,7 +3285,7 @@ class Game {
   /* Items a full stamp card trades for: the ones ticked "Stamp card prize" in the curator, or any item when none are ticked. */
   stampPrize(it) { const sh = this.pack.settings.shop; return !sh.stampItems.length || sh.stampItems.includes(it.id); }
   tradeStampCard() {
-    const sh = this.pack.settings.shop, prizes = sh.items.filter(it => this.stampPrize(it) && !this.progress.items.includes(it.id));
+    const sh = this.pack.settings.shop, prizes = this.shopItems().filter(it => this.stampPrize(it) && !this.progress.items.includes(it.id));
     if (!prizes.length) { this.shopMsg = this.tx("stamp.noPrizes").join(" "); this.renderShop(); return; }
     this.closeShop();
     this.choose("Trade your full stamp card for:", [...prizes.map(it => it.name), "Not yet"], i => {
@@ -3859,7 +3862,7 @@ class Game {
           face(cer.curator, "down");
           cer.crowd.forEach((n, i) => { n.pose = { kind: i % 2 ? "heart" : "startled", t0: this.t, dur: 110 }; });
           after(80, () => {
-            const p = cer.pieces[0], week = this.weekDrink(), gift = this.giftOf(cer.pieces.find(q => q.gift)), pages = [...this.tx("unveil.read", vars)];
+            const p = cer.pieces[0], week = this.weekDrink(), gift = cer.pieces.map(q => this.giftOf(q)).find(Boolean), pages = [...this.tx("unveil.read", vars)];
             if (cer.pieces.some(q => q.gameUrl) && this.rooms.museum.props.some(q => q.key === "arcade_cabinet")) pages.push(...this.tx("unveil.arcade", vars));
             if (cer.pieces.some(q => q.episodeUrl)) pages.push(...this.tx("unveil.theater", vars));
             if (week && cer.pieces.some(q => q.id === week.piece)) pages.push(...this.tx("unveil.drink", { drink: week.name }));
@@ -3942,7 +3945,7 @@ class Game {
   kidClue() { // where his mom is, for {clue}: "the Strategy wing", "the café" or "the Screening Nook" (the lines add "in", "to"...)
     const d = this.dayState(), mo = d.mom; if (!mo) return { clue: "" };
     const z = mo.place === "nook" ? null : (this.rooms.museum.zones || []).find(q => q.id === mo.place);
-    const place = mo.place === "nook" ? this.roomName("screening") || "Screening Nook" : mo.place === "cafe" ? "café" : z ? z.name + (z.rect && z.rect.genre ? " wing" : "") : "museum";
+    const place = mo.place === "nook" ? this.roomName("screening") || "Screening Nook" : mo.place === "cafe" ? "café" : z ? z.name + (z.rect && z.rect.genre && !/\bwing$/i.test(z.name) ? " wing" : "") : "museum"; // "Strategy" becomes "Strategy wing"; "Meier Wing" stays
     return { clue: "the " + place };
   }
   /* A line's version by number (wrapping), instead of taking turns: Monday's conservator, the kid's line for this Tuesday. */
@@ -3996,8 +3999,8 @@ class Game {
     if (this.popupCache && this.popupCache.key === key) return this.popupCache.items;
     const sh = this.pack.settings.shop, wg = this.weekGift(), h = k => strSeed(key + ":" + k);
     const order = list => list.map(it => [h("o" + it.id), it]).sort((x, y) => x[0] - y[0]).map(x => x[1]);
-    const rare = order([...sh.items.filter(it => it.price >= RARE_PRICE), ...this.giftItems().filter(g => !wg || g.id !== wg.id), { id: "goc-shirt", name: "GOC shirt", price: 15, description: "", alwaysFake: true }]);
-    const picks = rare.slice(0, 3).concat(order(sh.items.filter(it => it.price < RARE_PRICE))).slice(0, 3);
+    const rare = order([...this.shopItems().filter(it => it.price >= RARE_PRICE), ...this.giftItems().filter(g => !wg || g.id !== wg.id), { id: "goc-shirt", name: "GOC shirt", price: 15, description: "", alwaysFake: true }]);
+    const picks = rare.slice(0, 3).concat(order(this.shopItems().filter(it => it.price < RARE_PRICE))).slice(0, 3);
     const colors = ["#4a78d0", "#e070a0", "#4aa060", "#d8b040", "#8a5ac8", "#d04848", "#3aa0a0", "#e08838"];
     const items = picks.map((b, i) => {
       const fake = b.alwaysFake || h("real" + i) % 2 === 0, spell = fake && !b.alwaysFake && h("how" + i) % 2 === 0 && /[A-Za-z]{4,}/.test(b.name);
@@ -4922,7 +4925,7 @@ class Game {
     if (this.cache[ck]) return this.cache[ck];
     if (it.popup) { // a pop-up find: its base item (or Joe), recolored
       const c = document.createElement("canvas"); c.width = 16; c.height = 16; const x = c.getContext("2d"); x.imageSmoothingEnabled = false;
-      const base = it.base === "joe" ? null : it.base === "goc-shirt" ? { id: "goc-shirt", name: "GOC shirt" } : [...this.pack.settings.shop.items, ...this.giftItems()].find(q => q.id === it.base);
+      const base = it.base === "joe" ? null : it.base === "goc-shirt" ? { id: "goc-shirt", name: "GOC shirt" } : this.pack.settings.shop.items.find(q => q.id === it.base);
       if (base) x.drawImage(this.itemIcon(base), 0, 0); else x.drawImage(this.sheet("joe"), 0, 0, 16, 16, 0, 0, 16, 16);
       if (it.color) { x.globalCompositeOperation = "source-atop"; x.globalAlpha = 0.55; x.fillStyle = it.color; x.fillRect(0, 0, 16, 16); }
       return (this.cache[ck] = c);
@@ -4955,7 +4958,7 @@ class Game {
   closeShop() { this.el.shop.style.display = "none"; this.mode = "walk"; this.inputLock = true; }
   shopRows() {
     const sh = this.pack.settings.shop;
-    const items = sh.items.slice().sort((a, b) => (b.id === sh.featured) - (a.id === sh.featured)), gift = this.weekGift();
+    const items = this.shopItems().sort((a, b) => (b.id === sh.featured) - (a.id === sh.featured)), gift = this.weekGift();
     if (gift) items.unshift(gift); // this week's unveil gift, on sale until the next one
     const full = this.progress.stamps.length >= sh.stampSize && sh.items.length;
     return [...(full ? [{ trade: true }] : []), ...items.map(it => ({ item: it })), { shirt: true }, { collection: true }, { leave: true }];
@@ -4973,7 +4976,7 @@ class Game {
       const row = document.createElement("div"); row.className = "gt-shop-row" + (i === this.shopSel ? " on" : "");
       if (r.item) {
         const img = document.createElement("img"); img.src = this.itemIcon(r.item).toDataURL(); img.alt = ""; row.appendChild(img);
-        const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = (r.item.gift ? "NEW " : r.item.id === sh.featured ? "* " : "") + r.item.name; row.appendChild(nm);
+        const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = (r.item.gift ? "NEW " : r.item.id === this.featuredId() ? "* " : "") + r.item.name; row.appendChild(nm);
         const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = owned.includes(r.item.id) ? "OWNED" : r.item.price + " T" + (this.stampPrize(r.item) ? " or card" : ""); row.appendChild(pr);
       } else if (r.trade) {
         const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = "Trade your full stamp card"; row.appendChild(nm);
@@ -4986,7 +4989,7 @@ class Game {
       list.appendChild(row);
     });
     const r = rows[this.shopSel], det = document.createElement("p"); det.className = "gt-shop-detail";
-    det.textContent = this.shopMsg || (r.item ? (r.item.id === sh.featured ? "FEATURED. " : "") + (r.item.description || "") :
+    det.textContent = this.shopMsg || (r.item ? (r.item.id === this.featuredId() ? "FEATURED. " : "") + (r.item.description || "") :
       r.trade ? "Pick one prize item, on the house." : r.shirt ? this.tx(this.progress.shirt ? "shirt.owned" : "shirt.tease").join(" ") : r.collection ? "See what you've bought." : "Head back out.");
     box.appendChild(det);
     const sel = list.children[this.shopSel]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: "nearest" });
@@ -5014,8 +5017,8 @@ class Game {
     this.renderShop();
   }
   /* Each stand (rack or shelving unit) shows one item, in Shop-tab order: stand 1 has item 1, and so on. A stand without an item gets trinkets. */
-  unitGoods(u) { const it = this.pack.settings.shop.items[u], out = []; for (let k = 0; k < 6; k++) out.push(it ? { item: it } : { trinket: hash(u, k) % 8 }); return out; } // one item per stand, in menu order
-  rackItems(i) { const items = this.pack.settings.shop.items; return [items[i] || null]; } // one item per stand, in menu order
+  unitGoods(u) { const it = this.shopItems()[u], out = []; for (let k = 0; k < 6; k++) out.push(it ? { item: it } : { trinket: hash(u, k) % 8 }); return out; } // one item per stand, in menu order
+  rackItems(i) { const items = this.shopItems(); return [items[i] || null]; } // one item per stand, in menu order
   browseUnit(u) { this.browseRack(u); } // each stand shows its one item, same as a rack
   browseRack(i) {
     const items = this.rackItems(i).filter(Boolean);
@@ -5033,7 +5036,7 @@ class Game {
     };
     show(0);
   }
-  ownedItems() { return [...this.pack.settings.shop.items, ...this.giftItems()].filter(it => this.progress.items.includes(it.id)).concat(this.progress.popups || []); } // shop souvenirs and gifts, then Bluu's finds
+  ownedItems() { return this.pack.settings.shop.items.filter(it => this.progress.items.includes(it.id)).concat(this.progress.popups || []); } // shop souvenirs and gifts, then Bluu's finds
   /* The collection cabinet: up to 12 of your souvenirs, the ones you picked in Souvenirs (or the first 12 until you pick). */
   displayed() { const own = this.ownedItems(), pick = this.progress.display; return Array.isArray(pick) ? pick.map(id => own.find(it => it.id === id)).filter(Boolean).slice(0, 12) : own.slice(0, 12); }
   /* ----- unveils: the drink and the gift of the week -----
@@ -5041,7 +5044,9 @@ class Game {
      until the next unveil that brings one. Whoever is there for the ceremony gets the gift free; after that it's in the gift
      shop until the next gift replaces it, and then it's one of the old gifts Bluu sells (real, or not) on Saturdays. */
   unveiled() { const t = todayISO(); return this.pack.pieces.filter(p => !p.tut && p.unveil && p.unveil <= t).sort((a, b) => (a.unveil < b.unveil ? -1 : a.unveil > b.unveil ? 1 : 0)); }
-  giftOf(p) { return p && p.gift ? { id: "gift-" + p.id, name: p.gift.name, description: p.gift.description || "", price: p.gift.price, image: null, gift: true, from: p.id } : null; }
+  giftOf(p) { return p ? this.pack.settings.shop.items.find(it => it.gift === p.id) || null : null; } // its unveil gift: a shop item tagged with its id
+  shopItems() { return this.pack.settings.shop.items.filter(it => !it.gift); } // the regular stock (gifts only show as the gift of the week)
+  featuredId() { const g = this.weekGift(); return g ? g.id : this.pack.settings.shop.featured; } // the gift of the week is always the featured item
   giftItems() { return this.unveiled().map(p => this.giftOf(p)).filter(Boolean); } // oldest first
   weekGift() { const g = this.giftItems(); return g[g.length - 1] || null; }
   weekDrink() { const ps = this.unveiled().filter(p => p.drink), p = ps[ps.length - 1]; return p ? { id: "week", name: p.drink, piece: p.id, color: p.drinkColor, line: p.drinkLine } : null; }
@@ -5097,7 +5102,7 @@ class Game {
     this.say(this.tx("cat.pet"));
   }
   readFeatured() {
-    const sh = this.pack.settings.shop, it = sh.items.find(i => i.id === sh.featured);
+    const sh = this.pack.settings.shop, it = sh.items.find(i => i.id === this.featuredId());
     if (!it) { this.say(["An empty pedestal under a glass dome."]); return; }
     this.say(["FEATURED: " + it.name, ...(it.description ? [it.description] : []), it.price + " tokens. Find it on the racks or ask at the counter."]);
   }
@@ -6498,7 +6503,7 @@ class Game {
     });
   }
   drawFeatured(r, cx, cy) {
-    const x = r.featuredAt.x * T - cx, y = r.featuredAt.y * T - T - cy, sh = this.pack.settings.shop, it = sh.items.find(i => i.id === sh.featured);
+    const x = r.featuredAt.x * T - cx, y = r.featuredAt.y * T - T - cy, sh = this.pack.settings.shop, it = sh.items.find(i => i.id === this.featuredId());
     this.drawSlot("featured_stand", 0, 0, x, y);
     if (it) this.ctx.drawImage(this.itemIcon(it), x + 2, y + 2, 12, 12);
     return;
@@ -6879,7 +6884,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-15 dragon week";
+const VERSION = "2026-11-15 gift items";
 window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

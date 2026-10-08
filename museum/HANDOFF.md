@@ -467,6 +467,13 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Gifts are shop items (2026-11-15).**
+- An unveil gift is now a regular shop item with `gift` set to its piece's id (curator: Shop tab, each item's **Unveil gift for**). It isn't on the racks or in the regular list; it only shows as the gift of the week (first, "NEW") from its piece's unveil until the next gift, then Bluu sells it. Item images work for gifts like any item. Old `piece.gift` objects are turned into shop items on load (`normalizePack`).
+- **The gift of the week is always the featured item** (`featuredId()`: the glass dome, the "FEATURED." note); otherwise the Featured choice in the Shop tab applies. Helpers: `shopItems()` (the regular stock), `giftOf(piece)`.
+- **Drinks of the week** are also editable in the Shop tab (name, cup color, barista line), the same fields as each piece's Unveiling section.
+- The Stuffed blue dragon is now the shop item `gift-piece-g3at9r2`.
+- Fixed: the kid's clue said "the Meier Wing wing"; "wing" is only added to wing names that don't already end with it.
+
 **Dragon week (2026-11-15).**
 - **Read means read:** a case side (or a painting's placard) only counts once you page to the end of it (`rd.end`, `readEnded`; `viewPiece(p, side, stampAfter, onRead)`). Opening a placard and backing out leaves the border red.
 - **Sparkle:** read pieces sparkle more (two twinkles, a cross that flares) with its own Staff-tab slider, Sparkle on read pieces (`staff.sparkle`, default 70%, 0 is off).
