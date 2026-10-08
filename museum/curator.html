@@ -331,6 +331,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
       <button role="tab" id="tab-staff" aria-selected="false" aria-controls="main">Staff</button>
       <button role="tab" id="tab-visitors" aria-selected="false" aria-controls="main">Visitors</button>
       <button role="tab" id="tab-shop" aria-selected="false" aria-controls="main">Shop</button>
+      <button role="tab" id="tab-tokens" aria-selected="false" aria-controls="main">Tokens</button>
       <button role="tab" id="tab-rooms" aria-selected="false" aria-controls="main">Rooms</button>
       <button role="tab" id="tab-words" aria-selected="false" aria-controls="main">Words</button>
       <button role="tab" id="tab-ach" aria-selected="false" aria-controls="main">Achievements</button>
@@ -381,13 +382,14 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
               <button class="btn" type="button" id="figureBtn" title="The figure appears right now, beside or behind you, with this room's lights off. Turn and photograph it before it's gone.">The figure</button>
               <button class="btn" type="button" id="unveilBtn" title="Stages the unveiling ceremony for the newest piece on display, as if it were unveiled today. Walk into its wing to see it.">An unveiling</button>
               <button class="btn" type="button" id="joeBtn" title="Joe turns up on the floor near you. Talk to him (or photograph him) to see the glitch.">Joe</button>
+              <label class="btn" style="display:flex;gap:6px;align-items:center" title="Set how many tokens you have in this preview">Tokens <input id="walletIn" type="number" min="0" max="9999" style="width:70px"></label>
               <button class="btn" type="button" id="dayBtn" title="The next day: curious visitors come back, dust settles, the museum opens again">Tomorrow</button>
             </div></div>
           <div class="pvsec"><span class="pvh">Start fresh</span>
             <div class="pvgrid">
               <button class="btn" type="button" id="recrate" title="Pieces with a future unveil date go back in their crates, so you can hang them again">Re-crate upcoming</button>
               <button class="btn" type="button" id="reread" title="Forget which placards you've read, so every border goes back to red">Unread everything</button>
-              <button class="btn" type="button" id="rechore" title="Forget everything done in this preview: chores, tokens, photos, stamps, achievements, the office. The lights come back on and visitors return. (The preview never saves; players' saves aren't touched.)">Start the visit over</button>
+              <button class="btn" type="button" id="rechore" title="Forget everything done in this preview: chores, tokens, photos, achievements, the office. The lights come back on and visitors return. (The preview never saves; players' saves aren't touched.)">Start the visit over</button>
             </div></div>
         </div>
       </details>
@@ -400,7 +402,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-17 pause in dialogue";
+window.GOQ_WANT = "2026-11-18 tokens and drinks";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -455,7 +457,7 @@ function packOut() {
     if (p.genre) o.genre = p.genre;
     if (p.blend) o.blend = p.blend;
     if (p.unveil) o.unveil = p.unveil;
-    if (p.drink) { o.drink = p.drink; if (p.drinkColor) o.drinkColor = p.drinkColor; if (p.drinkLine && p.drinkLine.length) o.drinkLine = p.drinkLine; }
+    if (p.drink) { o.drink = p.drink; if (p.drinkColor) o.drinkColor = p.drinkColor; if (p.drinkLine && p.drinkLine.length) o.drinkLine = p.drinkLine; if (p.drinkPrice) o.drinkPrice = p.drinkPrice; if (p.drinkIced) o.drinkIced = true; }
     if (p.pick) o.pick = true;
     if (p.image) o.image = p.image; else { o.colors = p.colors; o.style = p.style; }
     return o;
@@ -625,6 +627,8 @@ $("#unveilBtn").addEventListener("click", () => {
   status(t ? "Staged the unveiling of " + t + ". Walk into its wing (from outside it) to see the ceremony." : "No piece on display to unveil.", !t);
   stage.focus({ preventScroll: true });
 });
+$("#walletIn").addEventListener("focus", () => { $("#walletIn").value = (game && game.progress && game.progress.tokens) || 0; });
+$("#walletIn").addEventListener("change", () => { if (!game || !game.progress) return; game.progress.tokens = Math.max(0, Math.min(9999, Math.round(+$("#walletIn").value || 0))); game.saveProgress(); game.updateHud(true); status("Test wallet: " + game.progress.tokens + " tokens."); });
 $("#dayBtn").addEventListener("click", () => { game.closeAll(); game.skipDay(); stage.focus({ preventScroll: true }); });
 // "Reset chores" also reopens the museum: visitors come back and the lights come on.
 
@@ -632,7 +636,7 @@ $("#dayBtn").addEventListener("click", () => { game.closeAll(); game.skipDay(); 
 let tab = "art", current = "atlas";
 function setTab(t) {
   tab = t;
-  ["art", "pieces", "staff", "visitors", "shop", "rooms", "words", "ach", "notes"].forEach(k => $("#tab-" + k).setAttribute("aria-selected", t === k));
+  ["art", "pieces", "staff", "visitors", "shop", "tokens", "rooms", "words", "ach", "notes"].forEach(k => $("#tab-" + k).setAttribute("aria-selected", t === k));
   $("#app").classList.toggle("no-side", t !== "art");
   render();
 }
@@ -644,6 +648,7 @@ $("#tab-shop").addEventListener("click", () => setTab("shop"));
 $("#tab-rooms").addEventListener("click", () => setTab("rooms"));
 $("#tab-words").addEventListener("click", () => setTab("words"));
 $("#tab-ach").addEventListener("click", () => setTab("ach"));
+$("#tab-tokens").addEventListener("click", () => setTab("tokens"));
 $("#tab-notes").addEventListener("click", () => setTab("notes"));
 // Small screens: the preview sits below the editor; this jumps to it.
 $("#pvJump").addEventListener("click", () => document.querySelector(".preview").scrollIntoView({ behavior: "smooth", block: "start" }));
@@ -661,7 +666,7 @@ function tidyTab() {
   }
 }
 function render() { renderTab(); tidyTab(); }
-function renderTab() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "visitors") renderVisitors(); else if (tab === "shop") renderShop(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else if (tab === "notes") renderNotes(); else renderPieces(); }
+function renderTab() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "visitors") renderVisitors(); else if (tab === "shop") renderShop(); else if (tab === "tokens") renderTokens(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else if (tab === "notes") renderNotes(); else renderPieces(); }
 
 /* ---------- Image helpers ---------- */
 function readFile(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error("That file couldn't be read.")); r.readAsDataURL(file); }); }
@@ -1847,13 +1852,13 @@ function renderInspector() {
   }
   if (it.type === "arrow") {
     const a = d.arrows[it.i], genres = draft.settings.genres || GOQ.SAMPLE_GENRES, ed = fn => { snapshot(); fn(editable(R.id).arrows[it.i]); roomChanged(true); renderInspector(); };
-    const gs = el("select", {}, genres.map(g => el("option", { value: g.id, text: g.name })).concat([el("option", { value: "", text: "None (use the words and color below)" })]));
+    const gs = el("select", {}, genres.map(g => el("option", { value: g.id, text: wingOf(g.id) ? wingOf(g.id) + " (" + g.name + ")" : g.name })).concat([el("option", { value: "", text: "None (use the words and color below)" })]));
     gs.value = a.genre || ""; gs.addEventListener("change", () => ed(q => { q.genre = gs.value; }));
     const ds = el("select", {}, [["left", "Pointing left"], ["right", "Pointing right"]].map(([v, l]) => el("option", { value: v, text: l }))); ds.value = a.dir === "left" ? "left" : "right";
     ds.addEventListener("change", () => ed(q => { q.dir = ds.value; }));
     const wd = el("input", { type: "number", min: 2, max: 8, value: a.w || 4 }); wd.addEventListener("change", () => ed(q => { q.w = Math.max(2, Math.min(8, +wd.value || 4)); }));
-    box.appendChild(el("div", { class: "rrow" }, [field("Room it points to", gs, "Its name and color come from the genre (Visitors, Genres)."), field("Direction", ds), field("Length (tiles)", wd)]));
-    const lb = el("input", { type: "text", value: a.label || "", placeholder: "(the genre's name)", maxlength: 16 }); lb.addEventListener("change", () => ed(q => { if (lb.value.trim()) q.label = lb.value.trim(); else delete q.label; }));
+    box.appendChild(el("div", { class: "rrow" }, [field("Room it points to", gs, "Its color comes from the room's genre (Visitors, Genres); its words are the room's name unless you set them below. What it says when you look at it is in Words, Signs."), field("Direction", ds), field("Length (tiles)", wd)]));
+    const lb = el("input", { type: "text", value: a.label || "", placeholder: "(the room's name)", maxlength: 16 }); lb.addEventListener("change", () => ed(q => { if (lb.value.trim()) q.label = lb.value.trim(); else delete q.label; }));
     const cl = el("input", { type: "color", value: a.color || (genres.find(g => g.id === a.genre) || {}).color || "#c8a070" }); cl.addEventListener("change", () => ed(q => { q.color = cl.value; }));
     box.appendChild(el("div", { class: "rrow" }, [field("Words (optional)", lb), field("Own color (optional)", cl)]));
     if (a.color) box.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small quiet", text: "Use the genre's color", onclick: () => ed(q => { delete q.color; }) })]));
@@ -2328,6 +2333,24 @@ function renderCuriousWords(wrap) {
   });
 }
 
+/* ---------- Tokens: what everything earns ---------- */
+function renderTokens() {
+  const main = $("#main"); main.innerHTML = "";
+  const D = GOQ.REWARD_DEFAULTS, r = draft.settings.rewards = Object.assign(JSON.parse(JSON.stringify(D)), draft.settings.rewards || {});
+  if (!Array.isArray(r.artist) || r.artist.length !== 4) r.artist = D.artist.slice();
+  const wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
+  wrap.appendChild(el("h2", { class: "title", text: "Tokens" }));
+  wrap.appendChild(el("p", { text: "How many gift shop tokens each thing earns. Staff points for Employee of the Month don't change (a chore is 1, recommending the right piece and closing up are 3). Changes show in the preview after Apply to preview." }));
+  const num = (get, set, label, note) => { const i = el("input", { type: "number", min: 0, max: 999, value: get(), style: "max-width:110px", "aria-label": label }); i.addEventListener("input", () => { set(Math.max(0, Math.min(999, Math.round(+i.value || 0)))); changed(); }); return el("label", {}, [document.createTextNode(label), note ? el("small", { text: note }) : null, i]); };
+  const k = (key, label, note) => num(() => r[key], v => { r[key] = v; }, label, note);
+  const sec = (title, kids) => wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [el("h3", { text: title, style: "margin:0 0 8px" }), el("div", { class: "fields" }, kids)]));
+  sec("Recommending", [k("helped", "The right piece for a curious visitor", "Each time you recommend a visitor the piece they were looking for.")]);
+  sec("Chores", [k("dusted", "Dusting a frame"), k("straightened", "Straightening a frame"), k("watered", "Watering a plant"), k("mugs", "Returning the curator's mug"), k("wiped", "Wiping a case"), k("closings", "Closing the museum")]);
+  sec("Days of the week", [k("boxes", "Monday: all five boxes for the conservator"), k("kid", "Tuesday: the lost kid back to his mom"),
+    ...["a common photo", "an uncommon photo", "a rare photo", "the rarest photos"].map((t, i) => num(() => r.artist[i], v => { r.artist[i] = v; }, "Wednesday: the artist, for " + t)),
+    k("trivia", "Thursday: each right trivia answer"), k("triviaPerfect", "Thursday: bonus for all five")]);
+  wrap.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small quiet", text: "Back to the defaults", onclick: () => { draft.settings.rewards = JSON.parse(JSON.stringify(D)); changed({ now: true }); renderTokens(); } })]));
+}
 /* ---------- Shop ---------- */
 async function itemImage(file) {
   const src = await readFile(file), img = await loadImg(src);
@@ -2340,10 +2363,16 @@ function renderShop() {
   const main = $("#main"); main.innerHTML = "";
   const sh = draft.settings.shop, wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
   wrap.appendChild(el("h2", { class: "title", text: "Gift shop" }));
-  wrap.appendChild(el("p", { text: "Visitors earn a token for every chore (3 for closing up) and spend them here. Swap items in and out whenever you like; anything already bought stays in that visitor's collection. The featured item sits under the glass dome in the shop. While a piece\'s unveil gift is the gift of the week, it\'s the featured item instead." }));
-  const price = el("input", { type: "number", min: 0, max: 99, value: sh.drinkPrice || 0, style: "max-width:120px" });
-  price.addEventListener("input", () => { sh.drinkPrice = Math.max(0, Math.min(99, Math.round(+price.value || 0))); changed(); });
-  wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:10px 0 6px" }, [el("label", {}, [document.createTextNode("Café drinks cost (tokens)"), el("small", { text: "0 means coffee, tea and cocoa are free." }), price])]));
+  wrap.appendChild(el("p", { text: "Visitors earn tokens for chores, recommendations and the days of the week (amounts in the Tokens tab) and spend them here. Swap items in and out whenever you like; anything already bought stays in that visitor's collection. The featured item sits under the glass dome in the shop. While a piece\'s unveil gift is the gift of the week, it\'s the featured item instead." }));
+  // The café's regular drinks: a price each (half off on Sundays), and hot or iced.
+  sh.drinks = GOQ.normalizePack({ settings: { shop: sh } }).settings.shop.drinks.map((d, i) => Object.assign(d, (sh.drinks || [])[i] && sh.drinks[i].id === d.id ? { name: sh.drinks[i].name || d.name } : {}));
+  const drinkRows = sh.drinks.map(d => {
+    const nm = el("input", { type: "text", value: d.name, maxlength: 30, "aria-label": "Drink name" }); nm.addEventListener("input", () => { d.name = nm.value.trim() || d.name; changed(); });
+    const pr = el("input", { type: "number", min: 0, max: 99, value: d.price, style: "max-width:90px", "aria-label": d.name + " price" }); pr.addEventListener("input", () => { d.price = Math.max(0, Math.min(99, Math.round(+pr.value || 0))); changed(); });
+    const ic = el("input", { type: "checkbox", checked: !!d.iced }); ic.addEventListener("change", () => { d.iced = ic.checked; changed(); });
+    return el("div", { class: "fields", style: "border-top:2px solid var(--line);padding-top:8px;margin-top:8px" }, [el("label", {}, [document.createTextNode("Name"), nm]), el("label", {}, [document.createTextNode("Price (tokens)"), pr]), el("label", { class: "check", style: "align-self:end" }, [ic, document.createTextNode("Iced (a clear cup, no steam)")])]);
+  });
+  wrap.appendChild(el("section", { class: "prow", style: "display:block;margin:10px 0 6px" }, [el("h3", { text: "Café drinks", style: "margin:0 0 4px" }), el("p", { class: "note", style: "margin:0", text: "Each drink has its own price (0 is free; Sundays are half off). Iced drinks come in a clear cup showing the drink's color, with no steam. Visitors' drinks follow the same menu." }), ...drinkRows]));
   // Drinks of the week: one per unveiled piece, on the café menu from its unveil until the next one with a drink.
   const dated = draft.pieces.filter(p => p.unveil).sort((a, b) => (a.unveil < b.unveil ? -1 : 1)), today = GOQ.todayISO();
   const weekP = dated.filter(p => p.unveil <= today && p.drink).slice(-1)[0];
@@ -2358,14 +2387,11 @@ function renderShop() {
     drinks.appendChild(el("div", { class: "fields", style: "border-top:2px solid var(--line);padding-top:10px;margin-top:10px" }, [
       el("p", { class: "wide", style: "margin:0;font-weight:700" }, [document.createTextNode(p.title + " · unveils " + p.unveil), p === weekP ? el("span", { class: "tag", style: "margin-left:8px", text: "On the menu now" }) : null]),
       el("label", {}, [document.createTextNode("Drink name"), nm]), el("label", {}, [document.createTextNode("Cup color"), col]),
+      (() => { const pr = el("input", { type: "number", min: 0, max: 99, value: p.drinkPrice || 0, "aria-label": "Price" }); pr.addEventListener("input", () => { p.drinkPrice = Math.max(0, Math.min(99, Math.round(+pr.value || 0))); changed(); }); return el("label", {}, [document.createTextNode("Price (tokens)"), pr]); })(),
+      (() => { const ic = el("input", { type: "checkbox", checked: !!p.drinkIced }); ic.addEventListener("change", () => { p.drinkIced = ic.checked; changed(); }); return el("label", { class: "check", style: "align-self:end" }, [ic, document.createTextNode("Iced")]); })(),
       el("label", { class: "wide" }, [document.createTextNode("The barista's line"), line])]));
   });
   wrap.appendChild(drinks);
-  // Stamp card: reading a piece's placard stamps it; a full card trades for one prize item (ticked below).
-  sh.stampItems = sh.stampItems || [];
-  const ssize = el("input", { type: "number", min: 3, max: 40, value: sh.stampSize || 10, style: "max-width:120px" });
-  ssize.addEventListener("input", () => { sh.stampSize = Math.max(3, Math.min(40, Math.round(+ssize.value || 10))); changed(); });
-  wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:6px 0 6px" }, [el("label", {}, [document.createTextNode("Stamps on a full stamp card"), el("small", { text: "Visitors get a stamp for each display case they read on both sides, and each painting they read. A full card trades for one item ticked \"Stamp card prize\" below. Tick none and it trades for any item." }), ssize])]));
   if (!sh.items.length) wrap.appendChild(el("p", { class: "empty", text: "No items yet. Add the first one below." }));
   sh.items.forEach((it, i) => {
     const icon = el("img", { class: "th", alt: "", style: "aspect-ratio:1/1;width:96px;object-fit:contain;background:var(--surface-2)" });
@@ -2393,7 +2419,6 @@ function renderShop() {
         el("label", { class: "wide" }, [document.createTextNode("Unveil gift for"), el("small", { text: gp ? "Free for whoever is at its ceremony on " + gp.unveil + ", then in the shop and featured until the next unveil gift, then one of the old gifts Bluu sells. Not on the racks." : "Pick a piece with an unveil date to make this its gift." }), giftFor]),
         el("div", { class: "acts" }, [
           el("label", { class: "check", style: "margin:0 10px 0 0" }, [feat, document.createTextNode(it.gift ? "Featured (automatic as the gift of the week)" : "Featured")]),
-          (() => { const cb = el("input", { type: "checkbox", checked: sh.stampItems.includes(it.id) }); cb.addEventListener("change", () => { sh.stampItems = sh.stampItems.filter(x => x !== it.id); if (cb.checked) sh.stampItems.push(it.id); changed(); }); return el("label", { class: "check", style: "margin:0 10px 0 0" }, [cb, document.createTextNode("Stamp card prize")]); })(),
           el("button", { class: "btn small quiet", type: "button", text: "Move up", disabled: i === 0, onclick: () => move(-1) }),
           el("button", { class: "btn small quiet", type: "button", text: "Move down", disabled: i === sh.items.length - 1, onclick: () => move(1) }),
           el("button", { class: "btn small quiet", type: "button", text: "Remove item", onclick: () => {
@@ -2540,6 +2565,8 @@ function pieceRow(p, i, place) {
   const extras = el("div", { class: "unveil-extras" }, [
     el("small", { text: "The ceremony on that day hands these out. Leave blank for none." }),
     xin("Drink of the week", "Name on the café menu", () => p.drink, v => { p.drink = v; }),
+    (() => { const pr = el("input", { type: "number", min: 0, max: 99, value: p.drinkPrice || 0, "aria-label": "Drink price" }); pr.addEventListener("input", () => { p.drinkPrice = Math.max(0, Math.min(99, Math.round(+pr.value || 0))); changed(); }); const ic = el("input", { type: "checkbox", checked: !!p.drinkIced }); ic.addEventListener("change", () => { p.drinkIced = ic.checked; changed(); });
+      return el("div", { class: "rrow" }, [el("label", { class: "rfield" }, [el("span", { text: "Drink price (tokens)" }), pr]), el("label", { class: "check" }, [ic, document.createTextNode("Iced")])]); })(),
     (() => { const inp = el("input", { type: "color", value: p.drinkColor || "#c89040", "aria-label": "Drink color" }); inp.addEventListener("input", () => { p.drinkColor = inp.value; changed(); }); return el("label", { class: "rfield" }, [el("span", { text: "Drink color (the cup in your hand)" }), inp]); })(),
     (() => { const t = el("textarea", { rows: 2, placeholder: "What the barista says when serving it (one page per line)", "aria-label": "Barista's line" }); t.value = (p.drinkLine || []).join("\n");
       t.addEventListener("input", () => { p.drinkLine = t.value.split("\n").map(x => x.trim()).filter(Boolean); changed(); }); return el("label", { class: "rfield" }, [el("span", { text: "The barista's line when serving it" }), t]); })(),

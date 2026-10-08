@@ -467,6 +467,14 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Signs, drinks, tokens and cleanup (2026-11-18).**
+- **Signs:** the lobby directory and the hallway arrow signs' words are in Words → Signs (`dir.head`, `dir.middle`, `dir.room`, `dir.storage`, `hall.arrow`; room names and directions are filled in). The curator's arrow inspector lists wings by their names (with the genre in brackets) instead of the old genre names.
+- **Drinks:** coffee, tea and cocoa each have a price and an Iced box (`settings.shop.drinks`, Shop tab → Café drinks; the old single `drinkPrice` seeds them). Drinks of the week too (`piece.drinkPrice`, `piece.drinkIced`, in Shop and the piece's Unveiling). Iced drinks are a generated clear cup showing the drink's color, with a lid, ice and a straw, and no steam (`icedCup`); visitors' drinks follow the menu (`npcDrink`). Sunday half price applies to each. The cocoa quest checks the drink, not its name.
+- **Tokens:** every reward is in `settings.rewards` (`REWARD_DEFAULTS`; curator Tokens tab): each chore, closing up, the right recommendation (5 by default), Monday's boxes, Tuesday's kid, the artist's four photo tiers, Thursday per answer and the perfect bonus. Staff points are unchanged. The preview's Make it happen has a **Tokens** box that sets your test wallet.
+- **The right recommendation** gets a big moment (`cheer`, reaction `thrilled`): a big heart pops, sparkles burst, little hearts float up, they hop, a "+N tokens" toast, and the thanks line comes after a short beat. The tutorial uses it too.
+- **Removed:** the stamp card (reading no longer stamps; no shop trade, no My Stuff entry, no curator fields, no Punch Card Pro achievement); the Tuesday kid's "seeing his mom" line.
+- **Fixed:** the staff whiteboard was transparent (the day board's palette shared its name, `board`; now `dayboard`); the artist won't take a photo of himself or his easel (`photo.of`; `wed.self`, `wed.ownEasel`, no tokens, show another); menu lists (the arcade) size to the box so the last row is never cut off; Thursday puts bunting over the café.
+
 **Pause in dialogue; visitors don't park in front of you (2026-11-17).**
 - **Start during a conversation** opens PAUSED (`pauseText`): Skip the tutorial (in the tutorial), Save and quit, or Back, which picks the conversation up on the same page. Not during the unveil ceremony (`this.cine`) or a close-up.
 - **Visitors** who step onto the tile you're facing wait at most two seconds (`n.faceWait`, time to talk), then go on their way; before, they waited until you moved, which jammed hallways. Strolling visitors never pick a spot right next to you to stop at.
