@@ -119,10 +119,6 @@ function outline(a, v) {
 }
 function rows(r) { return r.map(s => [...s].map(c => (c === "." ? -1 : +c))); }
 function mirror(a) { return a.map(r => r.slice().reverse()); }
-/* The robot cam's feel: speeds in pixels per frame (60 a second), grip as how much sideways slide is lost each frame.
-   The ones the curator can change (Staff tab, Robot cam) are in settings.robot; these are the rest. */
-const ROBOT = { roll: 0.995, coast: 0.965, brake: 0.16, radius: 3, skid: 0.55 };
-const ROBOT_DEFAULTS = { max: 2.6, accel: 0.11, reverse: 0.4, turn: 0.07, grip: 0.22, bounce: 0.45, shake: 2, skids: 4 };
 const RARE_PRICE = 10; // Bluu sells shop items at this price and up (real, or not)
 /* A knockoff's name: two letters in its longest word swapped ("Qualia" becomes "Qulaia"). */
 function misspell(name, seed) {
@@ -1391,14 +1387,12 @@ function normalizePack(p) {
   const genres = normalizeGenres(p.settings && p.settings.genres, mids), gids = new Set(genres.map(g => g.id));
   pieces.forEach(pc => { if (!gids.has(pc.genre)) pc.genre = ""; if (!gids.has(pc.blend) || pc.blend === pc.genre) pc.blend = ""; });
   const friday = (Array.isArray(p.settings && p.settings.friday) ? p.settings.friday : []).map(e => ({ title: str(e && e.title, 80) || "Games Over Coffee", url: safeUrl(e && e.url) })).filter(e => e.url).slice(0, 200); // Friday features: episodes for the screening nook
-  const rin = (p.settings && p.settings.robot) || {}, rnum = (k, lo, hi) => (typeof rin[k] === "number" && isFinite(rin[k]) ? Math.max(lo, Math.min(hi, rin[k])) : ROBOT_DEFAULTS[k]);
-  const robot = { max: rnum("max", 0.5, 6), accel: rnum("accel", 0.02, 0.5), reverse: rnum("reverse", 0.1, 1), turn: rnum("turn", 0.02, 0.3), grip: rnum("grip", 0.02, 0.6), bounce: rnum("bounce", 0, 1), shake: rnum("shake", 0, 12), skids: rnum("skids", 0, 10) }; // the robot cam's feel
   const ofin = (p.settings && p.settings.office) || {};
   const office = { lock: officeLock(officeUnlock(ofin.lock) || String(ofin.code || "").replace(/\D/g, "").slice(0, 8) || "40917"), // the keypad code, scrambled (never plain in the pack)
     nicknames: Array.isArray(ofin.nicknames) ? ofin.nicknames.map(n => str(n, 40)).filter(Boolean).slice(0, 12) : ["DeVaughn", "Boss", "Mr. curator sir"] }; // what people call a curator badge
   // Gifts set on the piece itself (before gifts were shop items) become shop items.
   pieces.forEach(pc => { if (pc.gift && pc.gift.name && !items.some(it => it.gift === pc.id)) items.push({ id: "gift-" + pc.id, name: pc.gift.name, price: pc.gift.price, description: pc.gift.description, image: null, gift: pc.id }); delete pc.gift; });
-  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, mindsets, curious, life, genres, office, friday, robot }, samples: !Array.isArray(p.pieces) };
+  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, mindsets, curious, life, genres, office, friday }, samples: !Array.isArray(p.pieces) };
 }
 /* The curator's "Skip to tomorrow" moves every daily system forward together. */
 let DAY_SHIFT = 0;
@@ -2808,11 +2802,10 @@ class Game {
       const ka = this.swapAB && (k === "a" || k === "b") ? (k === "a" ? "b" : "a") : k;
       if (ka === "a" && this.mode === "read" && this.rd && this.rd.sel >= 0) { this.rdUse(); return; }
       if (DIRS[k]) { this.held = this.held.filter(d => d !== k); this.held.push(k); }
-      if (ka === "a") this.aKey = true; if (ka === "b") this.bKey = true; // held A and B: the robot cam's gas and brake
       this.queue.push(this.swapAB && (k === "a" || k === "b") ? (k === "a" ? "b" : "a") : k); // Settings: Swap A and B
     });
-    window.addEventListener("keyup", e => { const k = KEYMAP[e.code]; if (k && DIRS[k]) this.held = this.held.filter(d => d !== k); if (k === (this.swapAB ? "b" : "a")) this.aKey = false; if (k === (this.swapAB ? "a" : "b")) this.bKey = false; });
-    window.addEventListener("blur", () => { this.held = []; this.virt = []; this.aKey = this.aTouch = this.bKey = this.bTouch = false; this.padVec = null; });
+    window.addEventListener("keyup", e => { const k = KEYMAP[e.code]; if (k && DIRS[k]) this.held = this.held.filter(d => d !== k); });
+    window.addEventListener("blur", () => { this.held = []; this.virt = []; });
     this.wrap.addEventListener("pointerdown", e => {
       this.wrap.focus({ preventScroll: true });
       if (e.target === this.canvas) this.tapStart = { x: e.clientX, y: e.clientY, t: performance.now() };
@@ -2903,11 +2896,10 @@ class Game {
   pollPad() {
     const pads = navigator.getGamepads ? navigator.getGamepads() : [], gp = [...(pads || [])].find(g => g && g.connected && g.buttons && g.buttons.length >= 10);
     const was = this.padDirs || [];
-    if (!gp) { was.forEach(d => this.hold(d, false)); this.padDirs = []; this.padPrev = {}; this.stickVec = null; this.aPad = this.bPad = false; return; }
+    if (!gp) { was.forEach(d => this.hold(d, false)); this.padDirs = []; this.padPrev = {}; return; }
     const b = i => !!(gp.buttons[i] && gp.buttons[i].pressed), ax = gp.axes[0] || 0, ay = gp.axes[1] || 0, dirs = [];
     if (b(12) || ay < -0.5) dirs.push("up"); if (b(13) || ay > 0.5) dirs.push("down");
     if (b(14) || ax < -0.5) dirs.push("left"); if (b(15) || ax > 0.5) dirs.push("right");
-    this.stickVec = Math.hypot(ax, ay) > 0.3 ? { x: ax, y: ay } : null; this.aPad = b(this.swapAB ? 1 : 0); this.bPad = b(this.swapAB ? 0 : 1); // for the robot cam: the stick, A and B held
     was.filter(d => !dirs.includes(d)).forEach(d => this.hold(d, false));
     dirs.filter(d => !was.includes(d)).forEach(d => this.hold(d, true, "pad"));
     this.padDirs = dirs;
@@ -2930,8 +2922,6 @@ class Game {
     el.text.addEventListener("click", () => this.press("a"));
     el.choice = h("gt-box gt-choice");
     el.hud = h("gt-shift");
-    el.cam = h("gt-cam"); el.cam.setAttribute("aria-hidden", "true");
-    el.cam.innerHTML = '<i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i><span class="rec"><b></b>REC</span><span class="tc">00:00:00</span><span class="brand">GOQ ROBOT CAM</span><span class="ret">PRESS START TO RETURN</span>';
     el.shop = h("gt-box gt-shop");
     el.album = h("gt-box gt-shop gt-album");
     el.reader = h("gt-box gt-reader");
@@ -2997,24 +2987,6 @@ class Game {
   border:calc(1px * var(--s)) solid #181820;cursor:pointer}
 .gt-end-btn:hover,.gt-end-btn:focus-visible{background:#e8b24a;color:#181820;outline:none}
 .gt-end-hint{font-size:calc(5px * var(--s));color:#505068;margin-top:calc(3px * var(--s)) !important}
-.gt-cam{position:absolute;inset:0;display:none;z-index:5;pointer-events:none;font-family:var(--pixel, monospace);color:#f8f8f0;text-shadow:0 calc(1px * var(--s)) 0 #181820;
-  border:calc(3px * var(--s)) solid #181820;box-shadow:inset 0 0 0 calc(1px * var(--s)) rgba(248,248,240,.35),inset 0 0 calc(40px * var(--s)) rgba(0,0,0,.45);
-  background:repeating-linear-gradient(to bottom,rgba(0,0,0,0) 0,rgba(0,0,0,0) calc(1px * var(--s)),rgba(0,0,0,.09) calc(1px * var(--s)),rgba(0,0,0,.09) calc(2px * var(--s)));animation:gtCamFlick 4s steps(1) infinite}
-.gt-cam .c{position:absolute;width:calc(10px * var(--s));height:calc(8px * var(--s));border:0 solid rgba(248,248,240,.85)}
-.gt-cam .tl{left:calc(6px * var(--s));top:calc(6px * var(--s));border-left-width:calc(1px * var(--s));border-top-width:calc(1px * var(--s))}
-.gt-cam .tr{right:calc(6px * var(--s));top:calc(6px * var(--s));border-right-width:calc(1px * var(--s));border-top-width:calc(1px * var(--s))}
-.gt-cam .bl{left:calc(6px * var(--s));bottom:calc(6px * var(--s));border-left-width:calc(1px * var(--s));border-bottom-width:calc(1px * var(--s))}
-.gt-cam .br{right:calc(6px * var(--s));bottom:calc(6px * var(--s));border-right-width:calc(1px * var(--s));border-bottom-width:calc(1px * var(--s))}
-.gt-cam span{position:absolute;font-size:max(calc(5px * var(--s)), 6px);line-height:1;letter-spacing:.08em;white-space:nowrap}
-.gt-cam .rec{left:calc(11px * var(--s));top:calc(10px * var(--s));display:flex;align-items:center;gap:calc(2px * var(--s))}
-.gt-cam .rec b{display:block;width:calc(4px * var(--s));height:calc(4px * var(--s));border-radius:50%;background:#ff3030;box-shadow:0 0 calc(2px * var(--s)) #ff3030;animation:gtRec 1s steps(1) infinite}
-.gt-cam .tc{right:calc(11px * var(--s));top:calc(10px * var(--s))}
-.gt-cam .brand{right:calc(4.5px * var(--s));top:50%;transform:translate(50%,-50%) rotate(90deg);transform-origin:center;font-size:max(calc(4px * var(--s)), 5px);opacity:.75}
-.gt-cam .ret{left:50%;bottom:calc(9px * var(--s));transform:translateX(-50%);opacity:.9}
-.gt-robo .gt-shift,.gt-robo .gt-loc{visibility:hidden}
-@keyframes gtRec{50%{opacity:0}}
-@keyframes gtCamFlick{0%{opacity:1}96%{opacity:.93}98%{opacity:1}}
-@media (prefers-reduced-motion: reduce){.gt-cam,.gt-cam .rec b{animation:none}}
 .gt-shift{position:absolute;right:calc(3px * var(--s));top:calc(3px * var(--s));display:none;gap:calc(2px * var(--s));z-index:6;pointer-events:none}
 .gt-shift .chip{padding:calc(2px * var(--s)) calc(3px * var(--s));font-size:calc(5px * var(--s));line-height:1.3;border:calc(1px * var(--s)) solid #f8f0c0;
   box-shadow:0 0 0 calc(1px * var(--s)) #181820;white-space:nowrap;opacity:.92}
@@ -3830,99 +3802,6 @@ class Game {
         if (role === "barista" || role === "shopkeeper") { m.npcs = m.npcs.filter(n => n.role !== role); this.onBreak = role; } // away from their counter
       }
     }
-  }
-  /* ----- the robot cam -----
-     A little toy car with a camera, for looking around the room you're in (doors stop it) without walking everywhere. It
-     moves by the pixel, not the tile: A is the gas, B brakes and then backs up (slower than it goes forward), and left
-     and right turn it. Let go of both and it coasts. The tires only grip so much, so turning hard at speed (or braking
-     into a turn) swings the back out into a drift, and skid marks fade behind it. Walls and people bounce it off;
-     visitors it zooms past jump. While you drive, the screen shows its feed in a recording frame (el.cam); Start brings
-     it back. Its feel: Staff tab, Robot cam (settings.robot), plus ROBOT at the top of the file. For now the curator
-     preview's Make it happen starts it. */
-  startRobot() {
-    if (this.rc || this.tut) return false;
-    const p = this.player, [dx, dy] = DIRS[p.dir], tx = p.x + dx, ty = p.y + dy;
-    if (this.blocked(tx, ty, p)) return false;
-    this.rc = { x: tx * T + 8, y: ty * T + 10, ang: Math.atan2(dy, dx), vx: 0, vy: 0, skids: [], cx: null, cy: null, hit: 0, t0: this.t };
-    this.player.walking = false; this.mode = "robot"; this.camFrame(true);
-    return true;
-  }
-  stopRobot() { this.rc = null; this.mode = "walk"; this.inputLock = true; this.camFrame(false); }
-  camFrame(on) { // the recording frame over the robot's feed: branding, REC and the running time, "press Start to return"
-    const e = this.el.cam; if (!e) return;
-    e.style.display = on ? "block" : "none"; this.wrap.classList.toggle("gt-robo", !!on); this.camSec = -1;
-    if (on) this.camTick();
-  }
-  camTick() {
-    const c = this.rc, e = this.el.cam; if (!c || !e) return;
-    const sec = Math.floor((this.t - c.t0) / 60); if (sec === this.camSec) return; this.camSec = sec;
-    const pad = n => String(n).padStart(2, "0");
-    e.querySelector(".tc").textContent = pad(Math.floor(sec / 3600)) + ":" + pad(Math.floor(sec / 60) % 60) + ":" + pad(sec % 60);
-  }
-  robotSolid(x, y) { // a point on the floor the robot can't be on: walls, solid things, the top rows, or someone's feet
-    const r = this.room, tx = Math.floor(x / T), ty = Math.floor(y / T);
-    if (tx < 1 || ty < 3 || tx >= r.w - 1 || ty >= r.h - 1 || r.solid[ty][tx]) return true;
-    return [this.player, ...r.npcs].some(n => { const q = this.pos(n); return Math.abs(q.x + 8 - x) < 5 && y > q.y + 6 && y < q.y + 16; });
-  }
-  updateRobot(has) {
-    const c = this.rc, R = Object.assign({}, ROBOT, ROBOT_DEFAULTS, this.pack.settings.robot || {}); if (!c) return;
-    if (has("start")) { this.stopRobot(); return; }
-    this.camTick();
-    // steering: left and right only (a stick or the touch pad steers by how far it's pushed sideways)
-    let steer = 0; const v = this.padVec || this.stickVec;
-    if (v) steer = Math.abs(v.x) > 0.25 ? v.x * 1.4 : 0;
-    else for (const d of this.held.concat(this.virt)) steer += d === "left" ? -1 : d === "right" ? 1 : 0;
-    steer = Math.max(-1, Math.min(1, steer));
-    const gas = !!(this.aKey || this.aTouch || this.aPad), brake = !!(this.bKey || this.bTouch || this.bPad); // A is the gas, B the brake and reverse
-    const hx = Math.cos(c.ang), hy = Math.sin(c.ang); let fwd = c.vx * hx + c.vy * hy, side = -c.vx * hy + c.vy * hx;
-    const speed = Math.hypot(c.vx, c.vy), back = R.max * R.reverse;
-    // turning: slow from a standstill (it can pivot a little), sharp at speed; backing up turns it the other way, like a car
-    const rate = R.turn * (0.35 + 0.65 * Math.min(1, Math.abs(fwd) / (R.max * 0.5))), turnIn = steer * rate * (fwd < -0.05 ? -1 : 1);
-    c.ang += turnIn;
-    if (gas && !brake) fwd = fwd < -0.05 ? Math.min(0, fwd + R.brake) : fwd + R.accel; // going backward, A stops it first
-    else if (brake && !gas) fwd = fwd > 0.05 ? Math.max(0, fwd - R.brake) : fwd - R.accel * 0.6; // B stops it, then backs up
-    else fwd *= R.coast;
-    fwd = Math.max(-back, Math.min(R.max, fwd * R.roll));
-    // the tires' grip: sideways speed bleeds off quickly normally, slowly when you crank the wheel at speed (a drift), more so braking into it
-    const crank = Math.abs(steer) * Math.min(1, speed / R.max), grip = R.grip * (1 - 0.8 * crank) * (brake && fwd > 0.8 ? 0.5 : 1);
-    side *= 1 - grip;
-    const nx = Math.cos(c.ang), ny = Math.sin(c.ang); c.vx = fwd * nx - side * ny; c.vy = fwd * ny + side * nx;
-    c.braking = brake && !gas; c.rev = fwd < -0.05;
-    // move, a little at a time, bouncing off what it hits
-    const steps = Math.max(1, Math.ceil(Math.hypot(c.vx, c.vy))); let bumped = 0;
-    for (let i = 0; i < steps; i++) {
-      const sx = c.vx / steps, sy = c.vy / steps, rr = R.radius;
-      const hitAt = (x, y) => this.robotSolid(x - rr, y - rr) || this.robotSolid(x + rr, y - rr) || this.robotSolid(x - rr, y + rr) || this.robotSolid(x + rr, y + rr);
-      if (!hitAt(c.x + sx, c.y)) c.x += sx; else { bumped = Math.max(bumped, Math.abs(c.vx)); c.vx *= -R.bounce; }
-      if (!hitAt(c.x, c.y + sy)) c.y += sy; else { bumped = Math.max(bumped, Math.abs(c.vy)); c.vy *= -R.bounce; }
-    }
-    if (bumped > 1.4 && c.hit <= 0) { if (R.shake > 0) this.shakeT = Math.round(R.shake); c.hit = 12; } if (c.hit > 0) c.hit--;
-    // visitors it zooms past jump and look (once in a while each)
-    if (speed > 1.3) for (const n of this.room.npcs) {
-      if (n.leaving || this.t - (n.zoomT || -9999) < 240) continue; const q = this.pos(n);
-      if (Math.abs(q.x + 8 - c.x) < 22 && Math.abs(q.y + 12 - c.y) < 18) { n.zoomT = this.t; n.pose = { kind: "startled", t0: this.t, dur: 90 }; if (!n.sitting && !this.deskStaff(n)) { if (n.homeDir === undefined && n.still) n.homeDir = n.dir; n.dir = Math.abs(q.x + 8 - c.x) > Math.abs(q.y + 12 - c.y) ? (c.x > q.x + 8 ? "right" : "left") : (c.y > q.y + 12 ? "down" : "up"); n.faceT = 150; } }
-    }
-    // skid marks from the back wheels while it slides
-    if (Math.abs(side) > R.skid) { const bx = c.x - nx * 3, by = c.y - ny * 3; c.skids.push({ x: bx - ny * 2, y: by + nx * 2, t: this.t }, { x: bx + ny * 2, y: by - nx * 2, t: this.t }); }
-    const life = R.skids * 60; c.skids = c.skids.filter(m => this.t - m.t < life).slice(-400); c.life = life;
-    c.slide = Math.abs(side);
-  }
-  drawRobot(cx, cy) {
-    const c = this.rc, ctx = this.ctx; if (!c) return;
-    for (const m of c.skids) { ctx.globalAlpha = 0.35 * (1 - (this.t - m.t) / (c.life || 240)); ctx.fillStyle = "#1a1418"; ctx.fillRect(Math.round(m.x - cx), Math.round(m.y - cy), 1, 1); }
-    ctx.globalAlpha = 1;
-    // the body, drawn by the pixel at any angle: a little white car, dark wheels, a blue camera lens at the front
-    const cos = Math.cos(c.ang), sin = Math.sin(c.ang), X = Math.round(c.x - cx), Y = Math.round(c.y - cy);
-    const shape = (lx, ly) => { const ax = Math.round(lx), ay = Math.round(ly);
-      if (Math.abs(ay) > 3 || ax < -4 || ax > 4) return null;
-      if ((ax === -3 || ax === 3) && Math.abs(ay) === 3) return "#181820"; // wheels
-      if (Math.abs(ay) === 3 || ax === -4 || ax === 4) return Math.abs(ay) === 3 && Math.abs(ax) <= 3 ? null : "#181820";
-      if (ax === 3 && Math.abs(ay) <= 1) return "#3a78e0"; // the lens
-      if (ax === -4 && Math.abs(ay) === 2) return c.braking ? (c.rev ? "#f8f8f0" : "#ff3030") : "#801818"; // tail lights: red braking, white backing up
-      if (Math.abs(ay) === 2 || ax === -3) return "#181820"; // outline
-      return ax <= -1 ? "#c8c8d4" : "#f0f0f6"; };
-    ctx.fillStyle = "rgba(0,0,0,0.25)"; ctx.fillRect(X - 4, Y + 2, 9, 2); // a shadow
-    for (let py = -6; py <= 6; py++) for (let px = -6; px <= 6; px++) { const lx = px * cos + py * sin, ly = -px * sin + py * cos, col = shape(lx, ly); if (col) { ctx.fillStyle = col; ctx.fillRect(X + px, Y + py - 3, 1, 1); } }
   }
   /* ----- the unveiling ceremony -----
      On a piece's unveil date, its wing gets bunting for the day. The first time you walk into that wing that day, a little
@@ -5942,7 +5821,6 @@ class Game {
     this.placeCurious(); this.placeMembers(); this.giveLife();
   }
   enterRoom(id, x, y, dir, quiet) {
-    if (this.rc) this.camFrame(false); this.rc = null; // the robot cam stays behind (it's put away)
     if (!this.rooms[id]) { id = "lobby"; [x, y, dir] = ROOMS.lobby.spawn; }
     if (typeof x === "string") { // a named doorway or stairs in the museum: ["museum", "@lobby"]
       const lay = layoutOf(ROOMS[id]), a = lay && lay.anchors[x.replace(/^@/, "")];
@@ -6226,8 +6104,7 @@ class Game {
         else { this.closeText(); return; }
       }
       this.renderText();
-    } else if (this.mode === "robot") { this.updateRobot(has); }
-    else if (this.mode === "walk") {
+    } else if (this.mode === "walk") {
       if (this.tut && this.tut.cut) { // the tutorial's opening: you walk up to the desk on your own
         const p = this.player;
         if (p.moving) { if (this.advance(p) && this.path) this.followPath(); }
@@ -6243,7 +6120,7 @@ class Game {
       this.updatePlayer(has("a"));
     }
     else if (this.mode === "ended" && (has("a") || has("start"))) this.reopen();
-    if (this.mode === "walk" || this.mode === "busy" || this.mode === "robot") this.updateNpcs();
+    if (this.mode === "walk" || this.mode === "busy") this.updateNpcs();
   }
   updatePlayer(pressA) {
     const p = this.player;
@@ -6801,8 +6678,7 @@ class Game {
     ctx.fillStyle = "#000"; ctx.fillRect(0, 0, VWp, VHp);
     const rw = r.w * T, rh = r.h * T;
     const cn = this.cine && !full ? this.cine : null, ke = cn ? cn.blend * cn.blend * (3 - 2 * cn.blend) : 0; // the ceremony's camera: eased from you to the piece
-    let fx = cn ? pp.x + (cn.fx - 8 - pp.x) * ke : pp.x, fy = cn ? pp.y + (cn.fy - pp.y) * ke : pp.y;
-    if (this.rc && !full) { const c = this.rc, tx = c.x - 8 + c.vx * 14, ty = c.y - 10 + c.vy * 14; c.cx = c.cx === null ? tx : c.cx + (tx - c.cx) * 0.12; c.cy = c.cy === null ? ty : c.cy + (ty - c.cy) * 0.12; fx = c.cx; fy = c.cy; } // the robot cam: a smoothed camera that looks ahead
+    const fx = cn ? pp.x + (cn.fx - 8 - pp.x) * ke : pp.x, fy = cn ? pp.y + (cn.fy - pp.y) * ke : pp.y;
     const cx = full ? 0 : Math.round(rw <= SW ? (rw - SW) / 2 : Math.max(0, Math.min(rw - SW, fx + 8 - SW / 2)));
     const cy = full ? 0 : Math.round(rh <= SH ? (rh - SH) / 2 : Math.max(0, Math.min(rh - SH, fy + 8 - SH * (ROOMS[r.id].camAt || 0.5))));
     if (!full) { this.camX = cx; this.camY = cy; }
@@ -6900,7 +6776,6 @@ class Game {
     if (r.featuredAt) this.drawFeatured(r, cx, cy);
     const shelf = r.props.find(p => p.mugShelf);
     if (shelf && this.progress.mug === todayISO()) this.drawSlot("mug", 0, 0, (shelf.x + 1) * T + 2 - cx, shelf.y * T - 9 - cy);
-    if (this.rc && !full) this.drawRobot(cx, cy); // on the floor, under people's feet
     const chars = (full ? (full.noPeople ? [] : r.npcs.slice()) : [this.player, ...r.npcs]).sort((a, b) => this.pos(a).y - this.pos(b).y);
     for (const c of chars) {
       const p = this.pos(c), prog = c.moving ? c.prog : c.bumpT > 0 ? 16 - c.bumpT : -1;
@@ -6970,8 +6845,7 @@ class Game {
     if (this.flickerT > 0 && !REDUCED_MOTION) { const k = this.flickerT, d = Math.max(0, 1 - Math.abs(k - 48) / 8, 1 - Math.abs(k - 22) / 8); if (d > 0) { ctx.fillStyle = "rgba(6,4,14," + (0.32 * d).toFixed(3) + ")"; ctx.fillRect(0, 0, SW, SH); } }
     // Camera flash: a small, soft glow in front of you rather than the whole screen.
     if (this.flash > 0) {
-      const pp2 = this.pos(this.player), [fx, fy] = DIRS[this.player.dir];
-      const x0 = pp2.x + 8 + fx * 14 - cx, y0 = pp2.y + 4 + fy * 12 - cy, g = ctx.createRadialGradient(x0, y0, 1, x0, y0, 30);
+      const pp2 = this.pos(this.player), [fx, fy] = DIRS[this.player.dir], x0 = pp2.x + 8 + fx * 14 - cx, y0 = pp2.y + 4 + fy * 12 - cy, g = ctx.createRadialGradient(x0, y0, 1, x0, y0, 30);
       g.addColorStop(0, "rgba(255,255,240," + (0.45 * this.flash / 6).toFixed(3) + ")"); g.addColorStop(1, "rgba(255,255,240,0)");
       ctx.fillStyle = g; ctx.fillRect(x0 - 30, y0 - 30, 60, 60);
     }
@@ -6991,19 +6865,18 @@ function mountControls(game, host) {
   const set = d => { if (d === active) return; if (active) game.hold(active, false); active = d; if (d) game.hold(d, true); pad.dataset.dir = d || ""; };
   const dirAt = e => {
     const r = pad.getBoundingClientRect(), x = e.clientX - (r.left + r.width / 2), y = e.clientY - (r.top + r.height / 2);
-    game.padVec = Math.hypot(x, y) < r.width * 0.1 ? game.padVec : { x, y }; // the exact angle, for steering the robot cam
     if (Math.hypot(x, y) < r.width * 0.1) return active;
     return Math.abs(x) > Math.abs(y) ? (x > 0 ? "right" : "left") : y > 0 ? "down" : "up";
   };
   const buzz = () => { if (game.haptics && navigator.vibrate) try { navigator.vibrate(8); } catch (err) {} };
   pad.addEventListener("pointerdown", e => { e.preventDefault(); pad.setPointerCapture(e.pointerId); buzz(); set(dirAt(e)); });
   pad.addEventListener("pointermove", e => { if (pad.hasPointerCapture(e.pointerId)) set(dirAt(e)); });
-  ["pointerup", "pointercancel", "lostpointercapture"].forEach(t => pad.addEventListener(t, () => { set(null); game.padVec = null; }));
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach(t => pad.addEventListener(t, () => set(null)));
   host.querySelectorAll(".gt-btn, .gt-start").forEach(b => {
     b.tabIndex = -1;
     const up = () => b.classList.remove("down");
-    b.addEventListener("pointerdown", e => { e.preventDefault(); buzz(); game.press(b.dataset.k); b.classList.add("down"); clearTimeout(b._t); b._t = setTimeout(up, 150); if (b.dataset.k === (game.swapAB ? "b" : "a")) game.aTouch = true; if (b.dataset.k === (game.swapAB ? "a" : "b")) game.bTouch = true; });
-    ["pointerup", "pointercancel", "pointerleave"].forEach(t => b.addEventListener(t, () => { up(); if (b.dataset.k === (game.swapAB ? "b" : "a")) game.aTouch = false; if (b.dataset.k === (game.swapAB ? "a" : "b")) game.bTouch = false; }));
+    b.addEventListener("pointerdown", e => { e.preventDefault(); buzz(); game.press(b.dataset.k); b.classList.add("down"); clearTimeout(b._t); b._t = setTimeout(up, 150); });
+    ["pointerup", "pointercancel", "pointerleave"].forEach(t => b.addEventListener(t, up));
     b.addEventListener("contextmenu", e => e.preventDefault());
   });
   host.addEventListener("contextmenu", e => e.preventDefault());
@@ -7011,8 +6884,8 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-16 robot cam 3";
-window.GOQ = { ROBOT_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
+const VERSION = "2026-11-17 no robot cam";
+window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
   spotRooms: () => Object.keys(ROOMS).filter(id => (ROOMS[id].spots || []).length).map(id => ({ id, name: ROOMS[id].name, n: ROOMS[id].spots.length })),
