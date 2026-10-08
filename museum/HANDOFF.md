@@ -2,6 +2,21 @@
 
 Written 2026-10-05. Branch: `experiments-1` (PR #5).
 
+## Pinned for later
+
+Ideas and chores parked on purpose. Nothing here is built yet.
+
+- **Weekly new-piece celebration.** When a new piece is unveiled: a short cutscene, an usher speech, bunting, a themed drink of the week, and visitors mentioning it.
+- **Photo chain-of-events mystery.** A long-haul chain: the conservator's secret exhibit, unlocked step by step through photos.
+- **What the figure is.** Still undecided.
+- **Pre-play-test cleanup:**
+  - Attach the six new clips (Absorber, Seeing Double, AI'm Domingo, Survivor TD, Stella Incus, Cave Escape) to their pieces.
+  - Stop tracking `.DS_Store` and `.vs/` in git (they're in `.gitignore` but were committed earlier).
+  - Remove the Batch fill button (`batch-fill.html` isn't in the repo).
+  - Fix the browser's slow pixel-readback warning (`willReadFrequently` on the canvases read with `getImageData`).
+  - A "Still to write" filter in Words. This may not be needed once the writing app exists.
+- **An art version of the writing app.** The same one-a-day idea, for the art slots.
+
 This document has three parts:
 
 1. **What we have now.** The museum as it is on `main` (engine version `2026-10-06 life 4`).
