@@ -119,6 +119,13 @@ function outline(a, v) {
 }
 function rows(r) { return r.map(s => [...s].map(c => (c === "." ? -1 : +c))); }
 function mirror(a) { return a.map(r => r.slice().reverse()); }
+const RARE_PRICE = 10; // Bluu sells shop items at this price and up (real, or not)
+/* A knockoff's name: two letters in its longest word swapped ("Qualia" becomes "Qulaia"). */
+function misspell(name, seed) {
+  const words = name.split(" "), wi = words.reduce((b, w, i) => (w.replace(/[^A-Za-z]/g, "").length > words[b].replace(/[^A-Za-z]/g, "").length ? i : b), 0), w = words[wi];
+  for (let k = 0; k < w.length; k++) { const i = 1 + ((seed + k) % Math.max(1, w.length - 2)); if (/[a-z]/i.test(w[i]) && /[a-z]/i.test(w[i + 1] || "") && w[i] !== w[i + 1]) { words[wi] = w.slice(0, i) + w[i + 1] + w[i] + w.slice(i + 2); return words.join(" "); } }
+  return name.replace(/o/, "0");
+}
 function hash(x, y) { let h = (x * 374761393 + y * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return (h ^ (h >>> 16)) >>> 0; }
 function strSeed(s) { let h = 7; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; }
 function hexRgb(h) { h = h.replace("#", ""); return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]; }
@@ -439,9 +446,10 @@ const GEN = {
     return y < 12 ? 9 : 10;
   }),
   cups: f => {
-    const a = mk(8, 8), body = [2, 4, 5][f];
+    const a = mk(8, 8), body = [2, 4, 5, 4][f];
     rect(a, 1, 2, 5, 5, 1); rect(a, 2, 2, 3, 1, body); px(a, 6, 3, 1); px(a, 6, 4, 1);
     if (f === 2) rect(a, 1, 1, 5, 1, 6); // a cocoa cloud of cream
+    if (f === 3) { rect(a, 1, 4, 5, 1, 5); px(a, 4, 0, 7); px(a, 4, 1, 7); } // the drink of the week: a band and a straw
     return outline(a);
   },
   steam: f => { const a = mk(8, 8); [[3, 6 - f], [4, 5 - f], [3, 4 - f], [4, 3 - f]].forEach(([x, y]) => px(a, x, y, 7)); return a; },
@@ -1041,7 +1049,7 @@ const SLOTS = [
   { key: "cafe_table", label: "Café table", group: "Gift shop and café", w: 16, h: 16, pal: "cafe", gen: GEN.cafe_table },
   { key: "cafe_stool", label: "Café stool", group: "Gift shop and café", w: 16, h: 16, pal: "cafe", gen: GEN.cafe_stool, note: "You can sit here. The player is drawn on top." },
   { key: "shop_staff", label: "Shopkeeper and barista", group: "Gift shop and café", w: 16, h: 16, layout: "char", pal: "apron", gen: GEN.staff_uniform, note: CHAR_NOTE },
-  { key: "cups", label: "Drinks in hand", group: "Gift shop and café", w: 8, h: 8, frames: 3, pal: "cups", gen: GEN.cups, note: "3 frames side by side (24×8): coffee, tea, cocoa." },
+  { key: "cups", label: "Drinks in hand", group: "Gift shop and café", w: 8, h: 8, frames: 4, pal: "cups", gen: GEN.cups, note: "4 frames side by side (32×8): coffee, tea, cocoa, the drink of the week." },
   { key: "steam", label: "Steam", group: "Gift shop and café", w: 8, h: 8, frames: 3, pal: "cups", gen: GEN.steam, note: "3 frames side by side (24×8), rising." },
   { key: "shutter", label: "Shutter (no longer used)", group: "Retired", retired: true, w: 16, h: 16, pal: "shutter", gen: GEN.shutter, note: "Kept only so older atlases still line up." },
   { key: "window_frame", label: "Lobby window", group: "Evening", w: 32, h: 32, pal: "wood", gen: GEN.window_frame, note: "Across both wall rows. Leave the glass (3,3 to 28,23) transparent: the sky shows through." },
@@ -1305,6 +1313,8 @@ function normalizePiece(p, i) {
     observation: str(p.observation), intention: str(p.intention), guestWriter: str(p.guestWriter, 80), guestNote: str(p.guestNote),
     episodeUrl: safeUrl(p.episodeUrl), gameUrl: safeUrl(p.gameUrl), clipUrl: safeUrl(p.clipUrl) || (/^[\w.-]{1,80}\.(webm|mp4)$/i.test(String(p.clipUrl || "").trim()) ? String(p.clipUrl).trim() : ""), clipLoop: str(p.clipLoop, 30), image: str(p.image, 20000000) || null,
     unveil: /^\d{4}-\d{2}-\d{2}$/.test(p.unveil || "") ? p.unveil : "",
+    drink: str(p.drink, 40), // unveiling: the drink of the week it brings (until the next unveil that brings one)
+    gift: p.gift && str(p.gift.name, 50) ? { name: str(p.gift.name, 50), description: str(p.gift.description, 160), price: Math.max(1, Math.min(99, Math.round(+p.gift.price || 5))) } : null, // and its gift
     hint: str(p.hint, 160), pick: !!p.pick, minds: Array.isArray(p.minds) ? p.minds.map(x => str(x, 30)).filter(Boolean).slice(0, 8) : [], genre: str(p.genre, 30), blend: str(p.blend, 30), // blend: a second category it also belongs to
     colors: colors.length >= 2 ? colors : ["#f0ecf8", "#a898d0", "#584a88", "#1a1430"],
     style: STYLES.includes(p.style) ? p.style : STYLES[strSeed(str(p.title, 80) || String(i)) % STYLES.length],
@@ -1733,6 +1743,14 @@ const TUT_SPOTS = { r1Exit: [5, 8], glass: [6, 8], office: { rosie: [3, 6], skye
    Placeholders: {name} (who's clocked in, or "friend"; a curator badge gets one of the curator's nicknames), {cat}, {catRoom}, {title}, {date}, {drink}, {n}, {room}, {hint}, {floor}, {locker}. */
 const TEXT = {
   "case.empty":        { g: "Pieces", l: "Empty display case", v: [["An empty display case, waiting for a game."]] },
+  "unveil.call":       { g: "Unveiling", l: "The ceremony: the usher calls everyone's attention ({title}: the new piece)", v: [["[Usher: calls everyone's attention. The curator will now unveil {title}]"]] },
+  "unveil.curator":    { g: "Unveiling", l: "The ceremony: the curator, just before pulling the cloth off ({title})", v: [["[Curator: a few words about {title}]"]] },
+  "unveil.read":       { g: "Unveiling", l: "After the unveil: the usher invites everyone to read the placard ({title})", v: [["[Usher: go read the placard for {title}]"]] },
+  "unveil.arcade":     { g: "Unveiling", l: "After the unveil, if the piece has a game link: play it on the arcade cabinet ({title})", v: [["[Usher: you can play {title} on the arcade cabinet in the café]"]] },
+  "unveil.theater":    { g: "Unveiling", l: "After the unveil, if the piece has an episode: watch it in the screening nook ({title})", v: [["[Usher: the episode about {title} is on in the screening nook]"]] },
+  "unveil.drink":      { g: "Unveiling", l: "After the unveil, if the piece brings a drink: the drink of the week ({drink})", v: [["[Usher: to celebrate, there's a new drink at the café: {drink}]"]] },
+  "unveil.gift":       { g: "Unveiling", l: "After the unveil, if the piece brings a gift: everyone here gets one free ({item})", v: [["[Usher: and everyone here today gets a free {item}]"]] },
+  "unveil.got":        { g: "Unveiling", l: "The note when you get the unveil gift ({item})", v: [["[You got the {item}]"]] },
   "case.covered":      { g: "Pieces", l: "Case under a cloth (unveiling soon)", v: [["Something is under a cloth in this case.", "The card says it will be unveiled on {date}."]] },
   "painting.covered":  { g: "Pieces", l: "Painting under a sheet (unveiling soon)", v: [["Something is hanging under a sheet.", "The card says it will be unveiled on {date}."]] },
   "case.ends":         { g: "Pieces", l: "Reading a case from the side", v: [["The placards are on the front and the back. Walk around to read them."]] },
@@ -1854,7 +1872,8 @@ const TEXT = {
   "sat.bought":        { g: "Days of the week", l: "Saturday: buying something ({item})", v: [["[Bought the {item}]"]] },
   "sat.broke":         { g: "Days of the week", l: "Saturday: not enough tokens ({n}: the price)", v: [["[Not enough tokens: it costs {n}]"]] },
   "sat.owned":         { g: "Days of the week", l: "Saturday: something you already bought", v: [["[You already bought that one]"]] },
-  "sat.adjectives":    { g: "Days of the week", l: "Saturday: words for the pop-up items, one per line; add x2, x0.5 and so on to change the price", v: [["limited edition x2", "knockoff x0.5", "signed x2.5", "prototype x2", "vintage x1.5", "misprinted", "pocket-sized x0.75", "deluxe x2"]] },
+  "sat.fake":          { g: "Days of the week", l: "Saturday: in your Souvenirs, one of Bluu's fakes ({item})", v: [["[It's a knockoff]"]] },
+  "sat.real":          { g: "Days of the week", l: "Saturday: in your Souvenirs, something real from Bluu ({item})", v: [["[It's the real deal]"]] },
   "sun.sitFirst":      { g: "Days of the week", l: "Sunday: talking to whoever's at the café table without sitting down", v: [["[They nod at the empty stool across the table]"]] },
   "sun.shopkeeper":    { g: "Days of the week", l: "Sunday: coffee with the shopkeeper (picks one at random)", v: [["[Coffee with the shopkeeper]"]] },
   "sun.barista":       { g: "Days of the week", l: "Sunday: coffee with the barista (picks one at random)", v: [["[Coffee with the barista]"]] },
@@ -3009,6 +3028,9 @@ class Game {
 .gt-polaroid:nth-child(2n){transform:rotate(1.5deg)}
 .gt-polaroid img{display:block;width:100%;aspect-ratio:4/3;image-rendering:pixelated}
 .gt-polaroid.on{outline:calc(2px * var(--s)) solid #e8b24a;transform:none}
+.gt-items .gt-polaroid{transform:none;padding:calc(2px * var(--s))}
+.gt-items .gt-polaroid img{aspect-ratio:1}
+.gt-items .gt-polaroid.shown{background:#fff0b8;border-color:#c89020}
 .gt-shop-detail{margin:calc(3px * var(--s)) 0 0;padding-top:calc(3px * var(--s));border-top:calc(1px * var(--s)) solid #b0b0c0;color:#303048;min-height:3em}
 .gt-choice{right:0;bottom:calc(48px * var(--s));min-width:calc(80px * var(--s));max-width:calc(236px * var(--s));max-height:calc(110px * var(--s));overflow:auto;padding:0 calc(6px * var(--s));z-index:6}
 .gt-choice-item{position:relative;padding-left:calc(9px * var(--s));cursor:pointer;white-space:normal;line-height:1.5}
@@ -3693,6 +3715,12 @@ class Game {
     return (this.cache[ck] = c);
   }
   dayNpc(o) { return Object.assign({ dayPerson: true, x: 0, y: 0, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 9999, still: true, lines: [["..."]], lineI: -1 }, o); }
+  /* A shirt color for a visitor sheet that isn't close to its skin color (palette color 1), so nobody looks shirtless. r: 0 to 1. */
+  shirtFor(sheet, list, r) {
+    const skin = hexRgb((PAL[SLOT[sheet] && SLOT[sheet].pal] || [])[1] || "#000000"), far = h => { const [a, b, c] = hexRgb(h); return Math.hypot(a - skin[0], (b - skin[1]) * 1.2, c - skin[2]) > 90; };
+    const all = (list && list.length ? list : SHIRT_COLORS).filter(isHex), ok = all.filter(far), pool = ok.length ? ok : all;
+    return pool[Math.floor(r * pool.length) % pool.length];
+  }
   dayTile(r, x, y) { // today's people keep their spot: a wandering visitor standing on it goes elsewhere
     if (!r || !r.solid[y] || r.solid[y][x]) return false;
     r.npcs = r.npcs.filter(n => !(n.x === x && n.y === y) || n.dayPerson || n.role || n.staff || n.usher || n.patrol || n.still);
@@ -3703,6 +3731,7 @@ class Game {
   /* Called after every (re)build: puts today's people and things back where today's state says. */
   placeDay() {
     if (this.tut || this.headless) return;
+    this.placeUnveil();
     const wd = this.weekday(), d = this.dayState(), m = this.rooms.museum; this.onBreak = null;
     if (wd === 1 && m && !d.monDone) { // Monday: five misplaced boxes
       if (!d.boxes) { d.boxes = []; for (let i = 0; i < 5; i++) { const at = this.freeSpot(m); if (at && !d.boxes.some(b => b.x === at[0] && b.y === at[1])) d.boxes.push({ x: at[0], y: at[1], i }); } d.found = []; this.saveProgress(); }
@@ -3746,7 +3775,7 @@ class Game {
         if (i === skip || (this.room === m && this.player.x === st.x && this.player.y === st.y)) return;
         m.npcs = m.npcs.filter(n => !(n.x === st.x && n.y === st.y));
         const h = strSeed(todayISO() + "trivia" + i);
-        m.npcs.push(this.dayNpc({ sheet: ["visitor_a", "visitor_b", "visitor_c"][h % 3], shirt: SHIRT_COLORS[(h >>> 3) % SHIRT_COLORS.length], x: st.x, y: st.y, sitting: true, dir: st.sit, trivia: true }));
+        m.npcs.push(this.dayNpc({ sheet: ["visitor_a", "visitor_b", "visitor_c"][h % 3], shirt: this.shirtFor(["visitor_a", "visitor_b", "visitor_c"][h % 3], this.pack.settings.life.shirts, ((h >>> 3) % 1000) / 1000), x: st.x, y: st.y, sitting: true, dir: st.sit, trivia: true }));
       });
     }
     if (wd === 6) { // Saturday: the pop-up stall in the lobby
@@ -3765,6 +3794,81 @@ class Game {
         if (role === "barista" || role === "shopkeeper") { m.npcs = m.npcs.filter(n => n.role !== role); this.onBreak = role; } // away from their counter
       }
     }
+  }
+  /* ----- the unveiling ceremony -----
+     On a piece's unveil date, its wing gets bunting for the day. The first time you walk into that wing that day, a little
+     ceremony plays: a crowd around the covered piece, the usher calls for attention, the curator pulls the cloth off,
+     everyone cheers, and the usher points you at the placard, the arcade, the episode, the new drink and the gift (free for
+     you, since you were there). Once per piece per player (progress.unveils). The curator preview can stage one (testUnveil). */
+  placeUnveil() {
+    const m = this.rooms.museum; this.ceremonies = []; if (!m || this.tut || this.headless) return;
+    const today = todayISO(), mine = this.progress.unveils || (this.progress.unveils = {});
+    const ps = this.pack.pieces.filter(p => !p.tut && (p.unveil === today || p.id === this.unveilTest)); m.unveilZones = [];
+    const near = (f, a, b) => { const out = []; for (let y = f.y; y <= f.y + b; y++) for (let x = f.x - b; x <= f.x + b; x++) { const d = Math.abs(x - f.x) + Math.abs(y - f.y); if (d >= a && d <= b) out.push([x, y, d]); } return out; };
+    for (const p of ps) {
+      const c = m.cases.find(q => q.piece && q.piece.id === p.id), sp = !c && (m.hung || []).find(q => q.piece && q.piece.id === p.id);
+      if (!c && !sp) continue;
+      const front = c ? { x: c.x, y: c.y + 1 } : { x: sp.x, y: sp.y + 1 }, z = this.zoneAt(m, front.x, front.y); if (!z) continue;
+      if (!m.unveilZones.includes(z)) m.unveilZones.push(z);
+      if (mine[p.id] || this.closing) continue;
+      let cer = this.ceremonies.find(q => q.zone === z);
+      if (!cer) {
+        cer = { zone: z, pieces: [], covered: [], front, done: false }; this.ceremonies.push(cer);
+        const ok = (x, y) => (this.zoneAt(m, x, y) === z) && !m.events[x + "," + y] && !this.byExhibit(m, x, y) && this.dayTile(m, x, y);
+        const side = [[front.x - 1, front.y, "right"], [front.x + 1, front.y, "left"], [front.x - 2, front.y + 1, "right"], [front.x + 2, front.y + 1, "left"]].filter(([x, y]) => ok(x, y));
+        const host = (sheet, role) => { const at = side.shift(); if (!at) return null; const n = this.dayNpc({ sheet, x: at[0], y: at[1], dir: at[2], unveilHost: role, member: role === "usher" ? "The usher" : "The curator" }); m.npcs.push(n); return n; };
+        cer.curator = host("curator", "curator"); cer.usher = host("usher", "usher"); cer.crowd = [];
+        const spots = near(front, 2, 4).filter(([x, y]) => ok(x, y)).sort((a, b) => a[2] - b[2] || strSeed(today + a[0] + "," + a[1]) - strSeed(today + b[0] + "," + b[1]));
+        for (const [x, y] of spots.slice(0, 6)) {
+          const sheet = ["visitor_a", "visitor_b", "visitor_c"][strSeed(today + "u" + x + y) % 3], dx = front.x - x, dy = front.y - 1 - y;
+          const n = this.dayNpc({ sheet, shirt: this.shirtFor(sheet, this.pack.settings.life.shirts, (strSeed(today + "s" + x + y) % 1000) / 1000), x, y, dir: Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : "up", unveilCrowd: true });
+          m.npcs.push(n); cer.crowd.push(n);
+        }
+      }
+      cer.pieces.push(p); const obj = c || sp; cer.covered.push([obj, obj.state]); obj.state = "covered"; // under the cloth until the curator pulls it off
+    }
+  }
+  testUnveil() { // curator preview: stage the ceremony for the newest piece, as if it were unveiled today
+    const m = this.rooms.museum, shown = q => m && (m.cases.some(c => c.piece && c.piece.id === q.id) || (m.hung || []).some(h => h.piece && h.piece.id === q.id));
+    const p = this.pack.pieces.filter(q => !q.tut && shown(q)).slice(-1)[0]; if (!p) return false;
+    this.unveilTest = p.id; if (this.progress.unveils) delete this.progress.unveils[p.id]; this.rebuild(); return p.title;
+  }
+  startCeremony(cer) {
+    if (cer.done || this.cine) return; cer.done = true;
+    const m = this.room, titles = cer.pieces.map(p => p.title).join(" and "), vars = { title: titles };
+    this.player.moving = false; this.mode = "busy";
+    this.cine = { fx: cer.front.x * T + 8, fy: (cer.front.y - 1) * T, blend: 0, goal: 1, wait: 50, then: null, cer };
+    const after = (frames, fn) => { this.mode = "busy"; this.cine.wait = frames; this.cine.then = fn; };
+    const face = (n, d) => { if (n) { n.dir = d; n.homeDir = d; } };
+    this.cine.then = () => {
+      face(cer.usher, "down"); if (cer.usher) cer.usher.pose = { kind: "bow", t0: this.t, dur: 90 };
+      this.say(this.tx("unveil.call", vars), () => after(20, () => {
+        face(cer.curator, cer.curator && cer.curator.x < cer.front.x ? "right" : "left");
+        this.say(this.tx("unveil.curator", vars), () => after(16, () => {
+          cer.covered.forEach(([obj, st]) => { obj.state = st === "covered" ? "wall" : st; }); this.flash = 8; // the cloth comes off
+          face(cer.curator, "down");
+          cer.crowd.forEach((n, i) => { n.pose = { kind: i % 2 ? "heart" : "startled", t0: this.t, dur: 110 }; });
+          after(80, () => {
+            const p = cer.pieces[0], week = this.weekDrink(), gift = this.giftOf(cer.pieces.find(q => q.gift)), pages = [...this.tx("unveil.read", vars)];
+            if (cer.pieces.some(q => q.gameUrl) && this.rooms.museum.props.some(q => q.key === "arcade_cabinet")) pages.push(...this.tx("unveil.arcade", vars));
+            if (cer.pieces.some(q => q.episodeUrl)) pages.push(...this.tx("unveil.theater", vars));
+            if (week && cer.pieces.some(q => q.id === week.piece)) pages.push(...this.tx("unveil.drink", { drink: week.name }));
+            if (gift) pages.push(...this.tx("unveil.gift", { item: gift.name }));
+            face(cer.usher, "down");
+            this.say(pages, () => {
+              if (gift && !this.progress.items.includes(gift.id)) { this.progress.items.push(gift.id); this.showLoc(this.tx("unveil.got", { item: gift.name })[0]); }
+              this.endCeremony(cer);
+            });
+          });
+        }));
+      }));
+    };
+  }
+  endCeremony(cer) {
+    const mine = this.progress.unveils || (this.progress.unveils = {});
+    cer.pieces.forEach(p => { mine[p.id] = todayISO(); }); this.progress.tally.unveils = (this.progress.tally.unveils || 0) + 1; this.saveProgress();
+    [cer.usher, cer.curator, ...cer.crowd].filter(Boolean).forEach((n, i) => { n.leaving = true; n.leaveT = -i * 25; n.alpha = 1; }); // everyone drifts off
+    this.mode = "busy"; this.cine.goal = 0; this.cine.wait = 40; this.cine.then = () => { this.cine = null; this.mode = "walk"; }; // the camera eases back to you
   }
   fridayFeatures() { // Fridays: the curator's Games Over Coffee episodes (Staff tab), shaped like pieces for the screening nook
     if (this.weekday() !== 5) return [];
@@ -3867,16 +3971,22 @@ class Game {
     };
     next();
   }
-  /* Saturday: three one-off things, the same for everyone this week: a shop item (or Joe) in a new color, with a new word. */
+  /* Saturday: Bluu's stall. Three things, the same for everyone this week: the shop's priciest items (RARE_PRICE tokens
+     and up), old unveil gifts, and the GOC shirt (always fake), topped up with regular shop items. Each one is real or a
+     fake: a fake is misspelled or the wrong color, at the same price, so only a careful look tells. You find out for sure
+     in Souvenirs once it's yours. */
   popupItems() {
     const t = new Date(todayISO() + "T12:00:00"), wk = Math.floor((t - new Date(t.getFullYear(), 0, 1)) / 6048e5), key = t.getFullYear() + "w" + wk;
     if (this.popupCache && this.popupCache.key === key) return this.popupCache.items;
-    const bases = [...this.pack.settings.shop.items.map(it => ({ id: it.id, name: it.name, price: it.price })), { id: "joe", name: "Joe doll", price: 6 }];
-    const colors = [["blue", "#4a78d0"], ["grey", "#8a8a92"], ["pink", "#e070a0"], ["green", "#4aa060"], ["gold", "#d8b040"], ["purple", "#8a5ac8"], ["red", "#d04848"], ["teal", "#3aa0a0"], ["orange", "#e08838"], ["black", "#2a2a30"]];
-    const adjs = (this.tx("sat.adjectives") || []).map(w => { const m = String(w).match(/^(.*?)\s*x\s*([\d.]+)\s*$/i); return m ? [m[1], +m[2] || 1] : [String(w).trim(), 1]; }).filter(a => a[0]);
-    const items = [0, 1, 2].map(i => {
-      const h = k => strSeed(key + ":" + i + ":" + k), b = bases[h("item") % bases.length], c = colors[h("color") % colors.length], a = adjs.length ? adjs[h("word") % adjs.length] : ["special", 1];
-      return { id: "popup-" + key + "-" + i, name: a[0] + " " + c[0] + " " + (/^[A-Z][a-z]/.test(b.name) ? b.name.charAt(0).toLowerCase() + b.name.slice(1) : b.name), base: b.id, color: c[1], price: Math.max(1, Math.round(b.price * a[1])), description: "", image: null, popup: true };
+    const sh = this.pack.settings.shop, wg = this.weekGift(), h = k => strSeed(key + ":" + k);
+    const order = list => list.map(it => [h("o" + it.id), it]).sort((x, y) => x[0] - y[0]).map(x => x[1]);
+    const rare = order([...sh.items.filter(it => it.price >= RARE_PRICE), ...this.giftItems().filter(g => !wg || g.id !== wg.id), { id: "goc-shirt", name: "GOC shirt", price: 15, description: "", alwaysFake: true }]);
+    const picks = rare.slice(0, 3).concat(order(sh.items.filter(it => it.price < RARE_PRICE))).slice(0, 3);
+    const colors = ["#4a78d0", "#e070a0", "#4aa060", "#d8b040", "#8a5ac8", "#d04848", "#3aa0a0", "#e08838"];
+    const items = picks.map((b, i) => {
+      const fake = b.alwaysFake || h("real" + i) % 2 === 0, spell = fake && !b.alwaysFake && h("how" + i) % 2 === 0 && /[A-Za-z]{4,}/.test(b.name);
+      const name = spell ? misspell(b.name, h("sp" + i)) : b.name, color = fake && !spell && !b.alwaysFake ? colors[h("c" + i) % colors.length] : null;
+      return { id: "bluu-" + key + "-" + i, name, base: b.id, color, price: Math.max(1, Math.round(b.price * 1.5)), description: b.description || "", image: null, popup: true, fake, real: !fake };
     });
     return (this.popupCache = { key, items }).items;
   }
@@ -4345,7 +4455,7 @@ class Game {
     add("LIFE", "Cat pets", t.pets); add("LIFE", "Photos taken", t.photos); add("LIFE", "Photo reactions caught", this.stat("reactions") ? this.stat("reactions") + " of 10" : 0);
     const sh = this.topOf(st.shots); if (sh && sh[1] > 1) add("LIFE", "Most photographed", sh[0] + " (" + sh[1] + " times)");
     add("LIFE", "Notes left", t.notes); add("LIFE", "Drinks ordered", t.drinks);
-    const dr = this.topOf(st.drinks), dn = dr && DRINKS.find(d => d.id === dr[0]); if (dn && t.drinks > 1) add("LIFE", "Usual order", dn.name);
+    const dr = this.topOf(st.drinks), dn = dr && (DRINKS.find(d => d.id === dr[0]) || (dr[0] === "week" ? { name: "The drink of the week" } : null)); if (dn && t.drinks > 1) add("LIFE", "Usual order", dn.name);
     add("LIFE", "Episodes watched", t.episodes); add("LIFE", "Arcade games started", t.arcade); add("LIFE", "Glitchy robot sightings", t.joe); add("LIFE", "Bench naps", t.naps); add("LIFE", "Microwave incidents", t.microwave); add("LIFE", "Segway rides", t.segway); add("LIFE", "Shifts clocked in", t.shifts);
     add("LIFE", "Time in the dark after closing", st.dark >= 60 ? hm(st.dark) : st.dark ? st.dark + "s" : 0);
     return rows;
@@ -4793,9 +4903,9 @@ class Game {
     if (this.cache[ck]) return this.cache[ck];
     if (it.popup) { // a pop-up find: its base item (or Joe), recolored
       const c = document.createElement("canvas"); c.width = 16; c.height = 16; const x = c.getContext("2d"); x.imageSmoothingEnabled = false;
-      const base = it.base === "joe" ? null : this.pack.settings.shop.items.find(q => q.id === it.base);
+      const base = it.base === "joe" ? null : it.base === "goc-shirt" ? { id: "goc-shirt", name: "GOC shirt" } : [...this.pack.settings.shop.items, ...this.giftItems()].find(q => q.id === it.base);
       if (base) x.drawImage(this.itemIcon(base), 0, 0); else x.drawImage(this.sheet("joe"), 0, 0, 16, 16, 0, 0, 16, 16);
-      x.globalCompositeOperation = "source-atop"; x.globalAlpha = 0.55; x.fillStyle = it.color; x.fillRect(0, 0, 16, 16);
+      if (it.color) { x.globalCompositeOperation = "source-atop"; x.globalAlpha = 0.55; x.fillStyle = it.color; x.fillRect(0, 0, 16, 16); }
       return (this.cache[ck] = c);
     }
     const c = document.createElement("canvas"); c.width = 16; c.height = 16; const x = c.getContext("2d");
@@ -4805,10 +4915,11 @@ class Game {
     } else {
       const sd = strSeed(it.id + it.name), hue = sd % 360, a = mk(16, 16), nm = it.name.toLowerCase();
       // Pick a placeholder shape from the name when it gives a hint: pin, bag, mug, card.
-      const kind = /pin|badge|button/.test(nm) ? 0 : /bag|tote|pouch/.test(nm) ? 1 : /mug|cup/.test(nm) ? 2 : /card|post|print|poster|sticker/.test(nm) ? 3 : sd % 4;
+      const kind = /shirt|tee\b|hoodie/.test(nm) ? 4 : /pin|badge|button/.test(nm) ? 0 : /bag|tote|pouch/.test(nm) ? 1 : /mug|cup/.test(nm) ? 2 : /card|post|print|poster|sticker/.test(nm) ? 3 : sd % 4;
       if (kind === 0) { circ(a, 7.5, 7.5, 5, 1); circ(a, 7.5, 7.5, 3, 2); px(a, 7, 5, 0); }
       else if (kind === 1) { rect(a, 3, 6, 10, 8, 1); rect(a, 5, 3, 1, 4, 2); rect(a, 10, 3, 1, 4, 2); rect(a, 5, 3, 6, 1, 2); rect(a, 5, 9, 6, 2, 2); }
       else if (kind === 2) { rect(a, 3, 4, 8, 10, 1); rect(a, 11, 6, 2, 1, 1); rect(a, 12, 7, 1, 4, 1); rect(a, 11, 10, 2, 1, 1); rect(a, 4, 6, 6, 2, 2); }
+      else if (kind === 4) { rect(a, 4, 3, 8, 11, 1); rect(a, 1, 3, 3, 4, 1); rect(a, 12, 3, 3, 4, 1); rect(a, 6, 3, 4, 1, 0); rect(a, 6, 7, 4, 2, 2); } // a shirt
       else { rect(a, 2, 4, 12, 9, 0); rect(a, 3, 5, 6, 7, 1); rect(a, 10, 6, 3, 1, 2); rect(a, 10, 8, 3, 1, 2); rect(a, 11, 5, 2, 1, 1); }
       const col = l => "hsl(" + hue + ",55%," + l + "%)";
       const toHex = css => { const t = document.createElement("canvas").getContext("2d", { willReadFrequently: true }); t.fillStyle = css; t.fillRect(0, 0, 1, 1); const d = t.getImageData(0, 0, 1, 1).data; return "#" + [d[0], d[1], d[2]].map(v => v.toString(16).padStart(2, "0")).join(""); };
@@ -4823,7 +4934,8 @@ class Game {
   closeShop() { this.el.shop.style.display = "none"; this.mode = "walk"; this.inputLock = true; }
   shopRows() {
     const sh = this.pack.settings.shop;
-    const items = sh.items.slice().sort((a, b) => (b.id === sh.featured) - (a.id === sh.featured));
+    const items = sh.items.slice().sort((a, b) => (b.id === sh.featured) - (a.id === sh.featured)), gift = this.weekGift();
+    if (gift) items.unshift(gift); // this week's unveil gift, on sale until the next one
     const full = this.progress.stamps.length >= sh.stampSize && sh.items.length;
     return [...(full ? [{ trade: true }] : []), ...items.map(it => ({ item: it })), { shirt: true }, { collection: true }, { leave: true }];
   }
@@ -4840,7 +4952,7 @@ class Game {
       const row = document.createElement("div"); row.className = "gt-shop-row" + (i === this.shopSel ? " on" : "");
       if (r.item) {
         const img = document.createElement("img"); img.src = this.itemIcon(r.item).toDataURL(); img.alt = ""; row.appendChild(img);
-        const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = (r.item.id === sh.featured ? "* " : "") + r.item.name; row.appendChild(nm);
+        const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = (r.item.gift ? "NEW " : r.item.id === sh.featured ? "* " : "") + r.item.name; row.appendChild(nm);
         const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = owned.includes(r.item.id) ? "OWNED" : r.item.price + " T" + (this.stampPrize(r.item) ? " or card" : ""); row.appendChild(pr);
       } else if (r.trade) {
         const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = "Trade your full stamp card"; row.appendChild(nm);
@@ -4864,7 +4976,7 @@ class Game {
     if (r.shirt) { this.shopMsg = this.tx(this.progress.shirt ? "shirt.owned" : "shirt.tease").join(" "); this.renderShop(); return; }
     if (r.trade) { this.tradeStampCard(); return; }
     if (r.collection) {
-      const names = this.pack.settings.shop.items.filter(it => this.progress.items.includes(it.id)).map(it => it.name);
+      const names = this.ownedItems().filter(it => !it.popup).map(it => it.name);
       const gone = this.progress.items.length - names.length;
       this.shopMsg = names.length ? "You have: " + names.join(", ") + (gone > 0 ? ", plus " + gone + " retired item" + (gone > 1 ? "s" : "") : "") + "." :
         gone > 0 ? "You have " + gone + " item" + (gone > 1 ? "s" : "") + " the shop no longer sells." : "Nothing yet. Chores earn tokens.";
@@ -4900,15 +5012,50 @@ class Game {
     };
     show(0);
   }
-  ownedItems() { return [...this.pack.settings.shop.items.filter(it => this.progress.items.includes(it.id)), ...(this.progress.popups || [])]; } // shop souvenirs, then pop-up finds
-  viewCollection() {
-    const own = this.ownedItems(), gone = this.progress.items.length - own.length, who = this.staff ? this.staff.name : "you";
-    if (!own.length && !gone) { this.say(this.tx("cabinet.empty")); return; }
-    const pages = this.tx("cabinet.intro").slice();
-    own.forEach(it => pages.push(it.name + (it.description ? ": " + it.description : "")));
-    if (own.length > 12) pages.push("The shelves only fit twelve. The rest are stacked carefully behind them.");
-    if (gone) pages.push("Plus " + gone + " retired souvenir" + (gone > 1 ? "s" : "") + " the shop doesn't sell anymore.");
-    this.say(pages);
+  ownedItems() { return [...this.pack.settings.shop.items, ...this.giftItems()].filter(it => this.progress.items.includes(it.id)).concat(this.progress.popups || []); } // shop souvenirs and gifts, then Bluu's finds
+  /* The collection cabinet: up to 12 of your souvenirs, the ones you picked in Souvenirs (or the first 12 until you pick). */
+  displayed() { const own = this.ownedItems(), pick = this.progress.display; return Array.isArray(pick) ? pick.map(id => own.find(it => it.id === id)).filter(Boolean).slice(0, 12) : own.slice(0, 12); }
+  /* ----- unveils: the drink and the gift of the week -----
+     A piece can bring a drink (piece.drink) and a gift (piece.gift: name, description, price) on its unveil date. Each lasts
+     until the next unveil that brings one. Whoever is there for the ceremony gets the gift free; after that it's in the gift
+     shop until the next gift replaces it, and then it's one of the old gifts Bluu sells (real, or not) on Saturdays. */
+  unveiled() { const t = todayISO(); return this.pack.pieces.filter(p => !p.tut && p.unveil && p.unveil <= t).sort((a, b) => (a.unveil < b.unveil ? -1 : a.unveil > b.unveil ? 1 : 0)); }
+  giftOf(p) { return p && p.gift ? { id: "gift-" + p.id, name: p.gift.name, description: p.gift.description || "", price: p.gift.price, image: null, gift: true, from: p.id } : null; }
+  giftItems() { return this.unveiled().map(p => this.giftOf(p)).filter(Boolean); } // oldest first
+  weekGift() { const g = this.giftItems(); return g[g.length - 1] || null; }
+  weekDrink() { const ps = this.unveiled().filter(p => p.drink), p = ps[ps.length - 1]; return p ? { id: "week", name: p.drink, piece: p.id } : null; }
+  /* Souvenirs: everything you own, like the photo album. A puts one in the collection cabinet or takes it out (12 fit). */
+  openItems(cabinet) { this.mode = "items"; this.itemSel = 0; this.itemMsg = ""; this.itemsCab = !!cabinet; this.el.album.style.display = "block"; this.renderItems(); }
+  closeItems() { this.el.album.style.display = "none"; this.mode = "walk"; this.inputLock = true; }
+  renderItems() {
+    const box = this.el.album, own = this.ownedItems(), shown = new Set(this.displayed().map(it => it.id));
+    if (!own.length) { this.closeItems(); return; }
+    this.itemSel = Math.max(0, Math.min(own.length - 1, this.itemSel));
+    box.innerHTML = "";
+    const head = document.createElement("div"); head.className = "gt-shop-head";
+    const t1 = document.createElement("span"); t1.textContent = this.itemsCab ? "COLLECTION CABINET" : "SOUVENIRS"; const t2 = document.createElement("span"); t2.textContent = shown.size + "/12 ON DISPLAY";
+    head.appendChild(t1); head.appendChild(t2); box.appendChild(head);
+    const grid = document.createElement("div"); grid.className = "gt-album-grid gt-items"; box.appendChild(grid);
+    own.forEach((it, i) => {
+      const cell = document.createElement("button"); cell.type = "button"; cell.className = "gt-polaroid" + (i === this.itemSel ? " on" : "") + (shown.has(it.id) ? " shown" : "");
+      const img = document.createElement("img"); img.src = this.itemIcon(it).toDataURL(); img.alt = ""; cell.appendChild(img);
+      cell.setAttribute("aria-label", it.name + (shown.has(it.id) ? ", on display" : ""));
+      cell.addEventListener("click", e => { e.stopPropagation(); if (this.itemSel === i) this.itemsAct(); else { this.itemSel = i; this.itemMsg = ""; this.renderItems(); } });
+      grid.appendChild(cell);
+    });
+    const cur = own[this.itemSel], det = document.createElement("p"); det.className = "gt-shop-detail";
+    const tag = cur.fake ? " " + this.tx("sat.fake", { item: cur.name }, true).join(" ") : cur.popup && cur.real ? " " + this.tx("sat.real", { item: cur.name }, true).join(" ") : "";
+    det.textContent = this.itemMsg || (cur.name + (cur.description ? ": " + cur.description : "") + tag + (shown.has(cur.id) ? "  (On display. A to take it out.)" : "  (A to put it on display.)"));
+    box.appendChild(det);
+    const sel = grid.children[this.itemSel]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: "nearest" });
+  }
+  itemsAct() {
+    const own = this.ownedItems(), cur = own[this.itemSel]; if (!cur) return;
+    const ids = this.displayed().map(it => it.id), at = ids.indexOf(cur.id);
+    if (at >= 0) { ids.splice(at, 1); this.itemMsg = cur.name + " is back in storage."; }
+    else if (ids.length >= 12) this.itemMsg = "The cabinet only fits twelve. Take something out first.";
+    else { ids.push(cur.id); this.itemMsg = cur.name + " is on display."; }
+    this.progress.display = ids; this.saveProgress(); this.renderItems();
   }
   /* The cat moves to a new nap spot every 20 minutes or so (real time), somewhere in any room with cat spots. */
   catBucket() { return Math.floor(Date.now() / (20 * 60 * 1000)); }
@@ -4953,14 +5100,15 @@ class Game {
     const tag = price ? " (" + price + " T" + (sun ? ", half off" : "") + ")" : sun && full ? " (free today)" : "";
     const lines = ["What can I get you?", "What'll it be?", "Something warm?"];
     this.cafeI = (this.cafeI || 0) + 1;
-    this.choose(lines[this.cafeI % lines.length], [...DRINKS.map(d => d.name + tag), "Just chatting", "Nothing, thanks"], i => {
-      if (i === DRINKS.length) { this.staffTalk("barista"); return; }
-      if (i >= DRINKS.length) return;
+    const week = this.tut ? null : this.weekDrink(), drinks = week ? [...DRINKS, week] : DRINKS; // the drink of the week, from the latest unveil
+    this.choose(lines[this.cafeI % lines.length], [...drinks.map(d => d.name + tag), "Just chatting", "Nothing, thanks"], i => {
+      if (i === drinks.length) { this.staffTalk("barista"); return; }
+      if (i >= drinks.length) return;
       if (price && (this.progress.tokens || 0) < price) { this.say(["That's " + price + " token" + (price > 1 ? "s" : "") + ". Chores earn tokens."]); return; }
       if (price) { this.progress.tokens -= price; this.saveProgress(); this.updateHud(); }
-      this.drink = { kind: i, name: DRINKS[i].name, sips: 0 };
-      if (DRINKS[i].id === "cocoa") this.quest("cocoa");
-      this.progress.tally.drinks = (this.progress.tally.drinks || 0) + 1; this.bump(this.progress.stats.drinks, DRINKS[i].id); this.saveProgress();
+      this.drink = { kind: i < DRINKS.length ? i : 3, name: drinks[i].name, sips: 0 };
+      if (drinks[i].id === "cocoa") this.quest("cocoa");
+      this.progress.tally.drinks = (this.progress.tally.drinks || 0) + 1; this.bump(this.progress.stats.drinks, drinks[i].id); this.saveProgress();
       this.say(this.tx("drink.served"));
     });
   }
@@ -5354,10 +5502,11 @@ class Game {
   myStuff() {
     const n = (this.progress.photos || []).length, sc = this.progress.stamps.length + "/" + this.pack.settings.shop.stampSize;
     const an = Object.keys(this.progress.ach || {}).length + "/" + this.pack.settings.achievements.length;
-    const opts = ["Photos (" + n + ")", "Stamp card (" + sc + ")", "Achievements (" + an + ")", ...(this.progress.shirt ? ["Wardrobe"] : []), "Back"];
+    const sv = this.ownedItems().length, opts = ["Photos (" + n + ")", "Souvenirs (" + sv + ")", "Stamp card (" + sc + ")", "Achievements (" + an + ")", ...(this.progress.shirt ? ["Wardrobe"] : []), "Back"];
     this.choose("MY STUFF", opts, k => {
       const o = opts[k];
       if (o.startsWith("Photos")) { if (!n) this.say(this.tx("photos.none")); else this.openAlbum(); }
+      else if (o.startsWith("Souvenirs")) { if (!sv) this.say(this.tx("cabinet.empty")); else this.openItems(); }
       else if (o.startsWith("Stamp card")) this.showStampCard();
       else if (o.startsWith("Achievements")) this.showAchievements();
       else if (o === "Wardrobe") this.choose("Wardrobe", [this.progress.wearShirt ? "Take off the GOQ shirt" : "Wear the GOQ shirt", "Back"], j => {
@@ -5669,6 +5818,8 @@ class Game {
     if (z.id === "upper") this.upperWalk = !!(was && (was.id === "puzzle" || (was.id === "upper" && this.upperWalk)));
     else { if (z.id === "strategy" && was && was.id === "upper" && this.upperWalk) this.quest("upperHall"); this.upperWalk = false; }
     if (z.kind !== "room") return;
+    const cer = (this.ceremonies || []).find(q => q.zone === z && !q.done);
+    if (cer && this.room.id === "museum") { if (this.mode === "walk" && !this.trans) this.startCeremony(cer); else { const a = this.afterTrans; this.afterTrans = () => { if (a) a(); this.startCeremony(cer); }; } }
     this.visit(this.room.id + ":" + z.id);
     if (!quiet) this.showLoc(z.name);
   }
@@ -5723,7 +5874,7 @@ class Game {
     else if (e.rack !== undefined) this.browseRack(e.rack);
     else if (e.unit !== undefined) this.browseUnit(e.unit);
     else if (e.magazines) this.magazines();
-    else if (e.collection) this.viewCollection();
+    else if (e.collection) { if (!this.ownedItems().length) this.say(this.tx("cabinet.empty")); else this.say(this.tx("cabinet.intro"), () => this.openItems(true)); }
     else if (e.cat) this.petCat();
     else if (e.guestbook) this.readGuestbook();
     else if (e.roofStairs) this.say(this.tx("stairs.roof"), () => { const p = this.player; p.dir = OPP[p.dir]; });
@@ -5837,6 +5988,10 @@ class Game {
       if (tr.hold && tr.switched) { this.fade = 1; this.trans = null; }
       else if (tr.t >= tr.dur * 2) { this.trans = null; this.fade = 0; this.mode = "walk"; if (tr.after) tr.after(); if (this.afterTrans) { const fn = this.afterTrans; this.afterTrans = null; fn(); } }
     }
+    if (this.cine) {
+      const c = this.cine; c.blend += (c.goal > c.blend ? 1 : -1) / 40; c.blend = Math.max(0, Math.min(1, c.blend));
+      if (this.mode === "busy" && c.wait > 0 && --c.wait === 0 && c.then) { const fn = c.then; c.then = null; fn(); }
+    }
     this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping();
     if (this.petT > 0) this.petT--;
     if (this.t % 20 === 0) this.flushToasts();
@@ -5871,6 +6026,14 @@ class Game {
       if (has("left")) i--; if (has("right")) i++; if (has("up")) i -= cols; if (has("down")) i += cols;
       if (i !== this.albumSel) { this.albumSel = Math.max(0, Math.min(n - 1, i)); this.renderAlbum(); }
       if (has("a")) this.albumAct(); else if (has("b") || has("start")) this.closeAlbum();
+      return;
+    }
+    if (this.mode === "items") {
+      const n = this.ownedItems().length, cols = 5;
+      let i = this.itemSel;
+      if (has("left")) i--; if (has("right")) i++; if (has("up")) i -= cols; if (has("down")) i += cols;
+      if (i !== this.itemSel) { this.itemSel = Math.max(0, Math.min(n - 1, i)); this.itemMsg = ""; this.renderItems(); }
+      if (has("a")) this.itemsAct(); else if (has("b") || has("start")) this.closeItems();
       return;
     }
     if (this.mode === "shop") {
@@ -6304,7 +6467,7 @@ class Game {
     }
     if (k === "day_board") { const t = this.chalkText(["SUN.", "MON.", "TUES.", "WED.", "THURS.", "FRI.", "SAT."][this.weekday()]); ctx.drawImage(t, px0 + 16 - Math.floor(t.width / 2), py0 + 3); }
     if (k === "popup_table") this.popupItems().forEach((it, i) => ctx.drawImage(this.itemIcon(it), px0 + 3 + i * 9, py0 + 1, 8, 8));
-    if (p.collection) this.ownedItems().slice(0, 12).forEach((it, i) => {
+    if (p.collection) this.displayed().forEach((it, i) => {
       ctx.drawImage(this.itemIcon(it), px0 + [4, 13, 27, 36][i % 4], py0 + [2, 11, 20][Math.floor(i / 4)], 8, 8);
     });
   }
@@ -6456,8 +6619,10 @@ class Game {
     const VWp = full ? full.w : SW, VHp = full ? full.h : SH;
     ctx.fillStyle = "#000"; ctx.fillRect(0, 0, VWp, VHp);
     const rw = r.w * T, rh = r.h * T;
-    const cx = full ? 0 : Math.round(rw <= SW ? (rw - SW) / 2 : Math.max(0, Math.min(rw - SW, pp.x + 8 - SW / 2)));
-    const cy = full ? 0 : Math.round(rh <= SH ? (rh - SH) / 2 : Math.max(0, Math.min(rh - SH, pp.y + 8 - SH * (ROOMS[r.id].camAt || 0.5))));
+    const cn = this.cine && !full ? this.cine : null, ke = cn ? cn.blend * cn.blend * (3 - 2 * cn.blend) : 0; // the ceremony's camera: eased from you to the piece
+    const fx = cn ? pp.x + (cn.fx - 8 - pp.x) * ke : pp.x, fy = cn ? pp.y + (cn.fy - pp.y) * ke : pp.y;
+    const cx = full ? 0 : Math.round(rw <= SW ? (rw - SW) / 2 : Math.max(0, Math.min(rw - SW, fx + 8 - SW / 2)));
+    const cy = full ? 0 : Math.round(rh <= SH ? (rh - SH) / 2 : Math.max(0, Math.min(rh - SH, fy + 8 - SH * (ROOMS[r.id].camAt || 0.5))));
     if (!full) { this.camX = cx; this.camY = cy; }
     const tx0 = Math.max(0, Math.floor(cx / T)), ty0 = Math.max(0, Math.floor(cy / T)), tx1 = Math.min(r.w - 1, Math.floor((cx + VWp) / T)), ty1 = Math.min(r.h - 1, Math.floor((cy + VHp) / T));
     for (let y = ty0; y <= ty1; y++) for (let x = tx0; x <= tx1; x++) {
@@ -6515,6 +6680,7 @@ class Game {
     }
     if (r.wallArt) r.wallArt.forEach(w => this.drawSlot(w.key, 0, 0, w.x * T - cx, (w.y || 1) * T - cy));
     if (r.bunting) for (let x = 1; x < r.w - 1; x++) this.drawSlot("bunting", 0, 0, x * T - cx, T - cy);
+    (r.unveilZones || []).forEach(z => { const R = z.rect, y = R.y - 2; for (let x = R.x; x < R.x + R.w; x++) if (r.tiles[y] && /upper/.test(String(r.tiles[y][x] || ""))) this.drawSlot("bunting", 0, 0, x * T - cx, y * T - cy); }); // an unveil day's bunting
     if (r.switchAt) this.drawSlot("light_switch", 0, 0, r.switchAt.x * T - cx, r.switchAt.y * T - cy);
     for (const sw of r.switches || []) this.drawSlot("light_switch", 0, 0, sw.x * T - cx, sw.y * T - cy);
     if (r.intercomAt) this.drawSlot("intercom", 0, 0, r.intercomAt.x * T - cx, r.intercomAt.y * T - cy);
@@ -6566,7 +6732,7 @@ class Game {
       if (cupFirst) this.drawCup(sx, sy, c);
       this.drawSlot(sheet, c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
       if (c !== this.player && /^visitor_[abc]$/.test(sheet) && !this.overrides[sheet]) { // their shirt, in their own color
-        const L = this.pack.settings.life, hex = c.shirt || (L.shirtsOn && L.shirts.length ? (c.shirt = L.shirts[Math.floor(Math.random() * L.shirts.length)]) : null);
+        const L = this.pack.settings.life, hex = c.shirt || (L.shirtsOn && L.shirts.length ? (c.shirt = this.shirtFor(sheet, L.shirts, Math.random())) : null);
         if (hex) this.drawSlot("visitor_shirt@" + hex, c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
       }
       if (cup && !cupFirst) this.drawCup(sx, sy, c);
@@ -6659,7 +6825,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-12 cleanup";
+const VERSION = "2026-11-13 unveiling";
 window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

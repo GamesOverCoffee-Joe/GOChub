@@ -156,6 +156,9 @@ label.check{display:inline-flex;align-items:center;gap:8px;font-size:.9rem;margi
 .ptags em{font-style:normal;font-size:.72rem;font-weight:700;padding:1px 6px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line)}
 .pchev{transition:transform .15s;color:var(--muted)}
 .prow.open .pchev{transform:rotate(90deg)}
+.unveil-extras{display:grid;gap:8px;margin-top:10px;flex-basis:100%}
+.unveil-extras .rfield{display:flex;flex-direction:column;gap:2px;font-size:.85rem;font-weight:700}
+.unveil-extras input{min-height:40px;border:2px solid var(--line);border-radius:3px;padding:.4em .6em;background:var(--surface);font:inherit;font-weight:400}
 .ptools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0 4px}
 .ptools input[type=search]{flex:1;min-width:200px;border:2px solid var(--line);background:var(--surface);border-radius:3px;padding:.45em .6em;min-height:40px;font:inherit;color:inherit}
 @media (max-width:560px){.ptools input[type=search]{flex-basis:100%}}
@@ -374,6 +377,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
           <div class="pvsec"><span class="pvh">Make it happen</span>
             <div class="pvgrid">
               <button class="btn" type="button" id="figureBtn" title="The figure appears right now, beside or behind you, with this room's lights off. Turn and photograph it before it's gone.">The figure</button>
+              <button class="btn" type="button" id="unveilBtn" title="Stages the unveiling ceremony for the newest piece on display, as if it were unveiled today. Walk into its wing to see it.">An unveiling</button>
               <button class="btn" type="button" id="joeBtn" title="Joe turns up on the floor near you. Talk to him (or photograph him) to see the glitch.">Joe</button>
               <button class="btn" type="button" id="dayBtn" title="The next day: curious visitors come back, dust settles, the museum opens again">Tomorrow</button>
             </div></div>
@@ -394,7 +398,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-12 cleanup";
+window.GOQ_WANT = "2026-11-13 unveiling";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -449,6 +453,8 @@ function packOut() {
     if (p.genre) o.genre = p.genre;
     if (p.blend) o.blend = p.blend;
     if (p.unveil) o.unveil = p.unveil;
+    if (p.drink) o.drink = p.drink;
+    if (p.gift && p.gift.name) o.gift = p.gift;
     if (p.pick) o.pick = true;
     if (p.image) o.image = p.image; else { o.colors = p.colors; o.style = p.style; }
     return o;
@@ -611,6 +617,11 @@ $("#figureBtn").addEventListener("click", () => {
 });
 $("#joeBtn").addEventListener("click", () => {
   game.closeAll(); if (!game.summonJoe()) status("No floor free near you for Joe. Try somewhere roomier.", true);
+  stage.focus({ preventScroll: true });
+});
+$("#unveilBtn").addEventListener("click", () => {
+  game.closeAll(); const t = game.testUnveil();
+  status(t ? "Staged the unveiling of " + t + ". Walk into its wing (from outside it) to see the ceremony." : "No piece on display to unveil.", !t);
   stage.focus({ preventScroll: true });
 });
 $("#dayBtn").addEventListener("click", () => { game.closeAll(); game.skipDay(); stage.focus({ preventScroll: true }); });
@@ -2487,10 +2498,22 @@ function pieceRow(p, i, place) {
   dated.addEventListener("change", () => {
     if (dated.checked) { if (!date.value) date.value = soon(); p.unveil = date.value; }
     else { p._lastUnveil = p.unveil || date.value; p.unveil = ""; }
-    date.hidden = !dated.checked; changed({ now: true });
+    date.hidden = extras.hidden = !dated.checked; changed({ now: true });
   });
   date.addEventListener("change", () => { if (dated.checked && date.value) { p.unveil = date.value; changed({ now: true }); } });
-  const unveilBox = el("div", { class: "unveil" }, [el("label", { class: "check" }, [dated, document.createTextNode("Unveil on a date")]), date]);
+  /* What the unveil brings: the drink of the week (on the café menu until the next unveil brings one) and a gift (free for
+     whoever is at the ceremony, then in the gift shop until the next gift, then one of the old gifts Bluu sells). */
+  const g = () => (p.gift = p.gift || { name: "", description: "", price: 5 });
+  const xin = (label, ph, get, set, type) => { const inp = el("input", { type: type || "text", value: get() || "", placeholder: ph, "aria-label": label }); if (type === "number") { inp.min = 1; inp.max = 99; }
+    inp.addEventListener("input", () => { set(type === "number" ? Math.max(1, Math.min(99, Math.round(+inp.value || 5))) : inp.value.trim()); if (p.gift && !p.gift.name && !p.gift.description) delete p.gift; changed(); }); return el("label", { class: "rfield" }, [el("span", { text: label }), inp]); };
+  const extras = el("div", { class: "unveil-extras" }, [
+    el("small", { text: "The ceremony on that day hands these out. Leave blank for none." }),
+    xin("Drink of the week", "Name on the café menu", () => p.drink, v => { p.drink = v; }),
+    xin("Gift", "Free for whoever is at the ceremony", () => p.gift && p.gift.name, v => { g().name = v; }),
+    xin("Gift description", "One line, in the shop and in Souvenirs", () => p.gift && p.gift.description, v => { g().description = v; }),
+    xin("Gift price (after the day)", "5", () => p.gift && p.gift.price, v => { g().price = v; }, "number")]);
+  extras.hidden = !p.unveil;
+  const unveilBox = el("div", { class: "unveil" }, [el("label", { class: "check" }, [dated, document.createTextNode("Unveil on a date")]), date, extras]);
   const placard = p.kind === "episode"
     ? [f("Observation (yours)", area("observation", "What you noticed while playing. Every placard frames this as your own view (Words, Pieces)."), true), f("Intention (the developer's)", area("intention", "What the developer was going for."), true)]
     : [f("Guest writer", text("guestWriter", "Name (Discord)")), el("span"), f("Guest note", area("guestNote", "The guest writer's note."), true)];

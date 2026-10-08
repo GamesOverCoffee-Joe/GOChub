@@ -6,7 +6,6 @@ Written 2026-10-05. Branch: `experiments-1` (PR #5).
 
 Ideas and chores parked on purpose. Nothing here is built yet.
 
-- **Weekly new-piece celebration.** When a new piece is unveiled: a short cutscene, an usher speech, bunting, a themed drink of the week, and visitors mentioning it.
 - **Photo chain-of-events mystery.** A long-haul chain: the conservator's secret exhibit, unlocked step by step through photos.
 - **What the figure is.** Still undecided.
 - **Batch fill.** The curator's Batch fill button stays: `batch-fill.html` will be uploaded later and updated then.
@@ -467,6 +466,14 @@ Goal: character.
 - **Stats on Someone's PC (B1):** it boots PLAYER_STATS.EXE: a staff profile (up to three titles you've earned, best first), then Visits, Reading, Recommending, Chores and Life. New counters in `progress.stats`: days visited, streak and best streak, time in the museum, time in the dark after closing, steps, walking into walls, drinks and plants by kind, who you photograph most, loved recommendations by genre, misses. Turning the PC on still counts for the shirt riddle.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
+
+**Unveiling (2026-11-13).** A piece's unveil date is now an event.
+- **The ceremony:** on the unveil date (that day only), the piece's wing has bunting along its upper wall, and the piece starts under a cloth. The first time you walk into that wing that day, input locks and the camera eases to the piece: a crowd of six stands around it, the usher (`unveil.call`) and the curator (`unveil.curator`) stand beside it, the cloth comes off with a flash, everyone pops a "!" or heart, and the usher's closing lines follow: `unveil.read`, then `unveil.arcade` (if it has a game link and the café has the cabinet), `unveil.theater` (if it has an episode), `unveil.drink` and `unveil.gift`. You get the gift (`unveil.got`), everyone drifts off, and the camera comes back. Once per piece per player (`progress.unveils`); several pieces in one wing share one ceremony. Code: `placeUnveil` (after every build), `startCeremony`, `endCeremony`, `this.cine` (camera blend and waits in `update`/`draw`).
+- **Drink and gift (piece fields, curator → Unveiling):** `piece.drink` is the drink of the week: a fourth café option (cup frame 3) from its unveil until the next unveil that brings a drink. `piece.gift` (name, description, price) is free for whoever is at the ceremony, then sold in the gift shop ("NEW", first in the list) until the next gift. Gift items are `gift-<piece id>` and count as owned souvenirs.
+- **Souvenirs (My Stuff, and A at the collection cabinet):** a grid like the photo album of everything you own. A puts an item in the cabinet or takes it out, 12 fit (`progress.display`; until you pick, the first 12 show). `viewCollection` is gone.
+- **Bluu (Saturdays), real or fake:** three things a week: shop items at `RARE_PRICE` (10) tokens and up, old unveil gifts (not this week's), and the **GOC shirt** (always fake), topped up with regular shop items while there aren't enough. Each is real or fake; a fake is misspelled (two letters swapped, `misspell`) or the wrong color, at the same price (1.5× the original). Souvenirs says which: `sat.fake` / `sat.real`. The old color-and-adjective remix (`sat.adjectives`) is gone; old pop-up finds still show.
+- **Shirts:** a visitor's shirt is never close to their skin color (`shirtFor`).
+- **Curator preview:** Make it happen → **An unveiling** stages the ceremony for the newest piece on display (`testUnveil`).
 
 **Cleanup (2026-11-12).** `.DS_Store` files and the `.vs/` folder are no longer tracked (`.vs/` added to `.gitignore`). The canvases the engine reads pixels back from are made with `willReadFrequently`, which clears the browser's slow-readback warning.
 
