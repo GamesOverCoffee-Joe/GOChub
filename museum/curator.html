@@ -380,7 +380,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
             <div class="pvgrid">
               <button class="btn" type="button" id="figureBtn" title="The figure appears right now, beside or behind you, with this room's lights off. Turn and photograph it before it's gone.">The figure</button>
               <button class="btn" type="button" id="unveilBtn" title="Stages the unveiling ceremony for the newest piece on display, as if it were unveiled today. Walk into its wing to see it.">An unveiling</button>
-              <button class="btn" type="button" id="robotBtn" title="Set the robot cam down in front of you and drive it: arrows steer, hold A to drift, B takes a photo, Start brings it back. A prototype for the shop item.">Robot cam</button>
+              <button class="btn" type="button" id="robotBtn" title="Set the robot cam down in front of you and drive it: A is the gas, B brakes and backs up, left and right steer, Start brings it back. A prototype for the shop item.">Robot cam</button>
               <button class="btn" type="button" id="joeBtn" title="Joe turns up on the floor near you. Talk to him (or photograph him) to see the glitch.">Joe</button>
               <button class="btn" type="button" id="dayBtn" title="The next day: curious visitors come back, dust settles, the museum opens again">Tomorrow</button>
             </div></div>
@@ -401,7 +401,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-16 robot cam 2";
+window.GOQ_WANT = "2026-11-16 robot cam 3";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -970,10 +970,11 @@ function renderStaff() {
   const pct = v => Math.round(v * 100) + "%";
   wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
     el("h3", { text: "Robot cam", style: "margin:0 0 4px" }),
-    el("p", { class: "note", style: "margin:0 0 12px", text: "How the little car drives. A is the gas, the arrows steer, B takes a photo, Start brings it back. Try it in the preview: Preview options, Make it happen, Robot cam." }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "How the little car drives. A is the gas, B brakes and backs up, left and right steer, Start brings it back. Try it in the preview: Preview options, Make it happen, Robot cam." }),
     knob("max", "Top speed", 1, 5, 0.1, v => v.toFixed(1)),
     knob("accel", "Acceleration", 0.03, 0.3, 0.01, v => v.toFixed(2)),
-    knob("turn", "Steering", 0.03, 0.2, 0.005, v => v.toFixed(3), "How quickly it turns toward where you point."),
+    knob("reverse", "Reverse speed", 0.1, 1, 0.05, pct, "How fast it backs up, compared to its top speed."),
+    knob("turn", "Steering", 0.03, 0.2, 0.005, v => v.toFixed(3), "How quickly left and right turn it."),
     knob("grip", "Grip", 0.04, 0.5, 0.01, v => v.toFixed(2), "Lower slides more: drifts come easier and last longer."),
     knob("bounce", "Bounce off walls", 0, 0.9, 0.05, pct),
     knob("shake", "Screen shake on a crash", 0, 8, 1, v => (v ? v + " frames" : "off")),
