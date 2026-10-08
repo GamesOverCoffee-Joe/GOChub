@@ -3820,10 +3820,15 @@ class Game {
         const host = (sheet, role) => { const at = side.shift(); if (!at) return null; const n = this.dayNpc({ sheet, x: at[0], y: at[1], dir: at[2], unveilHost: role, member: role === "usher" ? "The usher" : "The curator" }); m.npcs.push(n); return n; };
         cer.curator = host("curator", "curator"); cer.usher = host("usher", "usher"); cer.crowd = [];
         const spots = near(front, 2, 4).filter(([x, y]) => ok(x, y)).sort((a, b) => a[2] - b[2] || strSeed(today + a[0] + "," + a[1]) - strSeed(today + b[0] + "," + b[1]));
+        // The crowd: the museum's own wandering visitors gather (moved here while the museum is set up, before you see it),
+        // topped up with extras if there aren't six. Afterwards the visitors go back to wandering this wing; extras go in the fade.
+        const free = m.npcs.filter(n => n.random && !n.still && !n.sitting && !n.role && !n.staff && !n.patrol && !n.cur && !n.back && !n.follow && !n.member && !n.dayPerson && !n.leaving);
         for (const [x, y] of spots.slice(0, 6)) {
-          const sheet = ["visitor_a", "visitor_b", "visitor_c"][strSeed(today + "u" + x + y) % 3], dx = front.x - x, dy = front.y - 1 - y;
-          const n = this.dayNpc({ sheet, shirt: this.shirtFor(sheet, this.pack.settings.life.shirts, (strSeed(today + "s" + x + y) % 1000) / 1000), x, y, dir: Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : "up", unveilCrowd: true });
-          m.npcs.push(n); cer.crowd.push(n);
+          const dx = front.x - x, dy = front.y - 1 - y, dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : "up";
+          let n = free.shift();
+          if (n) Object.assign(n, { x, y, dir, moving: false, prog: 0, route: null, still: true, homeDir: undefined, zone: z.id, unveilCrowd: true, recruited: true });
+          else { const sheet = ["visitor_a", "visitor_b", "visitor_c"][strSeed(today + "u" + x + y) % 3]; n = this.dayNpc({ sheet, shirt: this.shirtFor(sheet, this.pack.settings.life.shirts, (strSeed(today + "s" + x + y) % 1000) / 1000), x, y, dir, unveilCrowd: true }); m.npcs.push(n); }
+          cer.crowd.push(n);
         }
       }
       cer.pieces.push(p); const obj = c || sp; cer.covered.push([obj, obj.state]); obj.state = "covered"; // under the cloth until the curator pulls it off
@@ -3868,8 +3873,14 @@ class Game {
   endCeremony(cer) {
     const mine = this.progress.unveils || (this.progress.unveils = {});
     cer.pieces.forEach(p => { mine[p.id] = todayISO(); }); this.progress.tally.unveils = (this.progress.tally.unveils || 0) + 1; this.saveProgress();
-    [cer.usher, cer.curator, ...cer.crowd].filter(Boolean).forEach((n, i) => { n.leaving = true; n.leaveT = -i * 25; n.alpha = 1; }); // everyone drifts off
-    this.mode = "busy"; this.cine.goal = 0; this.cine.wait = 40; this.cine.then = () => { this.cine = null; this.mode = "walk"; }; // the camera eases back to you
+    // A dip to black: the usher, the curator and any extras are gone, the visitors go back to wandering, and the camera is back on you.
+    this.mode = "busy";
+    this.trans = { t: 0, dur: 20, switched: false, fn: () => {
+      const extra = new Set([cer.usher, cer.curator, ...cer.crowd.filter(n => !n.recruited)]);
+      this.room.npcs = this.room.npcs.filter(n => !extra.has(n));
+      cer.crowd.filter(n => n.recruited).forEach(n => { Object.assign(n, { still: false, unveilCrowd: false, recruited: false, pose: null, homeDir: undefined, faceT: 0, timer: 30 + Math.random() * 120 }); });
+      this.cine = null;
+    } };
   }
   fridayFeatures() { // Fridays: the curator's Games Over Coffee episodes (Staff tab), shaped like pieces for the screening nook
     if (this.weekday() !== 5) return [];
@@ -6826,7 +6837,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-13 unveiling 2";
+const VERSION = "2026-11-13 unveiling 3";
 window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
