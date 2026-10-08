@@ -1827,6 +1827,7 @@ const TEXT = {
   "tue.found":         { g: "Days of the week", l: "Tuesday: bringing the kid to his mom ({n}: tokens)", v: [["[Mom is so relieved, and gives you {n} tokens]"]] },
   "tue.after":         { g: "Days of the week", l: "Tuesday: the kid, the moment you bring him to his mom (before she thanks you)", v: [["[Kid, seeing his mom]"]] },
   "tue.busy":          { g: "Days of the week", l: "Tuesday: the kid when someone else is already following you", v: [["[Kid: you're already helping someone]"]] },
+  "wed.easel":         { g: "Days of the week", l: "Wednesday: looking at the artist's easel (picks one at random)", v: [["[The artist's easel: what's on the canvas so far]"]] },
   "wed.ask":           { g: "Days of the week", l: "Wednesday: the artist", v: [["[Artist: needs inspiration. Show him a photo?]"]] },
   "wed.none":          { g: "Days of the week", l: "Wednesday: the artist, when you have no photos", v: [["[Artist: you don't have any photos to show]"]] },
   "wed.r0":            { g: "Days of the week", l: "Wednesday: the artist's reaction to a common photo ({desc}, {n}: tokens)", v: [["[Artist, unimpressed by your photo, gives you {n} token anyway]"]] },
@@ -3718,12 +3719,22 @@ class Game {
         if (this.fol !== this.kidNpc && this.dayTile(m, d.kid.x, d.kid.y)) { Object.assign(this.kidNpc, { x: d.kid.x, y: d.kid.y, follow: false, still: true }); m.npcs.push(this.kidNpc); }
       }
     }
-    if (wd === 3 && m) { // Wednesday: the artist at his easel in one of the wings
-      if (!d.art) { const wings = this.wingZones(), z = wings[strSeed(todayISO() + "art") % Math.max(1, wings.length)], at = z && this.spotIn(m, z.id); if (at) { d.art = { x: at[0], y: at[1] }; this.saveProgress(); } }
+    if (wd === 3 && m) { // Wednesday: the artist at his easel in one of the wings (picked together, so he always has one)
+      const easelOk = (x, y) => this.tileFree(m, x, y) && !m.events[x + "," + y] && !this.byExhibit(m, x, y) && m.solid[y - 1] && m.solid[y - 1][x] === false && !this.byExhibit(m, x, y - 1);
+      if (d.art && !(m.solid[d.art.y] && m.solid[d.art.y][d.art.x] === false && d.art.ex !== undefined)) d.art = null; // a spot saved before the layout (or this rule) changed
+      if (!d.art) {
+        const wings = this.wingZones(), z = wings[strSeed(todayISO() + "art") % Math.max(1, wings.length)], spots = [];
+        if (z) for (let y = 3; y < m.h - 1; y++) for (let x = 1; x < m.w - 1; x++) {
+          if ((this.zoneAt(m, x, y) || {}).id !== z.id || !this.tileFree(m, x, y) || this.byExhibit(m, x, y) || m.events[x + "," + y] || (m.noWander && m.noWander.has(x + "," + y))) continue;
+          const ex = [x + 1, x - 1].find(e => easelOk(e, y)); if (ex !== undefined) spots.push({ x, y, ex });
+        }
+        if (spots.length) { d.art = spots[strSeed(todayISO() + "artspot") % spots.length]; this.saveProgress(); }
+      }
       if (d.art && this.dayTile(m, d.art.x, d.art.y)) {
-        m.npcs.push(this.dayNpc({ sheet: "visitor_b", x: d.art.x, y: d.art.y, artist: true, member: "The artist", dir: "right" }));
-        const ex = [d.art.x + 1, d.art.x - 1].find(x => this.tileFree(m, x, d.art.y) && !m.events[x + "," + d.art.y] && !this.byExhibit(m, x, d.art.y) && m.solid[d.art.y - 1] && m.solid[d.art.y - 1][x] === false && !this.byExhibit(m, x, d.art.y - 1));
-        if (ex !== undefined) { m.props.push({ key: "easel", x: ex, y: d.art.y, tall: true }); m.solid[d.art.y][ex] = true; m.events[ex + "," + d.art.y] = { say: ["[The artist's easel]"] }; if (ex < d.art.x) m.npcs[m.npcs.length - 1].dir = "left"; }
+        const artist = this.dayNpc({ sheet: "visitor_b", x: d.art.x, y: d.art.y, artist: true, member: "The artist", dir: d.art.ex < d.art.x ? "left" : "right" });
+        m.npcs.push(artist);
+        const ex = this.dayTile(m, d.art.ex, d.art.y) && easelOk(d.art.ex, d.art.y) ? d.art.ex : [d.art.x + 1, d.art.x - 1].find(e => easelOk(e, d.art.y));
+        if (ex !== undefined) { m.props.push({ key: "easel", x: ex, y: d.art.y, tall: true }); m.solid[d.art.y][ex] = true; m.events[ex + "," + d.art.y] = { say: "wed.easel" }; artist.dir = ex < d.art.x ? "left" : "right"; }
       }
     }
     if (wd === 4 && m && !this.closing && this.tod() !== "night") { // Thursday: trivia players on every café stool but one
@@ -6637,7 +6648,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-11 day tweaks 2";
+const VERSION = "2026-11-11 artist easel";
 window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
