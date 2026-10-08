@@ -339,6 +339,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
           <button class="btn quiet" id="verBtn" type="button" title="Is this the latest engine, and is your draft the museum-pack.json in this folder?">Check version</button>
           <label class="btn quiet" for="importFile">Import pack</label>
           <a class="btn quiet" id="batchBtn" href="batch-fill.html" title="Add many pieces at once from YouTube and image files, and crop them to fit">Batch fill</a>
+          <a class="btn quiet" href="writers-room.html" title="Write the museum's lines one at a time, a little every day (same draft as this page)">Writers' Room</a>
           <a class="btn quiet" href="goc-links.html" target="_blank" rel="noopener" title="Copy your YouTube videos as lines for Friday features">GOC link grabber</a>
         </div>
       </details>
@@ -393,7 +394,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-09 office outlines";
+window.GOQ_WANT = "2026-11-10 writers room";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */

@@ -473,6 +473,15 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Writers' Room (2026-11-10).** `museum/writers-room.html` (also in the curator's More menu): a phone-first page for writing the museum's text one line at a time.
+- **Same draft as the curator.** It reads and writes `goq-curator-draft` in this browser, and the curator picks up changes even when it's open in another tab. With no draft yet, it starts one from the folder's `museum-pack.json`. It has its own Export pack (same file as the curator's) and shows the same "pack changed since your draft started" heads-up.
+- **What's in it:** every Words line (`GOQ.TEXT`), every staff chat set, visitor mindset lines (ask, loved, liked, nope), achievement names and descriptions, shop item names and descriptions, genre names, the cat's name, nicknames and corkboard notes. **Placards** are their own category: observation, intention (or the guest note) and the visitor's one-liner, per piece.
+- **Status:** "To write" if any bracketed placeholder is left (or it's empty), "Yours" if you edited it, "Kept" if you pressed Keep it, otherwise "Not reviewed" (lines Claude wrote). Keeps and marks are stored in `goq-writers-room`, with the punch card days.
+- **The daily loop:** Today's line picks the next placeholder, staying in the area you last worked in, then lines to review. Saving, or keeping, stamps today on the punch card, then offers One more or Clock out. Skip moves on without penalty. On multi-entry lines (books, trivia, box labels) empty boxes keep their placeholder, so you can write one entry at a time.
+- **Preview:** dialog lines render in the game's own text box (Press Start 2P, 240×48 box, the pack's textbox art) with the same page splitting as the engine, and sample values filled in for `{name}` and the like. LED lines show as the sign (and warn on letters it can't show); lists show as entries; placards as placard blocks.
+- **The museum map:** one little room per area, lit by how much is done. Rooms with placeholders left come first; the rest fold behind "Show all rooms".
+- No version string of its own: it loads the engine with the version from `version.json`.
+
 **Office outlines (2026-11-09).** The curator's office props now end with a near-black outline like the rest of the museum: desk, TV, shelf, chair, camera, Steam Deck table, PC tower, soft box and the floor clutter. The outline color is each palette's darkest; `tower`, `osoft` and `clutter` gained a `#141418` for it (index 7, 5 and 10). Lighting, walls and the clutter layout are unchanged on purpose. Joe uses the custom PNG in the pack, so his look is whatever that PNG is.
 
 **How updates reach players:** see `museum/UPDATING.md` (caching, version strings, custom art and exporting). Keep it current when any of that changes.

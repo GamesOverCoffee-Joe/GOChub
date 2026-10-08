@@ -33,3 +33,7 @@ There's no separate PNG to upload. "Use built-in art" on a slot removes the cust
 **Before you export:** if the repo's `museum-pack.json` has changed since your draft started (for example, Claude moved props or added settings), the curator shows "Heads up: this folder's museum-pack.json has changed since your draft started." Exporting then would undo those changes. Press **More → Check version** to see what's different. There are two safe ways out:
 - **You've only made a small change** (like one PNG): load the folder's pack from Check version, redo the change, then export.
 - **You've made a lot of changes:** export anyway, but don't replace the repo file yourself. Give the export to Claude to merge the two.
+
+## Text from the Writers' Room
+
+The Writers' Room (`writers-room.html`) writes into the same curator draft in that browser, so the same rule applies: players see your lines only after you **Export pack** (from the Writers' Room or the curator) and the exported `museum-pack.json` is in the repo on main. The draft lives in one browser on one device. If you write on your phone, export from your phone.
