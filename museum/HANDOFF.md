@@ -467,6 +467,8 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Tutorial editions (2026-11-17).** `settings.tutorialRev` (curator Staff tab → Tutorial → Require it again) is the tutorial's current edition; a save remembers which one it finished (`progress.tutorialRev`; older saves count as edition 1). Anyone behind is put into the tutorial on load (once), including when the site's pack arrives after a cached one (checked in `setPack`). The pack is at edition 2, so everyone retakes the new relationships tutorial. Skipping counts as finishing it.
+
 **Relationships replace mindsets (2026-11-17).** The core loop is now about reading both placards and comparing them.
 - **Relationships** (`settings.relations`: id, name, about, ask, miss; `SAMPLE_RELATIONS`): how the curator's experience lined up with the developer's intention. Each piece has one (`piece.rel`, curator Pieces tab → Relationship), picked by the host from the episode transcripts:
   - **Same page:** Depth Complaint, Zenomatrix, Comets Have Feathers, Minicraft TD.

@@ -22,6 +22,10 @@ Merge into **main** (the branch gamesover.coffee is served from). Returning play
 - **Rename clips and images instead of overwriting them.** Files in `clips/` and `images/` don't carry a version in their address. If you swap in a new file under the same name, some players may see the old one for a while. A new name (like `acrobatic-car_2.webm`) shows up right away. Update the name in the curator to match.
 - **Keep piece IDs stable.** Players' notes and "read" marks are tied to each piece's ID. Retitling a piece is fine, but deleting a piece and re-adding it means players lose their notes on it.
 
+## Making everyone take the tutorial again
+
+New players always start in the tutorial. After you change it, open the curator's **Staff** tab, **Tutorial**, and press **Require it again**. Export the pack and get it onto main: the next time each returning player loads the game, they're put into the tutorial once (they can still skip it). Players who haven't loaded since won't miss it; it waits for their next visit.
+
 ## Custom art from the curator (Art tab)
 
 When you upload a PNG on a slot's own page (Joe, a wall, a prop) or through the Photoshop atlas, it's saved **inside your curator draft in that browser**, not as a separate file. Players don't see it until it's in the repo's pack:

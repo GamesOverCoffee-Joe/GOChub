@@ -400,7 +400,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-17 relationships 3";
+window.GOQ_WANT = "2026-11-17 tutorial edition";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -899,6 +899,16 @@ function renderStaff() {
     el("h3", { text: "Patreon members", style: "margin:0 0 4px" }),
     el("p", { class: "note", style: "margin:0 0 12px", text: "One per line: their name, then a comma and their badge number if they have one. When a member clocks in with their badge, they're never also in the staff room, since they're the one playing. Names are public on your site, so use the names members are happy to show." }),
     el("label", { class: "sr-only", for: "memText", text: "Patreon members" }), mem, memCount,
+  ]));
+  // The tutorial's edition: raising it sends everyone who finished an older one back through it, once.
+  const trev = el("b", { text: String(draft.settings.tutorialRev || 1) });
+  wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
+    el("h3", { text: "Tutorial", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "New players always start with the tutorial. When you change it, press Require it again: everyone who finished an earlier edition is put into it the next time they load the game (once). It takes effect for players when this pack is exported and on the site. Anyone can still replay it from the lobby's Tutorial door." }),
+    el("p", { style: "margin:0 0 8px" }, [document.createTextNode("Current edition: "), trev]),
+    el("div", { class: "acts" }, [el("button", { type: "button", class: "btn small", text: "Require it again", onclick: () => {
+      if (!confirm("Send every player who finished the tutorial back through it once?")) return;
+      draft.settings.tutorialRev = (draft.settings.tutorialRev || 1) + 1; trev.textContent = String(draft.settings.tutorialRev); changed({ now: true }); } })]),
   ]));
   draft.settings.office = draft.settings.office || { lock: GOQ.officeLock("40917") };
   const ocode = el("input", { type: "text", inputmode: "numeric", value: GOQ.officeUnlock(draft.settings.office.lock) || "", placeholder: "40917", maxlength: 8 });
