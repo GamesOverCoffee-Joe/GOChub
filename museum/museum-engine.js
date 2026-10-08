@@ -54,6 +54,9 @@ const PAL = {
   shutter: [null, "#b8c0c8", "#7c8894", "#2a3038"],
   cafe:    ["#fbf3e6", "#d8a878", "#8a5a38", "#2a1810", "#5a9850", "#e86868", "#f0c060"],
   cups:    [null, "#f8f8f0", "#5a3420", "#181820", "#c89040", "#a06040", "#f8e8d8", "#c8c8d0"],
+  goqwear: [null, "#181820", "#34344a", "#9ab0d0", "#c83a3a", "#8a2020", "#f0c040"], // the GOQ shades and hat
+  tmug:    [null, "#3a3a46", "#c83a3a", "#181820", "#e8e8f0", "#f0c040"], // the GOQ travel mug
+  pcase:   ["#f8f8f0", "#b0b0c0", "#c83a3a", "#181820", "#f0c040"], // the phone in its GOQ case
   icecup:  [null, "#c8dce8", "#dce9f2", "#181820", "#5a3420", "#8a6a50", "#f4fbff", "#e05050", "#eef6fb"], // 4 and 5: the drink, tinted from the menu
   glass:   ["#f4fbff", "#c8a878", "#7c5a3a", "#2a1a10", "#a8d0e8"],
   usher:   [null, "#e8c098", "#8a2a3a", "#181820", "#f0c040"],
@@ -85,7 +88,7 @@ const PAL = {
   dayboard:[null, "#6a4428", "#26362c", "#34463a", "#e8e8d8", "#4a2e18"],
   lbox:    [null, "#b8864a", "#8a5e2e", "#e0b878", "#5a3a1a", "#f4f0e0"],
   easel:   [null, "#8a5a32", "#5a3a1a", "#f4f0e6", "#c84a3a", "#3a6ac8", "#e0b040"],
-  stall:   [null, "#c84a4a", "#f4f0e6", "#8a5a32", "#5a3a1a"],
+  stall:   [null, "#c84a4a", "#f4f0e6", "#8a5a32", "#5a3a1a", "#181820"],
   ledsign: [null, "#0a080c", "#2a2630", "#55505e", "#1c0808"],
   arcade:  [null, "#1a1424", "#3a2a5a", "#5a48a0", "#101018", "#40d0c0", "#f0c040", "#e05050", "#5878c8"],
   mags:    [null, "#f8f0e0", "#8a5a38", "#2a160c", "#e05050", "#5878c8", "#f0c040", "#58a868"],
@@ -454,6 +457,22 @@ const GEN = {
     return outline(a);
   },
   // An iced drink: a clear cup the size of the hot one, with a lid and a straw. Frame 0 full (the drink shows through), 1 empty.
+  // The GOQ shades and hat, drawn over you (the same 3 × 4 frames as a character: facing down, up, left, right).
+  goq_shades: f => {
+    const a = mk(16, 16), row = Math.floor(f / 3);
+    if (row === 0) { for (const x of [4, 9]) { rect(a, x, 5, 3, 2, 2); rect(a, x, 5, 3, 1, 1); px(a, x + 1, 6, 3); } rect(a, 7, 5, 2, 1, 1); px(a, 3, 5, 1); px(a, 12, 5, 1); }
+    else if (row === 1) { px(a, 3, 5, 1); px(a, 12, 5, 1); } // from behind: just the arms over the ears
+    else { rect(a, 3, 5, 3, 2, 2); rect(a, 3, 5, 3, 1, 1); px(a, 4, 6, 3); rect(a, 6, 5, 5, 1, 1); }
+    return row === 3 ? mirror(a) : a;
+  },
+  goq_hat: f => {
+    const a = mk(16, 16), row = Math.floor(f / 3);
+    if (row < 2) { rect(a, 4, 0, 8, 3, 4); rect(a, 4, 2, 8, 1, 5); rect(a, 3, 3, 10, 1, 5); if (row === 0) { px(a, 7, 1, 6); px(a, 8, 1, 6); } } // a cap, the logo on the front
+    else { rect(a, 5, 0, 8, 3, 4); rect(a, 5, 2, 8, 1, 5); rect(a, 2, 3, 8, 1, 5); px(a, 7, 1, 6); } // in profile, the bill out front
+    const b = outline(a, 1); return row === 3 ? mirror(b) : b;
+  },
+  travel_mug: () => { const a = mk(8, 8); rect(a, 1, 0, 5, 7, 1); rect(a, 1, 0, 5, 2, 4); const b = outline(a); rect(b, 2, 4, 3, 1, 2); px(b, 3, 3, 5); return b; },
+  phone_case: () => { const a = mk(8, 8); rect(a, 2, 0, 4, 7, 2); rect(a, 3, 1, 2, 4, 0); px(a, 3, 5, 4); return a; },
   cup_iced: f => {
     const a = mk(8, 8); rect(a, 1, 2, 5, 5, 1); // the same size as a hot cup (outlined below), no handle
     const b = outline(a);
@@ -799,7 +818,7 @@ const GEN = {
   day_board: () => { const a = mk(32, 16); rect(a, 0, 0, 32, 12, 1); rect(a, 2, 1, 28, 9, 2); px(a, 6, 8, 3); px(a, 22, 2, 3); px(a, 26, 7, 3); rect(a, 2, 10, 28, 1, 5); rect(a, 3, 12, 2, 4, 5); rect(a, 27, 12, 2, 4, 5); return a; },
   lost_box: () => { const a = mk(16, 16); rect(a, 2, 5, 12, 10, 1); rect(a, 2, 5, 12, 2, 3); rect(a, 2, 14, 12, 1, 2); rect(a, 7, 5, 2, 10, 2); rect(a, 4, 9, 4, 3, 5); px(a, 5, 10, 4); px(a, 6, 10, 4); return outline(a, 4); },
   easel: () => { const a = mk(16, 32); for (let i = 0; i < 20; i++) { px(a, 4 + Math.round(i * 0.15), 11 + i, 2); px(a, 11 - Math.round(i * 0.15), 11 + i, 2); } rect(a, 7, 4, 2, 27, 1); rect(a, 2, 3, 12, 10, 1); rect(a, 3, 4, 10, 8, 3); rect(a, 4, 6, 3, 2, 4); rect(a, 8, 5, 3, 3, 5); rect(a, 5, 9, 5, 2, 6); rect(a, 2, 13, 12, 1, 2); return a; },
-  popup_table: () => { const a = mk(32, 16); rect(a, 0, 4, 32, 8, 2); for (let x = 0; x < 32; x += 4) rect(a, x, 4, 2, 8, 1); rect(a, 0, 4, 32, 1, 4); rect(a, 2, 12, 2, 4, 3); rect(a, 28, 12, 2, 4, 3); return a; },
+  popup_table: () => { const a = mk(32, 16); rect(a, 0, 4, 32, 8, 2); for (let x = 0; x < 32; x += 4) rect(a, x, 4, 2, 8, 1); rect(a, 0, 4, 32, 1, 4); rect(a, 2, 12, 2, 4, 3); rect(a, 28, 12, 2, 4, 3); return outline(a, 5); }, // outlined, like the rest of the furniture
   // A movie poster on the theater hallway's side wall, seen edge on in the dark: a thin frame, two tiles tall (left wall; mirrored on the right).
   hall_poster: () => {
     const a = mk(16, 32);
@@ -1061,6 +1080,10 @@ const SLOTS = [
   { key: "cafe_stool", label: "Café stool", group: "Gift shop and café", w: 16, h: 16, pal: "cafe", gen: GEN.cafe_stool, note: "You can sit here. The player is drawn on top." },
   { key: "shop_staff", label: "Shopkeeper and barista", group: "Gift shop and café", w: 16, h: 16, layout: "char", pal: "apron", gen: GEN.staff_uniform, note: CHAR_NOTE },
   { key: "cups", label: "Drinks in hand", group: "Gift shop and café", w: 8, h: 8, frames: 4, pal: "cups", gen: GEN.cups, note: "4 frames side by side (32×8): coffee, tea, cocoa, the drink of the week." },
+  { key: "goq_shades", label: "GOQ shades (worn)", group: "People", w: 16, h: 16, layout: "char", pal: "goqwear", gen: GEN.goq_shades, note: CHAR_NOTE + " Drawn over you when you wear them. A fake pair shows only its right half." },
+  { key: "goq_hat", label: "GOQ hat (worn)", group: "People", w: 16, h: 16, layout: "char", pal: "goqwear", gen: GEN.goq_hat, note: CHAR_NOTE + " Drawn over you when you wear it." },
+  { key: "travel_mug", label: "GOQ travel mug in hand", group: "Gift shop and café", w: 8, h: 8, pal: "tmug", gen: GEN.travel_mug, note: "Your café drinks come in it once you have one (and have it switched on in Wardrobe)." },
+  { key: "phone_case", label: "Phone in its GOQ case", group: "People", w: 8, h: 8, pal: "pcase", gen: GEN.phone_case, note: "Held up when you take a photo, once you have the case." },
   { key: "cup_iced", label: "Iced drink in hand", group: "Gift shop and café", w: 8, h: 8, frames: 2, pal: "icecup", gen: GEN.cup_iced, note: "2 frames side by side (16×8): full, then empty. The clear cup's drink (colors 4 and 5) is tinted from the café menu while it's the built-in art." },
   { key: "steam", label: "Steam", group: "Gift shop and café", w: 8, h: 8, frames: 3, pal: "cups", gen: GEN.steam, note: "3 frames side by side (24×8), rising." },
   { key: "shutter", label: "Shutter (no longer used)", group: "Retired", retired: true, w: 16, h: 16, pal: "shutter", gen: GEN.shutter, note: "Kept only so older atlases still line up." },
@@ -1212,10 +1235,10 @@ const DEFAULT_CORKBOARD = [
 ];
 /* Sample gift shop items. The host replaces these in the curator's Shop tab. */
 const SAMPLE_ITEMS = [
-  { id: "pin", name: "Question mark pin", price: 3, description: "A tiny gold enamel pin shaped like a question mark." },
-  { id: "tote", name: "Qualia tote bag", price: 6, description: "Holds snacks, notebooks, and unresolved thoughts." },
-  { id: "mug", name: "\"Wait, why?\" mug", price: 5, description: "Just like the curator's. Please don't leave it lying around." },
-  { id: "postcards", name: "Gallery postcard set", price: 4, description: "Every piece in Gallery One, small enough to mail." },
+  { id: "goq-shades", name: "GOQ Shades", price: 12, description: "[GOQ Shades: description]", use: "shades" },
+  { id: "goq-hat", name: "GOQ Hat", price: 10, description: "[GOQ Hat: description]", use: "hat" },
+  { id: "goq-mug", name: "GOQ Travel Mug", price: 8, description: "[GOQ Travel Mug: description. Your café drinks come in it.]", use: "mug" },
+  { id: "goq-case", name: "GOQ Phone Case", price: 10, description: "[GOQ Phone Case: description]", use: "case" },
 ];
 const DRINKS = [{ id: "coffee", name: "Coffee", color: "#5a3420" }, { id: "tea", name: "Tea", color: "#c89040" }, { id: "cocoa", name: "Cocoa", color: "#a06040" }]; // color: what shows through an iced cup
 /* Relationships: how the curator's experience of a game lined up with what its developer intended (the two placards).
@@ -1370,6 +1393,7 @@ function normalizePack(p) {
   const items = (Array.isArray(shin.items) ? shin.items : SAMPLE_ITEMS).slice(0, 40).map((it, i) => ({
     id: str(it && it.id, 60) || "item-" + (i + 1), name: str(it && it.name, 60) || "Untitled item",
     price: Math.max(0, Math.min(999, Math.round(+(it && it.price) || 0))), description: str(it && it.description, 240), image: str(it && it.image, 2000000) || null,
+    use: ["shades", "hat", "mug", "case"].includes(it && it.use) ? it.use : "", // what it does once it's yours (Wardrobe): wear it, carry drinks in it, put it on your phone
     gift: str(it && it.gift, 60), // a piece's id: this item is that piece's unveil gift (in the shop only as the gift of the week)
   }));
   const shop = { items, featured: items.some(it => it.id === shin.featured) ? shin.featured : (items[0] ? items[0].id : ""),
@@ -1886,6 +1910,10 @@ const TEXT = {
   "thu.questions":     { g: "Days of the week", l: "Thursday: your own questions (one per entry: the question, then the right answer, then three wrong ones; entries starting with [ are skipped)", v: [["[Your question]", "[Right answer]", "[Wrong answer]", "[Wrong answer]", "[Wrong answer]"]] },
   "screen.friday":     { g: "Screening nook", l: "The LED sign on Fridays, before the title (letters, numbers and : - . ! ? ' & , / only)", v: [["FRIDAY FEATURE:"]] },
   "sat.vendor":        { g: "Days of the week", l: "Saturday: Bluu, the pop-up vendor", v: [["[Pop-up vendor: three things you can't get anywhere else, this week only]"]] },
+  "gear.lens":         { g: "Your stuff", l: "Putting on fake GOQ shades: a lens pops out (they stay on, half of them)", v: [["[One of the lenses pops out. Half the shades it is.]"]] },
+  "gear.hatSmall":     { g: "Your stuff", l: "Trying on a fake GOQ hat: it won't go on", v: [["[The hat is way too small. It sits on top of your head for a second, then falls off.]"]] },
+  "gear.leak":         { g: "Your stuff", l: "Walking with a drink in a fake travel mug: it leaks out", v: [["[Your travel mug leaks. Your drink is gone. Your shoes are not dry.]"]] },
+  "gear.caseBlocks":   { g: "Your stuff", l: "Taking a photo with a fake phone case on (no photo; take the case off in Wardrobe)", v: [["[The case covers the camera. The photo is just black.]", "[You could take the case off. My Stuff, Wardrobe.]"]] },
   "sat.bought":        { g: "Days of the week", l: "Saturday: buying something ({item})", v: [["[Bought the {item}]"]] },
   "sat.broke":         { g: "Days of the week", l: "Saturday: not enough tokens ({n}: the price)", v: [["[Not enough tokens: it costs {n}]"]] },
   "sat.owned":         { g: "Days of the week", l: "Saturday: something you already bought", v: [["[You already bought that one]"]] },
@@ -2009,12 +2037,11 @@ const TEXT = {
   "cur.missNone":      { g: "Curious visitors", l: "You recommend a piece with no relationship set ({title}; usually each relationship has its own miss lines, in Visitors)", v: [["[Reads {title}: can't tell what the curator made of it. Not what they're after]"]] },
   "cur.giveUp":        { g: "Curious visitors", l: "After a third piece that isn't what they wanted: they stop following you", v: [["[Thanks anyway! I'll keep looking around]"]] },
   "cur.recall":        { g: "Curious visitors", l: "Question: recommend one from memory (the pieces you've recommended right before come next, by name)", v: [["[Which one comes to mind?]"]] },
-  "cur.back":          { g: "Curious visitors", l: "Coming back the next day ({hint} is \", the one where...\" from the piece)", v: [["Hey, it's me, {name}! I tried {title}{hint}."]] },
-  "cur.beat":          { g: "Curious visitors", l: "The pause before they say what they thought (takes turns)", v: [["And honestly..."], ["So..."], ["Okay, so..."]] },
-  "cur.agree":         { g: "Curious visitors", l: "Next day, picked at random: they see why the curator felt that way ({title})", v: [["[I played {title} last night. I can totally see why the curator felt that way]"]] },
-  "cur.disagree":      { g: "Curious visitors", l: "Next day, picked at random: they think the curator got it wrong ({title})", v: [["[I played {title} last night. Honestly? I think the curator got this one wrong]"]] },
-  "cur.puzzled":       { g: "Curious visitors", l: "Next day, picked at random: they can't see where the curator got that ({title})", v: [["[I played {title} last night. I have no idea where the curator got that from]"]] },
-  "cur.after":         { g: "Curious visitors", l: "Talking to them again after they told you (takes turns)", v: [["Thanks again for the recommendation!"], ["I might come ask you for another one sometime."]] },
+  "cur.back":          { g: "Curious visitors", l: "Back the next day, in the lobby: hello ({title}: the game you recommended; {hint}: \", the one where...\" from the piece)", v: [["[Back from yesterday: says hi, and that they played {title}{hint}]"]] },
+  "cur.agree":         { g: "Curious visitors", l: "Next day, picked at random: they see why the curator felt that way ({title})", v: [["[Can totally see why the curator felt that way about {title}]"]] },
+  "cur.disagree":      { g: "Curious visitors", l: "Next day, picked at random: they think the curator got it wrong ({title})", v: [["[Honestly? Thinks the curator got {title} wrong]"]] },
+  "cur.puzzled":       { g: "Curious visitors", l: "Next day, picked at random: they can't see where the curator got that ({title})", v: [["[Has no idea where the curator got that from, about {title}]"]] },
+  "cur.bye":           { g: "Curious visitors", l: "Back the next day: goodbye, before they head out ({title})", v: [["[Says thanks again, and heads out]"]] },
   "pc.boot":           { g: "Storage", l: "Turning on Someone's PC (before the stats)", v: [["Someone's PC whirs to life.", "There's one program on the desktop: PLAYER_STATS.EXE. It's about you. Somehow."]] },
   "end.stats":         { g: "Closing up", l: "On the closing screen, after a few of your stats", v: [["All your stats are on the old PC in the basement."]] },
   "title.cat":         { g: "Staff profile titles", l: "Petting the cat a lot (variants take turns by day)", v: [["Cat Person (Diagnosed)"], ["Allergies Be Damned"]] },
@@ -3014,18 +3041,22 @@ class Game {
   display:none;font-size:calc(6px * var(--s));line-height:1.4;overflow:hidden}
 .gt-shop-head{display:flex;justify-content:space-between;color:#7c5a0c;font-size:calc(7px * var(--s));margin:0 0 calc(3px * var(--s))}
 .gt-shop-list{max-height:calc(80px * var(--s));overflow:auto}
+.gt-split{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:calc(5px * var(--s));min-height:0}
+.gt-split .gt-shop-list{max-height:none;height:100%;overflow:auto}
+.gt-split .gt-shop-row .nm{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.2;overflow-wrap:anywhere}
+.gt-split .gt-shop-row{align-items:flex-start;padding-top:calc(2px * var(--s));padding-bottom:calc(2px * var(--s))}
+.gt-split .gt-shop-row.on::before{top:calc(4px * var(--s));margin-top:0}
+.gt-split .gt-shop-row .pr{flex:none}
+.gt-tag{display:inline-block;padding:0 calc(2px * var(--s));background:#c83a3a;color:#fff8ec;border-radius:calc(1px * var(--s));transform:rotate(-4deg)}
+.gt-detail{overflow:auto;border-left:calc(1px * var(--s)) solid #c9b89a;padding-left:calc(5px * var(--s));display:flex;flex-direction:column;gap:calc(2px * var(--s))}
+.gt-detail .pic{position:relative;align-self:center;flex:none;display:grid;place-items:center;width:calc(34px * var(--s));height:calc(34px * var(--s));border-radius:50%;background:radial-gradient(circle,#fffaf0 0 54%,#e6cfa6 55% 66%,#d6b98a 67% 70%,transparent 71%)}
+.gt-detail .pic img{width:calc(24px * var(--s));height:calc(24px * var(--s));image-rendering:pixelated;object-fit:contain}
+.gt-detail .pic .gt-tag{position:absolute;right:calc(-6px * var(--s));top:calc(2px * var(--s));transform:rotate(12deg);box-shadow:0 calc(1px * var(--s)) 0 #6a1a1a}
+.gt-detail .t{color:#7c5a0c;text-align:center;line-height:1.2;overflow-wrap:anywhere}
+.gt-detail .p{text-align:center;color:#505068}
+.gt-detail .d{color:#303048;line-height:1.3;overflow-wrap:anywhere}
+.gt-detail .m{color:#a33a22;line-height:1.3}
 .gt-cafe{display:none}
-.gt-cafe-grid{display:grid;gap:calc(3px * var(--s));margin:calc(2px * var(--s)) 0}
-.gt-cafe-tile{position:relative;display:flex;flex-direction:column;align-items:center;gap:calc(1px * var(--s));padding:calc(3px * var(--s)) calc(2px * var(--s));background:#f1e3c8;border:calc(1px * var(--s)) solid #c9a77a;border-radius:calc(2px * var(--s));cursor:pointer}
-.gt-cafe-tile.on{border-color:#181820;box-shadow:0 0 0 calc(1px * var(--s)) #181820;background:#f8ecd6}
-.gt-cafe-saucer{width:calc(26px * var(--s));height:calc(26px * var(--s));display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle,#fffaf0 0 54%,#e6cfa6 55% 66%,#d6b98a 67% 70%,transparent 71%)}
-.gt-cafe-saucer img{width:calc(16px * var(--s));height:calc(16px * var(--s));image-rendering:pixelated}
-.gt-cafe-tile .nm{max-width:100%;overflow:hidden;text-align:center;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
-.gt-cafe-tile .pr{color:#7c5a0c}
-.gt-cafe-more{display:grid;grid-template-columns:1fr 1fr;gap:calc(3px * var(--s))}
-.gt-cafe-more div{padding:calc(2px * var(--s));text-align:center;border:calc(1px * var(--s)) solid #c9a77a;border-radius:calc(2px * var(--s));cursor:pointer}
-.gt-cafe-more div.on{border-color:#181820;box-shadow:0 0 0 calc(1px * var(--s)) #181820}
-.gt-cafe-msg{color:#a33a22;min-height:1.2em;text-align:center}
 .gt-shop-row{display:flex;align-items:center;gap:calc(4px * var(--s));padding:calc(1px * var(--s)) calc(2px * var(--s)) calc(1px * var(--s)) calc(8px * var(--s));position:relative;cursor:pointer}
 .gt-shop-row.on::before{content:"";position:absolute;left:0;top:50%;margin-top:calc(-4px * var(--s));border-top:calc(4px * var(--s)) solid transparent;border-bottom:calc(4px * var(--s)) solid transparent;border-left:calc(5px * var(--s)) solid #181820}
 .gt-shop-row img{width:calc(12px * var(--s));height:calc(12px * var(--s));image-rendering:pixelated;flex:none}
@@ -3997,6 +4028,22 @@ class Game {
     };
     next();
   }
+  /* ----- your gear: the GOQ shades, hat, travel mug and phone case -----
+     A shop item's use (curator Shop tab, What it does) makes it do something once it's yours; Bluu's copies of it do too,
+     except a fake does it badly: the shades lose a lens, the hat's too small, the mug leaks, the case covers the camera.
+     A real one wins over a fake. Each can be switched off in My Stuff, Wardrobe (progress.gearOn). */
+  itemUse(it) { if (!it) return ""; if (it.popup) { const b = this.pack.settings.shop.items.find(q => q.id === it.base); return (b && b.use) || ""; } return it.use || ""; }
+  gear(use) {
+    const sh = this.pack.settings.shop.items, p = this.progress;
+    if ((p.items || []).some(id => (sh.find(q => q.id === id) || {}).use === use) || (p.popups || []).some(o => o.real && this.itemUse(o) === use)) return "real";
+    return (p.popups || []).some(o => o.fake && this.itemUse(o) === use) ? "fake" : "";
+  }
+  using(use) { const g = this.gear(use); return g && (this.progress.gearOn || {})[use] !== false ? g : ""; }
+  gearCheck() { // a fake shows itself the first time you have it on
+    const p = this.progress, on = p.gearOn || (p.gearOn = {});
+    if (this.using("shades") === "fake" && !p.lensPopped) { p.lensPopped = true; this.saveProgress(); this.say(this.tx("gear.lens")); return; }
+    if (this.using("hat") === "fake") { on.hat = false; this.saveProgress(); this.say(this.tx("gear.hatSmall")); }
+  }
   /* Saturday: Bluu's stall. Three things, the same for everyone this week: the shop's priciest items (RARE_PRICE tokens
      and up), old unveil gifts, and the GOC shirt (always fake), topped up with regular shop items. Each one is real or a
      fake: a fake is misspelled or the wrong color, at the same price, so only a careful look tells. You find out for sure
@@ -4956,6 +5003,11 @@ class Game {
     if (it.image && this.itemImgs[it.id]) {
       x.imageSmoothingEnabled = true; const im = this.itemImgs[it.id], k = Math.min(16 / im.width, 16 / im.height);
       x.drawImage(im, (16 - im.width * k) / 2, (16 - im.height * k) / 2, im.width * k, im.height * k);
+    } else if (it.use) { // gear: its own art, large
+      x.imageSmoothingEnabled = false;
+      if (it.use === "shades") x.drawImage(this.sheet("goq_shades"), 3, 5, 10, 2, 0, 6, 16, 3.2); // just the shades, as wide as the icon
+      else if (it.use === "hat") x.drawImage(this.sheet("goq_hat"), 2, 0, 12, 5, 0, 3, 16, 6.7);
+      else x.drawImage(this.sheet(it.use === "mug" ? "travel_mug" : "phone_case"), 0, 0, 8, 8, 0, 0, 16, 16);
     } else {
       const nm = it.name.toLowerCase(), hues = { red: 0, orange: 28, gold: 45, yellow: 52, green: 120, teal: 175, blue: 215, purple: 275, pink: 330 }, cw = Object.keys(hues).find(w => new RegExp("\\b" + w + "\\b").test(nm));
       const sd = strSeed(it.id + it.name), hue = cw ? hues[cw] : sd % 360, a = mk(16, 16); // a color word in the name sets it
@@ -4984,32 +5036,45 @@ class Game {
     if (gift) items.unshift(gift); // this week's unveil gift, on sale until the next one
     return [...items.map(it => ({ item: it })), { shirt: true }, { collection: true }, { leave: true }];
   }
+  /* A split menu: the list on the left, the highlighted thing large on the right. Sized to the box, so nothing runs off the bottom. */
+  fitSplit(box, split) { const bs = getComputedStyle(box), room = box.getBoundingClientRect().bottom - split.getBoundingClientRect().top - parseFloat(bs.paddingBottom) - parseFloat(bs.borderBottomWidth) - 4 * (this.scale || 1); if (room > 30) split.style.height = Math.floor(room) + "px";
+    const list = split.querySelector(".gt-shop-list"); if (!list || list.scrollHeight <= list.clientHeight + 1) return; // it all fits
+    let fit = 0; for (const r of list.children) { if (r.offsetTop - list.offsetTop + r.offsetHeight <= list.clientHeight) fit = r.offsetTop - list.offsetTop + r.offsetHeight; }
+    if (fit > 20) { list.style.height = fit + "px"; list.style.alignSelf = "start"; } // end on a whole row: the rest scrolls into view, nothing half shown
+  }
+  detailPane(o) { // { img, tag, title, price, desc, msg }
+    const d = document.createElement("div"); d.className = "gt-detail";
+    if (o.img) { const pic = document.createElement("div"); pic.className = "pic"; const im = document.createElement("img"); im.alt = ""; im.src = o.img; pic.appendChild(im); if (o.tag) { const t = document.createElement("span"); t.className = "gt-tag"; t.textContent = o.tag; pic.appendChild(t); } d.appendChild(pic); }
+    for (const [k, v] of [["t", o.title], ["p", o.price], ["d", o.desc], ["m", o.msg]]) if (v) { const e = document.createElement("div"); e.className = k; e.textContent = v; d.appendChild(e); }
+    return d;
+  }
   renderShop() {
-    const box = this.el.shop, rows = this.shopRows(), sh = this.pack.settings.shop, owned = this.progress.items;
+    const box = this.el.shop, rows = this.shopRows(), owned = this.progress.items;
     this.shopSel = Math.max(0, Math.min(rows.length - 1, this.shopSel));
     box.innerHTML = "";
     const head = document.createElement("div"); head.className = "gt-shop-head";
     const t1 = document.createElement("span"); t1.textContent = "GIFT SHOP";
     const t2 = document.createElement("span"); t2.textContent = "TOKENS " + (this.progress.tokens || 0);
     head.appendChild(t1); head.appendChild(t2); box.appendChild(head);
-    const list = document.createElement("div"); list.className = "gt-shop-list"; box.appendChild(list);
+    const split = document.createElement("div"); split.className = "gt-split"; box.appendChild(split);
+    const list = document.createElement("div"); list.className = "gt-shop-list"; split.appendChild(list);
     rows.forEach((r, i) => {
       const row = document.createElement("div"); row.className = "gt-shop-row" + (i === this.shopSel ? " on" : "");
       if (r.item) {
         const img = document.createElement("img"); img.src = this.itemIcon(r.item).toDataURL(); img.alt = ""; row.appendChild(img);
         const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = (r.item.gift ? "NEW " : r.item.id === this.featuredId() ? "* " : "") + r.item.name; row.appendChild(nm);
-        const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = owned.includes(r.item.id) ? "OWNED" : r.item.price + " T"; row.appendChild(pr);
+        const pr = document.createElement("span"); pr.className = "pr"; if (owned.includes(r.item.id)) { pr.className = "pr gt-tag"; pr.textContent = "OWNED"; } else pr.textContent = r.item.price + " T"; row.appendChild(pr);
       } else if (r.shirt) {
         const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = "GOQ shirt"; row.appendChild(nm);
-        const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = this.progress.shirt ? "YOURS" : "DISCONTINUED"; row.appendChild(pr);
+        const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = this.progress.shirt ? "YOURS" : "GONE"; row.appendChild(pr);
       } else { const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = r.collection ? "Your collection" : "Leave"; row.appendChild(nm); }
       row.addEventListener("click", e => { e.stopPropagation(); if (this.shopSel === i) this.shopSelect(); else { this.shopSel = i; this.shopConfirm = null; this.shopMsg = ""; this.renderShop(); } });
       list.appendChild(row);
     });
-    const r = rows[this.shopSel], det = document.createElement("p"); det.className = "gt-shop-detail";
-    det.textContent = this.shopMsg || (r.item ? (r.item.id === this.featuredId() ? "FEATURED. " : "") + (r.item.description || "") :
-      r.trade ? "Pick one prize item, on the house." : r.shirt ? this.tx(this.progress.shirt ? "shirt.owned" : "shirt.tease").join(" ") : r.collection ? "See what you've bought." : "Head back out.");
-    box.appendChild(det);
+    const r = rows[this.shopSel], it = r.item;
+    split.appendChild(this.detailPane(it ? { img: this.itemIcon(it).toDataURL(), tag: owned.includes(it.id) ? "OWNED" : "", title: it.name, price: owned.includes(it.id) ? "Yours" : it.price + " tokens", desc: (it.id === this.featuredId() ? "FEATURED. " : "") + (it.description || ""), msg: this.shopMsg }
+      : { title: r.shirt ? "GOQ shirt" : r.collection ? "Your collection" : "Leave", desc: r.shirt ? this.tx(this.progress.shirt ? "shirt.owned" : "shirt.tease").join(" ") : r.collection ? "See what you've bought." : "Head back out.", msg: this.shopMsg }));
+    this.fitSplit(box, split);
     const sel = list.children[this.shopSel]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: "nearest" });
   }
   shopSelect() {
@@ -5152,8 +5217,8 @@ class Game {
     this.cm = { drinks, cost, sun, i: 0, title: lines[this.cafeI % lines.length], msg: "" };
     this.mode = "cafe"; this.el.cafe.style.display = "block"; this.renderCafe();
   }
-  /* The café menu: a grid of the drinks, each on the same saucer so none blends in, then Just chatting and Nothing, thanks. */
-  cafeCols() { const n = this.cm.drinks.length; return n <= 3 ? n : n === 4 ? 4 : 3; }
+  /* The café menu, split like the gift shop: the drinks (and Just chatting, Nothing, thanks) on the left, the highlighted
+     drink large on its saucer on the right, with its name and price in full. */
   cafeCup(d, k) { // the drink as it's served, on its own little canvas
     const c = document.createElement("canvas"); c.width = c.height = 8; const x = c.getContext("2d");
     const img = d.iced ? this.icedCup(d.color || DRINKS[Math.min(k, 2)].color) : d.id === "week" && d.color && !this.overrides.cups ? this.weekCup(d.color) : null;
@@ -5165,25 +5230,28 @@ class Game {
     const head = document.createElement("div"); head.className = "gt-shop-head";
     const t1 = document.createElement("span"); t1.textContent = "CAFE"; const t2 = document.createElement("span"); t2.textContent = "TOKENS " + (this.progress.tokens || 0);
     head.appendChild(t1); head.appendChild(t2); box.appendChild(head);
-    const q = document.createElement("div"); q.style.textAlign = "center"; q.textContent = m.title + (m.sun ? " Sundays, everything's half off." : ""); box.appendChild(q);
-    const grid = document.createElement("div"); grid.className = "gt-cafe-grid"; grid.style.gridTemplateColumns = "repeat(" + this.cafeCols() + ", minmax(0,1fr))"; box.appendChild(grid);
-    const pick = i => e => { e.stopPropagation(); if (m.i === i) this.cafePick(); else { m.i = i; m.msg = ""; this.renderCafe(); } };
-    m.drinks.forEach((d, i) => {
-      const t = document.createElement("div"); t.className = "gt-cafe-tile" + (m.i === i ? " on" : ""); t.addEventListener("click", pick(i));
-      const sc = document.createElement("div"); sc.className = "gt-cafe-saucer"; const img = document.createElement("img"); img.alt = ""; img.src = this.cafeCup(d, d.id === "week" ? 3 : i); sc.appendChild(img); t.appendChild(sc);
-      const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = d.name; t.appendChild(nm);
-      const c = m.cost(d), pr = document.createElement("span"); pr.className = "pr"; pr.textContent = c ? c + " T" : "Free"; t.appendChild(pr);
-      grid.appendChild(t);
+    const split = document.createElement("div"); split.className = "gt-split"; box.appendChild(split);
+    const list = document.createElement("div"); list.className = "gt-shop-list"; split.appendChild(list);
+    const rows = [...m.drinks.map((d, i) => ({ d, k: d.id === "week" ? 3 : i })), { label: "Just chatting" }, { label: "Nothing, thanks" }];
+    rows.forEach((r, i) => {
+      const row = document.createElement("div"); row.className = "gt-shop-row" + (i === m.i ? " on" : "");
+      if (r.d) { const img = document.createElement("img"); img.alt = ""; img.src = this.cafeCup(r.d, r.k); row.appendChild(img); }
+      const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = r.d ? r.d.name : r.label; row.appendChild(nm);
+      if (r.d) { const c = m.cost(r.d), pr = document.createElement("span"); pr.className = "pr"; pr.textContent = c ? c + " T" : "Free"; row.appendChild(pr); }
+      row.addEventListener("click", e => { e.stopPropagation(); if (m.i === i) this.cafePick(); else { m.i = i; m.msg = ""; this.renderCafe(); } });
+      list.appendChild(row);
     });
-    const more = document.createElement("div"); more.className = "gt-cafe-more"; box.appendChild(more);
-    ["Just chatting", "Nothing, thanks"].forEach((label, k) => { const i = m.drinks.length + k, b = document.createElement("div"); b.className = m.i === i ? "on" : ""; b.textContent = label; b.addEventListener("click", pick(i)); more.appendChild(b); });
-    const msg = document.createElement("div"); msg.className = "gt-cafe-msg"; msg.textContent = m.msg; box.appendChild(msg);
+    const r = rows[m.i];
+    split.appendChild(this.detailPane(r.d ? { img: this.cafeCup(r.d, r.k), title: r.d.name, price: (m.cost(r.d) ? m.cost(r.d) + " tokens" : "Free") + (r.d.iced ? " \u00b7 iced" : ""), desc: m.sun ? "Sundays, everything's half off." : "", msg: m.msg }
+      : { title: r.label, desc: r.label === "Just chatting" ? "Talk to the barista instead." : "Head back out.", msg: m.msg }));
+    const q = document.createElement("div"); q.style.textAlign = "center"; q.textContent = m.title; box.insertBefore(q, split);
+    this.fitSplit(box, split);
+    const sel = list.children[m.i]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: "nearest" });
   }
   cafeMove(d) {
-    const m = this.cm, n = m.drinks.length, cols = this.cafeCols(), last = n + 1; let i = m.i;
-    if (d === "left") i = i === 0 ? last : i - 1; else if (d === "right") i = i === last ? 0 : i + 1;
-    else if (d === "down") i = i < n ? (i + cols < n ? i + cols : n) : i; else if (d === "up") i = i >= n ? Math.max(0, n - cols + Math.min(i - n, cols - 1)) : i - cols >= 0 ? i - cols : i;
-    m.i = i; m.msg = ""; this.renderCafe();
+    const m = this.cm, n = m.drinks.length + 2;
+    if (d === "up" || d === "left") m.i = (m.i + n - 1) % n; else m.i = (m.i + 1) % n;
+    m.msg = ""; this.renderCafe();
   }
   closeCafe() { this.el.cafe.style.display = "none"; this.cm = null; this.mode = "walk"; this.inputLock = true; }
   cafePick() {
@@ -5237,6 +5305,7 @@ class Game {
     const t = todayISO(), cv = this.progress.curious || (this.progress.curious = { day: "", list: [], back: [] }), rels = this.askable(), pick = a => a[Math.floor(Math.random() * a.length)];
     const fix = () => cv.list.forEach(v => { if (!v.rel || !rels.some(m => m.id === v.rel)) v.rel = rels.length ? pick(rels).id : ""; }); // an older save's visitors, or a relationship no piece has anymore
     if (cv.day === t) { fix(); return cv; }
+    cv.back = (cv.back || []).filter(v => !v.day || daysBetween(v.day, t) <= 3); // the ones you helped wait in the lobby for three days at most
     if (!rels.length) return cv; // nothing to ask for yet (an older pack, before the real one loads): don't use up the day
     // Random for every player and every day. Relationships are dealt from a shuffled deck, so one day's visitors want different things.
     const per = this.pack.settings.curious.perDay;
@@ -5425,19 +5494,15 @@ class Game {
     const m = this.rel(piece.rel), vars = { title: piece.title, name };
     return m && m.miss.length ? [this.fmt(this.pickLine(m.miss, key + piece.id), vars)] : this.tx("cur.missNone", vars);
   }
-  /* The next day: what they made of the curator's take, picked when you recommended it (agree, disagree or puzzled). */
+  /* The next day, in the lobby: a short chat. Hello, what they made of the curator's take (picked when you recommended it:
+     agree, disagree or puzzled), goodbye, and they head out. Anyone you don't talk to stops coming after three days. */
   backTalk(n) {
-    const v = n.back, p = this.pieceById(v.piece), cv = this.curiousPlan(), title = p ? p.title : "that game";
-    const take = v.take || (v.take = ["agree", "disagree", "puzzled"][Math.floor(Math.random() * 3)]), how = { agree: "loved", disagree: "liked", puzzled: "nope" }[take] || "liked";
-    const lines = this.tx("cur." + take, { title, name: v.name });
-    cv.back = cv.back.filter(x => x !== v); n.back = null; n.lines = this.pack.settings.text["cur.after"] || TEXT["cur.after"].v; n.lineI = -1;
-    this.saveProgress();
-    const intro = [...this.tx("cur.back", { name: v.name, title, hint: p && p.hint ? ", " + p.hint : "" }), ...this.tx("cur.beat")].map((pg, k) => (k ? v.name + ": " + pg : pg));
-    this.say(intro, () => {
-      // The moment: the text box steps aside for a second so you see it (a happy hop and hearts, one heart, or a little shrug), then they say it.
-      n.react = { how, t0: this.t }; n.dir = OPP[this.player.dir]; this.mode = "busy";
-      setTimeout(() => { this.mode = "walk"; this.say(lines.map((pg, k) => (k ? pg : v.name + ": " + pg))); }, how === "nope" ? 700 : 1100);
-    });
+    const v = n.back, p = this.pieceById(v.piece), cv = this.curiousPlan(), title = p ? p.title : "that game", vars = { name: v.name, title, hint: p && p.hint ? ", " + p.hint : "" };
+    const take = v.take || (v.take = ["agree", "disagree", "puzzled"][Math.floor(Math.random() * 3)]);
+    cv.back = cv.back.filter(x => x !== v); n.back = null; this.saveProgress();
+    n.dir = OPP[this.player.dir];
+    const pages = [...this.tx("cur.back", vars), ...this.tx("cur." + take, vars), ...this.tx("cur.bye", vars)].map(pg => v.name + ": " + pg);
+    this.say(pages, () => { n.leaving = true; n.leaveT = 0; n.alpha = 1; n.route = null; });
   }
   pieceById(id) { return this.pack.pieces.find(p => p.id === id); }
   /* A question too long for the text box with the options open: the start reads out first, the end stays up with the options. */
@@ -5585,6 +5650,7 @@ class Game {
     return this.tx("react." + kind, { who }).join(" ") + (dark ? " It's very dark." : "");
   }
   takePhoto() {
+    if (this.using("case") === "fake") { this.say(this.tx("gear.caseBlocks")); return; } // a fake case covers the lens
     const sub = this.photoSubject(), ph = this.progress.photos || (this.progress.photos = []);
     { const [dx, dy] = DIRS[this.player.dir], n = this.room.npcs.find(q => q.x === this.player.x + dx && q.y === this.player.y + dy && !q.leaving);
       const d = n && this.photoReact(n); if (d) sub.desc = d;
@@ -5635,17 +5701,29 @@ class Game {
   myStuff() {
     const n = (this.progress.photos || []).length;
     const an = Object.keys(this.progress.ach || {}).length + "/" + this.pack.settings.achievements.length;
-    const sv = this.ownedItems().length, opts = ["Photos (" + n + ")", "Souvenirs (" + sv + ")", "Achievements (" + an + ")", ...(this.progress.shirt ? ["Wardrobe"] : []), "Back"];
+    const sv = this.ownedItems().length, opts = ["Photos (" + n + ")", "Souvenirs (" + sv + ")", "Achievements (" + an + ")", ...(this.progress.shirt || ["shades", "hat", "mug", "case"].some(u => this.gear(u)) ? ["Wardrobe"] : []), "Back"];
     this.choose("MY STUFF", opts, k => {
       const o = opts[k];
       if (o.startsWith("Photos")) { if (!n) this.say(this.tx("photos.none")); else this.openAlbum(); }
       else if (o.startsWith("Souvenirs")) { if (!sv) this.say(this.tx("cabinet.empty")); else this.openItems(); }
       else if (o.startsWith("Achievements")) this.showAchievements();
-      else if (o === "Wardrobe") this.choose("Wardrobe", [this.progress.wearShirt ? "Take off the GOQ shirt" : "Wear the GOQ shirt", "Back"], j => {
-        if (j === 0) { this.progress.wearShirt = !this.progress.wearShirt; this.saveProgress(); this.showLoc(this.progress.wearShirt ? "Looking sharp." : "Back to the usual."); }
-      });
+      else if (o === "Wardrobe") this.wardrobe();
       else this.openMenu();
     }, opts.length - 1);
+  }
+  /* Wardrobe: the GOQ shirt, and your gear (on or off). Back returns to My Stuff. */
+  wardrobe() {
+    const p = this.progress, on = p.gearOn || (p.gearOn = {}), opts = [], acts = [];
+    const add = (label, fn) => { opts.push(label); acts.push(fn); };
+    if (p.shirt) add(p.wearShirt ? "Take off the GOQ shirt" : "Wear the GOQ shirt", () => { p.wearShirt = !p.wearShirt; this.showLoc(p.wearShirt ? "Looking sharp." : "Back to the usual."); });
+    const toggle = (use, offL, onL, tOn, tOff) => { if (!this.gear(use)) return; const isOn = !!this.using(use); add(isOn ? offL : onL, () => { on[use] = !isOn; this.showLoc(isOn ? tOff : tOn); }); };
+    toggle("shades", "Take off the GOQ shades", "Put on the GOQ shades", "Shades on.", "Shades off.");
+    if (this.gear("hat") === "fake") add("Try on the GOQ hat", () => this.say(this.tx("gear.hatSmall")));
+    else toggle("hat", "Take off the GOQ hat", "Put on the GOQ hat", "Hat on.", "Hat off.");
+    toggle("mug", "Stop using the travel mug", "Use the travel mug", "Drinks come in your travel mug now.", "Back to paper cups.");
+    toggle("case", "Take the case off your phone", "Put the case on your phone", "Phone case on.", "Phone case off.");
+    add("Back", () => this.myStuff());
+    this.choose("Wardrobe", opts, k => { acts[k](); this.saveProgress(); }, opts.length - 1);
   }
   /* Controls: keyboard, touch and controller, one page each. The one you're using comes first. */
   showControls() {
@@ -6100,6 +6178,7 @@ class Game {
       c.x += DIRS[c.dir][0]; c.y += DIRS[c.dir][1]; c.prog = 0; c.moving = false;
       if (c === this.player) {
         if (!this.full && this.progress.stats) this.progress.stats.steps++;
+        if (this.drink && !this.drink.empty && this.using("mug") === "fake" && (this.drink.leak = (this.drink.leak || 0) + 1) >= 6) { this.drink.empty = true; setTimeout(() => this.say(this.tx("gear.leak")), 50); } // a fake travel mug leaks
         this.stepInDark(); this.zoneCheck();
         const e = this.room.events[c.x + "," + c.y];
         if (e && e.step && !this.trans) { this.path = null; this.pathAct = null; c.walking = false; if (e.warp[0] === "storage") this.quest("stairsB1"); this.runEvent(e); }
@@ -6173,7 +6252,7 @@ class Game {
       return;
     }
     if (this.mode === "cafe") {
-      for (const d of ["up", "down", "left", "right"]) if (has(d)) this.cafeMove(d);
+      for (const d of ["up", "down"]) if (has(d)) this.cafeMove(d);
       if (has("a")) this.cafePick(); else if (has("b") || has("start")) this.closeCafe();
       return;
     }
@@ -6225,6 +6304,7 @@ class Game {
       }
       if (this.konamiNow) { this.konamiNow = false; return; } // the code's last Start: no menu
       if (has("start") && !this.player.moving) { this.openMenu(); return; }
+      if (!this.player.moving && (this.using("shades") === "fake" && !this.progress.lensPopped || this.using("hat") === "fake")) { this.gearCheck(); return; }
       const codeB = this.kbuf && this.kbuf.slice(-9).join() === KONAMI.slice(0, 9).join(); // the B in the code isn't a photo
       if (has("a") && this.kbuf && this.kbuf.slice(-10).join() === KONAMI.slice(0, 10).join()) return; // nor is its A a look
       if (has("b") && !codeB && !this.player.moving && !this.asleep) { this.takePhoto(); return; }
@@ -6761,6 +6841,7 @@ class Game {
     const me = c === this.player, d = me ? this.drink : c.drink, st = me ? (this.sip ? this.sip.t : 0) : c.sipT ? 46 - c.sipT : 0;
     const k = d.kind, up = st > 6 && st < 36;
     const x = up ? { down: 4, up: 4, left: 2, right: 6 }[c.dir] : { down: 11, up: 2, left: 1, right: 8 }[c.dir], y = up ? 6 : 9;
+    if (me && this.using("mug")) { this.drawSlot("travel_mug", 0, 0, sx + x, sy + y); return; } // your travel mug: closed, so no steam
     if (d.iced) { const ic = this.icedCup(d.color || DRINKS[Math.min(k, 2)].color, d.empty); if (ic) this.ctx.drawImage(ic, sx + x, sy + y); else this.drawSlot("cup_iced", d.empty ? 1 : 0, 0, sx + x, sy + y); return; } // iced: a clear cup (empty: still clear), no steam
     if (d.empty) { this.drawSlot("cup_empty", 0, 0, sx + x, sy + y); return; }
     if (k === 3 && d.color && !this.overrides.cups) this.ctx.drawImage(this.weekCup(d.color), sx + x, sy + y); else this.drawSlot("cups", k, 0, sx + x, sy + y);
@@ -6914,6 +6995,12 @@ class Game {
       if (bagFirst) this.drawSlot("shop_bag", 0, 0, ...bagAt);
       if (cupFirst) this.drawCup(sx, sy, c);
       this.drawSlot(sheet, c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
+      if (c === this.player && !this.full) { // your gear: the GOQ hat and shades (a fake pair has only its right lens)
+        if (this.using("hat") === "real") this.drawSlot("goq_hat", c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
+        const sh = this.using("shades");
+        if (sh === "real") this.drawSlot("goq_shades", c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
+        else if (sh === "fake") { ctx.save(); ctx.beginPath(); ctx.rect(sx + 8, sy, 8, 16); ctx.clip(); this.drawSlot("goq_shades", c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy); ctx.restore(); }
+      }
       if (c !== this.player && /^visitor_[abc]$/.test(sheet) && !this.overrides[sheet]) { // their shirt, in their own color
         const L = this.pack.settings.life, hex = c.shirt || (L.shirtsOn && L.shirts.length ? (c.shirt = this.shirtFor(sheet, L.shirts, Math.random())) : null);
         if (hex) this.drawSlot("visitor_shirt@" + hex, c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
@@ -6928,7 +7015,7 @@ class Game {
           ctx.fillStyle = "rgba(255,255,230," + (0.25 * k) + ")"; ctx.beginPath(); ctx.arc(fx, fy, 9, 0, 7); ctx.fill(); }
       }
       if (c === this.player && this.phoneT > 0) {
-        const ox = { down: 4, up: 4, left: 0, right: 8 }[c.dir]; if (c.dir !== "up") this.drawSlot("phone", 0, 0, sx + ox, sy + 4);
+        const ox = { down: 4, up: 4, left: 0, right: 8 }[c.dir]; if (c.dir !== "up") this.drawSlot(this.using("case") ? "phone_case" : "phone", 0, 0, sx + ox, sy + 4);
       }
       if (c === this.player && this.asleep && c.sitting && this.t % 120 < 90) { const zy = Math.floor((this.t % 120) / 30); ctx.fillStyle = "#f8f8f0"; ctx.font = "6px monospace"; ctx.fillText("z", sx + 12 + zy, sy - zy * 3); }
       const bub = c.leaving || this.full ? -1 : c.tutId ? (!c.tutShown && !c.follow ? 0 : -1) : c.back ? 1 : c.cur && !c.follow ? 0 : -1; // "?" curious, "!" back to tell you how it went
@@ -7008,7 +7095,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cafe grid";
+const VERSION = "2026-11-18 goq gear";
 window.GOQ = { REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

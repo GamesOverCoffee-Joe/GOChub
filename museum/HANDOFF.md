@@ -467,7 +467,19 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
-**Café grid, a heart that floats, and fixes (2026-11-18).**
+**GOQ gear, split menus, and the lobby chat (2026-11-18).**
+- **Shop items** are four GOQ things now (old samples removed): **GOQ Shades** (12), **GOQ Hat** (10), **GOQ Travel Mug** (8), **GOQ Phone Case** (10). Descriptions are bracketed placeholders. Each shop item has **What it does** (`it.use`: shades, hat, mug, case, or nothing); Bluu's copies inherit it from the item they copy (`itemUse`).
+- **Gear** (`gear(use)` → "real", "fake" or ""; a real one wins; `using(use)` honors the Wardrobe's on/off, `progress.gearOn`). My Stuff → **Wardrobe** turns each on or off (shown once you own the shirt or any gear).
+  - Shades: drawn on you (`goq_shades`). Fake: the first time, one lens pops out (`gear.lens`, `progress.lensPopped`) and you wear half from then on.
+  - Hat: drawn on you (`goq_hat`). Fake: too small, the Wardrobe won't put it on (`gear.hatSmall`).
+  - Travel mug: your drinks go in it (`travel_mug`, no steam). Fake: after 6 steps the drink's gone (`gear.leak`).
+  - Phone case: your phone wears it (`phone_case`). Fake: photos are blocked (`gear.caseBlocks`).
+  - Art slots: `goq_shades`, `goq_hat`, `phone_case` (People) and `travel_mug` (Gift shop and café). The four lines are in Words → Your stuff.
+- **Split menus:** the gift shop and the café are a list on the left and the picked thing big on the right, with its full name, price and description (`.gt-split`, `detailPane`, `fitSplit` trims the list to whole rows so nothing's cut off). The café grid is gone; arrows go up and down.
+- **Helped visitors in the lobby** have a short chat now, not the old beat-by-beat: hello and that they played it (`cur.back`), what they thought of the curator's take (`cur.agree` / `cur.disagree` / `cur.puzzled`), and goodbye (`cur.bye`), then they walk out. `cur.beat` and `cur.after` are gone. Ones you don't talk to stop coming after 3 days (they used to wait forever, up to 6 at a time).
+- **Bluu's table** has an outline like the rest of the furniture (`stall` color 5).
+
+**Café grid, a heart that floats, and fixes (2026-11-18).** (The café grid was replaced by the split menu above.)
 - **Café menu** is its own panel (`el.cafe`, mode `"cafe"`, `renderCafe`, `cafeMove`, `cafePick`): a grid of the drinks, each cup drawn big on the same cream saucer (`.gt-cafe-saucer`) so none blends in, with its name and price; Just chatting and Nothing, thanks underneath. Sundays say "everything's half off" once, under the question. Arrows move, A orders, B closes; tiles can be tapped.
 - **The right recommendation** (`cheer`): your controls wait, the text box clears, the game screen eases in a little on the visitor (a CSS scale on the canvas, off with reduced motion) while one big heart floats up slowly and fades (`thrilled`, no hop), then eases back out; the "+N tokens" toast and their thanks come after (about 2.25 seconds).
 - **Iced cups** are an Art slot now (`cup_iced`, "Iced drink in hand", Gift shop and café): the hot cup's size, frame 0 full (the drink tinted from the menu, colors 4 and 5), frame 1 an empty clear cup. Replaced art draws as-is.
