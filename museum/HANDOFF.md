@@ -467,6 +467,10 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Pause in dialogue; visitors don't park in front of you (2026-11-17).**
+- **Start during a conversation** opens PAUSED (`pauseText`): Skip the tutorial (in the tutorial), Save and quit, or Back, which picks the conversation up on the same page. Not during the unveil ceremony (`this.cine`) or a close-up.
+- **Visitors** who step onto the tile you're facing wait at most two seconds (`n.faceWait`, time to talk), then go on their way; before, they waited until you moved, which jammed hallways. Strolling visitors never pick a spot right next to you to stop at.
+
 **Tutorial editions (2026-11-17).** `settings.tutorialRev` (curator Staff tab → Tutorial → Require it again) is the tutorial's current edition; a save remembers which one it finished (`progress.tutorialRev`; older saves count as edition 1). Anyone behind is put into the tutorial on load (once), including when the site's pack arrives after a cached one (checked in `setPack`). The pack is at edition 2, so everyone retakes the new relationships tutorial. Skipping counts as finishing it.
 
 **Relationships replace mindsets (2026-11-17).** The core loop is now about reading both placards and comparing them.

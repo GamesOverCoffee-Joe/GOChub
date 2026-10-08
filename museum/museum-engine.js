@@ -5551,6 +5551,17 @@ class Game {
       else if (o === "Save and quit") { this.saveWhere(); this.mode = "busy"; this.trans = { t: 0, dur: 24, switched: false, fn: () => this.showEnd("brb"), hold: true }; }
     });
   }
+  /* Paused in the middle of a conversation: skip the tutorial, or save and quit; Back picks the conversation up where it was. */
+  pauseText() {
+    const tx = this.txt; this.txt = null; this.holdToast();
+    const opts = this.tut ? ["Skip the tutorial", "Save and quit", "Back"] : ["Save and quit", "Back"];
+    this.choose("PAUSED", opts, i => {
+      const o = opts[i];
+      if (o === "Skip the tutorial") this.endTutorial(true);
+      else if (o === "Save and quit") { if (this.tut) this.cleanTutorial(); else this.saveWhere(); this.mode = "busy"; this.trans = { t: 0, dur: 24, switched: false, fn: () => this.showEnd("brb"), hold: true }; }
+      else { this.mode = "text"; this.txt = tx; this.el.text.style.display = "block"; this.renderText(); }
+    });
+  }
   /* My Stuff: photos, the stamp card, achievements, and (once you have the shirt) the wardrobe. Back returns to the pause menu. */
   myStuff() {
     const n = (this.progress.photos || []).length, sc = this.progress.stamps.length + "/" + this.pack.settings.shop.stampSize;
@@ -6118,6 +6129,7 @@ class Game {
       return;
     }
     if (this.mode === "text") {
+      if (has("start") && this.el.cu.style.display !== "flex" && !this.cine) { this.pauseText(); return; } // pause in the middle of someone talking
       const tx = this.txt, page = tx.pages[tx.i];
       if (tx.n < page.length) tx.n = Math.min(page.length, tx.n + 1.5);
       if (has("b") && this.el.cu.style.display === "flex") { this.closeText(); return; }
@@ -6262,7 +6274,8 @@ class Game {
      They never step onto doorways, stairs, or the tiles where people arrive. */
   stroll(n) {
     if (n.stepWait > 0) { n.stepWait--; return; }
-    { const p = this.player, [fx, fy] = DIRS[p.dir]; if (!p.moving && p.x + fx === n.x && p.y + fy === n.y) { n.route = null; return; } } // you're facing them: they wait
+    { const p = this.player, [fx, fy] = DIRS[p.dir]; // you're facing them: they wait a couple of seconds (time to talk), then go on their way
+      if (!p.moving && p.x + fx === n.x && p.y + fy === n.y) { if ((n.faceWait = (n.faceWait || 0) + 1) < 120) { n.route = null; return; } } else n.faceWait = 0; }
     if (n.arrived) { // just stepped onto the spot they were heading for
       n.arrived = false;
       // Wandered into the café: now and then they come away with a drink (never with a bag in the other hand).
@@ -6281,8 +6294,8 @@ class Game {
         if (others.length) n.zone = others[(Math.random() * others.length) | 0].id;
       }
       const inZone = (x, y) => !r.zoneAt || !n.zone || (this.zoneAt(r, x, y) || {}).id === n.zone;
-      const opts = [];
-      for (let y = 3; y < r.h - 1; y++) for (let x = 1; x < r.w - 1; x++) if (!r.solid[y][x] && !noGo(x, y) && Math.abs(x - n.x) + Math.abs(y - n.y) > 2 && inZone(x, y)) opts.push([x, y]);
+      const opts = [], pl = this.player, byYou = (x, y) => r === this.room && Math.abs(x - pl.x) <= 1 && Math.abs(y - pl.y) <= 1; // never somewhere right next to you
+      for (let y = 3; y < r.h - 1; y++) for (let x = 1; x < r.w - 1; x++) if (!r.solid[y][x] && !noGo(x, y) && Math.abs(x - n.x) + Math.abs(y - n.y) > 2 && inZone(x, y) && !byYou(x, y)) opts.push([x, y]);
       // Often, somewhere in front of a piece: the front or back of a case, or under a painting.
       const views = opts.filter(([x, y]) => r.cases.some(c => c.piece && c.x === x && Math.abs(c.y - y) === 1) || r.hung.some(h => y === h.y + 2 && (h.x === x || h.x + 1 === x)));
       if (views.length && Math.random() < 0.5) opts.splice(0, opts.length, ...views);
@@ -6907,7 +6920,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-17 tutorial edition";
+const VERSION = "2026-11-17 pause in dialogue";
 window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
