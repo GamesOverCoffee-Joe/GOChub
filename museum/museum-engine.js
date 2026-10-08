@@ -1098,7 +1098,7 @@ const SLOTS = [
   { key: "mate_can", label: "Can of yerba mate", group: "Curator's office", w: 16, h: 16, pal: "clutter", gen: GEN.mate_can, note: "Floor clutter: walk over it." },
   { key: "joe", label: "Joe (crochet robot)", group: "Curator's office", w: 16, h: 16, frames: 2, fps: 1, pal: "joe", gen: GEN.joe, note: "2 frames (32×16): his antenna lights up. Sits in the office, and now and then turns up somewhere in the museum." },
   { key: "kid", label: "Lost kid (Tuesdays)", group: "Days of the week", w: 16, h: 16, layout: "char", pal: "kid", gen: GEN.kid, note: "Smaller than the visitors. " + CHAR_NOTE },
-  { key: "curator", label: "The curator (some Sundays)", group: "Days of the week", w: 16, h: 16, layout: "char", pal: "curatorp", gen: GEN.character, note: "The curator in person, at a café table now and then on a Sunday. " + CHAR_NOTE },
+  { key: "curator", label: "The curator", group: "Characters", w: 16, h: 16, layout: "char", pal: "curatorp", gen: GEN.character, note: "The curator in person: you, when you play on a curator badge; otherwise at a café table now and then on a Sunday, and at every unveiling. " + CHAR_NOTE },
   { key: "day_board", label: "Day board", group: "Days of the week", w: 32, h: 16, pal: "board", gen: GEN.day_board, note: "In the lobby, left of the door to the museum. Today's day is chalked on it in the pixel font, centered on the slate (x 2 to 29, y 3 to 7)." },
   { key: "lost_box", label: "Misplaced box (Mondays)", group: "Days of the week", w: 16, h: 16, pal: "lbox", gen: GEN.lost_box, note: "Five of these turn up around the museum on Mondays." },
   { key: "easel", label: "The artist's easel (Wednesdays)", group: "Days of the week", w: 16, h: 32, pal: "easel", gen: GEN.easel, note: "Two tiles tall." },
@@ -1343,7 +1343,7 @@ function normalizePack(p) {
     fingerprints: typeof sin.fingerprints === "number" && isFinite(sin.fingerprints) ? Math.max(0, Math.min(1, sin.fingerprints)) : 0.15,
     patronSpeed: typeof sin.patronSpeed === "number" && isFinite(sin.patronSpeed) ? Math.max(0.2, Math.min(1, sin.patronSpeed)) : 0.45,
     // Pieces you haven't read yet: a slow sparkle or a soft green glow (or off), and how strong (0 to 1).
-    readStyle: ["sparkle", "glow", "off"].includes(sin.readStyle) ? sin.readStyle : "sparkle",
+    readStyle: sin.readStyle === "off" ? "off" : "border", // the glowing floor border (the old sparkle and glow became it)
     readStrength: typeof sin.readStrength === "number" && isFinite(sin.readStrength) ? Math.max(0, Math.min(1, sin.readStrength)) : 0.4,
     eotm: { name: str(eo.name, 40), note: str(eo.note, 200) },
     // Patreon members: they visit the museum as named visitors, and are all listed on the Patron Board.
@@ -3771,7 +3771,7 @@ class Game {
     if (wd === 4 && m && !this.closing) { // Thursday: trivia players on every café stool but one (trivia night too)
       const stools = m.props.filter(p => p.key === "cafe_stool" && p.sit), skip = stools.length ? strSeed(todayISO() + "seat") % stools.length : -1;
       d.thuSeat = skip >= 0 ? { x: stools[skip].x, y: stools[skip].y } : null; // the one free seat: sit there to play
-      if (d.thuSeat && !d.thuDone) { const { x, y } = d.thuSeat; m.npcs = m.npcs.filter(n => !(n.x === x && n.y === y)); (m.noWander = m.noWander || new Set()).add(x + "," + y); } // kept free for you
+      if (d.thuSeat) { const { x, y } = d.thuSeat; /* all Thursday, before and after you've played */ m.npcs = m.npcs.filter(n => !(n.x === x && n.y === y)); (m.noWander = m.noWander || new Set()).add(x + "," + y); (m.keepFree = m.keepFree || new Set()).add(x + "," + y); } // kept free for you: nobody else steps on it
       stools.forEach((st, i) => {
         if (i === skip || (this.room === m && this.player.x === st.x && this.player.y === st.y)) return;
         m.npcs = m.npcs.filter(n => !(n.x === st.x && n.y === st.y));
@@ -3785,7 +3785,7 @@ class Game {
         L.npcs.push(this.dayNpc({ sheet: "visitor_c", x, y: y - 1, vendor: true, member: "Bluu" })); L.solid[y - 1][x] = true; }
     }
     if (wd === 0 && m && !d.sunDone) { // Sunday: someone from the staff at a café table, with the stool across from them free for you
-      const order = ["shopkeeper", "shopkeeper", "barista", "barista", "conservator", "conservator", "usher", "usher", "curator"], role = d.sunRole || (d.sunRole = order[strSeed(todayISO() + "sun") % order.length]);
+      const order = ["shopkeeper", "shopkeeper", "barista", "barista", "conservator", "conservator", "usher", "usher", ...(this.staff && this.staff.curator ? [] : ["curator"])], role = d.sunRole || (d.sunRole = order[strSeed(todayISO() + "sun") % order.length]);
       const def = ROOMS.museum, tables = (def.props || []).filter(p => p.key === "cafe_table").map(t => [t, (def.props || []).find(p => p.key === "cafe_stool" && p.sit === "right" && p.x === t.x - 1 && p.y === t.y), (def.props || []).find(p => p.key === "cafe_stool" && p.sit === "left" && p.x === t.x + 1 && p.y === t.y)]).filter(([, a, b]) => a && b);
       const tb = tables[strSeed(todayISO() + "table") % Math.max(1, tables.length)];
       if (tb) {
@@ -3818,7 +3818,7 @@ class Game {
         const ok = (x, y) => (this.zoneAt(m, x, y) === z) && !m.events[x + "," + y] && !this.byExhibit(m, x, y) && this.dayTile(m, x, y);
         const side = [[front.x - 1, front.y, "right"], [front.x + 1, front.y, "left"], [front.x - 2, front.y + 1, "right"], [front.x + 2, front.y + 1, "left"]].filter(([x, y]) => ok(x, y));
         const host = (sheet, role) => { const at = side.shift(); if (!at) return null; const n = this.dayNpc({ sheet, x: at[0], y: at[1], dir: at[2], unveilHost: role, member: role === "usher" ? "The usher" : "The curator" }); m.npcs.push(n); return n; };
-        cer.curator = host("curator", "curator"); cer.usher = host("usher", "usher"); cer.crowd = [];
+        cer.curator = this.staff && this.staff.curator ? null : host("curator", "curator"); cer.usher = host("usher", "usher"); cer.crowd = []; // on a curator badge, the curator is you
         const spots = near(front, 2, 4).filter(([x, y]) => ok(x, y)).sort((a, b) => a[2] - b[2] || strSeed(today + a[0] + "," + a[1]) - strSeed(today + b[0] + "," + b[1]));
         // The crowd: the museum's own wandering visitors gather (moved here while the museum is set up, before you see it),
         // topped up with extras if there aren't six. Afterwards the visitors go back to wandering this wing; extras go in the fade.
@@ -4035,6 +4035,8 @@ class Game {
      every piece in it front and back; once 5 visitors have loved your picks, a call sheet on the staff corkboard gives the
      order; and the keypad only works after closing (announcement made, lights out). One code for everyone (curator, Staff
      tab), so players can trade it. A curator badge always gets in, and starts there. */
+  /* What you look like: the curator in person on a curator badge, the staff uniform on shift, the shirt if you wear it. */
+  playerSheet(base) { return this.staff ? (this.staff.curator ? "curator" : "player_staff") : this.progress.wearShirt ? "player_goq_shirt" : base || "player"; }
   /* What people call you to your face: your badge name, or for a curator badge one of the curator's nicknames (Staff tab).
      Official things (the ON SHIFT tag, clocking in, the leaderboard, lockers, Employee of the Month) keep the badge name. */
   callName() {
@@ -4746,7 +4748,7 @@ class Game {
   /* The photo in your locker frame: one you put there, or a snapshot of you (head and shoulders, in what you're wearing). */
   framePhoto() {
     const lp = this.progress.lockerPhoto; if (lp) return this.photoThumb(lp);
-    const sheet = this.staff ? "player_staff" : this.progress.wearShirt ? "player_goq_shirt" : "player", ck = "selfie|" + sheet;
+    const sheet = this.playerSheet(), ck = "selfie|" + sheet;
     if (this.cache[ck]) return this.cache[ck];
     const art = ROOMS.staff && ROOMS.staff.art ? ROOMS.staff.art : {};
     return (this.cache[ck] = this.photoThumb({ thumb: { slot: sheet, bg: art.floor || "staff_floor" }, desc: "selfie", tod: "day", seed: 7 }));
@@ -5761,7 +5763,12 @@ class Game {
   }
   /* Sitting: on a café stool or a bench. Any direction stands you back up. With a drink, you sip now and then. */
   sit(e) {
-    if (this.room.npcs.some(n => n.x === e.x && n.y === e.y)) { this.say(["Someone's already sitting there."]); return; }
+    const r = this.room, k = e.x + "," + e.y, inSeat = r.npcs.find(n => n.x === e.x && n.y === e.y);
+    if (inSeat && r.keepFree && r.keepFree.has(k) && !inSeat.sitting) { // a seat saved for you: whoever's standing on it steps aside
+      const to = Object.values(DIRS).map(([dx, dy]) => [e.x + dx, e.y + dy]).find(([x, y]) => this.tileFree(r, x, y) && !r.events[x + "," + y]);
+      if (to) { [inSeat.x, inSeat.y] = to; inSeat.moving = false; inSeat.prog = 0; inSeat.route = null; } else r.npcs = r.npcs.filter(n => n !== inSeat);
+    }
+    if (r.npcs.some(n => n.x === e.x && n.y === e.y)) { this.say(["Someone's already sitting there."]); return; }
     const p = this.player;
     p.sitFrom = [p.x, p.y]; p.x = e.x; p.y = e.y; p.dir = e.sit; p.sitting = true; p.moving = false; this.sipClock = 60; this.inputLock = true;
     p.bench = !!e.bench; this.sitIdle = 0; this.asleep = false;
@@ -5953,7 +5960,7 @@ class Game {
     const f = this.fol, pl = this.player; // you and whoever is following you never block each other
     return [this.player, ...this.room.npcs].some(c => c !== self && !(f && ((self === pl && c === f) || (self === f && c === pl))) && ((c.x === x && c.y === y) || (c.moving && c.x + DIRS[c.dir][0] === x && c.y + DIRS[c.dir][1] === y)));
   }
-  blocked(x, y, self) { const r = this.room; return x < 0 || y < 0 || x >= r.w || y >= r.h || r.solid[y][x] || this.occupied(x, y, self); }
+  blocked(x, y, self) { const r = this.room; return x < 0 || y < 0 || x >= r.w || y >= r.h || r.solid[y][x] || this.occupied(x, y, self) || (self && self !== this.player && r.keepFree && r.keepFree.has(x + "," + y)); } // keepFree: a seat saved for you
   tryMove(c, d) {
     c.dir = d; const [dx, dy] = DIRS[d], nx = c.x + dx, ny = c.y + dy;
     if (this.blocked(nx, ny, c)) {
@@ -6490,44 +6497,38 @@ class Game {
     return;
     this.drawSlot("featured_stand", 0, 0, x, y);
   }
-  /* ----- what you haven't read -----
-     Unread pieces shine a little (Staff tab, Pieces you haven't read): a slow, eased sparkle, or a soft green glow that breathes.
-     Reading one side of a case dims it; reading both sides (or a painting's placard) stops it. Nothing shines in the dark. */
-  readLevel(p, isCase) {
-    const k = p.tut ? (this.tut ? this.tut.sides[p.id] : { note: 1 }) : this.progress.sides[p.id]; if (!k) return 1;
-    if (k.note || (k.front && k.back)) return 0;
-    return isCase && (k.front || k.back) ? 0.45 : 1;
-  }
-  drawReadMarks(r, cx, cy) {
+  /* ----- what you haven't read: a glowing border on the floor -----
+     A one-pixel square through the middle of the eight floor tiles around a case (its top edge hides behind the case's
+     top half). Slowly pulsing red: not read yet. One side read: that side turns green, fading to red toward the other side.
+     Both sides: a steady green. A painting gets the same line along the floor in front of it. On a piece's unveil day
+     (while its wing has bunting) its border pulses blue. Staff tab: Pieces you haven't read. Nothing glows in the dark. */
+  sidesOf(p) { return (p.tut ? (this.tut ? this.tut.sides[p.id] : { note: 1 }) : this.progress.sides[p.id]) || {}; }
+  drawReadBorders(r, cx, cy) {
     const st = this.pack.settings.staff, s = st.readStrength; if (st.readStyle === "off" || s <= 0) return;
-    const ctx = this.ctx, glow = st.readStyle === "glow";
-    const mark = (p, isCase, x, y, w, h, tx, ty) => {
-      const lv = this.readLevel(p, isCase); if (!lv || this.isDark(r, tx, ty)) return;
-      const seed = strSeed(p.id);
-      if (glow) { // a soft green outline (and the faintest wash) that slowly breathes
-        const b = 0.5 + 0.5 * Math.sin((this.t + seed % 600) / 40), a = Math.min(1, lv * s * (0.55 + 0.45 * b));
-        ctx.fillStyle = "#8be39a";
-        ctx.globalAlpha = a * 0.45; ctx.fillRect(x - 2, y - 2, w + 4, 1); ctx.fillRect(x - 2, y + h + 1, w + 4, 1); ctx.fillRect(x - 2, y - 1, 1, h + 2); ctx.fillRect(x + w + 1, y - 1, 1, h + 2);
-        ctx.globalAlpha = a; ctx.fillRect(x - 1, y - 1, w + 2, 1); ctx.fillRect(x - 1, y + h, w + 2, 1); ctx.fillRect(x - 1, y, 1, h); ctx.fillRect(x + w, y, 1, h);
-        ctx.globalAlpha = a * 0.12; ctx.fillRect(x, y, w, h);
-        ctx.globalAlpha = 1; return;
-      }
-      // Sparkles: twinkles that ease in and out now and then, somewhere new each time. Half-read: one, fainter and rarer.
-      const n = lv < 1 ? 1 : 2, period = Math.round((lv < 1 ? 1.7 : 1) * (600 - 380 * s)), life = 60;
-      for (let i = 0; i < n; i++) {
-        const off = hash(seed, i * 7) % period, tt = this.t + off, ph = tt % period; if (ph >= life) continue;
-        const cyc = Math.floor(tt / period), e = Math.sin(Math.PI * ph / life), a = e * e * Math.min(1, 0.3 + 0.7 * s) * (lv < 1 ? 0.6 : 1);
-        const px = Math.round(x + 1 + hash(seed + cyc, i * 13 + 1) % Math.max(1, w - 2)), py = Math.round(y + 1 + hash(seed + cyc, i * 13 + 2) % Math.max(1, h - 2));
-        ctx.fillStyle = "#fff8dc";
-        ctx.globalAlpha = a; ctx.fillRect(px, py, 1, 1);
-        ctx.globalAlpha = a * 0.65; ctx.fillRect(px - 1, py, 3, 1); ctx.fillRect(px, py - 1, 1, 3);
-        if (e > 0.7) { ctx.globalAlpha = a * 0.3; ctx.fillRect(px - 2, py, 5, 1); ctx.fillRect(px, py - 2, 1, 5); }
-      }
-      ctx.globalAlpha = 1;
+    const ctx = this.ctx, today = todayISO(), base = Math.min(1, 0.35 + s), pulse = 0.5 + 0.5 * Math.sin(this.t / 45);
+    const RED = [232, 70, 70], GREEN = [96, 220, 112], BLUE = [90, 170, 255];
+    const floor = (px, py) => { const x = Math.floor(px / T), y = Math.floor(py / T); return r.tiles[y] && r.tiles[y][x] && !/wall/.test(String(r.tiles[y][x])); };
+    const color = (p, k) => { // k: 0 at the back (top), 1 at the front (bottom)
+      if (!p.tut && p.unveil === today) return [BLUE, base * (0.4 + 0.6 * pulse)];
+      const sd = this.sidesOf(p), f = sd.front || sd.note, b = sd.back || sd.note;
+      const g = f && b ? 1 : f ? k : b ? 1 - k : 0; // how green this spot is
+      return [RED.map((v, i) => Math.round(v + (GREEN[i] - v) * g)), base * (g * 0.7 + (1 - g) * (0.4 + 0.6 * pulse))];
     };
-    for (const c of r.cases) if (c.piece && c.state === "wall") mark(c.piece, true, c.x * T - cx + 2, c.y * T - T - cy + 3, 12, 10, c.x, c.y);
-    for (const h of r.hung) if (h.piece && h.state === "wall") mark(h.piece, false, h.x * T - cx + 4, h.y * T - cy + 4, 24, 18, h.x, h.y + 2);
+    const dot = (p, wx, wy, k, w, h) => { if (!floor(wx, wy)) return; const [c, a] = color(p, k); ctx.globalAlpha = a; ctx.fillStyle = "rgb(" + c + ")"; ctx.fillRect(wx - cx, wy - cy, w, h); };
+    const onScreen = (x, y) => x * T - cx > -48 && x * T - cx < SW + 48 && y * T - cy > -48 && y * T - cy < SH + 48;
+    for (const c of r.cases) {
+      if (!c.piece || c.state !== "wall" || !onScreen(c.x, c.y) || this.isDark(r, c.x, c.y)) continue;
+      const x0 = (c.x - 1) * T + 8, x1 = (c.x + 1) * T + 8, y0 = (c.y - 1) * T + 8, y1 = (c.y + 1) * T + 8;
+      for (let x = x0; x <= x1; x += 4) { dot(c.piece, x, y0, 0, Math.min(4, x1 - x + 1), 1); dot(c.piece, x, y1, 1, Math.min(4, x1 - x + 1), 1); }
+      for (let y = y0 + 1; y < y1; y += 2) { const k = (y - y0) / (y1 - y0); dot(c.piece, x0, y, k, 1, Math.min(2, y1 - y)); dot(c.piece, x1, y, k, 1, Math.min(2, y1 - y)); }
+    }
+    for (const h of r.hung) {
+      if (!h.piece || h.state !== "wall" || !onScreen(h.x, h.y + 2) || this.isDark(r, h.x, h.y + 2)) continue;
+      const y = (h.y + 2) * T + 8; for (let x = h.x * T; x < h.x * T + 2 * T; x += 4) dot(h.piece, x, y, 1, 4, 1);
+    }
+    ctx.globalAlpha = 1;
   }
+
   resetRead() { this.progress.sides = {}; this.saveProgress(); }
   /* A sized rug: drawn from its border, corner and colors, or (if the Rug art was replaced) that art nine-sliced to fit,
      so its corners stay crisp and the edges and middle stretch. Custom art keeps its own colors. */
@@ -6711,6 +6712,7 @@ class Game {
     }
     for (const [mx, my] of this.doorMats(r)) this.drawSlot("doormat", 0, 0, mx * T - cx, my * T - cy);
     for (const st of r.stairs) this.drawSlot(st.kind === "up" ? "stair_up" : "stair_down", 0, 0, st.x * T - cx, st.y * T - cy);
+    this.drawReadBorders(r, cx, cy); // on the floor, under the cases and people
     for (const c of r.cases) this.drawCase(c, cx, cy);
     for (const p of r.props) this.drawProp(p, cx, cy);
     if (r.joe) { // Joe on the museum floor; glitching out when you talk to him
@@ -6733,7 +6735,7 @@ class Game {
       const p = this.pos(c), prog = c.moving ? c.prog : c.bumpT > 0 ? 16 - c.bumpT : -1;
       const col = prog >= 0 && prog < 8 ? (c.step ? 1 : 2) : 0;
       if (c.alpha !== undefined) ctx.globalAlpha = Math.max(0, c.alpha);
-      const sheet = c === this.player ? (this.staff ? "player_staff" : this.progress.wearShirt ? "player_goq_shirt" : c.sheet) : c.sheet;
+      const sheet = c === this.player ? this.playerSheet(c.sheet) : c.sheet;
       if (c === this.player && this.segway && !c.sitting) { const pp3 = this.pos(c); this.drawSlot("segway", 0, 0, Math.round(pp3.x - cx), Math.round(pp3.y - cy - 1)); }
       const pk = c.pose ? this.t - c.pose.t0 : 999, jump = c.pose && /^(startled|guard|pose)$/.test(c.pose.kind) && pk < 14 ? Math.round(Math.sin(Math.PI * pk / 14) * 3) : 0; // a little jump when photographed
       const hop = (c.react && c.react.how === "loved" && this.t - c.react.t0 < 48 ? Math.round(Math.abs(Math.sin((this.t - c.react.t0) / 8)) * 4) : 0) + jump - (c.pose && c.pose.kind === "bow" && pk > 8 && pk < 50 ? 1 : 0); // a happy hop; the usher's bow dips
@@ -6779,7 +6781,6 @@ class Game {
     }
     this.drawUppers(r, cx, cy);
     if (full) return;
-    this.drawReadMarks(r, cx, cy);
     this.drawLighting(r, cx, cy, pp);
     this.drawMarquee(r, cx, cy);
     this.syncScreen(r, cx, cy); this.syncTv(r, cx, cy);
@@ -6837,7 +6838,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-13 unveiling 3";
+const VERSION = "2026-11-14 read borders";
 window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

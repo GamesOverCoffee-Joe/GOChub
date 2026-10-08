@@ -384,7 +384,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
           <div class="pvsec"><span class="pvh">Start fresh</span>
             <div class="pvgrid">
               <button class="btn" type="button" id="recrate" title="Pieces with a future unveil date go back in their crates, so you can hang them again">Re-crate upcoming</button>
-              <button class="btn" type="button" id="reread" title="Forget which placards you've read, so every piece shines again">Unread everything</button>
+              <button class="btn" type="button" id="reread" title="Forget which placards you've read, so every border goes back to red">Unread everything</button>
               <button class="btn" type="button" id="rechore" title="Forget everything done in this preview: chores, tokens, photos, stamps, achievements, the office. The lights come back on and visitors return. (The preview never saves; players' saves aren't touched.)">Start the visit over</button>
             </div></div>
         </div>
@@ -398,7 +398,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-13 unveiling 3";
+window.GOQ_WANT = "2026-11-14 read borders";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -940,8 +940,8 @@ function renderStaff() {
     el("label", { class: "range" }, [el("span", { text: "Amount" }), fp, fpOut]),
   ]));
   // Pieces you haven't read yet: how they're marked in the museum, and how strongly.
-  const rsty = el("select", {}, [["sparkle", "Sparkle"], ["glow", "Soft green highlight"], ["off", "Off"]].map(([v, t]) => el("option", { value: v, text: t })));
-  rsty.value = st.readStyle || "sparkle";
+  const rsty = el("select", {}, [["border", "Glowing border on the floor"], ["off", "Off"]].map(([v, t]) => el("option", { value: v, text: t })));
+  rsty.value = st.readStyle === "off" ? "off" : "border";
   const rs = el("input", { type: "range", min: 0, max: 100, step: 1, value: Math.round((st.readStrength === undefined ? 0.4 : st.readStrength) * 100), "aria-label": "How strong the unread mark is" });
   const rsOut = el("output", { text: rs.value + "%" });
   const rApply = () => { if (game && game.pack) { game.pack.settings.staff.readStyle = st.readStyle; game.pack.settings.staff.readStrength = st.readStrength; } }; // see it in the preview right away
@@ -949,7 +949,7 @@ function renderStaff() {
   rs.addEventListener("input", () => { st.readStrength = +rs.value / 100; rsOut.textContent = rs.value + "%"; rApply(); changed(); });
   wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
     el("h3", { text: "Pieces you haven't read", style: "margin:0 0 4px" }),
-    el("p", { class: "note", style: "margin:0 0 12px", text: "Unread pieces shine a little so players can tell at a glance what's left. Reading one side of a case dims it; reading both sides (or a painting's placard) stops it. Preview options, Reset what I've read, shows them all again." }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "A thin border on the floor around each case (and a line in front of each painting) shows what's left to read. It pulses red until you read it; reading one side turns that side green, fading to red toward the other side; both sides make it all green. On a piece's unveil day it pulses blue. Strength sets how bright it is. Preview options, Unread everything, resets it." }),
     el("div", { class: "fields", style: "max-width:420px" }, [el("label", {}, [document.createTextNode("Style"), rsty])]),
     el("label", { class: "range" }, [el("span", { text: "Strength" }), rs, rsOut]),
   ]));
