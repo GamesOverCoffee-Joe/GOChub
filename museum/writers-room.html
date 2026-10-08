@@ -316,6 +316,19 @@ if (!j) {
   try { localStorage.setItem(DRAFT_KEY, f.text); setBase(f.text, "folder", f.j.savedAt); } catch (e) {}
 }
 if (f) folderFp = fingerprint(f.text);
+/* A draft that didn't start from this folder's pack (another device's old draft, an old curator session): exporting it would
+   undo whatever changed in the folder since. Rebasing takes the folder's pack and re-applies the lines saved here. */
+const draftIsOld = () => { if (!f) return false; const b = getBase(); return !b || !b.fp || b.fp !== folderFp; };
+function rebase() {
+  const vals = {};
+  for (const id in meta.marks) if (meta.marks[id] === "mine") { const c = byId(id); if (c) vals[id] = c.fields.map(fl => clone(fl.get())); }
+  useRaw(clone(f.j)); CARDS = buildCards();
+  let n = 0;
+  for (const id in vals) { const c = byId(id); if (!c) continue; try { c.fields.forEach((fl, i) => { fl.set(vals[id][i]); N = GOQ.normalizePack(raw); }); n++; } catch (e) {} }
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(raw)); } catch (e) { toast("Couldn't save: the browser's storage is full"); }
+  setBase(f.text, "folder", f.j.savedAt); if (n) markEdited();
+  N = GOQ.normalizePack(raw); CARDS = buildCards(); return n;
+}
 useRaw(j); CARDS = buildCards();
 await document.fonts.ready.catch(() => {});
 
@@ -359,7 +372,9 @@ function renderHome() {
   dock(null);
   $app.appendChild(top("Writers' Room"));
   const b = getBase();
-  if (folderFp && b && b.fp && b.fp !== folderFp) $app.appendChild(el("div", { class: "banner", text: "Heads up: this folder's museum-pack.json has changed since your draft started. Before you export, open the curator and press More → Check version." }));
+  if (draftIsOld()) $app.appendChild(el("div", { class: "banner" }, [
+    el("b", { text: "Your draft doesn't match this folder's museum-pack.json." }), " It started from an older pack (or the pack changed since). Exporting it as it is could put old rooms, pieces and settings back. Update keeps every line you've saved here and takes everything else from the folder.",
+    el("button", { class: "btn primary wide", type: "button", style: "margin-top:10px", text: "Update my draft", onclick: () => { const n = rebase(); render(); toast(n + (n === 1 ? " line" : " lines") + " kept; the rest is up to date"); } })]));
   if (fresh) { $app.appendChild(el("div", { class: "banner", style: "border-color:var(--gold)", text: "Started a draft from this folder's museum-pack.json. The curator in this browser uses the same draft." })); fresh = false; }
 
   // Today
@@ -649,6 +664,10 @@ function celebrate(c, kind, partial) {
 
 /* ---------- Export ---------- */
 function exportPack() {
+  if (draftIsOld()) {
+    if (!confirm("Your draft is older than this folder's museum-pack.json. Update it first? (Recommended: keeps every line you've saved here, and the rest comes from the folder.)")) return;
+    const n = rebase(); render(); toast(n + (n === 1 ? " line" : " lines") + " kept; the rest is up to date");
+  }
   const savedAt = new Date().toISOString(), text = JSON.stringify(Object.assign({}, raw, { savedAt }));
   const a = el("a", { href: URL.createObjectURL(new Blob([text], { type: "application/json" })), download: "museum-pack.json" });
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
