@@ -2,6 +2,21 @@
 
 Written 2026-10-05. Branch: `experiments-1` (PR #5).
 
+## Pinned for later
+
+Ideas and chores parked on purpose. Nothing here is built yet.
+
+- **Weekly new-piece celebration.** When a new piece is unveiled: a short cutscene, an usher speech, bunting, a themed drink of the week, and visitors mentioning it.
+- **Photo chain-of-events mystery.** A long-haul chain: the conservator's secret exhibit, unlocked step by step through photos.
+- **What the figure is.** Still undecided.
+- **Pre-play-test cleanup:**
+  - Attach the six new clips (Absorber, Seeing Double, AI'm Domingo, Survivor TD, Stella Incus, Cave Escape) to their pieces.
+  - Stop tracking `.DS_Store` and `.vs/` in git (they're in `.gitignore` but were committed earlier).
+  - Remove the Batch fill button (`batch-fill.html` isn't in the repo).
+  - Fix the browser's slow pixel-readback warning (`willReadFrequently` on the canvases read with `getImageData`).
+  - A "Still to write" filter in Words. This may not be needed once the writing app exists.
+- **An art version of the writing app.** The same one-a-day idea, for the art slots.
+
 This document has three parts:
 
 1. **What we have now.** The museum as it is on `main` (engine version `2026-10-06 life 4`).
@@ -457,6 +472,78 @@ Goal: character.
 - **Stats on Someone's PC (B1):** it boots PLAYER_STATS.EXE: a staff profile (up to three titles you've earned, best first), then Visits, Reading, Recommending, Chores and Life. New counters in `progress.stats`: days visited, streak and best streak, time in the museum, time in the dark after closing, steps, walking into walls, drinks and plants by kind, who you photograph most, loved recommendations by genre, misses. Turning the PC on still counts for the shirt riddle.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
+
+**Day tweaks (2026-11-11).**
+- **Sunday:** drinks are half price (rounded down, "half off" on the menu). With the drink price at 0 they stay free.
+- **Monday:** the conservator says `mon.ask` version 1 the first time you talk to him that day, then version 2 every time after (`txAt`, counted in `progress.day.monTalks`). Box labels are gone (`mon.labels` removed).
+- **Tuesday:** `tue.kid` uses one version per Tuesday, taking turns week to week (`weekNo()`). The per-place clues are gone: `{clue}` is just where his mom is ("the Strategy wing", "the café", "the Screening Nook"), and each line supplies its own "in" or "to". `tue.after` is now the kid's line the moment you bring him back, said before his mom's `tue.found`.
+- **Wednesday:** the artist and his easel keep off the tiles where you read a case, front or back (`byExhibit`; `freeSpot` skips them too, so boxes, the kid and his mom do as well). His spot and the easel's are picked together (saved as `progress.day.art = { x, y, ex }`), so he always has his easel; a spot saved before a layout change is picked again. Looking at the easel says `wed.easel`.
+- **Thursday:** trivia players sit on every café stool but one (the empty one is picked per day), outside of closing and night. Missing a question (wrong or out of time) says `thu.wrong` / `thu.time`, then one of them answers with `thu.steal` (a "!" over their head). Talking to them says `thu.crowd`.
+- **Saturday:** the vendor is Bluu (his name on photos and in the stats).
+- **Today's people keep their spots:** a wandering visitor standing on the artist's, mom's, kid's or a box's tile at a rebuild moves elsewhere instead of that person going missing (`dayTile`).
+
+**Writers' Room (2026-11-10).** `museum/writers-room.html` (also in the curator's More menu): a phone-first page for writing the museum's text one line at a time.
+- **Same draft as the curator.** It reads and writes `goq-curator-draft` in this browser, and the curator picks up changes even when it's open in another tab. With no draft yet, it starts one from the folder's `museum-pack.json`. It has its own Export pack (same file as the curator's) and shows the same "pack changed since your draft started" heads-up.
+- **What's in it:** every Words line (`GOQ.TEXT`), every staff chat set, visitor mindset lines (ask, loved, liked, nope), achievement names and descriptions, shop item names and descriptions, genre names, the cat's name, nicknames and corkboard notes. **Placards** are their own category: observation, intention (or the guest note) and the visitor's one-liner, per piece.
+- **Status:** "To write" if any bracketed placeholder is left (or it's empty), "Yours" if you edited it, "Kept" if you pressed Keep it, otherwise "Not reviewed" (lines Claude wrote). Keeps and marks are stored in `goq-writers-room`, with the punch card days.
+- **The daily loop:** Today's line picks the next placeholder, staying in the area you last worked in, then lines to review. Saving, or keeping, stamps today on the punch card, then offers One more or Clock out. Skip moves on without penalty. On multi-entry lines (books, trivia, box labels) empty boxes keep their placeholder, so you can write one entry at a time.
+- **Preview:** dialog lines render in the game's own text box (Press Start 2P, 240×48 box, the pack's textbox art) with the same page splitting as the engine, and sample values filled in for `{name}` and the like. LED lines show as the sign (and warn on letters it can't show); lists show as entries; placards as placard blocks.
+- **The museum map:** one little room per area, lit by how much is done. Rooms with placeholders left come first; the rest fold behind "Show all rooms".
+- No version string of its own: it loads the engine with the version from `version.json`.
+- **Old drafts (2026-11-11):** if the draft didn't start from the folder's `museum-pack.json` (no base record, or a different fingerprint), the home screen says so and offers **Update my draft**: it takes the folder's pack and re-applies every line saved in the Writers' Room (`meta.marks` = "mine"). Export asks to do the same first. This came from an export made from an old phone draft, which put old rooms, pieces and settings back (restored in `ae8fb56`). Edits made in the curator on that device outside the Writers' Room aren't carried over by Update.
+
+**Office outlines (2026-11-09).** The curator's office props now end with a near-black outline like the rest of the museum: desk, TV, shelf, chair, camera, Steam Deck table, PC tower, soft box and the floor clutter. The outline color is each palette's darkest; `tower`, `osoft` and `clutter` gained a `#141418` for it (index 7, 5 and 10). Lighting, walls and the clutter layout are unchanged on purpose. Joe uses the custom PNG in the pack, so his look is whatever that PNG is.
+
+**How updates reach players:** see `museum/UPDATING.md` (caching, version strings, custom art and exporting). Keep it current when any of that changes.
+
+**Curator tidy (2026-11-08).** A cleanup pass on curator.html; no pack or engine changes.
+- **Header:** only the save status, **More** and **Export pack** stay out. More holds Check version, Import pack, Batch fill (local only, and `batch-fill.html` isn't in the repo) and the GOC link grabber.
+- **Pieces fold:** each piece is a one-line row (thumb, title, developer, where it hangs, tags for Painting / Pick / Unveils / Clip / No episode link). Click to open. Which ones are open is kept for the tab session (`goq-open-pieces` in sessionStorage). There's a search box (title or developer) and Open all / Close all. A new piece opens itself and focuses its title. The tab went from about 43,600px tall to about 3,100px.
+- **Intros:** a tab's opening paragraphs longer than 220 characters fold into a "How this works" toggle (`tidyTab()`, run after every render).
+- **Jump chips:** tabs with four or more sections (Staff, Visitors) get chips at the top that scroll to each section. Rooms and Art are skipped.
+- **Checkboxes:** they now sit beside their labels instead of above them.
+
+**GOC link grabber (2026-11-07).** `museum/goc-links.html` (linked from Staff → Friday features) makes `Title | https://youtu.be/ID` lines.
+- **Bookmark:** drag it to the bookmarks bar, then click it on a YouTube Videos tab or playlist. It copies every loaded video, skipping Shorts and duplicates, and shows the list to copy by hand if the clipboard is blocked.
+- **Paste box:** finds video ids in any text and looks up titles through YouTube's oEmbed. A title that can't be fetched becomes "Games Over Coffee".
+- **Pipes:** "|" in titles becomes "/" so the line format holds.
+
+**Days of the week (2026-11-07).** Something small and different each day, by the player's local day of the week (`weekday()`, which follows `todayISO()` so Skip to tomorrow works). Today's progress is kept in `progress.day` (keyed by date and weekday), so reloading doesn't reshuffle it. `placeDay()` runs after every build; `dayTalk()` runs before the usual talk. All lines are bracketed placeholders in Words → Days of the week.
+- **Day board** (`day_board`, 32×16): in the lobby at (5, 2), left of the museum door. Today's day is chalked on it (SUN., MON., TUES., WED., THURS., FRI., SAT.); looking at it reads `day.board.<0-6>`. The lobby light switch moved from (5, 2) to (1, 2) to make room.
+- **Mon:** five misplaced boxes (`lost_box`) on random open floor in the museum. Talking to the conservator gives a hint (the wing one is in); after all five, 5 tokens.
+- **Tue:** a lost kid (`kid`, a visitor shrunk to three quarters) somewhere in the museum. His mom is in the café, the screening nook or a wing (picked by the date). His clue for a wing names its *category*, not the wing. He follows you (`this.fol`, not offered recommendations); talk to his mom with him in tow for 3 tokens.
+- **Wed:** the artist with an easel in a random wing. "Show a photo" opens the album (`albumTitle`) and pays by the photo's hidden `rarity`: 0 common (walls, props, signs) 1 token, 1 uncommon (people, the cat, pieces) 3, 2 rare (people reacting, the poster reveal) 6, 3 legendary (the figure, Joe) 12. His sketch of it shows on the staff corkboard for 7 days (`progress.sketch`, a grayscale close-up).
+- **Thu:** trivia with the barista: 5 questions, 10 s each (a timer bar; running out counts as a miss). Generated from the pieces (who made it, which wing, which game is in a wing; templates in Words) plus your own (`thu.questions`: question, right answer, three wrong; entries starting with [ are skipped). 1 token per right answer, plus 2 for all five.
+- **Fri:** the nook's NOW PLAYING comes from **Friday features** (curator Staff tab: one per line, title and link; `settings.friday`), and the sign says `screen.friday` ("FRIDAY FEATURE:"). They're also at the top of the nook's list.
+- **Sat:** a pop-up table and vendor in the lobby, with three items the same for everyone that week: a shop item or a Joe doll, recolored, with a word from `sat.adjectives` ("limited edition x2" sets the price multiplier). Buy any or all. They're kept in `progress.popups` and show in your collection.
+- **Sun:** someone from the staff at a café table: shopkeeper, barista, conservator or usher (2 each) or the curator (1) in a 9-slot draw. Sitting on the free stool across from them plays `sun.<role>`, then a quick fade and everyone's back at their post. While the barista or shopkeeper is out, their counter says `sun.break`. New `curator` character art.
+- **Curator preview:** Day of the week: Auto / Mon to Sun (`setDay`).
+
+**Nap fix (2026-11-06).** Leaving a seat any way other than walking off (changing rooms, respawning) left `asleep` on, so the Zzz followed you around. `standUp` and `enterRoom` now clear it, and the Zzz only draws while you're seated.
+
+**Curators off the leaderboard (2026-11-06).** `get_leaderboard` (Supabase) leaves out curator badges (`not b.curator`), so the curator is never Employee of the Month or in the top ten. It needs the SQL run again.
+
+**Photo perspective and preview options (2026-11-05).**
+- **Photos are 48×36 now** (they were 24×18; the album and close-up showed them bigger anyway). Scenes are drawn at full size; older single-sprite photos are drawn at 24×18 and doubled, so they look as before. The locker frame crop scales with the size.
+- **People** (`personScene`, built in `takePhoto` after they react): a classic close-up, drawn at 24×18 on the floor tile they stand on and then doubled (`thumb.close`). They face the camera (the shy turn their back), with their reaction bubble beside their head. Nothing behind them, so it reads as if the camera were right in front of them. (A backdrop of the walls, cases and furniture behind them was tried on 2026-11-05 and removed.)
+- **Hallway posters:** the flash reveals a museum game on each poster (`poster:` layer, the same game per poster: `strSeed(room:x,y)`).
+- **Joe:** photos of him come out as a full-frame scramble of bits of the museum's own sprites (`thumb.glitch`), MissingNo style.
+- **Preview options** (curator):
+  - Settings are segmented rows: View as Curator/Visitor, Time Clock/Day/Sunset/Night, Spooky Rare/Every closing, Test pieces Off/60 placeholders.
+  - "Make it happen" holds the figure, **Joe** (`summonJoe()`: he appears near you, in any room) and Tomorrow.
+  - "Start fresh" holds Re-crate upcoming, Unread everything, and **Start the visit over**. That button was "Reset chores", but it forgets everything done in the preview.
+  - The menu opens in place under the buttons, and the preview no longer gets squashed.
+
+**Photos drawn as little scenes again (2026-11-04).**
+- **Back to scenes:** the screen-snapshot photos from 2026-11-03 are gone (`ph.shot` is dropped on load, so those photos are drawn from their subject again). Photos are composed scenes once more, built from the room as it is: `thumb.layers` (`[key, col, row, x, y, flip]`, drawn into a `w×h` box), plus `bg`, a tinted floor or wall tile.
+- **What's in a scene:**
+  - People: their sheet, turned toward you, with their shirt color.
+  - Doors and stairs: the actual wall tiles with their door overlay. Side doors are mirrored, and two-tile doors show both halves.
+  - Theater: the marquee doorway with its bulbs, and the NOW PLAYING board with the hour's title in LED letters.
+  - Office and props: the keypad in its current state, the TV on or off, and any prop with its current art.
+  - Also: the theater screen, hallway posters, café wall art, floor-Joe, the cat and the mug.
+  - Walls and floors use the room's tinted tiles.
+- **Unchanged:** pieces still show their art close up, and older photos with the old `slot` thumbs still draw.
 
 **Photo, placard and cabinet fixes (2026-11-03).**
 - **Photos are real snapshots:** a 36×27 crop of the screen around what you're facing (`snapshot`), saved with the photo as a small PNG (`ph.shot`, about 1 KB, so 40 photos is about 40 KB). Pieces still show their art close up. Older photos keep the old sprite-style picture.

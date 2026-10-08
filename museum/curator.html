@@ -98,6 +98,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 .tabs button+button{border-left:2px solid var(--text)}
 .tabs button[aria-selected="true"]{background:var(--text);color:var(--surface)}
 .actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#saved{font-size:.8rem;color:var(--muted);max-width:220px;line-height:1.3}
+.hmore .rmenu{min-width:190px}
+.hmore .rmenu .btn{justify-content:flex-start;width:100%}
 #saved{font-size:.84rem;color:var(--muted);max-width:32ch}
 #saved.err{color:var(--warn)}
 
@@ -137,6 +140,26 @@ label.check{display:inline-flex;align-items:center;gap:8px;font-size:.9rem;margi
 .pieces{max-width:920px}
 .pieces>p{color:var(--muted);max-width:66ch;margin:0 0 8px}
 .prow{display:grid;grid-template-columns:168px minmax(0,1fr);gap:16px;padding:14px;border:2px solid var(--line);border-radius:4px;background:var(--surface);margin-top:12px}
+.prow.fold{display:block;padding:0}
+.prow.fold .pbody{display:none;grid-template-columns:168px minmax(0,1fr);gap:16px;padding:0 14px 14px}
+.prow.fold.open .pbody{display:grid}
+.phead{display:grid;grid-template-columns:48px minmax(0,1fr) auto auto 18px;align-items:center;gap:12px;width:100%;padding:8px 14px;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;border-radius:4px}
+.phead:hover{background:var(--surface-2)}
+.phead:focus-visible{outline:3px solid var(--gold);outline-offset:-3px}
+.pth{width:48px;height:36px;object-fit:cover;border-radius:2px;background:#000;image-rendering:pixelated}
+.pth.photo{image-rendering:auto}
+.pname{display:flex;flex-direction:column;min-width:0}
+.pname b,.pdev{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pdev{font-size:.82rem;color:var(--muted)}
+.pwhere{font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.ptags{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.ptags em{font-style:normal;font-size:.72rem;font-weight:700;padding:1px 6px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line)}
+.pchev{transition:transform .15s;color:var(--muted)}
+.prow.open .pchev{transform:rotate(90deg)}
+.ptools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0 4px}
+.ptools input[type=search]{flex:1;min-width:200px;border:2px solid var(--line);background:var(--surface);border-radius:3px;padding:.45em .6em;min-height:40px;font:inherit;color:inherit}
+@media (max-width:560px){.ptools input[type=search]{flex-basis:100%}}
+@media (max-width:760px){.phead{grid-template-columns:44px minmax(0,1fr) 18px}.pwhere,.ptags{display:none}.prow.fold .pbody{grid-template-columns:1fr}}
 .prow .th{width:168px;aspect-ratio:4/3;object-fit:cover;border-radius:2px;background:#000;display:block;image-rendering:pixelated}
 .prow .th.photo{image-rendering:auto}
 .prow .frame{border:4px solid #c89a2c;border-radius:2px}
@@ -159,6 +182,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);outline:none}
 .fieldset small{font-size:.8rem;color:var(--muted)}
 .unveil{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:40px}
 .unveil label.check{margin:0;font-weight:600;color:var(--text)}
+.fields label.check{flex-direction:row;align-items:center;gap:8px;font-size:.9rem;font-weight:600;color:var(--text)} /* a checkbox beside its words, not stacked like a field */
+input[type=checkbox]{width:18px;height:18px;flex:none;accent-color:var(--gold);margin:0}
 .unveil input[type=date]{width:auto;flex:1;min-width:150px}
 input:invalid{border-color:var(--warn)}
 fieldset.lightroom{border:2px solid var(--line);border-radius:4px;background:var(--surface);padding:12px 16px 16px;margin:18px 0 0;display:grid;gap:10px;max-width:560px}
@@ -233,10 +258,31 @@ input[type=range]{accent-color:var(--gold);width:100%}
 .applyb .dot{position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:#e8b24a;box-shadow:0 0 0 2px #120b0e}
 #goRoom{font:inherit;font-weight:600;font-size:.82rem;min-height:34px;padding:.3em .5em}
 .pvmore,.rmore{position:relative}
+details.howto{margin:4px 0 14px;max-width:720px}
+details.howto>summary{cursor:pointer;font-weight:700;font-size:.9rem;color:var(--muted);list-style:none;display:inline-flex;align-items:center;gap:6px}
+details.howto>summary::before{content:"▸";transition:transform .15s}
+details.howto[open]>summary::before{transform:rotate(90deg)}
+details.howto>summary::-webkit-details-marker{display:none}
+details.howto>p{margin:8px 0 0}
+nav.jumps{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 16px}
+nav.jumps a{font-size:.8rem;font-weight:700;color:var(--text);text-decoration:none;padding:3px 10px;border:2px solid var(--line);border-radius:999px;background:var(--surface)}
+nav.jumps a:hover,nav.jumps a:focus-visible{border-color:var(--gold)}
 .pvmore>summary,.rmore>summary{list-style:none;cursor:pointer}
 .pvmore>summary::-webkit-details-marker,.rmore>summary::-webkit-details-marker{display:none}
 .pvmenu,.rmenu{position:absolute;right:0;top:calc(100% + 6px);display:flex;flex-direction:column;gap:6px;padding:8px;border:2px solid var(--line);border-radius:4px;background:var(--surface);z-index:20;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
-.pvmenu{background:#281a1f;border-color:#4b343b}
+.pvmenu{background:#281a1f;border-color:#4b343b;gap:10px;position:static;margin-top:8px;min-width:0;box-shadow:none} /* opens in place, under the buttons */
+.pvmore[open]{flex-basis:100%;width:100%}
+.preview > *{flex-shrink:0} /* the open menu scrolls the panel instead of squashing the preview */
+.pvmore[open]>summary{margin-left:auto;width:max-content}
+.pvsec{display:flex;flex-direction:column;gap:4px}
+.pvh{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted, #b8a8a0)}
+.seg{display:flex;border:2px solid #4b343b;border-radius:4px;overflow:hidden}
+.seg button{flex:1;min-width:0;font:inherit;font-size:.8rem;font-weight:600;padding:.35em .4em;background:transparent;color:inherit;border:0;border-left:1px solid #4b343b;cursor:pointer;min-height:32px}
+.seg button:first-child{border-left:0}
+.seg button[aria-pressed="true"]{background:#e8b24a;color:#1a1014}
+.seg button:focus-visible{outline:2px solid #e8b24a;outline-offset:-2px}
+.pvgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.pvgrid .btn{justify-content:center;font-size:.78rem;padding:.35em .3em;min-height:32px}
 .rmenu .btn{justify-content:flex-start}
 .wrow{margin:10px 0 14px}
 .wrow textarea,.wtalk textarea{width:100%;min-height:64px;margin-top:4px}
@@ -287,9 +333,16 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
     </div>
     <div class="actions">
       <span id="saved" role="status"></span>
-      <button class="btn quiet" id="verBtn" type="button" title="Is this the latest engine, and is your draft the museum-pack.json in this folder?">Check version</button>
-      <a class="btn quiet" id="batchBtn" href="batch-fill.html" title="Add many pieces at once from YouTube and image files, and crop them to fit">Batch fill</a>
-      <label class="btn quiet" for="importFile">Import pack</label>
+      <details class="rmore hmore">
+        <summary class="btn quiet">More</summary>
+        <div class="rmenu">
+          <button class="btn quiet" id="verBtn" type="button" title="Is this the latest engine, and is your draft the museum-pack.json in this folder?">Check version</button>
+          <label class="btn quiet" for="importFile">Import pack</label>
+          <a class="btn quiet" id="batchBtn" href="batch-fill.html" title="Add many pieces at once from YouTube and image files, and crop them to fit">Batch fill</a>
+          <a class="btn quiet" href="writers-room.html" title="Write the museum's lines one at a time, a little every day (same draft as this page)">Writers' Room</a>
+          <a class="btn quiet" href="goc-links.html" target="_blank" rel="noopener" title="Copy your YouTube videos as lines for Friday features">GOC link grabber</a>
+        </div>
+      </details>
       <input id="importFile" class="sr-only" type="file" accept=".json,application/json">
       <button class="btn primary" id="exportBtn" type="button">Export pack</button>
       <button class="btn quiet" id="pvJump" type="button">Preview</button>
@@ -308,15 +361,28 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
       <details class="pvmore">
         <summary class="btn">Preview options</summary>
         <div class="pvmenu">
-          <button class="btn" type="button" id="who" aria-pressed="true">Viewing as curator</button>
-          <button class="btn" type="button" id="timeBtn" title="Pin the time of day in the preview, or follow the clock">Time: clock</button>
-          <button class="btn" type="button" id="spooky" aria-pressed="false" title="How often something creepy happens after the lights go out">Spooky: rare</button>
-          <button class="btn" type="button" id="recrate" title="Put pieces with a future unveil date back in their crates">Repack crates</button>
-          <button class="btn" type="button" id="reread" title="Forget which placards you've read in the preview, so every piece shines again">Reset what I've read</button>
-          <button class="btn" type="button" id="rechore" title="Dust settles, plants get thirsty, the mug goes missing, visitors come back, lights come on">Reset chores</button>
-          <button class="btn" type="button" id="figureBtn" title="The figure appears right now, beside or behind you, with this room's lights off. Turn and photograph it before it's gone.">Summon the figure</button>
-          <button class="btn" type="button" id="dayBtn" title="Jump the preview to the next day: curious visitors come back, dust settles, the museum opens again">Skip to tomorrow</button>
-          <button class="btn" type="button" id="testPcs" aria-pressed="false" title="Fill the preview with 60 placeholder pieces so the oldest go to the rooms' touch screens. Never saved to the pack.">Test pieces: off</button>
+          <div class="pvsec"><span class="pvh">View as</span>
+            <div class="seg" id="segWho" role="group" aria-label="View the preview as"><button type="button" data-v="curator" title="Hang crates, see everything, notes off">Curator</button><button type="button" data-v="visitor" title="What a player sees">Visitor</button></div></div>
+          <div class="pvsec"><span class="pvh">Time of day</span>
+            <div class="seg" id="segTime" role="group" aria-label="Time of day"><button type="button" data-v="" title="Follow the real clock">Clock</button><button type="button" data-v="day">Day</button><button type="button" data-v="sunset">Sunset</button><button type="button" data-v="night">Night</button></div></div>
+          <div class="pvsec"><span class="pvh">Day of the week</span>
+            <div class="seg" id="segDay" role="group" aria-label="Day of the week"><button type="button" data-v="" title="Follow the real calendar">Auto</button><button type="button" data-v="1">Mon</button><button type="button" data-v="2">Tue</button><button type="button" data-v="3">Wed</button><button type="button" data-v="4">Thu</button><button type="button" data-v="5">Fri</button><button type="button" data-v="6">Sat</button><button type="button" data-v="0">Sun</button></div></div>
+          <div class="pvsec"><span class="pvh">Spooky moments</span>
+            <div class="seg" id="segSpook" role="group" aria-label="Spooky moments"><button type="button" data-v="rare" title="About one closing in five, as players get it">Rare</button><button type="button" data-v="always" title="Every time the lights go out (handy for recording)">Every closing</button></div></div>
+          <div class="pvsec"><span class="pvh">Test pieces</span>
+            <div class="seg" id="segTest" role="group" aria-label="Test pieces"><button type="button" data-v="off">Off</button><button type="button" data-v="on" title="60 placeholder pieces, so the oldest go to the rooms' touch screens. Never saved to the pack.">60 placeholders</button></div></div>
+          <div class="pvsec"><span class="pvh">Make it happen</span>
+            <div class="pvgrid">
+              <button class="btn" type="button" id="figureBtn" title="The figure appears right now, beside or behind you, with this room's lights off. Turn and photograph it before it's gone.">The figure</button>
+              <button class="btn" type="button" id="joeBtn" title="Joe turns up on the floor near you. Talk to him (or photograph him) to see the glitch.">Joe</button>
+              <button class="btn" type="button" id="dayBtn" title="The next day: curious visitors come back, dust settles, the museum opens again">Tomorrow</button>
+            </div></div>
+          <div class="pvsec"><span class="pvh">Start fresh</span>
+            <div class="pvgrid">
+              <button class="btn" type="button" id="recrate" title="Pieces with a future unveil date go back in their crates, so you can hang them again">Re-crate upcoming</button>
+              <button class="btn" type="button" id="reread" title="Forget which placards you've read, so every piece shines again">Unread everything</button>
+              <button class="btn" type="button" id="rechore" title="Forget everything done in this preview: chores, tokens, photos, stamps, achievements, the office. The lights come back on and visitors return. (The preview never saves; players' saves aren't touched.)">Start the visit over</button>
+            </div></div>
         </div>
       </details>
     </div>
@@ -328,7 +394,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-03 photo fix";
+window.GOQ_WANT = "2026-11-11 artist easel";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -528,35 +594,26 @@ function fitPreview() {
 }
 window.addEventListener("resize", fitPreview); fitPreview();
 fillRoomPicker();
-$("#who").addEventListener("click", e => {
-  const on = !game.curator; game.setCurator(on);
-  e.currentTarget.textContent = on ? "Viewing as curator" : "Viewing as a visitor"; e.currentTarget.setAttribute("aria-pressed", on);
-  stage.focus({ preventScroll: true });
-});
+/* Preview options: each setting is a row of choices (the lit one is on); the one-off actions are buttons. */
+const seg = (id, val, pick) => { const box = $("#" + id), show = v => box.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === v)); show(val);
+  box.addEventListener("click", async e => { const b = e.target.closest("button"); if (!b) return; show(b.dataset.v); await pick(b.dataset.v); stage.focus({ preventScroll: true }); }); };
+seg("segWho", game.curator ? "curator" : "visitor", v => game.setCurator(v === "curator"));
+seg("segTime", game.timeOverride || "", v => game.setTime(v || null)); // pin day, sunset or night to see (and record) the evening details
+seg("segDay", "", v => game.setDay(v === "" ? null : +v)); // try any day's event without waiting for it
+seg("segSpook", game.forceSpook ? "always" : "rare", v => { game.forceSpook = v === "always"; game.spook = null; });
+seg("segTest", testPieces ? "on" : "off", async v => { testPieces = v === "on"; await refreshPreview(); status(testPieces ? "Preview has 60 test pieces; the oldest are on the rooms' touch screens" : "Test pieces removed from the preview"); });
 $("#recrate").addEventListener("click", () => { game.resetHangs(); stage.focus({ preventScroll: true }); });
-$("#rechore").addEventListener("click", () => { game.resetProgress(); stage.focus({ preventScroll: true }); });
+$("#rechore").addEventListener("click", () => { game.resetProgress(); status("The preview's visit starts over"); stage.focus({ preventScroll: true }); });
 $("#reread").addEventListener("click", () => { game.resetRead(); stage.focus({ preventScroll: true }); });
-// Time: follow the real clock, or pin day, sunset or night to see (and record) the evening details.
-$("#timeBtn").addEventListener("click", e => {
-  const order = [null, "day", "sunset", "night"], next = order[(order.indexOf(game.timeOverride) + 1) % order.length];
-  game.setTime(next); e.currentTarget.textContent = "Time: " + (next || "clock"); stage.focus({ preventScroll: true });
-});
 $("#figureBtn").addEventListener("click", () => {
   game.closeAll(); if (!game.summonFigure()) status("No room for the figure here. Try a bigger room.", true);
   stage.focus({ preventScroll: true });
 });
+$("#joeBtn").addEventListener("click", () => {
+  game.closeAll(); if (!game.summonJoe()) status("No floor free near you for Joe. Try somewhere roomier.", true);
+  stage.focus({ preventScroll: true });
+});
 $("#dayBtn").addEventListener("click", () => { game.closeAll(); game.skipDay(); stage.focus({ preventScroll: true }); });
-$("#testPcs").addEventListener("click", async e => {
-  testPieces = !testPieces; e.currentTarget.textContent = "Test pieces: " + (testPieces ? "on" : "off"); e.currentTarget.setAttribute("aria-pressed", testPieces);
-  await refreshPreview(); status(testPieces ? "Preview has 60 test pieces; the oldest are on the rooms' touch screens" : "Test pieces removed from the preview");
-  stage.focus({ preventScroll: true });
-});
-// Spooky: "always" makes the rare creepy moment happen on every closing, handy for recording an end-card.
-$("#spooky").addEventListener("click", e => {
-  game.forceSpook = !game.forceSpook; game.spook = null;
-  e.currentTarget.textContent = game.forceSpook ? "Spooky: always" : "Spooky: rare"; e.currentTarget.setAttribute("aria-pressed", game.forceSpook);
-  stage.focus({ preventScroll: true });
-});
 // "Reset chores" also reopens the museum: visitors come back and the lights come on.
 
 /* ---------- Tabs ---------- */
@@ -578,7 +635,21 @@ $("#tab-ach").addEventListener("click", () => setTab("ach"));
 $("#tab-notes").addEventListener("click", () => setTab("notes"));
 // Small screens: the preview sits below the editor; this jumps to it.
 $("#pvJump").addEventListener("click", () => document.querySelector(".preview").scrollIntoView({ behavior: "smooth", block: "start" }));
-function render() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "visitors") renderVisitors(); else if (tab === "shop") renderShop(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else if (tab === "notes") renderNotes(); else renderPieces(); }
+/* After a tab draws: a long intro under its title folds into "How this works", and a tab with several sections gets links to them. */
+function tidyTab() {
+  const main = $("#main"), h2 = main.querySelector("h2.title"); if (!h2 || tab === "rooms" || tab === "art") return;
+  const intro = []; let n = h2.nextElementSibling;
+  while (n && n.tagName === "P" && !n.classList.contains("empty")) { intro.push(n); n = n.nextElementSibling; }
+  const len = intro.reduce((a, p) => a + p.textContent.length, 0);
+  if (len > 220) { const d = el("details", { class: "howto" }, [el("summary", { text: "How this works" })]); h2.after(d); intro.forEach(p => d.appendChild(p)); }
+  const heads = [...main.querySelectorAll("section h3, section > h2.title")].filter(h => h !== h2 && h.textContent.trim());
+  if (heads.length >= 4) {
+    const nav = el("nav", { class: "jumps", "aria-label": "On this page" }, heads.map((h, i) => { h.id = h.id || "sec-" + tab + "-" + i; return el("a", { href: "#" + h.id, text: h.textContent.trim(), onclick: e => { e.preventDefault(); h.scrollIntoView({ behavior: "smooth", block: "start" }); } }); }));
+    (main.querySelector("details.howto") || h2).after(nav);
+  }
+}
+function render() { renderTab(); tidyTab(); }
+function renderTab() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "visitors") renderVisitors(); else if (tab === "shop") renderShop(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else if (tab === "notes") renderNotes(); else renderPieces(); }
 
 /* ---------- Image helpers ---------- */
 function readFile(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error("That file couldn't be read.")); r.readAsDataURL(file); }); }
@@ -824,6 +895,15 @@ function renderStaff() {
     el("h3", { text: "Curator's office keypad", style: "margin:0 0 4px" }),
     el("p", { class: "note", style: "margin:0 0 12px", text: "The code on the office door in B1, the same for everyone so players can trade it. One digit per wing: each wing's touch screen gives its digit once every piece in it is read front and back, and the call sheet on the staff corkboard (after 5 visitors love a pick) gives the order. With five wings, it's the first five digits. It's saved scrambled in the pack, and the keypad locks for the day after three wrong tries. A curator badge always gets in." }),
     el("div", { class: "fields", style: "max-width:420px" }, [el("label", {}, [document.createTextNode("Code"), ocode])]),
+  ]));
+  draft.settings.friday = Array.isArray(draft.settings.friday) ? draft.settings.friday : [];
+  const fri = el("textarea", { rows: 4, style: "max-width:520px;width:100%", placeholder: "Episode title | https://youtu.be/..." }); fri.value = draft.settings.friday.map(e => e.title + " | " + e.url).join("\n");
+  fri.addEventListener("input", () => { draft.settings.friday = fri.value.split("\n").map(l => { const url = (l.match(/https?:\/\/\S+/) || [])[0], title = url ? l.replace(url, "").replace(/\|/g, "").trim() : ""; return url ? { title: title || "Games Over Coffee", url } : null; }).filter(Boolean); changed(); }); // the link from anywhere on the line; the rest is the title
+  wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
+    el("h3", { text: "Friday features", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "One per line: the title, a | and the YouTube link. On Fridays the screening nook plays a random one each hour (the sign says FRIDAY FEATURE), and they're at the top of its list." }),
+    el("p", { class: "note", style: "margin:0 0 8px" }, [el("a", { href: "goc-links.html", target: "_blank", rel: "noopener", text: "GOC link grabber" }), document.createTextNode(": copies your channel's videos in this format.")]),
+    el("label", { class: "sr-only", text: "Friday features" }), fri,
   ]));
   if (!Array.isArray(draft.settings.office.nicknames)) draft.settings.office.nicknames = ["DeVaughn", "Boss", "Mr. curator sir"];
   const nicks = el("textarea", { rows: 3, style: "max-width:420px;width:100%" }); nicks.value = draft.settings.office.nicknames.join("\n");
@@ -2318,14 +2398,20 @@ function renderPieces() {
     return n || c ? g.name + ": " + n + " episode" + (n === 1 ? "" : "s") + ", " + c + " case" + (c === 1 ? "" : "s") + (n > c ? " (" + (n - c) + " on the room's touch screen)" : "") : null;
   }).filter(Boolean);
   if (gl.length) wrap.appendChild(el("ul", { class: "laylist" }, gl.map(t => el("li", { text: t }))));
+  // Find a piece, and open or close them all. Each piece folds to one line (title, developer, where it is) until you open it.
+  const find = el("input", { type: "search", placeholder: "Find a piece by title or developer", "aria-label": "Find a piece", value: pieceFilter });
+  const allBtn = (txt, open) => el("button", { class: "btn small quiet", type: "button", text: txt, onclick: () => { draft.pieces.forEach(p => (open ? openPieces.add(p.id) : openPieces.delete(p.id))); savePieceState(); renderPieces(); } });
+  wrap.appendChild(el("div", { class: "ptools" }, [find, allBtn("Open all", true), allBtn("Close all", false)]));
+  find.addEventListener("input", () => { pieceFilter = find.value; const q = pieceFilter.trim().toLowerCase(); wrap.querySelectorAll(".prow").forEach(r => { r.hidden = !!q && !(r.dataset.find || "").includes(q); }); });
   let ci = 0;
   draft.pieces.forEach((p, i) => {
     const g = p.kind === "episode" ? (draft.settings.genres || GOQ.SAMPLE_GENRES).find(x => x.id === GOQ.genreOf(p, draft.settings.genres || GOQ.SAMPLE_GENRES)) : null;
     const place = p.kind === "episode" ? label[p.id] || (g ? "ON THE " + (wingOf(g.id) || g.short || g.name).toUpperCase() + " SCREEN" : "NOT SHOWN (NO GENRE)") : (ci++ < oldC ? "NOT SHOWN (NO WALL SPOT FREE)" : walls[ci - 1 - oldC]);
-    wrap.appendChild(pieceRow(p, i, place));
+    wrap.appendChild(foldPiece(pieceRow(p, i, place), p, place));
   });
+  if (pieceFilter.trim()) find.dispatchEvent(new Event("input"));
   wrap.appendChild(el("div", { class: "row" }, [el("button", { class: "btn primary", type: "button", text: "Add a piece", onclick: () => {
-    draft.pieces.push(GOQ.normalizePiece({ id: uid(), title: "New piece", developer: "" }, draft.pieces.length)); changed({ now: true }); renderPieces();
+    const np = GOQ.normalizePiece({ id: uid(), title: "New piece", developer: "" }, draft.pieces.length); draft.pieces.push(np); openPieces.add(np.id); savePieceState(); changed({ now: true }); renderPieces();
     const rows = document.querySelectorAll(".prow"); const last = rows[rows.length - 1]; if (last) { last.scrollIntoView({ block: "nearest" }); last.querySelector("input").focus(); }
   } })]));
   /* Guestbook: entries the front desk reads out, newest last. */
@@ -2342,6 +2428,22 @@ function renderPieces() {
     el("p", { class: "note", text: "One entry per line, written as Name: note. The front desk reads the newest six, newest first." }),
     el("label", { class: "sr-only", for: "gbText", text: "Guestbook entries" }), gb,
   ]));
+}
+/* Which pieces are open (kept for this browser tab), and the find box. */
+let pieceFilter = "", openPieces = new Set((() => { try { return JSON.parse(sessionStorage.getItem("goq-open-pieces") || "[]"); } catch (e) { return []; } })());
+function savePieceState() { try { sessionStorage.setItem("goq-open-pieces", JSON.stringify([...openPieces])); } catch (e) {} }
+function foldPiece(row, p, place) {
+  const body = el("div", { class: "pbody" }); while (row.firstChild) body.appendChild(row.firstChild);
+  const th = el("img", { class: "pth" + (p.image ? " photo" : ""), alt: "", src: p.image || GOQ.placeholderPainting(p).toDataURL() });
+  const tt = el("b", { text: p.title || "Untitled piece" }), dev = el("span", { class: "pdev", text: p.developer || "No developer yet" });
+  const tags = [p.kind === "community" ? "Painting" : null, p.pick ? "Pick" : null, p.unveil ? "Unveils " + p.unveil : null, p.clipUrl ? "Clip" : null, !p.episodeUrl && p.kind === "episode" ? "No episode link" : null].filter(Boolean);
+  const head = el("button", { class: "phead", type: "button", "aria-expanded": openPieces.has(p.id) ? "true" : "false" }, [th, el("span", { class: "pname" }, [tt, dev]), el("span", { class: "pwhere", text: place || "Not on display" }), el("span", { class: "ptags" }, tags.map(t => el("em", { text: t }))), el("span", { class: "pchev", "aria-hidden": "true", text: "▸" })]);
+  const setOpen = on => { row.classList.toggle("open", on); head.setAttribute("aria-expanded", on ? "true" : "false"); if (on) openPieces.add(p.id); else openPieces.delete(p.id); savePieceState(); };
+  head.addEventListener("click", () => setOpen(!row.classList.contains("open")));
+  row.dataset.find = ((p.title || "") + " " + (p.developer || "")).toLowerCase();
+  row.addEventListener("input", () => { tt.textContent = p.title || "Untitled piece"; dev.textContent = p.developer || "No developer yet"; row.dataset.find = ((p.title || "") + " " + (p.developer || "")).toLowerCase(); }); // the summary follows your edits
+  row.append(head, body); row.classList.add("fold"); if (openPieces.has(p.id)) row.classList.add("open");
+  return row;
 }
 function pieceRow(p, i, place) {
   const row = el("article", { class: "prow" + (p.kind === "community" ? " community" : ""), "aria-label": p.title || "Untitled piece" });

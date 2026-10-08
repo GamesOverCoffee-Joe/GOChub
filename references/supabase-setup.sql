@@ -149,7 +149,7 @@ begin
   return json_build_object('ok', true, 'counted', true, 'points', r.points);
 end $$;
 
--- Names and points only: this month's top ten, and Employee of the Month.
+-- Names and points only: this month's top ten, and Employee of the Month. Curator badges are left out of both.
 -- Employee of the Month is last month's winner. Until there is one, it's this month's leader "so far".
 create or replace function public.get_leaderboard() returns json
 language sql stable security definer set search_path = '' as $$
@@ -157,12 +157,12 @@ language sql stable security definer set search_path = '' as $$
   this_month as (
     select b.name, sum(d.points)::int as points, min(d.at) as first_at
     from goq.duties d join goq.badges b using (badge), m
-    where b.active and d.day >= m.this_m group by b.badge, b.name
+    where b.active and not b.curator and d.day >= m.this_m group by b.badge, b.name -- [UPDATE, October 2026] curators aren't on the board
   ),
   last_month as (
     select b.name, sum(d.points)::int as points, min(d.at) as first_at
     from goq.duties d join goq.badges b using (badge), m
-    where b.active and d.day >= (m.this_m - interval '1 month')::date and d.day < m.this_m group by b.badge, b.name
+    where b.active and not b.curator and d.day >= (m.this_m - interval '1 month')::date and d.day < m.this_m group by b.badge, b.name
   ),
   top as (select name, points from this_month order by points desc, first_at limit 10),
   champ as (select name, points from last_month order by points desc, first_at limit 1),

@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d1317">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Writers' Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+/* The writers' room: write the museum's lines one at a time, a little every day. Phone first.
+   It edits the curator's draft in this browser (the same one curator.html uses), so what you write shows up there too. */
+:root{
+  --bg:#f1e4df;--surface:#fffaf7;--surface-2:#f6ebe6;--line:#d9c0b8;--text:#2a171c;--muted:#6d5157;
+  --gold:#8f5a0a;--on-gold:#fff8ec;--warn:#a33a22;--ok:#3f7a2a;--shadow:#d9c0b8;--todo:#c0532e;--lit:#f0b840;--dark-room:#3a2a30;
+  --pixel:'Press Start 2P',ui-monospace,monospace;--body:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1d1317;--surface:#281a1f;--surface-2:#34232a;--line:#4b343b;--text:#f3e5d0;--muted:#b59e8c;
+  --gold:#e8b24a;--on-gold:#2a1a10;--warn:#f08a6a;--ok:#9fcf7a;--shadow:#0e080a;--todo:#f08a6a;--lit:#f0c050;--dark-room:#120b0e;color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#1d1317;--surface:#281a1f;--surface-2:#34232a;--line:#4b343b;--text:#f3e5d0;--muted:#b59e8c;
+  --gold:#e8b24a;--on-gold:#2a1a10;--warn:#f08a6a;--ok:#9fcf7a;--shadow:#0e080a;--todo:#f08a6a;--lit:#f0c050;--dark-room:#120b0e;color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100vh;min-height:100dvh;background:var(--bg);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+[hidden]{display:none !important}
+.app{max-width:560px;margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px calc(env(safe-area-inset-bottom,0px) + 112px)}
+.app.nobar{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 32px)}
+
+/* Top bar */
+.top{display:flex;align-items:center;gap:10px;min-height:44px;margin-bottom:12px}
+.top h1{font-family:var(--pixel);font-weight:400;font-size:13px;line-height:1.5;color:var(--gold);margin:0;flex:1;min-width:0}
+.top .crumb{font-size:.85rem;color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border:2px solid var(--line);border-radius:6px;background:var(--surface);cursor:pointer;font-weight:700;padding:0 10px}
+.iconbtn:active{transform:translateY(1px)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4em;min-height:48px;padding:.5em 1.1em;border:2px solid var(--text);background:var(--surface);
+  border-radius:6px;box-shadow:3px 3px 0 var(--shadow);cursor:pointer;font-weight:700;font-size:1rem;text-decoration:none;color:var(--text)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow)}
+.btn.primary{background:var(--gold);color:var(--on-gold);border-color:var(--gold)}
+.btn.quiet{border-color:var(--line);box-shadow:none;font-weight:600}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btn.wide{width:100%}
+.small{font-size:.85rem;color:var(--muted)}
+.mono{font-family:var(--pixel);font-size:10px;line-height:1.6}
+
+/* Cards */
+.panel{background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:16px;margin:0 0 14px}
+.panel h2{font-family:var(--pixel);font-weight:400;font-size:11px;line-height:1.6;margin:0 0 10px;color:var(--text)}
+.today{border-color:var(--gold);box-shadow:4px 4px 0 var(--shadow)}
+.today .what{font-weight:700;font-size:1.05rem;line-height:1.35;margin:4px 0 2px}
+.today .where{font-size:.85rem;color:var(--muted);margin:0 0 14px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px}
+.tile{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;min-height:76px;padding:12px;border:2px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer}
+.tile b{font-size:.98rem;line-height:1.25}
+.tile span{font-size:.82rem;color:var(--muted)}
+.tile:active{transform:translateY(1px)}
+
+/* Punch card */
+.punch-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px}
+.punch-head h2{margin:0}
+.punch{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.punch .dow{font-size:.7rem;color:var(--muted);text-align:center}
+.punch .d{aspect-ratio:1;border:2px dashed var(--line);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;color:var(--muted);position:relative}
+.punch .d.blank{border:0}
+.punch .d.today{border-style:solid;border-color:var(--gold);color:var(--text);font-weight:700}
+.punch .d.hit{border:0;background:var(--gold);color:var(--on-gold);font-weight:700}
+.punch .d.hit::after{content:"";position:absolute;inset:3px;border:2px solid var(--on-gold);border-radius:50%;opacity:.55}
+.punch .d.future{opacity:.4}
+.punch-foot{margin:10px 0 0;font-size:.85rem;color:var(--muted)}
+.stamp-in{animation:stampin .55s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes stampin{0%{transform:scale(2.4) rotate(-18deg);opacity:0}60%{opacity:1}100%{transform:scale(1) rotate(0)}}
+
+/* The museum lights up: one little room per area */
+.rooms{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.room{position:relative;display:flex;flex-direction:column;gap:6px;text-align:left;padding:10px;border:2px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;min-height:96px}
+.room .win{height:30px;border-radius:4px;background:var(--dark-room);position:relative;overflow:hidden;border:2px solid var(--line)}
+.room .win i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--lit),#ffe08a);box-shadow:0 0 14px var(--lit);transition:width .6s}
+.room .win.full{box-shadow:0 0 12px var(--lit)}
+.room b{font-size:.86rem;line-height:1.25}
+.room span{font-size:.76rem;color:var(--muted)}
+.room .todo{position:absolute;top:-8px;right:-6px;background:var(--todo);color:#fff;font-size:.72rem;font-weight:700;border-radius:999px;padding:1px 8px}
+.room:active{transform:translateY(1px)}
+
+/* Lists (area, archive) */
+.search{width:100%;min-height:48px;border:2px solid var(--line);border-radius:8px;background:var(--surface);padding:10px 12px;font-size:16px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:10px 0 4px;margin:0 -16px;padding-left:16px;padding-right:16px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:38px;padding:6px 14px;border:2px solid var(--line);border-radius:999px;background:var(--surface);font-weight:700;font-size:.85rem;cursor:pointer;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
+.rows{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.row{display:flex;align-items:flex-start;gap:10px;text-align:left;width:100%;padding:12px;border:2px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer}
+.row .dot{flex:none;width:12px;height:12px;border-radius:50%;margin-top:5px;border:2px solid var(--muted)}
+.dot.todo{background:var(--todo);border-color:var(--todo)}
+.dot.default{background:transparent}
+.dot.kept,.dot.mine{background:var(--lit);border-color:var(--gold)}
+.row .txt{min-width:0;flex:1}
+.row b{display:block;font-size:.92rem;line-height:1.3}
+.row span{display:block;font-size:.82rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar{height:10px;border-radius:999px;background:var(--surface-2);border:2px solid var(--line);overflow:hidden;margin:6px 0 4px}
+.bar i{display:block;height:100%;background:var(--lit)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend .dot{width:10px;height:10px;margin:0;border:2px solid var(--muted);border-radius:50%;display:inline-block}
+
+/* The card: one line to write */
+.who{font-weight:700;font-size:1.1rem;line-height:1.35;margin:0 0 4px}
+.tagline{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+.tag{font-size:.74rem;font-weight:700;padding:2px 8px;border-radius:999px;border:2px solid var(--line);color:var(--muted)}
+.tag.todo{border-color:var(--todo);color:var(--todo)}
+.tag.fin{border-color:var(--gold);color:var(--gold)}
+.brief{background:var(--surface-2);border-left:4px solid var(--gold);border-radius:6px;padding:10px 12px;margin:0 0 14px;font-size:.92rem}
+.brief b{display:block;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.field{margin:0 0 16px}
+.field > label{display:block;font-weight:700;font-size:.9rem;margin:0 0 6px}
+.field .hint{font-size:.8rem;color:var(--muted);margin:-2px 0 8px}
+.ver{position:relative;margin:0 0 10px}
+.ver .vlabel{display:flex;justify-content:space-between;align-items:center;font-size:.76rem;color:var(--muted);margin:0 0 4px}
+.ver .vlabel button{border:0;background:none;color:var(--muted);font-weight:700;min-height:32px;padding:0 6px;cursor:pointer}
+textarea{width:100%;min-height:56px;border:2px solid var(--line);border-radius:8px;background:var(--surface);padding:10px 12px;font-size:16px;line-height:1.45;resize:none;overflow:hidden;display:block}
+textarea:focus{border-color:var(--gold);outline:none}
+textarea::placeholder{color:var(--muted);opacity:.75}
+input.one{width:100%;min-height:48px;border:2px solid var(--line);border-radius:8px;background:var(--surface);padding:10px 12px;font-size:16px}
+input.one:focus{border-color:var(--gold);outline:none}
+.addver{border:2px dashed var(--line);background:none;border-radius:8px;width:100%;min-height:44px;font-weight:700;color:var(--muted);cursor:pointer}
+.varchips{position:sticky;top:0;z-index:3;background:var(--bg);display:flex;gap:6px;overflow-x:auto;padding:8px 16px;margin:0 -16px 10px;scrollbar-width:none}
+.varchips::-webkit-scrollbar{display:none}
+.varchips button{flex:none;min-height:36px;padding:4px 10px;border:2px solid var(--gold);border-radius:6px;background:var(--surface);font-family:var(--pixel);font-size:9px;color:var(--gold);cursor:pointer}
+.varchips .lead{flex:none;align-self:center;font-size:.76rem;color:var(--muted);padding-right:2px}
+.warn{color:var(--warn);font-size:.82rem;margin:4px 0 0}
+
+/* Preview: the game's own text box, at the game's own size, scaled to fit */
+.preview{margin:4px 0 18px}
+.preview h3{font-size:.76rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:700;display:flex;justify-content:space-between}
+.stage{background:#1d1317;border-radius:8px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.gbox{position:relative;box-sizing:border-box;border-style:solid;border-width:calc(8px * var(--s));border-image-slice:8 fill;border-image-repeat:stretch;
+  background:#f8f8f0;background-clip:padding-box;color:#181820;font-family:var(--pixel);font-size:calc(8px * var(--s));line-height:calc(16px * var(--s));
+  width:calc(240px * var(--s));height:calc(48px * var(--s));padding:0 calc(2px * var(--s));image-rendering:pixelated}
+.gbox .gb{white-space:pre-wrap;overflow:hidden;height:100%;overflow-wrap:anywhere}
+.gbox .pg{position:absolute;right:calc(3px * var(--s));bottom:calc(1px * var(--s));font-size:calc(5px * var(--s));line-height:1;color:#808090}
+.gmeasure{position:absolute;left:-9999px;top:0;visibility:hidden}
+.led{background:#0c0a0c;border:3px solid #2a2228;border-radius:4px;padding:8px 10px;font-family:var(--pixel);font-size:11px;line-height:1.4;color:#ff4a3a;text-shadow:0 0 6px #ff3020;white-space:nowrap;overflow-x:auto;max-width:100%}
+.listprev{display:flex;flex-wrap:wrap;gap:6px}
+.listprev span{background:#f8f8f0;color:#181820;font-family:var(--pixel);font-size:9px;line-height:1.5;padding:4px 8px;border-radius:3px}
+.placard{background:#f8f8f0;color:#202030;border-radius:4px;padding:12px;font-family:var(--body);font-size:.92rem;line-height:1.45;white-space:pre-wrap;width:100%}
+.placard b{display:block;font-family:var(--pixel);font-weight:400;font-size:8px;color:#7c5a0c;letter-spacing:.04em;margin:0 0 6px}
+.placard b.red{color:#a33a22}
+.placard + .placard{margin-top:8px}
+
+/* The bottom bar */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--bg);border-top:2px solid var(--line);padding:10px 16px calc(env(safe-area-inset-bottom,0px) + 10px)}
+.dock .in{max-width:560px;margin:0 auto;display:flex;gap:10px}
+.dock .btn{flex:1}
+.dock .btn.skip{flex:0 0 auto}
+
+/* After a save */
+.done{position:fixed;inset:0;z-index:20;background:rgba(20,10,14,.62);display:flex;align-items:flex-end;justify-content:center;animation:fade .2s both}
+.done .sheet{width:100%;max-width:560px;background:var(--surface);border-radius:16px 16px 0 0;padding:22px 16px calc(env(safe-area-inset-bottom,0px) + 16px);text-align:center;animation:rise .28s cubic-bezier(.2,1.2,.4,1) both}
+.done .big{font-family:var(--pixel);font-size:18px;line-height:1.5;color:var(--gold);margin:6px 0 6px;display:inline-block}
+.done p{margin:0 0 16px;color:var(--muted)}
+.done .acts{display:flex;gap:10px}
+.done .acts .btn{flex:1}
+.seal{width:84px;height:84px;margin:0 auto 6px;border-radius:50%;background:var(--gold);color:var(--on-gold);display:flex;align-items:center;justify-content:center;font-family:var(--pixel);font-size:10px;line-height:1.3;position:relative}
+.seal::after{content:"";position:absolute;inset:6px;border:3px solid var(--on-gold);border-radius:50%;opacity:.6}
+@keyframes fade{from{opacity:0}}
+@keyframes rise{from{transform:translateY(40px);opacity:0}}
+.banner{background:var(--surface-2);border:2px solid var(--warn);border-radius:8px;padding:10px 12px;font-size:.86rem;margin:0 0 14px}
+.foot{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.foot .small{text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 14px;border-radius:999px;font-weight:700;font-size:.85rem;z-index:30;animation:fade .2s both}
+.empty{color:var(--muted);text-align:center;padding:24px 8px}
+@media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
+</style>
+</head>
+<body>
+<main class="app" id="app"><p class="empty">Opening the writers' room…</p></main>
+<div class="dock" id="dock" hidden><div class="in" id="dockIn"></div></div>
+
+<script>
+/* Load the engine for its built-in lines (version from version.json, so this page never needs a version bump). */
+(function () {
+  const go = v => { const s = document.createElement("script"); s.src = "museum-engine.js" + (v ? "?v=" + encodeURIComponent(v) : ""); s.onload = () => window.wrStart(); s.onerror = () => { document.getElementById("app").innerHTML = '<p class="empty">Couldn\'t load museum-engine.js. Open this page from the museum folder.</p>'; }; document.head.appendChild(s); };
+  if (/^https?:$/.test(location.protocol)) fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => (r.ok ? r.json() : {})).then(j => go(j.version), () => go(""));
+  else go("");
+})();
+</script>
+<script>
+window.wrStart = async function () {
+"use strict";
+const DRAFT_KEY = "goq-curator-draft", BASE_KEY = "goq-curator-base", META_KEY = "goq-writers-room", SITE_PACK = "museum-pack.json";
+const $app = document.getElementById("app"), $dock = document.getElementById("dock"), $dockIn = document.getElementById("dockIn");
+const clone = o => JSON.parse(JSON.stringify(o));
+const el = (tag, attrs, kids) => { const e = document.createElement(tag); for (const k in attrs || {}) { const v = attrs[k]; if (v == null || v === false) continue; if (k === "text") e.textContent = v; else if (k === "class") e.className = v; else if (k.startsWith("on")) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v === true ? "" : v); } (kids || []).forEach(c => c != null && e.appendChild(typeof c === "string" ? document.createTextNode(c) : c)); return e; };
+const today = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+const hasBr = s => /\[[^\]\n]*\]/.test(s);
+const fingerprint = text => { let h1 = 0xdeadbeef, h2 = 0x41c6ce57; for (let i = 0; i < text.length; i++) { const c = text.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909); h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36).toUpperCase().padStart(8, "0").slice(-8); };
+const getBase = () => { try { return JSON.parse(localStorage.getItem(BASE_KEY) || "null"); } catch (e) { return null; } };
+const setBase = (text, from, savedAt) => { try { localStorage.setItem(BASE_KEY, JSON.stringify({ fp: fingerprint(text), from, savedAt: savedAt || "", at: new Date().toISOString(), edited: false })); } catch (e) {} };
+const markEdited = () => { const b = getBase(); if (b && !b.edited) { b.edited = true; try { localStorage.setItem(BASE_KEY, JSON.stringify(b)); } catch (e) {} } };
+function toast(t) { const x = el("div", { class: "toast", role: "status", text: t }); document.body.appendChild(x); setTimeout(() => x.remove(), 1800); }
+
+/* ---------- The draft (shared with the curator) and this page's own notes ---------- */
+let raw = null, N = null, folderFp = "";
+async function folderPack() {
+  if (!/^https?:$/.test(location.protocol)) return null;
+  try { const r = await fetch(SITE_PACK + "?t=" + Date.now(), { cache: "no-store" }); if (!r.ok) return null; const text = await r.text(), j = JSON.parse(text); return j && j.format === GOQ.PACK_FORMAT ? { text, j } : null; } catch (e) { return null; }
+}
+function readDraft() { try { const j = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); return j && j.format === GOQ.PACK_FORMAT ? j : null; } catch (e) { return null; } }
+function useRaw(j) { raw = j; raw.settings = raw.settings || {}; raw.pieces = raw.pieces || []; N = GOQ.normalizePack(raw); }
+function saveDraft() {
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(raw)); markEdited(); N = GOQ.normalizePack(raw); return true; }
+  catch (e) { toast("Couldn't save: the browser's storage is full"); return false; }
+}
+/* Settings lists and objects are read from the normalized pack, and written by replacing the draft's copy with the normalized one
+   plus the change (what the curator itself saves), so indexes always line up. */
+const own = k => (raw.settings[k] = clone(N.settings[k]));
+const own_ro = k => N.settings[k];
+let meta = { days: {}, marks: {}, total: 0, lastArea: "" };
+try { meta = Object.assign(meta, JSON.parse(localStorage.getItem(META_KEY) || "{}")); } catch (e) {}
+const saveMeta = () => { try { localStorage.setItem(META_KEY, JSON.stringify(meta)); } catch (e) {} };
+
+/* ---------- Every piece of writing in the museum, as cards ----------
+   A card has fields; each field reads and writes the draft. Kinds: "pages" (versions, each a list of pages: one page per line),
+   "lines" (a list of single lines, each its own version), "line" (one short line), "para" (one paragraph). */
+const versionsOf = (kind, v) => kind === "pages" ? (v || []).map(pg => pg.join("\n")) : kind === "lines" ? (v || []).slice() : [v || ""];
+const valueOf = (kind, vers) => kind === "pages" ? vers.map(t => t.split("\n").map(x => x.trim()).filter(Boolean)).filter(b => b.length)
+  : kind === "lines" ? vers.map(t => t.replace(/\s*\n\s*/g, " ").trim()).filter(Boolean) : (vers[0] || "").trim();
+const flat = (kind, v) => versionsOf(kind, v).join("\n");
+const varsIn = (...ts) => [...new Set(ts.join(" ").match(/\{[\w:-]+\}/g) || [])];
+const previewKind = (key, l) => /^screen\./.test(key) || /LED/.test(l) ? "led" : /one per line|one per entry|one book each|words for/i.test(l) ? "list" : "dialog";
+
+function buildCards() {
+  const cards = [], T = GOQ.TEXT;
+  // Words: everything in GOQ.TEXT, by area, in the engine's own order (so a scene's lines come together)
+  for (const k in T) {
+    const d = T[k];
+    cards.push({ id: "t:" + k, cat: "lines", area: d.g, title: d.l, where: "Words · " + d.g, preview: previewKind(k, d.l),
+      edited: () => !!(raw.settings.text && raw.settings.text[k]),
+      fields: [{ kind: "pages", label: "", def: () => d.v, get: () => (raw.settings.text && raw.settings.text[k]) || d.v,
+        set: v => { const t = (raw.settings.text = raw.settings.text || {}); if (!v.length || JSON.stringify(v) === JSON.stringify(d.v)) delete t[k]; else t[k] = v; } }],
+      reset: () => { if (raw.settings.text) delete raw.settings.text[k]; } });
+  }
+  // Staff chat: each set of lines a person says, with when they say it
+  const talk = N.settings.talk;
+  for (const role in GOQ.TALK_ROLES) (talk[role] || []).forEach((e, i) => {
+    const when = (e.when || ["always"]).map(w => GOQ.TALK_WHEN[w] || w).join(" + "), def = (GOQ.TALK_DEFAULTS[role] || [])[i];
+    const same = () => def && JSON.stringify(def.when) === JSON.stringify(cur().when) && JSON.stringify(def.v) === JSON.stringify(cur().v);
+    const cur = () => N.settings.talk[role][i];
+    cards.push({ id: "c:" + role + ":" + i, cat: "lines", area: "Chat: " + GOQ.TALK_ROLES[role].replace(/ \(.*\)$/, ""), title: GOQ.TALK_ROLES[role] + ", when: " + when, where: "Words · Chat", preview: "dialog",
+      edited: () => !same(),
+      fields: [{ kind: "pages", label: "", def: () => def && def.v, get: () => cur().v, set: v => { own("talk")[role][i].v = v.length ? v : [["..."]]; } }],
+      reset: def && JSON.stringify(def.when) === JSON.stringify(e.when) ? () => { own("talk")[role][i].v = clone(def.v); } : null });
+  });
+  // Visitor mindsets: what each kind of visitor asks for and says after playing
+  const mf = { ask: ["Asking you for a game", ""], loved: ["After a game they loved", "{title} is the game."], liked: ["After a game they liked", "{title} is the game."], nope: ["After a game that wasn't for them", "{title} is the game."] };
+  (N.settings.mindsets || []).forEach((m, mi) => { for (const f in mf) cards.push({ id: "m:" + m.id + ":" + f, cat: "lines", area: "Visitor mindsets", title: m.name + " visitor: " + mf[f][0].toLowerCase(), where: "Visitors · Mindsets", preview: "dialog", note: mf[f][1],
+    fields: [{ kind: "lines", label: "", get: () => (N.settings.mindsets[mi] || {})[f] || [], set: v => { own("mindsets")[mi][f] = v; } }] }); });
+  // Achievements, shop items, genres
+  (N.settings.achievements || []).forEach((a, i) => cards.push({ id: "a:" + a.id, cat: "lines", area: "Achievements", title: "Achievement: " + (a.secret ? "secret, " : "") + a.stat + " ×" + a.target, where: "Achievements", preview: "none",
+    fields: [{ kind: "line", label: "Name", get: () => own_ro("achievements")[i].name, set: v => { own("achievements")[i].name = v; } }, { kind: "line", label: "What you do to earn it", get: () => own_ro("achievements")[i].desc, set: v => { own("achievements")[i].desc = v; } }] }));
+  ((N.settings.shop || {}).items || []).forEach((it, i) => cards.push({ id: "s:" + it.id, cat: "lines", area: "Gift shop items", title: "Shop item (" + it.price + " tokens)", where: "Shop", preview: "none",
+    fields: [{ kind: "line", label: "Name", get: () => own_ro("shop").items[i].name, set: v => { own("shop").items[i].name = v; } }, { kind: "para", label: "Description", get: () => own_ro("shop").items[i].description, set: v => { own("shop").items[i].description = v; } }] }));
+  (N.settings.genres || []).forEach((g, i) => cards.push({ id: "g:" + g.id, cat: "lines", area: "Genres", title: "A genre (wing theme)", where: "Pieces · Genres", preview: "none",
+    fields: [{ kind: "line", label: "Name", get: () => own_ro("genres")[i].name, set: v => { own("genres")[i].name = v; } }, { kind: "line", label: "Short name (signs and tags)", get: () => own_ro("genres")[i].short, set: v => { own("genres")[i].short = v; } }] }));
+  // Odds and ends from the Staff tab
+  cards.push({ id: "o:cat", cat: "lines", area: "Odds and ends", title: "The museum cat's name", where: "Staff", preview: "none",
+    fields: [{ kind: "line", label: "Name", get: () => own_ro("staff").catName, set: v => { own("staff").catName = v; } }] });
+  cards.push({ id: "o:nicknames", cat: "lines", area: "Odds and ends", title: "What people call you (curator badge greetings, picked at random)", where: "Staff · Curator's office", preview: "none",
+    fields: [{ kind: "lines", label: "", get: () => (own_ro("office") || {}).nicknames || [], set: v => { own("office").nicknames = v; } }] });
+  cards.push({ id: "o:corkboard", cat: "lines", area: "Odds and ends", title: "Notes pinned on the staff room corkboard", where: "Staff", preview: "none",
+    fields: [{ kind: "lines", label: "", get: () => own_ro("staff").corkboard || [], set: v => { own("staff").corkboard = v; } }] });
+  // Placards: their own category
+  raw.pieces.forEach((p, i) => {
+    const P = () => raw.pieces[i], ep = p.kind !== "guest";
+    const fields = ep ? [
+      { kind: "para", label: "Observation (yours)", get: () => P().observation || "", set: v => { P().observation = v; } },
+      { kind: "para", label: "Intention (the developer's)", get: () => P().intention || "", set: v => { P().intention = v; } }]
+      : [{ kind: "line", label: "Guest writer", get: () => P().guestWriter || "", set: v => { P().guestWriter = v; } }, { kind: "para", label: "Their note", get: () => P().guestNote || "", set: v => { P().guestNote = v; } }];
+    fields.push({ kind: "line", label: "How a visitor would describe it (\"I tried " + (p.title || "it") + ", the one where…\")", get: () => P().hint || "", set: v => { P().hint = v; } });
+    cards.push({ id: "p:" + p.id, cat: "placards", area: "Placards", title: p.title || "Untitled", sub: p.developer || "", where: "Pieces", preview: "placard", fields });
+  });
+  return cards;
+}
+
+let CARDS = [];
+const byId = id => CARDS.find(c => c.id === id);
+function status(c) {
+  const vals = c.fields.map(f => flat(f.kind, f.get()));
+  if (vals.some(hasBr) || vals.every(v => !v.trim())) return "todo";
+  if (meta.marks[c.id]) return meta.marks[c.id];
+  if (c.edited && c.edited()) return "mine";
+  return "default";
+}
+const isDone = s => s === "mine" || s === "kept";
+const areasOf = cat => { const m = new Map(); CARDS.filter(c => c.cat === cat).forEach(c => { if (!m.has(c.area)) m.set(c.area, []); m.get(c.area).push(c); }); return m; };
+const STATUS_TEXT = { todo: "To write", default: "Not reviewed", kept: "Kept", mine: "Yours" };
+
+/* ---------- Load ---------- */
+let j = readDraft(), fresh = false;
+const f = await folderPack();
+if (!j) {
+  if (!f) { $app.innerHTML = ""; $app.appendChild(el("p", { class: "empty", text: "There's no curator draft in this browser and no museum-pack.json next to this page. Open this page from the museum folder (or open the curator once first)." })); return; }
+  j = f.j; fresh = true;
+  try { localStorage.setItem(DRAFT_KEY, f.text); setBase(f.text, "folder", f.j.savedAt); } catch (e) {}
+}
+if (f) folderFp = fingerprint(f.text);
+/* A draft that didn't start from this folder's pack (another device's old draft, an old curator session): exporting it would
+   undo whatever changed in the folder since. Rebasing takes the folder's pack and re-applies the lines saved here. */
+const draftIsOld = () => { if (!f) return false; const b = getBase(); return !b || !b.fp || b.fp !== folderFp; };
+function rebase() {
+  const vals = {};
+  for (const id in meta.marks) if (meta.marks[id] === "mine") { const c = byId(id); if (c) vals[id] = c.fields.map(fl => clone(fl.get())); }
+  useRaw(clone(f.j)); CARDS = buildCards();
+  let n = 0;
+  for (const id in vals) { const c = byId(id); if (!c) continue; try { c.fields.forEach((fl, i) => { fl.set(vals[id][i]); N = GOQ.normalizePack(raw); }); n++; } catch (e) {} }
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(raw)); } catch (e) { toast("Couldn't save: the browser's storage is full"); }
+  setBase(f.text, "folder", f.j.savedAt); if (n) markEdited();
+  N = GOQ.normalizePack(raw); CARDS = buildCards(); return n;
+}
+useRaw(j); CARDS = buildCards();
+await document.fonts.ready.catch(() => {});
+
+/* The curator saving in another tab: pick up its draft. */
+window.addEventListener("storage", e => {
+  if (e.key !== DRAFT_KEY || !e.newValue) return;
+  try { const nj = JSON.parse(e.newValue); if (!nj || nj.format !== GOQ.PACK_FORMAT) return; useRaw(nj); CARDS = buildCards(); if (view.name !== "card" || !view.dirty) render(); } catch (err) {}
+});
+
+/* ---------- Navigation ---------- */
+let view = { name: "home" }, skipped = new Set();
+function go(v, replace) { view = v; if (replace) history.replaceState({ v }, ""); else history.pushState({ v }, ""); render(); scrollTo(0, 0); }
+window.addEventListener("popstate", e => { view = (e.state && e.state.v) || { name: "home" }; render(); });
+history.replaceState({ v: view }, "");
+
+function dock(buttons) { $dockIn.innerHTML = ""; if (!buttons) { $dock.hidden = true; $app.classList.add("nobar"); return; } buttons.forEach(b => $dockIn.appendChild(b)); $dock.hidden = false; $app.classList.remove("nobar"); }
+function top(title, back) {
+  return el("header", { class: "top" }, [back ? el("button", { class: "iconbtn", type: "button", "aria-label": "Back", text: "←", onclick: () => history.length > 1 ? history.back() : go({ name: "home" }) }) : null,
+    back ? el("div", { class: "crumb", text: title }) : el("h1", { text: title })]);
+}
+function render() {
+  $app.innerHTML = "";
+  if (view.name === "home") return renderHome();
+  if (view.name === "area") return renderArea();
+  if (view.name === "archive") return renderArchive();
+  if (view.name === "card") return renderCard();
+}
+
+/* ---------- Picking the next card ---------- */
+function nextCard(opts) {
+  opts = opts || {};
+  const pool = CARDS.filter(c => c.cat === (opts.cat || "lines") && c.id !== opts.after);
+  const order = list => { if (!opts.area && !meta.lastArea) return list; const a = opts.area || meta.lastArea; return list.filter(c => c.area === a).concat(list.filter(c => c.area !== a)); };
+  const pick = want => { const l = order(pool.filter(c => want(status(c)))); return l.find(c => !skipped.has(c.id)) || null; };
+  if (opts.deck) { const i = opts.deck.indexOf(opts.after); for (let k = i + 1; k < opts.deck.length; k++) { const c = byId(opts.deck[k]); if (c && !isDone(status(c)) && !skipped.has(c.id)) return c; } }
+  return pick(s => s === "todo") || pick(s => s === "default") || (skipped.size ? (skipped.clear(), pick(s => !isDone(s))) : null);
+}
+
+/* ---------- Home ---------- */
+function renderHome() {
+  dock(null);
+  $app.appendChild(top("Writers' Room"));
+  const b = getBase();
+  if (draftIsOld()) $app.appendChild(el("div", { class: "banner" }, [
+    el("b", { text: "Your draft doesn't match this folder's museum-pack.json." }), " It started from an older pack (or the pack changed since). Exporting it as it is could put old rooms, pieces and settings back. Update keeps every line you've saved here and takes everything else from the folder.",
+    el("button", { class: "btn primary wide", type: "button", style: "margin-top:10px", text: "Update my draft", onclick: () => { const n = rebase(); render(); toast(n + (n === 1 ? " line" : " lines") + " kept; the rest is up to date"); } })]));
+  if (fresh) { $app.appendChild(el("div", { class: "banner", style: "border-color:var(--gold)", text: "Started a draft from this folder's museum-pack.json. The curator in this browser uses the same draft." })); fresh = false; }
+
+  // Today
+  const stampedToday = (meta.days[today()] || 0) > 0, next = nextCard();
+  const t = el("section", { class: "panel today", "aria-labelledby": "h-today" });
+  t.appendChild(el("h2", { id: "h-today", text: stampedToday ? "Stamped for today" : "Today's line" }));
+  if (next) {
+    const st = status(next);
+    t.appendChild(el("p", { class: "what", text: next.title }));
+    t.appendChild(el("p", { class: "where", text: next.area + " · " + (st === "todo" ? "still a placeholder" : "written by Claude: keep it or rewrite it") }));
+    t.appendChild(el("button", { class: "btn primary wide", type: "button", text: stampedToday ? "One more" : "Write it", onclick: () => go({ name: "card", id: next.id }) }));
+  } else t.appendChild(el("p", { class: "where", text: "Every line is written or kept. The museum is fully lit." }));
+  $app.appendChild(t);
+
+  // Punch card
+  $app.appendChild(punchCard());
+
+  // Quick tiles
+  const lines = CARDS.filter(c => c.cat === "lines"), plac = CARDS.filter(c => c.cat === "placards");
+  const nTodo = lines.filter(c => status(c) === "todo").length, nDef = lines.filter(c => status(c) === "default").length;
+  const pDone = plac.filter(c => isDone(status(c))).length;
+  $app.appendChild(el("div", { class: "pair" }, [
+    el("button", { class: "tile", type: "button", onclick: () => go({ name: "archive", cat: "lines", filter: nTodo ? "todo" : "default" }) }, [el("b", { text: nTodo ? "To write" : "Keep or rewrite" }), el("span", { text: nTodo ? nTodo + " placeholders left" : nDef + " lines to review" })]),
+    el("button", { class: "tile", type: "button", onclick: () => go({ name: "area", cat: "placards", area: "Placards" }) }, [el("b", { text: "Placards" }), el("span", { text: pDone + " of " + plac.length + " reviewed" })]),
+  ]));
+
+  // The museum lights up
+  const m = el("section", { class: "panel", "aria-labelledby": "h-rooms" }, [el("h2", { id: "h-rooms", text: "The museum" })]);
+  const done = lines.filter(c => isDone(status(c))).length;
+  m.appendChild(el("p", { class: "small", style: "margin:-4px 0 12px", text: done + " of " + lines.length + " lines written or kept. Each room lights up as its lines get done." }));
+  const grid = el("div", { class: "rooms" }), more = el("div", { class: "rooms", style: "margin-top:10px" });
+  const areas = [...areasOf("lines")].map(([area, list]) => ({ area, list, d: list.filter(c => isDone(status(c))).length, td: list.filter(c => status(c) === "todo").length }));
+  const rank = a => a.td ? 0 : a.d && a.d < a.list.length ? 1 : a.d < a.list.length ? 2 : 3; // placeholders left, then half-lit, then dark, then fully lit
+  areas.sort((a, b) => rank(a) - rank(b) || b.td - a.td);
+  const shown = Math.max(6, areas.filter(a => rank(a) < 2).length);
+  areas.forEach(({ area, list, d, td }, ai) => {
+    const pct = Math.round(d / list.length * 100);
+    (ai < shown ? grid : more).appendChild(el("button", { class: "room", type: "button", "aria-label": area + ": " + d + " of " + list.length + " done" + (td ? ", " + td + " to write" : ""), onclick: () => go({ name: "area", cat: "lines", area }) }, [
+      td ? el("span", { class: "todo", text: td }) : null,
+      el("div", { class: "win" + (pct === 100 ? " full" : "") }, [el("i", { style: "width:" + pct + "%" })]),
+      el("b", { text: area }), el("span", { text: d + " / " + list.length })]));
+  });
+  m.appendChild(grid);
+  if (more.children.length) {
+    more.hidden = !meta.allRooms;
+    const label = () => meta.allRooms ? "Show fewer rooms" : "Show all " + areas.length + " rooms";
+    const t = el("button", { class: "btn quiet wide", type: "button", style: "margin-top:12px", "aria-expanded": meta.allRooms ? "true" : "false", text: label(), onclick: () => { meta.allRooms = !meta.allRooms; saveMeta(); more.hidden = !meta.allRooms; t.setAttribute("aria-expanded", meta.allRooms ? "true" : "false"); t.textContent = label(); } });
+    m.appendChild(more); m.appendChild(t);
+  }
+  $app.appendChild(m);
+
+  // Footer
+  $app.appendChild(el("div", { class: "foot" }, [
+    el("button", { class: "btn wide", type: "button", text: "Browse every line", onclick: () => go({ name: "archive", cat: "lines", filter: "all" }) }),
+    el("button", { class: "btn quiet wide", type: "button", text: "Export pack", onclick: exportPack }),
+    el("a", { class: "btn quiet wide", href: "curator.html", text: "Open the curator" }),
+    el("p", { class: "small", text: "Everything you write saves to the curator's draft in this browser. Export the pack (here or in the curator) to put it on the site." })]));
+}
+function punchCard() {
+  const now = new Date(), y = now.getFullYear(), mo = now.getMonth(), first = new Date(y, mo, 1).getDay(), days = new Date(y, mo + 1, 0).getDate(), td = now.getDate();
+  const key = d => y + "-" + String(mo + 1).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+  let hits = 0; for (let d = 1; d <= days; d++) if (meta.days[key(d)]) hits++;
+  const s = el("section", { class: "panel", "aria-labelledby": "h-punch" });
+  s.appendChild(el("div", { class: "punch-head" }, [el("h2", { id: "h-punch", text: now.toLocaleString([], { month: "long" }) }), el("span", { class: "small", text: hits + (hits === 1 ? " day" : " days") + " this month" })]));
+  const g = el("div", { class: "punch", role: "img", "aria-label": hits + " days stamped this month" });
+  "SMTWTFS".split("").forEach(c => g.appendChild(el("span", { class: "dow", "aria-hidden": "true", text: c })));
+  for (let i = 0; i < first; i++) g.appendChild(el("span", { class: "d blank" }));
+  for (let d = 1; d <= days; d++) g.appendChild(el("span", { class: "d" + (meta.days[key(d)] ? " hit" : "") + (d === td ? " today" : "") + (d > td ? " future" : ""), "data-day": d, text: d }));
+  s.appendChild(g);
+  s.appendChild(el("p", { class: "punch-foot", text: (meta.total || 0) + " saved so far. One a day gets a stamp; more is extra credit." }));
+  return s;
+}
+
+/* ---------- An area, or the whole archive ---------- */
+function rowFor(c, deck) {
+  const st = status(c), first = c.fields.map(f => flat(f.kind, f.get())).join(" · ").replace(/\s+/g, " ");
+  return el("button", { class: "row", type: "button", onclick: () => go({ name: "card", id: c.id, deck }) }, [
+    el("span", { class: "dot " + st, title: STATUS_TEXT[st] }), el("span", { class: "txt" }, [el("b", { text: c.title }), el("span", { text: (c.sub ? c.sub + " · " : "") + (first || "(empty)") })])]);
+}
+function legend() { return el("div", { class: "legend" }, [["todo", "To write"], ["default", "Not reviewed"], ["mine", "Done"]].map(([k, t]) => el("span", {}, [el("i", { class: "dot " + k }), t]))); }
+function renderArea() {
+  const list = CARDS.filter(c => c.cat === view.cat && c.area === view.area), deck = list.map(c => c.id);
+  const d = list.filter(c => isDone(status(c))).length, first = list.find(c => status(c) === "todo") || list.find(c => !isDone(status(c)));
+  $app.appendChild(top(view.area, true));
+  $app.appendChild(el("p", { class: "small", style: "margin:0", text: d + " of " + list.length + " done" }));
+  $app.appendChild(el("div", { class: "bar" }, [el("i", { style: "width:" + Math.round(d / list.length * 100) + "%" })]));
+  $app.appendChild(legend());
+  const rows = el("div", { class: "rows" }); list.forEach(c => rows.appendChild(rowFor(c, deck))); $app.appendChild(rows);
+  dock(first ? [el("button", { class: "btn primary", type: "button", text: "Start with the next one", onclick: () => { meta.lastArea = view.area; saveMeta(); go({ name: "card", id: first.id, deck }); } })] : null);
+}
+function renderArchive() {
+  dock(null);
+  $app.appendChild(top("Every line", true));
+  const q = el("input", { class: "search", type: "search", placeholder: "Search lines, people, places", "aria-label": "Search", value: view.q || "" });
+  const cats = el("div", { class: "chips", role: "group", "aria-label": "Which writing" });
+  const filt = el("div", { class: "chips", role: "group", "aria-label": "Filter" });
+  const rows = el("div", { class: "rows" });
+  const chip = (wrap, label, on, fn) => wrap.appendChild(el("button", { class: "chip", type: "button", "aria-pressed": on ? "true" : "false", text: label, onclick: fn }));
+  const draw = () => {
+    cats.innerHTML = ""; filt.innerHTML = ""; rows.innerHTML = "";
+    chip(cats, "Lines", view.cat === "lines", () => { view.cat = "lines"; history.replaceState({ v: view }, ""); draw(); });
+    chip(cats, "Placards", view.cat === "placards", () => { view.cat = "placards"; history.replaceState({ v: view }, ""); draw(); });
+    const pool = CARDS.filter(c => c.cat === view.cat), n = s => pool.filter(c => s === "done" ? isDone(status(c)) : status(c) === s).length;
+    [["all", "All " + pool.length], ["todo", "To write " + n("todo")], ["default", "Not reviewed " + n("default")], ["done", "Done " + n("done")]].forEach(([k, label]) =>
+      chip(filt, label, view.filter === k, () => { view.filter = k; history.replaceState({ v: view }, ""); draw(); }));
+    const qq = (view.q || "").trim().toLowerCase();
+    const list = pool.filter(c => { const s = status(c); if (view.filter === "todo" && s !== "todo") return false; if (view.filter === "default" && s !== "default") return false; if (view.filter === "done" && !isDone(s)) return false;
+      return !qq || [c.area, c.title, c.sub || "", ...c.fields.map(f => flat(f.kind, f.get()))].join(" ").toLowerCase().includes(qq); });
+    const deck = list.map(c => c.id); let area = "";
+    list.forEach(c => { if (c.area !== area && view.cat === "lines") { area = c.area; rows.appendChild(el("p", { class: "small", style: "margin:10px 0 0;font-weight:700", text: area })); } rows.appendChild(rowFor(c, deck)); });
+    if (!list.length) rows.appendChild(el("p", { class: "empty", text: qq ? "Nothing matches that." : "Nothing here." }));
+  };
+  q.addEventListener("input", () => { view.q = q.value; history.replaceState({ v: view }, ""); draw(); });
+  $app.appendChild(q); $app.appendChild(cats); $app.appendChild(filt); $app.appendChild(legend()); $app.appendChild(rows);
+  draw();
+}
+
+/* ---------- The card ---------- */
+const SAMPLE = () => ({ name: (own_ro("office") || {}).nicknames && own_ro("office").nicknames[0] || "Sam", title: (raw.pieces[0] || {}).title || "Acrobatic Car", cat: own_ro("staff").catName || "the cat",
+  n: "3", tokens: "3", price: "4", item: "Question mark pin", drink: "iced coffee", label: "FRAGILE", clue: "somewhere near the coffee", answer: "Joe", desc: "a cat in a hallway", state: "on", gallery: "the Wolpaw wing", room: "the café", developer: "Electric Hat", badge: "0042", time: "ten minutes" });
+function fillVars(s) {
+  const smp = SAMPLE();
+  return s.replace(/\{(room|ROOM):([\w-]+)\}/g, (m, k, id) => { const r = GOQ.ROOMS[id]; const n = r ? r.name : id; return k === "ROOM" ? n.toUpperCase() : n; })
+    .replace(/\{(\w+)\}/g, (m, k) => (smp[k] !== undefined ? smp[k] : m));
+}
+let measure = null;
+function paginate(pages, s) {
+  if (!measure) { measure = el("div", { class: "gbox gmeasure", style: "--s:" + s }, [el("div", { class: "gb" })]); document.body.appendChild(measure); }
+  measure.style.setProperty("--s", s);
+  const body = measure.firstChild, out = [];
+  for (const page of pages) {
+    body.textContent = page;
+    if (body.scrollHeight <= body.clientHeight + 1) { out.push(page); continue; }
+    let cur = "";
+    for (const w of page.split(/\s+/)) { const t = cur ? cur + " " + w : w; body.textContent = t; if (body.scrollHeight > body.clientHeight + 1 && cur) { out.push(cur); cur = w; } else cur = t; }
+    if (cur) out.push(cur);
+  }
+  body.textContent = ""; return out;
+}
+let boxSrc = "";
+function textboxImage() {
+  if (boxSrc) return boxSrc;
+  const a = raw.assets && raw.assets.textbox && raw.assets.textbox.src;
+  try { boxSrc = a || GOQ.placeholder("textbox").toDataURL(); } catch (e) { boxSrc = ""; }
+  return boxSrc;
+}
+const LED_OK = /^[A-Za-z0-9 :\-.!?'&,/]*$/;
+
+function renderCard() {
+  const c = byId(view.id); if (!c) { go({ name: "home" }, true); return; }
+  const st0 = status(c);
+  meta.lastArea = c.area; saveMeta();
+  const deck = view.deck, pos = deck ? deck.indexOf(c.id) + 1 : 0;
+  $app.appendChild(top(c.area + (pos ? " · " + pos + " of " + deck.length : ""), true));
+  $app.appendChild(el("p", { class: "who", text: c.title + (c.sub ? " · " + c.sub : "") }));
+  $app.appendChild(el("div", { class: "tagline" }, [el("span", { class: "tag" + (st0 === "todo" ? " todo" : isDone(st0) ? " fin" : ""), text: STATUS_TEXT[st0] }), el("span", { class: "tag", text: c.where })]));
+
+  // What it's for: the bracketed brief, when there is one
+  const fresh = c.fields.map(f => { const v = f.get(), d = f.def && f.def(); return hasBr(flat(f.kind, v)) && (!d || JSON.stringify(v) === JSON.stringify(d)); });
+  const briefs = c.fields.map(f => flat(f.kind, f.get())).join("\n").match(/\[[^\]\n]*\]/g);
+  if (briefs && fresh.some(Boolean)) $app.appendChild(el("div", { class: "brief" }, [el("b", { text: "What it's for" }), [...new Set(briefs)].slice(0, 4).map(s => s.slice(1, -1)).join(" · ")]));
+  if (c.note) $app.appendChild(el("p", { class: "small", style: "margin:-6px 0 12px", text: c.note }));
+
+  // Placeholder chips: tap to drop {name} and friends where the cursor is
+  const vars = varsIn(c.title, ...c.fields.map(f => flat(f.kind, f.def ? f.def() : "")), ...c.fields.map(f => flat(f.kind, f.get())), c.note || "").filter(v => !/^\{(room|ROOM):/.test(v) || true);
+  let lastBox = null;
+  if (vars.length) {
+    const vc = el("div", { class: "varchips", role: "group", "aria-label": "Insert a placeholder" }, [el("span", { class: "lead", text: "Insert" })]);
+    vars.forEach(v => vc.appendChild(el("button", { type: "button", text: v, onpointerdown: e => e.preventDefault(), onclick: () => {
+      const t = lastBox || $app.querySelector("textarea, input.one"); if (!t) return;
+      const a = t.selectionStart != null ? t.selectionStart : t.value.length, b = t.selectionEnd != null ? t.selectionEnd : a;
+      const pre = t.value.slice(0, a), sp = pre && !/\s$/.test(pre) ? " " : "";
+      t.value = pre + sp + v + t.value.slice(b); const p = a + sp.length + v.length; t.focus(); t.setSelectionRange(p, p); t.dispatchEvent(new Event("input", { bubbles: true }));
+    } })));
+    $app.appendChild(vc);
+  }
+
+  // Editors
+  const state = c.fields.map((f, i) => { const vers = versionsOf(f.kind, f.get()); return fresh[i] ? { vers: vers.map(() => ""), ph: vers } : { vers, ph: [] }; });
+  const initial = JSON.stringify(state.map(s => s.vers));
+  const grow = t => { t.style.height = "auto"; t.style.height = t.scrollHeight + 2 + "px"; };
+  const forms = el("div");
+  const prev = el("div", { class: "preview" });
+  let focusField = 0, focusVer = 0;
+  const drawFields = () => {
+    forms.innerHTML = "";
+    c.fields.forEach((f, fi) => {
+      const S = state[fi], box = el("div", { class: "field" });
+      if (f.label) box.appendChild(el("label", { text: f.label }));
+      if (f.kind === "pages") box.appendChild(el("p", { class: "hint", text: S.vers.length > 1 ? "Versions take turns. A new line starts a new page." : "A new line starts a new page." }));
+      if (f.kind === "lines") box.appendChild(el("p", { class: "hint", text: "One per box; the game picks one at random." }));
+      S.vers.forEach((v, vi) => {
+        const multi = f.kind === "pages" || f.kind === "lines";
+        const input = f.kind === "line" ? el("input", { class: "one", type: "text", value: v, placeholder: S.ph[vi] || "", "aria-label": (f.label || c.title) + (multi ? " version " + (vi + 1) : "") })
+          : el("textarea", { rows: 2, placeholder: (S.ph[vi] || "").replace(/\n/g, "\n"), "aria-label": (f.label || c.title) + (multi ? " version " + (vi + 1) : "") });
+        if (input.tagName === "TEXTAREA") input.value = v;
+        input.addEventListener("focus", () => { lastBox = input; focusField = fi; focusVer = vi; drawPreview(); });
+        input.addEventListener("input", () => { S.vers[vi] = input.value; if (input.tagName === "TEXTAREA") grow(input); view.dirty = JSON.stringify(state.map(s => s.vers)) !== initial; drawPreview(); drawDock(); });
+        const w = el("div", { class: "ver" });
+        if (multi && (S.vers.length > 1 || f.kind === "lines")) w.appendChild(el("div", { class: "vlabel" }, [el("span", { text: (f.kind === "lines" ? "Option " : "Version ") + (vi + 1) }),
+          S.vers.length > 1 ? el("button", { type: "button", "aria-label": "Remove version " + (vi + 1), text: "Remove", onclick: () => { S.vers.splice(vi, 1); S.ph.splice(vi, 1); view.dirty = true; drawFields(); drawPreview(); drawDock(); } }) : null]));
+        w.appendChild(input); box.appendChild(w);
+        if (f.kind === "line" && c.preview === "none" && /LED/.test(c.title)) {}
+        requestAnimationFrame(() => input.tagName === "TEXTAREA" && grow(input));
+      });
+      if (f.kind === "pages" || f.kind === "lines") box.appendChild(el("button", { class: "addver", type: "button", text: f.kind === "lines" ? "+ Add another option" : "+ Add another version", onclick: () => { S.vers.push(""); S.ph.push(""); drawFields(); const ts = box.parentNode && forms.querySelectorAll(".field")[fi].querySelectorAll("textarea"); if (ts && ts.length) ts[ts.length - 1].focus(); } }));
+      forms.appendChild(box);
+    });
+  };
+  const drawPreview = () => {
+    prev.innerHTML = "";
+    if (c.preview === "none") return;
+    const S = state[focusField] || state[0];
+    const txt = (S.vers[focusVer] != null ? S.vers[focusVer] : S.vers[0]) || (S.ph[focusVer] || S.ph[0] || "");
+    const stage = el("div", { class: "stage" });
+    let label = "In the game";
+    if (c.preview === "placard") {
+      label = "On the placard";
+      state.forEach((s, i) => { const t = (s.vers[0] || s.ph[0] || "").trim(); if (!t) return; const f = c.fields[i]; stage.appendChild(el("div", { class: "placard" }, [el("b", { class: /Intention/.test(f.label) ? "red" : "", text: f.label.replace(/ \(.*$/, "").toUpperCase() }), fillVars(t)])); });
+    } else if (c.preview === "led") {
+      const line = txt.replace(/\n/g, " ").toUpperCase();
+      stage.appendChild(el("div", { class: "led", text: line + " ACROBATIC CAR" }));
+      if (!LED_OK.test(txt.replace(/\n/g, " "))) stage.appendChild(el("p", { class: "warn", style: "color:#f08a6a", text: "The sign only has letters, numbers and : - . ! ? ' & , /" }));
+    } else if (c.preview === "list") {
+      label = "The entries";
+      const wrap = el("div", { class: "listprev" }); txt.split("\n").map(s => s.trim()).filter(Boolean).forEach(s => wrap.appendChild(el("span", { text: fillVars(s) }))); stage.appendChild(wrap);
+    } else {
+      const s = Math.max(1, Math.min(2.2, (Math.min($app.clientWidth, 560) - 52) / 240));
+      const pages = paginate(txt.split("\n").map(x => x.trim()).filter(Boolean).map(fillVars), s), src = textboxImage();
+      pages.forEach((p, i) => stage.appendChild(el("div", { class: "gbox", style: "--s:" + s + (src ? ";border-image-source:url(" + src + ")" : "") }, [el("div", { class: "gb", text: p }), pages.length > 1 ? el("span", { class: "pg", text: (i + 1) + "/" + pages.length }) : null])));
+      label = pages.length > 1 ? "In the game · " + pages.length + " pages" : "In the game";
+      if (!pages.length) stage.appendChild(el("p", { class: "small", style: "color:#b59e8c;margin:0", text: "Start typing to see it here." }));
+    }
+    const sv = c.fields[focusField].kind === "pages" && state[focusField].vers.length > 1 ? " · version " + (focusVer + 1) : "";
+    prev.appendChild(el("h3", {}, [el("span", { text: label + sv }), el("span", { text: Object.keys(SAMPLE()).some(k => txt.includes("{" + k + "}")) ? "sample names filled in" : "" })]));
+    prev.appendChild(stage);
+  };
+  $app.appendChild(forms); $app.appendChild(prev);
+  drawFields(); drawPreview();
+  if (c.reset && st0 !== "todo") $app.appendChild(el("button", { class: "btn quiet wide", type: "button", text: "Reset to the original", onclick: () => { if (!confirm("Put this back to how it shipped?")) return; c.reset(); delete meta.marks[c.id]; saveMeta(); saveDraft(); CARDS = buildCards(); view.dirty = false; render(); toast("Reset"); } }));
+
+  const drawDock = () => {
+    const dirty = !!view.dirty, filled = state.every((s, i) => { const v = valueOf(c.fields[i].kind, s.vers.map((x, vi) => x.trim() ? x : s.ph[vi] || "")); return Array.isArray(v) ? v.length : !!v; }) && state.some(s => s.vers.some(x => x.trim()));
+    const keep = !dirty && st0 !== "todo";
+    dock([el("button", { class: "btn quiet skip", type: "button", text: "Skip", onclick: () => { skipped.add(c.id); view.dirty = false; advance(c, false); } }),
+      el("button", { class: "btn primary", type: "button", text: keep ? (isDone(st0) ? "Looks good" : "Keep it") : "Save", disabled: !keep && (!dirty || !filled), onclick: () => commit(c, state, keep) })]);
+  };
+  drawDock();
+}
+function commit(c, state, keep) {
+  if (!keep) {
+    c.fields.forEach((f, i) => { const S = state[i]; f.set(valueOf(f.kind, S.vers.map((v, vi) => v.trim() ? v : S.ph[vi] || ""))); N = GOQ.normalizePack(raw); });
+    if (!saveDraft()) return;
+  }
+  CARDS = buildCards();
+  const nc = byId(c.id), st = status(nc);
+  if (st !== "todo") meta.marks[c.id] = keep ? (meta.marks[c.id] === "mine" ? "mine" : "kept") : "mine";
+  const first = !(meta.days[today()] > 0);
+  meta.days[today()] = (meta.days[today()] || 0) + 1; meta.total = (meta.total || 0) + 1;
+  saveMeta(); view.dirty = false;
+  celebrate(nc, first ? "first" : st === "todo" ? "partial" : "more", st === "todo");
+}
+function advance(c, fromDone) {
+  const n = nextCard({ cat: c.cat, area: c.area, after: c.id, deck: view.deck });
+  if (n) go({ name: "card", id: n.id, deck: view.deck && view.deck.includes(n.id) ? view.deck : null }, !fromDone);
+  else { toast("That's everything in this pile"); go({ name: "home" }); }
+}
+function celebrate(c, kind, partial) {
+  const left = CARDS.filter(x => x.cat === c.cat && x.area === c.area && !isDone(status(x))).length;
+  const sheet = el("div", { class: "sheet", role: "dialog", "aria-modal": "true", "aria-label": "Saved" });
+  if (kind === "first") {
+    sheet.appendChild(el("div", { class: "seal stamp-in", text: "DAY " + new Date().getDate() }));
+    sheet.appendChild(el("div", { class: "big", text: "Stamped." }));
+    sheet.appendChild(el("p", { text: "That's today's line. Anything else is extra credit." + (partial ? " (Some boxes here are still placeholders, so it stays on the to-write pile.)" : "") }));
+  } else {
+    sheet.appendChild(el("div", { class: "big", text: kind === "partial" ? "Saved." : "Done." }));
+    sheet.appendChild(el("p", { text: kind === "partial" ? "Some boxes are still placeholders, so it stays on the to-write pile." : left ? left + " left in " + c.area + "." : c.area + " is fully lit." }));
+  }
+  const close = () => wrap.remove();
+  sheet.appendChild(el("div", { class: "acts" }, [
+    el("button", { class: "btn quiet", type: "button", text: "Clock out", onclick: () => { close(); go({ name: "home" }); } }),
+    el("button", { class: "btn primary", type: "button", text: "One more", onclick: () => { close(); advance(c, true); } })]));
+  const wrap = el("div", { class: "done" }, [sheet]);
+  wrap.addEventListener("click", e => { if (e.target === wrap) { close(); go({ name: "home" }); } });
+  document.body.appendChild(wrap); sheet.querySelector(".btn.primary").focus();
+}
+
+/* ---------- Export ---------- */
+function exportPack() {
+  if (draftIsOld()) {
+    if (!confirm("Your draft is older than this folder's museum-pack.json. Update it first? (Recommended: keeps every line you've saved here, and the rest comes from the folder.)")) return;
+    const n = rebase(); render(); toast(n + (n === 1 ? " line" : " lines") + " kept; the rest is up to date");
+  }
+  const savedAt = new Date().toISOString(), text = JSON.stringify(Object.assign({}, raw, { savedAt }));
+  const a = el("a", { href: URL.createObjectURL(new Blob([text], { type: "application/json" })), download: "museum-pack.json" });
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  setBase(text, "export", savedAt); toast("Exported museum-pack.json");
+}
+
+render();
+};
+</script>
+</body>
+</html>
