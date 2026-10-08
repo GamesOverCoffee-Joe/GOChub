@@ -2447,7 +2447,7 @@ function runnerCorner(img, ru) {
   // in the corner's own frame (c0: arms going right and down), measured from the tile's top-left
   const lx = ru.ax - ru.x * T, ly = ru.ay - ru.y * T, ax = fx ? T - lx : lx, ay = fy ? T - ly : ly;
   const key = [k, ax, ay, ru.wh, ru.wv].join(","); if (per[key]) return per[key];
-  const s = document.createElement("canvas"); s.width = iw; s.height = T; const sx = s.getContext("2d"); sx.drawImage(img, 0, 0);
+  const s = document.createElement("canvas"); s.width = iw; s.height = T; const sx = s.getContext("2d", { willReadFrequently: true }); sx.drawImage(img, 0, 0); // read back pixel by pixel below
   const col = r => { const d = sx.getImageData(T + 8, r, 1, 1).data; return "rgba(" + d[0] + "," + d[1] + "," + d[2] + "," + d[3] / 255 + ")"; };
   const cols = [col(3), col(4), col(5)], N = T + 2 * P, c = document.createElement("canvas"); c.width = N; c.height = N; const x = c.getContext("2d");
   const y0 = Math.round(ay - ru.wh / 2), y1 = y0 + ru.wh, x0 = Math.round(ax - ru.wv / 2), x1 = x0 + ru.wv;
@@ -2724,7 +2724,7 @@ class Game {
   tinted(key) {
     const [base, hex] = key.split("@"), src = this.sheet(base), w = src.naturalWidth || src.width, h = src.naturalHeight || src.height;
     if (!w || !h) return src;
-    const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d"); x.drawImage(src, 0, 0);
+    const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(src, 0, 0);
     const img = x.getImageData(0, 0, w, h), d = img.data, [cr, cg, cb] = hexRgb(hex);
     let sum = 0, n = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 3]) { sum += (0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]) / 255; n++; }
     const mean = n ? sum / n : 0.5;
@@ -4811,7 +4811,7 @@ class Game {
       else if (kind === 2) { rect(a, 3, 4, 8, 10, 1); rect(a, 11, 6, 2, 1, 1); rect(a, 12, 7, 1, 4, 1); rect(a, 11, 10, 2, 1, 1); rect(a, 4, 6, 6, 2, 2); }
       else { rect(a, 2, 4, 12, 9, 0); rect(a, 3, 5, 6, 7, 1); rect(a, 10, 6, 3, 1, 2); rect(a, 10, 8, 3, 1, 2); rect(a, 11, 5, 2, 1, 1); }
       const col = l => "hsl(" + hue + ",55%," + l + "%)";
-      const toHex = css => { const t = document.createElement("canvas").getContext("2d"); t.fillStyle = css; t.fillRect(0, 0, 1, 1); const d = t.getImageData(0, 0, 1, 1).data; return "#" + [d[0], d[1], d[2]].map(v => v.toString(16).padStart(2, "0")).join(""); };
+      const toHex = css => { const t = document.createElement("canvas").getContext("2d", { willReadFrequently: true }); t.fillStyle = css; t.fillRect(0, 0, 1, 1); const d = t.getImageData(0, 0, 1, 1).data; return "#" + [d[0], d[1], d[2]].map(v => v.toString(16).padStart(2, "0")).join(""); };
       x.drawImage(paint([outline(a)], 16, 16, 1, ["#f8f4ec", toHex(col(62)), toHex(col(38)), "#181820"]), 0, 0);
     }
     return (this.cache[ck] = c);
@@ -6659,7 +6659,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-12 trivia seat";
+const VERSION = "2026-11-12 cleanup";
 window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

@@ -9,10 +9,7 @@ Ideas and chores parked on purpose. Nothing here is built yet.
 - **Weekly new-piece celebration.** When a new piece is unveiled: a short cutscene, an usher speech, bunting, a themed drink of the week, and visitors mentioning it.
 - **Photo chain-of-events mystery.** A long-haul chain: the conservator's secret exhibit, unlocked step by step through photos.
 - **What the figure is.** Still undecided.
-- **Pre-play-test cleanup:**
-  - Stop tracking `.DS_Store` and `.vs/` in git (they're in `.gitignore` but were committed earlier).
-  - Remove the Batch fill button (`batch-fill.html` isn't in the repo).
-  - Fix the browser's slow pixel-readback warning (`willReadFrequently` on the canvases read with `getImageData`).
+- **Batch fill.** The curator's Batch fill button stays: `batch-fill.html` will be uploaded later and updated then.
 - **An art version of the writing app.** The same one-a-day idea, for the art slots.
 
 This document has three parts:
@@ -470,6 +467,8 @@ Goal: character.
 - **Stats on Someone's PC (B1):** it boots PLAYER_STATS.EXE: a staff profile (up to three titles you've earned, best first), then Visits, Reading, Recommending, Chores and Life. New counters in `progress.stats`: days visited, streak and best streak, time in the museum, time in the dark after closing, steps, walking into walls, drinks and plants by kind, who you photograph most, loved recommendations by genre, misses. Turning the PC on still counts for the shirt riddle.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
+
+**Cleanup (2026-11-12).** `.DS_Store` files and the `.vs/` folder are no longer tracked (`.vs/` added to `.gitignore`). The canvases the engine reads pixels back from are made with `willReadFrequently`, which clears the browser's slow-readback warning.
 
 **Clip names (2026-11-12).** Clip file names in `clips/` are lowercase, and the engine lowercases a bare clip name before loading it (GitHub Pages is case-sensitive; a phone keyboard had capitalized five of them). The curator's Gameplay clip field has autocapitalize and autocorrect off.
 
