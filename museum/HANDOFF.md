@@ -475,7 +475,7 @@ Goal: character.
 - **Shirts:** a visitor's shirt is never close to their skin color (`shirtFor`).
 - **Curator preview:** Make it happen → **An unveiling** stages the ceremony for the newest piece on display (`testUnveil`).
 
-**Cleanup (2026-11-12).** `.DS_Store` files and the `.vs/` folder are no longer tracked (`.vs/` added to `.gitignore`). The canvases the engine reads pixels back from are made with `willReadFrequently`, which clears the browser's slow-readback warning.
+**Cleanup (2026-11-12).** `.DS_Store` files and the `.vs/` folder are no longer tracked (`.vs/` added to `.gitignore`). The scratch canvases the engine only reads pixels back from (rug corners, item icon colors) are made with `willReadFrequently`, which clears the browser's slow-readback warning. **Not** `tinted()`: its canvas is drawn every frame (every recolored floor and wall tile, every shirt), and `willReadFrequently` keeps a canvas off the GPU, which slowed the whole game down on phones (everyone walked slower). Fixed 2026-11-13.
 
 **Clip names (2026-11-12).** Clip file names in `clips/` are lowercase, and the engine lowercases a bare clip name before loading it (GitHub Pages is case-sensitive; a phone keyboard had capitalized five of them). The curator's Gameplay clip field has autocapitalize and autocorrect off.
 
