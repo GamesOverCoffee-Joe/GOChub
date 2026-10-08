@@ -18,6 +18,7 @@ Merge into **main** (the branch gamesover.coffee is served from). Returning play
 - **Four version strings.** The freshness checks only work when the version is bumped in all four places: `VERSION` in museum-engine.js, `GOQ_WANT` in museum.html and curator.html, and `version.json`. Claude bumps them with every code change.
 - **It's not instant.** GitHub Pages caches files for up to about 10 minutes after a merge. Anyone with the game already open sees the update only after they refresh or come back.
 - **Only main is live.** Work on `experiments-1` doesn't reach players until it's merged.
+- **Name clip files in lowercase** (`seeing-double.webm`). GitHub Pages treats `Seeing-double.webm` as a different file. The game lowercases the name you type, so a file with capitals in its name won't be found.
 - **Rename clips and images instead of overwriting them.** Files in `clips/` and `images/` don't carry a version in their address. If you swap in a new file under the same name, some players may see the old one for a while. A new name (like `acrobatic-car_2.webm`) shows up right away. Update the name in the curator to match.
 - **Keep piece IDs stable.** Players' notes and "read" marks are tied to each piece's ID. Retitling a piece is fine, but deleting a piece and re-adding it means players lose their notes on it.
 

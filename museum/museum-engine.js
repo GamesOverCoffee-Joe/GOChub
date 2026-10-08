@@ -4015,7 +4015,7 @@ class Game {
      Gameplay video. */
   clipOf(p) {
     if (!p.clipUrl || this.screenVideo === false || this.headless) return null;
-    if (/\.(webm|mp4)(\?.*)?$/i.test(p.clipUrl)) return { file: /^https?:/i.test(p.clipUrl) ? p.clipUrl : "../clips/" + p.clipUrl };
+    if (/\.(webm|mp4)(\?.*)?$/i.test(p.clipUrl)) return { file: /^https?:/i.test(p.clipUrl) ? p.clipUrl : "../clips/" + p.clipUrl.trim().toLowerCase() }; // clip files are named in lowercase (a phone keyboard likes to capitalize the field)
     const id = this.ytId(p.clipUrl); if (!id) return null;
     const t = s => { const n = String(s).trim().split(":").map(Number); return n.some(isNaN) ? NaN : n.reduce((a, v) => a * 60 + v, 0); };
     const [a, b] = String(p.clipLoop || "").split(/\s*[-–]\s*/).map(t);
@@ -6652,7 +6652,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-12 trivia counter";
+const VERSION = "2026-11-12 clip names";
 window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

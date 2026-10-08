@@ -394,7 +394,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-12 trivia counter";
+window.GOQ_WANT = "2026-11-12 clip names";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -2506,7 +2506,7 @@ function pieceRow(p, i, place) {
     p.kind === "episode" ? blendBox(p) : null,
     f("YouTube episode", link("episodeUrl", "https://youtube.com/watch?v=..."), false, "Shown as \"Watch the episode\""),
     f("The game", link("gameUrl", "https://store.steampowered.com/... or itch.io"), false, "Shown as \"Play the game\""),
-    f("Gameplay clip", text("clipUrl", "acrobatic-car_1.webm or https://youtu.be/..."), false, "Plays muted and looping beside the placard's text. Best: a short .webm or .mp4 in the clips folder (type just its name; about 320×180, no sound). A YouTube link works too, but YouTube's overlay shows each time it loops."),
+    f("Gameplay clip", (i => { ["autocapitalize", "autocorrect"].forEach(k => i.setAttribute(k, "off")); i.spellcheck = false; return i; })(text("clipUrl", "acrobatic-car_1.webm or https://youtu.be/...")), false, "Plays muted and looping beside the placard's text. Best: a short .webm or .mp4 in the clips folder (type just its name; about 320×180, no sound). A YouTube link works too, but YouTube's overlay shows each time it loops."),
     f("Clip loop (YouTube only)", text("clipLoop", "12:53-13:00"), false, "From and to, in the YouTube video. That stretch loops. A clip file loops by itself and ignores this."),
     el("div", { class: "acts" }, [
       el("button", { class: "btn small quiet", type: "button", text: "Move up", disabled: i === 0, onclick: () => move(-1) }),
