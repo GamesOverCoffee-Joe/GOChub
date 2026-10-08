@@ -468,11 +468,12 @@ Goal: character.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
 **Robot cam prototype (2026-11-16).** A toy car you drive around the room you're in (curator preview: Make it happen → Robot cam; not a shop item yet). `startRobot`, `updateRobot`, `drawRobot`, `robotPhoto`, mode `"robot"`, state in `this.rc`.
-- **Driving:** it moves by the pixel. Hold a direction and it steers toward it while speeding up (the touch pad and a controller's stick give the exact angle: `padVec`, `stickVec`; arrow keys add up, so two make a diagonal). Let go and it coasts. Pointing back the way you came brakes before it turns around.
-- **Drifting:** the tires lose sideways speed quickly normally (`grip`), much less when you crank the wheel at speed, and barely with the handbrake (hold A: `aKey`, `aTouch`, `aPad`). Skid marks from the back wheels fade over 4 seconds.
-- **Bumps:** walls, solid things and people's feet bounce it back (`bounce`), with a small shake on a hard hit. Doors stop it; changing rooms puts it away.
-- **Camera:** smoothed, leaning ahead of the car. **B** takes a photo from the robot's spot (`takePhoto` with the player moved there for the moment), **Start** brings it back.
-- **All the feel is in `ROBOT`** at the top of the engine: accel, max speed, turn rate, roll and coast friction, grip, handbrake, bounce, skid threshold and life.
+- **Driving:** it moves by the pixel. **A is the gas** (`aKey`, `aTouch`, `aPad`); the arrows steer it toward the way you point (the touch pad and a controller's stick give the exact angle: `padVec`, `stickVec`; arrow keys add up, so two make a diagonal). Let go of A and it coasts. Pointing back the way you came brakes before it turns around.
+- **Drifting:** the tires lose sideways speed quickly normally (`grip`), much less when you crank the wheel at speed, so the back swings out. Skid marks from the back wheels fade.
+- **Bumps:** walls, solid things and people's feet bounce it back (`bounce`). The screen shakes only on a hard hit (speed over 1.4), for `shake` frames (default 2). Doors stop it; changing rooms puts it away.
+- **Visitors react:** zooming past someone (speed over 1.3, within about 22 by 18 pixels) makes them jump (`startled` pose) and look at it; each one at most every 4 seconds (`n.zoomT`).
+- **Camera:** smoothed, leaning ahead of the car. **B** takes a photo from the robot's spot (`takePhoto` with the player moved there for the moment), with a bigger, brighter flash at the robot's lens that goes off right away. **Start** brings it back.
+- **Its feel is editable:** curator Staff tab → **Robot cam** (top speed, acceleration, steering, grip, bounce, screen shake, skid mark life; "Back to the defaults"), saved as `settings.robot` (defaults in `ROBOT_DEFAULTS`, clamped in `normalizePack`). The finer constants (roll and coast friction, reverse brake, size) are in `ROBOT` at the top of the engine.
 - The car is drawn by the pixel at any angle (white body, dark wheels, blue lens), not an Art slot yet.
 
 **Gifts are shop items (2026-11-15).**

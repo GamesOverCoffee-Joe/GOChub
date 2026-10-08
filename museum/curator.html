@@ -401,7 +401,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-16 robot cam";
+window.GOQ_WANT = "2026-11-16 robot cam 2";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -959,6 +959,26 @@ function renderStaff() {
     el("div", { class: "fields", style: "max-width:420px" }, [el("label", {}, [document.createTextNode("Style"), rsty])]),
     el("label", { class: "range" }, [el("span", { text: "Strength" }), rs, rsOut]),
     el("label", { class: "range" }, [el("span", { text: "Sparkle on read pieces" }), sk, skOut]),
+  ]));
+  // The robot cam: how the little car drives (try it: Preview options, Make it happen, Robot cam). Changes show in the preview right away.
+  const rb = draft.settings.robot = Object.assign({}, GOQ.ROBOT_DEFAULTS, draft.settings.robot || {});
+  const knob = (k, label, lo, hi, step, fmt, note) => {
+    const inp = el("input", { type: "range", min: lo, max: hi, step, value: rb[k], "aria-label": label }), outp = el("output", { text: fmt(rb[k]) });
+    inp.addEventListener("input", () => { rb[k] = +inp.value; outp.textContent = fmt(rb[k]); if (game && game.pack) game.pack.settings.robot = Object.assign({}, rb); changed(); });
+    return el("div", { style: "margin:0 0 10px" }, [el("label", { class: "range" }, [el("span", { text: label }), inp, outp]), note ? el("small", { class: "note", style: "display:block;margin-top:-4px", text: note }) : null]);
+  };
+  const pct = v => Math.round(v * 100) + "%";
+  wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
+    el("h3", { text: "Robot cam", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "How the little car drives. A is the gas, the arrows steer, B takes a photo, Start brings it back. Try it in the preview: Preview options, Make it happen, Robot cam." }),
+    knob("max", "Top speed", 1, 5, 0.1, v => v.toFixed(1)),
+    knob("accel", "Acceleration", 0.03, 0.3, 0.01, v => v.toFixed(2)),
+    knob("turn", "Steering", 0.03, 0.2, 0.005, v => v.toFixed(3), "How quickly it turns toward where you point."),
+    knob("grip", "Grip", 0.04, 0.5, 0.01, v => v.toFixed(2), "Lower slides more: drifts come easier and last longer."),
+    knob("bounce", "Bounce off walls", 0, 0.9, 0.05, pct),
+    knob("shake", "Screen shake on a crash", 0, 8, 1, v => (v ? v + " frames" : "off")),
+    knob("skids", "Skid marks last", 0, 10, 0.5, v => (v ? v + " s" : "off")),
+    el("div", { class: "acts" }, [el("button", { class: "btn small quiet", type: "button", text: "Back to the defaults", onclick: () => { Object.assign(rb, GOQ.ROBOT_DEFAULTS); if (game && game.pack) game.pack.settings.robot = Object.assign({}, rb); changed({ now: true }); render(); } })]),
   ]));
   const ps = el("input", { type: "range", min: 20, max: 100, step: 5, value: Math.round((st.patronSpeed === undefined ? 0.45 : st.patronSpeed) * 100), "aria-label": "Visitor walking speed" });
   const psOut = el("output", { text: ps.value + "%" });
