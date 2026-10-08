@@ -3737,7 +3737,7 @@ class Game {
         if (ex !== undefined) { m.props.push({ key: "easel", x: ex, y: d.art.y, tall: true }); m.solid[d.art.y][ex] = true; m.events[ex + "," + d.art.y] = { say: "wed.easel" }; artist.dir = ex < d.art.x ? "left" : "right"; }
       }
     }
-    if (wd === 4 && m && !this.closing && this.tod() !== "night") { // Thursday: trivia players on every café stool but one
+    if (wd === 4 && m && !this.closing) { // Thursday: trivia players on every café stool but one (trivia night too)
       const stools = m.props.filter(p => p.key === "cafe_stool" && p.sit), skip = stools.length ? strSeed(todayISO() + "seat") % stools.length : -1;
       stools.forEach((st, i) => {
         if (i === skip || (this.room === m && this.player.x === st.x && this.player.y === st.y)) return;
@@ -4927,9 +4927,13 @@ class Game {
     if (!it) { this.say(["An empty pedestal under a glass dome."]); return; }
     this.say(["FEATURED: " + it.name, ...(it.description ? [it.description] : []), it.price + " tokens. Find it on the racks or ask at the counter."]);
   }
-  cafe() {
+  cafe(menu) {
     if (this.closing) { this.say(this.tx("cafe.closed")); return; }
     if (this.onBreak === "barista") { this.say(this.tx("sun.break")); return; }
+    if (!menu && !this.tut && this.weekday() === 4 && !this.dayState().thuDone) { // Thursday: the barista asks about trivia first
+      this.ask(this.tx("thu.ask").join(" "), ["Play", "Order a drink", "Not now"], i => { if (i === 0) this.trivia(); else if (i === 1) this.cafe(true); }, 2);
+      return;
+    }
     if (this.drink && this.drink.empty) {
       const n = this.drink.name.toLowerCase();
       this.choose("Finished? Want a refill on that " + n + "?", ["Refill, please", "No thanks"], i => {
@@ -6648,7 +6652,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-11 artist easel";
+const VERSION = "2026-11-12 trivia counter";
 window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
