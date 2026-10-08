@@ -10,6 +10,15 @@ Ideas and chores parked on purpose. Nothing here is built yet.
 - **What the figure is.** Still undecided.
 - **Batch fill.** The curator's Batch fill button stays: `batch-fill.html` will be uploaded later and updated then.
 - **An art version of the writing app.** The same one-a-day idea, for the art slots.
+- **Relationships replace mindsets (decided, not built).** Visitors ask for a piece by how the curator's experience matched the developer's intention, so you have to read both placards. One relationship per piece, picked by the host from the episode transcripts (`transcripts/`):
+  - **Same page** (felt what the dev meant): Depth Complaint, Zenomatrix, Comets Have Feathers, Minicraft TD.
+  - **Halfway there** (some landed, some didn't): Diecast, Tangled Crisis, Hovershot, Spring Escape Deep Down, Spacecat Solitaire, Cave Escape, Ominoflux.
+  - **Student** (not the audience, but had fun once it was internalized): Sonak, Zeroth.
+  - **Happy accident** (found something the dev didn't plan): Seeing Double, Survivor TD, Manboobs The Mini Game.
+  - **Different feeling** (felt something other than intended): Enemies Within, ESiON, Sneaky, AI'm Domingo, Polariball, Cyber Volley, Monster Freaks!, Credit Farm/Debtician, Stella Incus.
+  - **Missed the message** (a deeper meaning didn't come through): Club Soko, Hope Timbre, Hyperbaric, Near The Fear.
+  - **Not for me** (does what the dev wanted; not the curator's game): Warlord's Penance, Orion Wars, Acrobatic Car, Absorber.
+  - Still to do: the curator field, visitor asks and on-the-spot reactions, and a new tutorial (three made-up games; brainstorming now).
 
 This document has three parts:
 
