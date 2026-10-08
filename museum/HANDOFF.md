@@ -467,6 +467,14 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Dragon week (2026-11-15).**
+- **Read means read:** a case side (or a painting's placard) only counts once you page to the end of it (`rd.end`, `readEnded`; `viewPiece(p, side, stampAfter, onRead)`). Opening a placard and backing out leaves the border red.
+- **Sparkle:** read pieces sparkle more (two twinkles, a cross that flares) with its own Staff-tab slider, Sparkle on read pieces (`staff.sparkle`, default 70%, 0 is off).
+- **Unveil border:** blue until the piece is read, then the same green flare as the rest.
+- **The curator preview's Curator view** shows you as the curator (`isCurator()`: a curator badge, or curator mode).
+- **Drink of the week extras:** `piece.drinkColor` (the cup in your hand, `weekCup`) and `piece.drinkLine` (what the barista says when serving it), both in the curator under Unveiling.
+- **Comets Have Feathers** now has an unveil date (2026-10-07), so it's this week's unveil: **Dragon's Breath** (blue; the barista: "One Dragon's Breath. It's blue." / "Don't ask why it's blue. We asked. The answer was \"dragon.\"") and the **Stuffed blue dragon** (8 tokens, free at its ceremony). Item icons pick up a color word in the name, and "dragon", "plush", "stuffed" or "doll" draws a plush.
+
 **Read borders, the curator in person, the trivia seat (2026-11-14).**
 - **Read borders** replace the sparkle and the green glow (`drawReadBorders`, drawn on the floor under cases and people). A one-pixel square on the floor 4 pixels out from each case's footprint; its top edge runs behind the case's top half. Pulsing red: unread. One side read: green on that side, fading to red toward the other. Both sides (or a painting's placard): it turns green, flares bright and fades out over about 1.7 seconds (`readFx`, started when you're back to walking), and after that the piece only gets a very faint, occasional sparkle (a second pass drawn over the cases). Paintings get a line along the floor in front. On a piece's unveil day the border pulses blue. Not drawn on wall tiles or in the dark. Staff tab: Pieces you haven't read (Glowing border / Off, Strength). Old `readStyle` values become "border".
 - **The curator in person:** on a curator badge you look like the `curator` slot (Characters group in Art, also used for the curator at Sunday coffee and the unveiling; `playerSheet()`). With a curator badge there's no second curator at the unveiling, and Sunday coffee never picks the curator.

@@ -158,6 +158,8 @@ label.check{display:inline-flex;align-items:center;gap:8px;font-size:.9rem;margi
 .prow.open .pchev{transform:rotate(90deg)}
 .unveil-extras{display:grid;gap:8px;margin-top:10px;flex-basis:100%}
 .unveil-extras .rfield{display:flex;flex-direction:column;gap:2px;font-size:.85rem;font-weight:700}
+.unveil-extras textarea{border:2px solid var(--line);border-radius:3px;padding:.4em .6em;background:var(--surface);font:inherit;font-weight:400;resize:vertical}
+.unveil-extras input[type=color]{width:64px;padding:2px}
 .unveil-extras input{min-height:40px;border:2px solid var(--line);border-radius:3px;padding:.4em .6em;background:var(--surface);font:inherit;font-weight:400}
 .ptools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0 4px}
 .ptools input[type=search]{flex:1;min-width:200px;border:2px solid var(--line);background:var(--surface);border-radius:3px;padding:.45em .6em;min-height:40px;font:inherit;color:inherit}
@@ -398,7 +400,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-14 read borders 2";
+window.GOQ_WANT = "2026-11-15 dragon week";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -453,7 +455,7 @@ function packOut() {
     if (p.genre) o.genre = p.genre;
     if (p.blend) o.blend = p.blend;
     if (p.unveil) o.unveil = p.unveil;
-    if (p.drink) o.drink = p.drink;
+    if (p.drink) { o.drink = p.drink; if (p.drinkColor) o.drinkColor = p.drinkColor; if (p.drinkLine && p.drinkLine.length) o.drinkLine = p.drinkLine; }
     if (p.gift && p.gift.name) o.gift = p.gift;
     if (p.pick) o.pick = true;
     if (p.image) o.image = p.image; else { o.colors = p.colors; o.style = p.style; }
@@ -944,14 +946,18 @@ function renderStaff() {
   rsty.value = st.readStyle === "off" ? "off" : "border";
   const rs = el("input", { type: "range", min: 0, max: 100, step: 1, value: Math.round((st.readStrength === undefined ? 0.4 : st.readStrength) * 100), "aria-label": "How strong the unread mark is" });
   const rsOut = el("output", { text: rs.value + "%" });
+  const sk = el("input", { type: "range", min: 0, max: 100, step: 1, value: Math.round((st.sparkle === undefined ? 0.7 : st.sparkle) * 100), "aria-label": "How much read pieces sparkle" });
+  const skOut = el("output", { text: sk.value + "%" });
+  sk.addEventListener("input", () => { st.sparkle = +sk.value / 100; skOut.textContent = sk.value + "%"; if (game && game.pack) game.pack.settings.staff.sparkle = st.sparkle; changed(); }); // see it in the preview right away
   const rApply = () => { if (game && game.pack) { game.pack.settings.staff.readStyle = st.readStyle; game.pack.settings.staff.readStrength = st.readStrength; } }; // see it in the preview right away
   rsty.addEventListener("change", () => { st.readStyle = rsty.value; rApply(); changed(); });
   rs.addEventListener("input", () => { st.readStrength = +rs.value / 100; rsOut.textContent = rs.value + "%"; rApply(); changed(); });
   wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
     el("h3", { text: "Pieces you haven't read", style: "margin:0 0 4px" }),
-    el("p", { class: "note", style: "margin:0 0 12px", text: "A thin border on the floor around each case (and a line in front of each painting) shows what's left to read. It pulses red until you read it; reading one side turns that side green, fading to red toward the other side. Once both sides are read it turns green, flares, and fades away for good, and the piece just sparkles faintly now and then. On a piece's unveil day it pulses blue. Strength sets how bright it is. Preview options, Unread everything, resets it." }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "A thin border on the floor around each case (and a line in front of each painting) shows what's left to read. It pulses red until you read it; reading one side turns that side green, fading to red toward the other side. A side only counts once its placard is read to the last page. Once both sides are read it turns green, flares, and fades away for good, and from then on the piece sparkles now and then (Sparkle on read pieces; 0% turns it off). On a piece's unveil day it pulses blue until it's read, then flares the same way. Strength sets how bright it is. Preview options, Unread everything, resets it." }),
     el("div", { class: "fields", style: "max-width:420px" }, [el("label", {}, [document.createTextNode("Style"), rsty])]),
     el("label", { class: "range" }, [el("span", { text: "Strength" }), rs, rsOut]),
+    el("label", { class: "range" }, [el("span", { text: "Sparkle on read pieces" }), sk, skOut]),
   ]));
   const ps = el("input", { type: "range", min: 20, max: 100, step: 5, value: Math.round((st.patronSpeed === undefined ? 0.45 : st.patronSpeed) * 100), "aria-label": "Visitor walking speed" });
   const psOut = el("output", { text: ps.value + "%" });
@@ -2509,6 +2515,9 @@ function pieceRow(p, i, place) {
   const extras = el("div", { class: "unveil-extras" }, [
     el("small", { text: "The ceremony on that day hands these out. Leave blank for none." }),
     xin("Drink of the week", "Name on the café menu", () => p.drink, v => { p.drink = v; }),
+    (() => { const inp = el("input", { type: "color", value: p.drinkColor || "#c89040", "aria-label": "Drink color" }); inp.addEventListener("input", () => { p.drinkColor = inp.value; changed(); }); return el("label", { class: "rfield" }, [el("span", { text: "Drink color (the cup in your hand)" }), inp]); })(),
+    (() => { const t = el("textarea", { rows: 2, placeholder: "What the barista says when serving it (one page per line)", "aria-label": "Barista's line" }); t.value = (p.drinkLine || []).join("\n");
+      t.addEventListener("input", () => { p.drinkLine = t.value.split("\n").map(x => x.trim()).filter(Boolean); changed(); }); return el("label", { class: "rfield" }, [el("span", { text: "The barista's line when serving it" }), t]); })(),
     xin("Gift", "Free for whoever is at the ceremony", () => p.gift && p.gift.name, v => { g().name = v; }),
     xin("Gift description", "One line, in the shop and in Souvenirs", () => p.gift && p.gift.description, v => { g().description = v; }),
     xin("Gift price (after the day)", "5", () => p.gift && p.gift.price, v => { g().price = v; }, "number")]);

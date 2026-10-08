@@ -1314,6 +1314,7 @@ function normalizePiece(p, i) {
     episodeUrl: safeUrl(p.episodeUrl), gameUrl: safeUrl(p.gameUrl), clipUrl: safeUrl(p.clipUrl) || (/^[\w.-]{1,80}\.(webm|mp4)$/i.test(String(p.clipUrl || "").trim()) ? String(p.clipUrl).trim() : ""), clipLoop: str(p.clipLoop, 30), image: str(p.image, 20000000) || null,
     unveil: /^\d{4}-\d{2}-\d{2}$/.test(p.unveil || "") ? p.unveil : "",
     drink: str(p.drink, 40), // unveiling: the drink of the week it brings (until the next unveil that brings one)
+    drinkColor: isHex(p.drinkColor) ? p.drinkColor : "", drinkLine: Array.isArray(p.drinkLine) ? p.drinkLine.map(x => str(x, 200)).filter(Boolean).slice(0, 6) : [], // its cup color, and what the barista says
     gift: p.gift && str(p.gift.name, 50) ? { name: str(p.gift.name, 50), description: str(p.gift.description, 160), price: Math.max(1, Math.min(99, Math.round(+p.gift.price || 5))) } : null, // and its gift
     hint: str(p.hint, 160), pick: !!p.pick, minds: Array.isArray(p.minds) ? p.minds.map(x => str(x, 30)).filter(Boolean).slice(0, 8) : [], genre: str(p.genre, 30), blend: str(p.blend, 30), // blend: a second category it also belongs to
     colors: colors.length >= 2 ? colors : ["#f0ecf8", "#a898d0", "#584a88", "#1a1430"],
@@ -1344,6 +1345,7 @@ function normalizePack(p) {
     patronSpeed: typeof sin.patronSpeed === "number" && isFinite(sin.patronSpeed) ? Math.max(0.2, Math.min(1, sin.patronSpeed)) : 0.45,
     // Pieces you haven't read yet: a slow sparkle or a soft green glow (or off), and how strong (0 to 1).
     readStyle: sin.readStyle === "off" ? "off" : "border", // the glowing floor border (the old sparkle and glow became it)
+    sparkle: typeof sin.sparkle === "number" && isFinite(sin.sparkle) ? Math.max(0, Math.min(1, sin.sparkle)) : 0.7, // how much read pieces sparkle
     readStrength: typeof sin.readStrength === "number" && isFinite(sin.readStrength) ? Math.max(0, Math.min(1, sin.readStrength)) : 0.4,
     eotm: { name: str(eo.name, 40), note: str(eo.note, 200) },
     // Patreon members: they visit the museum as named visitors, and are all listed on the Patron Board.
@@ -3239,10 +3241,11 @@ class Game {
   }
   renderRead() {
     const r = this.rd, pg = r.pages[r.i], body = this.el.reader.querySelector(".gt-rd-body");
+    if (r.i >= r.pages.length - 1) r.end = true;
     body.innerHTML = ""; if (pg.label) { const b = document.createElement("b"); b.textContent = pg.label; if (pg.tone) b.className = pg.tone; body.appendChild(b); } body.appendChild(document.createTextNode(pg.text));
     this.el.reader.querySelector(".gt-rd-n").textContent = (r.pages.length > 1 ? (r.i + 1) + " / " + r.pages.length + "   " : "") + (r.sel >= 0 ? "A: open" : r.i < r.pages.length - 1 ? "A: next" : "A: done") + "   B: close" + (this.rdButtons().length ? "   \u2191\u2193: buttons" : "");
   }
-  closeRead() { this.dropClip(); this.el.reader.style.display = "none"; const d = this.rd && this.rd.done; this.rd = null; this.mode = "walk"; this.inputLock = true; if (d) d(); }
+  closeRead() { this.dropClip(); this.el.reader.style.display = "none"; const d = this.rd && this.rd.done; this.readEnded = !!(this.rd && this.rd.end); this.rd = null; this.mode = "walk"; this.inputLock = true; if (d) d(); } // readEnded: got to the last page
   /* Up and Down highlight the placard's buttons (Watch, Play, Note) in turn; A uses the highlighted one. */
   rdButtons() { return this.rd ? [...this.el.reader.querySelectorAll(".gt-rd-links > *")] : []; }
   rdPick(d) {
@@ -3288,7 +3291,7 @@ class Game {
       this.say(this.tx("stamp.traded", { title: it.name }));
     });
   }
-  viewPiece(p, side, stampAfter) {
+  viewPiece(p, side, stampAfter, onRead) { // onRead: runs if you read it to the last page
     const gold = p.kind === "episode", img = this.pieceImgs[p.id], secs = [];
     // The observation is always framed as the curator's own view; the headings and that line are in Words, Pieces.
     const obs = () => { secs.push({ label: this.tx("case.obsLabel").join(" "), text: p.observation }); if (!p.tut) secs.push({ label: "", text: this.tx("case.obsNote").join(" ") }); };
@@ -3302,8 +3305,10 @@ class Game {
     if (notes) { const ns = this.notesFor(p); if (side === "front") secs.splice(secs.length - 1, 0, ...ns); else secs.push(...ns); this.refreshNotes(); } // before the "other side" line
     this.read({ img: img ? p.image : this.pieceArt(p).toDataURL(), imgClass: img && img.naturalWidth > 160 ? "photo" : "", title: p.title.toUpperCase(), sub: "By " + p.developer,
       sections: secs, pick: p.pick, frame: true, clip: this.clipOf(p), flip: side === "back", note: notes && !this.curator ? p : null, links: [[p.episodeUrl, "Watch the episode", "WATCH"], [p.gameUrl, "Play the game", "PLAY"]] }, () => {
+      if (!this.readEnded) return; // closed before the last page: not read yet
+      if (onRead) onRead();
       if (side === undefined) { const k = (this.progress.sides || (this.progress.sides = {}))[p.id] || (this.progress.sides[p.id] = {}); if (gold) k.front = k.back = 1; else k.note = 1; this.saveProgress(); }
-      if (stampAfter) this.stamp(p);
+      if (stampAfter || (stampAfter === null && !p.tut && this.sidesOf(p).front && this.sidesOf(p).back)) this.stamp(p);
     });
   }
   /* Episode cases have two placards. From the front (standing below it, facing up) you read the curator's observation;
@@ -3325,8 +3330,7 @@ class Game {
     if (!side) { this.say(this.tx("case.ends")); return; }
     // Reading both sides of a case stamps your card (after the placard closes). The tutorial's games keep their own record.
     const tp = !!c.piece.tut, seen = tp ? (this.tut ? this.tut.sides : {}) : this.progress.sides || (this.progress.sides = {}), k = seen[c.piece.id] || (seen[c.piece.id] = {});
-    k[side] = 1; if (!tp) this.saveProgress(); else this.tutRead();
-    this.viewPiece(c.piece, side, !tp && !!(k.front && k.back));
+    this.viewPiece(c.piece, side, null, () => { k[side] = 1; if (!tp) this.saveProgress(); else this.tutRead(); }); // marked once you've read that side to its last page
   }
   /* Curator mode: lift a new piece out of its crate onto the wall, with sparkles, then read its placard. */
   hang(spot) {
@@ -3785,7 +3789,7 @@ class Game {
         L.npcs.push(this.dayNpc({ sheet: "visitor_c", x, y: y - 1, vendor: true, member: "Bluu" })); L.solid[y - 1][x] = true; }
     }
     if (wd === 0 && m && !d.sunDone) { // Sunday: someone from the staff at a café table, with the stool across from them free for you
-      const order = ["shopkeeper", "shopkeeper", "barista", "barista", "conservator", "conservator", "usher", "usher", ...(this.staff && this.staff.curator ? [] : ["curator"])], role = d.sunRole || (d.sunRole = order[strSeed(todayISO() + "sun") % order.length]);
+      const order = ["shopkeeper", "shopkeeper", "barista", "barista", "conservator", "conservator", "usher", "usher", ...(this.isCurator() ? [] : ["curator"])], role = d.sunRole || (d.sunRole = order[strSeed(todayISO() + "sun") % order.length]);
       const def = ROOMS.museum, tables = (def.props || []).filter(p => p.key === "cafe_table").map(t => [t, (def.props || []).find(p => p.key === "cafe_stool" && p.sit === "right" && p.x === t.x - 1 && p.y === t.y), (def.props || []).find(p => p.key === "cafe_stool" && p.sit === "left" && p.x === t.x + 1 && p.y === t.y)]).filter(([, a, b]) => a && b);
       const tb = tables[strSeed(todayISO() + "table") % Math.max(1, tables.length)];
       if (tb) {
@@ -3818,7 +3822,7 @@ class Game {
         const ok = (x, y) => (this.zoneAt(m, x, y) === z) && !m.events[x + "," + y] && !this.byExhibit(m, x, y) && this.dayTile(m, x, y);
         const side = [[front.x - 1, front.y, "right"], [front.x + 1, front.y, "left"], [front.x - 2, front.y + 1, "right"], [front.x + 2, front.y + 1, "left"]].filter(([x, y]) => ok(x, y));
         const host = (sheet, role) => { const at = side.shift(); if (!at) return null; const n = this.dayNpc({ sheet, x: at[0], y: at[1], dir: at[2], unveilHost: role, member: role === "usher" ? "The usher" : "The curator" }); m.npcs.push(n); return n; };
-        cer.curator = this.staff && this.staff.curator ? null : host("curator", "curator"); cer.usher = host("usher", "usher"); cer.crowd = []; // on a curator badge, the curator is you
+        cer.curator = this.isCurator() ? null : host("curator", "curator"); cer.usher = host("usher", "usher"); cer.crowd = []; // on a curator badge, the curator is you
         const spots = near(front, 2, 4).filter(([x, y]) => ok(x, y)).sort((a, b) => a[2] - b[2] || strSeed(today + a[0] + "," + a[1]) - strSeed(today + b[0] + "," + b[1]));
         // The crowd: the museum's own wandering visitors gather (moved here while the museum is set up, before you see it),
         // topped up with extras if there aren't six. Afterwards the visitors go back to wandering this wing; extras go in the fade.
@@ -4036,7 +4040,8 @@ class Game {
      order; and the keypad only works after closing (announcement made, lights out). One code for everyone (curator, Staff
      tab), so players can trade it. A curator badge always gets in, and starts there. */
   /* What you look like: the curator in person on a curator badge, the staff uniform on shift, the shirt if you wear it. */
-  playerSheet(base) { return this.staff ? (this.staff.curator ? "curator" : "player_staff") : this.progress.wearShirt ? "player_goq_shirt" : base || "player"; }
+  playerSheet(base) { return this.isCurator() ? "curator" : this.staff ? "player_staff" : this.progress.wearShirt ? "player_goq_shirt" : base || "player"; }
+  isCurator() { return !!(this.curator || (this.staff && this.staff.curator)); } // a curator badge, or the curator preview's curator view
   /* What people call you to your face: your badge name, or for a curator badge one of the curator's nicknames (Staff tab).
      Official things (the ON SHIFT tag, clocking in, the leaderboard, lockers, Employee of the Month) keep the badge name. */
   callName() {
@@ -4927,12 +4932,14 @@ class Game {
       x.imageSmoothingEnabled = true; const im = this.itemImgs[it.id], k = Math.min(16 / im.width, 16 / im.height);
       x.drawImage(im, (16 - im.width * k) / 2, (16 - im.height * k) / 2, im.width * k, im.height * k);
     } else {
-      const sd = strSeed(it.id + it.name), hue = sd % 360, a = mk(16, 16), nm = it.name.toLowerCase();
+      const nm = it.name.toLowerCase(), hues = { red: 0, orange: 28, gold: 45, yellow: 52, green: 120, teal: 175, blue: 215, purple: 275, pink: 330 }, cw = Object.keys(hues).find(w => new RegExp("\\b" + w + "\\b").test(nm));
+      const sd = strSeed(it.id + it.name), hue = cw ? hues[cw] : sd % 360, a = mk(16, 16); // a color word in the name sets it
       // Pick a placeholder shape from the name when it gives a hint: pin, bag, mug, card.
-      const kind = /shirt|tee\b|hoodie/.test(nm) ? 4 : /pin|badge|button/.test(nm) ? 0 : /bag|tote|pouch/.test(nm) ? 1 : /mug|cup/.test(nm) ? 2 : /card|post|print|poster|sticker/.test(nm) ? 3 : sd % 4;
+      const kind = /dragon|plush|stuffed|doll/.test(nm) ? 5 : /shirt|tee\b|hoodie/.test(nm) ? 4 : /pin|badge|button/.test(nm) ? 0 : /bag|tote|pouch/.test(nm) ? 1 : /mug|cup/.test(nm) ? 2 : /card|post|print|poster|sticker/.test(nm) ? 3 : sd % 4;
       if (kind === 0) { circ(a, 7.5, 7.5, 5, 1); circ(a, 7.5, 7.5, 3, 2); px(a, 7, 5, 0); }
       else if (kind === 1) { rect(a, 3, 6, 10, 8, 1); rect(a, 5, 3, 1, 4, 2); rect(a, 10, 3, 1, 4, 2); rect(a, 5, 3, 6, 1, 2); rect(a, 5, 9, 6, 2, 2); }
       else if (kind === 2) { rect(a, 3, 4, 8, 10, 1); rect(a, 11, 6, 2, 1, 1); rect(a, 12, 7, 1, 4, 1); rect(a, 11, 10, 2, 1, 1); rect(a, 4, 6, 6, 2, 2); }
+      else if (kind === 5) { rect(a, 4, 6, 8, 7, 1); rect(a, 3, 3, 5, 4, 1); px(a, 4, 2, 2); px(a, 6, 2, 2); px(a, 4, 4, 0); rect(a, 9, 4, 4, 3, 2); px(a, 12, 7, 2); rect(a, 12, 9, 3, 2, 1); rect(a, 5, 13, 2, 1, 2); rect(a, 9, 13, 2, 1, 2); } // a plush (a little dragon)
       else if (kind === 4) { rect(a, 4, 3, 8, 11, 1); rect(a, 1, 3, 3, 4, 1); rect(a, 12, 3, 3, 4, 1); rect(a, 6, 3, 4, 1, 0); rect(a, 6, 7, 4, 2, 2); } // a shirt
       else { rect(a, 2, 4, 12, 9, 0); rect(a, 3, 5, 6, 7, 1); rect(a, 10, 6, 3, 1, 2); rect(a, 10, 8, 3, 1, 2); rect(a, 11, 5, 2, 1, 1); }
       const col = l => "hsl(" + hue + ",55%," + l + "%)";
@@ -5037,7 +5044,7 @@ class Game {
   giftOf(p) { return p && p.gift ? { id: "gift-" + p.id, name: p.gift.name, description: p.gift.description || "", price: p.gift.price, image: null, gift: true, from: p.id } : null; }
   giftItems() { return this.unveiled().map(p => this.giftOf(p)).filter(Boolean); } // oldest first
   weekGift() { const g = this.giftItems(); return g[g.length - 1] || null; }
-  weekDrink() { const ps = this.unveiled().filter(p => p.drink), p = ps[ps.length - 1]; return p ? { id: "week", name: p.drink, piece: p.id } : null; }
+  weekDrink() { const ps = this.unveiled().filter(p => p.drink), p = ps[ps.length - 1]; return p ? { id: "week", name: p.drink, piece: p.id, color: p.drinkColor, line: p.drinkLine } : null; }
   /* Souvenirs: everything you own, like the photo album. A puts one in the collection cabinet or takes it out (12 fit). */
   openItems(cabinet) { this.mode = "items"; this.itemSel = 0; this.itemMsg = ""; this.itemsCab = !!cabinet; this.el.album.style.display = "block"; this.renderItems(); }
   closeItems() { this.el.album.style.display = "none"; this.mode = "walk"; this.inputLock = true; }
@@ -5104,7 +5111,7 @@ class Game {
     if (this.drink && this.drink.empty) {
       const n = this.drink.name.toLowerCase();
       this.choose("Finished? Want a refill on that " + n + "?", ["Refill, please", "No thanks"], i => {
-        if (i === 0) { this.drink = { kind: this.drink.kind, name: this.drink.name, sips: 0 }; this.say(this.tx("drink.refill")); }
+        if (i === 0) { this.drink = { kind: this.drink.kind, name: this.drink.name, sips: 0, color: this.drink.color }; this.say(this.tx("drink.refill")); }
         else this.say(this.tx("drink.noRefill"));
       });
       return;
@@ -5120,10 +5127,10 @@ class Game {
       if (i >= drinks.length) return;
       if (price && (this.progress.tokens || 0) < price) { this.say(["That's " + price + " token" + (price > 1 ? "s" : "") + ". Chores earn tokens."]); return; }
       if (price) { this.progress.tokens -= price; this.saveProgress(); this.updateHud(); }
-      this.drink = { kind: i < DRINKS.length ? i : 3, name: drinks[i].name, sips: 0 };
+      this.drink = { kind: i < DRINKS.length ? i : 3, name: drinks[i].name, sips: 0, color: drinks[i].color || "" };
       if (drinks[i].id === "cocoa") this.quest("cocoa");
       this.progress.tally.drinks = (this.progress.tally.drinks || 0) + 1; this.bump(this.progress.stats.drinks, drinks[i].id); this.saveProgress();
-      this.say(this.tx("drink.served"));
+      this.say(drinks[i].line && drinks[i].line.length ? drinks[i].line : this.tx("drink.served")); // the drink of the week can come with its own line
     });
   }
   /* Empty cups go in the bus tub or a trash can. */
@@ -6511,8 +6518,8 @@ class Game {
     const seen = this.readSeen || (this.readSeen = {}), fx = this.readFx || (this.readFx = {});
     const floor = (px, py) => { const x = Math.floor(px / T), y = Math.floor(py / T); return r.tiles[y] && r.tiles[y][x] && !/wall/.test(String(r.tiles[y][x])); };
     const state = p => { // what this piece's border does right now: a color for each point (k: 0 at the back, 1 at the front)
-      if (!p.tut && p.unveil === today) return k => [BLUE, base * (0.4 + 0.6 * pulse)];
       const sd = this.sidesOf(p), f = sd.front || sd.note, b = sd.back || sd.note, full = !!(f && b);
+      if (!p.tut && p.unveil === today && !full) return k => [BLUE, base * (0.4 + 0.6 * pulse)]; // unveil day: blue until it's read, then the same flare
       if (this.mode === "walk") { if (seen[p.id] === false && full) fx[p.id] = this.t; seen[p.id] = full; } // just finished: the flare (seen once you're back to walking)
       if (full) {
         const e = fx[p.id] !== undefined ? this.t - fx[p.id] : FX; if (e >= FX) return null; // done: no border, just the sparkle
@@ -6522,14 +6529,21 @@ class Game {
       return k => { const g = f ? k : b ? 1 - k : 0; return [RED.map((v, i) => Math.round(v + (GREEN[i] - v) * g)), base * (g * 0.7 + (1 - g) * (0.4 + 0.6 * pulse))]; };
     };
     const dot = (col, wx, wy, k, w, h) => { if (!floor(wx, wy)) return; const [c, a] = col(k); ctx.globalAlpha = a; ctx.fillStyle = "rgb(" + c + ")"; ctx.fillRect(wx - cx, wy - cy, w, h); };
-    const sparkle = (p, x, y, w, h) => { // read: a single faint twinkle now and then
-      const seed = strSeed(p.id), period = 900, life = 50, tt = this.t + hash(seed, 7) % period, ph = tt % period; if (ph >= life) return;
-      const cyc = Math.floor(tt / period), e = Math.sin(Math.PI * ph / life), a = e * e * 0.35 * Math.min(1, 0.4 + s);
-      const px = Math.round(x + 1 + hash(seed + cyc, 1) % Math.max(1, w - 2)), py = Math.round(y + 1 + hash(seed + cyc, 2) % Math.max(1, h - 2));
-      ctx.fillStyle = "#fff8dc"; ctx.globalAlpha = a; ctx.fillRect(px, py, 1, 1); ctx.globalAlpha = a * 0.5; ctx.fillRect(px - 1, py, 3, 1); ctx.fillRect(px, py - 1, 1, 3);
+    const sp = st.sparkle; // Staff tab: Sparkle on read pieces (0 is off)
+    const sparkle = (p, x, y, w, h) => { // read: twinkles now and then, eased in and out, somewhere new each time
+      if (sp <= 0) return;
+      const seed = strSeed(p.id), period = Math.round(900 - 720 * sp), life = 60, n = sp >= 0.5 ? 2 : 1;
+      for (let i = 0; i < n; i++) {
+        const tt = this.t + hash(seed, 7 + i * 5) % period, ph = tt % period; if (ph >= life) continue;
+        const cyc = Math.floor(tt / period), e = Math.sin(Math.PI * ph / life), a = e * e * (0.3 + 0.7 * sp);
+        const px = Math.round(x + 1 + hash(seed + cyc, 1 + i * 13) % Math.max(1, w - 2)), py = Math.round(y + 1 + hash(seed + cyc, 2 + i * 13) % Math.max(1, h - 2));
+        ctx.fillStyle = "#fff8dc"; ctx.globalAlpha = a; ctx.fillRect(px, py, 1, 1);
+        ctx.globalAlpha = a * 0.7; ctx.fillRect(px - 1, py, 3, 1); ctx.fillRect(px, py - 1, 1, 3);
+        if (e > 0.6) { ctx.globalAlpha = a * 0.35; ctx.fillRect(px - 2, py, 5, 1); ctx.fillRect(px, py - 2, 1, 5); }
+      }
     };
     const onScreen = (x, y) => x * T - cx > -48 && x * T - cx < SW + 48 && y * T - cy > -48 && y * T - cy < SH + 48;
-    const done = p => { const sd = this.sidesOf(p); return !(!p.tut && p.unveil === today) && (sd.note || (sd.front && sd.back)) && (fx[p.id] === undefined || this.t - fx[p.id] >= FX); };
+    const done = p => { const sd = this.sidesOf(p); return (sd.note || (sd.front && sd.back)) && (fx[p.id] === undefined || this.t - fx[p.id] >= FX); };
     if (top) {
       for (const c of r.cases) if (c.piece && c.state === "wall" && onScreen(c.x, c.y) && !this.isDark(r, c.x, c.y) && done(c.piece)) sparkle(c.piece, c.x * T - cx + 2, c.y * T - T - cy + 3, 12, 10);
       for (const h of r.hung) if (h.piece && h.state === "wall" && onScreen(h.x, h.y + 2) && !this.isDark(r, h.x, h.y + 2) && done(h.piece)) sparkle(h.piece, h.x * T - cx + 4, h.y * T - cy + 4, 24, 18);
@@ -6611,12 +6625,17 @@ class Game {
     }
   }
   /* The drink in your hand; lifted to your mouth while sipping, with a little steam. */
+  weekCup(hex) { // the drink of the week's cup, in its own color
+    const ck = "cup|" + hex; if (this.cache[ck]) return this.cache[ck];
+    const [r, g, b] = hexRgb(hex), dark = "#" + [r, g, b].map(v => Math.round(v * 0.6).toString(16).padStart(2, "0")).join("");
+    const pal = PAL.cups.slice(); pal[4] = hex; pal[5] = dark; return (this.cache[ck] = paint([GEN.cups(3)], 8, 8, 1, pal));
+  }
   drawCup(sx, sy, c) {
     const me = c === this.player, d = me ? this.drink : c.drink, st = me ? (this.sip ? this.sip.t : 0) : c.sipT ? 46 - c.sipT : 0;
     const k = d.kind, up = st > 6 && st < 36;
     const x = up ? { down: 4, up: 4, left: 2, right: 6 }[c.dir] : { down: 11, up: 2, left: 1, right: 8 }[c.dir], y = up ? 6 : 9;
     if (d.empty) { this.drawSlot("cup_empty", 0, 0, sx + x, sy + y); return; }
-    this.drawSlot("cups", k, 0, sx + x, sy + y);
+    if (k === 3 && d.color && !this.overrides.cups) this.ctx.drawImage(this.weekCup(d.color), sx + x, sy + y); else this.drawSlot("cups", k, 0, sx + x, sy + y);
     if (up || (c.sitting && this.t % 90 < 40)) this.drawSlot("steam", Math.floor(this.t / 8) % 3, 0, sx + x, sy + y - 7);
   }
   /* The floor tile just inside each doorway, for its mat. */
@@ -6860,7 +6879,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-14 read borders 2";
+const VERSION = "2026-11-15 dragon week";
 window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
