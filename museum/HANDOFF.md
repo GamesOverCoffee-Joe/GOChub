@@ -467,6 +467,16 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Café grid, a heart that floats, and fixes (2026-11-18).**
+- **Café menu** is its own panel (`el.cafe`, mode `"cafe"`, `renderCafe`, `cafeMove`, `cafePick`): a grid of the drinks, each cup drawn big on the same cream saucer (`.gt-cafe-saucer`) so none blends in, with its name and price; Just chatting and Nothing, thanks underneath. Sundays say "everything's half off" once, under the question. Arrows move, A orders, B closes; tiles can be tapped.
+- **The right recommendation** (`cheer`): your controls wait, the text box clears, the game screen eases in a little on the visitor (a CSS scale on the canvas, off with reduced motion) while one big heart floats up slowly and fades (`thrilled`, no hop), then eases back out; the "+N tokens" toast and their thanks come after (about 2.25 seconds).
+- **Iced cups** are an Art slot now (`cup_iced`, "Iced drink in hand", Gift shop and café): the hot cup's size, frame 0 full (the drink tinted from the menu, colors 4 and 5), frame 1 an empty clear cup. Replaced art draws as-is.
+- **Visitors' drinks** are anything on the menu, the drink of the week included (`npcDrink`).
+- **Read borders:** paintings have no outline any more, only the sparkle once read; cases' sparkles draw after their tops are redrawn over people (`drawReadBorders(..., "cases")`), which had been hiding them.
+- **Paintings can't be recommended** (only episodes; `cur.unreadNote` removed).
+- **Art tab:** a search box (name, key, group or note), a group picker and "Only art I've replaced" at the top of the list.
+- **Fixed:** Bluu's stall looks anywhere in the lobby with room when his usual spots are taken (a rearranged lobby hid him); the night guard also does rounds during closing at any hour; hallway lamps and glows go dark with their own spot, not yours (standing in a dark wing used to switch the hallway's off).
+
 **Signs, drinks, tokens and cleanup (2026-11-18).**
 - **Signs:** the lobby directory and the hallway arrow signs' words are in Words → Signs (`dir.head`, `dir.middle`, `dir.room`, `dir.storage`, `hall.arrow`; room names and directions are filled in). The curator's arrow inspector lists wings by their names (with the genre in brackets) instead of the old genre names.
 - **Drinks:** coffee, tea and cocoa each have a price and an Iced box (`settings.shop.drinks`, Shop tab → Café drinks; the old single `drinkPrice` seeds them). Drinks of the week too (`piece.drinkPrice`, `piece.drinkIced`, in Shop and the piece's Unveiling). Iced drinks are a generated clear cup showing the drink's color, with a lid, ice and a straw, and no steam (`icedCup`); visitors' drinks follow the menu (`npcDrink`). Sunday half price applies to each. The cocoa quest checks the drink, not its name.

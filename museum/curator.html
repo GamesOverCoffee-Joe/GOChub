@@ -402,7 +402,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 tokens and drinks";
+window.GOQ_WANT = "2026-11-18 cafe grid";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -692,8 +692,30 @@ function pixelsMatch(a, b, tol) {
 const dataOf = c => c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
 
 /* ---------- Slot list ---------- */
+let artFind = { q: "", group: "", custom: false }; // the Art list's search, kept while you work
 function renderSlotList() {
   const nav = $("#slots"); nav.innerHTML = "";
+  // Find a slot: type part of its name (or where it's used), pick a group, or show only the ones you've replaced.
+  const groups = [...new Set(GOQ.SLOTS.filter(s => !s.retired).map(s => s.group))];
+  const q = el("input", { type: "search", placeholder: "Find art (cup, door, guard...)", value: artFind.q, "aria-label": "Find art", style: "width:100%;margin:0 0 6px" });
+  const gs = el("select", { "aria-label": "Group", style: "width:100%;margin:0 0 6px" }, [el("option", { value: "", text: "All groups" }), ...groups.map(g => el("option", { value: g, text: g }))]); gs.value = artFind.group;
+  const cu = el("input", { type: "checkbox", checked: artFind.custom });
+  const count = el("small", { class: "note", style: "display:block;margin:0 0 6px" });
+  const apply = () => {
+    const words = artFind.q.toLowerCase().split(/\s+/).filter(Boolean); let shown = 0;
+    nav.querySelectorAll("button.slot[data-key]").forEach(b => {
+      const sl = GOQ.SLOT[b.dataset.key], hay = (sl.label + " " + sl.key + " " + sl.group + " " + (sl.note || "")).toLowerCase();
+      const on = words.every(w => hay.includes(w)) && (!artFind.group || sl.group === artFind.group) && (!artFind.custom || !!draft.assets[sl.key]);
+      b.style.display = on ? "" : "none"; if (on) shown++;
+    });
+    nav.querySelectorAll("h3[data-group]").forEach(h => { h.style.display = [...nav.querySelectorAll('button.slot[data-key]')].some(b => b.style.display !== "none" && GOQ.SLOT[b.dataset.key].group === h.dataset.group) ? "" : "none"; });
+    const any = artFind.q || artFind.group || artFind.custom; count.textContent = any ? shown + " match" + (shown === 1 ? "" : "es") : "";
+    nav.querySelectorAll("button.slot.atlas").forEach(b => { b.style.display = any ? "none" : ""; });
+  };
+  q.addEventListener("input", () => { artFind.q = q.value; apply(); });
+  gs.addEventListener("change", () => { artFind.group = gs.value; apply(); });
+  cu.addEventListener("change", () => { artFind.custom = cu.checked; apply(); });
+  nav.appendChild(el("div", { class: "artfind", style: "position:sticky;top:0;z-index:2;background:var(--surface, #fff);padding:6px 0 2px" }, [q, gs, el("label", { class: "check", style: "margin:0 0 4px" }, [cu, document.createTextNode("Only art I've replaced")]), count]));
   const thumb = (src, w, h) => { const s = Math.max(w, h), [c, x] = canvasOf(s, s); x.drawImage(src, 0, 0, w, h, (s - w) / 2, (s - h) / 2, w, h); return c; };
   const atl = el("button", { class: "slot atlas", type: "button", "aria-current": current === "atlas" ? "true" : "false", onclick: () => { current = "atlas"; render(); } });
   const [ac, ax] = canvasOf(40, 40); ax.fillStyle = "#8f5a0a"; [[4, 4], [20, 4], [4, 20], [20, 20]].forEach(([x, y]) => ax.fillRect(x, y, 14, 14)); atl.appendChild(ac);
@@ -705,13 +727,14 @@ function renderSlotList() {
   let group = "";
   for (const s of GOQ.SLOTS) {
     if (s.retired) continue; // kept in the list only so older atlases line up
-    if (s.group !== group) { group = s.group; nav.appendChild(el("h3", { text: group })); }
-    const b = el("button", { class: "slot", type: "button", "aria-current": current === s.key ? "true" : "false", onclick: () => { current = s.key; render(); } });
+    if (s.group !== group) { group = s.group; nav.appendChild(el("h3", { text: group, "data-group": group })); }
+    const b = el("button", { class: "slot", type: "button", "data-key": s.key, "aria-current": current === s.key ? "true" : "false", onclick: () => { current = s.key; render(); } });
     b.appendChild(thumb(game.sheet(s.key), s.w, s.h));
     b.appendChild(el("span", { class: "nm", text: s.label }));
     if (draft.assets[s.key]) b.appendChild(el("span", { class: "tag", text: "Custom" }));
     nav.appendChild(b);
   }
+  apply();
 }
 
 /* ---------- One slot ---------- */
