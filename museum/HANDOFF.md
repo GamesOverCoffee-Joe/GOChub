@@ -473,12 +473,14 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Clip names (2026-11-12).** Clip file names in `clips/` are lowercase, and the engine lowercases a bare clip name before loading it (GitHub Pages is case-sensitive; a phone keyboard had capitalized five of them). The curator's Gameplay clip field has autocapitalize and autocorrect off.
+
 **Day tweaks (2026-11-11).**
 - **Sunday:** drinks are half price (rounded down, "half off" on the menu). With the drink price at 0 they stay free.
 - **Monday:** the conservator says `mon.ask` version 1 the first time you talk to him that day, then version 2 every time after (`txAt`, counted in `progress.day.monTalks`). Box labels are gone (`mon.labels` removed).
 - **Tuesday:** `tue.kid` uses one version per Tuesday, taking turns week to week (`weekNo()`). The per-place clues are gone: `{clue}` is just where his mom is ("the Strategy wing", "the café", "the Screening Nook"), and each line supplies its own "in" or "to". `tue.after` is now the kid's line the moment you bring him back, said before his mom's `tue.found`.
 - **Wednesday:** the artist and his easel keep off the tiles where you read a case, front or back (`byExhibit`; `freeSpot` skips them too, so boxes, the kid and his mom do as well). His spot and the easel's are picked together (saved as `progress.day.art = { x, y, ex }`), so he always has his easel; a spot saved before a layout change is picked again. Looking at the easel says `wed.easel`.
-- **Thursday:** trivia players sit on every café stool but one (the empty one is picked per day), outside of closing and night. Missing a question (wrong or out of time) says `thu.wrong` / `thu.time`, then one of them answers with `thu.steal` (a "!" over their head). Talking to them says `thu.crowd`.
+- **Thursday:** pressing A at the café counter asks `thu.ask` first (Play / Order a drink / Not now) until you've played that day; the barista stands behind the counter, so talking to her directly isn't how most players get there. Trivia players sit on every café stool but one (the empty one is picked per day), day or night, but not after closing. Missing a question (wrong or out of time) says `thu.wrong` / `thu.time`, then one of them answers with `thu.steal` (a "!" over their head). Talking to them says `thu.crowd`.
 - **Saturday:** the vendor is Bluu (his name on photos and in the stats).
 - **Today's people keep their spots:** a wandering visitor standing on the artist's, mom's, kid's or a box's tile at a rebuild moves elsewhere instead of that person going missing (`dayTile`).
 
