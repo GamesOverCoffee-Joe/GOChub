@@ -458,6 +458,8 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Office outlines (2026-11-09).** The curator's office props now end with a near-black outline like the rest of the museum: desk, TV, shelf, chair, camera, Steam Deck table, PC tower, soft box and the floor clutter. The outline color is each palette's darkest; `tower`, `osoft` and `clutter` gained a `#141418` for it (index 7, 5 and 10). Lighting, walls and the clutter layout are unchanged on purpose. Joe uses the custom PNG in the pack, so his look is whatever that PNG is.
+
 **How updates reach players:** see `museum/UPDATING.md` (caching, version strings, custom art and exporting). Keep it current when any of that changes.
 
 **Curator tidy (2026-11-08).** A cleanup pass on curator.html; no pack or engine changes.

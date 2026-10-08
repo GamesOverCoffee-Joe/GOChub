@@ -68,14 +68,14 @@ const PAL = {
   aisle:   [null, "#3a2a18", "#ffc860", "#fff2c8"],
   ship:    [null, "#232a38", "#36405a", "#56627c", "#151a24", "#e04040", "#5a1c1c", "#40d8a8", "#163a30", "#8a96ac"],
   odesk:   [null, "#6a4a30", "#4a3220", "#2a1c12", "#141418", "#2e2e38", "#c8c8d0", "#e8dcc0", "#8a5a30", "#f0d020", "#f4f4f8"],
-  tower:   [null, "#ececf2", "#c4c4d0", "#8a8a98", "#9a5cff", "#d4b8ff", "#4a4a56"],
+  tower:   [null, "#ececf2", "#c4c4d0", "#8a8a98", "#9a5cff", "#d4b8ff", "#4a4a56", "#141418"],
   otv:     [null, "#121216", "#26262e", "#3c3c48", "#1c2a3a", "#4a88b8", "#a0d8f0", "#e05050"],
   oshelf:  [null, "#5a3a24", "#3a2414", "#24160c", "#c84a3a", "#3a6ac8", "#e0b040", "#4a9a5a", "#9a5ac8", "#e8e0d0"],
   ochair:  [null, "#24242c", "#3c3c48", "#5a5a68", "#141418"],
   ocam:    [null, "#18181c", "#2e2e36", "#4a4a54", "#8a8a96", "#0c0c10"],
-  osoft:   [null, "#f4f0e6", "#2a2a30", "#5a5a64", "#d8d0c0"],
+  osoft:   [null, "#f4f0e6", "#2a2a30", "#5a5a64", "#d8d0c0", "#141418"],
   odeck:   [null, "#6a4a30", "#4a3220", "#1c1c22", "#34445e", "#6a7a9a", "#8a8a96"],
-  clutter: [null, "#2a2a32", "#4a4a56", "#d4d4dc", "#ece4d4", "#7a4a28", "#f0d020", "#b89810", "#ffffff", "#3a7ae0"],
+  clutter: [null, "#2a2a32", "#4a4a56", "#d4d4dc", "#ece4d4", "#7a4a28", "#f0d020", "#b89810", "#ffffff", "#3a7ae0", "#141418"],
   joe:     [null, "#acd6ee", "#82b6d6", "#5a8cae", "#34343c", "#9ca2aa", "#6c7078", "#e8fbff", "#5a6a7a", "#6a4028"],
   wdoor:   [null, "#3a2414", "#7a4e2a", "#9a6a3a", "#5a381c", "#e8b84a", "#fff0a0", "#a07020"],
   keypad:  [null, "#2a2a32", "#4a4a56", "#8a8a96", "#1a1a20", "#000000", "#ff3a30", "#40e070"],
@@ -673,6 +673,7 @@ const GEN = {
     return a;
   },
   // The curator's office: spaceship-panel walls (2 frames: a few lights blink), cluttered desk, white PC with a purple glow.
+  // Like the rest of the museum's props, each one ends with a near-black outline (its palette's darkest color).
   ship_wall_upper: f => {
     const a = mk(16, 16);
     rect(a, 0, 0, 16, 16, 2); rect(a, 0, 0, 16, 1, 3); rect(a, 15, 0, 1, 16, 4); px(a, 2, 2, 9); px(a, 12, 2, 9);
@@ -696,7 +697,7 @@ const GEN = {
     rect(a, 41, 12, 4, 6, 9); rect(a, 41, 14, 4, 1, 3); // a can of yerba mate
     rect(a, 9, 16, 3, 4, 7); rect(a, 9, 18, 3, 2, 8); // another one
     rect(a, 1, 23, 3, 9, 2); rect(a, 44, 23, 3, 9, 2); rect(a, 30, 22, 12, 7, 2); rect(a, 35, 25, 2, 1, 3);
-    return a;
+    return outline(a, 4);
   },
   pc_tower: () => {
     const a = mk(16, 32);
@@ -704,7 +705,7 @@ const GEN = {
     rect(a, 4, 8, 1, 20, 4); px(a, 4, 12, 5); px(a, 4, 20, 5); // the purple light
     for (let y = 10; y < 16; y += 2) rect(a, 6, y, 4, 1, 6);
     px(a, 9, 25, 4); rect(a, 4, 31, 2, 1, 6); rect(a, 10, 31, 2, 1, 6);
-    return a;
+    return outline(a, 7);
   },
   // The office TV on a low stand: 2 frames (off, on). The picture area is 26×15 at (3, 4); clips play there when it's on.
   office_tv: f => {
@@ -712,7 +713,7 @@ const GEN = {
     rect(a, 1, 2, 30, 19, 2); rect(a, 3, 4, 26, 15, f ? 4 : 1);
     if (!f) { px(a, 6, 6, 2); px(a, 7, 5, 2); px(a, 28, 19, 7); } else for (let x = 3; x < 29; x++) px(a, x, 4 + ((x * 7) % 15), 5);
     rect(a, 14, 21, 4, 3, 3); rect(a, 2, 24, 28, 7, 3); rect(a, 2, 24, 28, 1, 2); rect(a, 5, 26, 9, 3, 2); rect(a, 18, 26, 9, 3, 2);
-    return a;
+    return outline(a, 1);
   },
   office_shelf: () => {
     const a = mk(32, 32);
@@ -722,41 +723,41 @@ const GEN = {
       rect(a, 1, y0 + 8, 30, 1, 2);
     }
     rect(a, 0, 29, 32, 3, 2);
-    return a;
+    return outline(a, 3);
   },
-  office_chair: () => { const a = mk(16, 16); rect(a, 4, 1, 8, 7, 2); rect(a, 5, 2, 6, 5, 3); rect(a, 3, 8, 10, 3, 1); rect(a, 7, 11, 2, 3, 4); rect(a, 3, 14, 10, 1, 4); px(a, 3, 15, 4); px(a, 12, 15, 4); return a; },
+  office_chair: () => { const a = mk(16, 16); rect(a, 4, 1, 8, 7, 2); rect(a, 5, 2, 6, 5, 3); rect(a, 3, 8, 10, 3, 1); rect(a, 7, 11, 2, 3, 4); rect(a, 3, 14, 10, 1, 4); px(a, 3, 15, 4); px(a, 12, 15, 4); return outline(a, 4); },
   camera_tripod: () => {
     const a = mk(16, 32);
     rect(a, 4, 6, 9, 6, 1); rect(a, 1, 7, 4, 4, 4); rect(a, 2, 8, 2, 2, 5); rect(a, 6, 4, 5, 2, 2); rect(a, 12, 5, 3, 3, 3); // the camera, facing the desk
     rect(a, 7, 12, 2, 3, 3);
     for (let i = 0; i < 16; i++) { px(a, 8 - Math.round(i * 0.35), 15 + i, 2); px(a, 8, 15 + i, 3); px(a, 8 + Math.round(i * 0.35), 15 + i, 2); }
-    return a;
+    return outline(a, 5);
   },
   softbox: () => {
     const a = mk(16, 32);
     rect(a, 1, 2, 14, 11, 2); rect(a, 2, 3, 12, 9, 1); rect(a, 2, 11, 12, 1, 4);
     rect(a, 7, 13, 2, 15, 3); for (let i = 0; i < 4; i++) { px(a, 7 - i, 28 + i, 3); px(a, 8 + i, 28 + i, 3); }
-    return a;
+    return outline(a, 5);
   },
   deck_table: () => {
     const a = mk(16, 16);
     rect(a, 1, 7, 14, 3, 1); rect(a, 1, 10, 14, 1, 2); rect(a, 2, 11, 2, 5, 2); rect(a, 12, 11, 2, 5, 2);
     rect(a, 2, 3, 12, 5, 3); rect(a, 5, 4, 6, 3, 4); px(a, 6, 5, 5); px(a, 3, 5, 6); px(a, 12, 5, 6); // a Steam Deck
-    return a;
+    return outline(a, 3);
   },
   floor_controllers: () => {
     const a = mk(16, 16);
     rect(a, 2, 4, 6, 3, 1); px(a, 2, 7, 1); px(a, 7, 7, 1); px(a, 3, 5, 2); px(a, 6, 5, 9);
     rect(a, 9, 10, 6, 3, 3); px(a, 9, 13, 3); px(a, 14, 13, 3); px(a, 10, 11, 1); px(a, 13, 11, 1);
-    return a;
+    return outline(a, 10);
   },
   iced_coffees: () => {
     const a = mk(16, 16);
     rect(a, 3, 5, 4, 7, 4); rect(a, 3, 9, 4, 3, 5); rect(a, 5, 2, 1, 4, 8);
     rect(a, 10, 9, 4, 6, 4); rect(a, 10, 13, 4, 2, 5); rect(a, 12, 6, 1, 4, 8);
-    return a;
+    return outline(a, 10);
   },
-  mate_can: () => { const a = mk(16, 16); rect(a, 4, 9, 8, 4, 6); rect(a, 4, 12, 8, 1, 7); rect(a, 4, 10, 8, 1, 7); px(a, 3, 10, 7); px(a, 3, 11, 7); return a; },
+  mate_can: () => { const a = mk(16, 16); rect(a, 4, 9, 8, 4, 6); rect(a, 4, 12, 8, 1, 7); rect(a, 4, 10, 8, 1, 7); px(a, 3, 10, 7); px(a, 3, 11, 7); return outline(a, 10); },
   // Joe: a crochet robot. A controller for a head (d-pad and buttons for eyes) floating over a mug of coffee, a little cup in
   // his right hand, the mug's handle for his left arm, skinny legs, blocky grey feet. 2 frames: the antenna lights up.
   joe: f => {
@@ -6610,7 +6611,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-08 curator tidy";
+const VERSION = "2026-11-09 office outlines";
 window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
