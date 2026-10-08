@@ -473,6 +473,15 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Day tweaks (2026-11-11).**
+- **Sunday:** drinks are half price (rounded down, "half off" on the menu). With the drink price at 0 they stay free.
+- **Monday:** the conservator says `mon.ask` version 1 the first time you talk to him that day, then version 2 every time after (`txAt`, counted in `progress.day.monTalks`). Box labels are gone (`mon.labels` removed).
+- **Tuesday:** `tue.kid` uses one version per Tuesday, taking turns week to week (`weekNo()`). The per-place clues are gone: `{clue}` is "in the Strategy wing" / "in the café" / "in the Screening Nook", and `{place}` is the bare place. `tue.after` is now the kid's line the moment you bring him back, said before his mom's `tue.found`.
+- **Wednesday:** the artist and his easel keep off the tiles where you read a case, front or back (`byExhibit`; `freeSpot` skips them too, so boxes, the kid and his mom do as well).
+- **Thursday:** trivia players sit on every café stool but one (the empty one is picked per day), outside of closing and night. Missing a question (wrong or out of time) says `thu.wrong` / `thu.time`, then one of them answers with `thu.steal` (a "!" over their head). Talking to them says `thu.crowd`.
+- **Saturday:** the vendor is Bluu (his name on photos and in the stats).
+- **Today's people keep their spots:** a wandering visitor standing on the artist's, mom's, kid's or a box's tile at a rebuild moves elsewhere instead of that person going missing (`dayTile`).
+
 **Writers' Room (2026-11-10).** `museum/writers-room.html` (also in the curator's More menu): a phone-first page for writing the museum's text one line at a time.
 - **Same draft as the curator.** It reads and writes `goq-curator-draft` in this browser, and the curator picks up changes even when it's open in another tab. With no draft yet, it starts one from the folder's `museum-pack.json`. It has its own Export pack (same file as the curator's) and shows the same "pack changed since your draft started" heads-up.
 - **What's in it:** every Words line (`GOQ.TEXT`), every staff chat set, visitor mindset lines (ask, loved, liked, nope), achievement names and descriptions, shop item names and descriptions, genre names, the cat's name, nicknames and corkboard notes. **Placards** are their own category: observation, intention (or the guest note) and the visitor's one-liner, per piece.
@@ -500,7 +509,7 @@ Goal: character.
 
 **Days of the week (2026-11-07).** Something small and different each day, by the player's local day of the week (`weekday()`, which follows `todayISO()` so Skip to tomorrow works). Today's progress is kept in `progress.day` (keyed by date and weekday), so reloading doesn't reshuffle it. `placeDay()` runs after every build; `dayTalk()` runs before the usual talk. All lines are bracketed placeholders in Words → Days of the week.
 - **Day board** (`day_board`, 32×16): in the lobby at (5, 2), left of the museum door. Today's day is chalked on it (SUN., MON., TUES., WED., THURS., FRI., SAT.); looking at it reads `day.board.<0-6>`. The lobby light switch moved from (5, 2) to (1, 2) to make room.
-- **Mon:** five misplaced boxes (`lost_box`) on random open floor in the museum, with labels from `mon.labels`. Talking to the conservator gives a hint (the wing one is in); after all five, 5 tokens.
+- **Mon:** five misplaced boxes (`lost_box`) on random open floor in the museum. Talking to the conservator gives a hint (the wing one is in); after all five, 5 tokens.
 - **Tue:** a lost kid (`kid`, a visitor shrunk to three quarters) somewhere in the museum. His mom is in the café, the screening nook or a wing (picked by the date). His clue for a wing names its *category*, not the wing. He follows you (`this.fol`, not offered recommendations); talk to his mom with him in tow for 3 tokens.
 - **Wed:** the artist with an easel in a random wing. "Show a photo" opens the album (`albumTitle`) and pays by the photo's hidden `rarity`: 0 common (walls, props, signs) 1 token, 1 uncommon (people, the cat, pieces) 3, 2 rare (people reacting, the poster reveal) 6, 3 legendary (the figure, Joe) 12. His sketch of it shows on the staff corkboard for 7 days (`progress.sketch`, a grayscale close-up).
 - **Thu:** trivia with the barista: 5 questions, 10 s each (a timer bar; running out counts as a miss). Generated from the pieces (who made it, which wing, which game is in a wing; templates in Words) plus your own (`thu.questions`: question, right answer, three wrong; entries starting with [ are skipped). 1 token per right answer, plus 2 for all five.

@@ -1817,19 +1817,15 @@ const TEXT = {
   "day.board.4":       { g: "Days of the week", l: "The day board on a Thursday", v: [["[Day board, Thursday: trivia with the barista in the café]"]] },
   "day.board.5":       { g: "Days of the week", l: "The day board on a Friday", v: [["[Day board, Friday: a Games Over Coffee episode in the screening nook]"]] },
   "day.board.6":       { g: "Days of the week", l: "The day board on a Saturday", v: [["[Day board, Saturday: a pop-up stall in the lobby]"]] },
-  "mon.ask":           { g: "Days of the week", l: "Monday: the conservator, boxes still missing ({n}: how many found, {room}: where one of the others is)", v: [["[Conservator, Monday: five boxes went missing around the museum, you've found {n}; vague hint that one is near {room}]"]] },
-  "mon.found":         { g: "Days of the week", l: "Monday: finding a box ({label}: its label, {n}: found so far)", v: [["[Found a misplaced box labeled {label}. {n} of 5]"]] },
-  "mon.labels":        { g: "Days of the week", l: "Monday: the labels on the boxes (one per line, picked at random)", v: [["[BOX LABEL 1]", "[BOX LABEL 2]", "[BOX LABEL 3]", "[BOX LABEL 4]", "[BOX LABEL 5]", "[BOX LABEL 6]", "[BOX LABEL 7]"]] },
+  "mon.ask":           { g: "Days of the week", l: "Monday: the conservator, boxes still missing ({n}: how many found, {room}: where one of the others is). Version 1 the first time you talk to him that day, version 2 every time after", v: [["[Conservator, Monday: five boxes went missing around the museum, you've found {n}; vague hint that one is near {room}]"]] },
+  "mon.found":         { g: "Days of the week", l: "Monday: finding a box ({n}: found so far)", v: [["[Found a misplaced box. {n} of 5]"]] },
   "mon.done":          { g: "Days of the week", l: "Monday: bringing the conservator all five ({n}: tokens)", v: [["[Conservator thanks you for finding all five boxes and gives you {n} tokens]"]] },
   "mon.after":         { g: "Days of the week", l: "Monday: the conservator after you've found them", v: [["[Conservator, already thanked you today]"]] },
-  "tue.kid":           { g: "Days of the week", l: "Tuesday: the lost kid, the first time ({clue}: where his mom might be)", v: [["[Lost kid: he can't find his mom.]", "{clue}"]] },
-  "tue.clue.cafe":     { g: "Days of the week", l: "Tuesday: the kid's clue when his mom is in the café", v: [["[Clue: his mom is wherever there's coffee]"]] },
-  "tue.clue.nook":     { g: "Days of the week", l: "Tuesday: the kid's clue when his mom is in the screening nook", v: [["[Clue: his mom loves watching the videos]"]] },
-  "tue.clue.wing":     { g: "Days of the week", l: "Tuesday: the kid's clue when his mom is in a wing ({genre}: that wing's category)", v: [["[Clue: his mom loves games that are {genre}]"]] },
-  "tue.again":         { g: "Days of the week", l: "Tuesday: talking to the kid while he follows you ({clue})", v: [["[Kid, following you: reminds you]", "{clue}"]] },
+  "tue.kid":           { g: "Days of the week", l: "Tuesday: the lost kid, the first time. One version per Tuesday, taking turns week to week ({clue}: where his mom is, like \"in the Strategy wing\", \"in the café\" or \"in the Screening Nook\"; {place}: just the place, like \"Strategy wing\")", v: [["[Lost kid: he can't find his mom. She's {clue}]"]] },
+  "tue.again":         { g: "Days of the week", l: "Tuesday: talking to the kid while he follows you ({clue}, {place})", v: [["[Kid, following you: reminds you she's {clue}]"]] },
   "tue.mom":           { g: "Days of the week", l: "Tuesday: his mom, before you've brought him", v: [["[A worried mom: she's lost her son]"]] },
   "tue.found":         { g: "Days of the week", l: "Tuesday: bringing the kid to his mom ({n}: tokens)", v: [["[Mom is so relieved, and gives you {n} tokens]"]] },
-  "tue.after":         { g: "Days of the week", l: "Tuesday: the kid after he's found his mom", v: [["[Kid, back with his mom, waves]"]] },
+  "tue.after":         { g: "Days of the week", l: "Tuesday: the kid, the moment you bring him to his mom (before she thanks you)", v: [["[Kid, seeing his mom]"]] },
   "tue.busy":          { g: "Days of the week", l: "Tuesday: the kid when someone else is already following you", v: [["[Kid: you're already helping someone]"]] },
   "wed.ask":           { g: "Days of the week", l: "Wednesday: the artist", v: [["[Artist: needs inspiration. Show him a photo?]"]] },
   "wed.none":          { g: "Days of the week", l: "Wednesday: the artist, when you have no photos", v: [["[Artist: you don't have any photos to show]"]] },
@@ -1841,8 +1837,10 @@ const TEXT = {
   "wed.sketch":        { g: "Days of the week", l: "The artist's sketch on the staff corkboard, for a week ({desc}: the photo)", v: [["[The artist's sketch of your photo, pinned to the corkboard: {desc}]"]] },
   "thu.ask":           { g: "Days of the week", l: "Thursday: the barista invites you to trivia", v: [["[Barista: it's trivia Thursday. Five questions, a few seconds each. Play?]"]] },
   "thu.right":         { g: "Days of the week", l: "Thursday: a right answer", v: [["[Right!]"]] },
-  "thu.wrong":         { g: "Days of the week", l: "Thursday: a wrong answer ({answer}: the right one)", v: [["[Wrong. It was {answer}]"]] },
-  "thu.time":          { g: "Days of the week", l: "Thursday: out of time ({answer})", v: [["[Time's up. It was {answer}]"]] },
+  "thu.wrong":         { g: "Days of the week", l: "Thursday: a wrong answer (someone at a café table answers next; {answer}: the right one)", v: [["[Wrong!]"]] },
+  "thu.time":          { g: "Days of the week", l: "Thursday: out of time (someone at a café table answers next; {answer})", v: [["[Time's up!]"]] },
+  "thu.steal":         { g: "Days of the week", l: "Thursday: someone at a café table answers after you miss ({answer}: the right one)", v: [["[Someone else buzzes in: {answer}. Correct]"]] },
+  "thu.crowd":         { g: "Days of the week", l: "Thursday: talking to one of the trivia players at the café tables (picks one at random)", v: [["[Trivia player: waiting for the next round]"]] },
   "thu.done":          { g: "Days of the week", l: "Thursday: the end of trivia ({n}: right answers, {tokens})", v: [["[Trivia over: {n} of 5 right, {tokens} tokens]"]] },
   "thu.after":         { g: "Days of the week", l: "Thursday: the barista after you've played", v: [["[Barista: come back next Thursday for more trivia]"]] },
   "thu.q.dev":         { g: "Days of the week", l: "Thursday: a question about who made a game ({title})", v: [["Who made {title}?"]] },
@@ -1850,7 +1848,7 @@ const TEXT = {
   "thu.q.which":       { g: "Days of the week", l: "Thursday: a question about which game is in a wing ({room})", v: [["Which of these is in the {room}?"]] },
   "thu.questions":     { g: "Days of the week", l: "Thursday: your own questions (one per entry: the question, then the right answer, then three wrong ones; entries starting with [ are skipped)", v: [["[Your question]", "[Right answer]", "[Wrong answer]", "[Wrong answer]", "[Wrong answer]"]] },
   "screen.friday":     { g: "Screening nook", l: "The LED sign on Fridays, before the title (letters, numbers and : - . ! ? ' & , / only)", v: [["FRIDAY FEATURE:"]] },
-  "sat.vendor":        { g: "Days of the week", l: "Saturday: the pop-up vendor", v: [["[Pop-up vendor: three things you can't get anywhere else, this week only]"]] },
+  "sat.vendor":        { g: "Days of the week", l: "Saturday: Bluu, the pop-up vendor", v: [["[Pop-up vendor: three things you can't get anywhere else, this week only]"]] },
   "sat.bought":        { g: "Days of the week", l: "Saturday: buying something ({item})", v: [["[Bought the {item}]"]] },
   "sat.broke":         { g: "Days of the week", l: "Saturday: not enough tokens ({n}: the price)", v: [["[Not enough tokens: it costs {n}]"]] },
   "sat.owned":         { g: "Days of the week", l: "Saturday: something you already bought", v: [["[You already bought that one]"]] },
@@ -3693,6 +3691,11 @@ class Game {
     return (this.cache[ck] = c);
   }
   dayNpc(o) { return Object.assign({ dayPerson: true, x: 0, y: 0, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 9999, still: true, lines: [["..."]], lineI: -1 }, o); }
+  dayTile(r, x, y) { // today's people keep their spot: a wandering visitor standing on it goes elsewhere
+    if (!r || !r.solid[y] || r.solid[y][x]) return false;
+    r.npcs = r.npcs.filter(n => !(n.x === x && n.y === y) || n.dayPerson || n.role || n.staff || n.usher || n.patrol || n.still);
+    return this.tileFree(r, x, y);
+  }
   wingZones() { const r = this.rooms.museum; return r && r.zones ? r.zones.filter(z => z.kind === "room" && z.rect && z.rect.genre) : []; }
   spotIn(r, zoneId) { return r && this.freeSpot(r, null, zoneId); }
   /* Called after every (re)build: puts today's people and things back where today's state says. */
@@ -3701,7 +3704,7 @@ class Game {
     const wd = this.weekday(), d = this.dayState(), m = this.rooms.museum; this.onBreak = null;
     if (wd === 1 && m && !d.monDone) { // Monday: five misplaced boxes
       if (!d.boxes) { d.boxes = []; for (let i = 0; i < 5; i++) { const at = this.freeSpot(m); if (at && !d.boxes.some(b => b.x === at[0] && b.y === at[1])) d.boxes.push({ x: at[0], y: at[1], i }); } d.found = []; this.saveProgress(); }
-      for (const b of d.boxes) if (!d.found.includes(b.i) && this.tileFree(m, b.x, b.y)) { m.props.push({ key: "lost_box", x: b.x, y: b.y }); m.solid[b.y][b.x] = true; m.events[b.x + "," + b.y] = { lostBox: b.i }; }
+      for (const b of d.boxes) if (!d.found.includes(b.i) && this.dayTile(m, b.x, b.y)) { m.props.push({ key: "lost_box", x: b.x, y: b.y }); m.solid[b.y][b.x] = true; m.events[b.x + "," + b.y] = { lostBox: b.i }; }
     }
     if (wd === 2 && m && !d.kidDone) { // Tuesday: the lost kid and his mom
       if (!d.mom) {
@@ -3710,23 +3713,32 @@ class Game {
         if (at && kidAt) { d.mom = { room: pick === "nook" ? "screening" : "museum", x: at[0], y: at[1], place: pick }; d.kid = { x: kidAt[0], y: kidAt[1] }; this.saveProgress(); }
       }
       if (d.mom) {
-        const mr = this.rooms[d.mom.room]; if (mr && this.tileFree(mr, d.mom.x, d.mom.y)) mr.npcs.push(this.dayNpc({ sheet: "visitor_c", x: d.mom.x, y: d.mom.y, mom: true, member: "Mom" }));
+        const mr = this.rooms[d.mom.room]; if (mr && this.dayTile(mr, d.mom.x, d.mom.y)) mr.npcs.push(this.dayNpc({ sheet: "visitor_c", x: d.mom.x, y: d.mom.y, mom: true, member: "Mom" }));
         if (!this.kidNpc) this.kidNpc = this.dayNpc({ sheet: "kid", x: d.kid.x, y: d.kid.y, kid: true, member: "Kid" });
-        if (this.fol !== this.kidNpc && this.tileFree(m, d.kid.x, d.kid.y)) { Object.assign(this.kidNpc, { x: d.kid.x, y: d.kid.y, follow: false, still: true }); m.npcs.push(this.kidNpc); }
+        if (this.fol !== this.kidNpc && this.dayTile(m, d.kid.x, d.kid.y)) { Object.assign(this.kidNpc, { x: d.kid.x, y: d.kid.y, follow: false, still: true }); m.npcs.push(this.kidNpc); }
       }
     }
     if (wd === 3 && m) { // Wednesday: the artist at his easel in one of the wings
       if (!d.art) { const wings = this.wingZones(), z = wings[strSeed(todayISO() + "art") % Math.max(1, wings.length)], at = z && this.spotIn(m, z.id); if (at) { d.art = { x: at[0], y: at[1] }; this.saveProgress(); } }
-      if (d.art && this.tileFree(m, d.art.x, d.art.y)) {
+      if (d.art && this.dayTile(m, d.art.x, d.art.y)) {
         m.npcs.push(this.dayNpc({ sheet: "visitor_b", x: d.art.x, y: d.art.y, artist: true, member: "The artist", dir: "right" }));
-        const ex = [d.art.x + 1, d.art.x - 1].find(x => this.tileFree(m, x, d.art.y) && m.solid[d.art.y - 1] && m.solid[d.art.y - 1][x] === false);
+        const ex = [d.art.x + 1, d.art.x - 1].find(x => this.tileFree(m, x, d.art.y) && !m.events[x + "," + d.art.y] && !this.byExhibit(m, x, d.art.y) && m.solid[d.art.y - 1] && m.solid[d.art.y - 1][x] === false && !this.byExhibit(m, x, d.art.y - 1));
         if (ex !== undefined) { m.props.push({ key: "easel", x: ex, y: d.art.y, tall: true }); m.solid[d.art.y][ex] = true; m.events[ex + "," + d.art.y] = { say: ["[The artist's easel]"] }; if (ex < d.art.x) m.npcs[m.npcs.length - 1].dir = "left"; }
       }
+    }
+    if (wd === 4 && m && !this.closing && this.tod() !== "night") { // Thursday: trivia players on every café stool but one
+      const stools = m.props.filter(p => p.key === "cafe_stool" && p.sit), skip = stools.length ? strSeed(todayISO() + "seat") % stools.length : -1;
+      stools.forEach((st, i) => {
+        if (i === skip || (this.room === m && this.player.x === st.x && this.player.y === st.y)) return;
+        m.npcs = m.npcs.filter(n => !(n.x === st.x && n.y === st.y));
+        const h = strSeed(todayISO() + "trivia" + i);
+        m.npcs.push(this.dayNpc({ sheet: ["visitor_a", "visitor_b", "visitor_c"][h % 3], shirt: SHIRT_COLORS[(h >>> 3) % SHIRT_COLORS.length], x: st.x, y: st.y, sitting: true, dir: st.sit, trivia: true }));
+      });
     }
     if (wd === 6) { // Saturday: the pop-up stall in the lobby
       const L = this.rooms.lobby, spot = [[10, 7], [11, 7], [10, 4], [4, 6]].find(([x, y]) => this.tileFree(L, x, y) && this.tileFree(L, x + 1, y) && L.solid[y + 1] && L.solid[y + 1][x] === false);
       if (L && spot) { const [x, y] = spot; L.props.push({ key: "popup_table", x, y }); L.solid[y][x] = L.solid[y][x + 1] = true; L.events[x + "," + y] = L.events[(x + 1) + "," + y] = { popup: true };
-        L.npcs.push(this.dayNpc({ sheet: "visitor_c", x, y: y - 1, vendor: true, member: "The vendor" })); L.solid[y - 1][x] = true; }
+        L.npcs.push(this.dayNpc({ sheet: "visitor_c", x, y: y - 1, vendor: true, member: "Bluu" })); L.solid[y - 1][x] = true; }
     }
     if (wd === 0 && m && !d.sunDone) { // Sunday: someone from the staff at a café table, with the stool across from them free for you
       const order = ["shopkeeper", "shopkeeper", "barista", "barista", "conservator", "conservator", "usher", "usher", "curator"], role = d.sunRole || (d.sunRole = order[strSeed(todayISO() + "sun") % order.length]);
@@ -3750,21 +3762,21 @@ class Game {
     if (n.role === "conservator" && wd === 1 && d.boxes) {
       if (d.monDone) { this.say(this.tx("mon.after")); return true; }
       const left = d.boxes.filter(b => !d.found.includes(b.i));
-      if (left.length) { const z = this.zoneAt(this.rooms.museum, left[0].x, left[0].y); this.say(this.tx("mon.ask", { n: d.found.length, room: z ? z.name : "the museum" })); return true; }
+      if (left.length) { const z = this.zoneAt(this.rooms.museum, left[0].x, left[0].y), i = d.monTalks || 0; d.monTalks = i + 1; this.saveProgress(); this.say(this.txAt("mon.ask", i, { n: d.found.length, room: z ? z.name : "the museum" })); return true; } // the first version once, then the next
       d.monDone = true; this.earn(5); this.progress.tally.boxes = (this.progress.tally.boxes || 0) + 1; this.saveProgress(); this.say(this.tx("mon.done", { n: 5 })); return true;
     }
     if (n.kid) {
       if (d.kidDone) { this.say(this.tx("tue.after")); return true; }
       const clue = this.kidClue();
-      if (n.follow) { this.say(this.tx("tue.again", { clue })); return true; }
+      if (n.follow) { this.say(this.tx("tue.again", clue)); return true; }
       if (this.fol && this.fol !== n) { this.say(this.tx("tue.busy")); return true; }
-      this.say(this.tx("tue.kid", { clue }), () => { n.follow = true; n.still = false; n.route = null; n.aside = null; n.lost = 0; this.fol = n; });
+      this.say(this.txAt("tue.kid", this.weekNo(), clue, true), () => { n.follow = true; n.still = false; n.route = null; n.aside = null; n.lost = 0; this.fol = n; });
       return true;
     }
     if (n.mom) {
       if (this.fol && this.fol.kid && !d.kidDone) { // reunited
         const k = this.fol; this.fol = null; k.follow = false; k.still = true; d.kidDone = true; this.earn(3); this.progress.tally.kids = (this.progress.tally.kids || 0) + 1; this.saveProgress();
-        this.say(this.tx("tue.found", { n: 3 }), () => { [k, n].forEach(q => { q.leaving = true; q.leaveT = 0; q.alpha = 1; }); this.kidNpc = null; });
+        this.say([...this.tx("tue.after"), ...this.tx("tue.found", { n: 3 })], () => { [k, n].forEach(q => { q.leaving = true; q.leaveT = 0; q.alpha = 1; }); this.kidNpc = null; });
       } else this.say(this.tx(d.kidDone ? "tue.after" : "tue.mom"));
       return true;
     }
@@ -3787,6 +3799,7 @@ class Game {
       return true;
     }
     if (n.vendor) { this.popupStall(); return true; }
+    if (n.trivia) { this.say(this.tx("thu.crowd", null, true)); return true; }
     if (n.sunGuest) { this.say(this.tx("sun.sitFirst")); return true; }
     return false;
   }
@@ -3794,15 +3807,20 @@ class Game {
     const d = this.dayState(), m = this.room, b = (d.boxes || []).find(q => q.i === i); if (!b || d.found.includes(i)) return;
     d.found.push(i); this.saveProgress();
     m.props = m.props.filter(p => !(p.key === "lost_box" && p.x === b.x && p.y === b.y)); m.solid[b.y][b.x] = false; delete m.events[b.x + "," + b.y];
-    const labels = (this.tx("mon.labels") || []).filter(Boolean); this.say(this.tx("mon.found", { label: labels.length ? labels[strSeed(todayISO() + i) % labels.length] : "?", n: d.found.length }));
+    this.say(this.tx("mon.found", { n: d.found.length }));
   }
-  kidClue() {
-    const d = this.dayState(), mo = d.mom; if (!mo) return "";
-    if (mo.place === "cafe") return this.tx("tue.clue.cafe").join(" ");
-    if (mo.place === "nook") return this.tx("tue.clue.nook").join(" ");
-    const z = this.wingZones().find(q => q.id === mo.place), g = z && (this.pack.settings.genres || []).find(q => q.id === z.rect.genre);
-    return this.tx("tue.clue.wing", { genre: g ? g.name : "interesting" }).join(" ");
+  kidClue() { // where his mom is: { place: "Strategy wing", clue: "in the Strategy wing" } (or the café, or the Screening Nook)
+    const d = this.dayState(), mo = d.mom; if (!mo) return { place: "", clue: "" };
+    const z = mo.place === "nook" ? null : (this.rooms.museum.zones || []).find(q => q.id === mo.place);
+    const place = mo.place === "nook" ? this.roomName("screening") || "Screening Nook" : mo.place === "cafe" ? "café" : z ? z.name + (z.rect && z.rect.genre ? " wing" : "") : "museum";
+    return { place, clue: "in the " + place };
   }
+  /* A line's version by number (wrapping), instead of taking turns: Monday's conservator, the kid's line for this Tuesday. */
+  txAt(key, i, vars, wrap) {
+    const v = this.pack.settings.text[key] || (TEXT[key] && TEXT[key].v) || [[key]], all = Object.assign(this.baseVars(), vars || {});
+    return v[wrap ? i % v.length : Math.min(i, v.length - 1)].map(p => this.fmt(p, all));
+  }
+  weekNo() { return Math.floor(daysBetween("2000-01-02", todayISO()) / 7); } // counts up by one every Sunday
   /* Thursday: five questions, multiple choice, a few seconds each. Mostly from the pieces themselves; your own ones too. */
   trivia() {
     const ps = this.pack.pieces.filter(p => !p.tut && !(p.unveil && p.unveil > todayISO())), gs = this.pack.settings.genres, wings = this.wingZones();
@@ -3826,7 +3844,13 @@ class Game {
       this.choose((quiz.i + 1) + "/" + quiz.qs.length + "  " + q.q, opts, k => {
         clearTimeout(quiz.timer); const bar = this.el.text.querySelector(".gt-qtimer"); if (bar) bar.remove();
         quiz.i++; const ok = opts[k] === q.right; if (ok) quiz.score++;
-        this.say(this.tx(k === -1 ? "thu.time" : ok ? "thu.right" : "thu.wrong", { answer: q.right }), next);
+        if (ok) { this.say(this.tx("thu.right", { answer: q.right }), next); return; }
+        const crowd = this.room.npcs.filter(c => c.trivia), who = crowd[Math.floor(Math.random() * crowd.length)]; // one of the players at the café tables gets it
+        this.say(this.tx(k === -1 ? "thu.time" : "thu.wrong", { answer: q.right }), () => {
+          if (!who) { next(); return; }
+          who.pose = { kind: "startled", t0: this.t, dur: 110 };
+          this.say(this.tx("thu.steal", { answer: q.right }), next);
+        });
       }, -2);
       const bar = document.createElement("div"); bar.className = "gt-qtimer"; bar.style.animationDuration = secs + "s"; this.el.text.appendChild(bar);
       const ch = this.ch; quiz.timer = setTimeout(() => { if (this.ch === ch && this.mode === "choice") { ch.i = -1; this.endChoice(false); } }, secs * 1000);
@@ -4904,7 +4928,8 @@ class Game {
       return;
     }
     if (this.drink) { this.say(this.tx("drink.still")); return; }
-    const price = this.pack.settings.shop.drinkPrice, tag = price ? " (" + price + " T)" : "";
+    const full = this.pack.settings.shop.drinkPrice, sun = this.weekday() === 0 && !this.tut, price = sun ? Math.floor(full / 2) : full; // Sundays: half price (rounded down)
+    const tag = price ? " (" + price + " T" + (sun ? ", half off" : "") + ")" : sun && full ? " (free today)" : "";
     const lines = ["What can I get you?", "What'll it be?", "Something warm?"];
     this.cafeI = (this.cafeI || 0) + 1;
     this.choose(lines[this.cafeI % lines.length], [...DRINKS.map(d => d.name + tag), "Just chatting", "Nothing, thanks"], i => {
@@ -4997,10 +5022,11 @@ class Game {
     return x > 0 && y > 2 && x < r.w - 1 && y < r.h - 1 && !r.solid[y][x] && !r.npcs.some(c => c !== self && c.x === x && c.y === y) && !(r === this.room && this.player.x === x && this.player.y === y);
   }
   /* A random open floor tile, away from doorways and events. near: [x, y, distance] limits it to around that spot (doorways allowed). */
+  byExhibit(r, x, y) { return (r.cases || []).some(c => c.x === x && (c.y - 1 === y || c.y + 1 === y)); } // where you stand to read a case, front or back
   freeSpot(r, near, zone) {
     const out = [];
     for (let y = 3; y < r.h - 1; y++) for (let x = 1; x < r.w - 1; x++) {
-      if (!this.tileFree(r, x, y)) continue;
+      if (!this.tileFree(r, x, y) || this.byExhibit(r, x, y)) continue;
       if (zone && (this.zoneAt(r, x, y) || {}).id !== zone) continue;
       if (near ? Math.abs(x - near[0]) + Math.abs(y - near[1]) > near[2] : (r.events[x + "," + y] || (r.noWander && r.noWander.has(x + "," + y)))) continue;
       out.push([x, y]);
@@ -6611,7 +6637,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-10 writers room";
+const VERSION = "2026-11-11 day tweaks";
 window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
