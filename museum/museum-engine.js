@@ -6498,33 +6498,54 @@ class Game {
     this.drawSlot("featured_stand", 0, 0, x, y);
   }
   /* ----- what you haven't read: a glowing border on the floor -----
-     A one-pixel square through the middle of the eight floor tiles around a case (its top edge hides behind the case's
-     top half). Slowly pulsing red: not read yet. One side read: that side turns green, fading to red toward the other side.
-     Both sides: a steady green. A painting gets the same line along the floor in front of it. On a piece's unveil day
-     (while its wing has bunting) its border pulses blue. Staff tab: Pieces you haven't read. Nothing glows in the dark. */
+     A one-pixel square on the floor just around a case (its top edge hides behind the case's top half). Slowly pulsing
+     red: not read yet. One side read: that side turns green, fading to red toward the other side. Both sides (or a
+     painting's placard): it all turns green, flares bright, and fades away for good, and from then on the piece only
+     gives off a very faint, now-and-then sparkle. A painting gets the same line along the floor in front of it. On a
+     piece's unveil day (while its wing has bunting) its border pulses blue all day. Staff tab: Pieces you haven't read. */
   sidesOf(p) { return (p.tut ? (this.tut ? this.tut.sides[p.id] : { note: 1 }) : this.progress.sides[p.id]) || {}; }
-  drawReadBorders(r, cx, cy) {
+  drawReadBorders(r, cx, cy, top) { // top: the second pass, after the cases are drawn: just the sparkles
     const st = this.pack.settings.staff, s = st.readStrength; if (st.readStyle === "off" || s <= 0) return;
     const ctx = this.ctx, today = todayISO(), base = Math.min(1, 0.35 + s), pulse = 0.5 + 0.5 * Math.sin(this.t / 45);
-    const RED = [232, 70, 70], GREEN = [96, 220, 112], BLUE = [90, 170, 255];
+    const RED = [232, 70, 70], GREEN = [96, 220, 112], BLUE = [90, 170, 255], FLARE = [214, 255, 220], FX = 100;
+    const seen = this.readSeen || (this.readSeen = {}), fx = this.readFx || (this.readFx = {});
     const floor = (px, py) => { const x = Math.floor(px / T), y = Math.floor(py / T); return r.tiles[y] && r.tiles[y][x] && !/wall/.test(String(r.tiles[y][x])); };
-    const color = (p, k) => { // k: 0 at the back (top), 1 at the front (bottom)
-      if (!p.tut && p.unveil === today) return [BLUE, base * (0.4 + 0.6 * pulse)];
-      const sd = this.sidesOf(p), f = sd.front || sd.note, b = sd.back || sd.note;
-      const g = f && b ? 1 : f ? k : b ? 1 - k : 0; // how green this spot is
-      return [RED.map((v, i) => Math.round(v + (GREEN[i] - v) * g)), base * (g * 0.7 + (1 - g) * (0.4 + 0.6 * pulse))];
+    const state = p => { // what this piece's border does right now: a color for each point (k: 0 at the back, 1 at the front)
+      if (!p.tut && p.unveil === today) return k => [BLUE, base * (0.4 + 0.6 * pulse)];
+      const sd = this.sidesOf(p), f = sd.front || sd.note, b = sd.back || sd.note, full = !!(f && b);
+      if (this.mode === "walk") { if (seen[p.id] === false && full) fx[p.id] = this.t; seen[p.id] = full; } // just finished: the flare (seen once you're back to walking)
+      if (full) {
+        const e = fx[p.id] !== undefined ? this.t - fx[p.id] : FX; if (e >= FX) return null; // done: no border, just the sparkle
+        const up = Math.min(1, e / 24), down = e < 24 ? 1 : 1 - (e - 24) / (FX - 24);
+        return () => [GREEN.map((v, i) => Math.round(v + (FLARE[i] - v) * up * down)), Math.min(1, base * 0.7 + 0.5 * up) * down];
+      }
+      return k => { const g = f ? k : b ? 1 - k : 0; return [RED.map((v, i) => Math.round(v + (GREEN[i] - v) * g)), base * (g * 0.7 + (1 - g) * (0.4 + 0.6 * pulse))]; };
     };
-    const dot = (p, wx, wy, k, w, h) => { if (!floor(wx, wy)) return; const [c, a] = color(p, k); ctx.globalAlpha = a; ctx.fillStyle = "rgb(" + c + ")"; ctx.fillRect(wx - cx, wy - cy, w, h); };
+    const dot = (col, wx, wy, k, w, h) => { if (!floor(wx, wy)) return; const [c, a] = col(k); ctx.globalAlpha = a; ctx.fillStyle = "rgb(" + c + ")"; ctx.fillRect(wx - cx, wy - cy, w, h); };
+    const sparkle = (p, x, y, w, h) => { // read: a single faint twinkle now and then
+      const seed = strSeed(p.id), period = 900, life = 50, tt = this.t + hash(seed, 7) % period, ph = tt % period; if (ph >= life) return;
+      const cyc = Math.floor(tt / period), e = Math.sin(Math.PI * ph / life), a = e * e * 0.35 * Math.min(1, 0.4 + s);
+      const px = Math.round(x + 1 + hash(seed + cyc, 1) % Math.max(1, w - 2)), py = Math.round(y + 1 + hash(seed + cyc, 2) % Math.max(1, h - 2));
+      ctx.fillStyle = "#fff8dc"; ctx.globalAlpha = a; ctx.fillRect(px, py, 1, 1); ctx.globalAlpha = a * 0.5; ctx.fillRect(px - 1, py, 3, 1); ctx.fillRect(px, py - 1, 1, 3);
+    };
     const onScreen = (x, y) => x * T - cx > -48 && x * T - cx < SW + 48 && y * T - cy > -48 && y * T - cy < SH + 48;
+    const done = p => { const sd = this.sidesOf(p); return !(!p.tut && p.unveil === today) && (sd.note || (sd.front && sd.back)) && (fx[p.id] === undefined || this.t - fx[p.id] >= FX); };
+    if (top) {
+      for (const c of r.cases) if (c.piece && c.state === "wall" && onScreen(c.x, c.y) && !this.isDark(r, c.x, c.y) && done(c.piece)) sparkle(c.piece, c.x * T - cx + 2, c.y * T - T - cy + 3, 12, 10);
+      for (const h of r.hung) if (h.piece && h.state === "wall" && onScreen(h.x, h.y + 2) && !this.isDark(r, h.x, h.y + 2) && done(h.piece)) sparkle(h.piece, h.x * T - cx + 4, h.y * T - cy + 4, 24, 18);
+      ctx.globalAlpha = 1; return;
+    }
     for (const c of r.cases) {
       if (!c.piece || c.state !== "wall" || !onScreen(c.x, c.y) || this.isDark(r, c.x, c.y)) continue;
-      const x0 = (c.x - 1) * T + 8, x1 = (c.x + 1) * T + 8, y0 = (c.y - 1) * T + 8, y1 = (c.y + 1) * T + 8;
-      for (let x = x0; x <= x1; x += 4) { dot(c.piece, x, y0, 0, Math.min(4, x1 - x + 1), 1); dot(c.piece, x, y1, 1, Math.min(4, x1 - x + 1), 1); }
-      for (let y = y0 + 1; y < y1; y += 2) { const k = (y - y0) / (y1 - y0); dot(c.piece, x0, y, k, 1, Math.min(2, y1 - y)); dot(c.piece, x1, y, k, 1, Math.min(2, y1 - y)); }
+      const col = state(c.piece); if (!col) continue;
+      const x0 = c.x * T - 4, x1 = c.x * T + T + 3, y0 = c.y * T - 4, y1 = c.y * T + T + 3; // 4 pixels out from the case's footprint
+      for (let x = x0; x <= x1; x += 4) { dot(col, x, y0, 0, Math.min(4, x1 - x + 1), 1); dot(col, x, y1, 1, Math.min(4, x1 - x + 1), 1); }
+      for (let y = y0 + 1; y < y1; y += 2) { const k = (y - y0) / (y1 - y0); dot(col, x0, y, k, 1, Math.min(2, y1 - y)); dot(col, x1, y, k, 1, Math.min(2, y1 - y)); }
     }
     for (const h of r.hung) {
       if (!h.piece || h.state !== "wall" || !onScreen(h.x, h.y + 2) || this.isDark(r, h.x, h.y + 2)) continue;
-      const y = (h.y + 2) * T + 8; for (let x = h.x * T; x < h.x * T + 2 * T; x += 4) dot(h.piece, x, y, 1, 4, 1);
+      const col = state(h.piece); if (!col) continue;
+      const y = (h.y + 2) * T + 4; for (let x = h.x * T + 2; x < h.x * T + 2 * T - 2; x += 4) dot(col, x, y, 1, Math.min(4, h.x * T + 2 * T - 2 - x), 1);
     }
     ctx.globalAlpha = 1;
   }
@@ -6715,6 +6736,7 @@ class Game {
     this.drawReadBorders(r, cx, cy); // on the floor, under the cases and people
     for (const c of r.cases) this.drawCase(c, cx, cy);
     for (const p of r.props) this.drawProp(p, cx, cy);
+    this.drawReadBorders(r, cx, cy, true); // read pieces: a faint sparkle over the case
     if (r.joe) { // Joe on the museum floor; glitching out when you talk to him
       const j = r.joe, x = j.x * T - cx, y = j.y * T - cy, img = this.sheet("joe"), f = this.frame("joe");
       if (!j.t) this.drawSlot("joe", f, 0, x, y);
@@ -6838,7 +6860,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-14 read borders";
+const VERSION = "2026-11-14 read borders 2";
 window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

@@ -398,7 +398,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-14 read borders";
+window.GOQ_WANT = "2026-11-14 read borders 2";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -949,7 +949,7 @@ function renderStaff() {
   rs.addEventListener("input", () => { st.readStrength = +rs.value / 100; rsOut.textContent = rs.value + "%"; rApply(); changed(); });
   wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
     el("h3", { text: "Pieces you haven't read", style: "margin:0 0 4px" }),
-    el("p", { class: "note", style: "margin:0 0 12px", text: "A thin border on the floor around each case (and a line in front of each painting) shows what's left to read. It pulses red until you read it; reading one side turns that side green, fading to red toward the other side; both sides make it all green. On a piece's unveil day it pulses blue. Strength sets how bright it is. Preview options, Unread everything, resets it." }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "A thin border on the floor around each case (and a line in front of each painting) shows what's left to read. It pulses red until you read it; reading one side turns that side green, fading to red toward the other side. Once both sides are read it turns green, flares, and fades away for good, and the piece just sparkles faintly now and then. On a piece's unveil day it pulses blue. Strength sets how bright it is. Preview options, Unread everything, resets it." }),
     el("div", { class: "fields", style: "max-width:420px" }, [el("label", {}, [document.createTextNode("Style"), rsty])]),
     el("label", { class: "range" }, [el("span", { text: "Strength" }), rs, rsOut]),
   ]));
