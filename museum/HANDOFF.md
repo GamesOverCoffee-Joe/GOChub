@@ -476,7 +476,7 @@ Goal: character.
 **Day tweaks (2026-11-11).**
 - **Sunday:** drinks are half price (rounded down, "half off" on the menu). With the drink price at 0 they stay free.
 - **Monday:** the conservator says `mon.ask` version 1 the first time you talk to him that day, then version 2 every time after (`txAt`, counted in `progress.day.monTalks`). Box labels are gone (`mon.labels` removed).
-- **Tuesday:** `tue.kid` uses one version per Tuesday, taking turns week to week (`weekNo()`). The per-place clues are gone: `{clue}` is "in the Strategy wing" / "in the café" / "in the Screening Nook", and `{place}` is the bare place. `tue.after` is now the kid's line the moment you bring him back, said before his mom's `tue.found`.
+- **Tuesday:** `tue.kid` uses one version per Tuesday, taking turns week to week (`weekNo()`). The per-place clues are gone: `{clue}` is just where his mom is ("the Strategy wing", "the café", "the Screening Nook"), and each line supplies its own "in" or "to". `tue.after` is now the kid's line the moment you bring him back, said before his mom's `tue.found`.
 - **Wednesday:** the artist and his easel keep off the tiles where you read a case, front or back (`byExhibit`; `freeSpot` skips them too, so boxes, the kid and his mom do as well).
 - **Thursday:** trivia players sit on every café stool but one (the empty one is picked per day), outside of closing and night. Missing a question (wrong or out of time) says `thu.wrong` / `thu.time`, then one of them answers with `thu.steal` (a "!" over their head). Talking to them says `thu.crowd`.
 - **Saturday:** the vendor is Bluu (his name on photos and in the stats).

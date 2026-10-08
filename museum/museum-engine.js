@@ -1821,8 +1821,8 @@ const TEXT = {
   "mon.found":         { g: "Days of the week", l: "Monday: finding a box ({n}: found so far)", v: [["[Found a misplaced box. {n} of 5]"]] },
   "mon.done":          { g: "Days of the week", l: "Monday: bringing the conservator all five ({n}: tokens)", v: [["[Conservator thanks you for finding all five boxes and gives you {n} tokens]"]] },
   "mon.after":         { g: "Days of the week", l: "Monday: the conservator after you've found them", v: [["[Conservator, already thanked you today]"]] },
-  "tue.kid":           { g: "Days of the week", l: "Tuesday: the lost kid, the first time. One version per Tuesday, taking turns week to week ({clue}: where his mom is, like \"in the Strategy wing\", \"in the café\" or \"in the Screening Nook\"; {place}: just the place, like \"Strategy wing\")", v: [["[Lost kid: he can't find his mom. She's {clue}]"]] },
-  "tue.again":         { g: "Days of the week", l: "Tuesday: talking to the kid while he follows you ({clue}, {place})", v: [["[Kid, following you: reminds you she's {clue}]"]] },
+  "tue.kid":           { g: "Days of the week", l: "Tuesday: the lost kid, the first time. One version per Tuesday, taking turns week to week ({clue}: where his mom is, like \"the Strategy wing\", \"the café\" or \"the Screening Nook\"; add your own \"in\" or \"to\")", v: [["[Lost kid: he can't find his mom. He thinks she's in {clue}]"]] },
+  "tue.again":         { g: "Days of the week", l: "Tuesday: talking to the kid while he follows you ({clue}: like \"the café\")", v: [["[Kid, following you: reminds you she's in {clue}]"]] },
   "tue.mom":           { g: "Days of the week", l: "Tuesday: his mom, before you've brought him", v: [["[A worried mom: she's lost her son]"]] },
   "tue.found":         { g: "Days of the week", l: "Tuesday: bringing the kid to his mom ({n}: tokens)", v: [["[Mom is so relieved, and gives you {n} tokens]"]] },
   "tue.after":         { g: "Days of the week", l: "Tuesday: the kid, the moment you bring him to his mom (before she thanks you)", v: [["[Kid, seeing his mom]"]] },
@@ -3809,11 +3809,11 @@ class Game {
     m.props = m.props.filter(p => !(p.key === "lost_box" && p.x === b.x && p.y === b.y)); m.solid[b.y][b.x] = false; delete m.events[b.x + "," + b.y];
     this.say(this.tx("mon.found", { n: d.found.length }));
   }
-  kidClue() { // where his mom is: { place: "Strategy wing", clue: "in the Strategy wing" } (or the café, or the Screening Nook)
-    const d = this.dayState(), mo = d.mom; if (!mo) return { place: "", clue: "" };
+  kidClue() { // where his mom is, for {clue}: "the Strategy wing", "the café" or "the Screening Nook" (the lines add "in", "to"...)
+    const d = this.dayState(), mo = d.mom; if (!mo) return { clue: "" };
     const z = mo.place === "nook" ? null : (this.rooms.museum.zones || []).find(q => q.id === mo.place);
     const place = mo.place === "nook" ? this.roomName("screening") || "Screening Nook" : mo.place === "cafe" ? "café" : z ? z.name + (z.rect && z.rect.genre ? " wing" : "") : "museum";
-    return { place, clue: "in the " + place };
+    return { clue: "the " + place };
   }
   /* A line's version by number (wrapping), instead of taking turns: Monday's conservator, the kid's line for this Tuesday. */
   txAt(key, i, vars, wrap) {
@@ -6637,7 +6637,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-11 day tweaks";
+const VERSION = "2026-11-11 day tweaks 2";
 window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
