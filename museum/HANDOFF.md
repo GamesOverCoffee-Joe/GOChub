@@ -10,15 +10,6 @@ Ideas and chores parked on purpose. Nothing here is built yet.
 - **What the figure is.** Still undecided.
 - **Batch fill.** The curator's Batch fill button stays: `batch-fill.html` will be uploaded later and updated then.
 - **An art version of the writing app.** The same one-a-day idea, for the art slots.
-- **Relationships replace mindsets (decided, not built).** Visitors ask for a piece by how the curator's experience matched the developer's intention, so you have to read both placards. One relationship per piece, picked by the host from the episode transcripts (`transcripts/`):
-  - **Same page** (felt what the dev meant): Depth Complaint, Zenomatrix, Comets Have Feathers, Minicraft TD.
-  - **Halfway there** (some landed, some didn't): Diecast, Tangled Crisis, Hovershot, Spring Escape Deep Down, Spacecat Solitaire, Cave Escape, Ominoflux.
-  - **Student** (not the audience, but had fun once it was internalized): Sonak, Zeroth.
-  - **Happy accident** (found something the dev didn't plan): Seeing Double, Survivor TD, Manboobs The Mini Game.
-  - **Different feeling** (felt something other than intended): Enemies Within, ESiON, Sneaky, AI'm Domingo, Polariball, Cyber Volley, Monster Freaks!, Credit Farm/Debtician, Stella Incus.
-  - **Missed the message** (a deeper meaning didn't come through): Club Soko, Hope Timbre, Hyperbaric, Near The Fear.
-  - **Not for me** (does what the dev wanted; not the curator's game): Warlord's Penance, Orion Wars, Acrobatic Car, Absorber.
-  - Still to do: the curator field, visitor asks and on-the-spot reactions, and a new tutorial (three made-up games; brainstorming now).
 
 This document has three parts:
 
@@ -72,8 +63,8 @@ The wings experiment (commit `782f8e7` on `experiments-1`) is finished and is **
 - **Pieces.** Episodes go in display cases (45 case slots across the 3 galleries). Community pieces hang on painting spots on top walls; you read one standing 2 tiles below it. When there are more episodes than cases, the overflow is archived on Someone's PC in B1 (`archiveSplit`).
 - **Chores (staff).** Dust, straighten, water plants, collect mugs, wipe cases, help visitors, close the museum (worth 3). Points go to the online leaderboard.
 - **Closing.** Every room with a light switch has to be dark before you can close. Turning lights back on doesn't re-award points (exploit fixed).
-- **Curious visitors.** A random set each day (setting: `curious.perDay`), each with a mindset drawn from a shuffled deck. They wait in rooms with art. You can talk to them, have them follow you (including through doors), and recommend a piece. They come back the next day with a verdict and a reaction. Patreon members appear in the Staff Room instead.
-- **Mindsets** (editable in the curator's Visitors tab): Hands-on, Systems, Tinkerer, Unhurried, Thrill, Story, One-more. Pieces are tagged with mindsets in the Pieces tab.
+- **Curious visitors.** A random set each day (setting: `curious.perDay`), each asking for a **relationship** drawn from a shuffled deck (see "Relationships replace mindsets" below). They wait in the wings. You can talk to them, have them follow you (including through doors), and recommend a piece: the right one is instant, a wrong one they explain and keep following. They come back the next day with a random take. Patreon members appear in the Staff Room instead.
+- **Relationships** (editable in the curator's Visitors tab): Same page, Halfway there, Student, Happy accident, Different feeling, Missed the message, Not for me. Each piece has one, in the Pieces tab.
 - **Museum life.** Crowd visitors stroll, sit, order drinks or carry a gift bag (never both), snap photos of art, and throw cups away. Rates are curator sliders.
 - **Cat, mugs, magazines, Segway, the shirt quest, the figure in the dark, stamp card, gift shop, photo album, locker photo frame, achievements.**
 - **Room-specific bits** (these matter for the redesign):
@@ -476,6 +467,23 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Relationships replace mindsets (2026-11-17).** The core loop is now about reading both placards and comparing them.
+- **Relationships** (`settings.relations`: id, name, about, ask, miss; `SAMPLE_RELATIONS`): how the curator's experience lined up with the developer's intention. Each piece has one (`piece.rel`, curator Pieces tab → Relationship), picked by the host from the episode transcripts:
+  - **Same page:** Depth Complaint, Zenomatrix, Comets Have Feathers, Minicraft TD.
+  - **Halfway there:** Diecast, Tangled Crisis, Hovershot, Spring Escape Deep Down, Spacecat Solitaire, Cave Escape, Ominoflux.
+  - **Student** (not the audience, but had fun once it sank in): Sonak, Zeroth.
+  - **Happy accident:** Seeing Double, Survivor TD, Manboobs The Mini Game.
+  - **Different feeling:** Enemies Within, ESiON, Sneaky, AI'm Domingo, Polariball, Cyber Volley, Monster Freaks!, Credit Farm/Debtician, Stella Incus.
+  - **Missed the message:** Club Soko, Hope Timbre, Hyperbaric, Near The Fear.
+  - **Not for me:** Warlord's Penance, Orion Wars, Acrobatic Car, Absorber.
+- **Curious visitors** ask for a relationship in plain words (`ask`; never the name; only relationships some piece has). The right piece: `cur.thanks`, they head off, 3 staff points (`helped`), and the piece joins `progress.recall`. A wrong one: its relationship's `miss` line (what they read there, `missLines`), they keep following; the third wrong one, `cur.giveUp` and they go back to waiting (`releaseFollower`). Next day: a random take picked at recommend time (`v.take`: `cur.agree`, `cur.disagree`, `cur.puzzled`), with the old hop/heart/shrug reactions.
+- **Recall:** talking to whoever's following you offers **Recommend from memory**: the pieces you've recommended right before, by name only (sorted). Picking one recommends it on the spot, right or wrong.
+- **Mindsets are gone.** Genres no longer list mindsets (a piece's room is only its Exhibited in genre; every piece already had one). The lobby directory dropped its "Popular with" line. Old saves' visitors get a relationship on load.
+- **Placards:** each side is one voice: front = observation + WATCH, back = intention + PLAY. The "my own impressions" line is gone; the end line is "Continues on other side →" (`case.frontNote`, `case.backNote`). Visitors' notes (and Leave a note) only show once you've read the other side, at the very end.
+- **The tutorial** uses three made-up games (`TUT_GAMES`, Words → Tutorial `tut.bus.*`, `tut.spoon.*`, `tut.sale.*`): Last Bus Home (Halfway there, in the middle, opens the far door), Spoon Siege (Happy accident), Grandpa's Garage Sale (Missed the message). The planters are gone; every side is readable. Rosie, Skye and Onyx each ask for one; a wrong pick, they say why and keep following (the first time, the speaker explains: `tut.missFirst`). Once the middle game is read, the speaker frames the job (`tut.frame`). In the office they give one of each take (agree, disagree, puzzled). Observation placards are bracketed for the host; the intentions are written.
+- **Stats:** Games recommended (every try), The right piece (`helped`), Not quite (`stats.nope`: wrong picks).
+- **Writers' Room:** Relationships cards (ask, miss), plus the new Words lines.
+
 **Robot cam removed (2026-11-17).** The toy-car robot cam (three commits on experiments-1, never on main) was taken out: it was fun for a minute, but it didn't celebrate the games, and the museum floor is too full of exhibits to drive in. It's in git history (5299b96, 6446894, 5113888) if a racing mini-game ever needs it.
 
 **Gifts are shop items (2026-11-15).**
@@ -521,7 +529,7 @@ Goal: character.
 
 **Writers' Room (2026-11-10).** `museum/writers-room.html` (also in the curator's More menu): a phone-first page for writing the museum's text one line at a time.
 - **Same draft as the curator.** It reads and writes `goq-curator-draft` in this browser, and the curator picks up changes even when it's open in another tab. With no draft yet, it starts one from the folder's `museum-pack.json`. It has its own Export pack (same file as the curator's) and shows the same "pack changed since your draft started" heads-up.
-- **What's in it:** every Words line (`GOQ.TEXT`), every staff chat set, visitor mindset lines (ask, loved, liked, nope), achievement names and descriptions, shop item names and descriptions, genre names, the cat's name, nicknames and corkboard notes. **Placards** are their own category: observation, intention (or the guest note) and the visitor's one-liner, per piece.
+- **What's in it:** every Words line (`GOQ.TEXT`), every staff chat set, relationship lines (what visitors ask for, and what they say when it's not the one), achievement names and descriptions, shop item names and descriptions, genre names, the cat's name, nicknames and corkboard notes. **Placards** are their own category: observation, intention (or the guest note) and the visitor's one-liner, per piece.
 - **Status:** "To write" if any bracketed placeholder is left (or it's empty), "Yours" if you edited it, "Kept" if you pressed Keep it, otherwise "Not reviewed" (lines Claude wrote). Keeps and marks are stored in `goq-writers-room`, with the punch card days.
 - **The daily loop:** Today's line picks the next placeholder, staying in the area you last worked in, then lines to review. Saving, or keeping, stamps today on the punch card, then offers One more or Clock out. Skip moves on without penalty. On multi-entry lines (books, trivia, box labels) empty boxes keep their placeholder, so you can write one entry at a time.
 - **Preview:** dialog lines render in the game's own text box (Press Start 2P, 240×48 box, the pack's textbox art) with the same page splitting as the engine, and sample values filled in for `{name}` and the like. LED lines show as the sign (and warn on letters it can't show); lists show as entries; placards as placard blocks.

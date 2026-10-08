@@ -263,10 +263,10 @@ function buildCards() {
       fields: [{ kind: "pages", label: "", def: () => def && def.v, get: () => cur().v, set: v => { own("talk")[role][i].v = v.length ? v : [["..."]]; } }],
       reset: def && JSON.stringify(def.when) === JSON.stringify(e.when) ? () => { own("talk")[role][i].v = clone(def.v); } : null });
   });
-  // Visitor mindsets: what each kind of visitor asks for and says after playing
-  const mf = { ask: ["Asking you for a game", ""], loved: ["After a game they loved", "{title} is the game."], liked: ["After a game they liked", "{title} is the game."], nope: ["After a game that wasn't for them", "{title} is the game."] };
-  (N.settings.mindsets || []).forEach((m, mi) => { for (const f in mf) cards.push({ id: "m:" + m.id + ":" + f, cat: "lines", area: "Visitor mindsets", title: m.name + " visitor: " + mf[f][0].toLowerCase(), where: "Visitors · Mindsets", preview: "dialog", note: mf[f][1],
-    fields: [{ kind: "lines", label: "", get: () => (N.settings.mindsets[mi] || {})[f] || [], set: v => { own("mindsets")[mi][f] = v; } }] }); });
+  // Relationships: what a curious visitor asks for, and what they say when you show them one of these but they wanted another
+  const rf = { ask: ["What a visitor asks for", "Never the relationship's name: they describe it."], miss: ["When you show it to a visitor who wanted another", "{title} is the piece. Say what they read there, in plain words."] };
+  (N.settings.relations || []).forEach((m, mi) => { for (const f in rf) cards.push({ id: "r:" + m.id + ":" + f, cat: "lines", area: "Relationships", title: m.name + ": " + rf[f][0].toLowerCase(), where: "Visitors · Relationships", preview: "dialog", note: rf[f][1],
+    fields: [{ kind: "lines", label: "", get: () => (N.settings.relations[mi] || {})[f] || [], set: v => { own("relations")[mi][f] = v; } }] }); });
   // Achievements, shop items, genres
   (N.settings.achievements || []).forEach((a, i) => cards.push({ id: "a:" + a.id, cat: "lines", area: "Achievements", title: "Achievement: " + (a.secret ? "secret, " : "") + a.stat + " ×" + a.target, where: "Achievements", preview: "none",
     fields: [{ kind: "line", label: "Name", get: () => own_ro("achievements")[i].name, set: v => { own("achievements")[i].name = v; } }, { kind: "line", label: "What you do to earn it", get: () => own_ro("achievements")[i].desc, set: v => { own("achievements")[i].desc = v; } }] }));

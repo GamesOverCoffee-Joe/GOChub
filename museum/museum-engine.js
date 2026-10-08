@@ -1206,44 +1206,39 @@ const SAMPLE_ITEMS = [
   { id: "postcards", name: "Gallery postcard set", price: 4, description: "Every piece in Gallery One, small enough to mail." },
 ];
 const DRINKS = [{ id: "coffee", name: "Coffee" }, { id: "tea", name: "Tea" }, { id: "cocoa", name: "Cocoa" }];
-/* Mindsets: how a visitor likes to play. Each game is tagged with the mindsets it suits (curator, Pieces tab), and the
-   curator's Visitors tab edits the list. ask: what a curious visitor is looking for, starting "Something...". loved / liked / nope: what they say the next
-   day about the game you recommended ({title} is the game). These defaults come from how the host talks about games. */
-const SAMPLE_MINDS = [
-  { id: "hands-on", name: "Hands-on", ask: ["Something that feels really good in my hands.", "Something where I can feel every hit.", "Something where just moving around is fun."],
-    loved: ["{title} felt SO good to play. Every move felt like it mattered.", "I played {title} way too late last night. It just feels great in your hands."],
-    liked: ["{title} had some moments that felt really good to play."],
-    nope: ["{title} wasn't for me. It was all numbers, and I never felt like I was really doing anything.", "I tried {title}, but I couldn't feel my actions. It all felt far away."] },
-  { id: "systems", name: "System builder", ask: ["Something where everything starts working together.", "Something with upgrades that combo off each other.", "Something I can plan a build in."],
-    loved: ["{title}! I found a combo that broke everything. I loved it.", "I've been thinking about my {title} build all day."],
-    liked: ["{title} had some neat systems in it. I liked poking at them."],
-    nope: ["{title} was nice, but there wasn't much under the hood for me to dig into.", "I tried {title}. It was pretty, but I kept waiting for the systems to open up."] },
-  { id: "tinkerer", name: "Tinkerer", ask: ["Something I can just mess around in, like a toy box.", "Something that lets me experiment and see what happens.", "Something where I can try weird stuff."],
-    loved: ["{title} was a toy box! I spent an hour just trying stuff.", "I did something in {title} I don't think anyone's done before. That one was mine."],
-    liked: ["{title} let me mess around a little. That was fun."],
-    nope: ["{title} wanted me to do things one specific way. I just wanted to play.", "I tried {title}, but there wasn't much room to experiment."] },
-  { id: "unhurried", name: "Unhurried", ask: ["Something I can play at my own pace.", "Something calm I can sit with for a while.", "Something relaxing. Nothing stressful, please."],
-    loved: ["{title} was so calm. I just sat with it for hours.", "I played {title} with a cup of tea. Perfect evening."],
-    liked: ["{title} had some quiet moments I really liked."],
-    nope: ["{title} kept pushing me to hurry. I wanted to breathe.", "I tried {title}, but my heart was racing the whole time. Not what I needed."] },
-  { id: "thrill", name: "Thrill seeker", ask: ["Something with real stakes.", "Something that makes me nervous, in a good way.", "Something with a thing breathing down my neck."],
-    loved: ["{title} had me on the edge of my seat! I yelled at my screen.", "My hands were sweating the whole time I played {title}. Loved it."],
-    liked: ["{title} had a couple of tense moments. I'll take it."],
-    nope: ["{title} was nice, but nothing ever pushed me.", "I tried {title}, but I never felt any danger. I got a little bored."] },
-  { id: "story", name: "Story seeker", ask: ["Something with a character I can care about.", "Something with a story that sneaks up on me.", "Something that makes me feel something."],
-    loved: ["{title} got me. I'm still thinking about it.", "I didn't expect {title} to hit me that hard. Thank you."],
-    liked: ["{title} had a little story in it that I liked."],
-    nope: ["{title} was fun, but I didn't really feel anything.", "I tried {title}. It's cool, but there wasn't anyone in it for me to care about."] },
-  { id: "one-more", name: "One more run", ask: ["Something I get a little better at every time.", "Something I keep saying \"one more\" to.", "Something with a high score to chase."],
-    loved: ["\"Just one more\" in {title} turned into three hours. Oops.", "I beat my best score in {title} like ten times last night!"],
-    liked: ["I went back to {title} a few times. It's got something."],
-    nope: ["{title} was a nice one-time thing, but I didn't feel the pull to go again.", "I tried {title}, but there wasn't much to get better at."] },
+/* Relationships: how the curator's experience of a game lined up with what its developer intended (the two placards).
+   Each piece has one (curator, Pieces tab); a curious visitor asks for one, so you have to read both sides to know.
+   The curator's Visitors tab edits the list. about: what it means (only the curator sees it). ask: what a visitor says
+   they're looking for (never the name). miss: what a visitor says when you show them a piece with THIS relationship but
+   they wanted another ({title} is the piece): what they read there, in plain words. */
+const SAMPLE_RELATIONS = [
+  { id: "same", name: "Same page", about: "The curator felt what the developer was going for.",
+    ask: ["[Asks for a game where the curator felt exactly what the developer was going for]", "[Asks for one where the curator and the developer were on the same page]"],
+    miss: ["[Reads {title}: the curator felt just what the developer meant. Not what they're after]"] },
+  { id: "halfway", name: "Halfway there", about: "Some of what the developer meant landed, some didn't.",
+    ask: ["[Asks for a game where the curator only half got what the developer was going for]", "[Asks for one where some of it came through and some didn't]"],
+    miss: ["[Reads {title}: some of it landed for the curator, some didn't. Not what they're after]"] },
+  { id: "student", name: "Student", about: "The curator wasn't the audience, but had fun once it all sank in.",
+    ask: ["[Asks for a game the curator wasn't the audience for, but learned to love]", "[Asks for one that clicked for the curator once they finally got it]"],
+    miss: ["[Reads {title}: the curator wasn't the audience, but came around to it. Not what they're after]"] },
+  { id: "accident", name: "Happy accident", about: "The curator found something the developer didn't plan.",
+    ask: ["[Asks for a game where the curator found something the developer never meant to put there]", "[Asks for one that didn't turn out how the developer planned, but turned out great]"],
+    miss: ["[Reads {title}: the curator found something the developer didn't plan. Not what they're after]"] },
+  { id: "different", name: "Different feeling", about: "It made the curator feel something other than what was intended.",
+    ask: ["[Asks for a game that made the curator feel something totally different from what the developer meant]", "[Asks for one where the curator and the developer felt opposite things]"],
+    miss: ["[Reads {title}: the curator felt something other than what the developer meant. Not what they're after]"] },
+  { id: "message", name: "Missed the message", about: "There was a deeper meaning, and it didn't come through.",
+    ask: ["[Asks for a game with a deeper meaning the curator didn't pick up on]", "[Asks for one where the developer was saying something the curator missed]"],
+    miss: ["[Reads {title}: the developer was saying something the curator missed. Not what they're after]"] },
+  { id: "notforme", name: "Not for me", about: "It does what the developer wanted; the curator just isn't its audience.",
+    ask: ["[Asks for a game that does what the developer wanted, but just wasn't the curator's thing]", "[Asks for one the curator respected but didn't love]"],
+    miss: ["[Reads {title}: it does what the developer wanted, it just wasn't for the curator. Not what they're after]"] },
 ];
 const VISITOR_NAMES = ["Ada", "Bea", "Cal", "Dot", "Eli", "Fern", "Gus", "Hana", "Ivo", "June", "Kit", "Lou", "Mae", "Nico", "Oona", "Pip", "Quinn", "Rosa", "Sol", "Tess",
   "Uma", "Vic", "Wren", "Yuki", "Arlo", "Bram", "Cleo", "Dex", "Esme", "Finn", "Gio", "Hal", "Iris", "Jude", "Kai", "Lark", "Milo", "Nell", "Otis", "Pia"];
 /* Offline staff badge for testing. Real badges live in Supabase (see supabase-setup.sql).
    Never put real badge keys in this file or in a museum pack: both are public on the site. */
-/* Chores that count toward staff points (a visitor who loved your recommendation, and closing up, are worth 3). */
+/* Chores that count toward staff points (recommending a visitor the right piece, and closing up, are worth 3). */
 const pts = n => n + " point" + (n === 1 ? "" : "s");
 const POINT_KINDS = ["dusted", "straightened", "watered", "mugs", "wiped", "helped", "closings"];
 const chorePoints = k => (k === "helped" || k === "closings" ? 3 : 1);
@@ -1256,35 +1251,34 @@ const normKey = k => String(k || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 const safeUrl = v => (typeof v === "string" && /^https?:\/\/\S+$/i.test(v.trim()) ? v.trim().slice(0, 400) : "");
 const str = (v, max) => (typeof v === "string" ? v.trim().slice(0, max || 600) : "");
 function shuffled(list) { const a = list.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
-function normalizeMinds(list) {
+function normalizeRelations(list) {
   const lines = v => (Array.isArray(v) ? v : []).map(x => str(x, 240)).filter(Boolean).slice(0, 8), seen = new Set();
-  return (Array.isArray(list) ? list : SAMPLE_MINDS).slice(0, 16).map((m, i) => {
-    let id = str(m && m.id, 30).toLowerCase().replace(/[^a-z0-9-]/g, "") || "mind-" + (i + 1);
+  return (Array.isArray(list) && list.length ? list : SAMPLE_RELATIONS).slice(0, 16).map((m, i) => {
+    let id = str(m && m.id, 30).toLowerCase().replace(/[^a-z0-9-]/g, "") || "rel-" + (i + 1);
     while (seen.has(id)) id += "-2";
     seen.add(id);
-    return { id, name: str(m && m.name, 40) || "Mindset " + (i + 1), ask: lines(m && m.ask), loved: lines(m && m.loved), liked: lines(m && m.liked), nope: lines(m && m.nope) };
+    return { id, name: str(m && m.name, 40) || "Relationship " + (i + 1), about: str(m && m.about, 200), ask: lines(m && m.ask), miss: lines(m && m.miss) };
   });
 }
-/* Genres: one per museum room that shows episodes. minds: the mindsets that room is for (a piece follows its first ticked mindset). */
+/* Genres: one per museum room that shows episodes. A piece is exhibited in the room for its genre (picked in the Pieces tab). */
 const SAMPLE_GENRES = [
-  { id: "dark", name: "The Shape in the Dark", short: "Dark", color: "#8a7ab8", minds: ["thrill"] },
-  { id: "mastery", name: "The Long Road to Mastery", short: "Mastery", color: "#e0817a", minds: ["hands-on", "one-more"] },
-  { id: "whispers", name: "Whispers of a Larger World", short: "Whispers", color: "#4caf9a", minds: ["unhurried"] },
-  { id: "experiment", name: "Mad Scientist", short: "Mad Scientist", color: "#6a8ad8", minds: ["systems", "tinkerer"] },
-  { id: "stories", name: "Stories", short: "Stories", color: "#c878b0", minds: ["story"] },
+  { id: "dark", name: "The Shape in the Dark", short: "Dark", color: "#8a7ab8" },
+  { id: "mastery", name: "The Long Road to Mastery", short: "Mastery", color: "#e0817a" },
+  { id: "whispers", name: "Whispers of a Larger World", short: "Whispers", color: "#4caf9a" },
+  { id: "experiment", name: "Mad Scientist", short: "Mad Scientist", color: "#6a8ad8" },
+  { id: "stories", name: "Stories", short: "Stories", color: "#c878b0" },
 ];
-function normalizeGenres(list, mids) {
+function normalizeGenres(list) {
   if (!Array.isArray(list)) list = JSON.parse(JSON.stringify(SAMPLE_GENRES));
   const seen = new Set();
   return list.filter(g => g && typeof g === "object").slice(0, 12).map((g, i) => {
     let id = str(g.id, 30).toLowerCase().replace(/[^a-z0-9_-]/g, "") || "genre-" + i; while (seen.has(id)) id += "2"; seen.add(id);
-    return { id, name: str(g.name, 40) || "Genre", short: str(g.short, 16), color: isHex(g.color) ? g.color : "#a08868", minds: (Array.isArray(g.minds) ? g.minds : []).map(x => str(x, 30)).filter(m => !mids || mids.has(m)) };
+    return { id, name: str(g.name, 40) || "Genre", short: str(g.short, 16), color: isHex(g.color) ? g.color : "#a08868" };
   });
 }
-/* Which room a piece belongs in: picked by hand, or the first genre that welcomes one of its mindsets (in the order they're ticked). */
+/* Which room a piece belongs in: picked by hand in the Pieces tab ("" for rooms with no genre). */
 function genreOf(p, genres) {
   if (p.genre && genres.some(g => g.id === p.genre)) return p.genre;
-  for (const m of p.minds || []) { const g = genres.find(g => g.minds.includes(m)); if (g) return g.id; }
   return "";
 }
 /* Episodes in cases. Newest first, each goes to a free case in its genre's room, and only there: add cases to a room
@@ -1316,7 +1310,7 @@ function normalizePiece(p, i) {
     drink: str(p.drink, 40), // unveiling: the drink of the week it brings (until the next unveil that brings one)
     drinkColor: isHex(p.drinkColor) ? p.drinkColor : "", drinkLine: Array.isArray(p.drinkLine) ? p.drinkLine.map(x => str(x, 200)).filter(Boolean).slice(0, 6) : [], // its cup color, and what the barista says
     gift: p.gift && str(p.gift.name, 50) ? { name: str(p.gift.name, 50), description: str(p.gift.description, 160), price: Math.max(1, Math.min(99, Math.round(+p.gift.price || 5))) } : null, // and its gift
-    hint: str(p.hint, 160), pick: !!p.pick, minds: Array.isArray(p.minds) ? p.minds.map(x => str(x, 30)).filter(Boolean).slice(0, 8) : [], genre: str(p.genre, 30), blend: str(p.blend, 30), // blend: a second category it also belongs to
+    hint: str(p.hint, 160), pick: !!p.pick, rel: str(p.rel, 30), genre: str(p.genre, 30), blend: str(p.blend, 30), // blend: a second category it also belongs to
     colors: colors.length >= 2 ? colors : ["#f0ecf8", "#a898d0", "#584a88", "#1a1430"],
     style: STYLES.includes(p.style) ? p.style : STYLES[strSeed(str(p.title, 80) || String(i)) % STYLES.length],
   };
@@ -1374,17 +1368,17 @@ function normalizePack(p) {
   // Online staff (Supabase): the project address and its public key. Both are meant to be public.
   const oin = (p.settings && p.settings.online) || {}, ourl = str(oin.url, 200).replace(/\/+$/, "");
   const online = { url: /^https:\/\/[^\s/]+$/i.test(ourl) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(ourl) ? ourl : "", key: str(oin.key, 400).replace(/\s/g, "") };
-  // Curious visitors: the mindsets, and how many curious visitors come each day. Tags for mindsets that no longer exist are dropped.
-  const mindsets = normalizeMinds(p.settings && p.settings.mindsets), mids = new Set(mindsets.map(m => m.id));
-  pieces.forEach(pc => (pc.minds = pc.minds.filter(id => mids.has(id))));
+  // Curious visitors: the relationships they ask for, and how many curious visitors come each day. A piece's relationship that no longer exists is dropped.
+  const relations = normalizeRelations(p.settings && p.settings.relations), rids = new Set(relations.map(m => m.id));
+  pieces.forEach(pc => { if (!rids.has(pc.rel)) pc.rel = ""; });
   const cin = (p.settings && p.settings.curious) || {}, curious = { perDay: Math.max(0, Math.min(10, Math.round(cin.perDay === undefined ? 3 : +cin.perDay || 0))) };
   // Museum life: the chance (0 to 100) that a visitor has a drink (lobby and café), carries a shop bag, or photographs a piece they stop at.
   const lin2 = (p.settings && p.settings.life) || {}, pct = (v, d) => Math.max(0, Math.min(100, Math.round(v === undefined ? d : +v || 0)));
   const shirts = (Array.isArray(lin2.shirts) ? lin2.shirts.filter(isHex) : []).slice(0, 10);
   const life = { drinks: pct(lin2.drinks, 30), bags: pct(lin2.bags, 20), photos: pct(lin2.photos, 8),
     shirtsOn: lin2.shirtsOn !== false, shirts: shirts.length ? shirts : SHIRT_COLORS.slice() }; // visitors' shirt colors: one is picked at random for each
-  // Genres: the museum's rooms (Action, Puzzle...), each welcoming some mindsets. A piece's genre is set by hand, or follows its mindsets.
-  const genres = normalizeGenres(p.settings && p.settings.genres, mids), gids = new Set(genres.map(g => g.id));
+  // Genres: the museum's rooms (Action, Puzzle...). A piece's genre is set by hand.
+  const genres = normalizeGenres(p.settings && p.settings.genres), gids = new Set(genres.map(g => g.id));
   pieces.forEach(pc => { if (!gids.has(pc.genre)) pc.genre = ""; if (!gids.has(pc.blend) || pc.blend === pc.genre) pc.blend = ""; });
   const friday = (Array.isArray(p.settings && p.settings.friday) ? p.settings.friday : []).map(e => ({ title: str(e && e.title, 80) || "Games Over Coffee", url: safeUrl(e && e.url) })).filter(e => e.url).slice(0, 200); // Friday features: episodes for the screening nook
   const ofin = (p.settings && p.settings.office) || {};
@@ -1392,7 +1386,7 @@ function normalizePack(p) {
     nicknames: Array.isArray(ofin.nicknames) ? ofin.nicknames.map(n => str(n, 40)).filter(Boolean).slice(0, 12) : ["DeVaughn", "Boss", "Mr. curator sir"] }; // what people call a curator badge
   // Gifts set on the piece itself (before gifts were shop items) become shop items.
   pieces.forEach(pc => { if (pc.gift && pc.gift.name && !items.some(it => it.gift === pc.id)) items.push({ id: "gift-" + pc.id, name: pc.gift.name, price: pc.gift.price, description: pc.gift.description, image: null, gift: pc.id }); delete pc.gift; });
-  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, mindsets, curious, life, genres, office, friday }, samples: !Array.isArray(p.pieces) };
+  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, relations, curious, life, genres, office, friday }, samples: !Array.isArray(p.pieces) };
 }
 /* The curator's "Skip to tomorrow" moves every daily system forward together. */
 let DAY_SHIFT = 0;
@@ -1696,10 +1690,7 @@ const ROOMS = {
       "#####B#####",
     ],
     spawn: [5, 8, "up"], lightSwitch: [2, 2],
-    props: [ // planters block the purple game's front and the green game's back
-      { key: "planter_wide", x: 2, y: 6, say: ["A long planter, right in front of the purple case.", "You can't read this side from here."] }, // its right half blocks the front
-      { key: "planter_wide", x: 7, y: 4, say: ["A long planter, pushed right up behind the green case.", "No reading the back of this one."] }, // half of it shows past the case
-    ],
+    props: [], // the three cases stand free: both sides of each are readable
     events: [{ x: 5, y: 2, tutDoor: "r1-r2", bump: true }, { x: 5, y: 9, tutDoor: "r1-office", bump: true }],
     light: { dim: 0, spots: 0.5 },
     visitors: [],
@@ -1733,12 +1724,13 @@ const NOTE_KEYS = [..."abcdefghijklmnopqrstuvwxyz.,!?"].map((k, i) => ({ k, col:
   .concat([{ k: "CAPS", label: "Caps", col: 0, span: 2 }, { k: "'", col: 2, span: 1 }, { k: " ", label: "Space", col: 3, span: 3 }, { k: "DEL", label: "Del", col: 6, span: 2 }, { k: "DONE", label: "Done", col: 8, span: 2 }]);
 /* The ten starting shirt colors for visitors (Visitors tab). */
 const SHIRT_COLORS = ["#c83838", "#e07830", "#e8c040", "#58a048", "#3a9a98", "#3a68c8", "#8850c0", "#e070a8", "#8a5a34", "#808898"];
-/* The tutorial's three games, in a row: just a color each. A planter blocks purple's front and another green's back;
-   red stands free. Their words are in Words, Tutorial. */
+/* The tutorial's three games, in a row: made-up games, each with a different relationship between the curator's
+   observation (front) and the developer's intention (back). The middle one opens the far door once it's read both
+   sides. Their words are in Words, Tutorial; rel is a relationship id (settings.relations). */
 const TUT_GAMES = [
-  { id: "tut-purple", key: "purple", color: "purple", colors: ["red", "blue", "purple"], art: "#8a4ad0", room: "tut_room1", x: 3, y: 5 },
-  { id: "tut-red", key: "red", color: "red", colors: ["red"], art: "#d84040", room: "tut_room1", x: 5, y: 5 },
-  { id: "tut-green", key: "green", color: "green", colors: ["green"], art: "#48a850", room: "tut_room1", x: 7, y: 5 },
+  { id: "tut-sale", key: "sale", rel: "message", art: "#c8803a", room: "tut_room1", x: 3, y: 5 },
+  { id: "tut-bus", key: "bus", rel: "halfway", art: "#3a68c8", room: "tut_room1", x: 5, y: 5 },
+  { id: "tut-spoon", key: "spoon", rel: "accident", art: "#a0a8b8", room: "tut_room1", x: 7, y: 5 },
 ];
 const TUT_SPOTS = { r1Exit: [5, 8], glass: [6, 8], office: { rosie: [3, 6], skye: [9, 6], onyx: [8, 8] } };
 
@@ -1760,7 +1752,6 @@ const TEXT = {
   "painting.covered":  { g: "Pieces", l: "Painting under a sheet (unveiling soon)", v: [["Something is hanging under a sheet.", "The card says it will be unveiled on {date}."]] },
   "case.ends":         { g: "Pieces", l: "Reading a case from the side", v: [["The placards are on the front and the back. Walk around to read them."]] },
   "case.obsLabel":     { g: "Pieces", l: "Heading over the observation (one line)", v: [["THE CURATOR'S OBSERVATION"]] },
-  "case.obsNote":      { g: "Pieces", l: "Under every observation: whose view it is", v: [["(These are my own impressions as the curator, from playing it myself. Not the developer's view, and not a verdict on the game.)"]] },
   "case.intLabel":     { g: "Pieces", l: "Heading over the developer's intention (one line)", v: [["THE DEVELOPER'S INTENTION"]] },
   "tut.hello":         { g: "Tutorial", l: "The usher, when you reach the desk (the last page asks for your badge)", v: [["Oh, hey! You must be the new hire.", "I'm happy to train you.", "First things first: can I get your badge number and key code?"]] },
   "tut.already":       { g: "Tutorial", l: "The usher, if you're already clocked in ({name})", v: [["Oh, hey, {name}! You're already clocked in, so we can skip the paperwork."]] },
@@ -1779,15 +1770,14 @@ const TEXT = {
   "tut.lockedStart":   { g: "Tutorial", l: "The speaker, when you try the way you came in", v: [["Yeah, ok, don't panic. This is part of the training."]] },
   "tut.unlocked":      { g: "Tutorial", l: "The far door unlocking (one line)", v: [["*click* The far door unlocked."]] },
   "tut.recommendFirst": { g: "Tutorial", l: "The speaker, when you try a door with visitors still waiting", v: [["You've still got visitors waiting on a recommendation. Help them out first."]] },
-  "tut.ask":           { g: "Tutorial", l: "A visitor asking for a game ({color}; the last page asks to follow)", v: [["Oh! Do you work here?", "Could you recommend me a game? I'm in the mood for... a {color} game."]] },
+  "tut.ask":           { g: "Tutorial", l: "A visitor asking for a game ({want}: one of the asks for their relationship, in Visitors; the last page asks to follow)", v: [["Oh! Do you work here?", "Could you recommend me a game? {want}"]] },
   "tut.follow":        { g: "Tutorial", l: "A visitor, following you", v: [["Lead the way!"]] },
-  "tut.remind":        { g: "Tutorial", l: "A visitor, reminding you what they want ({color})", v: [["I'm looking for a {color} game."]] },
+  "tut.remind":        { g: "Tutorial", l: "A visitor, reminding you what they want ({want})", v: [["{want}"]] },
   "tut.oneAtATime":    { g: "Tutorial", l: "Trying to lead two visitors at once", v: [["One visitor at a time! Finish helping the one you're with first."]] },
-  "tut.thanks":        { g: "Tutorial", l: "A visitor, after your recommendation ({title})", v: [["Ooh, {title}? I'll go check it out. Thanks!"]] },
-  "tut.loved":         { g: "Tutorial", l: "A visitor who got their color ({title}, {color})", v: [["I LOVED {title}! It was so {color}!"]] },
-  "tut.liked":         { g: "Tutorial", l: "A visitor whose color was in it, but wasn't the point ({title}, {color})", v: [["{title} was pretty good. There was some {color} in it, at least."]] },
-  "tut.nope":          { g: "Tutorial", l: "A visitor whose color wasn't in it at all ({title}, {color})", v: [["Hmm. {title} didn't have anything {color} in it at all..."]] },
+  "tut.thanks":        { g: "Tutorial", l: "A visitor, after you recommend the right game ({title})", v: [["[Oh, {title}! That's exactly what I was looking for. Thanks!]"]] },
+  "tut.missFirst":     { g: "Tutorial", l: "The speaker, the first time you recommend the wrong game", v: [["[Not quite. Read both sides of a case: what the curator felt, and what the developer meant. Then find the one they're asking for]"]] },
   "tut.after":         { g: "Tutorial", l: "A visitor, after telling you", v: [["Thanks again for the recommendation!"]] },
+  "tut.frame":         { g: "Tutorial", l: "The speaker, once you've read both sides of the middle game (after the door unlocks)", v: [["[People don't come here for genres. They come for the curator's story with a game: what the curator felt, next to what the developer meant]"]] },
   "tut.closeUp":       { g: "Tutorial", l: "The speaker, after every visitor has told you", v: [["Nice work! That's pretty much the job.", "Last thing: make the closing announcement on the intercom, then turn off the lights in both training rooms before you head out."]] },
   "tut.intercomEarly": { g: "Tutorial", l: "The intercom, before it's time", v: [["The office intercom. Not yet, though."]] },
   "tut.announce":      { g: "Tutorial", l: "The tutorial's closing announcement", v: [["*ding-dong*", "Attention, visitors: the museum is closing for the night. Thanks for coming!"]] },
@@ -1798,17 +1788,17 @@ const TEXT = {
   "tut.notYet":        { g: "Tutorial", l: "The glass door in the middle of training", v: [["You can't leave in the middle of training!"]] },
   "tut.done":          { g: "Tutorial", l: "The speaker, as you leave", v: [["And that's training! Welcome to the team.", "The museum's all yours."]] },
   "tut.welcome":       { g: "Tutorial", l: "Arriving in the lobby after training", v: [["Welcome to the GOQ Museum."]] },
+  "tut.bus.title":     { g: "Tutorial", l: "The middle game's title (it opens the far door)", v: [["Last Bus Home"]] },
+  "tut.bus.front":     { g: "Tutorial", l: "Last Bus Home: the curator's observation (front)", v: [["[I felt like the only person awake in the whole city, and that part really got me. But it felt lonely. Nobody talks, and the route just loops]"]] },
+  "tut.bus.back":      { g: "Tutorial", l: "Last Bus Home: the developer's intention (back)", v: [["The developer worked nights for six years and wanted quiet companionship: the only adult awake in the city, but not lonely about it. Regulars start waving at you, and the last passenger always says \"thanks, driver.\""]] },
+  "tut.spoon.title":   { g: "Tutorial", l: "The right-hand game's title", v: [["Spoon Siege"]] },
+  "tut.spoon.front":   { g: "Tutorial", l: "Spoon Siege: the curator's observation (front)", v: [["[Flinging ants back to the start with a spoon made me feel weirdly powerful. It's cute and quirky, and I loved it]"]] },
+  "tut.spoon.back":    { g: "Tutorial", l: "Spoon Siege: the developer's intention (back)", v: [["The developer didn't aim for any feeling. They made it to learn how pathfinding works, and it's set in a kitchen drawer because they had a fork on their desk."]] },
+  "tut.sale.title":    { g: "Tutorial", l: "The left-hand game's title", v: [["Grandpa's Garage Sale"]] },
+  "tut.sale.front":    { g: "Tutorial", l: "Grandpa's Garage Sale: the curator's observation (front)", v: [["[Haggling every customer down to the last coin made me feel like a mastermind. I barely let Grandpa finish a sentence]"]] },
+  "tut.sale.back":     { g: "Tutorial", l: "Grandpa's Garage Sale: the developer's intention (back)", v: [["The developer wanted bittersweet letting go: helping Grandpa downsize after Grandma passed. Every item has a story, and you earn more the less you let him talk. Selling well is meant to feel a little bad."]] },
   "tut.photo":         { g: "Tutorial", l: "Taking your first photo in the tutorial", v: [["Oh yeah, you can take photos.", "They don't help you here, though."]] },
   "tut.door":          { g: "Tutorial", l: "The lobby's Tutorial door", v: [["A door marked TUTORIAL. Take the training again?"]] },
-  "tut.red.title":     { g: "Tutorial", l: "The red game's title", v: [["Big Red Racer"]] },
-  "tut.red.front":     { g: "Tutorial", l: "The red game's front placard", v: [["This game has a lot of red stuff. There's red cars, red roads, and red trees."]] },
-  "tut.red.back":      { g: "Tutorial", l: "The red game's back placard", v: [["The developer wanted it to feel like the reddest game ever made: red skies, red music (somehow), red everything."]] },
-  "tut.purple.title":  { g: "Tutorial", l: "The purple game's title", v: [["Twilight Garden"]] },
-  "tut.purple.front":  { g: "Tutorial", l: "The purple game's front placard (blocked, so nobody reads it)", v: [["This game has red stuff and blue stuff: red apples, blue rivers, and red birds flying through blue skies."]] },
-  "tut.purple.back":   { g: "Tutorial", l: "The purple game's back placard", v: [["The developer wanted red things and blue things to mix until the whole game felt purple: red apples, blue rivers, red birds in blue skies."]] },
-  "tut.green.title":   { g: "Tutorial", l: "The green game's title", v: [["Meadow Mayhem"]] },
-  "tut.green.front":   { g: "Tutorial", l: "The green game's front placard", v: [["This game has a lot of green stuff. There's green hills, green frogs, and green trees."]] },
-  "tut.green.back":    { g: "Tutorial", l: "The green game's back placard (blocked, so nobody reads it)", v: [["The developer wanted every corner of it to feel fresh and green, like a spring morning."]] },
   "patron.enjoyed":    { g: "Staff", l: "A Patreon member mentioning a game they enjoyed ({title}: a random game; one picked at random)", v: [["I played {title} last week. Really enjoyed it."], ["Have you tried {title}? I keep thinking about it."], ["{title} was so good. No notes."], ["I finally got around to {title}. Worth it."], ["Okay, {title}. Why didn't anyone tell me sooner?"]] },
   "screen.guest":      { g: "Screening nook", l: "Someone sitting in the screening nook (takes turns)", v: [["Shh. It's getting to the good part."], ["I've seen this one four times."], ["The host talks fast. I like it."], ["Is there popcorn? There should be popcorn."], ["I came in for five minutes. That was an hour ago."]] },
   "screen.ask":        { g: "Screening nook", l: "Sitting down or looking at the screen ({title}: what's playing this hour)", v: [["Now playing: {title}. Stay for it?"]] },
@@ -1912,8 +1902,8 @@ const TEXT = {
   "note.thanks":       { g: "Visitor notes", l: "After sending a note", v: [["You tucked your note into the little card holder under the placard.", "The curator will read it soon."]] },
   "note.slow":         { g: "Visitor notes", l: "Too many notes at once", v: [["The card holder is full for now. Try again a little later."]] },
   "note.fail":         { g: "Visitor notes", l: "A note that didn't send", v: [["Your note didn't send. Check your connection and try again."]] },
-  "case.frontNote":    { g: "Pieces", l: "After the front placard", v: [["(The developer's intention is on the other side of the case.)"]] },
-  "case.backNote":     { g: "Pieces", l: "After the back placard", v: [["(The curator's observation is on the other side of the case.)"]] },
+  "case.frontNote":    { g: "Pieces", l: "At the end of the front placard", v: [["Continues on other side \u2192"]] },
+  "case.backNote":     { g: "Pieces", l: "At the end of the back placard", v: [["Continues on other side \u2192"]] },
   "intercom.ask":      { g: "Closing up", l: "Intercom question", v: [["The intercom. Make the closing announcement?"]] },
   "intercom.announce": { g: "Closing up", l: "Closing announcement", v: [["*ding-dong*", "Attention, visitors: the museum is closing for the night.", "Please make your way to the exit. Thank you for visiting!"]] },
   "intercom.again":    { g: "Closing up", l: "Intercom after announcing", v: [["The announcement already went out."]] },
@@ -1978,9 +1968,8 @@ const TEXT = {
   "rack.empty":        { g: "Gift shop", l: "A stand with nothing for sale", v: [["A stand of little knickknacks.", "Nothing on this one is for sale. They're just here to keep you company."]] },
   "rack.available":    { g: "Gift shop", l: "Stand close-up: for sale", v: [["{n} tokens. Available to buy at the counter up front."]] },
   "cur.hello":         { g: "Curious visitors", l: "When you walk up to them (takes turns)", v: [["Oh, hello!"], ["Oh! Hi there."], ["Hm? Oh, hello!"]] },
-  "cur.help":          { g: "Curious visitors", l: "After \"Do you need help?\" (what they're looking for comes next, from their mindset)", v: [["Actually, yes! My name is {name}, and I was looking for a game recommendation."]] },
+  "cur.help":          { g: "Curious visitors", l: "After \"Do you need help?\" (what they're looking for comes next: one of their relationship's asks, in Visitors)", v: [["Actually, yes! My name is {name}, and I was looking for a game recommendation."]] },
   "cur.busy":          { g: "Curious visitors", l: "After \"Sorry, I'm busy.\"", v: [["Oh, no worries! I'll keep looking around."]] },
-  "cur.also":          { g: "Curious visitors", l: "Before the second thing they like (joined to that line)", v: [["Oh, and"]] },
   "cur.follow":        { g: "Curious visitors", l: "They start following you", v: [["Lead the way! I'm right behind you."]] },
   "cur.lead":          { g: "Curious visitors", l: "Talking to them while they follow you", v: [["Where are we headed?"]] },
   "cur.remind":        { g: "Curious visitors", l: "You ask what they were looking for again (what they want comes next)", v: [["Oh, right! Like I said:"], ["Sure! I'm after this:"]] },
@@ -1990,12 +1979,15 @@ const TEXT = {
   "cur.recommend":     { g: "Curious visitors", l: "Question: recommend this piece?", v: [["Recommend {title} to {name}?"]] },
   "cur.unread":        { g: "Curious visitors", l: "Question: recommend a case you haven't read both sides of?", v: [["You haven't read both sides of {title} yet. Recommend it to {name} anyway?"]] },
   "cur.unreadNote":    { g: "Curious visitors", l: "Question: recommend a painting whose note you haven't read?", v: [["You haven't read the note on {title} yet. Recommend it to {name} anyway?"]] },
-  "cur.thanks":        { g: "Curious visitors", l: "After you recommend a piece", v: [["Ooh, {title}. I'll try it tonight!", "I'll come back and tell you how it went."]] },
+  "cur.thanks":        { g: "Curious visitors", l: "You recommend the right piece: what they say before they head out ({title})", v: [["[Oh, {title}! That's exactly what I was looking for]", "[I'll play it tonight and tell you how it went]"]] },
+  "cur.missNone":      { g: "Curious visitors", l: "You recommend a piece with no relationship set ({title}; usually each relationship has its own miss lines, in Visitors)", v: [["[Reads {title}: can't tell what the curator made of it. Not what they're after]"]] },
+  "cur.giveUp":        { g: "Curious visitors", l: "After a third piece that isn't what they wanted: they stop following you", v: [["[Thanks anyway! I'll keep looking around]"]] },
+  "cur.recall":        { g: "Curious visitors", l: "Question: recommend one from memory (the pieces you've recommended right before come next, by name)", v: [["[Which one comes to mind?]"]] },
   "cur.back":          { g: "Curious visitors", l: "Coming back the next day ({hint} is \", the one where...\" from the piece)", v: [["Hey, it's me, {name}! I tried {title}{hint}."]] },
   "cur.beat":          { g: "Curious visitors", l: "The pause before they say what they thought (takes turns)", v: [["And honestly..."], ["So..."], ["Okay, so..."]] },
-  "cur.liked":         { g: "Curious visitors", l: "Next day, about a game with no mindsets ticked", v: [["It was pretty good! Not my favorite, but I'm glad I tried it."]] },
-  "cur.loved":         { g: "Curious visitors", l: "Next day: loved it, if their mindset has no lines of its own", v: [["I loved it. Thank you so much!"]] },
-  "cur.nope":          { g: "Curious visitors", l: "Next day: not for them, if their mindset has no lines of its own", v: [["Honestly, it wasn't really for me. Thanks for trying, though!"]] },
+  "cur.agree":         { g: "Curious visitors", l: "Next day, picked at random: they see why the curator felt that way ({title})", v: [["[I played {title} last night. I can totally see why the curator felt that way]"]] },
+  "cur.disagree":      { g: "Curious visitors", l: "Next day, picked at random: they think the curator got it wrong ({title})", v: [["[I played {title} last night. Honestly? I think the curator got this one wrong]"]] },
+  "cur.puzzled":       { g: "Curious visitors", l: "Next day, picked at random: they can't see where the curator got that ({title})", v: [["[I played {title} last night. I have no idea where the curator got that from]"]] },
   "cur.after":         { g: "Curious visitors", l: "Talking to them again after they told you (takes turns)", v: [["Thanks again for the recommendation!"], ["I might come ask you for another one sometime."]] },
   "pc.boot":           { g: "Storage", l: "Turning on Someone's PC (before the stats)", v: [["Someone's PC whirs to life.", "There's one program on the desktop: PLAYER_STATS.EXE. It's about you. Somehow."]] },
   "end.stats":         { g: "Closing up", l: "On the closing screen, after a few of your stats", v: [["All your stats are on the old PC in the basement."]] },
@@ -2060,7 +2052,7 @@ const TEXT = {
 const TALK_ROLES = { usher: "Usher (front desk)", shopkeeper: "Shopkeeper", barista: "Barista", conservator: "Conservator (storage)", guard: "Night guard", member: "Patreon members on shift (staff room)" };
 const TALK_WHEN = { always: "Any time", visitor: "You're a visitor (not clocked in)", staff: "You're on shift", day: "Daytime", sunset: "Sunset", night: "Night",
   medium: "Medium day", heavy: "Busy day", reveal: "Reveal day", closing: "After the closing announcement", drink: "You're holding a drink",
-  photos: "You've taken photos", helped: "A visitor loved your recommendation", cat: "The cat is in this room", shirt: "You're wearing the GOQ shirt (always wins)" };
+  photos: "You've taken photos", helped: "You recommended a visitor the right piece", cat: "The cat is in this room", shirt: "You're wearing the GOQ shirt (always wins)" };
 const TALK_DEFAULTS = {
   usher: [
     { when: ["shirt"], v: [["Welcome to the GOQ... oh my gosh. Is that THE shirt?", "Can I... can I touch the sleeve? No. Sorry. Professionalism."], ["Everyone on staff has been talking about your shirt.", "Some of us are not handling it well."]] },
@@ -2085,14 +2077,14 @@ const TALK_DEFAULTS = {
    Pure data: each one is a name, a description, one of these stats and a target. The curator's Achievements tab edits them. */
 const ACH_STATS = {
   dusted: "Frames dusted", straightened: "Frames straightened", watered: "Plants watered", mugs: "Mugs found", wiped: "Cases wiped",
-  helped: "Visitors who loved your recommendation", recs: "Games recommended to visitors", pets: "Times petting the cat", closings: "Times closing the museum", photos: "Photos taken",
+  helped: "Visitors who got the right piece", recs: "Games recommended to visitors", pets: "Times petting the cat", closings: "Times closing the museum", photos: "Photos taken",
   bothSides: "Cases read on both sides", stamps: "Stamps collected", cards: "Stamp cards traded", items: "Gift shop items owned",
   drinks: "Drinks ordered", naps: "Bench naps", rooms: "Different rooms visited", microwave: "Microwave incidents", segway: "Segway rides",
   reactions: "Different photo reactions caught", episodes: "Episodes watched in the screening nook", arcade: "Games started at the café arcade", office: "Got into the curator's office (1 = yes)", shirt: "Has the GOQ shirt (1 = yes)", shifts: "Times clocking in", figure: "Photographed the figure in the dark (1 = yes)",
 };
 const SAMPLE_ACH = [
   { id: "first-dust", name: "Elbow Grease", desc: "Dust a frame for the first time.", stat: "dusted", target: 1 },
-  { id: "helper", name: "Right This Way", desc: "Recommend games that 5 visitors love.", stat: "helped", target: 5 },
+  { id: "helper", name: "Right This Way", desc: "Recommend 5 visitors the piece they were looking for.", stat: "helped", target: 5 },
   { id: "both-sides", name: "Both Sides Now", desc: "Read both sides of 10 display cases.", stat: "bothSides", target: 10 },
   { id: "cat", name: "Cat Person", desc: "Pet the cat 10 times.", stat: "pets", target: 10 },
   { id: "explorer", name: "Wayfinder", desc: "Visit every room in the museum.", stat: "rooms", target: 8 },
@@ -3296,18 +3288,19 @@ class Game {
   }
   viewPiece(p, side, stampAfter, onRead) { // onRead: runs if you read it to the last page
     const gold = p.kind === "episode", img = this.pieceImgs[p.id], secs = [];
-    // The observation is always framed as the curator's own view; the headings and that line are in Words, Pieces.
-    const obs = () => { secs.push({ label: this.tx("case.obsLabel").join(" "), text: p.observation }); if (!p.tut) secs.push({ label: "", text: this.tx("case.obsNote").join(" ") }); };
+    // Each side is one voice: the curator's observation (with the episode) on the front, the developer's intention (with the game) on the back. Headings are in Words, Pieces.
+    const obs = () => secs.push({ label: this.tx("case.obsLabel").join(" "), text: p.observation });
     const int = () => secs.push({ label: this.tx("case.intLabel").join(" "), text: p.intention, tone: "red" }); // the developer's words: red headings
     if (side === "front") { if (p.observation) obs(); secs.push({ label: "", text: this.tx("case.frontNote").join(" ") }); }
     else if (side === "back") { if (p.intention) int(); secs.push({ label: "", text: this.tx("case.backNote").join(" ") }); }
     else if (side === "end") secs.push({ label: "", text: this.tx("case.ends").join(" ") });
     else if (gold) { if (p.observation) obs(); if (p.intention) int(); }
     else if (p.guestNote) secs.push({ label: p.guestWriter ? "GUEST NOTE BY " + p.guestWriter.toUpperCase() : "GUEST NOTE", text: p.guestNote });
-    const notes = side !== "back" && side !== "end" && (this.online() || !!p.tut); // visitors' notes: under the front placard, or with the whole piece
-    if (notes) { const ns = this.notesFor(p); if (side === "front") secs.splice(secs.length - 1, 0, ...ns); else secs.push(...ns); this.refreshNotes(); } // before the "other side" line
+    const k0 = this.sidesOf(p), bothRead = side === "front" ? !!k0.back : side === "back" ? !!k0.front : side === undefined;
+    const notes = bothRead && (this.online() || !!p.tut); // visitors' notes: only once you've read the other side too (so this is your second), or with the whole piece
+    if (notes) { const ns = this.notesFor(p); secs.push(...ns); this.refreshNotes(); } // at the very end, after "Continues on other side"
     this.read({ img: img ? p.image : this.pieceArt(p).toDataURL(), imgClass: img && img.naturalWidth > 160 ? "photo" : "", title: p.title.toUpperCase(), sub: "By " + p.developer,
-      sections: secs, pick: p.pick, frame: true, clip: this.clipOf(p), flip: side === "back", note: notes && !this.curator ? p : null, links: [[p.episodeUrl, "Watch the episode", "WATCH"], [p.gameUrl, "Play the game", "PLAY"]] }, () => {
+      sections: secs, pick: p.pick, frame: true, clip: this.clipOf(p), flip: side === "back", note: notes && !this.curator ? p : null, links: [side !== "back" ? [p.episodeUrl, "Watch the episode", "WATCH"] : [], side !== "front" ? [p.gameUrl, "Play the game", "PLAY"] : []] }, () => {
       if (!this.readEnded) return; // closed before the last page: not read yet
       if (onRead) onRead();
       if (side === undefined) { const k = (this.progress.sides || (this.progress.sides = {}))[p.id] || (this.progress.sides[p.id] = {}); if (gold) k.front = k.back = 1; else k.note = 1; this.saveProgress(); }
@@ -4254,21 +4247,22 @@ class Game {
   }
   /* ----- the tutorial -----
      Plays once for a new player, and again through the lobby's Tutorial door. You walk in through the staff office's glass
-     door, the usher signs you in (or you train as a volunteer), and you train on your own: read the colored games in
-     Training Room A (its far door opens once the red one is read front and back), bring a visitor from Training Room B back
-     to them, help two more, hear what they thought out in the office, make the closing announcement, turn off both rooms'
+     door, the usher signs you in (or you train as a volunteer), and you train on your own: read the three made-up games in
+     Training Room A (its far door opens once the middle one is read front and back), bring a visitor from Training Room B
+     back to them (each asks for a relationship; a wrong pick, and they keep following), help two more, hear what they
+     thought out in the office, make the closing announcement, turn off both rooms'
      lights and leave by the glass door. Pausing offers only Skip or Save and quit (quitting starts it over next time).
      Nothing in it counts as real reading, stamps or notes. Every line is in Words, Tutorial. */
   needTutorial() { return !this.curator && !this.recording() && !!this.saveKey && !this.headless && !this.progress.tutorial; }
   tutSaid(name, pages) { return pages.map(p => (p.trim() === "..." ? p : name + ": " + p)); }
   tutSpeak(key, vars) { return [...this.tx("tut.speaker"), ...this.tx(key, vars)]; }
-  tutPerson(id, name, want, sheet, room, x, y) {
-    return { tutId: id, member: name, tutWant: want, shirt: { red: "#d84040", blue: "#3a68c8", black: "#2c2c34" }[want], sheet, room, x, y, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 9999, still: true, lines: [["..."]], lineI: -1 };
+  tutPerson(id, name, want, sheet, room, x, y) { // want: the relationship they ask for
+    return { tutId: id, member: name, tutWant: want, shirt: { rosie: "#d84040", skye: "#3a68c8", onyx: "#2c2c34" }[id], sheet, room, x, y, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 9999, still: true, lines: [["..."]], lineI: -1 };
   }
   tutGame(id) {
     const g = TUT_GAMES.find(q => q.id === id); if (!g) return null;
-    return { id: g.id, kind: "episode", tut: true, tutColor: g.color, tutColors: g.colors, art: g.art, title: this.tx("tut." + g.key + ".title")[0], developer: "The Training Department",
-      observation: this.tx("tut." + g.key + ".front").join(" "), intention: this.tx("tut." + g.key + ".back").join(" "), minds: [], hint: "", episodeUrl: "", gameUrl: "", pick: false };
+    return { id: g.id, kind: "episode", tut: true, rel: g.rel, art: g.art, title: this.tx("tut." + g.key + ".title")[0], developer: "The Training Department",
+      observation: this.tx("tut." + g.key + ".front").join(" "), intention: this.tx("tut." + g.key + ".back").join(" "), hint: "", episodeUrl: "", gameUrl: "", pick: false };
   }
   /* After the rooms are built: the colored games in their cases, and the tutorial's visitors where they were. */
   tutDress() {
@@ -4289,7 +4283,7 @@ class Game {
     const f = this.fol; // whoever was following you waits for another day
     if (f) { this.fol = null; f.follow = false; if (f.cur && f.cur.state) { f.cur.state = "waiting"; f.cur.room = null; } this.saveProgress(); }
     TUT_ROOMS.forEach(k => this.lightsOff.delete(k));
-    this.tut = { step: "intro", sides: {}, notes: {}, replay: !!replay, people: { rosie: this.tutPerson("rosie", "Rosie", "red", "visitor_b", "tut_room2", 4, 4) } };
+    this.tut = { step: "intro", sides: {}, notes: {}, replay: !!replay, people: { rosie: this.tutPerson("rosie", "Rosie", TUT_GAMES[1].rel, "visitor_b", "tut_room2", 4, 4) } };
     for (const k of TUT_ROOMS) if (this.rooms[k]) this.rooms[k].npcs = this.rooms[k].npcs.filter(n => !n.tutId);
     this.tutDress(); this.closeAll();
     this.warp("tut_office", ...ROOMS.tut_office.spawn, () => { if (!this.tut) return; this.path = ["up", "up", "up"]; this.pathAct = null; this.tut.cut = () => this.tutUsher(); });
@@ -4330,8 +4324,12 @@ class Game {
     }, 0);
   }
   tutGo() { const t = this.tut; if (!t) return; this.say(this.tutSaid("Usher", this.tx("tut.go")), () => { if (this.tut && this.tut.step === "signin") this.tut.step = "room1"; }); }
-  tutRedRead() { const k = this.tut && this.tut.sides["tut-red"]; return !!(k && k.front && k.back); }
-  tutRead() { const t = this.tut; if (t && !t.open && this.tutRedRead()) { t.open = true; this.showLoc(this.tx("tut.unlocked")[0]); } }
+  tutFirstRead() { const k = this.tut && this.tut.sides[TUT_GAMES[1].id]; return !!(k && k.front && k.back); } // the middle game, both sides
+  tutRead() {
+    const t = this.tut; if (!t || t.open || !this.tutFirstRead()) return;
+    t.open = true; this.showLoc(this.tx("tut.unlocked")[0]);
+    setTimeout(() => { if (this.tut && this.mode === "walk") this.say(this.tutSpeak("tut.frame")); }, 500); // what the job is really about
+  }
   tutAllShown() { const t = this.tut; return !!t && !!t.pair && Object.values(t.people).every(p => p.tutShown); }
   // Someone still waiting for a game who isn't with you (Rosie counts once you've met her).
   tutLeftBehind() { const t = this.tut; return !!t && Object.values(t.people).some(p => !p.tutShown && p !== this.fol && (p.tutId !== "rosie" || t.met2)); }
@@ -4342,8 +4340,8 @@ class Game {
   tutPair() { // two more visitors waiting in Training Room A
     const t = this.tut; if (!t || t.pair) return;
     t.pair = true;
-    t.people.skye = this.tutPerson("skye", "Skye", "blue", "visitor_a", "tut_room1", 1, 4);
-    t.people.onyx = this.tutPerson("onyx", "Onyx", "black", "visitor_c", "tut_room1", 9, 7);
+    t.people.skye = this.tutPerson("skye", "Skye", TUT_GAMES[2].rel, "visitor_a", "tut_room1", 1, 4);
+    t.people.onyx = this.tutPerson("onyx", "Onyx", TUT_GAMES[0].rel, "visitor_c", "tut_room1", 9, 7);
     const r = this.rooms.tut_room1; [t.people.skye, t.people.onyx].forEach(p => { if (r && !r.npcs.includes(p)) r.npcs.push(p); });
   }
   tutEvent(e) {
@@ -4363,7 +4361,7 @@ class Game {
         else this.say([...this.tx("tut.locked"), ...this.tutSpeak("tut.lockedStart")]);
       }
       else if (e.tutDoor === "r1-r2") {
-        if (!this.tutRedRead()) say("tut.locked");
+        if (!this.tutFirstRead()) say("tut.locked");
         else if (!late && this.tutLeftBehind()) speak("tut.recommendFirst");
         else { t.met2 = true; go("tut_room2", 4, 6, "up"); }
       }
@@ -4400,7 +4398,8 @@ class Game {
     }
     return false;
   }
-  /* The tutorial's visitors: ask for a color, follow you, take your recommendation, then tell you how it went. */
+  /* The tutorial's visitors: ask for a relationship, follow you until you show them the right game, then tell you what they made of it. */
+  tutWantLine(n) { const m = this.rel(n.tutWant); return m && m.ask.length ? this.pickLine(m.ask, n.tutId) : "[a game]"; }
   tutTalk(n) {
     const t = this.tut;
     if (n.usher && ROOMS[this.room.id] && ROOMS[this.room.id].tutorial) { this.tutUsher(); return true; }
@@ -4409,8 +4408,8 @@ class Game {
     const S = pages => this.tutSaid(n.member, pages);
     if (n.tutBack) { this.tutFeedback(n); return true; }
     if (n.tutHeard || n.tutShown) { this.say(S(this.tx(n.tutHeard ? "tut.after" : "tut.thanks", { title: (this.tutGame(n.tutShown) || {}).title || "it" }))); return true; }
-    if (n.follow) { this.choose(S(this.tx("tut.follow")).join(" "), ["Keep going", "What were you looking for?"], i => { if (i === 1) this.say(S(this.tx("tut.remind", { color: n.tutWant }))); }, 0); return true; }
-    const pages = S(this.tx("tut.ask", { color: n.tutWant })), q = pages.pop();
+    if (n.follow) { this.choose(S(this.tx("tut.follow")).join(" "), ["Keep going", "What were you looking for?"], i => { if (i === 1) this.say(S(this.tx("tut.remind", { want: this.tutWantLine(n) }))); }, 0); return true; }
+    const pages = S(this.tx("tut.ask", { want: this.tutWantLine(n) })), q = pages.pop();
     this.say(pages, () => this.ask(q, ["Follow me!", "Not yet"], i => {
       if (i !== 0) return;
       if (this.fol && this.fol !== n) { this.say(this.tx("tut.oneAtATime")); return; }
@@ -4420,6 +4419,12 @@ class Game {
     return true;
   }
   tutRecommend(n, piece) {
+    const t = this.tut;
+    if (piece.rel !== n.tutWant) { // not the one: they say what they read there and keep following; the first time, the speaker explains
+      n.dir = OPP[this.player.dir];
+      this.say(this.tutSaid(n.member, this.missLines(piece, n.member, n.tutId)), () => { if (t && !t.missed) { t.missed = true; this.say(this.tutSpeak("tut.missFirst")); } });
+      return;
+    }
     this.fol = null; n.follow = false; n.still = true; n.tutShown = piece.id; n.cur = null; n.dir = OPP[this.player.dir];
     this.say(this.tutSaid(n.member, this.tx("tut.thanks", { title: piece.title })), () => {
       n.leaving = true; n.leaveT = 0; n.alpha = 1; n.route = null; n.leaveTo = TUT_SPOTS.r1Exit;
@@ -4432,9 +4437,9 @@ class Game {
   }
   tutFeedback(n) {
     const t = this.tut, g = this.tutGame(n.tutShown); if (!t || !g) return;
-    const how = g.tutColor === n.tutWant ? "loved" : g.tutColors.includes(n.tutWant) ? "liked" : "nope"; // their color matched, was in it, or wasn't
+    const take = { rosie: "agree", skye: "disagree", onyx: "puzzled" }[n.tutId] || "agree", how = { agree: "loved", disagree: "liked", puzzled: "nope" }[take]; // one of each take, like the real thing
     n.tutBack = false; n.tutHeard = how; n.react = { how, t0: this.t }; n.dir = OPP[this.player.dir];
-    this.say(this.tutSaid(n.member, this.tx("tut." + how, { title: g.title, color: n.tutWant })), () => {
+    this.say(this.tutSaid(n.member, this.tx("cur." + take, { title: g.title, name: n.member })), () => {
       if (this.tut && this.tut.step === "feedback" && Object.values(this.tut.people).every(p => p.tutHeard)) { this.tut.step = "closing"; this.say(this.tutSpeak("tut.closeUp")); }
     });
   }
@@ -4469,7 +4474,7 @@ class Game {
       per.forEach(([name, all, done]) => add("READING", name, done + " of " + all + (done === all ? ", all of it" : "")));
       const fav = per.filter(x => x[2]).sort((a, b) => b[2] / b[1] - a[2] / a[1])[0]; if (fav) add("READING", "Most-read wing", fav[0]);
     }
-    add("RECOMMENDING", "Games recommended", t.recs); add("RECOMMENDING", "Visitors who loved them", t.helped); add("RECOMMENDING", "Visitors who didn't", st.nope);
+    add("RECOMMENDING", "Games recommended", t.recs); add("RECOMMENDING", "The right piece", t.helped); add("RECOMMENDING", "Not quite", st.nope);
     const lg = this.topOf(st.loved), gn = lg && (this.pack.settings.genres || []).find(g => g.id === lg[0]); if (gn) add("RECOMMENDING", "Your best category", gn.name);
     add("CHORES", "Frames dusted", t.dusted); add("CHORES", "Frames straightened", t.straightened); add("CHORES", "Cases wiped", t.wiped); add("CHORES", "Plants watered", t.watered);
     const pl = this.topOf(st.plants); if (pl && pl[1] > 1) add("CHORES", "Favorite plant", "the " + pl[0] + " (watered " + pl[1] + " times)");
@@ -5159,33 +5164,38 @@ class Game {
     return Math.min(3, base + ((this.extraPrints || {})[p.id] || 0));
   }
   /* ----- curious visitors -----
-     A few curious visitors come in each day (curator, Visitors tab). Talk to one and they tell you how they like to play; they
-     follow you anywhere in the building, until you stop at a piece and recommend it. The next day they come back to the lobby and
-     say how it went: loved it if the game suits their mindset, liked it if it suits the second thing they mentioned (or has no
-     mindsets ticked), otherwise not for them. A loved recommendation counts as a staff chore ("helped", worth 3). */
-  mind(id) { return this.pack.settings.mindsets.find(m => m.id === id) || null; }
+     A few curious visitors come in each day (curator, Visitors tab). Talk to one and they say what they're looking for: a
+     game with a certain relationship between the curator's observation and the developer's intention (settings.relations;
+     each piece has one, in the Pieces tab). They follow you anywhere in the building until you stop at a piece and
+     recommend it. The right one: they're thrilled and head off to play it (worth 3 staff points, "helped"), and the piece
+     joins the ones you can recommend from memory (progress.recall: talk to whoever's following you). The wrong one: they
+     say what they read there and keep following; after three they give up for now. The next day the ones you helped come
+     back to the lobby and say what they made of the curator's take, picked at random (agree, disagree, puzzled). */
+  rel(id) { return this.pack.settings.relations.find(m => m.id === id) || null; }
   pickLine(list, key) { return list[strSeed(key) % list.length]; }
   isRead(p) { const k = (p.tut ? this.tut && this.tut.sides : this.progress.sides || {})[p.id] || {}; return p.kind === "episode" ? !!(k.front && k.back) : !!k.note; }
-  /* Today's curious visitors. Anyone not shown a game yet comes back tomorrow; new faces fill the rest. */
+  /* What a visitor can ask for: a relationship with lines to ask with that at least one episode has. */
+  askable() { const have = new Set(this.pack.pieces.filter(p => p.kind === "episode" && p.rel).map(p => p.rel)); return this.pack.settings.relations.filter(m => m.ask.length && have.has(m.id)); }
+  /* Today's curious visitors. Anyone not shown the right game yet comes back tomorrow; new faces fill the rest. */
   curiousPlan() {
-    const t = todayISO(), cv = this.progress.curious || (this.progress.curious = { day: "", list: [], back: [] });
-    if (cv.day === t) return cv;
-    // Random for every player and every day. Mindsets are dealt from a shuffled deck, so one day's visitors want different things.
-    const minds = this.pack.settings.mindsets.filter(m => m.ask.length), per = this.pack.settings.curious.perDay, pick = a => a[Math.floor(Math.random() * a.length)];
-    // Visitors you talked to but didn't get to show a game come back; the rest of the day's faces are new.
-    const carry = cv.list.filter(v => v.met && v.state !== "recommended").slice(0, per).map(v => Object.assign(v, { state: "waiting", room: null }));
+    const t = todayISO(), cv = this.progress.curious || (this.progress.curious = { day: "", list: [], back: [] }), rels = this.askable(), pick = a => a[Math.floor(Math.random() * a.length)];
+    const fix = () => cv.list.forEach(v => { if (!v.rel || !rels.some(m => m.id === v.rel)) v.rel = rels.length ? pick(rels).id : ""; }); // an older save's visitors, or a relationship no piece has anymore
+    if (cv.day === t) { fix(); return cv; }
+    // Random for every player and every day. Relationships are dealt from a shuffled deck, so one day's visitors want different things.
+    const per = this.pack.settings.curious.perDay;
+    // Visitors you talked to but didn't get to show the right game come back; the rest of the day's faces are new.
+    const carry = cv.list.filter(v => v.met && v.state !== "recommended").slice(0, per).map(v => Object.assign(v, { state: "waiting", room: null, misses: 0 }));
     const names = shuffled(VISITOR_NAMES.filter(n => ![...carry, ...cv.back].some(v => v.name === n))), list = carry.slice();
-    let deck = shuffled(minds.filter(m => !carry.some(v => v.mind === m.id)));
-    while (list.length < per && minds.length && names.length) {
-      if (!deck.length) deck = shuffled(minds);
-      const m = deck.pop(), others = minds.filter(x => x !== m);
-      const m2 = others.length && Math.random() < 2 / 3 ? pick(others).id : ""; // two in three mention a second thing they like
-      list.push({ id: "v" + t.replace(/-/g, "") + Math.random().toString(36).slice(2, 8), name: names.pop(), sheet: pick(["visitor_a", "visitor_b", "visitor_c"]), mind: m.id, mind2: m2, state: "waiting", room: null });
+    let deck = shuffled(rels.filter(m => !carry.some(v => v.rel === m.id)));
+    while (list.length < per && rels.length && names.length) {
+      if (!deck.length) deck = shuffled(rels);
+      const m = deck.pop();
+      list.push({ id: "v" + t.replace(/-/g, "") + Math.random().toString(36).slice(2, 8), name: names.pop(), sheet: pick(["visitor_a", "visitor_b", "visitor_c"]), rel: m.id, state: "waiting", room: null });
     }
-    cv.day = t; cv.list = list; this.saveProgress();
+    cv.day = t; cv.list = list; fix(); this.saveProgress();
     return cv;
   }
-  /* Curious visitors wait in the museum room for their mindset; the ones coming back with news wait in the lobby. */
+  /* Curious visitors wait in one of the museum's wings; the ones coming back with news wait in the lobby. */
   placeCurious() {
     for (const id in this.rooms) this.rooms[id].npcs = this.rooms[id].npcs.filter(n => !n.cur && !n.back);
     if (this.closing) return;
@@ -5195,16 +5205,14 @@ class Game {
       if (v.state !== "waiting") return;
       const mus = Object.keys(this.rooms).find(k => this.rooms[k].zoneAt), id = v.room && this.rooms[v.room] ? v.room : mus || galleries[i % galleries.length];
       if (!v.home || !this.rooms[v.home]) v.home = id; // where they came to see; they go back there if you leave them somewhere else
-      if (id === mus && !v.zone) v.zone = this.zoneForMind(v.mind); // in the museum: the room for the way they like to play
+      if (id === mus && !v.zone) v.zone = this.galleryZone(); // in the museum: one of its wings
       if (id) this.addVisitor(id, v, { cur: v, zone: id === mus ? v.zone : null });
     });
     cv.back.filter(v => v.day < t).slice(0, 6).forEach(v => this.addVisitor("lobby", v, { back: v }));
   }
-  /* The museum room for a mindset: the room whose genre welcomes it (or any room with cases). */
-  zoneForMind(mind) {
+  /* A museum wing with a genre, picked at random (null if there's no layout). */
+  galleryZone() {
     const id = Object.keys(ROOMS).find(k => layoutOf(ROOMS[k])), lay = id && layoutOf(ROOMS[id]); if (!lay) return null;
-    const g = (this.pack.settings.genres || []).find(g => g.minds.includes(mind)), z = g && lay.zones.find(z => z.rect && z.rect.genre === g.id);
-    if (z) return z.id;
     const rooms = lay.zones.filter(z => z.rect && z.rect.genre); return rooms.length ? rooms[(Math.random() * rooms.length) | 0].id : null;
   }
   addVisitor(id, v, extra) {
@@ -5230,14 +5238,12 @@ class Game {
   }
   curiousTalk(n) {
     const v = n.cur; v.met = true;
-    const m = this.mind(v.mind), m2 = this.mind(v.mind2), low = t => (/^I\b/.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1));
-    const named = ps => ps.map(p => v.name + ": " + p), hello = named(this.tx("cur.hello", { name: v.name })), q = hello.pop();
+    const m = this.rel(v.rel), named = ps => ps.map(p => v.name + ": " + p), hello = named(this.tx("cur.hello", { name: v.name })), q = hello.pop();
     this.say(hello, () => this.choose(q, ["Do you need help?", "Can I get by you?", "Never mind"], i => {
       if (i === 1) { this.askToMove(n, named); return; }
       if (i !== 0) return;
       const pages = this.tx("cur.help", { name: v.name }).slice();
       if (m && m.ask.length) pages.push(this.pickLine(m.ask, v.id));
-      if (m2 && m2.ask.length) pages.push(this.tx("cur.also")[0] + " " + low(this.pickLine(m2.ask, v.id + "+")));
       const last = named(pages).pop();
       this.say(named(pages).slice(0, -1), () => this.ask(last, ["Follow me!", "Sorry, I'm busy."], k => {
         if (k === 0) this.startFollow(n); else this.say(named(this.tx("cur.busy", { name: v.name })));
@@ -5245,27 +5251,36 @@ class Game {
     }, 2));
   }
   startFollow(n) {
-    n.cur.state = "following"; n.follow = true; n.still = false; n.route = null; n.aside = null; n.lost = 0; this.fol = n; this.saveProgress();
+    n.cur.state = "following"; n.cur.misses = 0; n.follow = true; n.still = false; n.route = null; n.aside = null; n.lost = 0; this.fol = n; this.saveProgress();
     this.say(this.tx("cur.follow", { name: n.cur.name }));
   }
+  /* Talking to whoever's following you: what they wanted again, a piece from memory (one you've recommended right before), or let them go. */
   followerTalk(n) {
-    this.choose(n.member + ": " + this.tx("cur.lead", { name: n.member }).join(" "), ["Keep going", "What were you looking for?", "Never mind"], i => {
+    const v = n.cur, rc = (this.progress.recall || []).map(id => this.pieceById(id)).filter(p => p && p.kind === "episode").sort((a, b) => a.title.localeCompare(b.title));
+    const opts = ["Keep going", "What were you looking for?", ...(rc.length ? ["Recommend from memory"] : []), "Never mind"], last = opts.length - 1;
+    this.choose(n.member + ": " + this.tx("cur.lead", { name: n.member }).join(" "), opts, i => {
       if (i === 1) { // a reminder of what they asked for, in their words, then back to walking
-        const v = n.cur, m = this.mind(v.mind), m2 = this.mind(v.mind2), low = t => (/^I\b/.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1)), pages = [...this.tx("cur.remind", { name: v.name })];
+        const m = this.rel(v.rel), pages = [...this.tx("cur.remind", { name: v.name })];
         if (m && m.ask.length) pages.push(this.pickLine(m.ask, v.id));
-        if (m2 && m2.ask.length) pages.push(this.tx("cur.also")[0] + " " + low(this.pickLine(m2.ask, v.id + "+")));
         this.say(pages.map(p => n.member + ": " + p)); return;
       }
-      if (i !== 2) return;
-      const v = n.cur, home = v.home && this.rooms[v.home] ? v.home : this.room.id;
-      this.fol = null; n.follow = false; n.timer = 120; v.state = "waiting"; v.room = home; this.saveProgress();
-      this.say(this.tx("cur.release", { name: n.member }).map((p, k) => (k ? p : n.member + ": " + p)), () => {
-        if (home === this.room.id) { n.zone = v.zone || n.zone; n.goalT = null; n.route = null; return; } // they stroll back to their own room
-        // Somewhere else: they head out the nearest way and go back to their own floor.
-        n.leaving = true; n.leaveT = 0; n.alpha = 1; n.leaveTo = this.doorToward(home);
-        n.onGone = () => { if (!Object.values(this.rooms).some(r => r.npcs.some(m => m.cur === v))) this.addVisitor(home, v, { cur: v, zone: v.zone }); };
-      });
+      if (rc.length && i === 2) { // just the names: which one fits is still yours to remember
+        this.choose(this.tx("cur.recall", { name: v.name }).join(" "), [...rc.map(p => p.title), "Never mind"], k => { if (k < rc.length) this.recommend(n, rc[k]); });
+        return;
+      }
+      if (i === last) this.releaseFollower(n, this.tx("cur.release", { name: n.member }));
     }, 0);
+  }
+  /* They stop following you and go back to the room they came to see (pages: what they say first). */
+  releaseFollower(n, pages) {
+    const v = n.cur, home = v.home && this.rooms[v.home] ? v.home : this.room.id;
+    this.fol = null; n.follow = false; n.timer = 120; v.state = "waiting"; v.room = home; v.misses = 0; this.saveProgress();
+    this.say(pages.map((p, k) => (k ? p : n.member + ": " + p)), () => {
+      if (home === this.room.id) { n.zone = v.zone || n.zone; n.goalT = null; n.route = null; return; } // they stroll back to their own room
+      // Somewhere else: they head out the nearest way and go back to their own floor.
+      n.leaving = true; n.leaveT = 0; n.alpha = 1; n.leaveTo = this.doorToward(home);
+      n.onGone = () => { if (!Object.values(this.rooms).some(r => r.npcs.some(m => m.cur === v))) this.addVisitor(home, v, { cur: v, zone: v.zone }); };
+    });
   }
   /* Your follower comes with you into every room, except the staff room: there they wait by the door. */
   bringFollower() {
@@ -5316,33 +5331,38 @@ class Game {
   }
   recommend(n, piece) {
     if (n.tutWant) { this.tutRecommend(n, piece); return; }
-    const v = n.cur, cv = this.curiousPlan();
+    const v = n.cur, cv = this.curiousPlan(), named = ps => ps.map((p, k) => (k ? p : v.name + ": " + p));
+    this.progress.tally.recs = (this.progress.tally.recs || 0) + 1; n.dir = OPP[this.player.dir];
+    if (!v.rel || piece.rel !== v.rel) { // not what they wanted: they say what they read there, and keep following you (three, and they give up for now)
+      v.misses = (v.misses || 0) + 1; this.progress.stats.nope++; this.saveProgress();
+      const pages = named(this.missLines(piece, v.name, v.id));
+      if (v.misses < 3) this.say(pages);
+      else this.say(pages, () => this.releaseFollower(n, this.tx("cur.giveUp", { name: v.name })));
+      return;
+    }
     this.fol = null; n.follow = false; n.cur = null;
-    cv.list = cv.list.filter(x => x !== v); Object.assign(v, { state: "recommended", piece: piece.id, day: todayISO(), room: null }); cv.back.push(v);
-    this.progress.tally.recs = (this.progress.tally.recs || 0) + 1; this.saveProgress();
-    n.dir = OPP[this.player.dir];
-    this.say(this.tx("cur.thanks", { title: piece.title, name: v.name }).map((p, k) => (k ? p : v.name + ": " + p)), () => { n.leaving = true; n.leaveT = 0; n.alpha = 1; });
+    cv.list = cv.list.filter(x => x !== v); Object.assign(v, { state: "recommended", piece: piece.id, day: todayISO(), room: null, take: ["agree", "disagree", "puzzled"][Math.floor(Math.random() * 3)] }); cv.back.push(v);
+    const rc = this.progress.recall || (this.progress.recall = []); if (!rc.includes(piece.id)) rc.push(piece.id); // you know this one by heart now
+    this.count("helped", v.id); this.updateHud(true); this.bump(this.progress.stats.loved, genreOf(piece, this.pack.settings.genres)); this.saveProgress();
+    this.say(named(this.tx("cur.thanks", { title: piece.title, name: v.name })), () => { n.leaving = true; n.leaveT = 0; n.alpha = 1; });
   }
-  /* How the game suited them: their mindset ticked on the piece = loved; their second one = liked; no mindsets ticked = liked. */
-  verdict(v, p) {
-    if (!p || !p.minds.length) return "liked";
-    if (p.minds.includes(v.mind)) return "loved";
-    return v.mind2 && p.minds.includes(v.mind2) ? "liked" : "nope";
+  /* What a visitor says about a piece that isn't what they wanted: its relationship's miss lines, in plain words. */
+  missLines(piece, name, key) {
+    const m = this.rel(piece.rel), vars = { title: piece.title, name };
+    return m && m.miss.length ? [this.fmt(this.pickLine(m.miss, key + piece.id), vars)] : this.tx("cur.missNone", vars);
   }
+  /* The next day: what they made of the curator's take, picked when you recommended it (agree, disagree or puzzled). */
   backTalk(n) {
-    const v = n.back, p = this.pieceById(v.piece), cv = this.curiousPlan(), how = this.verdict(v, p), title = p ? p.title : "that game";
-    const m = how === "liked" && p && v.mind2 && p.minds.includes(v.mind2) ? this.mind(v.mind2) : this.mind(v.mind);
-    const own = p && p.minds.length && m && m[how] && m[how].length ? m[how] : null; // a game with no mindsets ticked gets the general line
-    const line = own ? this.fmt(this.pickLine(own, v.id + how), { title }) : this.tx("cur." + how, { title }).join(" ");
+    const v = n.back, p = this.pieceById(v.piece), cv = this.curiousPlan(), title = p ? p.title : "that game";
+    const take = v.take || (v.take = ["agree", "disagree", "puzzled"][Math.floor(Math.random() * 3)]), how = { agree: "loved", disagree: "liked", puzzled: "nope" }[take] || "liked";
+    const lines = this.tx("cur." + take, { title, name: v.name });
     cv.back = cv.back.filter(x => x !== v); n.back = null; n.lines = this.pack.settings.text["cur.after"] || TEXT["cur.after"].v; n.lineI = -1;
     this.saveProgress();
     const intro = [...this.tx("cur.back", { name: v.name, title, hint: p && p.hint ? ", " + p.hint : "" }), ...this.tx("cur.beat")].map((pg, k) => (k ? v.name + ": " + pg : pg));
     this.say(intro, () => {
-      // The moment: the text box steps aside for a second so you see it (a happy hop and hearts, one heart, or a little sigh), then they say it.
+      // The moment: the text box steps aside for a second so you see it (a happy hop and hearts, one heart, or a little shrug), then they say it.
       n.react = { how, t0: this.t }; n.dir = OPP[this.player.dir]; this.mode = "busy";
-      if (how === "loved") { this.count("helped", v.id); this.updateHud(true); this.bump(this.progress.stats.loved, p ? genreOf(p, this.pack.settings.genres) : ""); }
-      else if (how === "nope") this.progress.stats.nope++;
-      setTimeout(() => { this.mode = "walk"; this.say([v.name + ": " + line], () => { if (how === "loved") this.showLoc(v.name + " loved it!"); }); }, how === "nope" ? 700 : 1100);
+      setTimeout(() => { this.mode = "walk"; this.say(lines.map((pg, k) => (k ? pg : v.name + ": " + pg))); }, how === "nope" ? 700 : 1100);
     });
   }
   pieceById(id) { return this.pack.pieces.find(p => p.id === id); }
@@ -5960,13 +5980,9 @@ class Game {
     const c = r => [r.x + r.w / 2, r.y + r.h / 2], [mx, my] = c(mid.rect), names = this.pack.settings.genres || [];
     const dirOf = r => { const [x, y] = c(r), dx = x - mx, dy = y - my, ns = Math.abs(dy) > 2 ? (dy < 0 ? "north" : "south") : "", ew = Math.abs(dx) > 2 ? (dx < 0 ? "west" : "east") : ""; return ns + ew || "next door"; };
     const pages = ["DIRECTORY", "Straight up the hall: " + mid.name + ", in the middle of the museum."];
-    rooms.filter(z => z !== mid).forEach(z => { const g = names.find(g => g.id === z.rect.genre); pages.push(z.name.toUpperCase() + ": " + dirOf(z.rect) + " of the " + (mid.id === "cafe" ? "café" : mid.name) + "." + (g && g.minds.length ? " " + this.genreBlurb(g) : "")); });
+    rooms.filter(z => z !== mid).forEach(z => { const g = names.find(g => g.id === z.rect.genre); pages.push(z.name.toUpperCase() + ": " + dirOf(z.rect) + " of the " + (mid.id === "cafe" ? "café" : mid.name) + "."); });
     if ((ROOMS.lobby && ROOMS.lobby.stairs || []).some(st => st.to && st.to[0] === "storage")) pages.push("B1 STORAGE: down the stairs, right here in the lobby. Staff only, mostly.");
     this.say(pages);
-  }
-  genreBlurb(g) {
-    const ms = g.minds.map(m => this.mind(m)).filter(Boolean).map(m => (m.title || m.name || "").toLowerCase()).filter(Boolean);
-    return ms.length ? "Popular with: " + ms.join(", ") + "." : "";
   }
   occupied(x, y, self) {
     const f = this.fol, pl = this.player; // you and whoever is following you never block each other
@@ -6884,8 +6900,8 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-17 no robot cam";
-window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
+const VERSION = "2026-11-17 relationships";
+window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
   spotRooms: () => Object.keys(ROOMS).filter(id => (ROOMS[id].spots || []).length).map(id => ({ id, name: ROOMS[id].name, n: ROOMS[id].spots.length })),
