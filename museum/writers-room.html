@@ -118,7 +118,7 @@ button,input,textarea{font:inherit;color:inherit}
 .tagline{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
 .tag{font-size:.74rem;font-weight:700;padding:2px 8px;border-radius:999px;border:2px solid var(--line);color:var(--muted)}
 .tag.todo{border-color:var(--todo);color:var(--todo)}
-.tag.done{border-color:var(--gold);color:var(--gold)}
+.tag.fin{border-color:var(--gold);color:var(--gold)}
 .brief{background:var(--surface-2);border-left:4px solid var(--gold);border-radius:6px;padding:10px 12px;margin:0 0 14px;font-size:.92rem}
 .brief b{display:block;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
 .field{margin:0 0 16px}
@@ -515,7 +515,7 @@ function renderCard() {
   const deck = view.deck, pos = deck ? deck.indexOf(c.id) + 1 : 0;
   $app.appendChild(top(c.area + (pos ? " · " + pos + " of " + deck.length : ""), true));
   $app.appendChild(el("p", { class: "who", text: c.title + (c.sub ? " · " + c.sub : "") }));
-  $app.appendChild(el("div", { class: "tagline" }, [el("span", { class: "tag" + (st0 === "todo" ? " todo" : isDone(st0) ? " done" : ""), text: STATUS_TEXT[st0] }), el("span", { class: "tag", text: c.where })]));
+  $app.appendChild(el("div", { class: "tagline" }, [el("span", { class: "tag" + (st0 === "todo" ? " todo" : isDone(st0) ? " fin" : ""), text: STATUS_TEXT[st0] }), el("span", { class: "tag", text: c.where })]));
 
   // What it's for: the bracketed brief, when there is one
   const fresh = c.fields.map(f => { const v = f.get(), d = f.def && f.def(); return hasBr(flat(f.kind, v)) && (!d || JSON.stringify(v) === JSON.stringify(d)); });
