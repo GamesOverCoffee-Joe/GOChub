@@ -1836,7 +1836,8 @@ const TEXT = {
   "wed.r3":            { g: "Days of the week", l: "Wednesday: the artist's reaction to the rarest photos ({desc}, {n})", v: [["[Artist, speechless at your photo, gives you {n} tokens]"]] },
   "wed.after":         { g: "Days of the week", l: "Wednesday: the artist after you've shown him a photo", v: [["[Artist, busy sketching your photo]"]] },
   "wed.sketch":        { g: "Days of the week", l: "The artist's sketch on the staff corkboard, for a week ({desc}: the photo)", v: [["[The artist's sketch of your photo, pinned to the corkboard: {desc}]"]] },
-  "thu.ask":           { g: "Days of the week", l: "Thursday: the barista invites you to trivia", v: [["[Barista: it's trivia Thursday. Five questions, a few seconds each. Play?]"]] },
+  "thu.ask":           { g: "Days of the week", l: "Thursday: the barista at the counter, before you've played (then the drink menu)", v: [["[Barista: it's trivia night. Take the empty seat at the café tables to play]"]] },
+  "thu.seat":          { g: "Days of the week", l: "Thursday: sitting down in the empty seat at the trivia tables (then Play / Not now)", v: [["[Trivia: five questions, ten seconds each. Ready?]"]] },
   "thu.right":         { g: "Days of the week", l: "Thursday: a right answer", v: [["[Right!]"]] },
   "thu.wrong":         { g: "Days of the week", l: "Thursday: a wrong answer (someone at a café table answers next; {answer}: the right one)", v: [["[Wrong!]"]] },
   "thu.time":          { g: "Days of the week", l: "Thursday: out of time (someone at a café table answers next; {answer})", v: [["[Time's up!]"]] },
@@ -3739,6 +3740,8 @@ class Game {
     }
     if (wd === 4 && m && !this.closing) { // Thursday: trivia players on every café stool but one (trivia night too)
       const stools = m.props.filter(p => p.key === "cafe_stool" && p.sit), skip = stools.length ? strSeed(todayISO() + "seat") % stools.length : -1;
+      d.thuSeat = skip >= 0 ? { x: stools[skip].x, y: stools[skip].y } : null; // the one free seat: sit there to play
+      if (d.thuSeat && !d.thuDone) { const { x, y } = d.thuSeat; m.npcs = m.npcs.filter(n => !(n.x === x && n.y === y)); (m.noWander = m.noWander || new Set()).add(x + "," + y); } // kept free for you
       stools.forEach((st, i) => {
         if (i === skip || (this.room === m && this.player.x === st.x && this.player.y === st.y)) return;
         m.npcs = m.npcs.filter(n => !(n.x === st.x && n.y === st.y));
@@ -3804,11 +3807,7 @@ class Game {
       }, 1);
       return true;
     }
-    if (n.role === "barista" && wd === 4) {
-      if (d.thuDone) { this.say(this.tx("thu.after")); return true; }
-      this.ask(this.tx("thu.ask").join(" "), ["Play", "Not now"], i => { if (i === 0) this.trivia(); }, 1);
-      return true;
-    }
+    if (n.role === "barista" && wd === 4) { this.say(this.tx(d.thuDone ? "thu.after" : "thu.ask")); return true; }
     if (n.vendor) { this.popupStall(); return true; }
     if (n.trivia) { this.say(this.tx("thu.crowd", null, true)); return true; }
     if (n.sunGuest) { this.say(this.tx("sun.sitFirst")); return true; }
@@ -3891,6 +3890,13 @@ class Game {
       this.say(this.tx("sat.bought", { item: it.name }), show);
     });
     this.say(this.tx("sat.vendor"), show);
+  }
+  /* Thursday: sitting in the one free seat at the café tables starts trivia (if you haven't played today). */
+  triviaSeat(e) {
+    const d = this.dayState(), seat = d.thuSeat;
+    if (this.weekday() !== 4 || this.tut || d.thuDone || this.closing || !seat || e.x !== seat.x || e.y !== seat.y || this.room.id !== "museum") return false;
+    this.ask(this.tx("thu.seat").join(" "), ["Play", "Not now"], i => { if (i === 0) this.trivia(); }, 1);
+    return true;
   }
   /* Sunday: sit down across from them, talk, and then everyone goes back to where they belong. */
   sundaySeat(e) {
@@ -4930,8 +4936,8 @@ class Game {
   cafe(menu) {
     if (this.closing) { this.say(this.tx("cafe.closed")); return; }
     if (this.onBreak === "barista") { this.say(this.tx("sun.break")); return; }
-    if (!menu && !this.tut && this.weekday() === 4 && !this.dayState().thuDone) { // Thursday: the barista asks about trivia first
-      this.ask(this.tx("thu.ask").join(" "), ["Play", "Order a drink", "Not now"], i => { if (i === 0) this.trivia(); else if (i === 1) this.cafe(true); }, 2);
+    if (!menu && !this.tut && this.weekday() === 4 && !this.dayState().thuDone && this.dayState().thuSeat) { // Thursday: the barista points you to the free seat, then takes your order
+      this.say(this.tx("thu.ask"), () => this.cafe(true));
       return;
     }
     if (this.drink && this.drink.empty) {
@@ -5599,6 +5605,7 @@ class Game {
     p.sitFrom = [p.x, p.y]; p.x = e.x; p.y = e.y; p.dir = e.sit; p.sitting = true; p.moving = false; this.sipClock = 60; this.inputLock = true;
     p.bench = !!e.bench; this.sitIdle = 0; this.asleep = false;
     if (this.sundaySeat(e)) return; // Sunday: coffee with someone from the staff
+    if (this.triviaSeat(e)) return; // Thursday: the free seat at the trivia tables
     if (!this.drink && e.say) this.say(e.say);
     else if (this.room.screenAt && this.episodes().length) this.screenAsk(); // the screening nook
   }
@@ -6652,7 +6659,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-12 clip names";
+const VERSION = "2026-11-12 trivia seat";
 window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeMinds, SAMPLE_MINDS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

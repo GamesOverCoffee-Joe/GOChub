@@ -10,11 +10,9 @@ Ideas and chores parked on purpose. Nothing here is built yet.
 - **Photo chain-of-events mystery.** A long-haul chain: the conservator's secret exhibit, unlocked step by step through photos.
 - **What the figure is.** Still undecided.
 - **Pre-play-test cleanup:**
-  - Attach the six new clips (Absorber, Seeing Double, AI'm Domingo, Survivor TD, Stella Incus, Cave Escape) to their pieces.
   - Stop tracking `.DS_Store` and `.vs/` in git (they're in `.gitignore` but were committed earlier).
   - Remove the Batch fill button (`batch-fill.html` isn't in the repo).
   - Fix the browser's slow pixel-readback warning (`willReadFrequently` on the canvases read with `getImageData`).
-  - A "Still to write" filter in Words. This may not be needed once the writing app exists.
 - **An art version of the writing app.** The same one-a-day idea, for the art slots.
 
 This document has three parts:
@@ -480,7 +478,7 @@ Goal: character.
 - **Monday:** the conservator says `mon.ask` version 1 the first time you talk to him that day, then version 2 every time after (`txAt`, counted in `progress.day.monTalks`). Box labels are gone (`mon.labels` removed).
 - **Tuesday:** `tue.kid` uses one version per Tuesday, taking turns week to week (`weekNo()`). The per-place clues are gone: `{clue}` is just where his mom is ("the Strategy wing", "the café", "the Screening Nook"), and each line supplies its own "in" or "to". `tue.after` is now the kid's line the moment you bring him back, said before his mom's `tue.found`.
 - **Wednesday:** the artist and his easel keep off the tiles where you read a case, front or back (`byExhibit`; `freeSpot` skips them too, so boxes, the kid and his mom do as well). His spot and the easel's are picked together (saved as `progress.day.art = { x, y, ex }`), so he always has his easel; a spot saved before a layout change is picked again. Looking at the easel says `wed.easel`.
-- **Thursday:** pressing A at the café counter asks `thu.ask` first (Play / Order a drink / Not now) until you've played that day; the barista stands behind the counter, so talking to her directly isn't how most players get there. Trivia players sit on every café stool but one (the empty one is picked per day), day or night, but not after closing. Missing a question (wrong or out of time) says `thu.wrong` / `thu.time`, then one of them answers with `thu.steal` (a "!" over their head). Talking to them says `thu.crowd`.
+- **Thursday:** you play by sitting in the one free seat at the café tables (`progress.day.thuSeat`, kept clear of other sitters): it asks `thu.seat`, then Play / Not now. Until you've played, the café counter (and the barista herself) says `thu.ask` (it's trivia night, take a seat), then the counter goes on to the drink menu. Trivia players sit on every café stool but one (the empty one is picked per day), day or night, but not after closing. Missing a question (wrong or out of time) says `thu.wrong` / `thu.time`, then one of them answers with `thu.steal` (a "!" over their head). Talking to them says `thu.crowd`.
 - **Saturday:** the vendor is Bluu (his name on photos and in the stats).
 - **Today's people keep their spots:** a wandering visitor standing on the artist's, mom's, kid's or a box's tile at a rebuild moves elsewhere instead of that person going missing (`dayTile`).
 
