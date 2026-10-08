@@ -467,6 +467,14 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Robot cam prototype (2026-11-16).** A toy car you drive around the room you're in (curator preview: Make it happen → Robot cam; not a shop item yet). `startRobot`, `updateRobot`, `drawRobot`, `robotPhoto`, mode `"robot"`, state in `this.rc`.
+- **Driving:** it moves by the pixel. Hold a direction and it steers toward it while speeding up (the touch pad and a controller's stick give the exact angle: `padVec`, `stickVec`; arrow keys add up, so two make a diagonal). Let go and it coasts. Pointing back the way you came brakes before it turns around.
+- **Drifting:** the tires lose sideways speed quickly normally (`grip`), much less when you crank the wheel at speed, and barely with the handbrake (hold A: `aKey`, `aTouch`, `aPad`). Skid marks from the back wheels fade over 4 seconds.
+- **Bumps:** walls, solid things and people's feet bounce it back (`bounce`), with a small shake on a hard hit. Doors stop it; changing rooms puts it away.
+- **Camera:** smoothed, leaning ahead of the car. **B** takes a photo from the robot's spot (`takePhoto` with the player moved there for the moment), **Start** brings it back.
+- **All the feel is in `ROBOT`** at the top of the engine: accel, max speed, turn rate, roll and coast friction, grip, handbrake, bounce, skid threshold and life.
+- The car is drawn by the pixel at any angle (white body, dark wheels, blue lens), not an Art slot yet.
+
 **Gifts are shop items (2026-11-15).**
 - An unveil gift is now a regular shop item with `gift` set to its piece's id (curator: Shop tab, each item's **Unveil gift for**). It isn't on the racks or in the regular list; it only shows as the gift of the week (first, "NEW") from its piece's unveil until the next gift, then Bluu sells it. Item images work for gifts like any item. Old `piece.gift` objects are turned into shop items on load (`normalizePack`).
 - **The gift of the week is always the featured item** (`featuredId()`: the glass dome, the "FEATURED." note); otherwise the Featured choice in the Shop tab applies. Helpers: `shopItems()` (the regular stock), `giftOf(piece)`.
