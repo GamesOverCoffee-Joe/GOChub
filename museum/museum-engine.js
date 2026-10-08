@@ -1762,7 +1762,7 @@ const TEXT = {
   "tut.go":            { g: "Tutorial", l: "The usher sends you in (a page of just ... is a pause)", v: [["Just step right into that door there.", "...", "What?", "Oh yeah, I'm training you. But you'll be by yourself.", "...", "Yeah, well, the curator thinks gamification is the best way to train people.", "So off you go."]] },
   "tut.usher.wait":    { g: "Tutorial", l: "The usher, if you try the door before signing in", v: [["Hang on! Let's get you signed in first."]] },
   "tut.usher.go":      { g: "Tutorial", l: "The usher, while you're training", v: [["Go on, the door's right over there."]] },
-  "tut.usher.feedback": { g: "Tutorial", l: "The usher, while your visitors wait to tell you about their games", v: [["Sounds like your visitors have some thoughts. Go hear them out!"]] },
+  "tut.usher.great":   { g: "Tutorial", l: "The usher, when you come out front after helping all three visitors", v: [["You did great!", "Last thing: make the closing announcement on the intercom, then turn off the lights in both training rooms before you head out."]] },
   "tut.usher.closing": { g: "Tutorial", l: "The usher, before the closing announcement", v: [["The intercom's on the wall. Go on, make the announcement."]] },
   "tut.usher.lights":  { g: "Tutorial", l: "The usher, while you turn off the lights", v: [["Lights off in both training rooms, then you're free to go."]] },
   "tut.speaker":       { g: "Tutorial", l: "The speaker crackling on (before each speaker line)", v: [["*krrst* ...ding dong..."]] },
@@ -1778,7 +1778,7 @@ const TEXT = {
   "tut.missFirst":     { g: "Tutorial", l: "The speaker, the first time you recommend the wrong game", v: [["[Not quite. Read both sides of a case: what the curator felt, and what the developer meant. Then find the one they're asking for]"]] },
   "tut.after":         { g: "Tutorial", l: "A visitor, after telling you", v: [["Thanks again for the recommendation!"]] },
   "tut.frame":         { g: "Tutorial", l: "The speaker, once you've read both sides of the middle game (after the door unlocks)", v: [["[People don't come here for genres. They come for the curator's story with a game: what the curator felt, next to what the developer meant]"]] },
-  "tut.closeUp":       { g: "Tutorial", l: "The speaker, after every visitor has told you", v: [["Nice work! That's pretty much the job.", "Last thing: make the closing announcement on the intercom, then turn off the lights in both training rooms before you head out."]] },
+  "tut.closeUp":       { g: "Tutorial", l: "The speaker, right after you help the third visitor", v: [["Nice work! That's pretty much the job.", "Come on out front for the last part of the training."]] },
   "tut.intercomEarly": { g: "Tutorial", l: "The intercom, before it's time", v: [["The office intercom. Not yet, though."]] },
   "tut.announce":      { g: "Tutorial", l: "The tutorial's closing announcement", v: [["*ding-dong*", "Attention, visitors: the museum is closing for the night. Thanks for coming!"]] },
   "tut.lightsEarly":   { g: "Tutorial", l: "A light switch, before it's time", v: [["Better leave the lights on while there's still training to do."]] },
@@ -4304,7 +4304,7 @@ class Game {
   tutUsher() {
     const t = this.tut, U = pages => this.tutSaid("Usher", pages);
     if (!t) { this.say(["The training desk."]); return; }
-    if (t.step !== "intro") { const k = { signin: "go", room1: "go", feedback: "feedback", closing: "closing", lights: "lights" }[t.step] || "go"; this.say(U(this.tx("tut.usher." + k))); return; }
+    if (t.step !== "intro") { const k = { signin: "go", room1: "go", feedback: "closing", closing: "closing", lights: "lights" }[t.step] || "go"; this.say(U(this.tx("tut.usher." + k))); return; }
     t.step = "signin";
     if (this.staff) { this.say(U(this.tx("tut.already", { name: this.callName() })), () => this.tutGo()); return; }
     const hello = U(this.tx("tut.hello")), q = hello.pop();
@@ -4356,7 +4356,10 @@ class Game {
       if (e.tutDoor === "office-r1") { if (t.step === "intro" || t.step === "signin") this.say(this.tutSaid("Usher", this.tx("tut.usher.wait"))); else go("tut_room1", 5, 8, "up"); }
       else if (e.tutDoor === "r1-office") {
         if (late) go("tut_office", 10, 3, "down");
-        else if (this.tutAllShown()) { this.tutFlush(); t.step = "feedback"; go("tut_office", 10, 3, "down"); }
+        else if (this.tutAllShown()) { // the last part: out front, the usher congratulates you and explains closing up
+          this.tutFlush(); t.step = "closing";
+          go("tut_office", 10, 3, "down", () => { if (this.tut && !this.tut.greeted) { this.tut.greeted = true; const u = this.room.npcs.find(n => n.usher); if (u) u.dir = "down"; this.say(this.tutSaid("Usher", this.tx("tut.usher.great"))); } });
+        }
         else if (t.met2) speak("tut.recommendFirst");
         else this.say([...this.tx("tut.locked"), ...this.tutSpeak("tut.lockedStart")]);
       }
@@ -4418,15 +4421,16 @@ class Game {
     }, 1));
     return true;
   }
-  tutRecommend(n, piece) {
+  tutRecommend(n, piece) { // the right one: a heart right away, then they head out front; the third, and the speaker calls you out too
     const t = this.tut;
     if (piece.rel !== n.tutWant) { // not the one: they say what they read there and keep following; the first time, the speaker explains
       n.dir = OPP[this.player.dir];
       this.say(this.tutSaid(n.member, this.missLines(piece, n.member, n.tutId)), () => { if (t && !t.missed) { t.missed = true; this.say(this.tutSpeak("tut.missFirst")); } });
       return;
     }
-    this.fol = null; n.follow = false; n.still = true; n.tutShown = piece.id; n.cur = null; n.dir = OPP[this.player.dir];
+    this.fol = null; n.follow = false; n.still = true; n.tutShown = piece.id; n.cur = null; n.dir = OPP[this.player.dir]; n.react = { how: "liked", t0: this.t };
     this.say(this.tutSaid(n.member, this.tx("tut.thanks", { title: piece.title })), () => {
+      if (this.tutAllShown()) this.say(this.tutSpeak("tut.closeUp"));
       n.leaving = true; n.leaveT = 0; n.alpha = 1; n.route = null; n.leaveTo = TUT_SPOTS.r1Exit;
       n.onGone = () => { // out through the door they came in by, to wait in the office
         const s = TUT_SPOTS.office[n.tutId] || [3, 6], r = this.rooms.tut_office;
@@ -4438,10 +4442,8 @@ class Game {
   tutFeedback(n) {
     const t = this.tut, g = this.tutGame(n.tutShown); if (!t || !g) return;
     const take = { rosie: "agree", skye: "disagree", onyx: "puzzled" }[n.tutId] || "agree", how = { agree: "loved", disagree: "liked", puzzled: "nope" }[take]; // one of each take, like the real thing
-    n.tutBack = false; n.tutHeard = how; n.react = { how, t0: this.t }; n.dir = OPP[this.player.dir];
-    this.say(this.tutSaid(n.member, this.tx("cur." + take, { title: g.title, name: n.member })), () => {
-      if (this.tut && this.tut.step === "feedback" && Object.values(this.tut.people).every(p => p.tutHeard)) { this.tut.step = "closing"; this.say(this.tutSpeak("tut.closeUp")); }
-    });
+    n.tutBack = false; n.tutHeard = how; n.dir = OPP[this.player.dir]; // just their take: the heart came when you recommended it
+    this.say(this.tutSaid(n.member, this.tx("cur." + take, { title: g.title, name: n.member })));
   }
   /* ----- the player's stats (Someone's PC in the basement, and a taste on the closing screen) ----- */
   markDay() { // one visit a day; visits on days in a row make a streak
@@ -5344,6 +5346,7 @@ class Game {
     cv.list = cv.list.filter(x => x !== v); Object.assign(v, { state: "recommended", piece: piece.id, day: todayISO(), room: null, take: ["agree", "disagree", "puzzled"][Math.floor(Math.random() * 3)] }); cv.back.push(v);
     const rc = this.progress.recall || (this.progress.recall = []); if (!rc.includes(piece.id)) rc.push(piece.id); // you know this one by heart now
     this.count("helped", v.id); this.updateHud(true); this.bump(this.progress.stats.loved, genreOf(piece, this.pack.settings.genres)); this.saveProgress();
+    n.react = { how: "liked", t0: this.t }; // a heart, right away
     this.say(named(this.tx("cur.thanks", { title: piece.title, name: v.name })), () => { n.leaving = true; n.leaveT = 0; n.alpha = 1; });
   }
   /* What a visitor says about a piece that isn't what they wanted: its relationship's miss lines, in plain words. */
@@ -6824,7 +6827,7 @@ class Game {
         const ox = { down: 4, up: 4, left: 0, right: 8 }[c.dir]; if (c.dir !== "up") this.drawSlot("phone", 0, 0, sx + ox, sy + 4);
       }
       if (c === this.player && this.asleep && c.sitting && this.t % 120 < 90) { const zy = Math.floor((this.t % 120) / 30); ctx.fillStyle = "#f8f8f0"; ctx.font = "6px monospace"; ctx.fillText("z", sx + 12 + zy, sy - zy * 3); }
-      const bub = c.leaving || this.full ? -1 : c.tutId ? (c.tutBack ? 1 : !c.tutShown && !c.follow ? 0 : -1) : c.back ? 1 : c.cur && !c.follow ? 0 : -1; // "?" curious, "!" back to tell you how it went
+      const bub = c.leaving || this.full ? -1 : c.tutId ? (!c.tutShown && !c.follow ? 0 : -1) : c.back ? 1 : c.cur && !c.follow ? 0 : -1; // "?" curious, "!" back to tell you how it went
       if (c.react && !this.full) this.drawReaction(c, sx, sy);
       if (c.pose && !this.full) { // the photo reaction's bubble, fading out at the end
         if (pk >= c.pose.dur) c.pose = null;
@@ -6900,7 +6903,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-17 relationships";
+const VERSION = "2026-11-17 relationships 2";
 window.GOQ = { officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
