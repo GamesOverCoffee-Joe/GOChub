@@ -402,7 +402,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 goq gear 7";
+window.GOQ_WANT = "2026-11-18 bluu shop";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -2485,6 +2485,54 @@ function renderShop() {
     sh.items.push({ id, name: "New item", price: 3, description: "", image: null }); if (!sh.featured) sh.featured = id; changed({ now: true }); renderShop();
   } })]));
   wrap.appendChild(el("p", { class: "note", style: "margin-top:18px", text: "Item images can be any size; they're shrunk to 64 pixels and shown as small icons. Without one, the shop draws a placeholder icon." }));
+  // Bluu: Saturdays' pop-up table in the lobby. What he carries, his markup, how often it's fake, a look at the table, his lines.
+  const bl = sh.bluu = Object.assign(GOQ.normalizePack({ settings: { shop: sh } }).settings.shop.bluu, {});
+  const carries = it => (bl.carry ? bl.carry.includes(it.id) : !!it.gift || it.price >= GOQ.RARE_PRICE);
+  const bsec = el("section", { class: "prow", style: "display:block;margin:22px 0 16px" }, [el("h3", { text: "Bluu (Saturdays)", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 10px", text: "On Saturdays Bluu sets up a pop-up table in the lobby with up to three things, the same for every player that week. Each is real or a fake: a fake has a misspelled name or the wrong color and costs the same, so only a careful look tells. Players find out which in Souvenirs once they buy it. His copies do what the original does (the fakes misbehave). Try it in the preview: Make it happen, Saturday." })]);
+  // What he carries
+  const carryBox = el("div", { class: "fields" });
+  const setCarry = (it, on) => { const cur = sh.items.filter(carries).map(q => q.id); bl.carry = on ? [...new Set([...cur, it.id])] : cur.filter(id => id !== it.id); changed(); drawStall(); };
+  sh.items.forEach(it => { const cb = el("input", { type: "checkbox", checked: carries(it) }); cb.addEventListener("change", () => setCarry(it, cb.checked));
+    carryBox.appendChild(el("label", { class: "check" }, [cb, document.createTextNode(it.name + " (" + it.price + " T in the shop" + (it.gift ? "; an unveil gift: only after its week" : "") + ")")])); });
+  const shirt = el("input", { type: "checkbox", checked: bl.shirt }); shirt.addEventListener("change", () => { bl.shirt = shirt.checked; changed(); drawStall(); });
+  carryBox.appendChild(el("label", { class: "check" }, [shirt, document.createTextNode("GOC shirt (always a fake)")]));
+  bsec.appendChild(el("h4", { text: "What he carries", style: "margin:10px 0 4px" }));
+  bsec.appendChild(el("p", { class: "note", style: "margin:0 0 6px", text: (bl.carry ? "" : "Until you change these, he carries shop items priced " + GOQ.RARE_PRICE + " tokens and up, and old unveil gifts. ") + "With more than three, he brings a different three each week; with fewer, his table has fewer things." }));
+  bsec.appendChild(carryBox);
+  // Markup and fakes
+  const mk = el("input", { type: "number", min: 1, max: 3, step: 0.1, value: bl.markup, style: "max-width:90px" }); mk.addEventListener("input", () => { bl.markup = Math.max(1, Math.min(3, Math.round((+mk.value || 1.5) * 10) / 10)); changed(); drawStall(); });
+  const fk = el("input", { type: "number", min: 0, max: 100, value: bl.fakes, style: "max-width:90px" }); fk.addEventListener("input", () => { bl.fakes = Math.max(0, Math.min(100, Math.round(+fk.value || 0))); changed(); drawStall(); });
+  bsec.appendChild(el("div", { class: "fields", style: "margin-top:10px" }, [
+    el("label", {}, [document.createTextNode("His markup"), el("small", { text: "His price is the shop price times this (1.5: a 10-token item is 15)." }), mk]),
+    el("label", {}, [document.createTextNode("Fakes (percent)"), el("small", { text: "How often each thing on his table is a fake. The shirt always is." }), fk])]));
+  // This week's table, and next week's
+  const stall = el("div", { style: "display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:6px" }); let wkOff = 0;
+  const wkSel = el("select", { "aria-label": "Which week" }, [el("option", { value: "0", text: "This week" }), el("option", { value: "1", text: "Next week" }), el("option", { value: "2", text: "In two weeks" })]);
+  wkSel.addEventListener("change", () => { wkOff = +wkSel.value; drawStall(); });
+  function drawStall() {
+    stall.innerHTML = "";
+    const keep = game.pack.settings.shop; let items = [];
+    try { game.pack.settings.shop = GOQ.normalizePack({ settings: { shop: sh } }).settings.shop; game.popupCache = null; items = game.popupItems(wkOff).map(it => Object.assign({ icon: game.itemIcon(it).toDataURL() }, it)); }
+    finally { game.pack.settings.shop = keep; game.popupCache = null; }
+    if (!items.length) { stall.appendChild(el("p", { class: "empty", text: "Nothing on his table that week: tick something above." })); return; }
+    items.forEach(it => { const img = el("img", { alt: "", style: "width:64px;height:64px;image-rendering:pixelated;object-fit:contain;background:var(--surface-2)" }); img.src = it.icon;
+      const why = it.why === "always" ? "always a fake" : it.why === "spelling" ? "misspelled" : it.why === "color" ? "wrong color" : "";
+      stall.appendChild(el("div", { style: "border:2px solid var(--line);border-radius:4px;padding:8px;text-align:center" }, [img, el("div", { style: "font-weight:700;margin-top:4px", text: it.name }), el("div", { text: it.price + " tokens" }),
+        el("span", { class: "tag", style: "display:inline-block;margin-top:4px;color:" + (it.fake ? "var(--warn)" : "var(--ok)"), text: it.fake ? "FAKE" + (why ? ": " + why : "") : "REAL" })])); });
+  }
+  bsec.appendChild(el("div", { class: "row", style: "margin-top:14px;align-items:center;gap:8px" }, [el("h4", { text: "His table", style: "margin:0" }), wkSel]));
+  bsec.appendChild(el("p", { class: "note", style: "margin:0", text: "What players see, with what's real and what isn't. Changes here show right away." }));
+  bsec.appendChild(stall); drawStall();
+  // His lines (also in Words, under Bluu)
+  const st = draft.settings; st.text = st.text || {};
+  const lines = el("div"); ["sat.vendor", "sat.bought", "sat.broke", "sat.owned", "sat.fake", "sat.real"].forEach(k => {
+    const def = GOQ.TEXT[k]; if (!def) return; const t = el("textarea", { rows: 2, "aria-label": def.l }); t.value = toText(st.text[k] || def.v);
+    const reset = el("button", { type: "button", class: "btn small quiet", text: "Reset to the original", disabled: !st.text[k], onclick: () => { delete st.text[k]; t.value = toText(def.v); reset.disabled = true; changed(); } });
+    t.addEventListener("input", () => { const v = fromText(t.value); if (v.length && toText(v) !== toText(def.v)) st.text[k] = v; else delete st.text[k]; reset.disabled = !st.text[k]; changed(); });
+    lines.appendChild(el("label", { class: "wide", style: "display:block;margin-top:8px" }, [document.createTextNode(def.l.replace(/^Saturday: /, "")), t, reset])); });
+  bsec.appendChild(el("h4", { text: "His lines", style: "margin:14px 0 0" })); bsec.appendChild(el("p", { class: "note", style: "margin:0", text: "Also in Words, under Bluu. A blank line starts a new page." })); bsec.appendChild(lines);
+  wrap.appendChild(bsec);
 }
 
 /* ---------- Pieces ---------- */

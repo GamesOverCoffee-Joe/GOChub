@@ -467,6 +467,11 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Bluu in the Shop tab (2026-11-18).**
+- `settings.shop.bluu` = `{ carry, shirt, markup, fakes }`. `carry` is a list of shop item ids he can bring (null: the old rule, items at `RARE_PRICE` and up plus old unveil gifts); `shirt` puts the GOC shirt (always fake) in the mix; `markup` (1 to 3, default 1.5) times the shop price; `fakes` (percent, default 50) is how often each thing is fake. No more topping up with cheap items: with fewer than three carried, the table has fewer.
+- Shop tab → **Bluu (Saturdays)**: a checkbox per item and the shirt, markup and fakes, **His table** (this week, next week or the week after, each thing marked real or fake and why; `popupItems(off)`), and his lines.
+- His six lines (`sat.vendor`, `sat.bought`, `sat.broke`, `sat.owned`, `sat.fake`, `sat.real`) are their own Words group, **Bluu**.
+
 **The curator updates itself (2026-11-18).**
 - **Engine:** `boot()` in curator.html covers the page ("Getting the latest version") until `version.json`, `GOQ_WANT` and `GOQ.VERSION` agree; it reloads with `?upd=n&fresh=` up to 3 times, then shows "Waiting for the new version" and retries every 20 s. The cover is removed by `goqReady()` at the end of `start()`. An old engine never touches the draft.
 - **Pack:** `packSync(f, base)` → same / load (site newer, draft unedited: taken automatically) / ahead (draft is a newer export, kept) / ask (`askPack`: back up the draft to downloads, then use the site's pack; or keep it). Export confirms first when the result would be "ask". Pack edits by hand keep or raise `savedAt`.

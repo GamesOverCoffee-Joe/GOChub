@@ -1398,6 +1398,11 @@ function normalizePack(p) {
   }));
   const shop = { items, featured: items.some(it => it.id === shin.featured) ? shin.featured : (items[0] ? items[0].id : ""),
     drinkPrice: Math.max(0, Math.min(99, Math.round(+shin.drinkPrice || 0))) };
+  // Bluu (Saturdays, Shop tab): which items he carries (null: the old rule, shop items at RARE_PRICE and up plus old gifts),
+  // whether the GOC shirt is on his table, his markup, and how often a thing is fake (percent).
+  const bin = (shin.bluu && typeof shin.bluu === "object") ? shin.bluu : {};
+  shop.bluu = { carry: Array.isArray(bin.carry) ? bin.carry.map(x => str(x, 60)).filter(Boolean).slice(0, 60) : null, shirt: bin.shirt !== false,
+    markup: Math.max(1, Math.min(3, Math.round((+bin.markup || 1.5) * 10) / 10)), fakes: Math.max(0, Math.min(100, Math.round(bin.fakes === undefined ? 50 : +bin.fakes || 0))) };
   // The café's regular drinks: each with its own price (an older pack's one price for all) and whether it's served iced.
   shop.drinks = DRINKS.map(d => { const o = (Array.isArray(shin.drinks) ? shin.drinks : []).find(x => x && x.id === d.id) || {};
     return { id: d.id, name: str(o.name, 30) || d.name, price: Math.max(0, Math.min(99, Math.round(o.price === undefined ? shop.drinkPrice : +o.price || 0))), iced: !!o.iced }; });
@@ -1909,18 +1914,18 @@ const TEXT = {
   "thu.q.which":       { g: "Days of the week", l: "Thursday: a question about which game is in a wing ({room})", v: [["Which of these is in the {room}?"]] },
   "thu.questions":     { g: "Days of the week", l: "Thursday: your own questions (one per entry: the question, then the right answer, then three wrong ones; entries starting with [ are skipped)", v: [["[Your question]", "[Right answer]", "[Wrong answer]", "[Wrong answer]", "[Wrong answer]"]] },
   "screen.friday":     { g: "Screening nook", l: "The LED sign on Fridays, before the title (letters, numbers and : - . ! ? ' & , / only)", v: [["FRIDAY FEATURE:"]] },
-  "sat.vendor":        { g: "Days of the week", l: "Saturday: Bluu, the pop-up vendor", v: [["[Pop-up vendor: three things you can't get anywhere else, this week only]"]] },
+  "sat.vendor":        { g: "Bluu", l: "His greeting at the table", v: [["[Pop-up vendor: three things you can't get anywhere else, this week only]"]] },
   "gear.lens":         { g: "Your stuff", l: "Putting on fake GOQ shades: a lens pops out (they stay on, half of them)", v: [["[One of the lenses pops out. Half the shades it is.]"]] },
   "gear.hatSmall":     { g: "Your stuff", l: "Trying on a fake GOQ hat: it won't go on", v: [["[The hat is way too small. It sits on top of your head for a second, then falls off.]"]] },
   "gear.mugDone":      { g: "Your stuff", l: "Finishing a drink from your (real) travel mug ({drink}: what it was); the mug goes back in your bag", v: [["[You finish your {drink}. The mug goes back in your bag]"]] },
   "drink.useMug":      { g: "Café", l: "Ordering when you own a travel mug", v: [["Do you want to use your travel mug?"]] },
   "gear.leak":         { g: "Your stuff", l: "Walking with a drink in a fake travel mug: it leaks out (the mug goes back in your bag)", v: [["[Your travel mug leaks. Your drink is gone. Your shoes are not dry.]"]] },
   "gear.caseBlocks":   { g: "Your stuff", l: "Taking a photo with a fake phone case on (no photo; take the case off in Wardrobe)", v: [["[The case covers the camera. The photo is just black.]", "[You could take the case off. My Stuff, Wardrobe.]"]] },
-  "sat.bought":        { g: "Days of the week", l: "Saturday: buying something ({item})", v: [["[Bought the {item}]"]] },
-  "sat.broke":         { g: "Days of the week", l: "Saturday: not enough tokens ({n}: the price)", v: [["[Not enough tokens: it costs {n}]"]] },
-  "sat.owned":         { g: "Days of the week", l: "Saturday: something you already bought", v: [["[You already bought that one]"]] },
-  "sat.fake":          { g: "Days of the week", l: "Saturday: in your Souvenirs, one of Bluu's fakes ({item})", v: [["[It's a knockoff]"]] },
-  "sat.real":          { g: "Days of the week", l: "Saturday: in your Souvenirs, something real from Bluu ({item})", v: [["[It's the real deal]"]] },
+  "sat.bought":        { g: "Bluu", l: "Buying something ({item})", v: [["[Bought the {item}]"]] },
+  "sat.broke":         { g: "Bluu", l: "Not enough tokens ({n}: the price)", v: [["[Not enough tokens: it costs {n}]"]] },
+  "sat.owned":         { g: "Bluu", l: "Something you already bought", v: [["[You already bought that one]"]] },
+  "sat.fake":          { g: "Bluu", l: "In your Souvenirs, one of his fakes ({item})", v: [["[It's a knockoff]"]] },
+  "sat.real":          { g: "Bluu", l: "In your Souvenirs, something real from him ({item})", v: [["[It's the real deal]"]] },
   "sun.sitFirst":      { g: "Days of the week", l: "Sunday: talking to whoever's at the café table without sitting down", v: [["[They nod at the empty stool across the table]"]] },
   "sun.shopkeeper":    { g: "Days of the week", l: "Sunday: coffee with the shopkeeper (picks one at random)", v: [["[Coffee with the shopkeeper]"]] },
   "sun.barista":       { g: "Days of the week", l: "Sunday: coffee with the barista (picks one at random)", v: [["[Coffee with the barista]"]] },
@@ -2752,7 +2757,7 @@ class Game {
 
   /* ----- art ----- */
   async setPack(p) {
-    const pack = normalizePack(p), token = ++this.packToken, ov = {}, pi = {}, ii = {};
+    const pack = normalizePack(p), token = ++this.packToken, ov = {}, pi = {}, ii = {}; this.popupCache = null; // Bluu's table follows the new pack
     await Promise.all([
       ...Object.keys(pack.assets).map(async k => { const img = await loadImage(pack.assets[k].src); if (img) ov[k] = img; }),
       ...pack.pieces.filter(x => x.image).map(async x => { const img = await loadImage(x.image); if (img) pi[x.id] = img; }),
@@ -4048,23 +4053,25 @@ class Game {
     if (this.using("shades") === "fake" && !p.lensPopped) { p.lensPopped = true; this.saveProgress(); this.say(this.tx("gear.lens")); return; }
     if (this.using("hat") === "fake") { on.hat = false; this.saveProgress(); this.say(this.tx("gear.hatSmall")); }
   }
-  /* Saturday: Bluu's stall. Three things, the same for everyone this week: the shop's priciest items (RARE_PRICE tokens
-     and up), old unveil gifts, and the GOC shirt (always fake), topped up with regular shop items. Each one is real or a
-     fake: a fake is misspelled or the wrong color, at the same price, so only a careful look tells. You find out for sure
-     in Souvenirs once it's yours. */
-  popupItems() {
-    const t = new Date(todayISO() + "T12:00:00"), wk = Math.floor((t - new Date(t.getFullYear(), 0, 1)) / 6048e5), key = t.getFullYear() + "w" + wk;
-    if (this.popupCache && this.popupCache.key === key) return this.popupCache.items;
-    const sh = this.pack.settings.shop, wg = this.weekGift(), h = k => strSeed(key + ":" + k);
+  /* Saturday: Bluu's stall. Up to three things, the same for everyone this week, from what he carries (Shop tab, Bluu):
+     by default the shop's priciest items (RARE_PRICE tokens and up) and old unveil gifts, plus the GOC shirt (always fake).
+     Each one is real or a fake (the Shop tab sets how often): a fake is misspelled or the wrong color, at the same price, so
+     only a careful look tells. You find out for sure in Souvenirs once it's yours. off: weeks from now (the curator's preview). */
+  popupItems(off) {
+    const t = new Date(todayISO() + "T12:00:00"); if (off) t.setDate(t.getDate() + 7 * off);
+    const wk = Math.floor((t - new Date(t.getFullYear(), 0, 1)) / 6048e5), key = t.getFullYear() + "w" + wk;
+    if (!off && this.popupCache && this.popupCache.key === key) return this.popupCache.items;
+    const sh = this.pack.settings.shop, bl = sh.bluu || { carry: null, shirt: true, markup: 1.5, fakes: 50 }, wg = this.weekGift(), h = k => strSeed(key + ":" + k);
     const order = list => list.map(it => [h("o" + it.id), it]).sort((x, y) => x[0] - y[0]).map(x => x[1]);
-    const rare = order([...this.shopItems().filter(it => it.price >= RARE_PRICE), ...this.giftItems().filter(g => !wg || g.id !== wg.id), { id: "goc-shirt", name: "GOC shirt", price: 15, description: "", alwaysFake: true }]);
-    const picks = rare.slice(0, 3).concat(order(this.shopItems().filter(it => it.price < RARE_PRICE))).slice(0, 3);
+    const carries = it => (bl.carry ? bl.carry.includes(it.id) : it.gift || it.price >= RARE_PRICE);
+    const picks = order([...this.shopItems().filter(carries), ...this.giftItems().filter(g => (!wg || g.id !== wg.id) && carries(g)), ...(bl.shirt ? [{ id: "goc-shirt", name: "GOC shirt", price: 15, description: "", alwaysFake: true }] : [])]).slice(0, 3);
     const colors = ["#4a78d0", "#e070a0", "#4aa060", "#d8b040", "#8a5ac8", "#d04848", "#3aa0a0", "#e08838"];
     const items = picks.map((b, i) => {
-      const fake = b.alwaysFake || h("real" + i) % 2 === 0, spell = fake && !b.alwaysFake && h("how" + i) % 2 === 0 && /[A-Za-z]{4,}/.test(b.name);
+      const fake = b.alwaysFake || h("real" + i) % 100 < bl.fakes, spell = fake && !b.alwaysFake && h("how" + i) % 2 === 0 && /[A-Za-z]{4,}/.test(b.name);
       const name = spell ? misspell(b.name, h("sp" + i)) : b.name, color = fake && !spell && !b.alwaysFake ? colors[h("c" + i) % colors.length] : null;
-      return { id: "bluu-" + key + "-" + i, name, base: b.id, color, price: Math.max(1, Math.round(b.price * 1.5)), description: b.description || "", image: null, popup: true, fake, real: !fake };
+      return { id: "bluu-" + key + "-" + i, name, base: b.id, color, price: Math.max(1, Math.round(b.price * bl.markup)), description: b.description || "", image: null, popup: true, fake, real: !fake, why: b.alwaysFake ? "always" : spell ? "spelling" : color ? "color" : "" };
     });
+    if (off) return items;
     return (this.popupCache = { key, items }).items;
   }
   popupStall() {
@@ -7109,8 +7116,8 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 goq gear 7";
-window.GOQ = { REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
+const VERSION = "2026-11-18 bluu shop";
+window.GOQ = { RARE_PRICE, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
   spotRooms: () => Object.keys(ROOMS).filter(id => (ROOMS[id].spots || []).length).map(id => ({ id, name: ROOMS[id].name, n: ROOMS[id].spots.length })),
