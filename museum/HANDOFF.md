@@ -477,6 +477,7 @@ Goal: character.
 - `npcOwner(n)`: who's in charge of an NPC (tutorial > closing > unveiling > weekday event > curious > staff > rhythm > idle). The rhythm only moves "idle" people.
 - `updateDirector()`: every 3 seconds in your room, the crowd follows the beat: people come in through the doors (they fade in) and walk to the emptiest wing, or head out from the fullest part. A freshly built room starts at the right size for the minute.
 - (10/9, director 4) `crowdPlan(r, beat)`: the crowd a room is built with (the usual crowd for the day and hour, as before the clock) is the floor, never cut (Joe: the clock had been thinning it to half for most of a visit). Each museum wing gets +1 while Getting busy and +2 at the Rush, back to its usual at Winding down and Settling in; the halls and café keep theirs; the lobby gets +1 at the Rush. `r.base` is now per part (`{wingId: n, hall: n, cafe: n}`).
+- (director 5) Arrivals start on the doorway tile, which is in `noWander` (with its neighbours), so with the usual rules they had no way off it and stood there, blocking the door for everyone after them. They now carry `entering`: until they're off the no-wander tiles they may path across them (`npcPath(..., loose)`).
 - Curator → Preview tab → **Visit clock**: jump to a beat, pause or resume, +1 min, and a line with the minute, beat, loop and this loop's problems (`setVisitClock(min, paused)`).
 - Also: member shirt colors (`members[].shirts`; Staff tab "name, badge, orange pink"), the basement garage door (`garage_door`, storage `wallArt`, `storage.garage`).
 

@@ -5141,7 +5141,7 @@ class Game {
       const n = over[1].now.find(n => !n.moving && Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 2); if (n) { n.leaving = true; n.stroll = true; n.leaveT = 0; n.alpha = 1; n.route = null; n.aside = null; n.timer = 0; this.dirClock.last = { what: "out", t: this.t }; }
     } else if (under) {
       const at = def.exitTo || def.spawn, [x, y] = at || []; if (at === undefined || !this.tileFree(r, x, y) || (this.player.x === x && this.player.y === y)) return;
-      r.npcs.push(Object.assign(this.crowdPerson(x, y, under[1].zone), { dir: "up", timer: 30, alpha: 0, fadeIn: true })); this.dirClock.last = { what: "in", t: this.t };
+      r.npcs.push(Object.assign(this.crowdPerson(x, y, under[1].zone), { dir: "up", timer: 30, alpha: 0, fadeIn: true, entering: true })); this.dirClock.last = { what: "in", t: this.t };
     }
   }
   /* The crowd the rhythm wants in a room, part by part. The crowd the room was built with (the museum's usual crowd for
@@ -6727,7 +6727,10 @@ class Game {
     if (n.snapT > 0) return; // taking a photo: hold still
     if (n.timer > 0) { n.timer--; if (n.timer % 90 === 0 && Math.random() < 0.5) n.dir = DIRS_LIST[(Math.random() * 4) | 0]; return; }
     if (this.binRun(n) && n.timer > 0) return;
-    const r = this.room, noGo = (x, y) => r.noWander && r.noWander.has(x + "," + y);
+    const r = this.room, noGo = (x, y) => !n.entering && r.noWander && r.noWander.has(x + "," + y);
+    // Just came in through the doors: they start on the doorway, where visitors usually don't walk, so they may cross it
+    // to get going; once off it, the usual rules.
+    if (n.entering && !(r.noWander && r.noWander.has(n.x + "," + n.y))) { n.entering = false; n.route = null; }
     if (!n.route || !n.route.length) {
       // The museum: visitors stroll around their own room, and now and then wander off down a hallway to another one.
       if (r.zoneAt && n.zone && !n.goalT && !n.cur && Math.random() < 0.15) {
@@ -6742,7 +6745,7 @@ class Game {
       if (views.length && Math.random() < 0.5) opts.splice(0, opts.length, ...views);
       const t = n.goalT || opts[(Math.random() * opts.length) | 0]; // someone was in the way: try the same spot again
       n.goalT = t;
-      n.route = t ? this.npcPath(n, t[0], t[1]) : null;
+      n.route = t ? this.npcPath(n, t[0], t[1], n.entering) : null;
       if (!n.route || !n.route.length) { n.timer = 60 + Math.random() * 120; n.route = null; n.goalT = null; n.retry = 0; return; }
     }
     const d = n.route[0], [dx, dy] = DIRS[d];
@@ -7376,7 +7379,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 director 4";
+const VERSION = "2026-11-18 director 5";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
