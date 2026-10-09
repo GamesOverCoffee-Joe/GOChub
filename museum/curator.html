@@ -407,7 +407,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 hear a line";
+window.GOQ_WANT = "2026-11-18 bluu carries all";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -2492,7 +2492,7 @@ function renderShop() {
   wrap.appendChild(el("p", { class: "note", style: "margin-top:18px", text: "Item images can be any size; they're shrunk to 64 pixels and shown as small icons. Without one, the shop draws a placeholder icon." }));
   // Bluu: Saturdays' pop-up table in the lobby. What he carries, his markup, how often it's fake, a look at the table, his lines.
   const bl = sh.bluu = Object.assign(GOQ.normalizePack({ settings: { shop: sh } }).settings.shop.bluu, {});
-  const carries = it => (bl.carry ? bl.carry.includes(it.id) : !!it.gift || it.price >= GOQ.RARE_PRICE);
+  const carries = it => (bl.carry ? bl.carry.includes(it.id) : true);
   const bsec = el("section", { class: "prow", style: "display:block;margin:22px 0 16px" }, [el("h3", { text: "Bluu (Saturdays)", style: "margin:0 0 4px" }),
     el("p", { class: "note", style: "margin:0 0 10px", text: "On Saturdays Bluu sets up a pop-up table in the lobby with up to three things, the same for every player that week. Each is real or a fake: a fake has a misspelled name or the wrong color and costs the same, so only a careful look tells. Players find out which in Souvenirs once they buy it. His copies do what the original does (the fakes misbehave). Try it in the preview: Make it happen, Saturday." })]);
   // What he carries
@@ -2503,7 +2503,7 @@ function renderShop() {
   const shirt = el("input", { type: "checkbox", checked: bl.shirt }); shirt.addEventListener("change", () => { bl.shirt = shirt.checked; changed(); drawStall(); });
   carryBox.appendChild(el("label", { class: "check" }, [shirt, document.createTextNode("GOC shirt (always a fake)")]));
   bsec.appendChild(el("h4", { text: "What he carries", style: "margin:10px 0 4px" }));
-  bsec.appendChild(el("p", { class: "note", style: "margin:0 0 6px", text: (bl.carry ? "" : "Until you change these, he carries shop items priced " + GOQ.RARE_PRICE + " tokens and up, and old unveil gifts. ") + "With more than three, he brings a different three each week; with fewer, his table has fewer things." }));
+  bsec.appendChild(el("p", { class: "note", style: "margin:0 0 6px", text: (bl.carry ? "" : "Until you change these, he carries everything in the shop and the old unveil gifts. ") + "With more than three, he brings a different three each week; with fewer, his table has fewer things." }));
   bsec.appendChild(carryBox);
   // Markup and fakes
   const mk = el("input", { type: "number", min: 1, max: 3, step: 0.1, value: bl.markup, style: "max-width:90px" }); mk.addEventListener("input", () => { bl.markup = Math.max(1, Math.min(3, Math.round((+mk.value || 1.5) * 10) / 10)); changed(); drawStall(); });

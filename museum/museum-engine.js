@@ -123,7 +123,6 @@ function outline(a, v) {
 }
 function rows(r) { return r.map(s => [...s].map(c => (c === "." ? -1 : +c))); }
 function mirror(a) { return a.map(r => r.slice().reverse()); }
-const RARE_PRICE = 10; // Bluu sells shop items at this price and up (real, or not)
 /* A knockoff's name: two letters in its longest word swapped ("Qualia" becomes "Qulaia"). */
 function misspell(name, seed) {
   const words = name.split(" "), wi = words.reduce((b, w, i) => (w.replace(/[^A-Za-z]/g, "").length > words[b].replace(/[^A-Za-z]/g, "").length ? i : b), 0), w = words[wi];
@@ -1400,7 +1399,7 @@ function normalizePack(p) {
   }));
   const shop = { items, featured: items.some(it => it.id === shin.featured) ? shin.featured : (items[0] ? items[0].id : ""),
     drinkPrice: Math.max(0, Math.min(99, Math.round(+shin.drinkPrice || 0))) };
-  // Bluu (Saturdays, Shop tab): which items he carries (null: the old rule, shop items at RARE_PRICE and up plus old gifts),
+  // Bluu (Saturdays, Shop tab): which items he carries (null: everything in the shop, and old gifts),
   // whether the GOC shirt is on his table, his markup, and how often a thing is fake (percent).
   const bin = (shin.bluu && typeof shin.bluu === "object") ? shin.bluu : {};
   shop.bluu = { carry: Array.isArray(bin.carry) ? bin.carry.map(x => str(x, 60)).filter(Boolean).slice(0, 60) : null, shirt: bin.shirt !== false,
@@ -4056,7 +4055,7 @@ class Game {
     if (this.using("hat") === "fake") { on.hat = false; this.saveProgress(); this.say(this.tx("gear.hatSmall")); }
   }
   /* Saturday: Bluu's stall. Up to three things, the same for everyone this week, from what he carries (Shop tab, Bluu):
-     by default the shop's priciest items (RARE_PRICE tokens and up) and old unveil gifts, plus the GOC shirt (always fake).
+     by default every shop item and old unveil gift, plus the GOC shirt (always fake).
      Each one is real or a fake (the Shop tab sets how often): a fake is misspelled or the wrong color, at the same price, so
      only a careful look tells. You find out for sure in Souvenirs once it's yours. off: weeks from now (the curator's preview). */
   popupItems(off) {
@@ -4065,7 +4064,7 @@ class Game {
     if (!off && this.popupCache && this.popupCache.key === key) return this.popupCache.items;
     const sh = this.pack.settings.shop, bl = sh.bluu || { carry: null, shirt: true, markup: 1.5, fakes: 50 }, wg = this.weekGift(), h = k => strSeed(key + ":" + k);
     const order = list => list.map(it => [h("o" + it.id), it]).sort((x, y) => x[0] - y[0]).map(x => x[1]);
-    const carries = it => (bl.carry ? bl.carry.includes(it.id) : it.gift || it.price >= RARE_PRICE);
+    const carries = it => (bl.carry ? bl.carry.includes(it.id) : true); // until the curator picks, everything in the shop (and old gifts)
     const picks = order([...this.shopItems().filter(carries), ...this.giftItems().filter(g => (!wg || g.id !== wg.id) && carries(g)), ...(bl.shirt ? [{ id: "goc-shirt", name: "GOC shirt", price: 15, description: "", alwaysFake: true }] : [])]).slice(0, 3);
     const colors = ["#4a78d0", "#e070a0", "#4aa060", "#d8b040", "#8a5ac8", "#d04848", "#3aa0a0", "#e08838"];
     const items = picks.map((b, i) => {
@@ -7119,8 +7118,8 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 hear a line";
-window.GOQ = { RARE_PRICE, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
+const VERSION = "2026-11-18 bluu carries all";
+window.GOQ = { REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
   spotRooms: () => Object.keys(ROOMS).filter(id => (ROOMS[id].spots || []).length).map(id => ({ id, name: ROOMS[id].name, n: ROOMS[id].spots.length })),
