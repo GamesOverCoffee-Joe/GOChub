@@ -72,7 +72,7 @@ Four phases, each playable on its own.
 
 - **Off shift:** you can still do chores, but staff react like it's a favor: "Oh, you didn't have to do that."
 
-- **The shift sheet:** a handwritten note on the staff corkboard listing today's actual needs, built from what's really out there ("Plants (6)", "Smudges in the Strategy wing", "A crooked frame in the lobby", "Café bins"). Items get crossed off by whoever does them, including coworkers (Phase 2).
+- **The shift sheet:** a handwritten note on the staff corkboard listing today's actual needs, built from what's really out there ("Plants (6)", "Smudges in the Strategy wing", "A crooked frame in the lobby"; no bins: those are the janitor's) *(Joe 10/9)*. Items get crossed off by whoever does them, including coworkers (Phase 2).
 
 - **Equipment in its place:** a watering can on a hook in the staff room, a duster in your locker. Just props that say "there's a job here."
 
@@ -106,7 +106,7 @@ The hybrid clock.
 
     - **Café rush:** a real line at the counter. You take your place and wait, or come back later. Seats fill up.
 
-    - **Breaks** on a schedule you can learn: the barista or shopkeeper steps out ("Back in 15" on the counter), and you wait or come back. (Reuses Sunday's coffee-break code.)
+    - **Breaks** on a schedule you can learn: the shopkeeper steps out at 6–9 ("Back in 15" on the counter), and you wait or come back. Only the shopkeeper breaks in the baseline; Sunday's coffee breaks are their own thing. (Reuses Sunday's coffee-break code.) *(Joe 10/9)*
 
     - **A tour group** once a visit: the usher leads 4 to 6 visitors wing to wing; they stop at a piece, move on; you step around.
 
@@ -200,7 +200,7 @@ Every problem has:
 | **Friday** (the episode in the Screening Nook)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | At a set time the crowd flows to the nook: the wings empty out, and the nook gets the litter (*moves*). The usher is scheduling the showing (*stronger:* he needs that coffee).                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | **Saturday** (Bluu's stall) | A crowd at the stall in the lobby: a blocked walkway in the lobby too (*adds*). Bluu's customers leave packaging behind: bins fill faster (*stronger:* litter, janitor). The shopkeeper is grumpy about the competition (cue only). See Joe's note below. |
 | **Sunday** (half-price café, coffee breaks with staff) | Half price means a much bigger café line (*stronger*). Staff take turns on their coffee break: a counter stands empty for a while (*adds* a "come back later"). See Joe's note below. |
-| **Unveiling day** (any day with an unveiling) | The ceremony draws everyone to one wing at a set time: other areas empty out. The usher runs the ceremony instead of a tour (the tour chain is off). Before it, the shopkeeper has the gift to stock too (*stronger:* the stock problem); right after, a rush on the drink of the week (*stronger:* the line). |
+| **Unveiling day** (any day with an unveiling) | The ceremony starts when you arrive in that wing (no set time): everyone gathers there and other areas empty out. *(Joe 10/9: only when the player arrives in the room.)* The usher runs the ceremony instead of a tour (the tour chain is off). Before it, the shopkeeper has the gift to stock too (*stronger:* the stock problem); right after, a rush on the drink of the week (*stronger:* the line). |
 | **Every day**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | How busy the museum is (light / medium / heavy, already in the game) makes the lines, litter and crowds bigger or smaller.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 
 **The new shape, day to day** *(Claude 10/9; Joe: yes)*. ↑ stronger · ↓ weaker · → moved · ✕ off
@@ -209,7 +209,7 @@ The three baseline chains: **litter** (the janitor's bin route → full bins →
 
 | Day | Litter chain | Tour chain | Supplies chain |
 | --- | --- | --- | --- |
-| **Mon** (boxes) | ↑ the janitor breaks down boxes | | ↑ the boxes you find include coffee beans and cups, so the morning box chore feeds the café |
+| **Mon** (boxes) |  |  | ↑ the boxes you find include coffee beans and cups, so the morning box chore feeds the café |
 | **Tue** (lost kid) | | ↑ a school group, more kids; the tour's lost kid is the Tuesday lost kid | |
 | **Wed** (artist) | → litter collects around the easel | ↓ the tour stops at the easel, so fewer fumbles | |
 | **Thu** (trivia) | | | ↑ trivia setup in the barista's 0–3 prep; → the line moves to 9–12 |
@@ -218,7 +218,7 @@ The three baseline chains: **litter** (the janitor's bin route → full bins →
 | **Sun** (half-price) | | | ↑↑ a much bigger line (the moving line); a counter empty during coffee breaks |
 | **Unveiling** | | ✕ the usher runs the ceremony, so no tour | ↑ the gift to stock too, then a rush on the drink of the week |
 
-Each day leans on a different chain: Monday and Sunday are supply days, Tuesday and Friday are tour days, Wednesday and Saturday move the litter around, and Thursday shifts the café's rush late. Wednesday and Saturday are lighter on purpose; quiet days make busy days feel busy.
+Each day leans on a different chain: Monday and Sunday are supply days (Joe 10/9: no janitor boxes on Monday), Tuesday and Friday are tour days, Wednesday and Saturday move the litter around, and Thursday shifts the café's rush late. Wednesday and Saturday are lighter on purpose; quiet days make busy days feel busy.
 
 > **Joe (Saturday):** there's an issue with this idea. The lobby is very small and constantly using the "excuse me" mechanic will most likely play the teleportation joke over and over. That should be avoided. Is there another way to get around people without relying on pure chance? If we're going to use a path finding thing to make a clear path, that might trap people in spots which should also be avoided.
 >
@@ -227,6 +227,18 @@ Each day leans on a different chain: Monday and Sunday are supply days, Tuesday 
 > **Joe (Sunday):** how much work would it be to make the line move for each person? And perhaps you don't get a drink and must wait in line to get one? If you say excuse me to someone in the line, I don't want them to move because they're say they're in line.
 >
 > **Claude (10/9):** doable, about medium. The line is a row of spots at the counter; when the front person is served, everyone steps up one. You join at the back and wait your turn to order. People in line don't step aside: they say they're in line. The same line works for the barista's 6–9 rush and Sunday.
+
+#### Build order *(decided 10/9)*
+
+Built one step at a time, each playable on its own:
+
+1. **The director** ⏳ in progress: one owner for the 12-minute clock (beats, loop, pausing at night and closing, today's day and unveiling, which 3 or 4 problems are active this loop) and one rule for who's in charge of an NPC when two systems want them (tutorial > closing and night > unveiling > weekday event > the rhythm > idle wandering). Curator preview controls: jump to a minute or beat, force a day, see the active problems. First visible proof: arrivals early in the loop, departures late.
+2. **The janitor** (Phase 2) on the director.
+3. **The litter chain**: bins that fill, litter, picking it up. The first full chain; Joe plays it before we go wide.
+4. **The supplies chain**, with the moving line (also used by the café rush and Sunday).
+5. **The tour chain**: the tour group, the usher's coffee, explaining a piece, the lost kid.
+6. **The two on their own**: the conservator, the mixed-up item.
+7. **Day modifiers and the unveiling.**
 
 ### **Phase 4: NPC-to-NPC moments**
 
