@@ -56,7 +56,7 @@ PHASE 2: THE WORLD DOES ITS OWN CHORES
 - He always has a garbage can with him. He empties the dust from his sweeping into it.
 - He chooses random chores to do: sweeping (dust goes into his can), and taking the trash out from each bin in the museum.
 - He has a routine, which we'll map on the master timeline later (see Phase 3).
-- The capability rule: he never touches the art, and he doesn't point any of it out to you either. The cases, frames and
+- He never touches the art, and he doesn't point any of it out to you either. The cases, frames and
   placards are yours alone, and nobody prompts you about them.
 - He waters the plants, but only after he's done with his own chores (when that is comes from the master timeline). Any
   plant you haven't watered by then, he does, and it's crossed off the shift sheet.
