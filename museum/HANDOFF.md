@@ -6,13 +6,12 @@ Written 2026-10-05. Branch: `experiments-1` (PR #5).
 
 Ideas and chores parked on purpose. Nothing here is built yet.
 
-- **Weekly new-piece celebration.** When a new piece is unveiled: a short cutscene, an usher speech, bunting, a themed drink of the week, and visitors mentioning it.
+- **Placeholder text during the living museum work.** While we build the phases in `LIVING-MUSEUM-PLAN.txt`, unwritten lines read `[PLACEHOLDER: …]` (the seven left as of 2026-10-09 do too). Outside that work, go back to the usual bracketed placeholders.
+- **The living museum plan.** The volunteer shift, coworkers doing chores, a daily rhythm and NPC-to-NPC moments, plus theater sound and the silly toys: all in `LIVING-MUSEUM-PLAN.txt`, word for word. Joe adds changes there.
+
 - **Photo chain-of-events mystery.** A long-haul chain: the conservator's secret exhibit, unlocked step by step through photos.
 - **What the figure is.** Still undecided.
-- **Pre-play-test cleanup:**
-  - Stop tracking `.DS_Store` and `.vs/` in git (they're in `.gitignore` but were committed earlier).
-  - Remove the Batch fill button (`batch-fill.html` isn't in the repo).
-  - Fix the browser's slow pixel-readback warning (`willReadFrequently` on the canvases read with `getImageData`).
+- **Batch fill.** The curator's Batch fill button stays: `batch-fill.html` will be uploaded later and updated then.
 - **An art version of the writing app.** The same one-a-day idea, for the art slots.
 
 This document has three parts:
@@ -67,8 +66,8 @@ The wings experiment (commit `782f8e7` on `experiments-1`) is finished and is **
 - **Pieces.** Episodes go in display cases (45 case slots across the 3 galleries). Community pieces hang on painting spots on top walls; you read one standing 2 tiles below it. When there are more episodes than cases, the overflow is archived on Someone's PC in B1 (`archiveSplit`).
 - **Chores (staff).** Dust, straighten, water plants, collect mugs, wipe cases, help visitors, close the museum (worth 3). Points go to the online leaderboard.
 - **Closing.** Every room with a light switch has to be dark before you can close. Turning lights back on doesn't re-award points (exploit fixed).
-- **Curious visitors.** A random set each day (setting: `curious.perDay`), each with a mindset drawn from a shuffled deck. They wait in rooms with art. You can talk to them, have them follow you (including through doors), and recommend a piece. They come back the next day with a verdict and a reaction. Patreon members appear in the Staff Room instead.
-- **Mindsets** (editable in the curator's Visitors tab): Hands-on, Systems, Tinkerer, Unhurried, Thrill, Story, One-more. Pieces are tagged with mindsets in the Pieces tab.
+- **Curious visitors.** A random set each day (setting: `curious.perDay`), each asking for a **relationship** drawn from a shuffled deck (see "Relationships replace mindsets" below). They wait in the wings. You can talk to them, have them follow you (including through doors), and recommend a piece: the right one is instant, a wrong one they explain and keep following. They come back the next day with a random take. Patreon members appear in the Staff Room instead.
+- **Relationships** (editable in the curator's Visitors tab): Same page, Halfway there, Student, Happy accident, Different feeling, Missed the message, Not for me. Each piece has one, in the Pieces tab.
 - **Museum life.** Crowd visitors stroll, sit, order drinks or carry a gift bag (never both), snap photos of art, and throw cups away. Rates are curator sliders.
 - **Cat, mugs, magazines, Segway, the shirt quest, the figure in the dark, stamp card, gift shop, photo album, locker photo frame, achievements.**
 - **Room-specific bits** (these matter for the redesign):
@@ -471,6 +470,117 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Crisp pixels on scaled screens (2026-11-18).** With display scaling (Windows 125%/150%, browser zoom), the game's "whole" zoom wasn't whole on the actual screen (3× at 125% is 3.75 screen pixels per game pixel), so columns came out uneven and fine detail shimmered as the camera moved; the shop shelves' little stacks showed it most. `fit()` now snaps the zoom so every game pixel is a whole number of screen pixels (`devicePixelRatio`), and nudges the canvas onto the screen's pixel grid (`style.translate`, separate from the cheer zoom's `transform`). The shelf stacks are also drawn once per stand into a cached layer (`unitLayer`).
+
+**Rotating stock, featured picks, today's special, prices (2026-11-18).**
+- **Stock rotates daily** (`stockToday(off)`): `shop.stock` (default 4, one per stand) of the regular items, a seeded mix per day, the same for everyone; the stands and the menu show today's stock. A picked featured item is always in. The menu says "New stock every day." (`shop.stock`); the unveil gift is extra, marked LIMITED (`shop.limited`).
+- **Featured** (`shop.featured`): "" is automatic (the unveil gift while it's new, else one of today's stock, a different one each day); an item's id always wins, even over the gift. Curator: Shop tab → Featured item and today's stock (with today, tomorrow and the day after). The per-item radio is gone.
+- **Today's special** (`shop.special`: "" automatic = the drink of the week, else a different regular drink each day; or coffee/tea/cocoa): the café sign (`cafe_sign` prop and Art slot, at 36,28 in the museum; Rooms can move it), its cup drawn on the board, `cafe.sign` when you look; starred and tagged SPECIAL on the café menu (`cafeSpecial`, `isSpecial`).
+- **Closing pays once a day** (`progress.closingDay`).
+- **Prices:** Shades 28, Phone Case 30, Hat 34, Travel Mug 40, the dragon 30; four new souvenirs (Tote Bag 30, Enamel Pin 26, Mousepad 32, Lanyard 28; placeholder descriptions); coffee and tea 4, cocoa 5, Dragon's Breath 6. A casual day earns about 25.
+- Long descriptions in the split menus shrink to fit (`fitDetail`).
+
+**Hear a line (2026-11-18).** Curator → Preview options → **Hear a line**: every Words line (by group) and every staff chat set, a version picker (Sunday coffee and other random lines have several; chat sets also have "All of them, in turn"), and Play it, which `say()`s it in the preview from the draft (no Apply needed; `lineSources`, `fillLines`).
+
+**Fixed: old rooms popping into the curator's preview (2026-11-18).** `normalizePack` used to reset the shared `ROOMS` to the built-in rooms whenever it was handed something without rooms, and the curator's Shop tab does that (it reads just the shop). The preview's next rebuild (changing the day, for one) then drew the built-in rooms. Now only a whole pack sets the rooms, and every `buildWorld` applies its own pack's rooms first (the curator runs two games, the preview and the room editor's, over the one `ROOMS`).
+
+**Bluu in the Shop tab (2026-11-18).**
+- `settings.shop.bluu` = `{ carry, shirt, markup, fakes }`. `carry` is a list of shop item ids he can bring (null: everything in the shop and old unveil gifts; the old 10-token rule is gone); `shirt` puts the GOC shirt (always fake) in the mix; `markup` (1 to 3, default 1.5) times the shop price; `fakes` (percent, default 50) is how often each thing is fake. No more topping up with cheap items: with fewer than three carried, the table has fewer.
+- Shop tab → **Bluu (Saturdays)**: a checkbox per item and the shirt, markup and fakes, **His table** (this week, next week or the week after, each thing marked real or fake and why; `popupItems(off)`), and his lines.
+- His six lines (`sat.vendor`, `sat.bought`, `sat.broke`, `sat.owned`, `sat.fake`, `sat.real`) are their own Words group, **Bluu**.
+
+**The curator updates itself (2026-11-18).**
+- **Engine:** `boot()` in curator.html covers the page ("Getting the latest version") until `version.json`, `GOQ_WANT` and `GOQ.VERSION` agree; it reloads with `?upd=n&fresh=` up to 3 times, then shows "Waiting for the new version" and retries every 20 s. The cover is removed by `goqReady()` at the end of `start()`. An old engine never touches the draft.
+- **Pack:** `packSync(f, base)` → same / load (site newer, draft unedited: taken automatically) / ahead (draft is a newer export, kept) / ask (`askPack`: back up the draft to downloads, then use the site's pack; or keep it). Export confirms first when the result would be "ask". Pack edits by hand keep or raise `savedAt`.
+- UPDATING.md explains it for Joe.
+
+**GOQ gear, split menus, and the lobby chat (2026-11-18).**
+- **Shop items** are four GOQ things now (old samples removed): **GOQ Shades** (12), **GOQ Hat** (10), **GOQ Travel Mug** (8), **GOQ Phone Case** (10). Descriptions are bracketed placeholders. Each shop item has **What it does** (`it.use`: shades, hat, mug, case, or nothing); Bluu's copies inherit it from the item they copy (`itemUse`).
+- **Gear** (`gear(use)` → "real", "fake" or ""; a real one wins; `using(use)` honors the Wardrobe's on/off, `progress.gearOn`). My Stuff → **Wardrobe** turns each on or off (shown once you own the shirt or any gear).
+  - Shades: drawn on you (`goq_shades`). Fake: the first time, one lens pops out (`gear.lens`, `progress.lensPopped`) and you wear half from then on.
+  - Hat: drawn on you (`goq_hat`). Fake: too small, the Wardrobe won't put it on (`gear.hatSmall`).
+  - Travel mug: not in the Wardrobe; the barista asks with every order (`drink.useMug`; `drink.mug` is "real", "fake" or ""). In the mug: no steam, and you sip while you walk around (every 7 seconds or so, 4 sips a drink). When it's finished, or poured out at a bin, the mug goes back in your bag (`gear.mugDone`, `bin.poured`), so you're never holding an empty mug and can't throw it away. Fake: after 6 steps the drink's gone (`gear.leak`).
+  - Bins with an unfinished drink ask first: `bin.tossFull` (a cup) or `bin.pourMug` (the mug). `bin.full` is gone.
+  - Phone case: your phone wears it (`phone_case`). Fake: photos are blocked (`gear.caseBlocks`).
+  - Art slots: `goq_shades`, `goq_hat`, `phone_case` (People) and `travel_mug` (Gift shop and café). The four lines are in Words → Your stuff.
+- **Split menus:** the gift shop and the café are a list on the left and the picked thing big on the right, with its full name, price and description (`.gt-split`, `detailPane`, `fitSplit` trims the list to whole rows so nothing's cut off). The café grid is gone; arrows go up and down.
+- **Helped visitors in the lobby** have a short chat now, not the old beat-by-beat: hello and that they played it (`cur.back`), what they thought of the curator's take (`cur.agree` / `cur.disagree` / `cur.puzzled`), and goodbye (`cur.bye`), then they walk out. `cur.beat` and `cur.after` are gone. Ones you don't talk to stop coming after 3 days (they used to wait forever, up to 6 at a time).
+- **Bluu's table** has an outline like the rest of the furniture (`stall` color 5).
+- **Check version:** "Load the folder's pack" only shows once the engine is current. Loading with an old cached engine had dropped the shop items' What it does (no Wardrobe, no gear pictures); the pack's four GOQ items have it back.
+
+**Café grid, a heart that floats, and fixes (2026-11-18).** (The café grid was replaced by the split menu above.)
+- **Café menu** is its own panel (`el.cafe`, mode `"cafe"`, `renderCafe`, `cafeMove`, `cafePick`): a grid of the drinks, each cup drawn big on the same cream saucer (`.gt-cafe-saucer`) so none blends in, with its name and price; Just chatting and Nothing, thanks underneath. Sundays say "everything's half off" once, under the question. Arrows move, A orders, B closes; tiles can be tapped.
+- **The right recommendation** (`cheer`): your controls wait, the text box clears, the game screen eases in a little on the visitor (a CSS scale on the canvas, off with reduced motion) while one big heart floats up slowly and fades (`thrilled`, no hop), then eases back out; the "+N tokens" toast and their thanks come after (about 2.25 seconds).
+- **Iced cups** are an Art slot now (`cup_iced`, "Iced drink in hand", Gift shop and café): the hot cup's size, frame 0 full (the drink tinted from the menu, colors 4 and 5), frame 1 an empty clear cup. Replaced art draws as-is.
+- **Visitors' drinks** are anything on the menu, the drink of the week included (`npcDrink`).
+- **Read borders:** paintings have no outline any more, only the sparkle once read; cases' sparkles draw after their tops are redrawn over people (`drawReadBorders(..., "cases")`), which had been hiding them.
+- **Paintings can't be recommended** (only episodes; `cur.unreadNote` removed).
+- **Art tab:** a search box (name, key, group or note), a group picker and "Only art I've replaced" at the top of the list.
+- **Fixed:** Bluu's stall looks anywhere in the lobby with room when his usual spots are taken (a rearranged lobby hid him); the night guard also does rounds during closing at any hour; hallway lamps and glows go dark with their own spot, not yours (standing in a dark wing used to switch the hallway's off).
+
+**Signs, drinks, tokens and cleanup (2026-11-18).**
+- **Signs:** the lobby directory and the hallway arrow signs' words are in Words → Signs (`dir.head`, `dir.middle`, `dir.room`, `dir.storage`, `hall.arrow`; room names and directions are filled in). The curator's arrow inspector lists wings by their names (with the genre in brackets) instead of the old genre names.
+- **Drinks:** coffee, tea and cocoa each have a price and an Iced box (`settings.shop.drinks`, Shop tab → Café drinks; the old single `drinkPrice` seeds them). Drinks of the week too (`piece.drinkPrice`, `piece.drinkIced`, in Shop and the piece's Unveiling). Iced drinks are a generated clear cup showing the drink's color, with a lid, ice and a straw, and no steam (`icedCup`); visitors' drinks follow the menu (`npcDrink`). Sunday half price applies to each. The cocoa quest checks the drink, not its name.
+- **Tokens:** every reward is in `settings.rewards` (`REWARD_DEFAULTS`; curator Tokens tab): each chore, closing up, the right recommendation (5 by default), Monday's boxes, Tuesday's kid, the artist's four photo tiers, Thursday per answer and the perfect bonus. Staff points are unchanged. The preview's Make it happen has a **Tokens** box that sets your test wallet.
+- **The right recommendation** gets a big moment (`cheer`, reaction `thrilled`): a big heart pops, sparkles burst, little hearts float up, they hop, a "+N tokens" toast, and the thanks line comes after a short beat. The tutorial uses it too.
+- **Removed:** the stamp card (reading no longer stamps; no shop trade, no My Stuff entry, no curator fields, no Punch Card Pro achievement); the Tuesday kid's "seeing his mom" line.
+- **Fixed:** the staff whiteboard was transparent (the day board's palette shared its name, `board`; now `dayboard`); the artist won't take a photo of himself or his easel (`photo.of`; `wed.self`, `wed.ownEasel`, no tokens, show another); menu lists (the arcade) size to the box so the last row is never cut off; Thursday puts bunting over the café.
+
+**Pause in dialogue; visitors don't park in front of you (2026-11-17).**
+- **Start during a conversation** opens PAUSED (`pauseText`): Skip the tutorial (in the tutorial), Save and quit, or Back, which picks the conversation up on the same page. Not during the unveil ceremony (`this.cine`) or a close-up.
+- **Visitors** who step onto the tile you're facing wait at most two seconds (`n.faceWait`, time to talk), then go on their way; before, they waited until you moved, which jammed hallways. Strolling visitors never pick a spot right next to you to stop at.
+
+**Tutorial editions (2026-11-17).** `settings.tutorialRev` (curator Staff tab → Tutorial → Require it again) is the tutorial's current edition; a save remembers which one it finished (`progress.tutorialRev`; older saves count as edition 1). Anyone behind is put into the tutorial on load (once), including when the site's pack arrives after a cached one (checked in `setPack`). The pack is at edition 2, so everyone retakes the new relationships tutorial. Skipping counts as finishing it.
+
+**Relationships replace mindsets (2026-11-17).** The core loop is now about reading both placards and comparing them.
+- **Relationships** (`settings.relations`: id, name, about, ask, miss; `SAMPLE_RELATIONS`): how the curator's experience lined up with the developer's intention. Each piece has one (`piece.rel`, curator Pieces tab → Relationship), picked by the host from the episode transcripts:
+  - **Same page:** Depth Complaint, Zenomatrix, Comets Have Feathers, Minicraft TD.
+  - **Halfway there:** Diecast, Tangled Crisis, Hovershot, Spring Escape Deep Down, Spacecat Solitaire, Cave Escape, Ominoflux.
+  - **Student** (not the audience, but had fun once it sank in): Sonak, Zeroth.
+  - **Happy accident:** Seeing Double, Survivor TD, Manboobs The Mini Game.
+  - **Different feeling:** Enemies Within, ESiON, Sneaky, AI'm Domingo, Polariball, Cyber Volley, Monster Freaks!, Credit Farm/Debtician, Stella Incus.
+  - **Missed the message:** Club Soko, Hope Timbre, Hyperbaric, Near The Fear.
+  - **Not for me:** Warlord's Penance, Orion Wars, Acrobatic Car, Absorber.
+- **Curious visitors** ask for a relationship in plain words (`ask`; never the name; only relationships some piece has). The right piece: `cur.thanks`, they head off, 3 staff points (`helped`), and the piece joins `progress.recall`. A wrong one: its relationship's `miss` line (what they read there, `missLines`), they keep following; the third wrong one, `cur.giveUp` and they go back to waiting (`releaseFollower`). The right piece also gets one heart right away. Next day: a random take picked at recommend time (`v.take`: `cur.agree`, `cur.disagree`, `cur.puzzled`), with the old hop/heart/shrug reactions.
+- **Recall:** talking to whoever's following you offers **Recommend from memory**: the pieces you've recommended right before, by name only (sorted). Picking one recommends it on the spot, right or wrong.
+- **Mindsets are gone.** Genres no longer list mindsets (a piece's room is only its Exhibited in genre; every piece already had one). The lobby directory dropped its "Popular with" line. Old saves' visitors get a relationship on load.
+- **Placards:** each side is one voice: front = observation + WATCH, back = intention + PLAY. The "my own impressions" line is gone; the end line is "Continues on other side →" (`case.frontNote`, `case.backNote`). Visitors' notes (and Leave a note) only show once you've read the other side, at the very end.
+- **The tutorial** uses three made-up games (`TUT_GAMES`, Words → Tutorial `tut.bus.*`, `tut.spoon.*`, `tut.sale.*`): Last Bus Home (Halfway there, in the middle, opens the far door), Spoon Siege (Happy accident), Grandpa's Garage Sale (Missed the message). The planters are gone; every side is readable. Rosie, Skye and Onyx each ask for one; a wrong pick, they say why and keep following (the first time, the speaker explains: `tut.missFirst`). Once the middle game is read, the speaker frames the job (`tut.frame`). The right game gets one heart on the spot (`react: liked`); the third one, and the speaker says that's the job and calls you out front (`tut.closeUp`), where the usher says you did great and explains closing up (`tut.usher.great`, once). The visitors wait out front with no bubble, but still give a take if you talk to them (agree, disagree, puzzled); it doesn't gate anything. Observation placards are bracketed for the host; the intentions are written.
+- **Stats:** Games recommended (every try), The right piece (`helped`), Not quite (`stats.nope`: wrong picks).
+- **Writers' Room:** Relationships cards (ask, miss), plus the new Words lines.
+
+**Robot cam removed (2026-11-17).** The toy-car robot cam (three commits on experiments-1, never on main) was taken out: it was fun for a minute, but it didn't celebrate the games, and the museum floor is too full of exhibits to drive in. It's in git history (5299b96, 6446894, 5113888) if a racing mini-game ever needs it.
+
+**Gifts are shop items (2026-11-15).**
+- An unveil gift is now a regular shop item with `gift` set to its piece's id (curator: Shop tab, each item's **Unveil gift for**). It isn't on the racks or in the regular list; it only shows as the gift of the week (first, "NEW") from its piece's unveil until the next gift, then Bluu sells it. Item images work for gifts like any item. Old `piece.gift` objects are turned into shop items on load (`normalizePack`).
+- **The gift of the week is always the featured item** (`featuredId()`: the glass dome, the "FEATURED." note); otherwise the Featured choice in the Shop tab applies. Helpers: `shopItems()` (the regular stock), `giftOf(piece)`.
+- **Drinks of the week** are also editable in the Shop tab (name, cup color, barista line), the same fields as each piece's Unveiling section.
+- The Stuffed blue dragon is now the shop item `gift-piece-g3at9r2`.
+- Fixed: the kid's clue said "the Meier Wing wing"; "wing" is only added to wing names that don't already end with it.
+
+**Dragon week (2026-11-15).**
+- **Read means read:** a case side (or a painting's placard) only counts once you page to the end of it (`rd.end`, `readEnded`; `viewPiece(p, side, stampAfter, onRead)`). Opening a placard and backing out leaves the border red.
+- **Sparkle:** read pieces sparkle more (two twinkles, a cross that flares) with its own Staff-tab slider, Sparkle on read pieces (`staff.sparkle`, default 70%, 0 is off).
+- **Unveil border:** blue until the piece is read, then the same green flare as the rest.
+- **The curator preview's Curator view** shows you as the curator (`isCurator()`: a curator badge, or curator mode).
+- **Drink of the week extras:** `piece.drinkColor` (the cup in your hand, `weekCup`) and `piece.drinkLine` (what the barista says when serving it), both in the curator under Unveiling.
+- **Comets Have Feathers** now has an unveil date (2026-10-07), so it's this week's unveil: **Dragon's Breath** (blue; the barista: "One Dragon's Breath. It's blue." / "Don't ask why it's blue. We asked. The answer was \"dragon.\"") and the **Stuffed blue dragon** (8 tokens, free at its ceremony). Item icons pick up a color word in the name, and "dragon", "plush", "stuffed" or "doll" draws a plush.
+
+**Read borders, the curator in person, the trivia seat (2026-11-14).**
+- **Read borders** replace the sparkle and the green glow (`drawReadBorders`, drawn on the floor under cases and people). A one-pixel square on the floor 4 pixels out from each case's footprint; its top edge runs behind the case's top half. Pulsing red: unread. One side read: green on that side, fading to red toward the other. Both sides (or a painting's placard): it turns green, flares bright and fades out over about 1.7 seconds (`readFx`, started when you're back to walking), and after that the piece only gets a very faint, occasional sparkle (a second pass drawn over the cases). Paintings get a line along the floor in front. On a piece's unveil day the border pulses blue. Not drawn on wall tiles or in the dark. Staff tab: Pieces you haven't read (Glowing border / Off, Strength). Old `readStyle` values become "border".
+- **The curator in person:** on a curator badge you look like the `curator` slot (Characters group in Art, also used for the curator at Sunday coffee and the unveiling; `playerSheet()`). With a curator badge there's no second curator at the unveiling, and Sunday coffee never picks the curator.
+- **The trivia seat** stays free all Thursday, before and after you've played: it's in `room.keepFree`, which `blocked()` treats as solid for everyone but you; anyone on it when you sit steps aside.
+
+**Unveiling (2026-11-13).** A piece's unveil date is now an event.
+- **The ceremony:** on the unveil date (that day only), the piece's wing has bunting along its upper wall, and the piece starts under a cloth. The first time you walk into that wing that day, input locks and the camera eases to the piece: a crowd of six stands around it, the usher (`unveil.call`) and the curator (`unveil.curator`) stand beside it, the cloth comes off with a flash, everyone pops a "!" or heart, and the usher's closing lines follow: `unveil.read`, then `unveil.arcade` (if it has a game link and the café has the cabinet), `unveil.theater` (if it has an episode), `unveil.drink` and `unveil.gift`. You get the gift (`unveil.got`), then a dip to black: the usher, the curator and any extra people are gone, the camera is back on you, and the crowd goes back to wandering the wing. The crowd is the museum's own wandering visitors, moved into place while the museum is set up (before you see it); extras only fill in when there aren't six. Once per piece per player (`progress.unveils`); several pieces in one wing share one ceremony. Code: `placeUnveil` (after every build), `startCeremony`, `endCeremony`, `this.cine` (camera blend and waits in `update`/`draw`).
+- **Drink and gift (piece fields, curator → Unveiling):** `piece.drink` is the drink of the week: a fourth café option (cup frame 3) from its unveil until the next unveil that brings a drink. `piece.gift` (name, description, price) is free for whoever is at the ceremony, then sold in the gift shop ("NEW", first in the list) until the next gift. Gift items are `gift-<piece id>` and count as owned souvenirs.
+- **Souvenirs (My Stuff, and A at the collection cabinet):** a grid like the photo album of everything you own. A puts an item in the cabinet or takes it out, 12 fit (`progress.display`; until you pick, the first 12 show). `viewCollection` is gone.
+- **Bluu (Saturdays), real or fake:** three things a week: shop items at `RARE_PRICE` (10) tokens and up, old unveil gifts (not this week's), and the **GOC shirt** (always fake), topped up with regular shop items while there aren't enough. Each is real or fake; a fake is misspelled (two letters swapped, `misspell`) or the wrong color, at the same price (1.5× the original). Souvenirs says which: `sat.fake` / `sat.real`. The old color-and-adjective remix (`sat.adjectives`) is gone; old pop-up finds still show.
+- **Shirts:** a visitor's shirt is never close to their skin color (`shirtFor`).
+- **Curator preview:** Make it happen → **An unveiling** stages the ceremony for the newest piece on display (`testUnveil`).
+
+**Cleanup (2026-11-12).** `.DS_Store` files and the `.vs/` folder are no longer tracked (`.vs/` added to `.gitignore`). The scratch canvases the engine only reads pixels back from (rug corners, item icon colors) are made with `willReadFrequently`, which clears the browser's slow-readback warning. **Not** `tinted()`: its canvas is drawn every frame (every recolored floor and wall tile, every shirt), and `willReadFrequently` keeps a canvas off the GPU, which slowed the whole game down on phones (everyone walked slower). Fixed 2026-11-13.
+
 **Clip names (2026-11-12).** Clip file names in `clips/` are lowercase, and the engine lowercases a bare clip name before loading it (GitHub Pages is case-sensitive; a phone keyboard had capitalized five of them). The curator's Gameplay clip field has autocapitalize and autocorrect off.
 
 **Day tweaks (2026-11-11).**
@@ -484,7 +594,7 @@ Goal: character.
 
 **Writers' Room (2026-11-10).** `museum/writers-room.html` (also in the curator's More menu): a phone-first page for writing the museum's text one line at a time.
 - **Same draft as the curator.** It reads and writes `goq-curator-draft` in this browser, and the curator picks up changes even when it's open in another tab. With no draft yet, it starts one from the folder's `museum-pack.json`. It has its own Export pack (same file as the curator's) and shows the same "pack changed since your draft started" heads-up.
-- **What's in it:** every Words line (`GOQ.TEXT`), every staff chat set, visitor mindset lines (ask, loved, liked, nope), achievement names and descriptions, shop item names and descriptions, genre names, the cat's name, nicknames and corkboard notes. **Placards** are their own category: observation, intention (or the guest note) and the visitor's one-liner, per piece.
+- **What's in it:** every Words line (`GOQ.TEXT`), every staff chat set, relationship lines (what visitors ask for, and what they say when it's not the one), achievement names and descriptions, shop item names and descriptions, genre names, the cat's name, nicknames and corkboard notes. **Placards** are their own category: observation, intention (or the guest note) and the visitor's one-liner, per piece.
 - **Status:** "To write" if any bracketed placeholder is left (or it's empty), "Yours" if you edited it, "Kept" if you pressed Keep it, otherwise "Not reviewed" (lines Claude wrote). Keeps and marks are stored in `goq-writers-room`, with the punch card days.
 - **The daily loop:** Today's line picks the next placeholder, staying in the area you last worked in, then lines to review. Saving, or keeping, stamps today on the punch card, then offers One more or Clock out. Skip moves on without penalty. On multi-entry lines (books, trivia, box labels) empty boxes keep their placeholder, so you can write one entry at a time.
 - **Preview:** dialog lines render in the game's own text box (Press Start 2P, 240×48 box, the pack's textbox art) with the same page splitting as the engine, and sample values filled in for `{name}` and the like. LED lines show as the sign (and warn on letters it can't show); lists show as entries; placards as placard blocks.

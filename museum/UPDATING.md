@@ -22,6 +22,10 @@ Merge into **main** (the branch gamesover.coffee is served from). Returning play
 - **Rename clips and images instead of overwriting them.** Files in `clips/` and `images/` don't carry a version in their address. If you swap in a new file under the same name, some players may see the old one for a while. A new name (like `acrobatic-car_2.webm`) shows up right away. Update the name in the curator to match.
 - **Keep piece IDs stable.** Players' notes and "read" marks are tied to each piece's ID. Retitling a piece is fine, but deleting a piece and re-adding it means players lose their notes on it.
 
+## Making everyone take the tutorial again
+
+New players always start in the tutorial. After you change it, open the curator's **Staff** tab, **Tutorial**, and press **Require it again**. Export the pack and get it onto main: the next time each returning player loads the game, they're put into the tutorial once (they can still skip it). Players who haven't loaded since won't miss it; it waits for their next visit.
+
 ## Custom art from the curator (Art tab)
 
 When you upload a PNG on a slot's own page (Joe, a wall, a prop) or through the Photoshop atlas, it's saved **inside your curator draft in that browser**, not as a separate file. Players don't see it until it's in the repo's pack:
@@ -31,12 +35,20 @@ When you upload a PNG on a slot's own page (Joe, a wall, a prop) or through the 
 
 There's no separate PNG to upload. "Use built-in art" on a slot removes the custom art from the next export.
 
-**Before you export:** if the repo's `museum-pack.json` has changed since your draft started (for example, Claude moved props or added settings), the curator shows "Heads up: this folder's museum-pack.json has changed since your draft started." Exporting then would undo those changes. Press **More → Check version** to see what's different. There are two safe ways out:
-- **You've only made a small change** (like one PNG): load the folder's pack from Check version, redo the change, then export.
-- **You've made a lot of changes:** export anyway, but don't replace the repo file yourself. Give the export to Claude to merge the two.
+**Updating the curator itself is automatic** (no buttons). Every time you open or refresh it:
+1. **The engine.** A "Getting the latest version" cover shows while it checks `version.json` and loads the matching engine, reloading itself (up to three times) if the device hands it an old copy. If the site still hasn't published the new version (right after a push), it says "Waiting for the new version" and retries every 20 seconds. Nothing in your draft can be opened, saved or exported until the right engine is running.
+2. **The pack.** It compares your draft with the site's `museum-pack.json`:
+   - **Same file:** nothing to do.
+   - **The site's is newer and you haven't changed anything since:** it loads the site's pack by itself ("Loaded the newer museum-pack.json from the site").
+   - **The site's is newer and you have changes too:** it asks. Pick **Back up my draft, then use the site's pack**: your draft goes to your downloads as `museum-pack-backup-<date>.json`, so nothing is lost. If those changes matter, redo them or give the backup to Claude to merge. **Keep my draft** keeps it, but then Export warns you that pushing it would undo the site's newer changes.
+   - **Your draft is newer** (you exported and haven't pushed yet): it keeps your draft.
+
+So the routine is: **open or refresh the curator, and do what it says, if it says anything.** More → Check version is still there if you want details.
+
+**For Claude:** when changing `museum-pack.json` by hand, keep its `savedAt` (or set it to now), never earlier, so drafts treat it as the newer file.
 
 ## Text from the Writers' Room
 
-The Writers' Room (`writers-room.html`) writes into the same curator draft in that browser, so the same rule applies: players see your lines only after you **Export pack** (from the Writers' Room or the curator) and the exported `museum-pack.json` is in the repo on main. The draft lives in one browser on one device. If you write on your phone, export from your phone.
+The Writers' Room (`writers-room.html`) writes into the same curator draft in that browser. There's no separate update step: open or refresh the curator **in the same browser** and your lines are there (try them with Preview options → **Hear a line**). The same rule applies to getting them out: players see your lines only after you **Export pack** (from the Writers' Room or the curator) and the exported `museum-pack.json` is in the repo on main. The draft lives in one browser on one device. If you write on your phone, export from your phone.
 
 If that browser's draft is older than the repo's pack (say, the curator was last opened on your phone weeks ago), the Writers' Room says "Your draft doesn't match this folder's museum-pack.json". Press **Update my draft** before writing or exporting. It keeps every line you saved in the Writers' Room and takes everything else (rooms, pieces, art, settings) from the folder. Exporting without updating would put the old rooms and settings back.
