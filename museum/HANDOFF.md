@@ -467,6 +467,8 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Fixed: old rooms popping into the curator's preview (2026-11-18).** `normalizePack` used to reset the shared `ROOMS` to the built-in rooms whenever it was handed something without rooms, and the curator's Shop tab does that (it reads just the shop). The preview's next rebuild (changing the day, for one) then drew the built-in rooms. Now only a whole pack sets the rooms, and every `buildWorld` applies its own pack's rooms first (the curator runs two games, the preview and the room editor's, over the one `ROOMS`).
+
 **Bluu in the Shop tab (2026-11-18).**
 - `settings.shop.bluu` = `{ carry, shirt, markup, fakes }`. `carry` is a list of shop item ids he can bring (null: the old rule, items at `RARE_PRICE` and up plus old unveil gifts); `shirt` puts the GOC shirt (always fake) in the mix; `markup` (1 to 3, default 1.5) times the shop price; `fakes` (percent, default 50) is how often each thing is fake. No more topping up with cheap items: with fewer than three carried, the table has fewer.
 - Shop tab → **Bluu (Saturdays)**: a checkbox per item and the shirt, markup and fakes, **His table** (this week, next week or the week after, each thing marked real or fake and why; `popupItems(off)`), and his lines.

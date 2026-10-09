@@ -1369,7 +1369,9 @@ function normalizePack(p) {
   const guestbook = (Array.isArray(p.guestbook) ? p.guestbook : []).slice(0, 60)
     .map(g => ({ name: str(g && g.name, 40), note: str(g && g.note, 200) })).filter(g => g.note);
   const lighting = {}, lin = (p.settings && p.settings.lighting) || {};
-  applyRooms(p.rooms);
+  // A whole pack sets the rooms; a partial one (the curator reading just a shop or settings) leaves them alone. Resetting
+  // them there put the built-in rooms back under the preview, and they showed up on its next rebuild (changing the day).
+  if (p.rooms || p.format || Array.isArray(p.pieces)) applyRooms(p.rooms);
   // (Extra pieces beyond the cases and wall spots go to the archive on Someone's PC.)
   for (const id in ROOMS) {
     const d = ROOMS[id].light || { dim: 0, spots: 0 }, v = lin[id] || {}, num = (x, lo, hi, def) => (typeof x === "number" && isFinite(x) ? Math.min(hi, Math.max(lo, x)) : def);
@@ -6013,6 +6015,7 @@ class Game {
 
   /* ----- world ----- */
   buildWorld() {
+    if (this.pack && this.pack.rooms) applyRooms(this.pack.rooms); // the rooms are shared by every game on the page (the curator has two): build from this one's
     const today = todayISO(), rooms = Object.keys(ROOMS).filter(id => ROOMS[id].mugSpots), seed = strSeed("mug" + today);
     const catRooms = Object.keys(ROOMS).filter(id => ROOMS[id].catSpots), cs = strSeed("cat" + today + this.catBucket());
     const o = { genres: this.pack.settings.genres, curator: this.curator, today, hung: this.hungNow, tod: this.tod(), crowd: this.crowdToday(), catRoom: catRooms[cs % catRooms.length], catIndex: cs >>> 5,
@@ -7116,7 +7119,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 bluu shop";
+const VERSION = "2026-11-18 rooms fix";
 window.GOQ = { RARE_PRICE, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
