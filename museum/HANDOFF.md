@@ -470,6 +470,14 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Living museum, Phase 1: the volunteer shift (2026-11-18).** (Plan: `LIVING-MUSEUM-PLAN.txt`.)
+- **Anyone can clock in** as a volunteer: the staff door and the time clock offer "Volunteer today" (no badge). `clockIn(who)`: a badge, or `null` for a volunteer (`progress.staff = { badge: "volunteer", name: "Volunteer", volunteer: true }`). Volunteers get the uniform, the staff room, a locker and the tally like badges do; nothing goes online (no token). Staff call them `vol.callName` ("volunteer").
+- **Off shift, a chore is a favor** (`favor()` from `count()`): a coworker within 8 tiles says `vol.favor` in the corner, at most once a minute. Same tokens either way.
+- **The shift sheet** (`shiftSheet()`) is the first thing on the staff corkboard: today's real needs (plants left, cases with fingerprints by wing, dusty or crooked frames, the curator's mug, closing up), each one marked done once anyone's done it. Its lines are `shift.*`.
+- **Equipment:** a watering can on its hook in the staff room (`watering_can` Art slot, staff room `wallArt`, `vol.can`); the duster in your locker (`vol.duster`).
+- **Clocking out:** the nearest coworker says one remark about this shift (`clockOutRemark()`, `out.*`: helped, closed, plants, glass, frames, or none).
+- New Words group **Volunteering**; the creative lines read `[PLACEHOLDER: …]`.
+
 **Crisp pixels on scaled screens (2026-11-18).** With display scaling (Windows 125%/150%, browser zoom), the game's "whole" zoom wasn't whole on the actual screen (3× at 125% is 3.75 screen pixels per game pixel), so columns came out uneven and fine detail shimmered as the camera moved; the shop shelves' little stacks showed it most. `fit()` now snaps the zoom so every game pixel is a whole number of screen pixels (`devicePixelRatio`), and nudges the canvas onto the screen's pixel grid (`style.translate`, separate from the cheer zoom's `transform`). The shelf stacks are also drawn once per stand into a cached layer (`unitLayer`).
 
 **Rotating stock, featured picks, today's special, prices (2026-11-18).**

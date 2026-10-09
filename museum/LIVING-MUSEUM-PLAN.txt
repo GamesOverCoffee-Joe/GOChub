@@ -34,6 +34,8 @@ yet. Phase 1 opens it up.
 --------------------------------------------------
 PHASE 1: THE VOLUNTEER SHIFT (the foundation)
 --------------------------------------------------
+STATUS: built 2026-10-09 (version "2026-11-18 volunteer shift"). Decisions used: volunteer clock-in for everyone; same tokens
+on or off shift. Lines to write: Words > Volunteering (marked [PLACEHOLDER: ...]).
 - Anyone can clock in: a plain "Volunteer" option at the time clock, no badge needed. Patreon badges keep everything they
   have now (their name, tally, leaderboard, Employee of the Month).
 - On shift: the uniform you already have. The world treats chores as your job.

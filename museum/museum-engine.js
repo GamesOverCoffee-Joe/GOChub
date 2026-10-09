@@ -28,6 +28,7 @@ const PAL = {
   medal:   ["#d84040", "#902828", "#f0c840", "#b07818", "#2a1408", "#fff4c0"],
   chalk:   ["#eef2e6", "#2e5a44", "#7a4a28", "#1a120c", "#f0d050", "#c8d8c8"],
   cork:    ["#f8f0d8", "#c89860", "#8a5a30", "#2a1a10", "#e05050", "#5080c8", "#f0d050"],
+  wcan:    ["#3a3a44", "#58a8c8", "#2f6f8f", "#181820"], // handle, can, can shade, outline
   staff:   [null, "#f8e0c0", "#2f6b4f", "#181820", "#f8f0c0"],
   shadow:  [null, "#e8f0ff", "#06040c"],
   board:   ["#fbfbf6", "#c4ccd4", "#505868", "#181820", "#e05050", "#2f6b4f"],
@@ -500,6 +501,15 @@ const GEN = {
     rect(a, 1, 29, 30, 3, 8);                                           // base
     rect(a, 12, 0, 8, 3, 3);                                            // price sign
     return outline(a, 8);
+  },
+  // A watering can hanging on a hook in the staff room (16x16, on the upper wall).
+  watering_can: () => {
+    const a = mk(16, 16);
+    rect(a, 7, 0, 2, 2, 3); rect(a, 6, 2, 4, 1, 3); // the hook
+    rect(a, 4, 6, 7, 7, 1); rect(a, 4, 6, 7, 1, 2); rect(a, 5, 4, 5, 2, 0); rect(a, 6, 4, 3, 1, 3); // body, rim, handle
+    rect(a, 11, 8, 2, 1, 1); rect(a, 12, 7, 2, 1, 1); rect(a, 13, 6, 2, 1, 2); // spout
+    rect(a, 4, 12, 7, 1, 2);
+    return outline(a);
   },
   trinkets: f => {
     const a = mk(8, 8);
@@ -1062,6 +1072,7 @@ const SLOTS = [
   { key: "mug", label: "The curator's coffee mug", group: "Cozy loop", w: 16, h: 16, pal: "mug", gen: GEN.mug, note: "Left somewhere new each day." },
   { key: "light_switch", label: "Light switch", group: "Cozy loop", w: 16, h: 16, pal: "switchp", gen: GEN.light_switch, note: "On the wall. " + OVER_NOTE },
   { key: "intercom", label: "Intercom", group: "Cozy loop", w: 16, h: 16, pal: "switchp", gen: GEN.intercom, note: "In the lobby. Makes the closing announcement. " + OVER_NOTE },
+  { key: "watering_can", label: "Watering can on its hook", group: "Staff", w: 16, h: 16, pal: "wcan", gen: GEN.watering_can, note: "Hangs on the staff room wall: there's a job here." },
   { key: "player_staff", label: "Player in staff uniform", group: "Staff", w: 16, h: 16, layout: "char", pal: "staff", gen: GEN.staff_uniform, note: "Used while clocked in. " + CHAR_NOTE },
   { key: "staff_floor", label: "Staff room floor", group: "Staff", w: 16, h: 16, pal: "staffrm", gen: GEN.floor_lino, note: "Tiles seamlessly in every direction." },
   { key: "staff_wall_top", label: "Staff room wall top", group: "Staff", w: 16, h: 16, pal: "staffrm", gen: GEN.wall_top },
@@ -1627,6 +1638,7 @@ const ROOMS = {
     lockers: [1, 2, 3, 4, 5, 6],
     catSpots: [[13, 3], [4, 8]],
     corkboardAt: [9, 1], leaderboardAt: [7, 1], timeClock: [12, 2],
+    wallArt: [{ key: "watering_can", x: 13, y: 1, say: "vol.can" }], // equipment in its place: there's a job here
     props: [
       { key: "whiteboard", x: 6, y: 6, rules: true },
       { key: "break_table", x: 2, y: 6, say: ["The break table. Someone left a half-finished crossword."] },
@@ -2023,6 +2035,27 @@ const TEXT = {
   "rules":             { g: "Staff", l: "Staff rules whiteboard", v: [["STAFF RULES", "1. Clock in at the staff door or the time clock. The ON SHIFT tag means you're working.", "2. On shift, every chore is a point: dusting, straightening, watering, finding the mug, wiping cases. A visitor who loves your recommendation, and closing up, are worth 3.", "3. Chores earn tokens for the gift shop, and staff tallies decide Employee of the Month.", "4. Clock out at the time clock. Leaving at closing clocks you out too.", "5. Do not touch anyone's yogurt."]] },
   "locker.mine":       { g: "Staff", l: "Your locker", v: [["Locker {locker}: {name}.", "Just your coat in here. Your gift shop finds are on display in the collection cabinet."]] },
   "locker.others":     { g: "Staff", l: "Other lockers (one per locker, in order)", v: [["A sticky note: \"Do not touch my yogurt.\""], ["Locked. It hums faintly."], ["Someone taped a pixel-art cat to this one."], ["Empty. It smells like old coffee."], ["A note in big letters: \"WAIT. WHY DID THAT HAPPEN?\""], ["Locked. There's a dent shaped like a controller."]] },
+  "vol.callName":      { g: "Volunteering", l: "What staff call you when you're volunteering (no badge)", v: [["volunteer"]] },
+  "vol.in":            { g: "Volunteering", l: "Clocking in as a volunteer", v: [["[PLACEHOLDER: clocking in as a volunteer. Mention the shift sheet on the corkboard]"]] },
+  "vol.favor":         { g: "Volunteering", l: "A coworker nearby when you do a chore off shift (shown in the corner; one version picked at random)", v: [["[PLACEHOLDER: a coworker, when you do a chore off shift. Like: Oh, you didn't have to do that]"]] },
+  "vol.can":           { g: "Volunteering", l: "The watering can on its hook in the staff room", v: [["[PLACEHOLDER: the watering can on its hook]"]] },
+  "vol.duster":        { g: "Volunteering", l: "Your locker: the feather duster inside", v: [["[PLACEHOLDER: the feather duster in your locker]"]] },
+  "shift.head":        { g: "Volunteering", l: "The shift sheet on the corkboard: the curator's note at the top", v: [["[PLACEHOLDER: the curator's note at the top of today's shift sheet]"]] },
+  "shift.plants":      { g: "Volunteering", l: "Shift sheet: plants still to water ({n}: how many)", v: [["Water the plants ({n} left)"]] },
+  "shift.plantsDone":  { g: "Volunteering", l: "Shift sheet: every plant watered", v: [["Plants: done"]] },
+  "shift.glass":       { g: "Volunteering", l: "Shift sheet: cases with fingerprints ({where}: which wings)", v: [["Wipe the glass: {where}"]] },
+  "shift.glassDone":   { g: "Volunteering", l: "Shift sheet: no fingerprints left", v: [["Glass: done"]] },
+  "shift.frames":      { g: "Volunteering", l: "Shift sheet: dusty or crooked frames ({where}: where)", v: [["Dust and straighten: {where}"]] },
+  "shift.mug":         { g: "Volunteering", l: "Shift sheet: the curator's mug isn't found yet", v: [["Find the curator's mug"]] },
+  "shift.mugDone":     { g: "Volunteering", l: "Shift sheet: the mug is found", v: [["Mug: found"]] },
+  "shift.close":       { g: "Volunteering", l: "Shift sheet: closing up", v: [["Close up at the end of the day"]] },
+  "shift.closeDone":   { g: "Volunteering", l: "Shift sheet: closed up today", v: [["Closing: done"]] },
+  "out.plants":        { g: "Volunteering", l: "Clocking out: a coworker, after you watered plants", v: [["[PLACEHOLDER: clocking out after watering plants. Like: Thanks for getting the plants]"]] },
+  "out.glass":         { g: "Volunteering", l: "Clocking out: after you wiped cases", v: [["[PLACEHOLDER: clocking out after wiping the cases]"]] },
+  "out.frames":        { g: "Volunteering", l: "Clocking out: after you dusted or straightened frames", v: [["[PLACEHOLDER: clocking out after dusting or straightening frames]"]] },
+  "out.helped":        { g: "Volunteering", l: "Clocking out: after you helped a curious visitor", v: [["[PLACEHOLDER: clocking out after helping a curious visitor]"]] },
+  "out.closed":        { g: "Volunteering", l: "Clocking out: after you closed up", v: [["[PLACEHOLDER: clocking out after closing up]"]] },
+  "out.none":          { g: "Volunteering", l: "Clocking out: you didn't do anything this shift", v: [["[PLACEHOLDER: clocking out after doing nothing. Like: Easy day, huh?]"]] },
   "clock.out":         { g: "Staff", l: "Clocking out", v: [["You clock out. See you next shift, {name}.", "Chores won't count toward your staff tally until you clock in again."]] },
   "clock.curator":     { g: "Staff", l: "Time clock in curator mode", v: [["The time clock.", "You're the curator. You don't need to clock in."]] },
   "cabinet.empty":     { g: "Staff", l: "Collection cabinet, nothing bought yet", v: [["The collection cabinet. Glass shelves, waiting for things.", "Whatever you buy at the gift shop goes on display here."]] },
@@ -3672,12 +3705,48 @@ class Game {
   count(kind, target) {
     this.progress.tally[kind] = (this.progress.tally[kind] || 0) + 1;
     this.earn(this.pack.settings.rewards[kind] !== undefined ? this.pack.settings.rewards[kind] : 1); // Tokens tab
-    const s = this.staff; if (!s) return;
+    const s = this.staff; if (!s) { this.favor(kind); return; }
     const t = this.progress.staffTally[s.badge] || (this.progress.staffTally[s.badge] = { name: s.name });
     t[kind] = (t[kind] || 0) + 1; t.name = s.name;
     this.shift[kind] = (this.shift[kind] || 0) + 1;
     if (POINT_KINDS.includes(kind)) this.sendDuty(kind, target);
     this.updateHud();
+  }
+  /* Off shift, a chore is a favor: a coworker nearby notices (not every time). On shift it's just the job. */
+  favor(kind) {
+    if (!["dusted", "straightened", "watered", "mugs", "wiped"].includes(kind) || this.tut || this.curator) return;
+    if (this.favorT && this.t - this.favorT < 60 * 60) return; // at most once a minute
+    const p = this.player, who = this.coworkerNear(8); if (!who) return;
+    this.favorT = this.t; this.showLoc(who.label + ": " + this.tx("vol.favor", null, true).join(" "));
+  }
+  coworkerNear(dist) { // the nearest member of staff in this room (by role), with a label to speak under
+    const p = this.player, label = n => n.usher ? "Usher" : n.patrol ? "Guard" : n.role === "barista" ? "Barista" : n.role === "shopkeeper" ? "Shopkeeper" : n.role === "conservator" ? "Conservator" : n.role ? n.role[0].toUpperCase() + n.role.slice(1) : n.member || "";
+    let best = null, bd = 1e9;
+    for (const n of this.room.npcs) { if (!(n.usher || n.patrol || n.role || (n.staff && n.member)) || n.leaving) continue; const d = Math.abs(n.x - p.x) + Math.abs(n.y - p.y); if (d <= dist && d < bd && label(n)) { bd = d; best = n; } }
+    return best ? { npc: best, label: label(best) } : null;
+  }
+  /* The shift sheet on the staff corkboard: today's real needs, each crossed off once it's done (by anyone). */
+  shiftSheet() {
+    const t = todayISO(), lines = [];
+    const plants = new Set(); for (const id in this.rooms) { if (/^tut/.test(id)) continue; for (const k in this.rooms[id].events) { const e = this.rooms[id].events[k]; if (e && e.plant && this.isThirsty(e.plant)) plants.add(e.plant); } }
+    lines.push(plants.size ? this.tx("shift.plants", { n: plants.size }).join(" ") : this.tx("shift.plantsDone").join(" "));
+    const where = list => { const u = [...new Set(list)]; return u.slice(0, 3).join(", ") + (u.length > 3 ? " and more" : ""); };
+    const zname = (r, x, y) => { const z = this.zoneAt(r, x, y); return z ? z.name : r.name; };
+    const glass = [], frames = [];
+    for (const id in this.rooms) { if (/^tut/.test(id)) continue; const r = this.rooms[id];
+      (r.cases || []).forEach(c => { if (c.piece && this.prints(c.piece) > 0) glass.push(zname(r, c.x, c.y)); });
+      for (const k in r.events) { const e = r.events[k], sp = e && e.spot; if (sp && sp.state === "wall" && sp.piece && (this.isDusty(sp.piece) || this.isCrooked(sp.piece))) { const [x, y] = k.split(",").map(Number); frames.push(zname(r, x, y)); } } }
+    lines.push(glass.length ? this.tx("shift.glass", { where: where(glass) }).join(" ") : this.tx("shift.glassDone").join(" "));
+    if (frames.length) lines.push(this.tx("shift.frames", { where: where(frames) }).join(" "));
+    lines.push(this.tx(this.progress.mug === t ? "shift.mugDone" : "shift.mug").join(" "));
+    lines.push(this.tx(this.progress.closingDay === t ? "shift.closeDone" : "shift.close").join(" "));
+    return [...this.tx("shift.head"), "TODAY'S SHIFT\n" + lines.map(l => "- " + l).join("\n")];
+  }
+  /* What a coworker says as you clock out, from what you did this shift (nothing at all is fine too). */
+  clockOutRemark() {
+    const s = this.shift || {}, order = [["helped", "out.helped"], ["closings", "out.closed"], ["watered", "out.plants"], ["wiped", "out.glass"], ["dusted", "out.frames"], ["straightened", "out.frames"]];
+    const hit = order.find(([k]) => s[k] > 0), who = this.coworkerNear(10), line = this.tx(hit ? hit[1] : "out.none", null, true);
+    return who ? line.map((l, i) => (i === 0 ? who.label + ": " : "") + l) : line;
   }
   /* Returns { badge, name, token? } when the badge works, or { error: "badge.wrong" | "badge.locked" | ... }.
      The offline test badge is checked first (where it's allowed); everything else asks the staff office (Supabase). */
@@ -4140,6 +4209,7 @@ class Game {
      Official things (the ON SHIFT tag, clocking in, the leaderboard, lockers, Employee of the Month) keep the badge name. */
   callName() {
     const s = this.staff; if (!s) return "";
+    if (s.volunteer) { const v = this.pack.settings.text["vol.callName"] || TEXT["vol.callName"].v; return (v[0] && v[0][0]) || "volunteer"; } // read directly: tx() asks for the name itself
     const nn = s.curator ? this.pack.settings.office.nicknames : []; return nn.length ? nn[Math.floor(Math.random() * nn.length)] : s.name;
   }
   officeOpen() { return !!(this.progress.office || (this.staff && this.staff.curator) || this.curator); }
@@ -4744,19 +4814,24 @@ class Game {
   /* The badge you last clocked in with, for clocking in again with one press. One saved before badges could be curators
      (October 2026) asks for the key once more, so a curator badge picks up its office. */
   lastBadge() { const b = this.progress.lastBadge; return b && (!b.token || b.curator !== undefined) ? b : null; }
+  /* Clocking in: with a badge (who) or as a volunteer (no badge: anyone can). A new shift starts its own count. */
+  clockIn(who) {
+    const vol = !who; who = who || { badge: "volunteer", name: "Volunteer", volunteer: true };
+    this.progress.staff = who; this.shift = {}; this.progress.tally.shifts = (this.progress.tally.shifts || 0) + 1; this.saveProgress(); this.updateHud();
+    this.showLoc("Clocked in: " + (vol ? "Volunteer" : who.name)); if (vol) setTimeout(() => { if (this.mode === "walk") this.say(this.tx("vol.in")); }, 900);
+  }
   staffDoor(e) {
     const to = (e && e.warp) || ["staff", 7, 8, "up"];
     this.staffTo = to;
     if (this.staff || this.curator) { this.warp(...to); return; }
     const last = this.lastBadge();
-    if (last) {
-      this.choose("Staff only. Clock in as " + last.name + "?", ["Clock in", "Different badge", "Not now"], i => {
-        if (i === 0) { this.progress.staff = last; this.saveProgress(); this.updateHud(); this.showLoc("Clocked in: " + last.name); this.warp(...to); }
-        else if (i === 1) this.openBadge();
-      });
-      return;
-    }
-    this.openBadge();
+    const opts = last ? ["Clock in as " + last.name, "Volunteer today", "Different badge", "Not now"] : ["Volunteer today", "I have a badge", "Not now"];
+    this.choose("Staff only." + (last ? "" : " Here to help?"), opts, i => {
+      const o = opts[i];
+      if (o === "Volunteer today") { this.clockIn(null); this.warp(...to); }
+      else if (o === "Different badge" || o === "I have a badge") this.openBadge();
+      else if (last && i === 0) { this.clockIn(last); this.warp(...to); }
+    }, opts.length - 1);
   }
   openBadge() {
     const f = this.el.badgeForm; this.mode = "form";
@@ -4844,19 +4919,21 @@ class Game {
     if (this.curator && !this.staff) { this.say(this.tx("clock.curator")); return; }
     if (!this.staff) {
       const last = this.lastBadge();
-      this.choose("You're off shift." + (last ? " Clock in as " + last.name + "?" : " Clock in with your badge?"), ["Clock in", "Not now"], i => {
-        if (i !== 0) return;
-        if (!last) { this.openBadge(); return; }
-        this.progress.staff = last; this.saveProgress(); this.updateHud(); this.showLoc("Clocked in: " + last.name);
-      });
+      const opts = [...(last ? ["Clock in as " + last.name] : []), "Volunteer today", ...(last ? [] : ["I have a badge"]), "Not now"];
+      this.choose("You're off shift. Clock in?", opts, i => {
+        const o = opts[i];
+        if (o === "Volunteer today") this.clockIn(null);
+        else if (o === "I have a badge") this.openBadge();
+        else if (last && i === 0) this.clockIn(last);
+      }, opts.length - 1);
       return;
     }
     const n = this.staffChores();
     this.choose("On shift as " + this.staff.name + ". " + n + " point" + (n === 1 ? "" : "s") + " on your tally. Clock out?",
       ["Clock out", "Keep working"], i => {
         if (i !== 0) return;
-        const name = this.callName(); this.progress.staff = null; this.saveProgress(); this.updateHud();
-        this.say(this.tx("clock.out", { name }));
+        const name = this.callName(), remark = this.clockOutRemark(); this.progress.staff = null; this.saveProgress(); this.updateHud();
+        this.say([...this.tx("clock.out", { name }), ...remark]);
       });
   }
   /* The photo in your locker frame: one you put there, or a snapshot of you (head and shoulders, in what you're wearing). */
@@ -4872,7 +4949,7 @@ class Game {
   locker(i) {
     if (this.myLocker() === i) {
       const lp = this.progress.lockerPhoto, has = !!lp, ph = this.progress.photos || [];
-      this.say(this.tx("locker.mine", { locker: i + 1 }), () => {
+      this.say([...this.tx("locker.mine", { locker: i + 1 }), ...this.tx("vol.duster")], () => {
         const opts = ["Look at the photo", ...(ph.length ? ["Change the photo"] : []), ...(has ? ["Put my own photo back"] : []), "Leave it"];
         this.choose(this.tx(has ? "frame.has" : "frame.ask").join(" "), opts, k => {
           const o = opts[k];
@@ -4906,7 +4983,8 @@ class Game {
     const notes = this.pack.settings.staff.corkboard;
     const sheet = !this.progress.office && (this.progress.tally.helped || 0) >= 5 ? [...this.tx("office.callsheet"), "CALL SHEET\n" + this.wings().map((w, i) => (i + 1) + ". " + w.name).join("\n")] : []; // Behind the Scenes: the order
     const sk = this.progress.sketch, sketch = sk && sk.ph && daysBetween(sk.day, todayISO()) < 7 ? sk : null; // the artist's sketch of your photo, for a week
-    this.say(notes.length ? [...this.tx("cork.intro"), ...notes, ...sheet] : [...this.tx("cork.empty"), ...sheet], sketch ? () => {
+    const shift = this.tut ? [] : this.shiftSheet();
+    this.say(notes.length ? [...shift, ...this.tx("cork.intro"), ...notes, ...sheet] : [...shift, ...this.tx("cork.empty"), ...sheet], sketch ? () => {
       this.el.cuImg.src = this.photoSrc(sketch.ph); this.el.cuImg.alt = sketch.ph.desc; this.el.cuImg.classList.remove("photo", "item"); this.el.cuImg.classList.add("sketch");
       this.el.cuLinks.innerHTML = ""; this.el.cu.style.display = "flex";
       this.say(this.tx("wed.sketch", { desc: sketch.ph.desc }), () => { this.el.cu.style.display = "none"; this.el.cuImg.classList.remove("sketch"); });
@@ -7195,7 +7273,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 placeholders";
+const VERSION = "2026-11-18 volunteer shift";
 window.GOQ = { REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
