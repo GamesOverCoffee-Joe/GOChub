@@ -2754,7 +2754,7 @@ function buildRoom(id, pieces, o) {
     const cafeX = Math.min(...(def.props || []).filter(p => /^cafe_/.test(p.key)).map(p => p.x).concat([r.w]));
     const shelves = (def.wallArt || []).filter(w => w.key === "shop_shelves" && w.x < cafeX - 2), spots = [];
     shelves.forEach(w => { for (let i = 0; i < SLOT[w.key].w / T; i++) if (free(w.x + i, (w.y || 1) + 2)) spots.push([w.x + i, (w.y || 1) + 2]); });
-    if (spots.length) { const [x, y] = spots[Math.floor(Math.random() * spots.length)]; extra.push(Object.assign(someone(), { _x: x, _y: y, still: true, dir: "up", lines: BROWSE_LINES, zone: cz })); }
+    if (spots.length) { const [x, y] = spots[Math.floor(Math.random() * spots.length)]; extra.push(Object.assign(someone(), { _x: x, _y: y, still: true, dir: "up", browsing: true, lines: BROWSE_LINES, zone: cz })); }
     const stools = (def.props || []).filter(p => p.key === "cafe_stool" && p.sit);
     if (stools.length) { const st = stools[Math.floor(Math.random() * stools.length)]; extra.push(Object.assign(someone(), { _x: st.x, _y: st.y, still: true, sitting: true, dir: st.sit, lines: SIT_LINES, zone: cz })); }
     if (o.crowd === "heavy") {
@@ -2765,7 +2765,7 @@ function buildRoom(id, pieces, o) {
     }
   }
   const who = (def.visitors || []).concat(extra).filter(v => (!v.day || o.tod !== "night") && (v.patrol ? o.closing : !v.night || o.tod === "night") && (!o.closing || v.staff || v.patrol)); // the guard does rounds only at closing, whatever the hour (Joe 10/9)
-  r.npcs = who.filter(v => !v.random || v._x !== undefined).map(v => ({ sitting: !!v.sitting, still: v.still, staff: v.staff, patrol: v.patrol, usher: v.usher, role: v.role || (v.usher ? "usher" : undefined), slow: v.slow, goRight: true, pause: 0, stuck: 0,
+  r.npcs = who.filter(v => !v.random || v._x !== undefined).map(v => ({ sitting: !!v.sitting, still: v.still, browsing: v.browsing, staff: v.staff, patrol: v.patrol, usher: v.usher, role: v.role || (v.usher ? "usher" : undefined), slow: v.slow, goRight: true, pause: 0, stuck: 0,
     sheet: v.sheet, x: v._x !== undefined ? v._x : v.x, y: v._y !== undefined ? v._y : v.y, dir: DIRS_LIST.includes(v.dir) ? v.dir : "down", moving: false, prog: 0, step: false, bumpT: 0, timer: 60 + Math.random() * 120, lines: v.lines, lineI: -1,
     random: !!v.random, zone: v.zone || null,
   }));
@@ -5100,7 +5100,8 @@ class Game {
       const order = PROBLEMS.map(pr => [strSeed(key + pr.id), pr]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
       d.picks = { key, ids: order.slice(0, 3 + (strSeed(key) % 2)).map(pr => pr.id) };
     }
-    return { min, beat, beatName: BEATS[beat], loop, day, unveiling, running, crowd: this.crowdToday(), problems: d.picks.ids, paused: d.paused };
+    const r = this.room, here = r && r.base !== undefined ? { now: r.npcs.filter(n => this.npcOwner(n) === "idle" || (n.rhythm && !n.leaving)).length, want: Math.round(r.base * [0.5, 0.85, 1, 0.6][beat]), base: r.base, room: r.id } : null;
+    return { min, beat, beatName: BEATS[beat], loop, day, unveiling, running, crowd: this.crowdToday(), problems: d.picks.ids, paused: d.paused, here, last: d.last ? { what: d.last.what, ago: Math.round((this.t - d.last.t) / 60) } : null };
   }
   setVisitClock(min, paused) { const d = this.dirClock || (this.dirClock = { t: 0, paused: false }); if (min !== undefined && min !== null) d.t = Math.floor(d.t / (12 * 3600)) * 12 * 3600 + Math.max(0, Math.min(12 * 3600 - 1, Math.round(min * 3600))); if (paused !== undefined) d.paused = !!paused; for (const id in this.rooms || {}) this.rooms[id].fresh = true; }
   npcOwner(n) {
@@ -5132,11 +5133,11 @@ class Game {
       return;
     }
     if (idle.length > want && d.beat === 3) { // winding down: someone heads for the doors
-      const n = idle.find(n => !n.moving && Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 2); if (n) { n.leaving = true; n.leaveT = 0; n.alpha = 1; n.route = null; n.aside = null; n.timer = 0; }
+      const n = idle.find(n => !n.moving && Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 2); if (n) { n.leaving = true; n.stroll = true; n.leaveT = 0; n.alpha = 1; n.route = null; n.aside = null; n.timer = 0; this.dirClock.last = { what: "out", t: this.t }; }
     } else if (idle.length < want && d.beat < 3) { // settling in and getting busy: someone comes in through the doors
       const at = def.exitTo || def.spawn, [x, y] = at || []; if (at === undefined || !this.tileFree(r, x, y) || (this.player.x === x && this.player.y === y)) return;
       const zones = r.zoneAt ? (r.zones || []).filter(z => z.kind === "room" && z.rect && z.rect.genre) : [], zone = zones.length ? zones[Math.floor(Math.random() * zones.length)].id : undefined;
-      r.npcs.push(Object.assign(this.crowdPerson(x, y, zone), { dir: "up", timer: 30, alpha: 0, fadeIn: true }));
+      r.npcs.push(Object.assign(this.crowdPerson(x, y, zone), { dir: "up", timer: 30, alpha: 0, fadeIn: true })); this.dirClock.last = { what: "in", t: this.t };
     }
   }
   crowdPerson(x, y, zone) { // an ordinary visitor the rhythm brought in
@@ -6435,7 +6436,7 @@ class Game {
     if (c.bumpT > 0) c.bumpT--;
     if (!c.moving) return false;
     if (c.slow && (this.t & 1)) return false; // the night guard strolls at half speed
-    if (c !== this.player && !c.slow && !c.follow && !c.leaving) { c.spd = (c.spd || 0) + this.pack.settings.staff.patronSpeed; if (c.spd < 1) return false; c.spd -= 1; } // patrons: slower than you
+    if (c !== this.player && !c.slow && !c.follow && (!c.leaving || c.stroll)) { c.spd = (c.spd || 0) + this.pack.settings.staff.patronSpeed; if (c.spd < 1) return false; c.spd -= 1; } // patrons: slower than you
     if ((c.prog += c === this.player && this.segway ? 2 : 1) >= T) {
       c.x += DIRS[c.dir][0]; c.y += DIRS[c.dir][1]; c.prog = 0; c.moving = false;
       if (c === this.player) {
@@ -6626,13 +6627,8 @@ class Game {
     if (npc) { npc.timer = 180; if (!this.deskStaff(npc) && !npc.sitting && !this.facingWall(npc)) this.faceYou(npc, 240); if (npc.patrol) npc.pause = 120; this.talkTo(npc); return; }
     const e = this.room.events[fx + "," + fy]; if (e) this.runEvent(e);
   }
-  /* Someone standing still and staring at a wall or a thing (a shelf, the arcade, the magazines) keeps staring when you talk
-     to them (Joe 10/9). Not people they're talking to, curious visitors (they turn to talk to you) or the tutorial. */
-  facingWall(n) {
-    if (n.moving || !DIRS[n.dir] || n.cur || n.back || n.follow || n.tutId) return false;
-    const [dx, dy] = DIRS[n.dir], x = n.x + dx, y = n.y + dy, r = this.room;
-    return !!(r.solid[y] && r.solid[y][x]) && !r.npcs.some(m => m !== n && m.x === x && m.y === y) && !(this.player.x === x && this.player.y === y);
-  }
+  /* The shop browser ("Hmm. Hmm hmm hmm.") keeps staring at the shelf when you talk to them (Joe 10/9). */
+  facingWall(n) { return !!n.browsing; }
   /* Staff behind a desk or counter keep facing their customers. */
   deskStaff(n) { return !!(n.usher || n.role === "shopkeeper" || n.role === "barista"); }
   /* Turn to face you. Someone who stands still turns back the way they were facing after t frames (while you're walking). */
@@ -7361,7 +7357,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 director 2";
+const VERSION = "2026-11-18 director 3";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

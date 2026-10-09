@@ -472,11 +472,12 @@ Goal: character.
 
 **Living museum, Step 1: the director (2026-11-18).** (Plan: `LIVING-MUSEUM-PLAN.md`, Build order.)
 - `director()`: the visit clock, a 12-minute loop from page load (`dirClock.t`, frames). Beat 0–3 (`BEATS`), loop number, today's weekday and unveiling, today's crowd, and this loop's 3 or 4 problems (`PROBLEMS`, picked by date + loop). It pauses at night, during closing, in the tutorial, or when paused from the curator.
-- (10/9 follow-up) The clock keeps running at night; the guard does rounds only at closing, at any hour. Jumping the clock (or rebuilding) settles the crowd right away, both ways (`crowdPerson`). `facingWall` now covers any wall or thing someone stands still facing.
+- (10/9 follow-up) The clock keeps running at night; the guard does rounds only at closing, at any hour. Jumping the clock (or rebuilding) settles the crowd right away, both ways (`crowdPerson`).
+- (10/9, director 3) `facingWall` is back to just the shop browser (`browsing`, the "Hmm. Hmm hmm hmm." person at the shelves); everyone else turns to you. People the rhythm sends home stroll out at visitor pace (`stroll`) instead of hurrying. `director()` also reports `here` (this room's strollers now, the target for the beat, the busiest count) and `last` (the last arrival or departure and how long ago); the curator's clock line shows both. Preview options moved out of the panel under the preview into their own **Preview** tab (the panel keeps an Options button that opens it; the options element `#pvMenu` is parked in `#pvHold` while another tab shows).
 - `npcOwner(n)`: who's in charge of an NPC (tutorial > closing > unveiling > weekday event > curious > staff > rhythm > idle). The rhythm only moves "idle" people.
 - `updateDirector()`: every 3 seconds in your room, the crowd follows the beat (half at 0–3, most at 3–6, all at the rush, fewer at 9–12): people come in through the doors early (they fade in) and walk out at the end. A freshly built room starts at the right size for the minute.
-- Curator → Preview options → **Visit clock**: jump to a beat, pause or resume, +1 min, and a line with the minute, beat, loop and this loop's problems (`setVisitClock(min, paused)`).
-- Also: member shirt colors (`members[].shirts`; Staff tab "name, badge, orange pink"), `facingWall(n)` (still people facing a bare wall don't turn when you talk), the basement garage door (`garage_door`, storage `wallArt`, `storage.garage`).
+- Curator → Preview tab → **Visit clock**: jump to a beat, pause or resume, +1 min, and a line with the minute, beat, loop and this loop's problems (`setVisitClock(min, paused)`).
+- Also: member shirt colors (`members[].shirts`; Staff tab "name, badge, orange pink"), the basement garage door (`garage_door`, storage `wallArt`, `storage.garage`).
 
 **Living museum, Phase 1: the volunteer shift (2026-11-18).** (Plan: `LIVING-MUSEUM-PLAN.md`.)
 - **Anyone can clock in** as a volunteer: the staff door and the time clock offer "Volunteer today" (no badge). `clockIn(who)`: a badge, or `null` for a volunteer (`progress.staff = { badge: "volunteer", name: "Volunteer", volunteer: true }`). Volunteers get the uniform, the staff room, a locker and the tally like badges do; nothing goes online (no token). Staff call them `vol.callName` ("volunteer").
@@ -654,7 +655,7 @@ Goal: character.
 - **People** (`personScene`, built in `takePhoto` after they react): a classic close-up, drawn at 24×18 on the floor tile they stand on and then doubled (`thumb.close`). They face the camera (the shy turn their back), with their reaction bubble beside their head. Nothing behind them, so it reads as if the camera were right in front of them. (A backdrop of the walls, cases and furniture behind them was tried on 2026-11-05 and removed.)
 - **Hallway posters:** the flash reveals a museum game on each poster (`poster:` layer, the same game per poster: `strSeed(room:x,y)`).
 - **Joe:** photos of him come out as a full-frame scramble of bits of the museum's own sprites (`thumb.glitch`), MissingNo style.
-- **Preview options** (curator):
+- **Preview options** (curator, Preview tab):
   - Settings are segmented rows: View as Curator/Visitor, Time Clock/Day/Sunset/Night, Spooky Rare/Every closing, Test pieces Off/60 placeholders.
   - "Make it happen" holds the figure, **Joe** (`summonJoe()`: he appears near you, in any room) and Tomorrow.
   - "Start fresh" holds Re-crate upcoming, Unread everything, and **Start the visit over**. That button was "Reset chores", but it forgets everything done in the preview.

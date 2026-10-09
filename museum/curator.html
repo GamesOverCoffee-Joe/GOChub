@@ -276,9 +276,10 @@ nav.jumps a:hover,nav.jumps a:focus-visible{border-color:var(--gold)}
 .pvmore>summary::-webkit-details-marker,.rmore>summary::-webkit-details-marker{display:none}
 .pvmenu,.rmenu{position:absolute;right:0;top:calc(100% + 6px);display:flex;flex-direction:column;gap:6px;padding:8px;border:2px solid var(--line);border-radius:4px;background:var(--surface);z-index:20;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
 .pvmenu{background:#281a1f;border-color:#4b343b;gap:10px;position:static;margin-top:8px;min-width:0;box-shadow:none} /* opens in place, under the buttons */
-.pvmore[open]{flex-basis:100%;width:100%}
+#main .pvmenu{max-width:720px;padding:14px;gap:16px;color:#f3e9d2} /* the dark panel, as it looked under the preview */
+#main .pvmenu .pv-hint{color:#d8c8b8}
+#main .pvgrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
 .preview > *{flex-shrink:0} /* the open menu scrolls the panel instead of squashing the preview */
-.pvmore[open]>summary{margin-left:auto;width:max-content}
 .pvsec{display:flex;flex-direction:column;gap:4px}
 .pvh{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted, #b8a8a0)}
 .seg{display:flex;border:2px solid #4b343b;border-radius:4px;overflow:hidden}
@@ -336,6 +337,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
       <button role="tab" id="tab-words" aria-selected="false" aria-controls="main">Words</button>
       <button role="tab" id="tab-ach" aria-selected="false" aria-controls="main">Achievements</button>
       <button role="tab" id="tab-notes" aria-selected="false" aria-controls="main">Notes</button>
+      <button role="tab" id="tab-preview" aria-selected="false" aria-controls="main">Preview</button>
     </div>
     <div class="actions">
       <span id="saved" role="status"></span>
@@ -364,9 +366,10 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
       <button class="btn applyb" type="button" id="applyBtn" title="Load your latest changes into the preview">Apply to preview<span class="dot" id="applyDot" hidden></span></button>
       <label class="sr-only" for="goRoom">Go to room</label>
       <select id="goRoom" class="btn" aria-label="Go to room"></select>
-      <details class="pvmore">
-        <summary class="btn">Preview options</summary>
-        <div class="pvmenu">
+      <button class="btn" type="button" id="pvOpts" title="View as, time, day, the visit clock, make things happen">Options</button>
+    </div>
+    <div id="pvHold" hidden>
+        <div class="pvmenu" id="pvMenu">
           <div class="pvsec"><span class="pvh">View as</span>
             <div class="seg" id="segWho" role="group" aria-label="View the preview as"><button type="button" data-v="curator" title="Hang crates, see everything, notes off">Curator</button><button type="button" data-v="visitor" title="What a player sees">Visitor</button></div></div>
           <div class="pvsec"><span class="pvh">Time of day</span>
@@ -396,7 +399,6 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
               <button class="btn" type="button" id="rechore" title="Forget everything done in this preview: chores, tokens, photos, achievements, the office. The lights come back on and visitors return. (The preview never saves; players' saves aren't touched.)">Start the visit over</button>
             </div></div>
         </div>
-      </details>
     </div>
     <p class="pv-hint" id="ver" style="font-size:.75rem"></p>
     <p class="pv-hint" id="pvHint">Click the preview, then walk with the arrow keys or WASD. Z or Space to look and hang, X to go back or take a photo, Enter for the menu.</p>
@@ -406,7 +408,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 director 2";
+window.GOQ_WANT = "2026-11-18 director 3";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -665,7 +667,7 @@ $("#dayBtn").addEventListener("click", () => { game.closeAll(); game.skipDay(); 
 let tab = "art", current = "atlas";
 function setTab(t) {
   tab = t;
-  ["art", "pieces", "staff", "visitors", "shop", "tokens", "rooms", "words", "ach", "notes"].forEach(k => $("#tab-" + k).setAttribute("aria-selected", t === k));
+  ["art", "pieces", "staff", "visitors", "shop", "tokens", "rooms", "words", "ach", "notes", "preview"].forEach(k => $("#tab-" + k).setAttribute("aria-selected", t === k));
   $("#app").classList.toggle("no-side", t !== "art");
   render();
 }
@@ -679,6 +681,8 @@ $("#tab-words").addEventListener("click", () => setTab("words"));
 $("#tab-ach").addEventListener("click", () => setTab("ach"));
 $("#tab-tokens").addEventListener("click", () => setTab("tokens"));
 $("#tab-notes").addEventListener("click", () => setTab("notes"));
+$("#tab-preview").addEventListener("click", () => setTab("preview"));
+$("#pvOpts").addEventListener("click", () => { setTab("preview"); $("#main").scrollIntoView({ behavior: "smooth", block: "start" }); });
 // Small screens: the preview sits below the editor; this jumps to it.
 $("#pvJump").addEventListener("click", () => document.querySelector(".preview").scrollIntoView({ behavior: "smooth", block: "start" }));
 /* After a tab draws: a long intro under its title folds into "How this works", and a tab with several sections gets links to them. */
@@ -694,8 +698,16 @@ function tidyTab() {
     (main.querySelector("details.howto") || h2).after(nav);
   }
 }
-function render() { renderTab(); tidyTab(); }
-function renderTab() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "visitors") renderVisitors(); else if (tab === "shop") renderShop(); else if (tab === "tokens") renderTokens(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else if (tab === "notes") renderNotes(); else renderPieces(); }
+function render() { $("#pvHold").appendChild($("#pvMenu")); renderTab(); tidyTab(); } // the options panel lives on (with its buttons wired) while another tab shows
+/* The Preview tab: the preview's options (they grew too big for the panel under it, Joe 10/9). */
+function renderPreviewTab() {
+  const main = $("#main"); main.innerHTML = "";
+  const wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
+  wrap.appendChild(el("h2", { class: "title", text: "Preview options" }));
+  wrap.appendChild(el("p", { class: "note", text: "These change only the live preview on the right, never the pack or anyone's save. Each row is a setting (the lit one is on); the buttons make something happen right away." }));
+  wrap.appendChild($("#pvMenu")); showClock();
+}
+function renderTab() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "visitors") renderVisitors(); else if (tab === "shop") renderShop(); else if (tab === "tokens") renderTokens(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else if (tab === "notes") renderNotes(); else if (tab === "preview") renderPreviewTab(); else renderPieces(); }
 
 /* ---------- Image helpers ---------- */
 function readFile(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error("That file couldn't be read.")); r.readAsDataURL(file); }); }
@@ -1027,7 +1039,7 @@ function renderStaff() {
   rs.addEventListener("input", () => { st.readStrength = +rs.value / 100; rsOut.textContent = rs.value + "%"; rApply(); changed(); });
   wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
     el("h3", { text: "Pieces you haven't read", style: "margin:0 0 4px" }),
-    el("p", { class: "note", style: "margin:0 0 12px", text: "A thin border on the floor around each case (and a line in front of each painting) shows what's left to read. It pulses red until you read it; reading one side turns that side green, fading to red toward the other side. A side only counts once its placard is read to the last page. Once both sides are read it turns green, flares, and fades away for good, and from then on the piece sparkles now and then (Sparkle on read pieces; 0% turns it off). On a piece's unveil day it pulses blue until it's read, then flares the same way. Strength sets how bright it is. Preview options, Unread everything, resets it." }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "A thin border on the floor around each case (and a line in front of each painting) shows what's left to read. It pulses red until you read it; reading one side turns that side green, fading to red toward the other side. A side only counts once its placard is read to the last page. Once both sides are read it turns green, flares, and fades away for good, and from then on the piece sparkles now and then (Sparkle on read pieces; 0% turns it off). On a piece's unveil day it pulses blue until it's read, then flares the same way. Strength sets how bright it is. The Preview tab's Unread everything resets it." }),
     el("div", { class: "fields", style: "max-width:420px" }, [el("label", {}, [document.createTextNode("Style"), rsty])]),
     el("label", { class: "range" }, [el("span", { text: "Strength" }), rs, rsOut]),
     el("label", { class: "range" }, [el("span", { text: "Sparkle on read pieces" }), sk, skOut]),
@@ -2741,10 +2753,13 @@ function showClock() {
   const d = game.director(), m = Math.floor(d.min), sec = Math.floor((d.min - m) * 60), info = $("#clockInfo"); if (!info) return;
   const names = d.problems.map(id => { const pr = GOQ.PROBLEMS.find(x => x.id === id); return pr ? pr.who + ": " + pr.label : id; });
   info.textContent = "Minute " + m + ":" + String(sec).padStart(2, "0") + " · " + d.beatName + (d.loop ? " · loop " + (d.loop + 1) : "") + (d.running ? "" : d.paused ? " · paused" : " · stopped (night, closing or tutorial)") + ". This loop's problems (not built yet): " + names.join("; ") + ".";
+  const here = d.here ? " In this room: " + d.here.now + " strolling, aiming for " + d.here.want + " (" + d.here.base + " at the busiest)." : " This room has no crowd of its own.";
+  const last = d.last ? " Last: someone " + (d.last.what === "in" ? "came in through the doors" : "headed out") + ", " + d.last.ago + " s ago." : "";
+  info.textContent += here + last;
   $("#clockPause").textContent = d.paused ? "Resume" : "Pause";
   document.querySelectorAll("#segBeat button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.v === d.beat * 3)));
 }
-setInterval(() => { const det = $("#clockInfo") && $("#clockInfo").closest("details"); if (!det || det.open) showClock(); }, 1000);
+setInterval(() => { if (tab === "preview") showClock(); }, 1000);
 
 /* ---------- Import and export ---------- */
 $("#exportBtn").addEventListener("click", async () => {
