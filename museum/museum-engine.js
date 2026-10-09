@@ -91,6 +91,7 @@ const PAL = {
   stall:   [null, "#c84a4a", "#f4f0e6", "#8a5a32", "#5a3a1a", "#181820"],
   ledsign: [null, "#0a080c", "#2a2630", "#55505e", "#1c0808"],
   arcade:  [null, "#1a1424", "#3a2a5a", "#5a48a0", "#101018", "#40d0c0", "#f0c040", "#e05050", "#5878c8"],
+  cafesign: ["#ecece0", "#c08850", "#2f4a3a", "#181820", "#7a4a26", "#f0c060"], // chalk, wood, chalkboard, outline, dark wood, yellow chalk
   mags:    [null, "#f8f0e0", "#8a5a38", "#2a160c", "#e05050", "#5878c8", "#f0c040", "#58a868"],
   segway:  [null, "#f8f8f0", "#b0b0c0", "#181820"],
   goqshirt:[null, "#f8e0c0", "#2a2030", "#181820", "#e8b24a"],
@@ -964,6 +965,14 @@ const GEN = {
     rect(a, 2, 5, 1, 9, 1); rect(a, 45, 5, 1, 9, 1);
     return a;
   },
+  // The café's sandwich board: today's special's cup is drawn on the chalkboard (at 4,12).
+  cafe_sign: () => {
+    const a = mk(16, 32);
+    rect(a, 2, 24, 2, 6, 4); rect(a, 12, 24, 2, 6, 4); rect(a, 1, 30, 3, 2, 4); rect(a, 12, 30, 3, 2, 4); // legs and feet
+    rect(a, 6, 5, 4, 2, 4); rect(a, 1, 7, 14, 18, 1); rect(a, 2, 8, 12, 16, 2); // handle, frame, chalkboard
+    rect(a, 4, 10, 8, 1, 0); rect(a, 4, 21, 3, 1, 5); rect(a, 9, 21, 3, 1, 5); px(a, 3, 22, 0); px(a, 12, 9, 0); // chalk
+    return outline(a);
+  },
   magazine_rack: () => {
     const a = mk(16, 32);
     rect(a, 2, 4, 12, 26, 2); rect(a, 2, 30, 12, 2, 3);
@@ -1176,6 +1185,7 @@ const SLOTS = [
   { key: "g3_wall_lower", label: "Gallery Three wall, lower row", group: "Gallery Three", w: 16, h: 16, pal: "g3", gen: GEN.wall_lower },
   { key: "someones_pc", label: "Someone's PC", group: "Floors", w: 16, h: 16, pal: "pc", gen: GEN.someones_pc, note: "In Storage. Holds the archive of pieces no longer on display." },
   { key: "shelf_unit", label: "Shop shelving unit", group: "Gift shop and café", w: 48, h: 32, pal: "shelf", gen: GEN.shelf_unit, note: "Two shelves, three stacks of goods per shelf. Goods are drawn on top: stacks centered at x 9, 24 and 39, shelves at y 4 and 18." },
+  { key: "cafe_sign", label: "Café sign (today's special)", group: "Gift shop and café", w: 16, h: 32, pal: "cafesign", gen: GEN.cafe_sign, note: "A sandwich board by the café. Today's special's cup is drawn on the chalkboard (8×8, from 4,12). Two tiles tall." },
   { key: "magazine_rack", label: "Magazine stand", group: "Gift shop and café", w: 16, h: 32, pal: "mags", gen: GEN.magazine_rack, note: "In the café. Two tiles tall." },
   { key: "segway", label: "Segway (secret)", group: "People", w: 16, h: 16, pal: "segway", gen: GEN.segway, note: "Drawn under you when you've entered a certain famous code." },
   { key: "player_goq_shirt", label: "Player in the GOQ shirt (secret)", group: "People", w: 16, h: 16, layout: "char", pal: "goqshirt", gen: GEN.staff_uniform, note: "Worn after unlocking the discontinued GOQ shirt. " + CHAR_NOTE },
@@ -1397,7 +1407,11 @@ function normalizePack(p) {
     use: ["shades", "hat", "mug", "case"].includes(it && it.use) ? it.use : "", // what it does once it's yours (Wardrobe): wear it, carry drinks in it, put it on your phone
     gift: str(it && it.gift, 60), // a piece's id: this item is that piece's unveil gift (in the shop only as the gift of the week)
   }));
-  const shop = { items, featured: items.some(it => it.id === shin.featured) ? shin.featured : (items[0] ? items[0].id : ""),
+  // featured: an item's id to always feature (and always stock), or "" for automatic (the unveil gift while it's new, else a
+  // different one of today's stock each day). stock: how many regular items are on the shelves each day (the rest rotate in).
+  // special: the café sign's drink, "" for automatic (the drink of the week, else a different regular drink each day).
+  const shop = { items, featured: items.some(it => it.id === shin.featured) ? shin.featured : "",
+    stock: Math.max(1, Math.min(40, Math.round(+shin.stock || 4))), special: ["coffee", "tea", "cocoa"].includes(shin.special) ? shin.special : "",
     drinkPrice: Math.max(0, Math.min(99, Math.round(+shin.drinkPrice || 0))) };
   // Bluu (Saturdays, Shop tab): which items he carries (null: everything in the shop, and old gifts),
   // whether the GOC shirt is on his table, his markup, and how often a thing is fake (percent).
@@ -1919,6 +1933,9 @@ const TEXT = {
   "gear.lens":         { g: "Your stuff", l: "Putting on fake GOQ shades: a lens pops out (they stay on, half of them)", v: [["[One of the lenses pops out. Half the shades it is.]"]] },
   "gear.hatSmall":     { g: "Your stuff", l: "Trying on a fake GOQ hat: it won't go on", v: [["[The hat is way too small. It sits on top of your head for a second, then falls off.]"]] },
   "gear.mugDone":      { g: "Your stuff", l: "Finishing a drink from your (real) travel mug ({drink}: what it was); the mug goes back in your bag", v: [["[You finish your {drink}. The mug goes back in your bag]"]] },
+  "shop.stock":        { g: "Gift shop", l: "Under GIFT SHOP in the shop menu: the stock changes every day", v: [["New stock every day."]] },
+  "shop.limited":      { g: "Gift shop", l: "Before an unveil gift's description: it's only here for a while", v: [["Limited time only."]] },
+  "cafe.sign":         { g: "Café", l: "The sign by the café: today's special ({drink}: its name; {n}: its price)", v: [["TODAY'S SPECIAL: {drink}.", "{n} tokens at the counter."]] },
   "drink.useMug":      { g: "Café", l: "Ordering when you own a travel mug", v: [["Do you want to use your travel mug?"]] },
   "gear.leak":         { g: "Your stuff", l: "Walking with a drink in a fake travel mug: it leaks out (the mug goes back in your bag)", v: [["[Your travel mug leaks. Your drink is gone. Your shoes are not dry.]"]] },
   "gear.caseBlocks":   { g: "Your stuff", l: "Taking a photo with a fake phone case on (no photo; take the case off in Wardrobe)", v: [["[The case covers the camera. The photo is just black.]", "[You could take the case off. My Stuff, Wardrobe.]"]] },
@@ -2758,7 +2775,7 @@ class Game {
 
   /* ----- art ----- */
   async setPack(p) {
-    const pack = normalizePack(p), token = ++this.packToken, ov = {}, pi = {}, ii = {}; this.popupCache = null; // Bluu's table follows the new pack
+    const pack = normalizePack(p), token = ++this.packToken, ov = {}, pi = {}, ii = {}; this.popupCache = null; this.stockCache = null; // Bluu's table and today's stock follow the new pack
     await Promise.all([
       ...Object.keys(pack.assets).map(async k => { const img = await loadImage(pack.assets[k].src); if (img) ov[k] = img; }),
       ...pack.pieces.filter(x => x.image).map(async x => { const img = await loadImage(x.image); if (img) pi[x.id] = img; }),
@@ -3507,8 +3524,8 @@ class Game {
     this.lightsOff.add(id); this.showLoc("Lights off");
     if (!this.spook) this.spook = { armed: this.forceSpook || Math.random() < 0.2, steps: 0, need: 10 + Math.floor(Math.random() * 12), done: false };
     if (this.switches().every(sw => this.lightsOff.has(sw.key))) {
-      // Closing up pays once per opening: flicking a light back on and off again doesn't count twice.
-      if (!this.closingPaid) { this.closingPaid = true; this.count("closings"); this.saveProgress(); }
+      // Closing up pays once a day: flicking a light back on and off, or closing again after reopening, doesn't count twice.
+      if (!this.closingPaid) { this.closingPaid = true; if (this.progress.closingDay !== todayISO()) { this.progress.closingDay = todayISO(); this.count("closings"); } this.saveProgress(); }
       this.closed = true;
       setTimeout(() => this.say(this.tx("lights.closed")), 500);
     }
@@ -5043,9 +5060,8 @@ class Game {
   }
   closeShop() { this.el.shop.style.display = "none"; this.mode = "walk"; this.inputLock = true; }
   shopRows() {
-    const sh = this.pack.settings.shop;
-    const items = this.shopItems().sort((a, b) => (b.id === sh.featured) - (a.id === sh.featured)), gift = this.weekGift();
-    if (gift) items.unshift(gift); // this week's unveil gift, on sale until the next one
+    const f = this.featuredId(), items = this.stockToday().slice().sort((a, b) => (b.id === f) - (a.id === f)), gift = this.weekGift();
+    if (gift) { if (gift.id === f) items.unshift(gift); else items.splice(items.length && items[0].id === f ? 1 : 0, 0, gift); } // this week's unveil gift, on sale until the next one
     return [...items.map(it => ({ item: it })), { shirt: true }, { collection: true }, { leave: true }];
   }
   /* A split menu: the list on the left, the highlighted thing large on the right. Sized to the box, so nothing runs off the bottom. */
@@ -5053,6 +5069,10 @@ class Game {
     const list = split.querySelector(".gt-shop-list"); if (!list || list.scrollHeight <= list.clientHeight + 1) return; // it all fits
     let fit = 0; for (const r of list.children) { if (r.offsetTop - list.offsetTop + r.offsetHeight <= list.clientHeight) fit = r.offsetTop - list.offsetTop + r.offsetHeight; }
     if (fit > 20) { list.style.height = fit + "px"; list.style.alignSelf = "start"; } // end on a whole row: the rest scrolls into view, nothing half shown
+  }
+  fitDetail(split) { // a long description shrinks (down to about 60%) until the whole thing shows, never cut off
+    const d = split.querySelector(".gt-detail"); if (!d) return;
+    for (let f = 1; f > 0.6 && d.scrollHeight > d.clientHeight + 1; f -= 0.08) [...d.children].forEach(c => { if (!c.classList.contains("pic")) c.style.fontSize = f + "em"; });
   }
   detailPane(o) { // { img, tag, title, price, desc, msg }
     const d = document.createElement("div"); d.className = "gt-detail";
@@ -5068,13 +5088,14 @@ class Game {
     const t1 = document.createElement("span"); t1.textContent = "GIFT SHOP";
     const t2 = document.createElement("span"); t2.textContent = "TOKENS " + (this.progress.tokens || 0);
     head.appendChild(t1); head.appendChild(t2); box.appendChild(head);
+    const sub = document.createElement("div"); sub.style.textAlign = "center"; sub.textContent = this.tx("shop.stock").join(" "); box.appendChild(sub); // the stock rotates
     const split = document.createElement("div"); split.className = "gt-split"; box.appendChild(split);
     const list = document.createElement("div"); list.className = "gt-shop-list"; split.appendChild(list);
     rows.forEach((r, i) => {
       const row = document.createElement("div"); row.className = "gt-shop-row" + (i === this.shopSel ? " on" : "");
       if (r.item) {
         const img = document.createElement("img"); img.src = this.itemIcon(r.item).toDataURL(); img.alt = ""; row.appendChild(img);
-        const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = (r.item.gift ? "NEW " : r.item.id === this.featuredId() ? "* " : "") + r.item.name; row.appendChild(nm);
+        const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = (r.item.gift ? "LIMITED " : r.item.id === this.featuredId() ? "* " : "") + r.item.name; row.appendChild(nm);
         const pr = document.createElement("span"); pr.className = "pr"; if (owned.includes(r.item.id)) { pr.className = "pr gt-tag"; pr.textContent = "OWNED"; } else pr.textContent = r.item.price + " T"; row.appendChild(pr);
       } else if (r.shirt) {
         const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = "GOQ shirt"; row.appendChild(nm);
@@ -5084,9 +5105,9 @@ class Game {
       list.appendChild(row);
     });
     const r = rows[this.shopSel], it = r.item;
-    split.appendChild(this.detailPane(it ? { img: this.itemIcon(it).toDataURL(), tag: owned.includes(it.id) ? "OWNED" : "", title: it.name, price: owned.includes(it.id) ? "Yours" : it.price + " tokens", desc: (it.id === this.featuredId() ? "FEATURED. " : "") + (it.description || ""), msg: this.shopMsg }
+    split.appendChild(this.detailPane(it ? { img: this.itemIcon(it).toDataURL(), tag: owned.includes(it.id) ? "OWNED" : it.gift ? "LIMITED" : "", title: it.name, price: owned.includes(it.id) ? "Yours" : it.price + " tokens", desc: (it.gift ? this.tx("shop.limited").join(" ") + " " : "") + (it.id === this.featuredId() ? "FEATURED. " : "") + (it.description || ""), msg: this.shopMsg }
       : { title: r.shirt ? "GOQ shirt" : r.collection ? "Your collection" : "Leave", desc: r.shirt ? this.tx(this.progress.shirt ? "shirt.owned" : "shirt.tease").join(" ") : r.collection ? "See what you've bought." : "Head back out.", msg: this.shopMsg }));
-    this.fitSplit(box, split);
+    this.fitSplit(box, split); this.fitDetail(split);
     const sel = list.children[this.shopSel]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: "nearest" });
   }
   shopSelect() {
@@ -5110,9 +5131,9 @@ class Game {
     }
     this.renderShop();
   }
-  /* Each stand (rack or shelving unit) shows one item, in Shop-tab order: stand 1 has item 1, and so on. A stand without an item gets trinkets. */
-  unitGoods(u) { const it = this.shopItems()[u], out = []; for (let k = 0; k < 6; k++) out.push(it ? { item: it } : { trinket: hash(u, k) % 8 }); return out; } // one item per stand, in menu order
-  rackItems(i) { const items = this.shopItems(); return [items[i] || null]; } // one item per stand, in menu order
+  /* Each stand (rack or shelving unit) shows one of today's stock, in Shop-tab order. A stand without an item gets trinkets. */
+  unitGoods(u) { const it = this.stockToday()[u], out = []; for (let k = 0; k < 6; k++) out.push(it ? { item: it } : { trinket: hash(u, k) % 8 }); return out; } // one item per stand, in menu order
+  rackItems(i) { const items = this.stockToday(); return [items[i] || null]; } // one item per stand, in menu order
   browseUnit(u) { this.browseRack(u); } // each stand shows its one item, same as a rack
   browseRack(i) {
     const items = this.rackItems(i).filter(Boolean);
@@ -5139,8 +5160,26 @@ class Game {
      shop until the next gift replaces it, and then it's one of the old gifts Bluu sells (real, or not) on Saturdays. */
   unveiled() { const t = todayISO(); return this.pack.pieces.filter(p => !p.tut && p.unveil && p.unveil <= t).sort((a, b) => (a.unveil < b.unveil ? -1 : a.unveil > b.unveil ? 1 : 0)); }
   giftOf(p) { return p ? this.pack.settings.shop.items.find(it => it.gift === p.id) || null : null; } // its unveil gift: a shop item tagged with its id
-  shopItems() { return this.pack.settings.shop.items.filter(it => !it.gift); } // the regular stock (gifts only show as the gift of the week)
-  featuredId() { const g = this.weekGift(); return g ? g.id : this.pack.settings.shop.featured; } // the gift of the week is always the featured item
+  shopItems() { return this.pack.settings.shop.items.filter(it => !it.gift); } // every regular item (gifts only show as the gift of the week)
+  /* Today's stock: shop.stock of the regular items, a different mix each day (the same for everyone), so players hold out for
+     the one they want. A featured item the curator picked is always in. off: days from now (the curator's preview). */
+  stockToday(off) {
+    const sh = this.pack.settings.shop, all = this.shopItems(), n = sh.stock || 4;
+    const t = new Date(todayISO() + "T12:00:00"); if (off) t.setDate(t.getDate() + off);
+    const day = t.toISOString().slice(0, 10), key = "stock|" + day;
+    if (!off && this.stockCache && this.stockCache.key === key + n + all.length) return this.stockCache.items;
+    const pin = all.find(it => it.id === sh.featured);
+    let pick = all.length <= n ? all.slice() : all.map(it => [strSeed(key + it.id), it]).sort((a, b) => a[0] - b[0]).map(x => x[1]).filter(it => it !== pin).slice(0, pin ? n - 1 : n);
+    if (pin && !pick.includes(pin)) pick.unshift(pin);
+    pick = all.filter(it => pick.includes(it)); // in Shop-tab order, so the stands keep their order
+    if (!off) this.stockCache = { key: key + n + all.length, items: pick };
+    return pick;
+  }
+  featuredId(off) { // the curator's pick; otherwise the unveil gift while it's new; otherwise one of today's stock, a different one each day
+    const sh = this.pack.settings.shop; if (sh.items.some(it => it.id === sh.featured)) return sh.featured;
+    const g = this.weekGift(); if (g) return g.id;
+    const st = this.stockToday(off); return st.length ? st[strSeed("feat|" + todayISO() + (off || 0)) % st.length].id : "";
+  }
   giftItems() { return this.unveiled().map(p => this.giftOf(p)).filter(Boolean); } // oldest first
   weekGift() { const g = this.giftItems(); return g[g.length - 1] || null; }
   weekDrink() { const ps = this.unveiled().filter(p => p.drink), p = ps[ps.length - 1]; return p ? { id: "week", name: p.drink, piece: p.id, color: p.drinkColor, line: p.drinkLine, price: p.drinkPrice, iced: p.drinkIced } : null; }
@@ -5204,7 +5243,7 @@ class Game {
   readFeatured() {
     const sh = this.pack.settings.shop, it = sh.items.find(i => i.id === this.featuredId());
     if (!it) { this.say(["An empty pedestal under a glass dome."]); return; }
-    this.say(["FEATURED: " + it.name, ...(it.description ? [it.description] : []), it.price + " tokens. Find it on the racks or ask at the counter."]);
+    this.say(["FEATURED: " + it.name, ...(it.gift ? this.tx("shop.limited") : []), ...(it.description ? [it.description] : []), it.price + " tokens. Find it on the racks or ask at the counter."]);
   }
   cafe(menu) {
     if (this.closing) { this.say(this.tx("cafe.closed")); return; }
@@ -5231,12 +5270,28 @@ class Game {
   }
   /* The café menu, split like the gift shop: the drinks (and Just chatting, Nothing, thanks) on the left, the highlighted
      drink large on its saucer on the right, with its name and price in full. */
-  cafeCup(d, k) { // the drink as it's served, on its own little canvas
-    const c = document.createElement("canvas"); c.width = c.height = 8; const x = c.getContext("2d");
+  cafeCup(d, k) { return this.cupCanvas(d, k).toDataURL(); }
+  cupCanvas(d, k) { // the drink as it's served, on its own little canvas
+    const ck = "cupc|" + (d.id || k) + "|" + (d.color || "") + (d.iced ? "|i" : ""); if (this.cache[ck]) return this.cache[ck];
+    const c = (this.cache[ck] = document.createElement("canvas")); c.width = c.height = 8; const x = c.getContext("2d");
     const img = d.iced ? this.icedCup(d.color || DRINKS[Math.min(k, 2)].color) : d.id === "week" && d.color && !this.overrides.cups ? this.weekCup(d.color) : null;
     if (img) x.drawImage(img, 0, 0); else if (d.iced) x.drawImage(this.sheet("cup_iced"), 0, 0, 8, 8, 0, 0, 8, 8); else x.drawImage(this.sheet("cups"), Math.min(k, 3) * 8, 0, 8, 8, 0, 0, 8, 8);
-    return c.toDataURL();
+    return c;
   }
+  /* Today's special, on the café sign and starred on the menu: the curator's pick (Shop tab), or else the drink of the week,
+     or else a different regular drink each day. { d: the drink, k: its cup (0 to 2, or 3 for the drink of the week) } */
+  cafeSpecial() {
+    const sh = this.pack.settings.shop, menu = this.menuDrinks(), pick = menu.findIndex(d => d.id === sh.special);
+    if (pick >= 0) return { d: menu[pick], k: pick };
+    const w = this.tut ? null : this.weekDrink(); if (w) return { d: w, k: 3 };
+    const i = strSeed("special|" + todayISO()) % menu.length; return menu[i] ? { d: menu[i], k: i } : null;
+  }
+  readCafeSign() {
+    const sp = this.cafeSpecial(); if (!sp) { this.say(["A sandwich board. Nothing chalked on it today."]); return; }
+    const sun = this.weekday() === 0 && !this.tut, n = sun ? Math.floor((sp.d.price || 0) / 2) : sp.d.price || 0;
+    this.say(this.tx("cafe.sign", { drink: sp.d.name, n }));
+  }
+  isSpecial(d) { const sp = this.cafeSpecial(); return !!sp && sp.d.id === d.id; }
   renderCafe() {
     const m = this.cm, box = this.el.cafe; box.innerHTML = "";
     const head = document.createElement("div"); head.className = "gt-shop-head";
@@ -5248,16 +5303,16 @@ class Game {
     rows.forEach((r, i) => {
       const row = document.createElement("div"); row.className = "gt-shop-row" + (i === m.i ? " on" : "");
       if (r.d) { const img = document.createElement("img"); img.alt = ""; img.src = this.cafeCup(r.d, r.k); row.appendChild(img); }
-      const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = r.d ? r.d.name : r.label; row.appendChild(nm);
+      const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = r.d ? (this.isSpecial(r.d) ? "* " : "") + r.d.name : r.label; row.appendChild(nm);
       if (r.d) { const c = m.cost(r.d), pr = document.createElement("span"); pr.className = "pr"; pr.textContent = c ? c + " T" : "Free"; row.appendChild(pr); }
       row.addEventListener("click", e => { e.stopPropagation(); if (m.i === i) this.cafePick(); else { m.i = i; m.msg = ""; this.renderCafe(); } });
       list.appendChild(row);
     });
     const r = rows[m.i];
-    split.appendChild(this.detailPane(r.d ? { img: this.cafeCup(r.d, r.k), title: r.d.name, price: (m.cost(r.d) ? m.cost(r.d) + " tokens" : "Free") + (r.d.iced ? " \u00b7 iced" : ""), desc: m.sun ? "Sundays, everything's half off." : "", msg: m.msg }
+    split.appendChild(this.detailPane(r.d ? { img: this.cafeCup(r.d, r.k), tag: this.isSpecial(r.d) ? "SPECIAL" : "", title: r.d.name, price: (m.cost(r.d) ? m.cost(r.d) + " tokens" : "Free") + (r.d.iced ? " \u00b7 iced" : ""), desc: m.sun ? "Sundays, everything's half off." : "", msg: m.msg }
       : { title: r.label, desc: r.label === "Just chatting" ? "Talk to the barista instead." : "Head back out.", msg: m.msg }));
     const q = document.createElement("div"); q.style.textAlign = "center"; q.textContent = m.title; box.insertBefore(q, split);
-    this.fitSplit(box, split);
+    this.fitSplit(box, split); this.fitDetail(split);
     const sel = list.children[m.i]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: "nearest" });
   }
   cafeMove(d) {
@@ -6102,6 +6157,7 @@ class Game {
     else if (e.usher) { const u = this.room.npcs.find(n => n.usher); if (u) this.usherTalk(); else this.readGuestbook(); }
     else if (e.window) this.lookOutWindow();
     else if (e.shopCounter) this.shopCounter();
+    else if (e.cafeSign) this.readCafeSign();
     else if (e.cafe) this.cafe();
     else if (e.trash) this.bin(e);
     else if (e.upcoming) this.workbench();
@@ -6714,6 +6770,7 @@ class Game {
       else { this.drawSlot("trinkets", hash(p.rack, 1) % 8, 0, px0 + 12, py0 + 5); this.drawSlot("trinkets", hash(p.rack, 2) % 8, 0, px0 + 12, py0 + 18); }
     }
     if (k === "day_board") { const t = this.chalkText(["SUN.", "MON.", "TUES.", "WED.", "THURS.", "FRI.", "SAT."][this.weekday()]); ctx.drawImage(t, px0 + 16 - Math.floor(t.width / 2), py0 + 3); }
+    if (k === "cafe_sign") { const sp = this.cafeSpecial(); if (sp) ctx.drawImage(this.cupCanvas(sp.d, sp.k), px0 + 4, py0 + 12); }
     if (k === "popup_table") this.popupItems().forEach((it, i) => ctx.drawImage(this.itemIcon(it), px0 + 3 + i * 9, py0 + 1, 8, 8));
     if (p.collection) this.displayed().forEach((it, i) => {
       ctx.drawImage(this.itemIcon(it), px0 + [4, 13, 27, 36][i % 4], py0 + [2, 11, 20][Math.floor(i / 4)], 8, 8);
@@ -7118,7 +7175,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 bluu carries all";
+const VERSION = "2026-11-18 rotating stock";
 window.GOQ = { REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

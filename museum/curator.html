@@ -407,7 +407,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 bluu carries all";
+window.GOQ_WANT = "2026-11-18 rotating stock";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -2445,6 +2445,28 @@ function renderShop() {
       el("label", { class: "wide" }, [document.createTextNode("The barista's line"), line])]));
   });
   wrap.appendChild(drinks);
+  // Today's special: the sandwich board by the café (and starred on the menu)
+  { const sp = el("select", { "aria-label": "Today's special" }, [el("option", { value: "", text: "Automatic: the drink of the week, or else a different drink each day" }), ...sh.drinks.map(d => el("option", { value: d.id, text: d.name + ", every day" }))]);
+    sp.value = sh.special || ""; sp.addEventListener("change", () => { sh.special = sp.value; changed({ now: true }); });
+    wrap.appendChild(el("section", { class: "prow", style: "display:block;margin:10px 0 16px" }, [el("h3", { text: "Today's special", style: "margin:0 0 4px" }),
+      el("p", { class: "note", style: "margin:0 0 8px", text: "Chalked on the sandwich board by the café (its cup is drawn on it, and looking at it says the name and price), and starred on the menu. Move the board in Rooms; its words are in Words, Café." }), sp])); }
+  // Featured item and today's stock
+  { const fsel = el("select", { "aria-label": "Featured item" }, [el("option", { value: "", text: "Automatic: the unveil gift while it's new, or else one of today's stock" }), ...sh.items.map(it => el("option", { value: it.id, text: it.name + (it.gift ? " (unveil gift)" : "") + ", always" }))]);
+    fsel.value = sh.featured || ""; fsel.addEventListener("change", () => { sh.featured = fsel.value; changed({ now: true }); drawStock(); });
+    const n = el("input", { type: "number", min: 1, max: 40, value: sh.stock || 4, style: "max-width:90px" }); n.addEventListener("input", () => { sh.stock = Math.max(1, Math.min(40, Math.round(+n.value || 4))); changed(); drawStock(); });
+    const stock = el("div", { class: "note" });
+    function drawStock() {
+      const keep = game.pack.settings.shop; let days = [];
+      try { game.pack.settings.shop = GOQ.normalizePack({ settings: { shop: sh } }).settings.shop; game.stockCache = null;
+        days = [0, 1, 2].map(o => { const f = game.featuredId(o); return game.stockToday(o).map(it => it.name + (it.id === f ? " (featured)" : "")).join(", "); }); }
+      finally { game.pack.settings.shop = keep; game.stockCache = null; }
+      stock.innerHTML = ""; ["Today", "Tomorrow", "The day after"].forEach((d, i) => stock.appendChild(el("div", {}, [el("b", { text: d + ": " }), document.createTextNode(days[i] || "nothing")])));
+    }
+    wrap.appendChild(el("section", { class: "prow", style: "display:block;margin:10px 0 16px" }, [el("h3", { text: "Featured item and today's stock", style: "margin:0 0 4px" }),
+      el("p", { class: "note", style: "margin:0 0 8px", text: "The shop carries a different mix of your items each day (the same for every player), one per stand. Picking a featured item keeps it on the shelves and on the pedestal every day, even over an unveil gift. Unveil gifts are extra, marked LIMITED, until the next unveil." }),
+      el("div", { class: "fields" }, [el("label", {}, [document.createTextNode("Featured item"), fsel]), el("label", {}, [document.createTextNode("Items on the shelves each day"), n])]),
+      el("h4", { text: "On the shelves", style: "margin:10px 0 4px" }), stock]));
+    drawStock(); }
   if (!sh.items.length) wrap.appendChild(el("p", { class: "empty", text: "No items yet. Add the first one below." }));
   sh.items.forEach((it, i) => {
     const icon = el("img", { class: "th", alt: "", style: "aspect-ratio:1/1;width:96px;object-fit:contain;background:var(--surface-2)" });
@@ -2454,7 +2476,6 @@ function renderShop() {
     const text = (k, ph) => { const inp = el("input", { type: "text", value: it[k] || "", placeholder: ph }); inp.addEventListener("input", () => { it[k] = inp.value; changed(); }); return inp; };
     const cost = el("input", { type: "number", min: 0, max: 999, value: it.price }); cost.addEventListener("input", () => { it.price = Math.max(0, Math.min(999, Math.round(+cost.value || 0))); changed(); });
     const desc = el("textarea", { placeholder: "One or two sentences." }); desc.value = it.description || ""; desc.addEventListener("input", () => { it.description = desc.value; changed(); });
-    const feat = el("input", { type: "radio", name: "featured", checked: sh.featured === it.id, disabled: !!it.gift }); feat.addEventListener("change", () => { sh.featured = it.id; changed({ now: true }); });
     // An item can be a piece's unveil gift: free at its ceremony, then in the shop (and featured) until the next gift; then Bluu's.
     const giftFor = el("select", { "aria-label": "Unveil gift for" }, [el("option", { value: "", text: "Not a gift: always in the shop" }), ...dated.map(p => el("option", { value: p.id, text: p.title + " (" + p.unveil + ")" }))]);
     giftFor.value = it.gift || ""; giftFor.addEventListener("change", () => { sh.items.forEach(q => { if (q !== it && q.gift === giftFor.value) q.gift = ""; }); it.gift = giftFor.value; changed({ now: true }); renderShop(); });
@@ -2474,12 +2495,11 @@ function renderShop() {
           return el("label", { class: "wide" }, [document.createTextNode("What it does"), el("small", { text: "Players switch it on and off in My Stuff, Wardrobe (the mug: the barista asks with every order). Bluu's fakes of it misbehave: the shades lose a lens, the hat's too small, the mug leaks, the case covers the camera." }), u]); })(),
         el("label", { class: "wide" }, [document.createTextNode("Unveil gift for"), el("small", { text: gp ? "Free for whoever is at its ceremony on " + gp.unveil + ", then in the shop and featured until the next unveil gift, then one of the old gifts Bluu sells. Not on the racks." : "Pick a piece with an unveil date to make this its gift." }), giftFor]),
         el("div", { class: "acts" }, [
-          el("label", { class: "check", style: "margin:0 10px 0 0" }, [feat, document.createTextNode(it.gift ? "Featured (automatic as the gift of the week)" : "Featured")]),
           el("button", { class: "btn small quiet", type: "button", text: "Move up", disabled: i === 0, onclick: () => move(-1) }),
           el("button", { class: "btn small quiet", type: "button", text: "Move down", disabled: i === sh.items.length - 1, onclick: () => move(1) }),
           el("button", { class: "btn small quiet", type: "button", text: "Remove item", onclick: () => {
             if (!confirm("Remove \"" + it.name + "\" from the shop? Visitors who bought it keep it.")) return;
-            sh.items.splice(i, 1); if (sh.featured === it.id) sh.featured = sh.items[0] ? sh.items[0].id : ""; changed({ now: true }); renderShop();
+            sh.items.splice(i, 1); if (sh.featured === it.id) sh.featured = ""; changed({ now: true }); renderShop();
           } }),
         ]),
       ]),
@@ -2487,7 +2507,7 @@ function renderShop() {
   });
   wrap.appendChild(el("div", { class: "row" }, [el("button", { class: "btn primary", type: "button", text: "Add an item", onclick: () => {
     const id = "item-" + Math.random().toString(36).slice(2, 8);
-    sh.items.push({ id, name: "New item", price: 3, description: "", image: null }); if (!sh.featured) sh.featured = id; changed({ now: true }); renderShop();
+    sh.items.push({ id, name: "New item", price: 25, description: "", image: null }); changed({ now: true }); renderShop();
   } })]));
   wrap.appendChild(el("p", { class: "note", style: "margin-top:18px", text: "Item images can be any size; they're shrunk to 64 pixels and shown as small icons. Without one, the shop draws a placeholder icon." }));
   // Bluu: Saturdays' pop-up table in the lobby. What he carries, his markup, how often it's fake, a look at the table, his lines.

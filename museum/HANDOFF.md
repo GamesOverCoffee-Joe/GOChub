@@ -467,6 +467,14 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Rotating stock, featured picks, today's special, prices (2026-11-18).**
+- **Stock rotates daily** (`stockToday(off)`): `shop.stock` (default 4, one per stand) of the regular items, a seeded mix per day, the same for everyone; the stands and the menu show today's stock. A picked featured item is always in. The menu says "New stock every day." (`shop.stock`); the unveil gift is extra, marked LIMITED (`shop.limited`).
+- **Featured** (`shop.featured`): "" is automatic (the unveil gift while it's new, else one of today's stock, a different one each day); an item's id always wins, even over the gift. Curator: Shop tab → Featured item and today's stock (with today, tomorrow and the day after). The per-item radio is gone.
+- **Today's special** (`shop.special`: "" automatic = the drink of the week, else a different regular drink each day; or coffee/tea/cocoa): the café sign (`cafe_sign` prop and Art slot, at 36,28 in the museum; Rooms can move it), its cup drawn on the board, `cafe.sign` when you look; starred and tagged SPECIAL on the café menu (`cafeSpecial`, `isSpecial`).
+- **Closing pays once a day** (`progress.closingDay`).
+- **Prices:** Shades 28, Phone Case 30, Hat 34, Travel Mug 40, the dragon 30; four new souvenirs (Tote Bag 30, Enamel Pin 26, Mousepad 32, Lanyard 28; placeholder descriptions); coffee and tea 4, cocoa 5, Dragon's Breath 6. A casual day earns about 25.
+- Long descriptions in the split menus shrink to fit (`fitDetail`).
+
 **Hear a line (2026-11-18).** Curator → Preview options → **Hear a line**: every Words line (by group) and every staff chat set, a version picker (Sunday coffee and other random lines have several; chat sets also have "All of them, in turn"), and Play it, which `say()`s it in the preview from the draft (no Apply needed; `lineSources`, `fillLines`).
 
 **Fixed: old rooms popping into the curator's preview (2026-11-18).** `normalizePack` used to reset the shared `ROOMS` to the built-in rooms whenever it was handed something without rooms, and the curator's Shop tab does that (it reads just the shop). The preview's next rebuild (changing the day, for one) then drew the built-in rooms. Now only a whole pack sets the rooms, and every `buildWorld` applies its own pack's rooms first (the curator runs two games, the preview and the room editor's, over the one `ROOMS`).
