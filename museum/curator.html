@@ -407,7 +407,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 volunteer shift";
+window.GOQ_WANT = "2026-11-18 tweaks";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -948,14 +948,21 @@ function renderStaff() {
   // Patreon members: two or three are on shift in the staff room each day, and they're all listed on the Patron Board.
   st.members = st.members || [];
   const mem = el("textarea", { id: "memText", style: "min-height:140px", placeholder: "Sam, 0002\nPriya, 0003\nAlex" });
-  mem.value = st.members.map(m => m.name + (m.badge ? ", " + m.badge : "")).join("\n");
+  // A member's shirt colors: after the name and badge, color names (or #hex). They only ever wear those.
+  const SHIRT_NAMES = { red: "#c83838", orange: "#e07830", yellow: "#e8c040", green: "#58a048", teal: "#3a9a98", tan: "#cab291", purple: "#8850c0", pink: "#e070a8", brown: "#8a5a34", gray: "#808898", grey: "#808898" };
+  const colorName = h => Object.keys(SHIRT_NAMES).find(k => SHIRT_NAMES[k] === h.toLowerCase()) || h;
+  mem.value = st.members.map(m => m.name + (m.badge ? ", " + m.badge : "") + ((m.shirts || []).length ? ", " + m.shirts.map(colorName).join(" ") : "")).join("\n");
   const memCount = el("p", { class: "note", style: "margin:8px 0 0" });
   const showCount = () => { const n = st.members.length; memCount.textContent = n + " member" + (n === 1 ? "" : "s") + ". Two or three are on shift in the staff room each day, a different group each day. Everyone is always on the Patron Board in the lobby."; };
-  mem.addEventListener("input", () => { st.members = mem.value.split("\n").map(l => l.trim()).filter(Boolean).map(l => { const m = l.match(/^(.*?)(?:\s*,\s*(\d+))?$/); return { name: m[1].trim().slice(0, 32), badge: m[2] || "" }; }).filter(m => m.name); showCount(); changed(); });
+  mem.addEventListener("input", () => { st.members = mem.value.split("\n").map(l => l.trim()).filter(Boolean).map(l => {
+    const parts = l.split(",").map(x => x.trim()), name = parts.shift() || "", badge = parts[0] && /^\d+$/.test(parts[0]) ? parts.shift() : "";
+    const shirts = parts.join(" ").split(/\s+/).map(w => w.toLowerCase()).map(w => SHIRT_NAMES[w] || (/^#[0-9a-f]{6}$/.test(w) ? w : "")).filter(Boolean);
+    return { name: name.slice(0, 32), badge, shirts };
+  }).filter(m => m.name); showCount(); changed(); });
   showCount();
   wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
     el("h3", { text: "Patreon members", style: "margin:0 0 4px" }),
-    el("p", { class: "note", style: "margin:0 0 12px", text: "One per line: their name, then a comma and their badge number if they have one. When a member clocks in with their badge, they're never also in the staff room, since they're the one playing. Names are public on your site, so use the names members are happy to show." }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "One per line: their name, then a comma and their badge number if they have one, then (optional) another comma and the only shirt colors they wear, like "Darla Jane, 0009, orange pink" (red, orange, yellow, green, teal, tan, purple, pink, brown, gray, or #hex). When a member clocks in with their badge, they're never also in the staff room, since they're the one playing. Names are public on your site, so use the names members are happy to show." }),
     el("label", { class: "sr-only", for: "memText", text: "Patreon members" }), mem, memCount,
   ]));
   // The tutorial's edition: raising it sends everyone who finished an older one back through it, once.

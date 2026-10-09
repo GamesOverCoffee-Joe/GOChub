@@ -92,6 +92,7 @@ const PAL = {
   stall:   [null, "#c84a4a", "#f4f0e6", "#8a5a32", "#5a3a1a", "#181820"],
   ledsign: [null, "#0a080c", "#2a2630", "#55505e", "#1c0808"],
   arcade:  [null, "#1a1424", "#3a2a5a", "#5a48a0", "#101018", "#40d0c0", "#f0c040", "#e05050", "#5878c8"],
+  garage:  ["#c8ccd4", "#9aa0ac", "#6a707c", "#181820", "#3a3a44", "#e8c040"], // slat, slat edge, slat shadow, outline, frame, hazard yellow
   cafesign: ["#ecece0", "#c08850", "#2f4a3a", "#181820", "#7a4a26", "#f0c060"], // chalk, wood, chalkboard, outline, dark wood, yellow chalk
   mags:    [null, "#f8f0e0", "#8a5a38", "#2a160c", "#e05050", "#5878c8", "#f0c040", "#58a868"],
   segway:  [null, "#f8f8f0", "#b0b0c0", "#181820"],
@@ -940,6 +941,15 @@ const GEN = {
     [[4, 3, 8, 6], [13, 4, 7, 5], [21, 2, 7, 7], [4, 13, 10, 6], [16, 14, 6, 5], [23, 12, 5, 7], [5, 23, 6, 6], [13, 22, 9, 7]].forEach(([x, y, w, h]) => { rect(a, x, y, w, h, 1); rect(a, x, y + 1, w, 1, 4); });
     return outline(a);
   },
+  // The basement's wide roll-up garage door, across both wall rows: where deliveries come in.
+  garage_door: () => {
+    const a = mk(48, 32);
+    rect(a, 0, 0, 48, 32, 4); rect(a, 3, 3, 42, 29, 0); // frame, door
+    for (let y = 3; y < 30; y += 4) { rect(a, 3, y, 42, 1, 1); rect(a, 3, y + 3, 42, 1, 2); } // slats
+    rect(a, 21, 25, 6, 2, 3); // handle
+    for (let x = 3; x < 45; x += 6) rect(a, x, 30, 3, 2, 5); // hazard stripes along the bottom
+    return outline(a);
+  },
   box_stack: () => {
     const a = mk(16, 32);
     rect(a, 2, 18, 12, 13, 1); rect(a, 3, 8, 10, 10, 1); rect(a, 4, 1, 8, 7, 1);
@@ -1178,6 +1188,7 @@ const SLOTS = [
   { key: "stairs_up", label: "Stairs going up", group: "Floors", w: 32, h: 32, pal: "staffrm", gen: GEN.stairs_up, note: "No longer used: stairs are one tile now." , retired: true },
   { key: "stairs_down", label: "Stairs going down", group: "Floors", w: 32, h: 32, pal: "staffrm", gen: GEN.stairs_down, note: "No longer used: stairs are one tile now.", retired: true },
   { key: "storage_shelves", label: "Storage shelves", group: "Floors", w: 32, h: 32, pal: "wood", gen: GEN.storage_shelves, note: "Two tiles tall." },
+  { key: "garage_door", label: "Garage door (basement)", group: "Floors", w: 48, h: 32, pal: "garage", gen: GEN.garage_door, note: "On the basement's north wall, across both wall rows. Deliveries come in here." },
   { key: "box_stack", label: "Stack of boxes", group: "Floors", w: 16, h: 32, pal: "wood", gen: GEN.box_stack, note: "Two tiles tall; you can walk behind the top." },
   { key: "workbench", label: "Workbench", group: "Floors", w: 48, h: 16, pal: "wood", gen: GEN.workbench, note: "In the storage room. Lists the crates for upcoming pieces." },
   { key: "stair_up", label: "Stairs up (one tile)", group: "Floors", w: 16, h: 16, pal: "staffrm", gen: GEN.stair_up, note: "Step on it to go up a floor." },
@@ -1408,7 +1419,7 @@ function normalizePack(p) {
     readStrength: typeof sin.readStrength === "number" && isFinite(sin.readStrength) ? Math.max(0, Math.min(1, sin.readStrength)) : 0.4,
     eotm: { name: str(eo.name, 40), note: str(eo.note, 200) },
     // Patreon members: they visit the museum as named visitors, and are all listed on the Patron Board.
-    members: (Array.isArray(sin.members) ? sin.members : []).slice(0, 1000).map(m => ({ name: str(m && m.name, 32), badge: str(m && m.badge, 12).replace(/\D/g, "") })).filter(m => m.name),
+    members: (Array.isArray(sin.members) ? sin.members : []).slice(0, 1000).map(m => ({ name: str(m && m.name, 32), badge: str(m && m.badge, 12).replace(/\D/g, ""), shirts: (Array.isArray(m && m.shirts) ? m.shirts : []).filter(isHex).slice(0, 8) })).filter(m => m.name), // shirts: the only colors they wear (none: any)
     corkboard: (Array.isArray(sin.corkboard) ? sin.corkboard : DEFAULT_CORKBOARD).map(n => str(n, 300)).filter(Boolean).slice(0, 12),
   };
   const shin = (p.settings && p.settings.shop) || {};
@@ -2035,6 +2046,7 @@ const TEXT = {
   "rules":             { g: "Staff", l: "Staff rules whiteboard", v: [["STAFF RULES", "1. Clock in at the staff door or the time clock. The ON SHIFT tag means you're working.", "2. On shift, every chore is a point: dusting, straightening, watering, finding the mug, wiping cases. A visitor who loves your recommendation, and closing up, are worth 3.", "3. Chores earn tokens for the gift shop, and staff tallies decide Employee of the Month.", "4. Clock out at the time clock. Leaving at closing clocks you out too.", "5. Do not touch anyone's yogurt."]] },
   "locker.mine":       { g: "Staff", l: "Your locker", v: [["Locker {locker}: {name}.", "Just your coat in here. Your gift shop finds are on display in the collection cabinet."]] },
   "locker.others":     { g: "Staff", l: "Other lockers (one per locker, in order)", v: [["A sticky note: \"Do not touch my yogurt.\""], ["Locked. It hums faintly."], ["Someone taped a pixel-art cat to this one."], ["Empty. It smells like old coffee."], ["A note in big letters: \"WAIT. WHY DID THAT HAPPEN?\""], ["Locked. There's a dent shaped like a controller."]] },
+  "storage.garage":    { g: "Storage", l: "The wide garage door on the basement's north wall", v: [["[PLACEHOLDER: the basement's garage door, where deliveries come in]"]] },
   "vol.callName":      { g: "Volunteering", l: "What staff call you when you're volunteering (no badge)", v: [["volunteer"]] },
   "vol.in":            { g: "Volunteering", l: "Clocking in as a volunteer", v: [["[PLACEHOLDER: clocking in as a volunteer. Mention the shift sheet on the corkboard]"]] },
   "vol.favor":         { g: "Volunteering", l: "A coworker nearby when you do a chore off shift (shown in the corner; one version picked at random)", v: [["[PLACEHOLDER: a coworker, when you do a chore off shift. Like: Oh, you didn't have to do that]"]] },
@@ -5735,7 +5747,7 @@ class Game {
     r.npcs = r.npcs.filter(n => !n.patron);
     const all = (this.pack.settings.staff.members || []).filter(m => !this.staff || (m.badge ? m.badge !== this.staff.badge : m.name.toLowerCase() !== this.staff.name.toLowerCase()));
     const seed = strSeed("members" + todayISO()), list = all.map((m, i) => ({ m, k: hash(seed, i) })).sort((a, b) => a.k - b.k).map(x => x.m);
-    list.slice(0, 2 + seed % 2).forEach((m, i) => this.addVisitor("staff", { name: m.name, sheet: ["visitor_a", "visitor_b", "visitor_c"][(seed + i) % 3] }, { patron: true, staff: true }));
+    list.slice(0, 2 + seed % 2).forEach((m, i) => this.addVisitor("staff", { name: m.name, sheet: ["visitor_a", "visitor_b", "visitor_c"][(seed + i) % 3] }, Object.assign({ patron: true, staff: true }, m.shirts && m.shirts.length ? { shirt: m.shirts[(seed + i) % m.shirts.length] } : {}))); // a member's own shirt colors (Staff tab), a different one day to day
     this.lastStaffKey = this.staff ? this.staff.badge + "|" + this.staff.name : "";
   }
   /* The Patron Board: every member, always, and who's on shift in the staff room today. */
@@ -6543,8 +6555,14 @@ class Game {
       if (into) { into.x = fx; into.y = fy; into.moving = false; into.prog = 0; into.route = null; npc = into; }
       else if (out) { out.moving = false; out.prog = 0; out.route = null; npc = out; }
     }
-    if (npc) { npc.timer = 180; if (!this.deskStaff(npc) && !npc.sitting) this.faceYou(npc, 240); if (npc.patrol) npc.pause = 120; this.talkTo(npc); return; }
+    if (npc) { npc.timer = 180; if (!this.deskStaff(npc) && !npc.sitting && !this.facingWall(npc)) this.faceYou(npc, 240); if (npc.patrol) npc.pause = 120; this.talkTo(npc); return; }
     const e = this.room.events[fx + "," + fy]; if (e) this.runEvent(e);
+  }
+  /* Someone standing still and staring at a bare wall keeps staring when you talk to them (Joe 10/9). */
+  facingWall(n) {
+    if (n.moving || !DIRS[n.dir]) return false;
+    const [dx, dy] = DIRS[n.dir], x = n.x + dx, y = n.y + dy, r = this.room;
+    return !!(r.solid[y] && r.solid[y][x]) && !r.events[x + "," + y] && !(r.cases || []).some(c => c.x === x && (c.y === y || c.y - 1 === y));
   }
   /* Staff behind a desk or counter keep facing their customers. */
   deskStaff(n) { return !!(n.usher || n.role === "shopkeeper" || n.role === "barista"); }
@@ -7273,7 +7291,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 volunteer shift";
+const VERSION = "2026-11-18 tweaks";
 window.GOQ = { REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
