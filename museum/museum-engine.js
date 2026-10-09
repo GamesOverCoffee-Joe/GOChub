@@ -5100,7 +5100,8 @@ class Game {
       const order = PROBLEMS.map(pr => [strSeed(key + pr.id), pr]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
       d.picks = { key, ids: order.slice(0, 3 + (strSeed(key) % 2)).map(pr => pr.id) };
     }
-    const r = this.room, here = r && r.base !== undefined ? { now: r.npcs.filter(n => this.npcOwner(n) === "idle" || (n.rhythm && !n.leaving)).length, want: Math.round(r.base * [0.5, 0.85, 1, 0.6][beat]), base: r.base, room: r.id } : null;
+    const r = this.room, plan = r && r.base ? Object.values(this.crowdPlan(r, beat)) : null, sum = k => plan.reduce((a, p) => a + (k === "now" ? p.now.length : p[k]), 0);
+    const here = plan ? { now: sum("now"), want: sum("want"), base: sum("base"), room: r.id } : null;
     return { min, beat, beatName: BEATS[beat], loop, day, unveiling, running, crowd: this.crowdToday(), problems: d.picks.ids, paused: d.paused, here, last: d.last ? { what: d.last.what, ago: Math.round((this.t - d.last.t) / 60) } : null };
   }
   setVisitClock(min, paused) { const d = this.dirClock || (this.dirClock = { t: 0, paused: false }); if (min !== undefined && min !== null) d.t = Math.floor(d.t / (12 * 3600)) * 12 * 3600 + Math.max(0, Math.min(12 * 3600 - 1, Math.round(min * 3600))); if (paused !== undefined) d.paused = !!paused; for (const id in this.rooms || {}) this.rooms[id].fresh = true; }
@@ -5119,26 +5120,44 @@ class Game {
     const d = this.director(); if (d.running) this.dirClock.t++;
     if (!d.running || !this.room || (this.t % 180 && !this.room.fresh)) return; // a decision every 3 seconds in the room you're in (right away after a jump)
     const r = this.room, def = ROOMS[r.id]; if (!def || !def.crowd || r.id === "staff" || ROOMS[r.id].tutorial) return;
-    const idle = r.npcs.filter(n => this.npcOwner(n) === "idle" || (n.rhythm && !n.leaving));
-    if (r.base === undefined) r.base = idle.length; // how many strollers this room holds at the busiest
-    const want = Math.round(r.base * [0.5, 0.85, 1, 0.6][d.beat]);
+    const plan = this.crowdPlan(r, d.beat), groups = Object.entries(plan), far = n => !n.moving && Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 3;
     if (r.fresh) { // just built, or the curator jumped the clock: settle the crowd for this point in the visit right away
-      r.fresh = false; const extra = idle.length - want;
-      if (extra > 0) { const off = idle.filter(n => Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 3).slice(0, extra); r.npcs = r.npcs.filter(n => !off.includes(n)); }
-      for (let i = 0; i < -extra; i++) { // more people: they're already around (strolling in their own wing)
-        const zones = r.zoneAt ? (r.zones || []).filter(z => z.kind === "room" && z.rect && z.rect.genre) : [], zone = zones.length ? zones[Math.floor(Math.random() * zones.length)].id : undefined;
-        const at = this.freeSpot(r, null, zone) || this.freeSpot(r); if (!at || Math.abs(at[0] - this.player.x) + Math.abs(at[1] - this.player.y) < 2) continue;
-        r.npcs.push(this.crowdPerson(at[0], at[1], zone));
-      }
+      r.fresh = false;
+      groups.forEach(([g, p]) => {
+        const extra = p.now.length - p.want;
+        if (extra > 0) { const off = p.now.filter(far).slice(0, extra); r.npcs = r.npcs.filter(n => !off.includes(n)); }
+        for (let i = 0; i < -extra; i++) { // more people: they're already around (strolling in that wing)
+          const at = this.freeSpot(r, null, p.zone) || (p.zone ? null : this.freeSpot(r)); if (!at || Math.abs(at[0] - this.player.x) + Math.abs(at[1] - this.player.y) < 2) continue;
+          r.npcs.push(this.crowdPerson(at[0], at[1], p.zone));
+        }
+      });
       return;
     }
-    if (idle.length > want && d.beat === 3) { // winding down: someone heads for the doors
-      const n = idle.find(n => !n.moving && Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 2); if (n) { n.leaving = true; n.stroll = true; n.leaveT = 0; n.alpha = 1; n.route = null; n.aside = null; n.timer = 0; this.dirClock.last = { what: "out", t: this.t }; }
-    } else if (idle.length < want && d.beat < 3) { // settling in and getting busy: someone comes in through the doors
+    // Every 3 seconds, one change: someone from the fullest part heads for the doors, or someone comes in through them
+    // and walks to the emptiest wing.
+    const over = groups.map(([g, p]) => [p.now.length - p.want, p]).filter(x => x[0] > 0).sort((x, y) => y[0] - x[0])[0];
+    const under = groups.map(([g, p]) => [p.want - p.now.length, p]).filter(x => x[0] > 0).sort((x, y) => y[0] - x[0])[0];
+    if (over) {
+      const n = over[1].now.find(n => !n.moving && Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 2); if (n) { n.leaving = true; n.stroll = true; n.leaveT = 0; n.alpha = 1; n.route = null; n.aside = null; n.timer = 0; this.dirClock.last = { what: "out", t: this.t }; }
+    } else if (under) {
       const at = def.exitTo || def.spawn, [x, y] = at || []; if (at === undefined || !this.tileFree(r, x, y) || (this.player.x === x && this.player.y === y)) return;
-      const zones = r.zoneAt ? (r.zones || []).filter(z => z.kind === "room" && z.rect && z.rect.genre) : [], zone = zones.length ? zones[Math.floor(Math.random() * zones.length)].id : undefined;
-      r.npcs.push(Object.assign(this.crowdPerson(x, y, zone), { dir: "up", timer: 30, alpha: 0, fadeIn: true })); this.dirClock.last = { what: "in", t: this.t };
+      r.npcs.push(Object.assign(this.crowdPerson(x, y, under[1].zone), { dir: "up", timer: 30, alpha: 0, fadeIn: true })); this.dirClock.last = { what: "in", t: this.t };
     }
+  }
+  /* The crowd the rhythm wants in a room, part by part. The crowd the room was built with (the museum's usual crowd for
+     the day and hour) is the least there ever is (Joe 10/9: never fewer than before the clock). In the museum each wing
+     gets one more while it's getting busy and two more at the rush; the halls and the café keep theirs. Elsewhere (the
+     lobby) one more at the rush. */
+  crowdPlan(r, beat) {
+    const zoned = !!r.zoneAt, wing = z => !!(z && z.kind === "room" && z.rect && z.rect.genre);
+    const groupOf = n => { if (!zoned) return "all"; const z = n.zone ? r.zones.find(q => q.id === n.zone) : this.zoneAt(r, n.x, n.y); return z ? z.id : "hall"; };
+    const idle = r.npcs.filter(n => !n.leaving && (this.npcOwner(n) === "idle" || n.rhythm)), plan = {};
+    const add = (g, zone) => plan[g] || (plan[g] = { now: [], zone, base: 0, want: 0, wing: zoned && wing(r.zones.find(q => q.id === g)) });
+    if (zoned) r.zones.filter(wing).forEach(z => add(z.id, z.id)); else add("all");
+    idle.forEach(n => { const g = groupOf(n); add(g, zoned && g !== "hall" ? g : undefined).now.push(n); });
+    if (!r.base) r.base = Object.fromEntries(Object.entries(plan).map(([g, p]) => [g, p.now.length])); // measured once, as built
+    Object.entries(plan).forEach(([g, p]) => { p.base = r.base[g] || 0; p.want = p.base + (p.wing ? [0, 1, 2, 0][beat] : zoned ? 0 : [0, 0, 1, 0][beat]); });
+    return plan;
   }
   crowdPerson(x, y, zone) { // an ordinary visitor the rhythm brought in
     return { sheet: ["visitor_a", "visitor_b", "visitor_c"][Math.floor(Math.random() * 3)], x, y, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 60 + Math.random() * 120, lines: [CROWD_LINES[Math.floor(Math.random() * CROWD_LINES.length)]], lineI: -1, random: true, rhythm: true, zone };
@@ -7357,7 +7376,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 director 3";
+const VERSION = "2026-11-18 director 4";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
