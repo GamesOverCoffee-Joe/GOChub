@@ -65,6 +65,74 @@ PHASE 2: THE WORLD DOES ITS OWN CHORES
 --------------------------------------------------
 PHASE 3: THE RHYTHM (hybrid clock)
 --------------------------------------------------
+MASTER TIMELINE (decided 2026-10-09)
+- One block is 12 minutes. It starts when you arrive (the page loads), not when you clock in, so the museum has its
+  rhythm whether you're volunteering or visiting. Stay longer and it loops; things picked at random (like the janitor's
+  chore order) change each time around.
+- The real clock sets the mood around it. At night or closing, the block pauses and the night version takes over.
+  Weekday events sit in the block wherever they fit.
+- Four beats of 3 minutes each. The "feel" column is only a suggestion until Joe fills it in.
+
+  BEAT          MINUTES  FEEL (suggested)
+  Settling in   0-3      people trickling in, staff setting up
+  Getting busy  3-6      wings filling up, café line forming
+  Rush          6-9      busiest: no seats, lines, a break starting
+  Winding down  9-12     quieter, people leaving
+
+WHO DOES WHAT, WHEN (to fill in, row by row)
+
+  JANITOR
+    0-3:   
+    3-6:   
+    6-9:   
+    9-12:  
+    Known so far: picks his chores at random (sweeping into his garbage can, taking the trash out from each bin); waters
+    the plants only once his own chores are done.
+
+  BARISTA
+    0-3:   
+    3-6:   
+    6-9:   
+    9-12:  
+
+  SHOPKEEPER
+    0-3:   
+    3-6:   
+    6-9:   
+    9-12:  
+
+  USHER
+    0-3:   
+    3-6:   
+    6-9:   
+    9-12:  
+
+  CONSERVATOR
+    0-3:   
+    3-6:   
+    6-9:   
+    9-12:  
+
+  VISITORS (the crowd)
+    0-3:   
+    3-6:   
+    6-9:   
+    9-12:  
+
+  TOUR GROUP
+    0-3:   
+    3-6:   
+    6-9:   
+    9-12:  
+
+  STAFF ON BREAK (the staff room)
+    0-3:   
+    3-6:   
+    6-9:   
+    9-12:  
+
+  (Night guard, curator and others: add rows as needed. The guard belongs to the night version.)
+
 - NOTE (2026-10-09): map a MASTER TIMELINE for the whole visit loop: when each person does what (the janitor's chores
   and when he moves on to the plants, staff breaks, the café rush, the tour group, arrivals and departures). Phase 2's
   janitor routine plugs into it.
