@@ -1,0 +1,136 @@
+GOQ MUSEUM: THE LIVING MUSEUM PLAN
+A daily rhythm, a volunteer role, and NPCs with their own intentions.
+Saved 2026-10-09 so we can pick it up later word for word. Edit freely; mark changes with your initials or a date.
+
+==================================================
+WHERE THIS CAME FROM (the short version)
+==================================================
+- Goal: the museum should feel like a living, breathing world that goes on without the player. NPCs with visible intentions
+  give the player social cues to read ("excuse me" is the model: they step aside because they were headed somewhere).
+- The player should feel a little important, but just a little: others are capable, but only you are allowed to touch the art.
+- The player's motivation: belonging. Going from a stranger in a busy place to the person who knows how it works.
+  "Master the details" = stop reading the museum and start predicting it. Four layers to master:
+    1. The place (layout, shortcuts, where things are). Shallowest.
+    2. The rhythm (when things happen: rushes, breaks, rounds, events). Where a small place gets deep.
+    3. The people (regulars with habits, staff with their own agendas).
+    4. The collection (knowing which piece fits which visitor without reading the placard). Deepest; teaches the show.
+- Joe picked layers 2 and 3 to start: the rhythm and the people.
+- Every NPC behavior should have: a visible goal, a consistent rule, and a small acknowledgement of you.
+- The world should pay off mastery with recognition, not tokens.
+
+Decisions so far:
+- The player is a volunteer. Two modes: visitor (off shift) and volunteer (on shift). Expectations are only implied when
+  you're clocked in. Nothing is ever demanded; nothing breaks if you don't do it. (Joe: yes.)
+- The clock is a hybrid: the real clock keeps the big things; a per-visit clock runs the busy/quiet rhythm. (Joe: yes.)
+
+==================================================
+THE PLAN (four phases, each playable on its own)
+==================================================
+
+First, one thing I found that changes Phase 1: clocking in currently needs a staff badge, and right now those are your
+Patreon staff (names, keys). Everyone else can never go "on shift", so for most players the volunteer role doesn't exist
+yet. Phase 1 opens it up.
+
+--------------------------------------------------
+PHASE 1: THE VOLUNTEER SHIFT (the foundation)
+--------------------------------------------------
+- Anyone can clock in: a plain "Volunteer" option at the time clock, no badge needed. Patreon badges keep everything they
+  have now (their name, tally, leaderboard, Employee of the Month).
+- On shift: the uniform you already have. The world treats chores as your job.
+- Off shift: you can still do chores, but staff react like it's a favor: "Oh, you didn't have to do that."
+- The shift sheet: a handwritten note on the staff corkboard listing today's actual needs, built from what's really out
+  there ("Plants (6)", "Smudges in the Strategy wing", "A crooked frame in the lobby", "Café bins"). Items get crossed off
+  by whoever does them, including coworkers (Phase 2).
+- Equipment in its place: a watering can on a hook in the staff room, a duster in your locker. Just props that say
+  "there's a job here."
+- Clock-out line: one remark from whoever's nearby, based on what you did ("Thanks for getting the plants.") or didn't
+  ("Easy day, huh?").
+
+--------------------------------------------------
+PHASE 2: THE WORLD DOES ITS OWN CHORES
+--------------------------------------------------
+- A janitor (new character) with a routine: mops the lobby at the start of a visit (a wet-floor sign to walk around),
+  empties bins, sweeps the café.
+- The capability rule: coworkers will water plants and empty bins if you haven't (after a while, with a sigh), and cross
+  them off the sheet. They never touch the art: at a smudged case, the janitor points at it and waits. Only you do the
+  cases, frames and placards.
+- The barista waters the café plant at lunch if nobody has.
+
+--------------------------------------------------
+PHASE 3: THE RHYTHM (hybrid clock)
+--------------------------------------------------
+- Real clock keeps the big things: day / sunset / night, the weekday events, closing.
+- A visit clock starts when you arrive and loops about every 12 minutes: quiet → getting busy → rush → lull.
+  - Café rush: a real line at the counter. You take your place and wait, or come back later. Seats fill up.
+  - Breaks on a schedule you can learn: the barista or shopkeeper steps out ("Back in 15" on the counter), and you wait or
+    come back. (Reuses Sunday's coffee-break code.)
+  - A tour group once a visit: the usher leads 4 to 6 visitors wing to wing; they stop at a piece, move on; you step around.
+  - Flow: more people come in through the front doors early in a visit, and more drift out near the end.
+
+--------------------------------------------------
+PHASE 4: NPC-TO-NPC MOMENTS
+--------------------------------------------------
+- Pairs who stop and talk; two people arguing at a placard; someone taking a photo of their friend; a wave across the
+  room. They ignore you.
+- Overhearing: walk close and you catch one line of their conversation (editable in Words), then they carry on.
+- Staff using the staff door, coming and going on their own business.
+
+--------------------------------------------------
+LATER (built on all this)
+--------------------------------------------------
+- Recognition: coworkers comment on your habits, regulars greet you, eventually someone asks you for directions.
+
+--------------------------------------------------
+IN THE CURATOR
+--------------------------------------------------
+- Every new line goes in Words. A "Rhythm" section: the visit loop length, how strong the rush is, break times, the tour
+  group on/off. The janitor and the props get Art slots.
+
+--------------------------------------------------
+DECISIONS BEFORE BUILDING
+--------------------------------------------------
+1. Volunteer clock-in for everyone. I'd say yes: that's the core of Phase 1.
+2. Do off-shift chores still pay tokens? I'd keep the same pay either way, so nothing feels demanded; being on shift only
+   changes how the world reacts.
+3. The janitor: his name and look. I'll leave his lines bracketed for you.
+
+==================================================
+JOE'S CHANGES / NOTES (add here)
+==================================================
+-
+
+
+==================================================
+OTHER IDEAS PARKED ALONG THE WAY (not built)
+==================================================
+
+THEATER SOUND (proximity)
+- Only in the Screening Nook; silent everywhere else.
+- Volume follows distance: about 0 at the door (row 27) up to full in the front rows (the screen is at row 1), updated as
+  you walk, with a short fade.
+- Dips to about 30% while a text box is open.
+- Off when you leave, and at closing.
+- A Settings switch, "Theater sound" (on by default), maybe a volume slider. The curator preview starts muted.
+- Browser limits: sound only after a click or key press on the page (always true by the time you reach the nook).
+  iPhones/iPads (Safari) may refuse to unmute embedded videos; there it stays silent like now.
+- Size: small.
+
+SILLY TOYS (shop items that do nothing useful, just fun)
+Joe's pick: Comfy Socks (slide everywhere like ice).
+Brainstorm list (with fakes from Bluu):
+- Comfy Socks: slide until you bump something. Fake: one sock missing, you slide in slow circles.
+- Light-up Sneakers: glowing footprints that fade; draw on the floor in a dark wing after closing. Fake: only the left lights up.
+- Squeaky Shoes: every step squeaks; people turn; quiet wings get annoyed; the cat follows. Fake: they squeak one step late.
+- Bouncy Ball: kick it, it ricochets, bonks visitors, knocks frames crooked, the cat chases it; the guard confiscates it at
+  closing. Fake: a lump of clay.
+- Popcorn: toss at people, random reactions. Fake: packing peanuts.
+- Bubble Wand: bubbles drift through rooms and doorways; visitors pop them, the cat swats them. Fake: no soap.
+- Paper Airplane: glides, lands somewhere random, a visitor may read it and throw it back. Fake: a crumpled napkin.
+- Kazoo: direction buttons are notes; visitors bob along. Fake: one sad note.
+- Rubber Chicken: squawk, everyone jumps; do it enough and the guard confiscates it. Fake: it wheezes.
+- Whoopee Cushion: leave it on a stool or bench for the next visitor (or sit on it yourself). Fake: flat, it just sighs.
+- Fake Mustache: staff don't recognize you and call you by a made-up name. Fake: it falls off when you talk.
+- Foam Finger: point at anything and nearby visitors cheer for it. Fake: a regular finger, drawn on.
+Favorites: Comfy Socks, Bouncy Ball, Bubble Wand, Whoopee Cushion. Then Popcorn, Rubber Chicken, Light-up Sneakers.
+Open questions: which ones (replace Tote/Pin/Mousepad/Lanyard, or add more: the shop rotates now), and worn (Wardrobe)
+vs used (a "Use…" spot in My Stuff or a quick button).
