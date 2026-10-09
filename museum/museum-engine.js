@@ -5979,7 +5979,7 @@ class Game {
     }
     if (r.npcs.some(n => n.x === e.x && n.y === e.y)) { this.say(["Someone's already sitting there."]); return; }
     const p = this.player;
-    p.sitFrom = [p.x, p.y]; p.x = e.x; p.y = e.y; p.dir = e.sit; p.sitting = true; p.moving = false; this.sipClock = 60; this.inputLock = true;
+    p.sitFrom = [p.x, p.y]; p.x = e.x; p.y = e.y; p.dir = e.sit; p.sitting = true; p.moving = false; this.sipClock = Math.min(this.sipClock > 0 ? this.sipClock : 60, 60); this.inputLock = true; // a sip within a second of sitting, or sooner if one was due
     p.bench = !!e.bench; this.sitIdle = 0; this.asleep = false;
     if (this.sundaySeat(e)) return; // Sunday: coffee with someone from the staff
     if (this.triviaSeat(e)) return; // Thursday: the free seat at the trivia tables
@@ -5987,7 +5987,7 @@ class Game {
     else if (this.room.screenAt && this.episodes().length) this.screenAsk(); // the screening nook
   }
   standUp(d) {
-    const p = this.player; [p.x, p.y] = p.sitFrom; p.sitting = false; p.dir = d || p.dir; this.sip = null; this.inputLock = true; this.asleep = false; this.sitIdle = 0;
+    const p = this.player; [p.x, p.y] = p.sitFrom; p.sitting = false; p.dir = d || p.dir; this.inputLock = true; this.asleep = false; this.sitIdle = 0; // a sip in progress finishes as you stand
   }
   updateSipping() {
     const p = this.player;
@@ -7109,7 +7109,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 goq gear 6";
+const VERSION = "2026-11-18 goq gear 7";
 window.GOQ = { REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
