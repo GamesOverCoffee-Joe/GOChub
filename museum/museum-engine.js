@@ -1912,6 +1912,7 @@ const TEXT = {
   "sat.vendor":        { g: "Days of the week", l: "Saturday: Bluu, the pop-up vendor", v: [["[Pop-up vendor: three things you can't get anywhere else, this week only]"]] },
   "gear.lens":         { g: "Your stuff", l: "Putting on fake GOQ shades: a lens pops out (they stay on, half of them)", v: [["[One of the lenses pops out. Half the shades it is.]"]] },
   "gear.hatSmall":     { g: "Your stuff", l: "Trying on a fake GOQ hat: it won't go on", v: [["[The hat is way too small. It sits on top of your head for a second, then falls off.]"]] },
+  "gear.mugDone":      { g: "Your stuff", l: "Finishing a drink from your (real) travel mug ({drink}: what it was)", v: [["[You finish your {drink} on the go. The mug's empty]"]] },
   "gear.leak":         { g: "Your stuff", l: "Walking with a drink in a fake travel mug: it leaks out", v: [["[Your travel mug leaks. Your drink is gone. Your shoes are not dry.]"]] },
   "gear.caseBlocks":   { g: "Your stuff", l: "Taking a photo with a fake phone case on (no photo; take the case off in Wardrobe)", v: [["[The case covers the camera. The photo is just black.]", "[You could take the case off. My Stuff, Wardrobe.]"]] },
   "sat.bought":        { g: "Days of the week", l: "Saturday: buying something ({item})", v: [["[Bought the {item}]"]] },
@@ -5983,11 +5984,12 @@ class Game {
     if (this.sip) {
       if (++this.sip.t >= 44) {
         this.sip = null;
-        if (this.drink && ++this.drink.sips >= 4) { const n = this.drink.name.toLowerCase(); this.drink.empty = true; if (this.drink.kind === 2 && this.player.sitting && !this.player.bench) this.quest("finishOnStool"); this.say(this.tx("drink.finished", { drink: n })); }
+        if (this.drink && ++this.drink.sips >= 4) { const n = this.drink.name.toLowerCase(); this.drink.empty = true; if (this.drink.kind === 2 && this.player.sitting && !this.player.bench) this.quest("finishOnStool"); this.say(this.tx(!this.player.sitting && this.using("mug") === "real" ? "gear.mugDone" : "drink.finished", { drink: n })); }
       }
       return;
     }
-    if (p.sitting && this.drink && !this.drink.empty && this.mode === "walk" && --this.sipClock <= 0) { this.sip = { t: 0 }; this.sipClock = 170; }
+    const onTheGo = !p.sitting && this.using("mug") === "real"; // a real travel mug: you sip while you walk around, just slower
+    if ((p.sitting || onTheGo) && this.drink && !this.drink.empty && this.mode === "walk" && --this.sipClock <= 0) { this.sip = { t: 0 }; this.sipClock = onTheGo ? 420 : 170; }
   }
 
   /* ----- world ----- */
@@ -7095,7 +7097,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 goq gear 2";
+const VERSION = "2026-11-18 goq gear 3";
 window.GOQ = { REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

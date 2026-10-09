@@ -472,7 +472,7 @@ Goal: character.
 - **Gear** (`gear(use)` → "real", "fake" or ""; a real one wins; `using(use)` honors the Wardrobe's on/off, `progress.gearOn`). My Stuff → **Wardrobe** turns each on or off (shown once you own the shirt or any gear).
   - Shades: drawn on you (`goq_shades`). Fake: the first time, one lens pops out (`gear.lens`, `progress.lensPopped`) and you wear half from then on.
   - Hat: drawn on you (`goq_hat`). Fake: too small, the Wardrobe won't put it on (`gear.hatSmall`).
-  - Travel mug: your drinks go in it (`travel_mug`, no steam). Fake: after 6 steps the drink's gone (`gear.leak`).
+  - Travel mug: your drinks go in it (`travel_mug`, no steam), and you sip while you walk around (every 7 seconds or so, 4 sips a drink; `gear.mugDone` when it's finished on the go). Fake: after 6 steps the drink's gone (`gear.leak`).
   - Phone case: your phone wears it (`phone_case`). Fake: photos are blocked (`gear.caseBlocks`).
   - Art slots: `goq_shades`, `goq_hat`, `phone_case` (People) and `travel_mug` (Gift shop and café). The four lines are in Words → Your stuff.
 - **Split menus:** the gift shop and the café are a list on the left and the picked thing big on the right, with its full name, price and description (`.gt-split`, `detailPane`, `fitSplit` trims the list to whole rows so nothing's cut off). The café grid is gone; arrows go up and down.
