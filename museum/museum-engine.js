@@ -2765,12 +2765,20 @@ class Game {
     };
     if (!opts.headless) requestAnimationFrame(tick); // headless: drawn only when asked (the curator's map editor)
   }
-  /* fine: quarter steps (touch layouts); otherwise whole steps from 2x up, like the Theater. Never below 1x unless the screen is narrower than the game. */
+  /* fine: quarter steps (touch layouts); otherwise whole steps from 2x up, like the Theater. Never below 1x unless the screen is narrower than the game.
+     Then snapped to the screen's real pixels: with display scaling (125%, 150%, browser zoom) a "3x" is really 3.75 screen
+     pixels per game pixel, so some columns came out wider than others and fine detail shimmered as the camera moved. */
   fit(maxW, maxH, fine) {
     let s = Math.min(maxW / SW, maxH / SH);
+    const raw = s, d = (typeof window !== "undefined" && window.devicePixelRatio) || 1;
     if (this.sharp) s = s >= 1 ? Math.floor(s) : Math.max(0.5, s); // Settings: Sharp pixels (whole numbers; smaller than 1x only if the screen is)
     else s = fine ? (s >= 1 ? Math.floor(s * 4) / 4 : Math.max(0.75, s)) : s >= 2 ? Math.floor(s) : Math.max(0.75, Math.floor(s * 8) / 8);
+    if (raw * d >= 1) { const px = Math.floor(s * d + 1e-6); s = Math.max(px, Math.min(Math.floor(raw * d + 1e-6), Math.ceil(s * d - 1e-6))) / d; } // whole screen pixels per game pixel
     this.wrap.style.setProperty("--s", s); this.scale = s;
+    if (this.canvas && typeof requestAnimationFrame !== "undefined") requestAnimationFrame(() => { // start on a whole screen pixel too (centering can leave it half a pixel over)
+      const c = this.canvas; c.style.translate = ""; const r = c.getBoundingClientRect(), dx = Math.round(r.left * d) / d - r.left, dy = Math.round(r.top * d) / d - r.top;
+      if (Math.abs(dx) > 0.001 || Math.abs(dy) > 0.001) c.style.translate = dx.toFixed(4) + "px " + dy.toFixed(4) + "px";
+    });
   }
 
   /* ----- art ----- */
@@ -5018,6 +5026,23 @@ class Game {
     }
     this.openShop();
   }
+  /* A shelving unit's goods: little stacks of today's item (or trinkets), three per shelf, drawn once into a 48×32 layer. Shrinking
+     the icons every frame at the camera's in-between positions made the stacks shimmer as you walked past. */
+  unitLayer(u) {
+    const g = this.unitGoods(u), it = g[0] && g[0].item, ck = "unit|" + u + "|" + (it ? it.id + "|" + (it.image ? it.image.length : 0) : g.map(t => t.trinket).join(","));
+    if (this.cache[ck]) return this.cache[ck];
+    const c = document.createElement("canvas"); c.width = 48; c.height = 32; const x = c.getContext("2d"); x.imageSmoothingEnabled = !!(it && it.image && this.itemImgs[it.id]);
+    const ctx = this.ctx; this.ctx = x; // drawSlot draws on this.ctx
+    try {
+      g.forEach((t, k) => {
+        const cxs = [9, 24, 39][k % 3], top = k < 3 ? 4 : 18;
+        for (const [dx, dy] of [[-6, 2], [0, 0], [-3, 3], [3, 2]]) { // a little stack of the same thing
+          if (t.item) x.drawImage(this.itemIcon(t.item), cxs - 5 + dx, top + dy, 10, 10); else this.drawSlot("trinkets", t.trinket, 0, cxs - 4 + dx, top + 1 + dy);
+        }
+      });
+    } finally { this.ctx = ctx; }
+    return (this.cache[ck] = c);
+  }
   itemIcon(it) {
     const ck = "icon|" + it.id + "|" + (it.image ? it.image.length : 0);
     if (this.cache[ck]) return this.cache[ck];
@@ -6758,12 +6783,7 @@ class Game {
     const px0 = p.x * T - cx, py0 = p.y * T - (SLOT[k].h - T) - cy;
     this.drawSlot(k, k === "microwave_counter" ? (this.microwaved ? 1 : 0) : k === "office_tv" ? (this.tvOn ? 1 : 0) : this.frame(k), 0, px0, py0);
     if (k === "microwave_counter" && this.boomT > 0) { const f = Math.floor((30 - this.boomT) / 5); if (f < 4) { this.drawSlot("sparkle", f, 0, px0 + 2, py0 - 8); this.drawSlot("sparkle", (f + 1) % 4, 0, px0 + 10, py0 - 4); } }
-    if (p.unit !== undefined) this.unitGoods(p.unit).forEach((it, k) => {
-      const cxs = px0 + [9, 24, 39][k % 3], top = py0 + (k < 3 ? 4 : 18);
-      for (const [dx, dy] of [[-6, 2], [0, 0], [-3, 3], [3, 2]]) { // a little stack of the same thing
-        if (it.item) ctx.drawImage(this.itemIcon(it.item), cxs - 5 + dx, top + dy, 10, 10); else this.drawSlot("trinkets", it.trinket, 0, cxs - 4 + dx, top + 1 + dy);
-      }
-    });
+    if (p.unit !== undefined) ctx.drawImage(this.unitLayer(p.unit), Math.round(px0), Math.round(py0)); // the stacks, drawn once and placed on whole pixels (no shimmer as you walk)
     if (p.rack !== undefined) {
       const it = this.rackItems(p.rack)[0];
       if (it) ctx.drawImage(this.itemIcon(it), px0 + 4, py0 + 3, 24, 24); // one item, big enough to fill both shelves
@@ -7175,7 +7195,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 rotating stock";
+const VERSION = "2026-11-18 crisp pixels";
 window.GOQ = { REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

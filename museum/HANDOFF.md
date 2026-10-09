@@ -467,6 +467,8 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Crisp pixels on scaled screens (2026-11-18).** With display scaling (Windows 125%/150%, browser zoom), the game's "whole" zoom wasn't whole on the actual screen (3× at 125% is 3.75 screen pixels per game pixel), so columns came out uneven and fine detail shimmered as the camera moved; the shop shelves' little stacks showed it most. `fit()` now snaps the zoom so every game pixel is a whole number of screen pixels (`devicePixelRatio`), and nudges the canvas onto the screen's pixel grid (`style.translate`, separate from the cheer zoom's `transform`). The shelf stacks are also drawn once per stand into a cached layer (`unitLayer`).
+
 **Rotating stock, featured picks, today's special, prices (2026-11-18).**
 - **Stock rotates daily** (`stockToday(off)`): `shop.stock` (default 4, one per stand) of the regular items, a seeded mix per day, the same for everyone; the stands and the menu show today's stock. A picked featured item is always in. The menu says "New stock every day." (`shop.stock`); the unveil gift is extra, marked LIMITED (`shop.limited`).
 - **Featured** (`shop.featured`): "" is automatic (the unveil gift while it's new, else one of today's stock, a different one each day); an item's id always wins, even over the gift. Curator: Shop tab → Featured item and today's stock (with today, tomorrow and the day after). The per-item radio is gone.
