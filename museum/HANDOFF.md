@@ -467,6 +467,8 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Hear a line (2026-11-18).** Curator → Preview options → **Hear a line**: every Words line (by group) and every staff chat set, a version picker (Sunday coffee and other random lines have several; chat sets also have "All of them, in turn"), and Play it, which `say()`s it in the preview from the draft (no Apply needed; `lineSources`, `fillLines`).
+
 **Fixed: old rooms popping into the curator's preview (2026-11-18).** `normalizePack` used to reset the shared `ROOMS` to the built-in rooms whenever it was handed something without rooms, and the curator's Shop tab does that (it reads just the shop). The preview's next rebuild (changing the day, for one) then drew the built-in rooms. Now only a whole pack sets the rooms, and every `buildWorld` applies its own pack's rooms first (the curator runs two games, the preview and the room editor's, over the one `ROOMS`).
 
 **Bluu in the Shop tab (2026-11-18).**
