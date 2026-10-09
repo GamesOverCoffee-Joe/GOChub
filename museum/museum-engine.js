@@ -1876,17 +1876,17 @@ const TEXT = {
   "office.lockout":    { g: "Curator's office", l: "Third wrong code today: the keypad locks until tomorrow", v: [["[Third wrong code: the keypad locks itself until tomorrow]"]] },
   "office.open":       { g: "Curator's office", l: "The right code: the office opens for the first time", v: [["[The right code: the door to the curator's office opens for the first time]"]] },
   "office.digit":      { g: "Curator's office", l: "A wing's touch screen once every piece in it is read front and back ({digit}: this wing's digit, {room}: the wing)", v: [["[Note from the curator on the {room} touch screen: you've read everything here, and this wing's digit is {digit}]"]] },
-  "office.callsheet":  { g: "Curator's office", l: "The call sheet on the staff corkboard, after 5 visitors loved your picks (the wings are listed after it, in the order of the code)", v: [["[Call sheet pinned to the corkboard: the order the wings were shot in. Hint that it's the order of the code]"]] },
+  "office.callsheet":  { g: "Curator's office", l: "The call sheet on the staff corkboard, after 5 visitors loved your picks (the wings are listed after it, in the order of the code)", v: [["[PLACEHOLDER: the call sheet pinned to the corkboard. Hint that the wings below are in the order of the code]"]] },
   "office.joe":        { g: "Curator's office", l: "Joe, the crochet robot, when you're clocked in ({name}: your badge name; picks one at random)", v: [["[Joe talks to you by name: {name}]"]] },
   "office.joeAnon":    { g: "Curator's office", l: "Joe, when you're not clocked in (picks one at random)", v: [["[Joe talks to you when he doesn't know your name]"]] },
   "office.books":      { g: "Curator's office", l: "The bookshelf: one book each (the first line is the spine, the rest is your note)", v: [["[Book 1 title]", "[Your note about book 1]"], ["[Book 2 title]", "[Your note about book 2]"], ["[Book 3 title]", "[Your note about book 3]"], ["[Book 4 title]", "[Your note about book 4]"], ["[Book 5 title]", "[Your note about book 5]"], ["[Book 6 title]", "[Your note about book 6]"]] },
   "office.shelf":      { g: "Curator's office", l: "The bookshelf, before picking a book", v: [["[The bookshelf: pick a book]"]] },
   "office.desk":       { g: "Curator's office", l: "The curator's computer, for anyone without a curator badge", v: [["[The curator's computer: two monitors, both off]"]] },
   "office.rec":        { g: "Curator's office", l: "The computer, for a curator badge ({state}: on or off)", v: [["[Recording mode is {state}. Hides the pop-ups, the ON SHIFT tag and the touch controls, holds the time of day, skips the tutorial]"]] },
-  "office.tower":      { g: "Curator's office", l: "The white PC tower (picks one at random)", v: [["[The white PC tower with its purple light]"]] },
+  "office.tower":      { g: "Curator's office", l: "The white PC tower (picks one at random)", v: [["[PLACEHOLDER: the white PC tower with its purple light]"]] },
   "office.deck":       { g: "Curator's office", l: "The Steam Deck on the small table (picks one at random)", v: [["[The Steam Deck on the small table]"]] },
   "office.camera":     { g: "Curator's office", l: "The camera on its tripod (picks one at random)", v: [["[The camera on its tripod]"]] },
-  "office.light":      { g: "Curator's office", l: "The studio light with the soft box (picks one at random)", v: [["[The studio light with its soft box]"]] },
+  "office.light":      { g: "Curator's office", l: "The studio light with the soft box (picks one at random)", v: [["[PLACEHOLDER: the studio light with its soft box]"]] },
   "office.tvNone":     { g: "Curator's office", l: "The TV when there are no clip files yet", v: [["[The TV has nothing to show yet]"]] },
   "day.board.0":       { g: "Days of the week", l: "The lobby's day board on a Sunday", v: [["[Day board, Sunday: someone from the staff is having coffee in the café]"]] },
   "day.board.1":       { g: "Days of the week", l: "The day board on a Monday", v: [["[Day board, Monday: the conservator has lost some boxes]"]] },
@@ -7195,7 +7195,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 crisp pixels";
+const VERSION = "2026-11-18 placeholders";
 window.GOQ = { REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
