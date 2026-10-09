@@ -320,6 +320,109 @@ else's accidentally.
 night version.)
 
 
+PROBLEMS AND CHAINS: THE BASELINE (Claude 10/9, built from Joe's problems above. Joe: these chains are the baseline.)
+
+Every problem has: a CUE you can read, a WINDOW to prevent it (earlier in the loop), a REPAIR if you missed the window
+(never a fail state), and BOTH OUTCOMES play out on their own (the world carries on without you, just better or worse).
+
+  USHER (0-3): needs coffee, too busy with the day's schedules.
+    Cue: empty mug on his desk, yawning, glancing toward the café.
+    Help: buy a coffee and bring it to him (hand over a drink instead of drinking it).
+    Then: at 3-6 he leads the tour. With coffee he's sharp; without it he's foggy (feeds the tour group problem).
+
+  TOUR GROUP (3-6): members complain because the guide doesn't understand the games.
+    0-3 they gather in the lobby. 3-6 at a piece they ask a question the usher fumbles.
+    Help: step in and explain, only if you've read that placard yourself (the collection, quietly).
+    Then: a happy group moves on; a bored one scatters at 6-9, and the kids drift into the gift shop.
+    9-12 they leave through the shop. Repeats every loop; one kid gets lost the same way each time (Joe's note:
+    repeated, not singular).
+
+  SHOPKEEPER (9-12): messy shelves from the tour kids.
+    Cause: a bored tour group (above).
+    Prevent: help the tour. Repair: straighten the shelves (a small new chore at the shelving units).
+    If neither: the shopkeeper tidies, slowly, with a sigh.
+
+  VISITORS (3-6): trash on the floor because some bins are full.
+    Cause: the janitor's random trash route; the bins he hasn't reached yet overflow.
+    Help: pick up litter, into a bin with room or the janitor's garbage can.
+    If not: he has to sweep it up later (adds to his load, feeds his overtime).
+
+  JANITOR (9-12): working overtime because the plants aren't watered.
+    0-9 his random chores (sweeping, trash runs), slowed by litter and crowds. 9-12 the plants.
+    Prevent: water the plants earlier (the shift sheet lists them). Then he finishes early and takes his break.
+    If not: he's still out at the end of the loop, grumbling, and misses his break.
+
+  BARISTA (6-9): a huge line blocks the walkway because she needed help preparing earlier.
+    Cue (0-3): prepping alone; stacks of cups and boxes.
+    Help: bring the supply box from storage, or restock the cups (like Monday's boxes).
+    Then: 3-6 a prepped café keeps the line moving. If not, at 6-9 the line snakes into the hallway and people squeeze
+    around it ("excuse me" happens on its own). 9-12 cleanup; if you helped, a free drink (thanks, not pay).
+
+  CONSERVATOR (9-12): ventures out to the wings, dreaming about the day his own game gets put up.
+    0-9 in storage, crates for the next unveiling. 9-12 standing in front of an empty wall spot.
+    Help: talk to him. Not a fix: a moment, which can grow over many visits (his game getting featured). The usher's
+    Sunday gossip already sets it up.
+
+  STAFF ON BREAK (9-12): someone left, accidentally taking someone else's personal item.
+    6-9 two members on break; headphones or a lunchbox on the table.
+    9-12 one leaves with the wrong thing; the other asks "has anyone seen my...?"
+    Help: catch the first one on the way out (the lobby) and bring it back. Owners and items rotate (Patreon members).
+
+  THE CHAINS
+    Bins (janitor's route) -> litter (visitors) -> more sweeping -> janitor overtime <- unwatered plants
+    Usher's coffee -> how good the tour is -> bored kids -> messy shop
+    Barista's prep -> the line -> a blocked walkway
+
+  Not every problem every loop: 3 or 4 of them per loop, chosen by the day, so loops differ and the patterns are
+  learned over several visits.
+  Idea: a helper's notebook (like Majora's Mask's Bombers' Notebook): people you've helped and what you've noticed
+  about their routines, maybe on the back of the shift sheet.
+
+
+DAY MODIFIERS (Joe 10/9: the chains are the baseline; the day of the week, or an unveiling, bends them, so each day
+has a different shape. Claude's first pass below, built on what each day already has.)
+
+  A modifier does one of four things to a chain: makes a link STRONGER (more likely, bigger), WEAKER, MOVES it to a
+  different beat or place, or ADDS a new link.
+
+  MONDAY (the misplaced boxes)
+    - Delivery day: more boxes. The barista's supply box is one of them (stronger: her prep chain).
+    - The janitor has boxes to break down (adds a chore: overtime more likely).
+    - The conservator is busy unpacking crates, so he doesn't come out to the wings.
+
+  TUESDAY (the lost kid)
+    - The tour group is a school group: more kids (stronger: bored kids -> messy shop).
+    - The lost kid and the tour group's lost kid can be the same story on Tuesdays.
+
+  WEDNESDAY (the artist)
+    - A crowd gathers around the artist's easel: litter collects there (moves the litter to one wing).
+    - The tour group stops at the easel instead of a piece (weaker: the usher's fumble).
+
+  THURSDAY (trivia night)
+    - The café is busiest late: the line moves from 6-9 to 9-12, and the barista has trivia to set up too (stronger).
+
+  FRIDAY (the episode in the Screening Nook)
+    - At a set time the crowd flows to the nook: the wings empty out, and the nook gets the litter (moves).
+    - The usher is scheduling the showing (stronger: he needs that coffee).
+
+  SATURDAY (Bluu's stall)
+    - A crowd at the stall in the lobby: a blocked walkway in the lobby too (adds).
+    - Bluu's customers leave packaging behind: bins fill faster (stronger: litter, janitor).
+    - The shopkeeper is grumpy about the competition (cue only).
+
+  SUNDAY (half-price café, coffee breaks with staff)
+    - Half price means a much bigger café line (stronger).
+    - Staff take turns on their coffee break: a counter stands empty for a while (adds a "come back later").
+
+  UNVEILING DAY (any day with an unveiling)
+    - The ceremony draws everyone to one wing at a set time: other areas empty out.
+    - The usher runs the ceremony instead of a tour (the tour chain is off).
+    - Right after: a rush on the gift (stronger: messy shop) and on the drink of the week (stronger: the line).
+
+  Every day: how busy the museum is (light / medium / heavy, already in the game) makes the lines, litter and crowds
+  bigger or smaller.
+
+
 
 - NOTE (2026-10-09): map a MASTER TIMELINE for the whole visit loop: when each
 person does what (the janitor's chores
