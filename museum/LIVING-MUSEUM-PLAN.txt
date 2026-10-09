@@ -51,16 +51,23 @@ on or off shift. Lines to write: Words > Volunteering (marked [PLACEHOLDER: ...]
 --------------------------------------------------
 PHASE 2: THE WORLD DOES ITS OWN CHORES
 --------------------------------------------------
-- A janitor (new character) with a routine: mops the lobby at the start of a visit (a wet-floor sign to walk around),
-  empties bins, sweeps the café.
-- The capability rule: coworkers will water plants and empty bins if you haven't (after a while, with a sigh), and cross
-  them off the sheet. They never touch the art: at a smudged case, the janitor points at it and waits. Only you do the
-  cases, frames and placards.
-- The barista waters the café plant at lunch if nobody has.
+(Revised 2026-10-09 with Joe's changes.)
+- A janitor (new character). His look: suspenders with a matching hat, and a tool belt.
+- He always has a garbage can with him (on wheels, rolling along behind him). He empties his sweepings into it.
+- He chooses random chores to do: sweeping (dust goes into his can), and taking the trash out from each bin in the museum.
+- He has a routine, which we'll map on the master timeline later (see Phase 3).
+- The capability rule: he never touches the art, and he doesn't point any of it out to you either. The cases, frames and
+  placards are yours alone, and nobody prompts you about them.
+- He waters the plants, but only after he's done with his own chores (when that is comes from the master timeline). Any
+  plant you haven't watered by then, he does, and it's crossed off the shift sheet.
+- The barista does not water the plant.
 
 --------------------------------------------------
 PHASE 3: THE RHYTHM (hybrid clock)
 --------------------------------------------------
+- NOTE (2026-10-09): map a MASTER TIMELINE for the whole visit loop: when each person does what (the janitor's chores
+  and when he moves on to the plants, staff breaks, the café rush, the tour group, arrivals and departures). Phase 2's
+  janitor routine plugs into it.
 - Real clock keeps the big things: day / sunset / night, the weekday events, closing.
 - A visit clock starts when you arrive and loops about every 12 minutes: quiet → getting busy → rush → lull.
   - Café rush: a real line at the counter. You take your place and wait, or come back later. Seats fill up.
