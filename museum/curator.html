@@ -402,7 +402,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 goq gear";
+window.GOQ_WANT = "2026-11-18 goq gear 2";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -532,7 +532,8 @@ async function checkVersion() {
     kids.push(verdict);
   }
   kids.push(el("div", { class: "row", style: "margin-top:12px;flex-wrap:wrap;gap:8px" }, [
-    folderOk ? el("button", { type: "button", class: "btn primary", text: "Load the folder's pack", onclick: async () => {
+    folderOk && !engineOk ? line(null, "Reload fresh before loading the folder's pack: an old engine would load it without what it doesn't know about yet.") : null,
+    folderOk && engineOk ? el("button", { type: "button", class: "btn primary", text: "Load the folder's pack", onclick: async () => {
       if (b && b.edited && !confirm("Replace your draft with this folder's museum-pack.json? Your edits since " + when(b.at) + " will be lost. Export first to keep them.")) return;
       if (!b && !confirm("Replace your draft with this folder's museum-pack.json? Export first if you want to keep the current draft.")) return;
       await loadFolderPack(f); dlg.close();

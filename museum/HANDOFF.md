@@ -478,6 +478,7 @@ Goal: character.
 - **Split menus:** the gift shop and the café are a list on the left and the picked thing big on the right, with its full name, price and description (`.gt-split`, `detailPane`, `fitSplit` trims the list to whole rows so nothing's cut off). The café grid is gone; arrows go up and down.
 - **Helped visitors in the lobby** have a short chat now, not the old beat-by-beat: hello and that they played it (`cur.back`), what they thought of the curator's take (`cur.agree` / `cur.disagree` / `cur.puzzled`), and goodbye (`cur.bye`), then they walk out. `cur.beat` and `cur.after` are gone. Ones you don't talk to stop coming after 3 days (they used to wait forever, up to 6 at a time).
 - **Bluu's table** has an outline like the rest of the furniture (`stall` color 5).
+- **Check version:** "Load the folder's pack" only shows once the engine is current. Loading with an old cached engine had dropped the shop items' What it does (no Wardrobe, no gear pictures); the pack's four GOQ items have it back.
 
 **Café grid, a heart that floats, and fixes (2026-11-18).** (The café grid was replaced by the split menu above.)
 - **Café menu** is its own panel (`el.cafe`, mode `"cafe"`, `renderCafe`, `cafeMove`, `cafePick`): a grid of the drinks, each cup drawn big on the same cream saucer (`.gt-cafe-saucer`) so none blends in, with its name and price; Just chatting and Nothing, thanks underneath. Sundays say "everything's half off" once, under the question. Arrows move, A orders, B closes; tiles can be tapped.
