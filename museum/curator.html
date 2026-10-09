@@ -402,7 +402,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 goq gear 4";
+window.GOQ_WANT = "2026-11-18 goq gear 5";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -2466,7 +2466,7 @@ function renderShop() {
         el("label", { class: "wide" }, [document.createTextNode("Description"), desc]),
         (() => { const u = el("select", { "aria-label": "What it does" }, [["", "Nothing (a souvenir)"], ["shades", "Shades: you wear them"], ["hat", "Hat: you wear it"], ["mug", "Travel mug: your café drinks come in it"], ["case", "Phone case: on your phone when you take photos"]].map(([v, t]) => el("option", { value: v, text: t })));
           u.value = it.use || ""; u.addEventListener("change", () => { it.use = u.value; changed({ now: true }); renderShop(); });
-          return el("label", { class: "wide" }, [document.createTextNode("What it does"), el("small", { text: "Players switch it on and off in My Stuff, Wardrobe. Bluu's fakes of it misbehave: the shades lose a lens, the hat's too small, the mug leaks, the case covers the camera." }), u]); })(),
+          return el("label", { class: "wide" }, [document.createTextNode("What it does"), el("small", { text: "Players switch it on and off in My Stuff, Wardrobe (the mug: the barista asks with every order). Bluu's fakes of it misbehave: the shades lose a lens, the hat's too small, the mug leaks, the case covers the camera." }), u]); })(),
         el("label", { class: "wide" }, [document.createTextNode("Unveil gift for"), el("small", { text: gp ? "Free for whoever is at its ceremony on " + gp.unveil + ", then in the shop and featured until the next unveil gift, then one of the old gifts Bluu sells. Not on the racks." : "Pick a piece with an unveil date to make this its gift." }), giftFor]),
         el("div", { class: "acts" }, [
           el("label", { class: "check", style: "margin:0 10px 0 0" }, [feat, document.createTextNode(it.gift ? "Featured (automatic as the gift of the week)" : "Featured")]),

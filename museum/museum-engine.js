@@ -1912,8 +1912,9 @@ const TEXT = {
   "sat.vendor":        { g: "Days of the week", l: "Saturday: Bluu, the pop-up vendor", v: [["[Pop-up vendor: three things you can't get anywhere else, this week only]"]] },
   "gear.lens":         { g: "Your stuff", l: "Putting on fake GOQ shades: a lens pops out (they stay on, half of them)", v: [["[One of the lenses pops out. Half the shades it is.]"]] },
   "gear.hatSmall":     { g: "Your stuff", l: "Trying on a fake GOQ hat: it won't go on", v: [["[The hat is way too small. It sits on top of your head for a second, then falls off.]"]] },
-  "gear.mugDone":      { g: "Your stuff", l: "Finishing a drink from your (real) travel mug ({drink}: what it was)", v: [["[You finish your {drink} on the go. The mug's empty]"]] },
-  "gear.leak":         { g: "Your stuff", l: "Walking with a drink in a fake travel mug: it leaks out", v: [["[Your travel mug leaks. Your drink is gone. Your shoes are not dry.]"]] },
+  "gear.mugDone":      { g: "Your stuff", l: "Finishing a drink from your (real) travel mug ({drink}: what it was); the mug goes back in your bag", v: [["[You finish your {drink}. The mug goes back in your bag]"]] },
+  "drink.useMug":      { g: "Café", l: "Ordering when you own a travel mug", v: [["Do you want to use your travel mug?"]] },
+  "gear.leak":         { g: "Your stuff", l: "Walking with a drink in a fake travel mug: it leaks out (the mug goes back in your bag)", v: [["[Your travel mug leaks. Your drink is gone. Your shoes are not dry.]"]] },
   "gear.caseBlocks":   { g: "Your stuff", l: "Taking a photo with a fake phone case on (no photo; take the case off in Wardrobe)", v: [["[The case covers the camera. The photo is just black.]", "[You could take the case off. My Stuff, Wardrobe.]"]] },
   "sat.bought":        { g: "Days of the week", l: "Saturday: buying something ({item})", v: [["[Bought the {item}]"]] },
   "sat.broke":         { g: "Days of the week", l: "Saturday: not enough tokens ({n}: the price)", v: [["[Not enough tokens: it costs {n}]"]] },
@@ -2015,7 +2016,9 @@ const TEXT = {
   "drink.still":       { g: "Café", l: "Ordering while you still have one", v: [["You've still got your {drink}.", "Find a seat and enjoy it."]] },
   "bin.tub":           { g: "Café", l: "Empty cup into the bus tub", v: [["You set the cup in the bus tub. Clink."]] },
   "bin.trash":         { g: "Café", l: "Empty cup into a trash can", v: [["You drop the cup in the trash. Thunk."]] },
-  "bin.full":          { g: "Café", l: "Bin while your drink isn't finished", v: [["Finish your {drink} first."]] },
+  "bin.tossFull":      { g: "Café", l: "Bin while your drink isn't finished (a cup): asks first", v: [["Throw away your full {drink}?"]] },
+  "bin.pourMug":       { g: "Café", l: "Bin while your travel mug still has a drink in it: asks first (the mug is never thrown away)", v: [["[Pour out your {drink}? The mug stays with you]"]] },
+  "bin.poured":        { g: "Café", l: "Poured out the drink in your travel mug", v: [["[You pour it out. The mug goes back in your bag]"]] },
   "bin.lookTub":       { g: "Café", l: "Looking at the bus tub", v: [["A bus tub full of cups waiting to be washed."]] },
   "bin.lookTrash":     { g: "Café", l: "Looking at a trash can", v: [["A trash can. Mostly napkins and one sad receipt."]] },
   "cafe.closed":       { g: "Café", l: "Café after closing", v: [["The café is closed. The espresso machine is cooling down."]] },
@@ -5262,16 +5265,24 @@ class Game {
     const d = drinks[i], price = m.cost(d);
     if (price && (this.progress.tokens || 0) < price) { m.msg = "That's " + price + " token" + (price > 1 ? "s" : "") + ". Chores earn tokens."; this.renderCafe(); return; }
     this.closeCafe();
-    if (price) { this.progress.tokens -= price; this.saveProgress(); this.updateHud(); }
-    this.drink = { kind: d.id === "week" ? 3 : i, name: d.name, sips: 0, color: d.color || "", iced: !!d.iced };
-    if (d.id === "cocoa") this.quest("cocoa");
-    this.progress.tally.drinks = (this.progress.tally.drinks || 0) + 1; this.bump(this.progress.stats.drinks, d.id); this.saveProgress();
-    this.say(d.line && d.line.length ? d.line : this.tx("drink.served")); // the drink of the week can come with its own line
+    const serve = mug => {
+      if (price) { this.progress.tokens -= price; this.saveProgress(); this.updateHud(); }
+      this.drink = { kind: d.id === "week" ? 3 : i, name: d.name, sips: 0, color: d.color || "", iced: !!d.iced, mug }; // mug: "real" or "fake" (your travel mug), "" (a cup)
+      if (d.id === "cocoa") this.quest("cocoa");
+      this.progress.tally.drinks = (this.progress.tally.drinks || 0) + 1; this.bump(this.progress.stats.drinks, d.id); this.saveProgress();
+      this.say(d.line && d.line.length ? d.line : this.tx("drink.served")); // the drink of the week can come with its own line
+    };
+    const mug = this.gear("mug"); // own a travel mug: the barista asks every time
+    if (mug) this.choose(this.tx("drink.useMug").join(" "), ["Yes, my mug", "No, a cup"], k => serve(k === 0 ? mug : ""), 1); else serve("");
   }
   /* Empty cups go in the bus tub or a trash can. */
   bin(e) {
     if (this.drink && this.drink.empty) { this.drink = null; if (!e.tub && this.room.id === "lobby") this.quest("lobbyTrash"); else this.quest("otherBin"); this.say(this.tx(e.tub ? "bin.tub" : "bin.trash")); return; }
-    if (this.drink) { this.say(this.tx("bin.full")); return; }
+    if (this.drink) { // not finished: ask first. A travel mug is never thrown away, only poured out
+      const d = this.drink, n = d.name.toLowerCase();
+      this.choose(this.tx(d.mug ? "bin.pourMug" : "bin.tossFull", { drink: n }).join(" "), ["Yes", "No"], k => { if (k !== 0) return; this.drink = null; this.say(this.tx(d.mug ? "bin.poured" : e.tub ? "bin.tub" : "bin.trash")); }, 1);
+      return;
+    }
     this.say(this.tx(e.tub ? "bin.lookTub" : "bin.lookTrash"));
   }
   workbench() {
@@ -5702,7 +5713,7 @@ class Game {
   myStuff() {
     const n = (this.progress.photos || []).length;
     const an = Object.keys(this.progress.ach || {}).length + "/" + this.pack.settings.achievements.length;
-    const sv = this.ownedItems().length, opts = ["Photos (" + n + ")", "Souvenirs (" + sv + ")", "Achievements (" + an + ")", ...(this.progress.shirt || ["shades", "hat", "mug", "case"].some(u => this.gear(u)) ? ["Wardrobe"] : []), "Back"];
+    const sv = this.ownedItems().length, opts = ["Photos (" + n + ")", "Souvenirs (" + sv + ")", "Achievements (" + an + ")", ...(this.progress.shirt || ["shades", "hat", "case"].some(u => this.gear(u)) ? ["Wardrobe"] : []), "Back"];
     this.choose("MY STUFF", opts, k => {
       const o = opts[k];
       if (o.startsWith("Photos")) { if (!n) this.say(this.tx("photos.none")); else this.openAlbum(); }
@@ -5721,7 +5732,6 @@ class Game {
     toggle("shades", "Take off the GOQ shades", "Put on the GOQ shades", "Shades on.", "Shades off.");
     if (this.gear("hat") === "fake") add("Try on the GOQ hat", () => this.say(this.tx("gear.hatSmall")));
     else toggle("hat", "Take off the GOQ hat", "Put on the GOQ hat", "Hat on.", "Hat off.");
-    toggle("mug", "Stop using the travel mug", "Use the travel mug", "Drinks come in your travel mug now.", "Back to paper cups.");
     toggle("case", "Take the case off your phone", "Put the case on your phone", "Phone case on.", "Phone case off.");
     add("Back", () => this.myStuff());
     this.choose("Wardrobe", opts, k => { acts[k](); this.saveProgress(); }, opts.length - 1);
@@ -5984,11 +5994,13 @@ class Game {
     if (this.sip) {
       if (++this.sip.t >= 44) {
         this.sip = null;
-        if (this.drink && ++this.drink.sips >= 4) { const n = this.drink.name.toLowerCase(); this.drink.empty = true; if (this.drink.kind === 2 && this.player.sitting && !this.player.bench) this.quest("finishOnStool"); this.say(this.tx(!this.player.sitting && this.using("mug") === "real" ? "gear.mugDone" : "drink.finished", { drink: n })); }
+        if (this.drink && ++this.drink.sips >= 4) { const n = this.drink.name.toLowerCase(); if (this.drink.kind === 2 && this.player.sitting && !this.player.bench) this.quest("finishOnStool");
+          if (this.drink.mug) { this.drink = null; this.say(this.tx("gear.mugDone", { drink: n })); } // the empty mug goes back in your bag
+          else { this.drink.empty = true; this.say(this.tx("drink.finished", { drink: n })); } }
       }
       return;
     }
-    const onTheGo = !p.sitting && this.using("mug") === "real"; // a real travel mug: you sip while you walk around, just slower
+    const onTheGo = !p.sitting && !!this.drink && this.drink.mug === "real"; // a real travel mug: you sip while you walk around, just slower
     if ((p.sitting || onTheGo) && this.drink && !this.drink.empty && this.mode === "walk" && --this.sipClock <= 0) { this.sip = { t: 0 }; this.sipClock = onTheGo ? 420 : 170; }
   }
 
@@ -6180,7 +6192,7 @@ class Game {
       c.x += DIRS[c.dir][0]; c.y += DIRS[c.dir][1]; c.prog = 0; c.moving = false;
       if (c === this.player) {
         if (!this.full && this.progress.stats) this.progress.stats.steps++;
-        if (this.drink && !this.drink.empty && this.using("mug") === "fake" && (this.drink.leak = (this.drink.leak || 0) + 1) >= 6) { this.drink.empty = true; setTimeout(() => this.say(this.tx("gear.leak")), 50); } // a fake travel mug leaks
+        if (this.drink && this.drink.mug === "fake" && (this.drink.leak = (this.drink.leak || 0) + 1) >= 6) { this.drink = null; setTimeout(() => this.say(this.tx("gear.leak")), 50); } // a fake travel mug leaks (and goes back in your bag, empty)
         this.stepInDark(); this.zoneCheck();
         const e = this.room.events[c.x + "," + c.y];
         if (e && e.step && !this.trans) { this.path = null; this.pathAct = null; c.walking = false; if (e.warp[0] === "storage") this.quest("stairsB1"); this.runEvent(e); }
@@ -6843,7 +6855,7 @@ class Game {
     const me = c === this.player, d = me ? this.drink : c.drink, st = me ? (this.sip ? this.sip.t : 0) : c.sipT ? 46 - c.sipT : 0;
     const k = d.kind, up = st > 6 && st < 36;
     const x = up ? { down: 4, up: 4, left: 2, right: 6 }[c.dir] : { down: 11, up: 2, left: 1, right: 8 }[c.dir], y = up ? 6 : 9;
-    if (me && this.using("mug")) { this.drawSlot("travel_mug", 0, 0, sx + x, sy + y); return; } // your travel mug: closed, so no steam
+    if (me && d.mug) { this.drawSlot("travel_mug", 0, 0, sx + x, sy + y); return; } // your travel mug: closed, so no steam
     if (d.iced) { const ic = this.icedCup(d.color || DRINKS[Math.min(k, 2)].color, d.empty); if (ic) this.ctx.drawImage(ic, sx + x, sy + y); else this.drawSlot("cup_iced", d.empty ? 1 : 0, 0, sx + x, sy + y); return; } // iced: a clear cup (empty: still clear), no steam
     if (d.empty) { this.drawSlot("cup_empty", 0, 0, sx + x, sy + y); return; }
     if (k === 3 && d.color && !this.overrides.cups) this.ctx.drawImage(this.weekCup(d.color), sx + x, sy + y); else this.drawSlot("cups", k, 0, sx + x, sy + y);
@@ -7097,7 +7109,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 goq gear 4";
+const VERSION = "2026-11-18 goq gear 5";
 window.GOQ = { REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
