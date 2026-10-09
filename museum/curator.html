@@ -385,6 +385,10 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
               <label class="btn" style="display:flex;gap:6px;align-items:center" title="Set how many tokens you have in this preview">Tokens <input id="walletIn" type="number" min="0" max="9999" style="width:70px"></label>
               <button class="btn" type="button" id="dayBtn" title="The next day: curious visitors come back, dust settles, the museum opens again">Tomorrow</button>
             </div></div>
+          <div class="pvsec"><span class="pvh">Visit clock</span>
+            <div class="seg" id="segBeat" role="group" aria-label="Jump to a beat"><button type="button" data-v="0" title="Minute 0">Settling in</button><button type="button" data-v="3" title="Minute 3">Getting busy</button><button type="button" data-v="6" title="Minute 6">Rush</button><button type="button" data-v="9" title="Minute 9">Winding down</button></div>
+            <div style="display:flex;gap:6px;align-items:center;margin-top:6px"><button class="btn" type="button" id="clockPause" title="Stop or start the 12-minute visit clock in this preview">Pause</button><button class="btn" type="button" id="clockFwd" title="Skip ahead one minute">+1 min</button><span id="clockInfo" class="pv-hint" style="margin:0;text-align:left;flex:1"></span></div>
+          </div>
           <div class="pvsec"><span class="pvh">Hear a line</span>
             <div class="pvgrid" style="grid-template-columns:1fr">
               <select id="lineSel" aria-label="Which line or conversation"></select>
@@ -407,7 +411,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 tweaks";
+window.GOQ_WANT = "2026-11-18 director";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -962,7 +966,7 @@ function renderStaff() {
   showCount();
   wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
     el("h3", { text: "Patreon members", style: "margin:0 0 4px" }),
-    el("p", { class: "note", style: "margin:0 0 12px", text: "One per line: their name, then a comma and their badge number if they have one, then (optional) another comma and the only shirt colors they wear, like "Darla Jane, 0009, orange pink" (red, orange, yellow, green, teal, tan, purple, pink, brown, gray, or #hex). When a member clocks in with their badge, they're never also in the staff room, since they're the one playing. Names are public on your site, so use the names members are happy to show." }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "One per line: their name, then a comma and their badge number if they have one, then (optional) another comma and the only shirt colors they wear, like \u201cDarla Jane, 0009, orange pink\u201d (red, orange, yellow, green, teal, tan, purple, pink, brown, gray, or #hex). When a member clocks in with their badge, they're never also in the staff room, since they're the one playing. Names are public on your site, so use the names members are happy to show." }),
     el("label", { class: "sr-only", for: "memText", text: "Patreon members" }), mem, memCount,
   ]));
   // The tutorial's edition: raising it sends everyone who finished an older one back through it, once.
@@ -2733,6 +2737,19 @@ function pieceRow(p, i, place) {
   row.appendChild(left); row.appendChild(fields);
   return row;
 }
+
+/* ---------- Visit clock: the director's 12-minute loop (living museum). Jump to a beat, pause, skip ahead; see what's active. ---------- */
+document.querySelectorAll("#segBeat button").forEach(b => b.addEventListener("click", () => { game.setVisitClock(+b.dataset.v); showClock(); stage.focus({ preventScroll: true }); }));
+$("#clockPause").addEventListener("click", () => { const d = game.director(); game.setVisitClock(null, !d.paused); showClock(); });
+$("#clockFwd").addEventListener("click", () => { const d = game.director(); game.setVisitClock(Math.min(11.99, d.min + 1)); showClock(); });
+function showClock() {
+  const d = game.director(), m = Math.floor(d.min), sec = Math.floor((d.min - m) * 60), info = $("#clockInfo"); if (!info) return;
+  const names = d.problems.map(id => { const pr = GOQ.PROBLEMS.find(x => x.id === id); return pr ? pr.who + ": " + pr.label : id; });
+  info.textContent = "Minute " + m + ":" + String(sec).padStart(2, "0") + " · " + d.beatName + (d.loop ? " · loop " + (d.loop + 1) : "") + (d.running ? "" : d.paused ? " · paused" : " · stopped (night, closing or tutorial)") + ". This loop's problems (not built yet): " + names.join("; ") + ".";
+  $("#clockPause").textContent = d.paused ? "Resume" : "Pause";
+  document.querySelectorAll("#segBeat button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.v === d.beat * 3)));
+}
+setInterval(() => { const det = $("#clockInfo") && $("#clockInfo").closest("details"); if (!det || det.open) showClock(); }, 1000);
 
 /* ---------- Hear a line: play any line or staff chat in the preview, straight from the draft ----------
    Lines with several versions (picked at random or in turn in the game, like Sunday coffee) can be played one by one. */

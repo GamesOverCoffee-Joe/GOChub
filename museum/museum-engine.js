@@ -2252,6 +2252,13 @@ const KONAMI = ["up", "up", "down", "down", "left", "right", "left", "right", "b
 const REDUCED_MOTION = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 const BROWSE_LINES = [["Hmm. Hmm hmm hmm."], ["Should I get the mug? I should get the mug.", "...Or the tote."], ["I've been standing here a while.", "I'm very close to deciding."], ["Don't rush me. This is a big decision."]];
 const SIT_LINES = [["Best seat in the house."], ["I come here for the café. The art is a bonus."], ["Shh. I'm people-watching."]];
+const BEATS = ["Settling in", "Getting busy", "Rush", "Winding down"]; // the visit clock's four 3-minute beats
+const PROBLEMS = [ // the living museum's problems (LIVING-MUSEUM-PLAN.md); the director picks 3 or 4 a loop. Built later, one chain at a time.
+  { id: "usher", who: "Usher", beat: 0, chain: "tour", label: "needs coffee" }, { id: "stock", who: "Shopkeeper", beat: 0, chain: "supplies", label: "busy stocking" },
+  { id: "litter", who: "Visitors", beat: 1, chain: "litter", label: "litter by full bins" }, { id: "tour", who: "Tour group", beat: 1, chain: "tour", label: "the guide fumbles" },
+  { id: "line", who: "Barista", beat: 2, chain: "supplies", label: "the line blocks the walkway" }, { id: "item", who: "Staff on break", beat: 2, chain: "", label: "someone's item goes missing" },
+  { id: "janitor", who: "Janitor", beat: 3, chain: "litter", label: "overtime" }, { id: "conservator", who: "Conservator", beat: 3, chain: "", label: "dreaming in the wings" },
+];
 const CROWD_LINES = [["What a nice museum."], ["I come here on my lunch break."], ["Have you seen the cat today?"], ["I always read both sides of the cases."],
   ["My friend told me about this place."], ["Honestly, I'm mostly here for the café."], ["Is it me, or is it busy today?"], ["I didn't know games could go in museums."],
   ["I've been standing here a while.", "I think I get it now. Maybe."], ["The café smells amazing from here."]];
@@ -5076,6 +5083,58 @@ class Game {
     const vars = this.baseVars(); this.say(pool[i].map((p, k) => (who && k === 0 ? who + ": " : "") + this.fmt(p, vars)), then);
   }
 
+  /* ----- the director (living museum, Phase 3) -----
+     One owner for the visit's rhythm, so systems don't fight. The visit clock is a 12-minute block that starts when the page
+     loads and loops; it pauses at night, during closing and in the tutorial. Four beats of 3 minutes. Each loop, 3 or 4 of
+     the problems are active (picked by the day and the loop). Everyone asks the director what time it is; nobody keeps
+     their own clock. Who's in charge of an NPC when two systems want them: npcOwner() (tutorial > closing > unveiling >
+     weekday event > curious visitors > staff posts > the rhythm > idle). The rhythm only ever moves "idle" people.
+     For now (Step 1) it does one visible thing: people trickle in early in the loop and drift out at the end. */
+  director() {
+    const LOOP = 12 * 3600, d = this.dirClock || (this.dirClock = { t: 0, paused: false }), t = d.t % LOOP, loop = Math.floor(d.t / LOOP);
+    const min = t / 3600, beat = Math.min(3, Math.floor(min / 3)), day = this.weekday(), today = todayISO();
+    const unveiling = !!(this.pack && this.pack.pieces.some(p => p.unveil === today));
+    const running = !d.paused && !this.tut && !this.closing && this.tod() !== "night";
+    const key = today + ":" + day + ":" + loop;
+    if (!d.picks || d.picks.key !== key) { // this loop's problems: 3 or 4 of them, the same for everyone on this day and loop
+      const order = PROBLEMS.map(pr => [strSeed(key + pr.id), pr]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+      d.picks = { key, ids: order.slice(0, 3 + (strSeed(key) % 2)).map(pr => pr.id) };
+    }
+    return { min, beat, beatName: BEATS[beat], loop, day, unveiling, running, crowd: this.crowdToday(), problems: d.picks.ids, paused: d.paused };
+  }
+  setVisitClock(min, paused) { const d = this.dirClock || (this.dirClock = { t: 0, paused: false }); if (min !== undefined && min !== null) d.t = Math.floor(d.t / (12 * 3600)) * 12 * 3600 + Math.max(0, Math.min(12 * 3600 - 1, Math.round(min * 3600))); if (paused !== undefined) d.paused = !!paused; for (const id in this.rooms || {}) this.rooms[id].fresh = true; }
+  npcOwner(n) {
+    if (n.tutId) return "tutorial";
+    if (this.closing || n.leaving) return "closing";
+    if (n.unveilHost || n.unveilCrowd) return "unveiling";
+    if (n.dayPerson || n.vendor || n.kid || n.mom || n.artist || n.sunGuest) return "weekday";
+    if (n.cur || n.back || n.follow) return "curious";
+    if (n.role || n.staff || n.usher || n.patrol || n.patron || n.member) return "staff";
+    if (n.rhythm) return "rhythm";
+    return n.random && !n.still && !n.sitting ? "idle" : "other";
+  }
+  updateDirector() {
+    if (this.headless) return;
+    const d = this.director(); if (d.running) this.dirClock.t++;
+    if (!d.running || !this.room || this.t % 180) return; // a decision every 3 seconds, in the room you're in
+    const r = this.room, def = ROOMS[r.id]; if (!def || !def.crowd || r.id === "staff" || ROOMS[r.id].tutorial) return;
+    const idle = r.npcs.filter(n => this.npcOwner(n) === "idle" || (n.rhythm && !n.leaving));
+    if (r.base === undefined) r.base = idle.length; // how many strollers this room holds at the busiest
+    const want = Math.round(r.base * [0.5, 0.85, 1, 0.6][d.beat]);
+    if (r.fresh) { // just built: settle the crowd for this point in the visit, out of sight (they hadn't arrived yet)
+      r.fresh = false; const extra = idle.length - want;
+      if (extra > 0) { const off = idle.filter(n => Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 6).slice(0, extra); r.npcs = r.npcs.filter(n => !off.includes(n)); }
+      return;
+    }
+    if (idle.length > want && d.beat === 3) { // winding down: someone heads for the doors
+      const n = idle.find(n => !n.moving && Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 2); if (n) { n.leaving = true; n.leaveT = 0; n.alpha = 1; n.route = null; n.aside = null; n.timer = 0; }
+    } else if (idle.length < want && d.beat < 3) { // settling in and getting busy: someone comes in through the doors
+      const at = def.exitTo || def.spawn, [x, y] = at || []; if (at === undefined || !this.tileFree(r, x, y) || (this.player.x === x && this.player.y === y)) return;
+      const zones = r.zoneAt ? (r.zones || []).filter(z => z.kind === "room" && z.rect && z.rect.genre) : [], zone = zones.length ? zones[Math.floor(Math.random() * zones.length)].id : undefined;
+      r.npcs.push({ sheet: ["visitor_a", "visitor_b", "visitor_c"][Math.floor(Math.random() * 3)], x, y, dir: "up", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 30, lines: [CROWD_LINES[Math.floor(Math.random() * CROWD_LINES.length)]], lineI: -1, random: true, rhythm: true, zone, alpha: 0, fadeIn: true });
+    }
+  }
+
   /* ----- evening -----
      Real time in the visitor's own time zone: day 7 am to 5 pm, sunset 5 to 7 pm (and 6 to 7 am), night 7 pm to 6 am. */
   tod() {
@@ -6198,6 +6257,7 @@ class Game {
     this.rooms = {}; Object.keys(ROOMS).forEach(id => (this.rooms[id] = buildRoom(id, this.pack.pieces, o)));
     this.tutDress(); this.seatGuests(); this.placeJoe(); this.placeDay();
     this.placeCurious(); this.placeMembers(); this.giveLife();
+    for (const id in this.rooms) this.rooms[id].fresh = true; // the director settles each room's crowd for this point in the visit
   }
   enterRoom(id, x, y, dir, quiet) {
     if (!this.rooms[id]) { id = "lobby"; [x, y, dir] = ROOMS.lobby.spawn; }
@@ -6401,7 +6461,7 @@ class Game {
       const c = this.cine; c.blend += (c.goal > c.blend ? 1 : -1) / 40; c.blend = Math.max(0, Math.min(1, c.blend));
       if (this.mode === "busy" && c.wait > 0 && --c.wait === 0 && c.then) { const fn = c.then; c.then = null; fn(); }
     }
-    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping();
+    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.updateDirector();
     if (this.petT > 0) this.petT--;
     if (this.t % 20 === 0) this.flushToasts();
     if (this.flickerT > 0) this.flickerT--;
@@ -6574,6 +6634,7 @@ class Game {
   updateNpcs() {
     const def = ROOMS[this.room.id];
     for (const n of this.room.npcs.slice()) {
+      if (n.fadeIn) { n.alpha = Math.min(1, (n.alpha || 0) + 1 / 24); if (n.alpha >= 1) { n.fadeIn = false; delete n.alpha; } } // someone just came in through the doors
       if (n.leaving) { this.walkOut(n, n.leaveTo || def.exitTo || ROOMS[this.room.id].spawn); continue; }
       this.updateLife(n);
       if (n.follow) { this.followStep(n); continue; } // a curious visitor following you around
@@ -7291,8 +7352,8 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 tweaks";
-window.GOQ = { REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
+const VERSION = "2026-11-18 director";
+window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
   spotRooms: () => Object.keys(ROOMS).filter(id => (ROOMS[id].spots || []).length).map(id => ({ id, name: ROOMS[id].name, n: ROOMS[id].spots.length })),

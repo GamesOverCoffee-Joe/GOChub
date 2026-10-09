@@ -470,6 +470,13 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**Living museum, Step 1: the director (2026-11-18).** (Plan: `LIVING-MUSEUM-PLAN.md`, Build order.)
+- `director()`: the visit clock, a 12-minute loop from page load (`dirClock.t`, frames). Beat 0–3 (`BEATS`), loop number, today's weekday and unveiling, today's crowd, and this loop's 3 or 4 problems (`PROBLEMS`, picked by date + loop). It pauses at night, during closing, in the tutorial, or when paused from the curator.
+- `npcOwner(n)`: who's in charge of an NPC (tutorial > closing > unveiling > weekday event > curious > staff > rhythm > idle). The rhythm only moves "idle" people.
+- `updateDirector()`: every 3 seconds in your room, the crowd follows the beat (half at 0–3, most at 3–6, all at the rush, fewer at 9–12): people come in through the doors early (they fade in) and walk out at the end. A freshly built room starts at the right size for the minute.
+- Curator → Preview options → **Visit clock**: jump to a beat, pause or resume, +1 min, and a line with the minute, beat, loop and this loop's problems (`setVisitClock(min, paused)`).
+- Also: member shirt colors (`members[].shirts`; Staff tab "name, badge, orange pink"), `facingWall(n)` (still people facing a bare wall don't turn when you talk), the basement garage door (`garage_door`, storage `wallArt`, `storage.garage`).
+
 **Living museum, Phase 1: the volunteer shift (2026-11-18).** (Plan: `LIVING-MUSEUM-PLAN.md`.)
 - **Anyone can clock in** as a volunteer: the staff door and the time clock offer "Volunteer today" (no badge). `clockIn(who)`: a badge, or `null` for a volunteer (`progress.staff = { badge: "volunteer", name: "Volunteer", volunteer: true }`). Volunteers get the uniform, the staff room, a locker and the tally like badges do; nothing goes online (no token). Staff call them `vol.callName` ("volunteer").
 - **Off shift, a chore is a favor** (`favor()` from `count()`): a coworker within 8 tiles says `vol.favor` in the corner, at most once a minute. Same tokens either way.
