@@ -5267,7 +5267,7 @@ class Game {
     this.closeCafe();
     const serve = mug => {
       if (price) { this.progress.tokens -= price; this.saveProgress(); this.updateHud(); }
-      this.drink = { kind: d.id === "week" ? 3 : i, name: d.name, sips: 0, color: d.color || "", iced: !!d.iced, mug }; // mug: "real" or "fake" (your travel mug), "" (a cup)
+      this.drink = { kind: d.id === "week" ? 3 : i, name: d.name, sips: 0, color: d.color || "", iced: !!d.iced, mug }; this.sipClock = 240; // the first sip a few seconds after you get it // mug: "real" or "fake" (your travel mug), "" (a cup)
       if (d.id === "cocoa") this.quest("cocoa");
       this.progress.tally.drinks = (this.progress.tally.drinks || 0) + 1; this.bump(this.progress.stats.drinks, d.id); this.saveProgress();
       this.say(d.line && d.line.length ? d.line : this.tx("drink.served")); // the drink of the week can come with its own line
@@ -6001,7 +6001,7 @@ class Game {
       return;
     }
     const onTheGo = !p.sitting && !!this.drink && this.drink.mug === "real"; // a real travel mug: you sip while you walk around, just slower
-    if ((p.sitting || onTheGo) && this.drink && !this.drink.empty && this.mode === "walk" && --this.sipClock <= 0) { this.sip = { t: 0 }; this.sipClock = onTheGo ? 420 : 170; }
+    if ((p.sitting || onTheGo) && this.drink && !this.drink.empty && this.mode === "walk" && !(--this.sipClock > 0)) { this.sip = { t: 0 }; this.sipClock = onTheGo ? 420 : 170; } // !(> 0): a clock that was never set (you haven't sat down yet) counts as due
   }
 
   /* ----- world ----- */
@@ -7109,7 +7109,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 goq gear 5";
+const VERSION = "2026-11-18 goq gear 6";
 window.GOQ = { REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
