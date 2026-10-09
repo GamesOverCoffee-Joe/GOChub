@@ -472,6 +472,7 @@ Goal: character.
 
 **Living museum, Step 1: the director (2026-11-18).** (Plan: `LIVING-MUSEUM-PLAN.md`, Build order.)
 - `director()`: the visit clock, a 12-minute loop from page load (`dirClock.t`, frames). Beat 0–3 (`BEATS`), loop number, today's weekday and unveiling, today's crowd, and this loop's 3 or 4 problems (`PROBLEMS`, picked by date + loop). It pauses at night, during closing, in the tutorial, or when paused from the curator.
+- (10/9 follow-up) The clock keeps running at night; the guard does rounds only at closing, at any hour. Jumping the clock (or rebuilding) settles the crowd right away, both ways (`crowdPerson`). `facingWall` now covers any wall or thing someone stands still facing.
 - `npcOwner(n)`: who's in charge of an NPC (tutorial > closing > unveiling > weekday event > curious > staff > rhythm > idle). The rhythm only moves "idle" people.
 - `updateDirector()`: every 3 seconds in your room, the crowd follows the beat (half at 0–3, most at 3–6, all at the rush, fewer at 9–12): people come in through the doors early (they fade in) and walk out at the end. A freshly built room starts at the right size for the minute.
 - Curator → Preview options → **Visit clock**: jump to a beat, pause or resume, +1 min, and a line with the minute, beat, loop and this loop's problems (`setVisitClock(min, paused)`).
@@ -495,7 +496,7 @@ Goal: character.
 - **Prices:** Shades 28, Phone Case 30, Hat 34, Travel Mug 40, the dragon 30; four new souvenirs (Tote Bag 30, Enamel Pin 26, Mousepad 32, Lanyard 28; placeholder descriptions); coffee and tea 4, cocoa 5, Dragon's Breath 6. A casual day earns about 25.
 - Long descriptions in the split menus shrink to fit (`fitDetail`).
 
-**Hear a line (2026-11-18).** Curator → Preview options → **Hear a line**: every Words line (by group) and every staff chat set, a version picker (Sunday coffee and other random lines have several; chat sets also have "All of them, in turn"), and Play it, which `say()`s it in the preview from the draft (no Apply needed; `lineSources`, `fillLines`).
+**Hear a line (2026-11-18), removed later the same day:** it only played lines out of context, and Joe wanted the real scene; that's left to the Visit clock and Make it happen.
 
 **Fixed: old rooms popping into the curator's preview (2026-11-18).** `normalizePack` used to reset the shared `ROOMS` to the built-in rooms whenever it was handed something without rooms, and the curator's Shop tab does that (it reads just the shop). The preview's next rebuild (changing the day, for one) then drew the built-in rooms. Now only a whole pack sets the rooms, and every `buildWorld` applies its own pack's rooms first (the curator runs two games, the preview and the room editor's, over the one `ROOMS`).
 

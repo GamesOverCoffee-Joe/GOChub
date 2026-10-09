@@ -232,7 +232,7 @@ Each day leans on a different chain: Monday and Sunday are supply days (Joe 10/9
 
 Built one step at a time, each playable on its own:
 
-1. **The director** ✅ built 10/9 (version "2026-11-18 director"; Curator → Preview options → Visit clock): one owner for the 12-minute clock (beats, loop, pausing at night and closing, today's day and unveiling, which 3 or 4 problems are active this loop) and one rule for who's in charge of an NPC when two systems want them (tutorial > closing and night > unveiling > weekday event > the rhythm > idle wandering). Curator preview controls: jump to a minute or beat, force a day, see the active problems. First visible proof: arrivals early in the loop, departures late.
+1. **The director** ✅ built 10/9 (version "2026-11-18 director"; Curator → Preview options → Visit clock): one owner for the 12-minute clock (beats, loop, pausing for closing (not at night, Joe 10/9), today's day and unveiling, which 3 or 4 problems are active this loop) and one rule for who's in charge of an NPC when two systems want them (tutorial > closing and night > unveiling > weekday event > the rhythm > idle wandering). Curator preview controls: jump to a minute or beat, force a day, see the active problems. First visible proof: arrivals early in the loop, departures late.
 2. **The janitor** (Phase 2) on the director. ⏳ next
 3. **The litter chain**: bins that fill, litter, picking it up. The first full chain; Joe plays it before we go wide.
 4. **The supplies chain**, with the moving line (also used by the café rush and Sunday).

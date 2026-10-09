@@ -389,11 +389,6 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
             <div class="seg" id="segBeat" role="group" aria-label="Jump to a beat"><button type="button" data-v="0" title="Minute 0">Settling in</button><button type="button" data-v="3" title="Minute 3">Getting busy</button><button type="button" data-v="6" title="Minute 6">Rush</button><button type="button" data-v="9" title="Minute 9">Winding down</button></div>
             <div style="display:flex;gap:6px;align-items:center;margin-top:6px"><button class="btn" type="button" id="clockPause" title="Stop or start the 12-minute visit clock in this preview">Pause</button><button class="btn" type="button" id="clockFwd" title="Skip ahead one minute">+1 min</button><span id="clockInfo" class="pv-hint" style="margin:0;text-align:left;flex:1"></span></div>
           </div>
-          <div class="pvsec"><span class="pvh">Hear a line</span>
-            <div class="pvgrid" style="grid-template-columns:1fr">
-              <select id="lineSel" aria-label="Which line or conversation"></select>
-              <div style="display:flex;gap:6px"><select id="lineVer" aria-label="Which version" style="flex:1"></select><button class="btn" type="button" id="lineBtn" title="Plays it in the preview now, from your draft (no need to Apply)">Play it</button></div>
-            </div></div>
           <div class="pvsec"><span class="pvh">Start fresh</span>
             <div class="pvgrid">
               <button class="btn" type="button" id="recrate" title="Pieces with a future unveil date go back in their crates, so you can hang them again">Re-crate upcoming</button>
@@ -411,7 +406,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 director";
+window.GOQ_WANT = "2026-11-18 director 2";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -2751,35 +2746,6 @@ function showClock() {
 }
 setInterval(() => { const det = $("#clockInfo") && $("#clockInfo").closest("details"); if (!det || det.open) showClock(); }, 1000);
 
-/* ---------- Hear a line: play any line or staff chat in the preview, straight from the draft ----------
-   Lines with several versions (picked at random or in turn in the game, like Sunday coffee) can be played one by one. */
-function lineSources() {
-  const st = draft.settings, out = [];
-  for (const k in GOQ.TEXT) { const d = GOQ.TEXT[k]; out.push({ id: "t:" + k, group: d.g, label: d.l, v: (st.text && st.text[k]) || d.v, who: "" }); }
-  for (const role in GOQ.TALK_ROLES) ((st.talk && st.talk[role]) || []).forEach((e, i) => out.push({ id: "c:" + role + ":" + i, group: "Chat: " + GOQ.TALK_ROLES[role], label: GOQ.TALK_ROLES[role] + ", set " + (i + 1) + " (when: " + e.when.map(w => GOQ.TALK_WHEN[w] || w).join(" + ") + ")", v: e.v, who: GOQ.TALK_ROLES[role] }));
-  return out;
-}
-function fillLines() {
-  const sel = $("#lineSel"), ver = $("#lineVer"); if (!sel) return;
-  const keep = sel.value, src = lineSources(), groups = {};
-  src.forEach(x => (groups[x.group] = groups[x.group] || []).push(x));
-  sel.innerHTML = ""; Object.keys(groups).sort((a, b) => (a.startsWith("Chat") ? 1 : 0) - (b.startsWith("Chat") ? 1 : 0) || a.localeCompare(b)).forEach(g => sel.appendChild(el("optgroup", { label: g }, groups[g].map(x => el("option", { value: x.id, text: x.label + (x.v.length > 1 ? " · " + x.v.length + " versions" : "") })))));
-  sel.value = keep && src.some(x => x.id === keep) ? keep : "t:sun.curator";
-  const fillVer = () => { const x = src.find(y => y.id === sel.value), k = ver.value; ver.innerHTML = ""; if (!x) return;
-    x.v.forEach((pg, i) => ver.appendChild(el("option", { value: i, text: "Version " + (i + 1) + ": " + (pg[0] || "").slice(0, 40) })));
-    if (x.v.length > 1 && x.group.startsWith("Chat")) ver.appendChild(el("option", { value: "all", text: "All of them, in turn" }));
-    ver.value = k && [...ver.options].some(o => o.value === k) ? k : "0"; };
-  sel.onchange = () => { ver.value = ""; fillVer(); }; fillVer();
-}
-$("#lineBtn").addEventListener("click", () => {
-  const x = lineSources().find(y => y.id === $("#lineSel").value); if (!x) return;
-  const vars = game.baseVars(), pick = $("#lineVer").value, pages = pick === "all" ? x.v.flat() : x.v[+pick || 0] || [];
-  game.closeAll(); game.mode = "walk";
-  game.say(pages.map((p, k) => (x.who && k === 0 ? x.who + ": " : "") + game.fmt(p, vars)));
-  stage.focus({ preventScroll: true });
-});
-{ const det = $("#lineSel") && $("#lineSel").closest("details"); if (det) det.addEventListener("toggle", () => { if (det.open) fillLines(); }); $("#lineBtn").closest(".pvsec").addEventListener("pointerenter", () => { if (document.activeElement !== $("#lineSel") && document.activeElement !== $("#lineVer")) fillLines(); }); }
-
 /* ---------- Import and export ---------- */
 $("#exportBtn").addEventListener("click", async () => {
   const f = await folderPack(); // exporting a draft that's behind the site would undo the site's newer changes once pushed
@@ -2863,7 +2829,7 @@ function askPack(f, b, raw) {
   useDraft(raw); if (moved) { changed({ now: true, keepBase: true }); status("Switched your draft to the one-building layout"); }
   await game.setPack(packOut());
   fillRoomPicker(); // the pack's own room names
-  render(); fillLines();
+  render();
 } finally { if (window.goqReady) window.goqReady(); } })();
 };
 </script>

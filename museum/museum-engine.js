@@ -2764,7 +2764,7 @@ function buildRoom(id, pieces, o) {
       if (cands.length) { const [x, y] = cands[Math.floor(Math.random() * cands.length)]; extra.push(Object.assign(someone(), { _x: x, _y: y, zone: cz })); }
     }
   }
-  const who = (def.visitors || []).concat(extra).filter(v => (!v.day || o.tod !== "night") && (!v.night || o.tod === "night" || (o.closing && v.patrol)) && (!o.closing || v.staff || v.patrol)); // the night guard also does rounds while you close up, whatever the hour
+  const who = (def.visitors || []).concat(extra).filter(v => (!v.day || o.tod !== "night") && (v.patrol ? o.closing : !v.night || o.tod === "night") && (!o.closing || v.staff || v.patrol)); // the guard does rounds only at closing, whatever the hour (Joe 10/9)
   r.npcs = who.filter(v => !v.random || v._x !== undefined).map(v => ({ sitting: !!v.sitting, still: v.still, staff: v.staff, patrol: v.patrol, usher: v.usher, role: v.role || (v.usher ? "usher" : undefined), slow: v.slow, goRight: true, pause: 0, stuck: 0,
     sheet: v.sheet, x: v._x !== undefined ? v._x : v.x, y: v._y !== undefined ? v._y : v.y, dir: DIRS_LIST.includes(v.dir) ? v.dir : "down", moving: false, prog: 0, step: false, bumpT: 0, timer: 60 + Math.random() * 120, lines: v.lines, lineI: -1,
     random: !!v.random, zone: v.zone || null,
@@ -5085,7 +5085,7 @@ class Game {
 
   /* ----- the director (living museum, Phase 3) -----
      One owner for the visit's rhythm, so systems don't fight. The visit clock is a 12-minute block that starts when the page
-     loads and loops; it pauses at night, during closing and in the tutorial. Four beats of 3 minutes. Each loop, 3 or 4 of
+     loads and loops; it pauses during closing and in the tutorial (not at night). Four beats of 3 minutes. Each loop, 3 or 4 of
      the problems are active (picked by the day and the loop). Everyone asks the director what time it is; nobody keeps
      their own clock. Who's in charge of an NPC when two systems want them: npcOwner() (tutorial > closing > unveiling >
      weekday event > curious visitors > staff posts > the rhythm > idle). The rhythm only ever moves "idle" people.
@@ -5094,7 +5094,7 @@ class Game {
     const LOOP = 12 * 3600, d = this.dirClock || (this.dirClock = { t: 0, paused: false }), t = d.t % LOOP, loop = Math.floor(d.t / LOOP);
     const min = t / 3600, beat = Math.min(3, Math.floor(min / 3)), day = this.weekday(), today = todayISO();
     const unveiling = !!(this.pack && this.pack.pieces.some(p => p.unveil === today));
-    const running = !d.paused && !this.tut && !this.closing && this.tod() !== "night";
+    const running = !d.paused && !this.tut && !this.closing; // the loop keeps going at night (Joe 10/9); it stops for closing and the tutorial
     const key = today + ":" + day + ":" + loop;
     if (!d.picks || d.picks.key !== key) { // this loop's problems: 3 or 4 of them, the same for everyone on this day and loop
       const order = PROBLEMS.map(pr => [strSeed(key + pr.id), pr]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
@@ -5116,14 +5116,19 @@ class Game {
   updateDirector() {
     if (this.headless) return;
     const d = this.director(); if (d.running) this.dirClock.t++;
-    if (!d.running || !this.room || this.t % 180) return; // a decision every 3 seconds, in the room you're in
+    if (!d.running || !this.room || (this.t % 180 && !this.room.fresh)) return; // a decision every 3 seconds in the room you're in (right away after a jump)
     const r = this.room, def = ROOMS[r.id]; if (!def || !def.crowd || r.id === "staff" || ROOMS[r.id].tutorial) return;
     const idle = r.npcs.filter(n => this.npcOwner(n) === "idle" || (n.rhythm && !n.leaving));
     if (r.base === undefined) r.base = idle.length; // how many strollers this room holds at the busiest
     const want = Math.round(r.base * [0.5, 0.85, 1, 0.6][d.beat]);
-    if (r.fresh) { // just built: settle the crowd for this point in the visit, out of sight (they hadn't arrived yet)
+    if (r.fresh) { // just built, or the curator jumped the clock: settle the crowd for this point in the visit right away
       r.fresh = false; const extra = idle.length - want;
-      if (extra > 0) { const off = idle.filter(n => Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 6).slice(0, extra); r.npcs = r.npcs.filter(n => !off.includes(n)); }
+      if (extra > 0) { const off = idle.filter(n => Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 3).slice(0, extra); r.npcs = r.npcs.filter(n => !off.includes(n)); }
+      for (let i = 0; i < -extra; i++) { // more people: they're already around (strolling in their own wing)
+        const zones = r.zoneAt ? (r.zones || []).filter(z => z.kind === "room" && z.rect && z.rect.genre) : [], zone = zones.length ? zones[Math.floor(Math.random() * zones.length)].id : undefined;
+        const at = this.freeSpot(r, null, zone) || this.freeSpot(r); if (!at || Math.abs(at[0] - this.player.x) + Math.abs(at[1] - this.player.y) < 2) continue;
+        r.npcs.push(this.crowdPerson(at[0], at[1], zone));
+      }
       return;
     }
     if (idle.length > want && d.beat === 3) { // winding down: someone heads for the doors
@@ -5131,8 +5136,11 @@ class Game {
     } else if (idle.length < want && d.beat < 3) { // settling in and getting busy: someone comes in through the doors
       const at = def.exitTo || def.spawn, [x, y] = at || []; if (at === undefined || !this.tileFree(r, x, y) || (this.player.x === x && this.player.y === y)) return;
       const zones = r.zoneAt ? (r.zones || []).filter(z => z.kind === "room" && z.rect && z.rect.genre) : [], zone = zones.length ? zones[Math.floor(Math.random() * zones.length)].id : undefined;
-      r.npcs.push({ sheet: ["visitor_a", "visitor_b", "visitor_c"][Math.floor(Math.random() * 3)], x, y, dir: "up", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 30, lines: [CROWD_LINES[Math.floor(Math.random() * CROWD_LINES.length)]], lineI: -1, random: true, rhythm: true, zone, alpha: 0, fadeIn: true });
+      r.npcs.push(Object.assign(this.crowdPerson(x, y, zone), { dir: "up", timer: 30, alpha: 0, fadeIn: true }));
     }
+  }
+  crowdPerson(x, y, zone) { // an ordinary visitor the rhythm brought in
+    return { sheet: ["visitor_a", "visitor_b", "visitor_c"][Math.floor(Math.random() * 3)], x, y, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 60 + Math.random() * 120, lines: [CROWD_LINES[Math.floor(Math.random() * CROWD_LINES.length)]], lineI: -1, random: true, rhythm: true, zone };
   }
 
   /* ----- evening -----
@@ -6618,11 +6626,12 @@ class Game {
     if (npc) { npc.timer = 180; if (!this.deskStaff(npc) && !npc.sitting && !this.facingWall(npc)) this.faceYou(npc, 240); if (npc.patrol) npc.pause = 120; this.talkTo(npc); return; }
     const e = this.room.events[fx + "," + fy]; if (e) this.runEvent(e);
   }
-  /* Someone standing still and staring at a bare wall keeps staring when you talk to them (Joe 10/9). */
+  /* Someone standing still and staring at a wall or a thing (a shelf, the arcade, the magazines) keeps staring when you talk
+     to them (Joe 10/9). Not people they're talking to, curious visitors (they turn to talk to you) or the tutorial. */
   facingWall(n) {
-    if (n.moving || !DIRS[n.dir]) return false;
+    if (n.moving || !DIRS[n.dir] || n.cur || n.back || n.follow || n.tutId) return false;
     const [dx, dy] = DIRS[n.dir], x = n.x + dx, y = n.y + dy, r = this.room;
-    return !!(r.solid[y] && r.solid[y][x]) && !r.events[x + "," + y] && !(r.cases || []).some(c => c.x === x && (c.y === y || c.y - 1 === y));
+    return !!(r.solid[y] && r.solid[y][x]) && !r.npcs.some(m => m !== n && m.x === x && m.y === y) && !(this.player.x === x && this.player.y === y);
   }
   /* Staff behind a desk or counter keep facing their customers. */
   deskStaff(n) { return !!(n.usher || n.role === "shopkeeper" || n.role === "barista"); }
@@ -7352,7 +7361,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 director";
+const VERSION = "2026-11-18 director 2";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
