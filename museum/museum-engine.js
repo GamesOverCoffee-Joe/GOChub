@@ -1581,7 +1581,7 @@ const ROOMS = {
       halls: [
         { id: "upper", name: "North Hall", path: [[15, 9], [42, 9]], width: 2, min: 24 },
         { id: "lower", name: "South Hall", path: [[14, 37], [42, 37]], width: 2, min: 24 },
-        { id: "lobbyhall", name: "Lobby Hall", path: [[28, 37], [28, 45]], width: 2, min: 8 },
+        { id: "lobbyhall", name: "Lobby Hall", path: [[28, 37], [28, 43]], width: 4, min: 6 },
         { id: "cafe-south", name: "Café, south", path: [[28, 25], [28, 37]], width: 2, min: 0 },
         { id: "cafe-west", name: "Café, west", path: [[21, 21], [10, 21]], width: 2, min: 0 },
         { id: "cafe-north", name: "Café, north", path: [[28, 17], [28, 9]], width: 2, min: 0 },
@@ -1589,7 +1589,8 @@ const ROOMS = {
         { id: "puzzle-action", name: "West Hall", path: [[10, 14], [10, 29]], width: 2, min: 0 },
         { id: "strategy-story", name: "East Hall", path: [[46, 14], [46, 30]], width: 2, min: 0 },
       ],
-      doors: [{ id: "lobby", zone: "lobbyhall", side: "bottom", at: 0, warp: ["lobby", 7, 3, "down"] }],
+      doors: [{ id: "lobby", zone: "lobbyhall", side: "bottom", at: 0, warp: ["lobby", 7, 3, "down"], use: "in" }, // visitors come in on the left
+        { id: "lobby-out", zone: "lobbyhall", side: "bottom", at: 3, warp: ["lobby", 7, 3, "down"], use: "out" }], // and leave on the right
       stairs: [],
       spawn: "lobby",
     },
@@ -2270,8 +2271,8 @@ const NIGHT_DIM = { lobby: 0.2, museum: 0.12, staff: 0.08, storage: 0.05 };
      halls: [{ id, name, path: [[x, y], ...], width, min }]   straight or L-shaped runs of floor. Each point is the top-left of
             the hallway's width; the first and last points sit inside the rooms (or the hallway) it joins. min: the shortest it
             should be, for the curator's warnings.
-     doors: [{ id, zone, side, at, warp }]   a doorway in a room or hallway's wall (side: top, bottom, left or right; at: how far
-            along). Other rooms can lead here with ["museum", "@id"].
+     doors: [{ id, zone, side, at, warp, use }]   a doorway in a room or hallway's wall (side: top, bottom, left or right; at: how far
+            along). Other rooms can lead here with ["museum", "@id"]. use: "in" (visitors come in here) or "out" (they leave here).
      stairs: [{ id, zone, at: [dx, dy], kind, arrive, to }]   stairs on the floor of a room (from its top-left floor tile) or a
             hallway (from its last point).
    Walls are worked out from the floor: three rows of wall behind (above) every stretch of floor, a wall top all around.
@@ -2295,7 +2296,7 @@ function normalizeLayout(L) {
     if (path.length) out.halls.push({ id: id(h.id, "hall" + i), name: str(h.name, 40) || "Hallway", path, width: n(h.width, 2, 6, 2), min: n(h.min, 0, 99, 0), art: art(h.art),
       walls: { mode: ["auto", "custom", "plain"].includes(wl.mode) ? wl.mode : "auto", from: hexOr(wl.from), to: hexOr(wl.to) } }); });
   (Array.isArray(L.doors) ? L.doors : []).slice(0, 20).forEach((d, i) => { if (d && Array.isArray(d.warp))
-    out.doors.push({ id: sid(d.id, "door" + i), zone: String(d.zone || ""), side: LAYOUT_SIDES.includes(d.side) ? d.side : "bottom", at: n(d.at, 0, 60, 0), warp: d.warp.slice(0, 4) }); });
+    { const o = { id: sid(d.id, "door" + i), zone: String(d.zone || ""), side: LAYOUT_SIDES.includes(d.side) ? d.side : "bottom", at: n(d.at, 0, 60, 0), warp: d.warp.slice(0, 4) }; if (d.use === "in" || d.use === "out") o.use = d.use; out.doors.push(o); } });
   (Array.isArray(L.stairs) ? L.stairs : []).slice(0, 10).forEach((st, i) => { if (st && Array.isArray(st.to))
     out.stairs.push({ id: sid(st.id, "stairs" + i), zone: String(st.zone || ""), at: [n(st.at && st.at[0], -60, 60, 0), n(st.at && st.at[1], -60, 60, 0)], kind: st.kind === "up" ? "up" : "down", arrive: DIRS_LIST.includes(st.arrive) ? st.arrive : "up", to: st.to.slice(0, 4) }); });
   out.spawn = typeof L.spawn === "string" ? L.spawn : (out.doors[0] || {}).id || "";
@@ -2360,7 +2361,7 @@ function carveLayout(L) {
     const rs = z.rects, x = Math.min(...rs.map(r => r.x)), y = Math.min(...rs.map(r => r.y));
     return { x, y, w: Math.max(...rs.map(r => r.x + r.w)) - x, h: Math.max(...rs.map(r => r.y + r.h)) - y };
   };
-  const anchors = {}, doors = [], stairs = [], lights = [], put = (x, y, c) => { if (ch[y] && ch[y][x] !== undefined) ch[y][x] = c; };
+  const anchors = {}, uses = {}, doors = [], stairs = [], lights = [], put = (x, y, c) => { if (ch[y] && ch[y][x] !== undefined) ch[y][x] = c; };
   for (const d of L.doors) {
     const z = zoneOf(d.zone); if (!z) continue;
     const b = box(z), side = d.side; let ex, ey, ax, ay, dir;
@@ -2368,7 +2369,7 @@ function carveLayout(L) {
     else if (side === "bottom") { ex = b.x + Math.min(d.at, b.w - 1); ey = b.y + b.h; put(ex, ey, "B"); ax = ex; ay = ey - 1; dir = "up"; }
     else { ey = b.y + Math.min(d.at, b.h - 1); ex = side === "left" ? b.x - 1 : b.x + b.w; put(ex, ey, "H"); ax = side === "left" ? ex + 1 : ex - 1; ay = ey; dir = side === "left" ? "right" : "left"; }
     if (ey < 0 || ey >= H || ex < 0 || ex >= W) continue;
-    doors.push({ x: ex, y: ey, warp: d.warp }); anchors[d.id] = { x: ax, y: ay, dir };
+    doors.push({ x: ex, y: ey, warp: d.warp }); anchors[d.id] = { x: ax, y: ay, dir }; if (d.use) uses[d.use] = [ax, ay];
   }
   for (const st of L.stairs) {
     const z = zoneOf(st.zone); if (!z) continue;
@@ -2383,7 +2384,7 @@ function carveLayout(L) {
   const a = anchors[L.spawn] || Object.values(anchors)[0];
   let spawn = a ? [a.x, a.y, a.dir] : null;
   if (!spawn) for (let y = 0; y < H && !spawn; y++) for (let x = 0; x < W; x++) if (fl(x, y)) { spawn = [x, y, "down"]; break; }
-  const out = { w: W, h: H, map: ch.map(r => r.join("")), zones, zoneAt: za, anchors, doors, stairs, lights, spawn: spawn || [1, 3, "down"] };
+  const out = { w: W, h: H, map: ch.map(r => r.join("")), zones, zoneAt: za, anchors, doors, stairs, lights, spawn: spawn || [1, 3, "down"], enterAt: uses.in, exitAt: uses.out };
   if (CARVED.size > 40) CARVED.clear();
   CARVED.set(key, out);
   return out;
@@ -2393,6 +2394,7 @@ function layoutOf(def) { return def && def.layout ? carveLayout(def.layout) : nu
 function prepLayoutRoom(def) {
   def.layout = normalizeLayout(def.layout);
   const c = carveLayout(def.layout); def.map = c.map.slice(); def.spawn = c.spawn.slice();
+  if (c.enterAt) def.enterAt = c.enterAt.slice(); if (c.exitAt) def.exitTo = c.exitAt.slice(); // the visitors' way in and way out
   return def;
 }
 prepLayoutRoom(ROOMS.museum);
@@ -2400,7 +2402,7 @@ prepLayoutRoom(ROOMS.museum);
    the level editor in curator.html writes them. Rooms are plain data, so a deep copy is enough. */
 const BUILTIN_ROOMS = JSON.parse(JSON.stringify(ROOMS));
 const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "runners", "lamps", "arrows", "murals", "tint", "windowAt", "intercom", "lightSwitch", "eotmAt",
-  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt", "posters", "floorLights", "camAt", "colorGlows", "keypadAt"];
+  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "enterAt", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt", "posters", "floorLights", "camAt", "colorGlows", "keypadAt"];
 /* Light checks so a hand-edited or damaged pack can't break the game: rectangular map, sane size, a spawn on the map. */
 function normalizeRoom(id, d) {
   if (d && typeof d === "object" && d.layout) { d = Object.assign({}, d); prepLayoutRoom(d); }
@@ -5140,9 +5142,18 @@ class Game {
     if (over) {
       const n = over[1].now.find(n => !n.moving && Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 2); if (n) { n.leaving = true; n.stroll = true; n.leaveT = 0; n.alpha = 1; n.route = null; n.aside = null; n.timer = 0; this.dirClock.last = { what: "out", t: this.t }; }
     } else if (under) {
-      const at = def.exitTo || def.spawn, [x, y] = at || []; if (at === undefined || !this.tileFree(r, x, y) || (this.player.x === x && this.player.y === y)) return;
-      r.npcs.push(Object.assign(this.crowdPerson(x, y, under[1].zone), { dir: "up", timer: 30, alpha: 0, fadeIn: true, entering: true })); this.dirClock.last = { what: "in", t: this.t };
+      const at = def.enterAt || def.exitTo || def.spawn, [x, y] = at || []; if (at === undefined || !this.tileFree(r, x, y) || (this.player.x === x && this.player.y === y)) return;
+      // They head straight for somewhere in that wing (in front of a piece, if one's free) and only look around once there.
+      const zone = under[1].zone, goal = zone ? this.arrivalSpot(r, zone) : null;
+      r.npcs.push(Object.assign(this.crowdPerson(x, y, zone), { dir: "up", timer: goal ? 0 : 30, goalT: goal, alpha: 0, fadeIn: true, entering: true })); this.dirClock.last = { what: "in", t: this.t };
     }
+  }
+  arrivalSpot(r, zone) {
+    const z = r.zones.find(q => q.id === zone), b = z && z.rect; if (!b) return null;
+    const ok = (x, y) => r.solid[y] && !r.solid[y][x] && (this.zoneAt(r, x, y) || {}).id === zone && !(r.noWander && r.noWander.has(x + "," + y)) && !r.npcs.some(n => n.x === x && n.y === y || (n.goalT && n.goalT[0] === x && n.goalT[1] === y));
+    const all = []; for (let y = b.y; y < b.y + b.h; y++) for (let x = b.x; x < b.x + b.w; x++) if (ok(x, y)) all.push([x, y]);
+    const views = all.filter(([x, y]) => r.cases.some(c => c.piece && c.x === x && Math.abs(c.y - y) === 1) || r.hung.some(h => y === h.y + 2 && (h.x === x || h.x + 1 === x)));
+    const from = views.length ? views : all; return from.length ? from[(Math.random() * from.length) | 0] : null;
   }
   /* The crowd the rhythm wants in a room, part by part. The crowd the room was built with (the museum's usual crowd for
      the day and hour) is the least there ever is (Joe 10/9: never fewer than before the clock). In the museum each wing
@@ -7379,7 +7390,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 director 5";
+const VERSION = "2026-11-18 director 6";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
