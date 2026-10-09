@@ -6,8 +6,8 @@ Written 2026-10-05. Branch: `experiments-1` (PR #5).
 
 Ideas and chores parked on purpose. Nothing here is built yet.
 
-- **Placeholder text during the living museum work.** While we build the phases in `LIVING-MUSEUM-PLAN.txt`, unwritten lines read `[PLACEHOLDER: …]` (the seven left as of 2026-10-09 do too). Outside that work, go back to the usual bracketed placeholders.
-- **The living museum plan.** The volunteer shift, coworkers doing chores, a daily rhythm and NPC-to-NPC moments, plus theater sound and the silly toys: all in `LIVING-MUSEUM-PLAN.txt`, word for word. Joe adds changes there.
+- **Placeholder text during the living museum work.** While we build the phases in `LIVING-MUSEUM-PLAN.md`, unwritten lines read `[PLACEHOLDER: …]` (the seven left as of 2026-10-09 do too). Outside that work, go back to the usual bracketed placeholders.
+- **The living museum plan.** The volunteer shift, coworkers doing chores, a daily rhythm and NPC-to-NPC moments, plus theater sound and the silly toys: all in `LIVING-MUSEUM-PLAN.md`, word for word. Joe adds changes there.
 
 - **Photo chain-of-events mystery.** A long-haul chain: the conservator's secret exhibit, unlocked step by step through photos.
 - **What the figure is.** Still undecided.
@@ -470,7 +470,7 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
-**Living museum, Phase 1: the volunteer shift (2026-11-18).** (Plan: `LIVING-MUSEUM-PLAN.txt`.)
+**Living museum, Phase 1: the volunteer shift (2026-11-18).** (Plan: `LIVING-MUSEUM-PLAN.md`.)
 - **Anyone can clock in** as a volunteer: the staff door and the time clock offer "Volunteer today" (no badge). `clockIn(who)`: a badge, or `null` for a volunteer (`progress.staff = { badge: "volunteer", name: "Volunteer", volunteer: true }`). Volunteers get the uniform, the staff room, a locker and the tally like badges do; nothing goes online (no token). Staff call them `vol.callName` ("volunteer").
 - **Off shift, a chore is a favor** (`favor()` from `count()`): a coworker within 8 tiles says `vol.favor` in the corner, at most once a minute. Same tokens either way.
 - **The shift sheet** (`shiftSheet()`) is the first thing on the staff corkboard: today's real needs (plants left, cases with fingerprints by wing, dusty or crooked frames, the curator's mug, closing up), each one marked done once anyone's done it. Its lines are `shift.*`.
