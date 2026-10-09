@@ -467,6 +467,11 @@ Goal: character.
 - **Profile titles** are in Words → Staff profile titles (variants take turns by day; `{n}` in the walls one is the count). Each has a threshold in `profile()`.
 - **Closing screen:** three of your stats at random, then "All your stats are on the old PC in the basement." (Words → Closing up, `end.stats`).
 
+**The curator updates itself (2026-11-18).**
+- **Engine:** `boot()` in curator.html covers the page ("Getting the latest version") until `version.json`, `GOQ_WANT` and `GOQ.VERSION` agree; it reloads with `?upd=n&fresh=` up to 3 times, then shows "Waiting for the new version" and retries every 20 s. The cover is removed by `goqReady()` at the end of `start()`. An old engine never touches the draft.
+- **Pack:** `packSync(f, base)` → same / load (site newer, draft unedited: taken automatically) / ahead (draft is a newer export, kept) / ask (`askPack`: back up the draft to downloads, then use the site's pack; or keep it). Export confirms first when the result would be "ask". Pack edits by hand keep or raise `savedAt`.
+- UPDATING.md explains it for Joe.
+
 **GOQ gear, split menus, and the lobby chat (2026-11-18).**
 - **Shop items** are four GOQ things now (old samples removed): **GOQ Shades** (12), **GOQ Hat** (10), **GOQ Travel Mug** (8), **GOQ Phone Case** (10). Descriptions are bracketed placeholders. Each shop item has **What it does** (`it.use`: shades, hat, mug, case, or nothing); Bluu's copies inherit it from the item they copy (`itemUse`).
 - **Gear** (`gear(use)` → "real", "fake" or ""; a real one wins; `using(use)` honors the Wardrobe's on/off, `progress.gearOn`). My Stuff → **Wardrobe** turns each on or off (shown once you own the shirt or any gear).

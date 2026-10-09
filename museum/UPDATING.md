@@ -35,9 +35,17 @@ When you upload a PNG on a slot's own page (Joe, a wall, a prop) or through the 
 
 There's no separate PNG to upload. "Use built-in art" on a slot removes the custom art from the next export.
 
-**Before you export:** if the repo's `museum-pack.json` has changed since your draft started (for example, Claude moved props or added settings), the curator shows "Heads up: this folder's museum-pack.json has changed since your draft started." Exporting then would undo those changes. Press **More → Check version** to see what's different. There are two safe ways out:
-- **You've only made a small change** (like one PNG): load the folder's pack from Check version, redo the change, then export.
-- **You've made a lot of changes:** export anyway, but don't replace the repo file yourself. Give the export to Claude to merge the two.
+**Updating the curator itself is automatic** (no buttons). Every time you open or refresh it:
+1. **The engine.** A "Getting the latest version" cover shows while it checks `version.json` and loads the matching engine, reloading itself (up to three times) if the device hands it an old copy. If the site still hasn't published the new version (right after a push), it says "Waiting for the new version" and retries every 20 seconds. Nothing in your draft can be opened, saved or exported until the right engine is running.
+2. **The pack.** It compares your draft with the site's `museum-pack.json`:
+   - **Same file:** nothing to do.
+   - **The site's is newer and you haven't changed anything since:** it loads the site's pack by itself ("Loaded the newer museum-pack.json from the site").
+   - **The site's is newer and you have changes too:** it asks. Pick **Back up my draft, then use the site's pack**: your draft goes to your downloads as `museum-pack-backup-<date>.json`, so nothing is lost. If those changes matter, redo them or give the backup to Claude to merge. **Keep my draft** keeps it, but then Export warns you that pushing it would undo the site's newer changes.
+   - **Your draft is newer** (you exported and haven't pushed yet): it keeps your draft.
+
+So the routine is: **open or refresh the curator, and do what it says, if it says anything.** More → Check version is still there if you want details.
+
+**For Claude:** when changing `museum-pack.json` by hand, keep its `savedAt` (or set it to now), never earlier, so drafts treat it as the newer file.
 
 ## Text from the Writers' Room
 

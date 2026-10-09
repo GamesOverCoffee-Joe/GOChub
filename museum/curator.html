@@ -402,30 +402,54 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 goq gear 3";
-/* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
-   always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
-   gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
-if (/^https?:$/.test(location.protocol)) fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => (r.ok ? r.json() : null)).then(j => {
-  if (!j || !j.version || j.version === window.GOQ_WANT) return;
-  try { const k = "goq-fresh-" + location.pathname + j.version; if (sessionStorage.getItem(k)) return; sessionStorage.setItem(k, "1"); } catch (e) { return; }
-  const u = new URL(location.href); u.searchParams.set("fresh", j.version); location.replace(u.toString());
-}).catch(() => {});
-(function load(retry) {
-  const s = document.createElement("script");
-  s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry ? "&r=" + Date.now() : "");
-  /* A cached engine can finish loading before the rest of this page is read, so wait for the page if needed. */
-  const go = () => {
+window.GOQ_WANT = "2026-11-18 goq gear 4";
+/* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
+   (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
+   1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
+      address (which skips the browser's copy), up to 3 times.
+   2. The engine is fetched with the version in its address; if an old copy arrives anyway, once more with a unique address.
+   3. Still old (the site hasn't finished publishing, or the folder has an old museum-engine.js): it says so and tries
+      again every 20 seconds. Nothing is touched meanwhile. */
+(function boot() {
+  const qs = new URLSearchParams(location.search), tries = +qs.get("upd") || 0, web = /^https?:$/.test(location.protocol);
+  const cover = document.createElement("div"); cover.id = "updCover";
+  cover.style.cssText = "position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(20,16,22,.92);color:#f3e9d2;font:16px/1.5 system-ui,sans-serif;text-align:center";
+  const say = (h, p, btn) => { cover.innerHTML = ""; const b = document.createElement("div"); b.style.maxWidth = "440px";
+    const t = document.createElement("h2"); t.textContent = h; t.style.margin = "0 0 8px"; b.appendChild(t);
+    if (p) { const q = document.createElement("p"); q.textContent = p; q.style.margin = "0 0 14px"; b.appendChild(q); }
+    if (btn) { const k = document.createElement("button"); k.type = "button"; k.className = "btn primary"; k.textContent = btn; k.onclick = () => again(); b.appendChild(k); }
+    cover.appendChild(b); };
+  say("Getting the latest version…"); document.body.appendChild(cover);
+  const reload = n => { const u = new URL(location.href); u.searchParams.set("upd", n); u.searchParams.set("fresh", Date.now()); location.replace(u.toString()); };
+  const again = () => reload(1);
+  const stuck = (have, want) => {
+    say("Waiting for the new version", "The newest version is “" + want + "”, but this device keeps getting “" + (have || "an older one") + "”. If you just pushed, the site takes a minute or two to publish. If you open the curator from a folder on your computer, put the new museum-engine.js (and curator.html) in it. Your draft is safe and untouched. Trying again by itself every 20 seconds.", "Try now");
+    setTimeout(again, 20000);
+  };
+  const done = () => {
+    if (qs.has("upd") || qs.has("fresh") || qs.has("hard")) { const u = new URL(location.href); ["upd", "fresh", "hard"].forEach(k => u.searchParams.delete(k)); history.replaceState(null, "", u.toString()); }
     const run = () => { if (window.GOQ && window.goqStart) window.goqStart(); if (window.goqCheck) window.goqCheck(); };
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run, { once: true }); else run();
   };
-  s.onload = () => {
-    if ((!window.GOQ || GOQ.VERSION !== window.GOQ_WANT) && !retry) { load(true); return; }
-    go();
+  window.goqReady = () => cover.remove(); // the draft is loaded and checked against the folder's pack
+  const engine = (latest, retry) => {
+    const s = document.createElement("script");
+    s.src = "museum-engine.js?v=" + encodeURIComponent(window.GOQ_WANT) + (retry || tries ? "&r=" + Date.now() : "");
+    s.onload = () => {
+      if (window.GOQ && GOQ.VERSION === window.GOQ_WANT) { done(); return; }
+      if (!retry) { delete window.GOQ; engine(latest, true); return; }
+      if (tries < 3) reload(tries + 1); else stuck(window.GOQ && GOQ.VERSION, window.GOQ_WANT);
+    };
+    s.onerror = () => { if (!retry) engine(latest, true); else say("Couldn't load museum-engine.js", "Open the curator from the museum folder on the site (next to museum.html).", "Try again"); };
+    document.head.appendChild(s);
   };
-  s.onerror = () => { if (!retry) load(true); else go(); };
-  document.head.appendChild(s);
-})(new URLSearchParams(location.search).has("hard")); // Check version, Reload fresh: skip any cached engine
+  if (!web) { engine("", false); return; }
+  fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => (r.ok ? r.json() : null)).catch(() => null).then(j => {
+    const latest = j && j.version || "";
+    if (latest && latest !== window.GOQ_WANT) { if (tries < 3) reload(tries + 1); else stuck(window.GOQ_WANT, latest); return; } // this page itself is an old copy
+    engine(latest, false);
+  });
+})();
 </script>
 <script>
 window.goqStart = function () {
@@ -2631,7 +2655,9 @@ function pieceRow(p, i, place) {
 }
 
 /* ---------- Import and export ---------- */
-$("#exportBtn").addEventListener("click", () => {
+$("#exportBtn").addEventListener("click", async () => {
+  const f = await folderPack(); // exporting a draft that's behind the site would undo the site's newer changes once pushed
+  if (packSync(f, getBase()) === "ask" && !confirm("Heads up: the site's museum-pack.json has newer changes that this draft doesn't have. If you push this export, those changes are undone.\n\nExport anyway? (Cancel, then reload the page, to pick between them.)")) return;
   const savedAt = new Date().toISOString(), text = JSON.stringify(Object.assign(packOut(), { savedAt })); // the export date, shown by Check version
   download("museum-pack.json", new Blob([text], { type: "application/json" })); setBase(text, "export", savedAt);
   status("Exported museum-pack.json. Put it next to museum.html on your site, or load it in the museum.");
@@ -2670,13 +2696,38 @@ function migrateFloors(raw) {
   ((raw.settings && raw.settings.achievements) || []).forEach(a => { if (a.id === "explorer" && a.target === 10) a.target = 8; });
   return true;
 }
+/* ---------- Keeping the draft in step with the site's pack ----------
+   "same": nothing to do. "load": the site's pack is newer and the draft has no edits of its own, so take it (nothing is lost).
+   "ahead": the draft came from an export newer than the site's pack (not pushed yet), so keep it.
+   "ask": the site's pack is newer AND the draft has edits it doesn't (or the draft is too old to know): ask, with a backup. */
+function packSync(f, b) {
+  if (!f || f.err || (b && b.fp === f.fp)) return "same";
+  if (b && b.savedAt && (!f.savedAt || f.savedAt < b.savedAt)) return "ahead";
+  return b && !b.edited ? "load" : "ask";
+}
+function backupDraft(raw) { download("museum-pack-backup-" + new Date().toISOString().slice(0, 10) + ".json", new Blob([JSON.stringify(raw)], { type: "application/json" })); }
+function askPack(f, b, raw) {
+  return new Promise(res => {
+    const dlg = el("dialog", { class: "rchooser", "aria-label": "Newer pack on the site" }); document.body.appendChild(dlg);
+    const end = v => { dlg.close(); dlg.remove(); res(v); };
+    [el("h3", { text: "The site has a newer museum-pack.json", style: "margin:0 0 8px" }),
+      el("p", { text: "This browser's draft also has changes that aren't in it" + (b && b.at ? " (since " + when(b.at) + ")" : "") + ". The usual answer is the first button: your draft is saved to your downloads as a backup, so nothing is lost, and you work on the site's pack." }),
+      el("div", { class: "row", style: "margin-top:12px;flex-wrap:wrap;gap:8px" }, [
+        el("button", { type: "button", class: "btn primary", text: "Back up my draft, then use the site's pack", onclick: () => { backupDraft(raw); end(true); } }),
+        el("button", { type: "button", class: "btn", text: "Keep my draft", onclick: () => end(false) })])].forEach(k => dlg.appendChild(k));
+    dlg.addEventListener("cancel", e => e.preventDefault()); dlg.showModal();
+  });
+}
 /* ---------- Start: this browser's draft, else the site's pack, else the sample pieces ---------- */
-(async function start() {
+(async function start() { try {
   let raw = null;
   try { raw = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); } catch (e) {}
   if (raw) {
     status("Restored your draft from this browser");
-    folderPack().then(f => { const b = getBase(); if (!f.err && b && b.fp !== f.fp) { status("Heads up: this folder's museum-pack.json has changed since your draft started. Press Check version.", true); } });
+    const f = await folderPack(), b = getBase(), sync = packSync(f, b);
+    if (sync === "load") { raw = f.j; setBase(f.text, "folder", f.savedAt); try { localStorage.setItem(DRAFT_KEY, f.text); } catch (e) {} status("Loaded the newer museum-pack.json from the site (you hadn't changed anything since)"); }
+    else if (sync === "ask") { if (await askPack(f, b, raw)) { raw = f.j; setBase(f.text, "folder", f.savedAt); try { localStorage.setItem(DRAFT_KEY, f.text); } catch (e) {} status("Loaded the newer museum-pack.json from the site. Your old draft is in your downloads"); } else status("Kept your draft. The site's pack has newer changes it doesn't have", true); }
+    else if (sync === "ahead") status("Your draft is newer than the site's pack: export it and push when you're ready");
   } else {
     const f = await folderPack();
     if (!f.err) { raw = f.j; setBase(f.text, "folder", f.savedAt); status("Loaded " + SITE_PACK + " from this folder"); }
@@ -2687,7 +2738,7 @@ function migrateFloors(raw) {
   await game.setPack(packOut());
   fillRoomPicker(); // the pack's own room names
   render();
-})();
+} finally { if (window.goqReady) window.goqReady(); } })();
 };
 </script>
 
