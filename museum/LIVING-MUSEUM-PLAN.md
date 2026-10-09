@@ -6,7 +6,7 @@ A daily rhythm, a volunteer role, and NPCs with their own intentions (and proble
 
 Saved 2026-10-09 so we can pick it up later word for word. Edit freely; mark changes with your initials or a date. Joe's notes are the quoted blocks marked **Joe**. Last edited: Note 09-10-2026 12:20 PM.
 
-**Contents:** [Where this came from](#where-this-came-from) · [Decisions](#decisions-so-far) · [Phase 1](#phase-1-the-volunteer-shift) · [Phase 2](#phase-2-the-world-does-its-own-chores) · [Phase 3](#phase-3-the-rhythm) · [Phase 4](#phase-4-npc-to-npc-moments) · [Later](#later) · [In the curator](#in-the-curator) · [Joe's notes](#joes-changes--notes) · [Parked ideas](#other-ideas-parked-along-the-way)
+**Contents:** Where this came from · Decisions · Phase 1 · Phase 2 · Phase 3 · Phase 4 · Later · In the curator · Joe's notes · Parked ideas
 
 ---
 
@@ -178,11 +178,9 @@ Every problem has:
 
 **The chains**
 
-```
-Bins (janitor's route) → litter (visitors) → more sweeping → janitor overtime ← unwatered plants
-Usher's coffee → how good the tour is → bored kids → messy shop
-Barista's prep → the line → a blocked walkway
-```
+- Bins (janitor's route) → litter (visitors) → more sweeping → janitor overtime ← unwatered plants
+- Usher's coffee → how good the tour is → bored kids → messy shop
+- Barista's prep → the line → a blocked walkway
 
 - **Not every problem every loop:** 3 or 4 of them per loop, chosen by the day, so loops differ and the patterns are learned over several visits.
 
@@ -206,7 +204,7 @@ Barista's prep → the line → a blocked walkway
 | **Unveiling day** (any day with an unveiling)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | The ceremony draws everyone to one wing at a set time: other areas empty out. The usher runs the ceremony instead of a tour (the tour chain is off). Right after: a rush on the gift (*stronger:* messy shop) and on the drink of the week (*stronger:* the line).                                                                                                                                                                                                                                                                                                                                                                                     |
 | **Every day**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | How busy the museum is (light / medium / heavy, already in the game) makes the lines, litter and crowds bigger or smaller.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 
-> **Joe (Saturday):** there's an issue with this idea. The lobby is very small and constantly using the "excuse me" mechanic will most likely play the teleportation joke over and over. That should be avoided.
+> **Joe (Saturday):** there's an issue with this idea. The lobby is very small and constantly using the "excuse me" mechanic will most likely play the teleportation joke over and over. That should be avoided. Is there another way to get around people without relying on pure chance? If we're going to use a path finding thing to make a clear path, that might trap people in spots which should also be avoided.
 
 > **Joe (Sunday):** how much work would it be to make the line move for each person? And perhaps you don't get a drink and must wait in line to get one? If you say excuse me to someone in the line, I don't want them to move because they're say they're in line.
 
