@@ -6,7 +6,7 @@ Written 2026-10-05. Branch: `experiments-1` (PR #5).
 
 Ideas and chores parked on purpose. Nothing here is built yet.
 
-- **Placeholder text says so.** Any line or description still waiting on Joe reads `[PLACEHOLDER: …]`, so it's obvious in the game (the brackets also keep it on the Writers' Room's To write list).
+- **Placeholder text during the living museum work.** While we build the phases in `LIVING-MUSEUM-PLAN.txt`, unwritten lines read `[PLACEHOLDER: …]` (the seven left as of 2026-10-09 do too). Outside that work, go back to the usual bracketed placeholders.
 - **The living museum plan.** The volunteer shift, coworkers doing chores, a daily rhythm and NPC-to-NPC moments, plus theater sound and the silly toys: all in `LIVING-MUSEUM-PLAN.txt`, word for word. Joe adds changes there.
 
 - **Photo chain-of-events mystery.** A long-haul chain: the conservator's secret exhibit, unlocked step by step through photos.
