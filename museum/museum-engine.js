@@ -6323,6 +6323,7 @@ class Game {
 
   /* ----- world ----- */
   buildWorld() {
+    this.worldGen = (this.worldGen || 0) + 1; // the janitor re-plans on a new world (the pack loaded, rooms edited)
     if (this.pack && this.pack.rooms) applyRooms(this.pack.rooms); // the rooms are shared by every game on the page (the curator has two): build from this one's
     const today = todayISO(), rooms = Object.keys(ROOMS).filter(id => ROOMS[id].mugSpots), seed = strSeed("mug" + today);
     const catRooms = Object.keys(ROOMS).filter(id => ROOMS[id].catSpots), cs = strSeed("cat" + today + this.catBucket());
@@ -6918,7 +6919,11 @@ class Game {
     if (!J || J.key !== key) { // a new visit (or the loop started over, or a new day)
       const n = J ? J.npc : { sheet: "janitor", janitor: true, staff: true, role: "janitor", x: 0, y: 0, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 0, lines: [], lineI: -1 };
       if (!J) { const [x, y] = this.janStand("lobby", "staff"); n.x = x; n.y = y; n.alpha = 0; n.fadeIn = true; } // out of the staff door
-      J = this.jan = { key, stops: this.janPlan(d.loop), i: 0, mode: "go", t: 0, eta: -1, phase: "chores", npc: n, room: J ? J.room : "lobby", watered: 0, stuck: 0 };
+      J = this.jan = { key, gen: this.worldGen, stops: this.janPlan(d.loop), i: 0, mode: "go", t: 0, eta: -1, phase: "chores", npc: n, room: J ? J.room : "lobby", watered: 0, stuck: 0 };
+    } else if (J.gen !== this.worldGen) { // the museum was rebuilt (usually the pack loading just after the page opens): the same chores, on the new map
+      J.gen = this.worldGen; const done = J.i; J.stops = this.janPlan(d.loop); J.i = Math.min(done, J.stops.length); J.cur = null; J.brk = null; J.fill = null; J.fillT = 0; J.door = null; J.tk = null; J.eta = -1;
+      if (J.mode === "act") J.mode = "go"; const n = J.npc, R = this.rooms[J.room]; n.route = null; n.moving = false; n.prog = 0;
+      if (!R || !R.solid[n.y] || R.solid[n.y][n.x] !== false) { J.room = R ? J.room : "lobby"; const [x, y] = J.room === "lobby" ? this.janStand("lobby", "staff") : this.janArrive(J.room, "lobby"); n.x = x; n.y = y; } // stood somewhere that's a wall now
     }
     const n = J.npc;
     for (const id in this.rooms) { const R = this.rooms[id], has = R.npcs.includes(n); if (id === J.room && !has) R.npcs.push(n); else if (id !== J.room && has) R.npcs = R.npcs.filter(m => m !== n); }
@@ -6965,12 +6970,14 @@ class Game {
     if (J.phase === "plants" && !this.isThirsty(stop.plant)) { J.cur = null; return; } // someone beat him to it
     const target = stop.room === J.room ? stop.at : this.janStand(J.room, stop.room === "lobby" || J.room === "lobby" ? stop.room : "lobby");
     const tk = J.room + ":" + target; if (J.tk !== tk) { J.tk = tk; J.eta = -1; n.route = null; J.stuck = 0; }
+    // Out of sight: he's already there, but takes as long as the walk would (so he isn't left standing in a doorway).
+    if (!vis && !(n.x === target[0] && n.y === target[1])) { J.eta = (Math.abs(target[0] - n.x) + Math.abs(target[1] - n.y)) * 46; n.x = target[0]; n.y = target[1]; }
+    if (!vis && J.eta > 0) { J.eta--; return; }
     if (n.x === target[0] && n.y === target[1]) {
       if (stop.room !== J.room) { J.door = stop.room === "lobby" || J.room === "lobby" ? stop.room : "lobby"; return; }
       if (stop.fill) { J.fillT = stop.dur; n.dir = stop.dir; return; }
       J.mode = "act"; J.t = stop.dur; n.dir = stop.dir; return;
     }
-    if (!vis) { if (J.eta < 0) J.eta = (Math.abs(target[0] - n.x) + Math.abs(target[1] - n.y)) * 46; if (--J.eta <= 0) { n.x = target[0]; n.y = target[1]; J.eta = -1; } return; }
     if (n.stepWait > 0) { n.stepWait--; return; }
     if (!n.route || !n.route.length) n.route = this.npcPath(n, target[0], target[1], true);
     const jump = () => { if (this.tileFree(this.room, target[0], target[1]) && !(this.player.x === target[0] && this.player.y === target[1])) { n.x = target[0]; n.y = target[1]; n.route = null; } J.stuck = 0; };
@@ -7628,7 +7635,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 janitor";
+const VERSION = "2026-11-18 janitor 2";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

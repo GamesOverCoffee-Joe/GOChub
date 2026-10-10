@@ -493,7 +493,9 @@ Goal: character.
 - **Doors:** lobby ↔ museum (enters at `enterAt`, leaves from `exitTo`), lobby ↔ staff (`janStand`, `janArrive`). **Out of sight** he keeps the same schedule: each leg takes its walking time (46 frames a tile), then he's there; any step or fade-in in progress finishes at once.
 - **Talking:** his lines follow what he's doing (`jan.start`, `jan.sweep`, `jan.trash`, `jan.wait`, `jan.plants`, `jan.overtime`, `jan.break`, `jan.early`; Words → Janitor).
 - Curator → Preview → **Find the janitor** (`findJanitor()`), and the clock line says where he is and what he's doing (`janitorInfo()`).
-- Not yet: bins filling up and litter (Step 3), his name.
+- (janitor 2) **Re-plans when the museum is rebuilt** (`worldGen`, bumped in `buildWorld`): the game builds from the built-in rooms before the pack loads, so his first plan was for the built-in map and he got stuck at the Lobby Hall door. Same chores, new map, and he's moved off any tile that's a wall now. Out of sight he's at his next stop straight away and waits out the walk there (so he isn't left standing in a doorway you arrive in).
+- His name is "Janitor" (Joe 10/10).
+- Not yet: bins filling up and litter (Step 3).
 - Curator → Preview tab → **Visit clock**: jump to a beat, pause or resume, +1 min, and a line with the minute, beat, loop and this loop's problems (`setVisitClock(min, paused)`).
 - Also: member shirt colors (`members[].shirts`; Staff tab "name, badge, orange pink"), the basement garage door (`garage_door`, storage `wallArt`, `storage.garage`).
 
