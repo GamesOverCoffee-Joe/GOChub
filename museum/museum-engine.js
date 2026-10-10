@@ -51,6 +51,7 @@ const PAL = {
   cat:     [null, "#f0a050", "#c87028", "#2a1810", "#f8f0e0", "#f88898", "#a05018"],
   apron:   [null, "#f0d0b0", "#c86848", "#181820", "#f8f0c0"],
   janitor: [null, "#d8a880", "#8aa8c0", "#181820", "#3c6a48", "#6a4424", "#c8c8c8"], // skin, shirt, outline, suspenders and hat, tool belt, tools
+  litter:  [null, "#f0ece0", "#c84838", "#181820", "#e8b24a", "#7a9ab8"], // paper, red wrapper, outline, gold, blue
   broom:   [null, "#a87838", "#d8b858", "#181820", "#c84838"], // handle, bristles, outline, band
   jcan:    [null, "#5a6a72", "#3e4a52", "#181820", "#8a9aa2"], // the janitor's rolling garbage can: body, shade, outline, rim
   guard:   [null, "#e8c098", "#283c64", "#181820", "#f0c040"],
@@ -315,6 +316,20 @@ const GEN = {
     const a = mk(16, 16), o = f ? 1 : 0;
     for (let i = 0; i < 9; i++) px(a, 10 - Math.floor(i / 2) + (i > 6 ? o : 0), i + 1, 1); // the handle, leaning
     rect(a, 4 + o, 10, 6, 1, 4); rect(a, 3 + o, 11, 8, 3, 2); for (let x = 3; x < 11; x += 2) px(a, x + o, 14, 2);
+    return outline(a);
+  },
+  // Litter on the floor: three kinds, side by side (a dropped cup, a crumpled wrapper, a balled-up napkin).
+  litter: f => {
+    const a = mk(16, 16);
+    if (f === 0) { rect(a, 5, 9, 6, 3, 1); rect(a, 10, 9, 1, 3, 4); px(a, 5, 10, 2); } // a paper cup on its side
+    else if (f === 1) { rect(a, 6, 9, 4, 3, 2); px(a, 5, 10, 2); px(a, 10, 9, 2); px(a, 7, 10, 4); px(a, 9, 11, 4); } // a wrapper
+    else { circ(a, 8, 10, 2, 1); px(a, 7, 9, 5); } // a napkin
+    return outline(a);
+  },
+  // A full bin: trash heaped over the rim, drawn on top of the trash can.
+  trash_full: () => {
+    const a = mk(16, 16);
+    rect(a, 3, 1, 10, 3, 1); px(a, 4, 0, 1); px(a, 9, 0, 1); rect(a, 5, 1, 2, 2, 2); rect(a, 10, 1, 2, 1, 5); px(a, 8, 2, 4);
     return outline(a);
   },
   jan_can: () => {
@@ -1224,6 +1239,8 @@ const SLOTS = [
   { key: "phone", label: "Phone (taking a photo)", group: "People", w: 8, h: 8, pal: "ui", gen: GEN.phone, note: "Held up in front of you for a moment when you take a photo." },
   { key: "janitor", label: "Janitor", group: "People", w: 16, h: 16, layout: "char", pal: "janitor", gen: GEN.janitor, note: "Suspenders with a matching hat, and a tool belt. Does the museum's chores on the visit clock. " + CHAR_NOTE },
   { key: "jan_broom", label: "Janitor's broom", group: "People", w: 16, h: 16, frames: 2, pal: "broom", gen: GEN.jan_broom, note: "Two frames, side by side: the broom swishes between them while he sweeps the tile in front of him." },
+  { key: "litter", label: "Litter", group: "Furniture", w: 16, h: 16, frames: 3, pal: "litter", gen: GEN.litter, note: "Three kinds side by side (48×16): a dropped cup, a wrapper, a napkin. On the floor by full bins; you can pick it up." },
+  { key: "trash_full", label: "Overflowing trash can", group: "Furniture", w: 16, h: 16, pal: "litter", gen: GEN.trash_full, note: "Drawn over a trash can once it's full: the trash heaped over the rim." },
   { key: "jan_can", label: "Janitor's garbage can", group: "People", w: 16, h: 16, pal: "jcan", gen: GEN.jan_can, note: "Rolls along beside the janitor; the dust from his sweeping goes in it." },
   { key: "usher", label: "Usher", group: "People", w: 16, h: 16, layout: "char", pal: "usher", gen: GEN.staff_uniform, note: "Behind the front desk. " + CHAR_NOTE },
   { key: "g2_floor", label: "Gallery Two floor", group: "Gallery Two", w: 16, h: 16, pal: "g2fl", gen: GEN.floor_wood, note: "Tiles seamlessly in every direction." },
@@ -1336,7 +1353,7 @@ const VISITOR_NAMES = ["Ada", "Bea", "Cal", "Dot", "Eli", "Fern", "Gus", "Hana",
 /* Chores that count toward staff points (recommending a visitor the right piece, and closing up, are worth 3). */
 const pts = n => n + " point" + (n === 1 ? "" : "s");
 /* Tokens each thing earns (curator, Tokens tab). Staff points (POINT_KINDS) are separate and don't change. */
-const REWARD_DEFAULTS = { dusted: 1, straightened: 1, watered: 1, mugs: 1, wiped: 1, helped: 5, closings: 3, boxes: 5, kid: 3, artist: [1, 3, 6, 12], trivia: 1, triviaPerfect: 2 };
+const REWARD_DEFAULTS = { dusted: 1, straightened: 1, watered: 1, mugs: 1, wiped: 1, litter: 1, helped: 5, closings: 3, boxes: 5, kid: 3, artist: [1, 3, 6, 12], trivia: 1, triviaPerfect: 2 };
 const POINT_KINDS = ["dusted", "straightened", "watered", "mugs", "wiped", "helped", "closings"];
 const chorePoints = k => (k === "helped" || k === "closings" ? 3 : 1);
 const TEST_BADGES = [{ badge: "0001", key: "QQQQQQ", name: "Test Staff" }];
@@ -1495,6 +1512,8 @@ function normalizePack(p) {
     shirtsOn: lin2.shirtsOn !== false, shirts: shirts.length ? shirts : SHIRT_COLORS.slice() }; // visitors' shirt colors: one is picked at random for each
   // The visit clock (living museum): how long one visit's loop runs, and whether it starts over when it ends or the museum
   // just stays at its usual crowd for the rest of the visit.
+  // Litter (living museum, Step 3): how much a bin holds before it overflows, and how fast the bins fill (percent).
+  const lit = (p.settings && p.settings.litter) || {}, litter = { cap: Math.max(2, Math.min(20, Math.round(lit.cap === undefined ? 6 : +lit.cap || 6))), rate: Math.max(0, Math.min(400, Math.round(lit.rate === undefined ? 100 : +lit.rate || 0))) };
   const vin = (p.settings && p.settings.visit) || {}, visit = { minutes: Math.max(4, Math.min(60, Math.round(vin.minutes === undefined ? 12 : +vin.minutes || 12))), repeat: !!vin.repeat };
   // Genres: the museum's rooms (Action, Puzzle...). A piece's genre is set by hand.
   const genres = normalizeGenres(p.settings && p.settings.genres), gids = new Set(genres.map(g => g.id));
@@ -1505,7 +1524,7 @@ function normalizePack(p) {
     nicknames: Array.isArray(ofin.nicknames) ? ofin.nicknames.map(n => str(n, 40)).filter(Boolean).slice(0, 12) : ["DeVaughn", "Boss", "Mr. curator sir"] }; // what people call a curator badge
   // Gifts set on the piece itself (before gifts were shop items) become shop items.
   pieces.forEach(pc => { if (pc.gift && pc.gift.name && !items.some(it => it.gift === pc.id)) items.push({ id: "gift-" + pc.id, name: pc.gift.name, price: pc.gift.price, description: pc.gift.description, image: null, gift: pc.id }); delete pc.gift; });
-  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, relations, curious, life, visit, genres, office, friday, rewards: normalizeRewards(p.settings && p.settings.rewards), tutorialRev: Math.max(1, Math.min(9999, Math.round(+(p.settings && p.settings.tutorialRev) || 1))) }, samples: !Array.isArray(p.pieces) };
+  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, relations, curious, life, visit, litter, genres, office, friday, rewards: normalizeRewards(p.settings && p.settings.rewards), tutorialRev: Math.max(1, Math.min(9999, Math.round(+(p.settings && p.settings.tutorialRev) || 1))) }, samples: !Array.isArray(p.pieces) };
 }
 /* The curator's "Skip to tomorrow" moves every daily system forward together. */
 let DAY_SHIFT = 0;
@@ -2087,6 +2106,12 @@ const TEXT = {
   "jan.overtime":      { g: "Janitor", l: "Still watering after the visit's loop is over (overtime)", v: [["[PLACEHOLDER: the janitor grumbling about overtime]"]] },
   "jan.break":         { g: "Janitor", l: "On his break in the staff room", v: [["[PLACEHOLDER: the janitor on his break]"]] },
   "jan.early":         { g: "Janitor", l: "On an early break, because the plants were already watered", v: [["[PLACEHOLDER: the janitor on an early break, thanks to whoever watered the plants]"]] },
+  "litter.pick":       { g: "Litter", l: "Picking up litter ({thing}: cup, wrapper or napkin)", v: [["[PLACEHOLDER: picking up a {thing} off the floor]"]] },
+  "litter.handsFull":  { g: "Litter", l: "Trying to pick up more litter with your hands full (three pieces)", v: [["[PLACEHOLDER: hands full of litter already]"]] },
+  "litter.binned":     { g: "Litter", l: "Putting litter in a bin ({n} pieces)", v: [["[PLACEHOLDER: dropping the litter in the bin]"]] },
+  "litter.look":       { g: "Litter", l: "Looking at litter while your hands are full", v: [["[PLACEHOLDER: litter on the floor, and no room in your hands]"]] },
+  "bin.full":          { g: "Litter", l: "A full bin (it won't take any more)", v: [["[PLACEHOLDER: the bin is full to the top]"]] },
+  "jan.takes":         { g: "Janitor", l: "Handing the janitor the litter you picked up (into his can)", v: [["[PLACEHOLDER: the janitor takes your litter for his can]"]] },
   "storage.garage":    { g: "Storage", l: "The wide garage door on the basement's north wall", v: [["[PLACEHOLDER: the basement's garage door, where deliveries come in]"]] },
   "vol.callName":      { g: "Volunteering", l: "What staff call you when you're volunteering (no badge)", v: [["volunteer"]] },
   "vol.in":            { g: "Volunteering", l: "Clocking in as a volunteer", v: [["[PLACEHOLDER: clocking in as a volunteer. Mention the shift sheet on the corkboard]"]] },
@@ -2238,7 +2263,7 @@ const TALK_DEFAULTS = {
 /* ---------- Achievements ----------
    Pure data: each one is a name, a description, one of these stats and a target. The curator's Achievements tab edits them. */
 const ACH_STATS = {
-  dusted: "Frames dusted", straightened: "Frames straightened", watered: "Plants watered", mugs: "Mugs found", wiped: "Cases wiped",
+  dusted: "Frames dusted", straightened: "Frames straightened", litter: "Litter picked up", watered: "Plants watered", mugs: "Mugs found", wiped: "Cases wiped",
   helped: "Visitors who got the right piece", recs: "Games recommended to visitors", pets: "Times petting the cat", closings: "Times closing the museum", photos: "Photos taken",
   bothSides: "Cases read on both sides", items: "Gift shop items owned",
   drinks: "Drinks ordered", naps: "Bench naps", rooms: "Different rooms visited", microwave: "Microwave incidents", segway: "Segway rides",
@@ -3775,7 +3800,7 @@ class Game {
   }
   /* Off shift, a chore is a favor: a coworker nearby notices (not every time). On shift it's just the job. */
   favor(kind) {
-    if (!["dusted", "straightened", "watered", "mugs", "wiped"].includes(kind) || this.tut || this.curator) return;
+    if (!["dusted", "straightened", "watered", "mugs", "wiped", "litter"].includes(kind) || this.tut || this.curator) return;
     if (this.favorT && this.t - this.favorT < 60 * 60) return; // at most once a minute
     const p = this.player, who = this.coworkerNear(8); if (!who) return;
     this.favorT = this.t; this.showLoc(who.label + ": " + this.tx("vol.favor", null, true).join(" "));
@@ -5603,6 +5628,13 @@ class Game {
   }
   /* Empty cups go in the bus tub or a trash can. */
   bin(e) {
+    const [bx, by] = [e.x !== undefined ? e.x : this.player.x + DIRS[this.player.dir][0], e.y !== undefined ? e.y : this.player.y + DIRS[this.player.dir][1]];
+    if (this.carry && !e.tub) { // litter you picked up: as much as fits
+      let put = 0; while (this.carry && this.binAdd(this.room.id, bx, by)) { this.carry--; put++; this.count("litter"); }
+      this.say(this.tx(put ? "litter.binned" : "bin.full", { n: put })); return;
+    }
+    if (this.drink && this.drink.empty && !e.tub && this.binFull(this.room.id, bx, by)) { this.say(this.tx("bin.full")); return; }
+    if (this.drink && this.drink.empty && !e.tub) this.binAdd(this.room.id, bx, by);
     if (this.drink && this.drink.empty) { this.drink = null; if (!e.tub && this.room.id === "lobby") this.quest("lobbyTrash"); else this.quest("otherBin"); this.say(this.tx(e.tub ? "bin.tub" : "bin.trash")); return; }
     if (this.drink) { // not finished: ask first. A travel mug is never thrown away, only poured out
       const d = this.drink, n = d.name.toLowerCase();
@@ -5874,7 +5906,11 @@ class Game {
     const r = this.room, bins = Object.keys(r.events).filter(k => r.events[k].trash).map(k => k.split(",").map(Number));
     if (!bins.length) { n.drink = null; return false; }
     const near = bins.find(([x, y]) => Math.abs(x - n.x) + Math.abs(y - n.y) === 1);
-    if (near) { n.drink = null; n.dir = near[0] > n.x ? "right" : near[0] < n.x ? "left" : near[1] > n.y ? "down" : "up"; n.route = null; n.timer = 120; return true; }
+    if (near) { // in it goes; a full bin, and it ends up on the floor beside it
+      n.drink = null; n.dir = near[0] > n.x ? "right" : near[0] < n.x ? "left" : near[1] > n.y ? "down" : "up"; n.route = null; n.timer = 120;
+      if (!this.binAdd(r.id, near[0], near[1])) this.dropLitter(r.id, near[0], near[1], 0);
+      return true;
+    }
     if (!n.route || !n.route.length) {
       for (const [bx, by] of bins) for (const [dx, dy] of Object.values(DIRS)) { const rt = this.tileFree(r, bx + dx, by + dy, n) && this.npcPath(n, bx + dx, by + dy, true); if (rt && rt.length) { n.route = rt; n.timer = 0; return true; } }
       n.drink = null; return false; // no way to a bin: they pocket it, somehow
@@ -6551,7 +6587,7 @@ class Game {
       const c = this.cine; c.blend += (c.goal > c.blend ? 1 : -1) / 40; c.blend = Math.max(0, Math.min(1, c.blend));
       if (this.mode === "busy" && c.wait > 0 && --c.wait === 0 && c.then) { const fn = c.then; c.then = null; fn(); }
     }
-    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.updateDirector(); this.updateJanitor();
+    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.updateDirector(); this.updateLitter(); this.updateJanitor();
     if (this.petT > 0) this.petT--;
     if (this.t % 20 === 0) this.flushToasts();
     if (this.flickerT > 0) this.flickerT--;
@@ -6705,8 +6741,14 @@ class Game {
       if (into) { into.x = fx; into.y = fy; into.moving = false; into.prog = 0; into.route = null; npc = into; }
       else if (out) { out.moving = false; out.prog = 0; out.route = null; npc = out; }
     }
+    if (npc && npc.janitor && this.carry) { this.faceYou(npc, 240); const k = this.carry; this.carry = 0; for (let i = 0; i < k; i++) this.count("litter"); this.say(this.tx("jan.takes", { n: k })); return; } // into his can
     if (npc) { npc.timer = 180; if (!this.deskStaff(npc) && !npc.sitting && !this.facingWall(npc)) this.faceYou(npc, 240); if (npc.patrol) npc.pause = 120; this.talkTo(npc); return; }
-    const e = this.room.events[fx + "," + fy]; if (e) this.runEvent(e);
+    const e = this.room.events[fx + "," + fy]; if (e) { this.runEvent(e); return; }
+    const L = this.litter && this.litter[this.room.id], li = L ? L.findIndex(l => l.x === fx && l.y === fy) : -1; // litter on the floor in front of you
+    if (li >= 0) {
+      if ((this.carry || 0) >= 3) { this.say(this.tx("litter.handsFull")); return; }
+      const l = L.splice(li, 1)[0]; this.carry = (this.carry || 0) + 1; this.say(this.tx("litter.pick", { thing: ["cup", "wrapper", "napkin"][l.k] }));
+    }
   }
   /* The shop browser ("Hmm. Hmm hmm hmm.") keeps staring at the shelf when you talk to them (Joe 10/9). */
   facingWall(n) { return !!n.browsing; }
@@ -6864,6 +6906,49 @@ class Game {
     }
     return out.length ? out[(Math.random() * out.length) | 0] : null;
   }
+  /* ----- Litter (living museum, Step 3: the litter chain) -----
+     The bins in the lobby and the museum fill up as the visit goes on (faster while it's busy, on busy days, and on loops
+     where the litter problem is one of the director's picks). A full bin overflows: whatever else goes in lands on the
+     floor beside it. You can pick litter up (three pieces at a time) and put it in a bin with room, or hand it to the
+     janitor for his can. His trash round empties the bins, and he stops to sweep up any litter he comes across, which
+     slows him down (and the plants wait). */
+  binKey(room, x, y) { return room + ":" + x + "," + y; }
+  binFill(room, x, y) { return (this.bins && this.bins[this.binKey(room, x, y)]) || 0; }
+  binFull(room, x, y) { return this.binFill(room, x, y) >= this.pack.settings.litter.cap; }
+  binAdd(room, x, y) { if (this.binFull(room, x, y)) return false; const b = this.bins || (this.bins = {}), k = this.binKey(room, x, y); b[k] = (b[k] || 0) + 1; return true; }
+  dropLitter(room, x, y, kind) { // a piece of litter on a free floor tile near (x, y)
+    const R = this.rooms[room], L = (this.litter || (this.litter = {}))[room] || (this.litter[room] = []); if (!R || L.length >= 12) return false;
+    const c = []; for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const tx = x + dx, ty = y + dy; if (R.solid[ty] && R.solid[ty][tx] === false && !R.events[tx + "," + ty] && !(R.noWander && R.noWander.has(tx + "," + ty)) && !L.some(l => l.x === tx && l.y === ty)) c.push([tx, ty]); }
+    if (!c.length) return false;
+    const [tx, ty] = c[(Math.random() * c.length) | 0]; L.push({ x: tx, y: ty, k: kind === undefined ? (Math.random() * 3) | 0 : kind, ox: ((Math.random() * 7) | 0) - 3, oy: ((Math.random() * 5) | 0) - 2 }); return true;
+  }
+  litterBins() { // the bins visitors use (the staff room's is the staff's own)
+    const out = []; for (const id of ["lobby", "museum"]) { const R = this.rooms && this.rooms[id]; if (R) for (const k in R.events) if (R.events[k].trash && !R.events[k].tub) { const [x, y] = k.split(",").map(Number); out.push([id, x, y]); } }
+    return out;
+  }
+  updateLitter() {
+    if (this.headless || this.tut || this.closing || !this.rooms || !this.pack || this.t % 60) return; // once a second
+    const d = this.director(); if (d.paused) return;
+    const set = this.pack.settings.litter, beat = d.over ? 3 : d.beat, busy = [0.5, 1, 1.3, 0.6][beat] * (d.crowd === "heavy" ? 1.3 : 1) * (this.tod() === "night" ? 0.5 : 1);
+    const p = busy * (d.problems.includes("litter") ? 1.8 : 0.7) * set.rate / 100 / 30; // about a bin's worth in three minutes while it's busy
+    for (const [room, x, y] of this.litterBins()) if (Math.random() < p) { if (!this.binAdd(room, x, y)) this.dropLitter(room, x, y); } // someone tosses something in; a full bin: it lands beside it
+  }
+  litterInfo() {
+    const bins = this.litterBins().map(([room, x, y]) => { const R = this.rooms[room], z = room === "museum" ? this.zoneAt(R, x, y) : null; return (z ? z.name : ROOMS[room].name) + " " + this.binFill(room, x, y) + "/" + this.pack.settings.litter.cap + (this.binFull(room, x, y) ? " (full)" : ""); });
+    const n = Object.values(this.litter || {}).reduce((a, L) => a + L.length, 0);
+    return "Bins: " + bins.join(", ") + ". Litter on the floor: " + n + (this.carry ? ", " + this.carry + " in your hands" : "") + ".";
+  }
+  fillBins() { // the curator's "Fill the bins": every bin full, and a little litter beside each
+    for (const [room, x, y] of this.litterBins()) { (this.bins || (this.bins = {}))[this.binKey(room, x, y)] = this.pack.settings.litter.cap; this.dropLitter(room, x, y); this.dropLitter(room, x, y); }
+  }
+  janNextLitter(room, x, y) { // the nearest litter, for the janitor to sweep up
+    let best = null;
+    for (const id of ["lobby", "museum"]) for (const l of (this.litter && this.litter[id]) || []) { // where he is first
+      const R = this.rooms[id], at = this.janBeside(R, l.x, l.y) || [l.x, l.y], d = (id === room ? 0 : 60) + Math.abs(at[0] - x) + Math.abs(at[1] - y);
+      if (!best || d < best.d) best = { room: id, at, dir: this.janFace(at, l.x, l.y), act: "sweep", dur: 120, lit: l, where: "up litter", d };
+    }
+    return best;
+  }
   /* ----- The janitor (living museum, Step 2; LIVING-MUSEUM-PLAN.md, Phase 2) -----
      When the visit starts he comes out of the staff door with his garbage can and does three chores picked at random
      (sweeping a part of the museum, the dust into his can, or a trash round, bin to bin), starting no more than one a
@@ -6889,7 +6974,7 @@ class Game {
     const trash = [];
     for (const id of ["lobby", "museum", "staff"]) {
       const R = this.rooms[id]; if (!R) continue;
-      for (const k in R.events) if (R.events[k].trash) { const [x, y] = k.split(",").map(Number), at = this.janBeside(R, x, y); if (at) trash.push({ room: id, at, dir: this.janFace(at, x, y), act: "empty", dur: 150 }); }
+      for (const k in R.events) if (R.events[k].trash) { const [x, y] = k.split(",").map(Number), at = this.janBeside(R, x, y); if (at) trash.push({ room: id, at, dir: this.janFace(at, x, y), act: "empty", dur: 150, bin: [x, y] }); }
     }
     const sweep = () => { // four spots in one part of the museum, or the lobby now and then
       const M = this.rooms.museum, zones = M.zones ? M.zones.filter(z => z.kind === "room" || (z.kind === "hall" && z.id !== "lobbyhall")) : [];
@@ -6953,7 +7038,7 @@ class Game {
       return;
     }
     // Which stop is next.
-    if (J.phase === "chores") {
+    if (J.phase === "chores" && J.mode !== "act") {
       if (!stop) { if (d.beat >= 3 || d.over) { J.phase = "plants"; J.cur = null; } else J.mode = "wait"; }
       else if (stop.notBefore > d.beat && !d.over) J.mode = "wait";
       else if (J.mode === "wait") J.mode = "go";
@@ -6966,18 +7051,24 @@ class Game {
       const R = this.rooms[J.room], c = []; for (let dy = -5; dy <= 5; dy++) for (let dx = -5; dx <= 5; dx++) { const x = n.x + dx, y = n.y + dy; if (R.solid[y] && R.solid[y][x] === false && !R.events[x + "," + y] && !(R.noWander && R.noWander.has(x + "," + y)) && Math.abs(dx) + Math.abs(dy) >= 2) c.push([x, y]); }
       if (c.length) J.fill = { room: J.room, at: c[(Math.random() * c.length) | 0], dir: "down", act: "sweep", dur: 240, where: "around", fill: true };
     }
-    stop = J.mode === "wait" ? J.fill : J.phase === "chores" ? J.stops[J.i] : J.phase === "plants" ? J.cur : J.brk;
+    // Litter comes first: he sweeps up any he knows of before going on (that's what makes him late). Not on his break.
+    if (J.lit && !((this.litter && this.litter[J.lit.room]) || []).includes(J.lit.lit)) J.lit = null; // someone picked it up
+    const onRound = J.phase === "chores" && J.mode !== "wait" && (J.stops[J.i] || {}).act === "empty"; // emptying the bins comes first: they're what's making the mess
+    if (!J.lit && !onRound && J.mode !== "act" && J.phase !== "break" && !J.fillT) { J.lit = this.janNextLitter(J.room, n.x, n.y); if (J.lit) { J.mode = "go"; J.fill = null; } }
+    stop = J.lit || (J.mode === "wait" ? J.fill : J.phase === "chores" ? J.stops[J.i] : J.phase === "plants" ? J.cur : J.brk);
     if (!stop) return;
     if (J.mode === "act") {
       n.sweep = stop.act === "sweep"; // sweeping the tile in front of him (the broom's drawn there)
       if (--J.t > 0) return;
       n.sweep = false;
       if (stop.act === "water" && this.isThirsty(stop.plant)) { this.progress.watered[stop.plant] = todayISO(); this.saveProgress(); J.watered++; }
+      if (stop.act === "empty" && stop.bin && this.bins) this.bins[this.binKey(stop.room, stop.bin[0], stop.bin[1])] = 0; // emptied into his can
+      if (stop.lit) { const L = this.litter && this.litter[stop.room]; if (L) { const i = L.indexOf(stop.lit); if (i >= 0) L.splice(i, 1); } J.lit = null; J.swept = (J.swept || 0) + 1; J.mode = "go"; return; }
       if (J.phase === "chores") J.i++; else if (J.phase === "plants") J.cur = null;
       J.mode = "go"; return;
     }
     // Going: to the stop, or first to the door toward its room.
-    if (J.phase === "plants" && !this.isThirsty(stop.plant)) { J.cur = null; return; } // someone beat him to it
+    if (stop.plant && !this.isThirsty(stop.plant)) { J.cur = null; return; } // someone beat him to it
     const target = stop.room === J.room ? stop.at : this.janStand(J.room, stop.room === "lobby" || J.room === "lobby" ? stop.room : "lobby");
     const tk = J.room + ":" + target; if (J.tk !== tk) { J.tk = tk; J.eta = -1; n.route = null; J.stuck = 0; }
     // Out of sight: he's already there, but takes as long as the walk would (so he isn't left standing in a doorway).
@@ -7000,7 +7091,7 @@ class Game {
     const J = this.jan; if (!J) return "";
     const R = ROOMS[J.room], z = J.room === "museum" && this.rooms.museum ? this.zoneAt(this.rooms.museum, J.npc.x, J.npc.y) : null, where = z ? z.name : R ? R.name : J.room;
     const st = J.phase === "chores" ? J.stops[J.i] : J.cur;
-    const what = J.door ? "going through a door" : J.phase === "break" ? (J.early ? "on an early break" : "on his break") : J.phase === "plants" ? (this.director().over ? "overtime: " : "") + "watering " + (st ? "the " + (st.name || "plant") : "plants") + " (" + J.watered + " so far)"
+    const what = J.door ? "going through a door" : J.lit ? "sweeping up litter (" + (J.swept || 0) + " so far)" : J.phase === "break" ? (J.early ? "on an early break" : "on his break") : J.phase === "plants" ? (this.director().over ? "overtime: " : "") + "watering " + (st ? "the " + (st.name || "plant") : "plants") + " (" + J.watered + " so far)"
       : J.mode === "wait" ? "between chores, waiting for the next quarter" : st ? (st.act === "empty" ? "taking out the trash" : "sweeping " + st.where) + " (chore " + st.chore + " of 3)" : "";
     return "Janitor: " + what + ", in " + where + ".";
   }
@@ -7229,6 +7320,7 @@ class Game {
     const ctx = this.ctx, k = p.plant && this.isThirsty(p.plant) ? "plant_thirsty" : p.key;
     const px0 = p.x * T - cx, py0 = p.y * T - (SLOT[k].h - T) - cy;
     this.drawSlot(k, k === "microwave_counter" ? (this.microwaved ? 1 : 0) : k === "office_tv" ? (this.tvOn ? 1 : 0) : this.frame(k), 0, px0, py0);
+    if (k === "trash_can" && this.binFull(this.room.id, p.x, p.y)) this.drawSlot("trash_full", 0, 0, px0, py0 - 3); // overflowing
     if (k === "microwave_counter" && this.boomT > 0) { const f = Math.floor((30 - this.boomT) / 5); if (f < 4) { this.drawSlot("sparkle", f, 0, px0 + 2, py0 - 8); this.drawSlot("sparkle", (f + 1) % 4, 0, px0 + 10, py0 - 4); } }
     if (p.unit !== undefined) ctx.drawImage(this.unitLayer(p.unit), Math.round(px0), Math.round(py0)); // the stacks, drawn once and placed on whole pixels (no shimmer as you walk)
     if (p.rack !== undefined) {
@@ -7509,6 +7601,7 @@ class Game {
     for (const [mx, my] of this.doorMats(r)) this.drawSlot("doormat", 0, 0, mx * T - cx, my * T - cy);
     for (const st of r.stairs) this.drawSlot(st.kind === "up" ? "stair_up" : "stair_down", 0, 0, st.x * T - cx, st.y * T - cy);
     this.drawReadBorders(r, cx, cy); // on the floor, under the cases and people
+    for (const l of (this.litter && this.litter[r.id]) || []) this.drawSlot("litter", l.k, 0, l.x * T - cx + l.ox, l.y * T - cy + l.oy); // on the floor, under everyone
     for (const c of r.cases) this.drawCase(c, cx, cy);
     for (const p of r.props) this.drawProp(p, cx, cy);
     this.drawReadBorders(r, cx, cy, true); // read paintings: a faint sparkle
@@ -7648,7 +7741,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 janitor 3";
+const VERSION = "2026-11-18 litter";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

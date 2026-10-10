@@ -496,7 +496,12 @@ Goal: character.
 - (janitor 2) **Re-plans when the museum is rebuilt** (`worldGen`, bumped in `buildWorld`): the game builds from the built-in rooms before the pack loads, so his first plan was for the built-in map and he got stuck at the Lobby Hall door. Same chores, new map, and he's moved off any tile that's a wall now. Out of sight he's at his next stop straight away and waits out the walk there (so he isn't left standing in a doorway you arrive in).
 - His name is "Janitor" (Joe 10/10).
 - (janitor 3) **Sweeping:** he stands facing the tile and the broom (`jan_broom`, 2 frames, Art slot) swishes in front of him (`n.sweep`), instead of him turning side to side. His can sits on his left when he faces down, so the broom shows.
-- Not yet: bins filling up and litter (Step 3).
+
+**Living museum, Step 3: the litter chain (2026-11-18 litter, built 10/10).**
+- **Bins** (`this.bins`, `"room:x,y"` → pieces; per visit, not saved): the lobby's and museum's trash cans (not bus tubs, not the staff room's) fill once a second at a chance of busy × problem × rate (`updateLitter`): busy by beat 0.5/1/1.3/0.6, ×1.3 heavy, ×0.5 at night; ×1.8 when `litter` is one of the loop's problems, ×0.7 otherwise; `settings.litter = { cap (2–20, default 6), rate (0–400 %, default 100) }` (Visitors tab → Litter). A full bin (`binFull`) draws `trash_full` over it; anything more lands beside it as litter (`dropLitter`, up to 12 a room, `this.litter[room]` = `{x, y, k (cup/wrapper/napkin), ox, oy}`, drawn with the `litter` slot under everyone). Visitors' empty cups go in a bin, or beside a full one.
+- **You:** Z on litter picks it up (`this.carry`, up to 3; `litter.pick`, `litter.handsFull`). At a bin: as much as fits (`litter.binned`, or `bin.full`), each piece `count("litter")` (Tokens tab → Picking up litter, 1). Talk to the Janitor with litter in hand: into his can (`jan.takes`). An empty cup won't go in a full bin either.
+- **The Janitor:** trash stops know their bin and empty it (fill 0). Litter comes before his other stops (`janNextLitter`, nearest first, his own room first), except during a trash round (the bins are what make the mess) and on his break. Each piece is a 2-second sweep.
+- Curator → Preview → **Fill the bins** (`fillBins()`), and the clock line lists each bin and the litter (`litterInfo()`).
 - Curator → Preview tab → **Visit clock**: jump to a beat, pause or resume, +1 min, and a line with the minute, beat, loop and this loop's problems (`setVisitClock(min, paused)`).
 - Also: member shirt colors (`members[].shirts`; Staff tab "name, badge, orange pink"), the basement garage door (`garage_door`, storage `wallArt`, `storage.garage`).
 
