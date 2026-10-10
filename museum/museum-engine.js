@@ -2145,6 +2145,8 @@ const TEXT = {
   "popcorn.ask":       { g: "Screening nook", l: "The popcorn stand ({price} tokens)", v: [["[PLACEHOLDER: the popcorn stand: a bag of popcorn for {price} tokens?]"]] },
   "popcorn.got":       { g: "Screening nook", l: "Getting popcorn", v: [["[PLACEHOLDER: you get a bag of popcorn]"]] },
   "popcorn.poor":      { g: "Screening nook", l: "Popcorn, without enough tokens", v: [["[PLACEHOLDER: not enough tokens for popcorn]"]] },
+  "popcorn.done":      { g: "Screening nook", l: "Finishing your popcorn as the episode ends", v: [["[PLACEHOLDER: the popcorn's gone by the end of the episode]"]] },
+  "bin.tubPopcorn":    { g: "Screening nook", l: "Trying to put a popcorn bag in the café's dish tub", v: [["[PLACEHOLDER: a popcorn bag goes in the trash, not the dish tub]"]] },
   "popcorn.hands":     { g: "Screening nook", l: "Popcorn, with something already in your hands", v: [["[PLACEHOLDER: your hands are full already]"]] },
   "litter.pick":       { g: "Litter", l: "Picking up litter ({thing}: cup, wrapper or napkin)", v: [["[PLACEHOLDER: picking up a {thing} off the floor]"]] },
   "litter.handsFull":  { g: "Litter", l: "Trying to pick up more litter with your hands full (three pieces)", v: [["[PLACEHOLDER: hands full of litter already]"]] },
@@ -4525,9 +4527,13 @@ class Game {
     if (id) { const f = document.createElement("iframe"); f.src = "https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1&rel=0" + (start > 0 ? "&start=" + Math.floor(start) : ""); f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen"; f.allowFullscreen = true; f.title = p.title; box.appendChild(f); }
     else { const a = document.createElement("a"); a.href = p.episodeUrl; a.target = "_blank"; a.rel = "noopener"; a.textContent = "This one plays on its own page \u2197"; a.style.color = "#f8f0e0"; box.appendChild(a); }
     tv.style.display = "flex"; this.mode = "tv";
+    if (this.drink && this.drink.popcorn && !this.drink.empty) this.drink.watching = true; // popcorn is for the show: it's gone by the end
     const st = this.progress.stats; st.episodes = (st.episodes || 0) + 1; this.progress.tally.episodes = (this.progress.tally.episodes || 0) + 1; this.saveProgress();
   }
-  closeTv() { const tv = this.el.tv; tv.style.display = "none"; tv.querySelector(".gt-tv-box").innerHTML = ""; this.mode = "walk"; this.inputLock = true; this.wrap.focus({ preventScroll: true }); }
+  closeTv() {
+    const tv = this.el.tv; tv.style.display = "none"; tv.querySelector(".gt-tv-box").innerHTML = ""; this.mode = "walk"; this.inputLock = true; this.wrap.focus({ preventScroll: true });
+    const d = this.drink; if (d && d.popcorn && d.watching) { d.watching = false; d.empty = true; this.say(this.tx("popcorn.done")); } // watched with popcorn: just the empty bag left
+  }
   /* One or two visitors already in their seats (not after closing). */
   seatGuests() {
     const r = this.rooms && this.rooms.screening; if (!r || this.closing) return;
@@ -5681,6 +5687,7 @@ class Game {
   }
   npcPopcorn() { return { kind: 0, popcorn: true, sips: 0, empty: false, t: 300 + Math.random() * 600 }; }
   bin(e) {
+    if (e.tub && this.drink && this.drink.popcorn) { this.say(this.tx("bin.tubPopcorn")); return; } // a popcorn bag goes in the trash, not the café's dish tub
     const [bx, by] = [e.x !== undefined ? e.x : this.player.x + DIRS[this.player.dir][0], e.y !== undefined ? e.y : this.player.y + DIRS[this.player.dir][1]];
     if (this.carry && !e.tub) { // litter you picked up: as much as fits
       let put = 0; while (this.carry && this.binAdd(this.room.id, bx, by)) { this.carry--; put++; this.count("litter"); }
@@ -6417,7 +6424,7 @@ class Game {
       return;
     }
     const onTheGo = !p.sitting && !!this.drink && this.drink.mug === "real"; // a real travel mug: you sip while you walk around, just slower
-    if ((p.sitting || onTheGo) && this.drink && !this.drink.empty && this.mode === "walk" && !(--this.sipClock > 0)) { this.sip = { t: 0 }; this.sipClock = onTheGo ? 420 : 170; } // !(> 0): a clock that was never set (you haven't sat down yet) counts as due
+    if ((p.sitting || onTheGo) && this.drink && !this.drink.popcorn && !this.drink.empty && this.mode === "walk" && !(--this.sipClock > 0)) { this.sip = { t: 0 }; this.sipClock = onTheGo ? 420 : 170; } // !(> 0): a clock that was never set (you haven't sat down yet) counts as due
   }
 
   /* ----- world ----- */
@@ -7809,7 +7816,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 litter 3";
+const VERSION = "2026-11-18 litter 4";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

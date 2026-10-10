@@ -410,7 +410,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 litter 3";
+window.GOQ_WANT = "2026-11-18 litter 4";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -2493,7 +2493,7 @@ function renderShop() {
   { const pc = el("input", { type: "number", min: 0, max: 99, value: sh.popcorn === undefined ? 3 : sh.popcorn, style: "max-width:120px" });
     pc.addEventListener("input", () => { sh.popcorn = Math.max(0, Math.min(99, Math.round(+pc.value || 0))); changed(); });
     wrap.appendChild(el("section", { class: "prow", style: "display:block;margin:10px 0 16px" }, [el("h3", { text: "Popcorn", style: "margin:0 0 4px" }),
-      el("p", { class: "note", style: "margin:0 0 8px", text: "The popcorn stand in the nook in the theater hallway. A bag costs this many tokens; it's eaten while you sit, like a drink, and the empty bag goes in a bin. Visitors watching an episode often have some too. Its words are in Words, Screening nook." }),
+      el("p", { class: "note", style: "margin:0 0 8px", text: "The popcorn stand in the nook in the theater hallway. A bag costs this many tokens. Sit down and watch an episode with it, and it's gone by the end; the empty bag goes in a trash can (not the café's dish tub). Visitors watching an episode often have some too. Its words are in Words, Screening nook." }),
       el("label", {}, [document.createTextNode("Price (tokens) "), pc])])); }
   // Today's special: the sandwich board by the café (and starred on the menu)
   { const sp = el("select", { "aria-label": "Today's special" }, [el("option", { value: "", text: "Automatic: the drink of the week, or else a different drink each day" }), ...sh.drinks.map(d => el("option", { value: d.id, text: d.name + ", every day" }))]);
