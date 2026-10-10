@@ -495,6 +495,7 @@ Goal: character.
 - Curator → Preview → **Find the janitor** (`findJanitor()`), and the clock line says where he is and what he's doing (`janitorInfo()`).
 - (janitor 2) **Re-plans when the museum is rebuilt** (`worldGen`, bumped in `buildWorld`): the game builds from the built-in rooms before the pack loads, so his first plan was for the built-in map and he got stuck at the Lobby Hall door. Same chores, new map, and he's moved off any tile that's a wall now. Out of sight he's at his next stop straight away and waits out the walk there (so he isn't left standing in a doorway you arrive in).
 - His name is "Janitor" (Joe 10/10).
+- (janitor 3) **Sweeping:** he stands facing the tile and the broom (`jan_broom`, 2 frames, Art slot) swishes in front of him (`n.sweep`), instead of him turning side to side. His can sits on his left when he faces down, so the broom shows.
 - Not yet: bins filling up and litter (Step 3).
 - Curator → Preview tab → **Visit clock**: jump to a beat, pause or resume, +1 min, and a line with the minute, beat, loop and this loop's problems (`setVisitClock(min, paused)`).
 - Also: member shirt colors (`members[].shirts`; Staff tab "name, badge, orange pink"), the basement garage door (`garage_door`, storage `wallArt`, `storage.garage`).

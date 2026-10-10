@@ -51,6 +51,7 @@ const PAL = {
   cat:     [null, "#f0a050", "#c87028", "#2a1810", "#f8f0e0", "#f88898", "#a05018"],
   apron:   [null, "#f0d0b0", "#c86848", "#181820", "#f8f0c0"],
   janitor: [null, "#d8a880", "#8aa8c0", "#181820", "#3c6a48", "#6a4424", "#c8c8c8"], // skin, shirt, outline, suspenders and hat, tool belt, tools
+  broom:   [null, "#a87838", "#d8b858", "#181820", "#c84838"], // handle, bristles, outline, band
   jcan:    [null, "#5a6a72", "#3e4a52", "#181820", "#8a9aa2"], // the janitor's rolling garbage can: body, shade, outline, rim
   guard:   [null, "#e8c098", "#283c64", "#181820", "#f0c040"],
   sky:     ["#f8f8ff", "#a8d8f8", "#78b8e8", "#4878b8", "#ffffff", "#ffe080", "#f89850", "#d05878", "#683878", "#181838", "#283058", "#f8f0c8"],
@@ -308,6 +309,13 @@ const GEN = {
     for (let x = 0; x < 16; x++) if (a[13][x] === 2) a[13][x] = 5; // tool belt
     if (!side) { a[13][6] = 6; a[13][9] = 6; } else a[13][f >= 9 ? 9 : 6] = 6; // tools on the belt
     return a;
+  },
+  // The janitor's broom, two frames: the bristles nudge a pixel side to side (a small sweep, not a big swing).
+  jan_broom: f => {
+    const a = mk(16, 16), o = f ? 1 : 0;
+    for (let i = 0; i < 9; i++) px(a, 10 - Math.floor(i / 2) + (i > 6 ? o : 0), i + 1, 1); // the handle, leaning
+    rect(a, 4 + o, 10, 6, 1, 4); rect(a, 3 + o, 11, 8, 3, 2); for (let x = 3; x < 11; x += 2) px(a, x + o, 14, 2);
+    return outline(a);
   },
   jan_can: () => {
     const a = mk(16, 16);
@@ -1215,6 +1223,7 @@ const SLOTS = [
   { key: "shop_bag", label: "Museum shop bag", group: "People", w: 8, h: 8, pal: "bag", gen: GEN.shop_bag, note: "Carried by some visitors. Held at their side, so draw it hanging from its handle." },
   { key: "phone", label: "Phone (taking a photo)", group: "People", w: 8, h: 8, pal: "ui", gen: GEN.phone, note: "Held up in front of you for a moment when you take a photo." },
   { key: "janitor", label: "Janitor", group: "People", w: 16, h: 16, layout: "char", pal: "janitor", gen: GEN.janitor, note: "Suspenders with a matching hat, and a tool belt. Does the museum's chores on the visit clock. " + CHAR_NOTE },
+  { key: "jan_broom", label: "Janitor's broom", group: "People", w: 16, h: 16, frames: 2, pal: "broom", gen: GEN.jan_broom, note: "Two frames, side by side: the broom swishes between them while he sweeps the tile in front of him." },
   { key: "jan_can", label: "Janitor's garbage can", group: "People", w: 16, h: 16, pal: "jcan", gen: GEN.jan_can, note: "Rolls along beside the janitor; the dust from his sweeping goes in it." },
   { key: "usher", label: "Usher", group: "People", w: 16, h: 16, layout: "char", pal: "usher", gen: GEN.staff_uniform, note: "Behind the front desk. " + CHAR_NOTE },
   { key: "g2_floor", label: "Gallery Two floor", group: "Gallery Two", w: 16, h: 16, pal: "g2fl", gen: GEN.floor_wood, note: "Tiles seamlessly in every direction." },
@@ -6951,8 +6960,8 @@ class Game {
     }
     if (J.phase === "plants" && !J.cur) { J.cur = this.janNextPlant(J.room, n.x, n.y); J.mode = "go"; if (!J.cur) { J.phase = "break"; J.early = !J.watered && !d.over; J.brk = this.janBreakSpot(); } }
     if (J.phase === "break" && !J.brk) J.brk = this.janBreakSpot();
-    if (J.mode !== "wait") { J.fill = null; J.fillT = 0; }
-    else if (J.fillT > 0) { if (vis) n.dir = Math.floor(J.fillT / 20) % 2 ? "left" : "right"; if (--J.fillT <= 0) J.fill = null; return; }
+    if (J.mode !== "wait") { J.fill = null; J.fillT = 0; if (J.mode !== "act") n.sweep = false; }
+    else if (J.fillT > 0) { n.sweep = true; if (--J.fillT <= 0) { J.fill = null; n.sweep = false; } return; }
     if (J.mode === "wait" && !J.fill) { // ahead of schedule: a bit of extra sweeping near where he is until it's time
       const R = this.rooms[J.room], c = []; for (let dy = -5; dy <= 5; dy++) for (let dx = -5; dx <= 5; dx++) { const x = n.x + dx, y = n.y + dy; if (R.solid[y] && R.solid[y][x] === false && !R.events[x + "," + y] && !(R.noWander && R.noWander.has(x + "," + y)) && Math.abs(dx) + Math.abs(dy) >= 2) c.push([x, y]); }
       if (c.length) J.fill = { room: J.room, at: c[(Math.random() * c.length) | 0], dir: "down", act: "sweep", dur: 240, where: "around", fill: true };
@@ -6960,8 +6969,9 @@ class Game {
     stop = J.mode === "wait" ? J.fill : J.phase === "chores" ? J.stops[J.i] : J.phase === "plants" ? J.cur : J.brk;
     if (!stop) return;
     if (J.mode === "act") {
-      if (vis && stop.act === "sweep") n.dir = Math.floor(J.t / 20) % 2 ? "left" : "right"; // sweeping, side to side
+      n.sweep = stop.act === "sweep"; // sweeping the tile in front of him (the broom's drawn there)
       if (--J.t > 0) return;
+      n.sweep = false;
       if (stop.act === "water" && this.isThirsty(stop.plant)) { this.progress.watered[stop.plant] = todayISO(); this.saveProgress(); J.watered++; }
       if (J.phase === "chores") J.i++; else if (J.phase === "plants") J.cur = null;
       J.mode = "go"; return;
@@ -7531,10 +7541,13 @@ class Game {
       const bagAt = c.bag && !c.sitting ? [sx + { down: 1, up: 9, left: 9, right: -1 }[c.dir], sy + 9] : null, bagFirst = bagAt && c.dir !== "down"; // a shop bag hangs at their side
       if (bagFirst) this.drawSlot("shop_bag", 0, 0, ...bagAt);
       if (cupFirst) this.drawCup(sx, sy, c);
-      const canAt = c.janitor && !c.sitting ? [sx + { down: 11, up: -11, left: -11, right: 11 }[c.dir], sy + 2] : null, canFirst = canAt && c.dir === "up";
+      const canAt = c.janitor && !c.sitting ? [sx + { down: -11, up: 11, left: -11, right: 11 }[c.dir], sy + 2] : null, canFirst = canAt && c.dir === "up";
+      const broomAt = c.sweep ? [sx + { down: 6, up: 2, left: -7, right: 7 }[c.dir], sy + { down: 5, up: -3, left: 3, right: 3 }[c.dir]] : null, broomF = Math.floor(this.t / 14) % 2;
+      if (broomAt && c.dir === "up") this.drawSlot("jan_broom", broomF, 0, ...broomAt);
       if (canFirst) this.drawSlot("jan_can", 0, 0, ...canAt);
       this.drawSlot(sheet, c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
       if (canAt && !canFirst) this.drawSlot("jan_can", 0, 0, ...canAt);
+      if (broomAt && c.dir !== "up") this.drawSlot("jan_broom", broomF, 0, ...broomAt);
       if (c === this.player && !this.full) { // your gear: the GOQ hat and shades (a fake pair has only its right lens)
         if (this.using("hat") === "real") this.drawSlot("goq_hat", c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
         const sh = this.using("shades");
@@ -7635,7 +7648,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 janitor 2";
+const VERSION = "2026-11-18 janitor 3";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
