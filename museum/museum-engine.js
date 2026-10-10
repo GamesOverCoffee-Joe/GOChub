@@ -5286,7 +5286,7 @@ class Game {
       const at = def.enterAt || def.exitTo || def.spawn, [x, y] = at || []; if (at === undefined || !this.tileFree(r, x, y) || (this.player.x === x && this.player.y === y)) return;
       // They head straight for somewhere in that wing (in front of a piece, if one's free) and only look around once there.
       // Some stop at the café counter first (more of them while it's busy), then go on to their wing (Joe 10/10).
-      const zone = under[1].zone, cup = Math.random() * 100 < [20, 30, 40, 20][d.beat] && this.lineOpen(r), goal = cup ? null : zone ? this.arrivalSpot(r, zone) : null;
+      const zone = under[1].zone, cup = Math.random() * 100 < [20, 30, 60, 20][d.beat] && this.lineOpen(r), goal = cup ? null : zone ? this.arrivalSpot(r, zone) : null;
       const who = Object.assign(this.crowdPerson(x, y, zone), { dir: "up", timer: goal || cup ? 0 : 30, goalT: goal, alpha: 0, fadeIn: true, entering: true });
       if (cup) { who.queue = { phase: "join" }; who.drink = null; who.bag = false; }
       r.npcs.push(who); this.dirClock.last = { what: "in", t: this.t };
@@ -6968,12 +6968,13 @@ class Game {
       }
       const inZone = (x, y) => !r.zoneAt || !n.zone || (this.zoneAt(r, x, y) || {}).id === n.zone;
       const opts = [], pl = this.player, byYou = (x, y) => r === this.room && Math.abs(x - pl.x) <= 1 && Math.abs(y - pl.y) <= 1; // never somewhere right next to you
-      for (let y = 3; y < r.h - 1; y++) for (let x = 1; x < r.w - 1; x++) if (!r.solid[y][x] && !noGo(x, y) && Math.abs(x - n.x) + Math.abs(y - n.y) > 2 && inZone(x, y) && !byYou(x, y)) opts.push([x, y]);
+      const qs = r.zoneAt ? this.queueSpots(r) : [], inQ = (x, y) => qs.some(([a, b]) => a === x && b === y); // the café line's spots: nobody stops there
+      for (let y = 3; y < r.h - 1; y++) for (let x = 1; x < r.w - 1; x++) if (!r.solid[y][x] && !noGo(x, y) && Math.abs(x - n.x) + Math.abs(y - n.y) > 2 && inZone(x, y) && !byYou(x, y) && !inQ(x, y)) opts.push([x, y]);
       // Often, somewhere in front of a piece: the front or back of a case, or under a painting.
       const views = opts.filter(([x, y]) => r.cases.some(c => c.piece && c.x === x && Math.abs(c.y - y) === 1) || r.hung.some(h => y === h.y + 2 && (h.x === x || h.x + 1 === x)));
       if (views.length && Math.random() < 0.5) opts.splice(0, opts.length, ...views);
       let t = n.goalT || null; // someone was in the way: try the same spot again
-      if (!t && n.random && !n.cur && !n.drink && !n.bag && Math.random() * 100 < this.pack.settings.life.coffee * (this.director().beat === 2 ? 2.5 : 1) && this.lineOpen(r)) { n.queue = { phase: "join" }; n.seat = null; n.route = null; return; } // a coffee run: into the line (Joe 10/10)
+      if (!t && n.random && !n.cur && !n.drink && !n.bag && Math.random() * 100 < this.pack.settings.life.coffee * [1, 1.5, 4, 1][this.director().over ? 3 : this.director().beat] && this.lineOpen(r)) { n.queue = { phase: "join" }; n.seat = null; n.route = null; return; } // a coffee run: into the line (Joe 10/10)
       if (!t && n.random && !n.cur && Math.random() * 100 < this.pack.settings.life.sits) { const st = this.seatFor(n); if (st) { n.seat = st[0]; t = st[1]; } } // now and then, somewhere to sit
       if (!t) { n.seat = null; n.coffee = false; t = opts[(Math.random() * opts.length) | 0]; }
       n.goalT = t;
@@ -7079,7 +7080,7 @@ class Game {
         const here = dist.has(y * W + x) ? dist.get(y * W + x) : 99;
         const opts = Object.values(DIRS).map(([dx, dy]) => [dx, dy, x + dx, y + dy]).filter(([, , nx, ny]) => ok(nx, ny) && !out.some(([a, b]) => a === nx && b === ny));
         const dv = o => (dist.has(o[3] * W + o[2]) ? dist.get(o[3] * W + o[2]) : 99) - (o[0] === dir[0] && o[1] === dir[1] ? 0.5 : 0);
-        const best = here > 0 ? opts.filter(o => dv(o) < here).sort((a, b) => dv(a) - dv(b))[0] : opts.find(o => o[0] === dir[0] && o[1] === dir[1]);
+        const best = here > 0 ? opts.filter(o => dv(o) < here).sort((a, b) => dv(a) - dv(b))[0] : (opts.find(o => o[0] === dir[0] && o[1] === dir[1]) || opts.find(o => hall(o[2], o[3]))); // in the hallway: straight on, or along it
         if (!best) break; dir = [best[0], best[1]]; x = best[2]; y = best[3]; out.push([x, y]);
       }
     }
@@ -7099,12 +7100,15 @@ class Game {
     if (n.stepWait > 0) { n.stepWait--; return; }
     const occ = (x, y) => (this.player.x === x && this.player.y === y) || r.npcs.some(m => m !== n && m.x === x && m.y === y);
     const idx = Q.findIndex(([x, y]) => x === n.x && y === n.y);
-    if (n.queue.phase !== "in" || idx < 0) { // joining: walk to the first free spot behind everyone (nobody cuts in)
-      let last = -1; Q.forEach(([x, y], i) => { if (occ(x, y) || r.npcs.some(m => m !== n && m.queue && m.queue.to === i)) last = i; });
+    if (n.queue.phase !== "in" || idx < 0) { // joining: walk to the first spot behind everyone in line (nobody cuts in)
+      const inLine = (x, y) => (this.player.x === x && this.player.y === y) || r.npcs.some(m => m !== n && m.queue && m.queue.phase === "in" && m.x === x && m.y === y); // only people waiting in line count (not someone standing about, or walking past to their place)
+      if (n.queue.tk === undefined) n.queue.tk = this.qTicket = (this.qTicket || 0) + 1; // a ticket: you only queue behind people who set off first (else two walkers keep stepping behind each other)
+      let last = -1; Q.forEach(([x, y], i) => { if (inLine(x, y) || r.npcs.some(m => m !== n && m.queue && m.queue.to === i && (m.queue.phase === "in" || m.queue.tk < n.queue.tk))) last = i; });
       const to = last + 1;
       if (to >= Q.length || to >= L.max) { n.queue = null; n.timer = 60; return; } // the line's too long: maybe later
-      n.queue.to = to;
+      const near = Math.abs(Q[to][0] - n.x) + Math.abs(Q[to][1] - n.y) <= 6; n.queue.to = near ? to : undefined; // a place is only kept for you once you're close (not from across the museum)
       if (idx === to) { n.queue.phase = "in"; n.route = null; return; }
+      if (occ(Q[to][0], Q[to][1]) && Math.abs(Q[to][0] - n.x) + Math.abs(Q[to][1] - n.y) <= 1) { n.stepWait = 20; return; } // someone's standing in the spot: wait for them to move on
       if (!n.route || !n.route.length || n.queue.goal !== to) { n.queue.goal = to; n.route = this.npcPath(n, Q[to][0], Q[to][1], true); }
       if (!n.route || !n.route.length) { if ((n.queue.stuck = (n.queue.stuck || 0) + 1) > 12) n.queue = null; n.stepWait = 20; return; }
       const d = n.route[0]; if (this.tryMove(n, d)) { n.route.shift(); n.stepWait = this.strollWait(); } else { n.route = null; n.stepWait = 15; }
@@ -7986,7 +7990,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 supplies 3";
+const VERSION = "2026-11-18 supplies 4";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
