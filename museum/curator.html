@@ -389,8 +389,8 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
               <button class="btn" type="button" id="dayBtn" title="The next day: curious visitors come back, dust settles, the museum opens again">Tomorrow</button>
             </div></div>
           <div class="pvsec"><span class="pvh">Visit clock</span>
-            <div class="seg" id="segBeat" role="group" aria-label="Jump to a beat"><button type="button" data-v="0" title="Minute 0">Settling in</button><button type="button" data-v="3" title="Minute 3">Getting busy</button><button type="button" data-v="6" title="Minute 6">Rush</button><button type="button" data-v="9" title="Minute 9">Winding down</button></div>
-            <div style="display:flex;gap:6px;align-items:center;margin-top:6px"><button class="btn" type="button" id="clockPause" title="Stop or start the 12-minute visit clock in this preview">Pause</button><button class="btn" type="button" id="clockFwd" title="Skip ahead one minute">+1 min</button><span id="clockInfo" class="pv-hint" style="margin:0;text-align:left;flex:1"></span></div>
+            <div class="seg" id="segBeat" role="group" aria-label="Jump to a beat"><button type="button" data-v="0" title="Jump to this quarter of the visit">Settling in</button><button type="button" data-v="1" title="Jump to this quarter of the visit">Getting busy</button><button type="button" data-v="2" title="Jump to this quarter of the visit">Rush</button><button type="button" data-v="3" title="Jump to this quarter of the visit">Winding down</button></div>
+            <div style="display:flex;gap:6px;align-items:center;margin-top:6px"><button class="btn" type="button" id="clockPause" title="Stop or start the visit clock in this preview">Pause</button><button class="btn" type="button" id="clockFwd" title="Skip ahead one minute">+1 min</button><span id="clockInfo" class="pv-hint" style="margin:0;text-align:left;flex:1"></span></div>
           </div>
           <div class="pvsec"><span class="pvh">Start fresh</span>
             <div class="pvgrid">
@@ -408,7 +408,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 director 6";
+window.GOQ_WANT = "2026-11-18 director 7";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -2333,6 +2333,18 @@ function renderVisitors() {
     pctIn("drinks", "Visitors with a drink", "Lobby and café only. They sip, finish, and drop the cup in a bin. Nobody carries a drink and a bag at once."),
     pctIn("bags", "Visitors with a shop bag", "Anywhere in the museum. The bag's art is under Art, People."),
     pctIn("photos", "Photos of a piece", "The chance a visitor who stops in front of a piece takes a photo of it. Keep it low."),
+    pctIn("sits", "Visitors who sit down", "Each time a visitor picks somewhere new to go, the chance it's a free bench or stool nearby. They sit 20 to 50 seconds, then go on their way."),
+  ]));
+  // The visit clock (living museum): how long a visit's loop is, and what happens when it ends.
+  st.visit = st.visit || { minutes: 12, repeat: false };
+  const vMin = el("input", { type: "number", min: 4, max: 60, value: st.visit.minutes, style: "max-width:120px" });
+  vMin.addEventListener("input", () => { st.visit.minutes = Math.max(4, Math.min(60, Math.round(+vMin.value || 12))); changed(); });
+  const vRep = el("input", { type: "checkbox", checked: !!st.visit.repeat }); vRep.addEventListener("change", () => { st.visit.repeat = vRep.checked; changed(); });
+  wrap.appendChild(el("h3", { text: "Visit clock", style: "margin:6px 0 4px" }));
+  wrap.appendChild(el("p", { class: "note", style: "margin:0 0 8px", text: "Each visit runs one loop from when the page opens: Settling in, Getting busy, Rush, Winding down, a quarter of the length each. After it ends the museum stays at its usual crowd for the rest of the visit, unless it starts over. Try it in the Preview tab (Apply to preview first)." }));
+  wrap.appendChild(el("div", { class: "fields", style: "max-width:520px;margin:0 0 14px" }, [
+    el("label", {}, [document.createTextNode("Length of a visit (minutes)"), el("small", { text: "4 to 60. 12 is the plan's length." }), vMin]),
+    el("label", { style: "flex-direction:row;align-items:center;gap:8px" }, [vRep, document.createTextNode("Start over when it ends")]),
   ]));
   // Visitors' shirt colors (a placeholder until the visitor art is replaced): each visitor gets one of these at random.
   if (!Array.isArray(st.life.shirts) || !st.life.shirts.length) st.life.shirts = GOQ.SHIRT_COLORS.slice();
@@ -2746,18 +2758,18 @@ function pieceRow(p, i, place) {
 }
 
 /* ---------- Visit clock: the director's 12-minute loop (living museum). Jump to a beat, pause, skip ahead; see what's active. ---------- */
-document.querySelectorAll("#segBeat button").forEach(b => b.addEventListener("click", () => { game.setVisitClock(+b.dataset.v); showClock(); stage.focus({ preventScroll: true }); }));
+document.querySelectorAll("#segBeat button").forEach(b => b.addEventListener("click", () => { game.setVisitClock(+b.dataset.v * game.director().minutes / 4); showClock(); stage.focus({ preventScroll: true }); }));
 $("#clockPause").addEventListener("click", () => { const d = game.director(); game.setVisitClock(null, !d.paused); showClock(); });
-$("#clockFwd").addEventListener("click", () => { const d = game.director(); game.setVisitClock(Math.min(11.99, d.min + 1)); showClock(); });
+$("#clockFwd").addEventListener("click", () => { const d = game.director(); game.setVisitClock(Math.min(d.minutes - 0.01, d.min + 1)); showClock(); });
 function showClock() {
   const d = game.director(), m = Math.floor(d.min), sec = Math.floor((d.min - m) * 60), info = $("#clockInfo"); if (!info) return;
   const names = d.problems.map(id => { const pr = GOQ.PROBLEMS.find(x => x.id === id); return pr ? pr.who + ": " + pr.label : id; });
-  info.textContent = "Minute " + m + ":" + String(sec).padStart(2, "0") + " · " + d.beatName + (d.loop ? " · loop " + (d.loop + 1) : "") + (d.running ? "" : d.paused ? " · paused" : " · stopped (night, closing or tutorial)") + ". This loop's problems (not built yet): " + names.join("; ") + ".";
+  info.textContent = (d.over ? "The visit's loop has ended (" + d.minutes + " minutes); the museum stays at its usual crowd. Jump to a quarter to run it again." : "Minute " + m + ":" + String(sec).padStart(2, "0") + " of " + d.minutes + " · " + d.beatName + (d.loop ? " · loop " + (d.loop + 1) : "") + (d.running ? "" : d.paused ? " · paused" : " · stopped (closing or tutorial)") + ". This loop's problems (not built yet): " + names.join("; ") + ".");
   const here = d.here ? " In this room: " + d.here.now + " strolling, aiming for " + d.here.want + " (" + d.here.base + " at the busiest)." : " This room has no crowd of its own.";
   const last = d.last ? " Last: someone " + (d.last.what === "in" ? "came in through the doors" : "headed out") + ", " + d.last.ago + " s ago." : "";
   info.textContent += here + last;
   $("#clockPause").textContent = d.paused ? "Resume" : "Pause";
-  document.querySelectorAll("#segBeat button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.v === d.beat * 3)));
+  document.querySelectorAll("#segBeat button").forEach(b => b.setAttribute("aria-pressed", String(!d.over && +b.dataset.v === d.beat)));
 }
 setInterval(() => { if (tab === "preview") showClock(); }, 1000);
 

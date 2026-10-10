@@ -1462,8 +1462,11 @@ function normalizePack(p) {
   // Museum life: the chance (0 to 100) that a visitor has a drink (lobby and café), carries a shop bag, or photographs a piece they stop at.
   const lin2 = (p.settings && p.settings.life) || {}, pct = (v, d) => Math.max(0, Math.min(100, Math.round(v === undefined ? d : +v || 0)));
   const shirts = (Array.isArray(lin2.shirts) ? lin2.shirts.filter(isHex) : []).slice(0, 10);
-  const life = { drinks: pct(lin2.drinks, 30), bags: pct(lin2.bags, 20), photos: pct(lin2.photos, 8),
+  const life = { drinks: pct(lin2.drinks, 30), bags: pct(lin2.bags, 20), photos: pct(lin2.photos, 8), sits: pct(lin2.sits, 15),
     shirtsOn: lin2.shirtsOn !== false, shirts: shirts.length ? shirts : SHIRT_COLORS.slice() }; // visitors' shirt colors: one is picked at random for each
+  // The visit clock (living museum): how long one visit's loop runs, and whether it starts over when it ends or the museum
+  // just stays at its usual crowd for the rest of the visit.
+  const vin = (p.settings && p.settings.visit) || {}, visit = { minutes: Math.max(4, Math.min(60, Math.round(vin.minutes === undefined ? 12 : +vin.minutes || 12))), repeat: !!vin.repeat };
   // Genres: the museum's rooms (Action, Puzzle...). A piece's genre is set by hand.
   const genres = normalizeGenres(p.settings && p.settings.genres), gids = new Set(genres.map(g => g.id));
   pieces.forEach(pc => { if (!gids.has(pc.genre)) pc.genre = ""; if (!gids.has(pc.blend) || pc.blend === pc.genre) pc.blend = ""; });
@@ -1473,7 +1476,7 @@ function normalizePack(p) {
     nicknames: Array.isArray(ofin.nicknames) ? ofin.nicknames.map(n => str(n, 40)).filter(Boolean).slice(0, 12) : ["DeVaughn", "Boss", "Mr. curator sir"] }; // what people call a curator badge
   // Gifts set on the piece itself (before gifts were shop items) become shop items.
   pieces.forEach(pc => { if (pc.gift && pc.gift.name && !items.some(it => it.gift === pc.id)) items.push({ id: "gift-" + pc.id, name: pc.gift.name, price: pc.gift.price, description: pc.gift.description, image: null, gift: pc.id }); delete pc.gift; });
-  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, relations, curious, life, genres, office, friday, rewards: normalizeRewards(p.settings && p.settings.rewards), tutorialRev: Math.max(1, Math.min(9999, Math.round(+(p.settings && p.settings.tutorialRev) || 1))) }, samples: !Array.isArray(p.pieces) };
+  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, relations, curious, life, visit, genres, office, friday, rewards: normalizeRewards(p.settings && p.settings.rewards), tutorialRev: Math.max(1, Math.min(9999, Math.round(+(p.settings && p.settings.tutorialRev) || 1))) }, samples: !Array.isArray(p.pieces) };
 }
 /* The curator's "Skip to tomorrow" moves every daily system forward together. */
 let DAY_SHIFT = 0;
@@ -5093,10 +5096,11 @@ class Game {
      weekday event > curious visitors > staff posts > the rhythm > idle). The rhythm only ever moves "idle" people.
      For now (Step 1) it does one visible thing: people trickle in early in the loop and drift out at the end. */
   director() {
-    const LOOP = 12 * 3600, d = this.dirClock || (this.dirClock = { t: 0, paused: false }), t = d.t % LOOP, loop = Math.floor(d.t / LOOP);
-    const min = t / 3600, beat = Math.min(3, Math.floor(min / 3)), day = this.weekday(), today = todayISO();
+    const V = this.visitSet(), LOOP = V.minutes * 3600, d = this.dirClock || (this.dirClock = { t: 0, paused: false });
+    const over = !V.repeat && d.t >= LOOP, t = over ? LOOP - 1 : d.t % LOOP, loop = V.repeat ? Math.floor(d.t / LOOP) : 0; // once per visit (Joe 10/9), unless it repeats
+    const min = t / 3600, beat = Math.min(3, Math.floor(min / (V.minutes / 4))), day = this.weekday(), today = todayISO();
     const unveiling = !!(this.pack && this.pack.pieces.some(p => p.unveil === today));
-    const running = !d.paused && !this.tut && !this.closing; // the loop keeps going at night (Joe 10/9); it stops for closing and the tutorial
+    const running = !over && !d.paused && !this.tut && !this.closing; // the loop keeps going at night (Joe 10/9); it stops for closing and the tutorial
     const key = today + ":" + day + ":" + loop;
     if (!d.picks || d.picks.key !== key) { // this loop's problems: 3 or 4 of them, the same for everyone on this day and loop
       const order = PROBLEMS.map(pr => [strSeed(key + pr.id), pr]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
@@ -5104,9 +5108,10 @@ class Game {
     }
     const r = this.room, plan = r && r.base ? Object.values(this.crowdPlan(r, beat)) : null, sum = k => plan.reduce((a, p) => a + (k === "now" ? p.now.length : p[k]), 0);
     const here = plan ? { now: sum("now"), want: sum("want"), base: sum("base"), room: r.id } : null;
-    return { min, beat, beatName: BEATS[beat], loop, day, unveiling, running, crowd: this.crowdToday(), problems: d.picks.ids, paused: d.paused, here, last: d.last ? { what: d.last.what, ago: Math.round((this.t - d.last.t) / 60) } : null };
+    return { min, minutes: V.minutes, repeat: V.repeat, over, beat, beatName: over ? "Over for this visit" : BEATS[beat], loop, day, unveiling, running, crowd: this.crowdToday(), problems: over ? [] : d.picks.ids, paused: d.paused, here, last: d.last ? { what: d.last.what, ago: Math.round((this.t - d.last.t) / 60) } : null };
   }
-  setVisitClock(min, paused) { const d = this.dirClock || (this.dirClock = { t: 0, paused: false }); if (min !== undefined && min !== null) d.t = Math.floor(d.t / (12 * 3600)) * 12 * 3600 + Math.max(0, Math.min(12 * 3600 - 1, Math.round(min * 3600))); if (paused !== undefined) d.paused = !!paused; for (const id in this.rooms || {}) this.rooms[id].fresh = true; }
+  visitSet() { return (this.pack && this.pack.settings.visit) || { minutes: 12, repeat: false }; }
+  setVisitClock(min, paused) { const d = this.dirClock || (this.dirClock = { t: 0, paused: false }), L = this.visitSet().minutes * 3600; if (min !== undefined && min !== null) d.t = (this.visitSet().repeat ? Math.floor(d.t / L) * L : 0) + Math.max(0, Math.min(L - 1, Math.round(min * 3600))); if (paused !== undefined) d.paused = !!paused; for (const id in this.rooms || {}) this.rooms[id].fresh = true; }
   npcOwner(n) {
     if (n.tutId) return "tutorial";
     if (this.closing || n.leaving) return "closing";
@@ -5115,12 +5120,12 @@ class Game {
     if (n.cur || n.back || n.follow) return "curious";
     if (n.role || n.staff || n.usher || n.patrol || n.patron || n.member) return "staff";
     if (n.rhythm) return "rhythm";
-    return n.random && !n.still && !n.sitting ? "idle" : "other";
+    return n.random && !n.still && (!n.sitting || n.seat) ? "idle" : "other"; // n.seat: sat down on their own, for a while
   }
   updateDirector() {
     if (this.headless) return;
     const d = this.director(); if (d.running) this.dirClock.t++;
-    if (!d.running || !this.room || (this.t % 180 && !this.room.fresh)) return; // a decision every 3 seconds in the room you're in (right away after a jump)
+    if (!(d.running || (d.over && !d.paused && !this.tut && !this.closing)) || !this.room || (this.t % 180 && !this.room.fresh)) return; // a decision every 3 seconds in the room you're in (right away after a jump)
     const r = this.room, def = ROOMS[r.id]; if (!def || !def.crowd || r.id === "staff" || ROOMS[r.id].tutorial) return;
     const plan = this.crowdPlan(r, d.beat), groups = Object.entries(plan), far = n => !n.moving && Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 3;
     if (r.fresh) { // just built, or the curator jumped the clock: settle the crowd for this point in the visit right away
@@ -5140,7 +5145,7 @@ class Game {
     const over = groups.map(([g, p]) => [p.now.length - p.want, p]).filter(x => x[0] > 0).sort((x, y) => y[0] - x[0])[0];
     const under = groups.map(([g, p]) => [p.want - p.now.length, p]).filter(x => x[0] > 0).sort((x, y) => y[0] - x[0])[0];
     if (over) {
-      const n = over[1].now.find(n => !n.moving && Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 2); if (n) { n.leaving = true; n.stroll = true; n.leaveT = 0; n.alpha = 1; n.route = null; n.aside = null; n.timer = 0; this.dirClock.last = { what: "out", t: this.t }; }
+      const n = over[1].now.find(n => !n.moving && !n.sitting && Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 2); if (n) { n.leaving = true; n.stroll = true; n.leaveT = 0; n.alpha = 1; n.route = null; n.aside = null; n.timer = 0; this.dirClock.last = { what: "out", t: this.t }; }
     } else if (under) {
       const at = def.enterAt || def.exitTo || def.spawn, [x, y] = at || []; if (at === undefined || !this.tileFree(r, x, y) || (this.player.x === x && this.player.y === y)) return;
       // They head straight for somewhere in that wing (in front of a piece, if one's free) and only look around once there.
@@ -5170,7 +5175,12 @@ class Game {
     Object.entries(plan).forEach(([g, p]) => { p.base = r.base[g] || 0; p.want = p.base + (p.wing ? [0, 1, 2, 0][beat] : zoned ? 0 : [0, 0, 1, 0][beat]); });
     return plan;
   }
-  crowdPerson(x, y, zone) { // an ordinary visitor the rhythm brought in
+  crowdPerson(x, y, zone) { // an ordinary visitor the rhythm brought in: like anyone else, maybe a shop bag or a drink from the café
+    const L = this.pack.settings.life, n = this.crowdBody(x, y, zone);
+    if (Math.random() * 100 < L.bags) n.bag = true; else if ((zone === "cafe" || !this.room.zoneAt) && Math.random() * 100 < L.drinks) n.drink = this.npcDrink();
+    return n;
+  }
+  crowdBody(x, y, zone) {
     return { sheet: ["visitor_a", "visitor_b", "visitor_c"][Math.floor(Math.random() * 3)], x, y, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 60 + Math.random() * 120, lines: [CROWD_LINES[Math.floor(Math.random() * CROWD_LINES.length)]], lineI: -1, random: true, rhythm: true, zone };
   }
 
@@ -6725,11 +6735,22 @@ class Game {
   /* Visitors stroll: pick somewhere open in the room, walk there, look around for a while, then pick somewhere else.
      They never step onto doorways, stairs, or the tiles where people arrive. */
   stroll(n) {
+    const r0 = this.room;
     if (n.stepWait > 0) { n.stepWait--; return; }
     { const p = this.player, [fx, fy] = DIRS[p.dir]; // you're facing them: they wait a couple of seconds (time to talk), then go on their way
       if (!p.moving && p.x + fx === n.x && p.y + fy === n.y) { if ((n.faceWait = (n.faceWait || 0) + 1) < 120) { n.route = null; return; } } else n.faceWait = 0; }
+    if (n.seat && n.sitting) { // sitting down for a while; then up, back where they came from, and on their way
+      if (--n.seatT > 0 || this.player.x === n.sitFrom[0] && this.player.y === n.sitFrom[1] || r0.npcs.some(m => m !== n && m.x === n.sitFrom[0] && m.y === n.sitFrom[1])) return;
+      [n.x, n.y] = n.sitFrom; n.sitting = false; n.seat = null; n.dir = DIRS_LIST[(Math.random() * 4) | 0]; n.timer = 30; return;
+    }
     if (n.arrived) { // just stepped onto the spot they were heading for
       n.arrived = false;
+      const e = n.seat; if (e) { // the spot beside a seat: sit down
+        if (Math.abs(n.x - e.x) + Math.abs(n.y - e.y) === 1 && !r0.npcs.some(m => m !== n && m.x === e.x && m.y === e.y) && !(this.player.x === e.x && this.player.y === e.y)) {
+          n.sitFrom = [n.x, n.y]; n.x = e.x; n.y = e.y; n.dir = e.sit; n.sitting = true; n.seatT = 1200 + Math.random() * 1800; n.timer = 0; return; // 20 to 50 seconds
+        }
+        n.seat = null;
+      }
       // Wandered into the café: now and then they come away with a drink (never with a bag in the other hand).
       if (this.room.zoneAt && n.zone === "cafe" && !n.drink && !n.bag && !n.cur && Math.random() * 100 < this.pack.settings.life.drinks) n.drink = this.npcDrink();
       else if (!this.binRun(n)) this.maybeSnap(n);
@@ -6754,7 +6775,9 @@ class Game {
       // Often, somewhere in front of a piece: the front or back of a case, or under a painting.
       const views = opts.filter(([x, y]) => r.cases.some(c => c.piece && c.x === x && Math.abs(c.y - y) === 1) || r.hung.some(h => y === h.y + 2 && (h.x === x || h.x + 1 === x)));
       if (views.length && Math.random() < 0.5) opts.splice(0, opts.length, ...views);
-      const t = n.goalT || opts[(Math.random() * opts.length) | 0]; // someone was in the way: try the same spot again
+      let t = n.goalT || null; // someone was in the way: try the same spot again
+      if (!t && n.random && !n.cur && Math.random() * 100 < this.pack.settings.life.sits) { const st = this.seatFor(n); if (st) { n.seat = st[0]; t = st[1]; } } // now and then, somewhere to sit
+      if (!t) { n.seat = null; t = opts[(Math.random() * opts.length) | 0]; }
       n.goalT = t;
       n.route = t ? this.npcPath(n, t[0], t[1], n.entering) : null;
       if (!n.route || !n.route.length) { n.timer = 60 + Math.random() * 120; n.route = null; n.goalT = null; n.retry = 0; return; }
@@ -6766,7 +6789,7 @@ class Game {
       return;
     }
     n.route.shift();
-    if (n.route.length) { n.stepWait = Math.round(8 * (1 - this.pack.settings.staff.patronSpeed) / this.pack.settings.staff.patronSpeed); return; }
+    if (n.route.length) { n.stepWait = this.strollWait(); return; }
     // A long walk (another room) comes in stretches: keep going toward the same spot.
     if (n.goalT && (n.x + dx !== n.goalT[0] || n.y + dy !== n.goalT[1])) { n.timer = 6; return; }
     n.timer = 180 + Math.random() * 300; n.goalT = null; n.retry = 0; n.arrived = true; // arrived (once this last step lands): stay a while
@@ -6774,6 +6797,20 @@ class Game {
     const ax = n.x + dx, ay = n.y + dy, amt = this.pack.settings.staff.fingerprints;
     const near = this.room.cases.find(c => c.piece && c.state === "wall" && Math.abs(c.x - ax) + Math.abs(c.y - ay) === 1);
     if (near && amt > 0 && Math.random() < amt * 0.5) { const xp = this.extraPrints || (this.extraPrints = {}); xp[near.piece.id] = Math.min(3, (xp[near.piece.id] || 0) + 1); }
+  }
+  strollWait() { const sp = this.pack.settings.staff.patronSpeed; return Math.round(8 * (1 - sp) / sp); }
+  /* Sitting down on their own: a free bench or stool near where they're strolling (Joe 10/9). Not seats kept for you
+     (Thursday's trivia seat, Sunday's coffee). */
+  seatFor(n) {
+    const r = this.room, zid = r.zoneAt && n.zone, out = [];
+    for (const k in r.events) {
+      const e = r.events[k]; if (!e.sit || (r.keepFree && r.keepFree.has(k))) continue;
+      if (zid && (this.zoneAt(r, e.x, e.y) || {}).id !== zid) continue;
+      if (r.npcs.some(m => (m.x === e.x && m.y === e.y) || (m.seat === e)) || (this.player.x === e.x && this.player.y === e.y)) continue;
+      const from = Object.values(DIRS).map(([dx, dy]) => [e.x + dx, e.y + dy]).filter(([x, y]) => r.solid[y] && !r.solid[y][x] && !(r.noWander && r.noWander.has(x + "," + y)));
+      if (from.length) out.push([e, from[(Math.random() * from.length) | 0]]);
+    }
+    return out.length ? out[(Math.random() * out.length) | 0] : null;
   }
   /* Shortest route for a visitor, around walls, furniture, people and no-go tiles (at most 40 steps). */
   npcPath(n, tx, ty, loose) { // loose: may cross the tiles visitors usually keep off (doorways), to leave or catch up
@@ -6806,10 +6843,13 @@ class Game {
   /* ----- drawing ----- */
   /* A leaving visitor heads for the room's exit, then fades away. */
   walkOut(n, to) {
+    if (n.seat) { if (n.sitting && n.sitFrom) [n.x, n.y] = n.sitFrom; n.sitting = false; n.seat = null; } // sitting on their own: up first
     n.leaveT++;
     if (n.fading) { n.alpha -= 1 / 24; if (n.alpha <= 0) { this.room.npcs = this.room.npcs.filter(m => m !== n); if (n.onGone) n.onGone(); } return; }
     if (n.moving) { this.advance(n); return; }
+    if (n.stroll && n.stepWait > 0) { n.stepWait--; return; } // heading home at the same easy pace (and little pauses) as strolling (Joe 10/9)
     if (n.leaveT < 0 || n.leaveT % 2) return;
+    if (n.stroll) n.stepWait = this.strollWait();
     const dx = Math.sign(to[0] - n.x), dy = Math.sign(to[1] - n.y);
     // The museum is big: there they get time to walk all the way out (to the lobby doors), and always find the way around.
     const far = !!this.room.zoneAt;
@@ -7390,7 +7430,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 director 6";
+const VERSION = "2026-11-18 director 7";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
