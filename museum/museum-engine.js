@@ -50,7 +50,9 @@ const PAL = {
   sconce:  ["#fff0b8", "#f0b850", "#9a6c34", "#3a2414"],
   cat:     [null, "#f0a050", "#c87028", "#2a1810", "#f8f0e0", "#f88898", "#a05018"],
   apron:   [null, "#f0d0b0", "#c86848", "#181820", "#f8f0c0"],
-  janitor: [null, "#d8a880", "#8aa8c0", "#181820", "#3c6a48", "#6a4424", "#c8c8c8"], // skin, shirt, outline, suspenders and hat, tool belt, tools
+  janitor: [null, "#d8a880", "#b8ae90", "#181820", "#4a78b8", "#6a4424", "#e8e8e8", "#2a4a7a"], // skin, khaki shirt, outline, cap and suspenders, tool belt, tools and cap badge, cap shade
+  popcorn: [null, "#f8f0d0", "#c83838", "#181820", "#e8b24a", "#8a2a2a", "#a8c8d8"], // popcorn, red, outline, gold, dark red, glass
+  binfull: ["#e8eef4", "#9fb4c8", "#5a7088", "#1a2230", "#e8b24a", "#f0ece0", "#c84838", "#e8e0c8"], // the trash can's colors, plus paper, a red wrapper, a cup
   litter:  [null, "#f0ece0", "#c84838", "#181820", "#e8b24a", "#7a9ab8"], // paper, red wrapper, outline, gold, blue
   broom:   [null, "#a87838", "#d8b858", "#181820", "#c84838"], // handle, bristles, outline, band
   jcan:    [null, "#5a6a72", "#3e4a52", "#181820", "#8a9aa2"], // the janitor's rolling garbage can: body, shade, outline, rim
@@ -304,8 +306,10 @@ const GEN = {
   // The janitor: a cap and suspenders in the same color, and a tool belt with a couple of tools hanging off it.
   janitor: f => {
     const a = CHAR_FRAMES[f].map(r => r.slice()), side = f >= 6;
-    for (let y = 1; y <= 3; y++) for (let x = 0; x < 16; x++) if (a[y][x] === 3 && !(y === 1 && (x === 5 || x === 10))) a[y][x] = 4; // the cap
-    if (!side) { for (let x = 2; x < 14; x++) if (a[4][x] === 3 && f < 3) a[4][x] = 4; } // its brim, from the front
+    // A low cap, the same shape as the GOQ hat (Joe's art), in blue: a = outline, b = crown, c = badge, d = shade/brim.
+    const CAP = { down: ["....aaaaaaaa....", "....abbccbba....", "...adddddddda...", "...aaaaaaaaaa..."], up: [".....aaaaaa.....", "....abbbbbba....", "...adddddddda...", "...adddddddda..."],
+      left: ["......aaaaaa....", ".....abcbbbba...", "..aaaaddddddda..", "..aaaaaaaa......"], right: ["....aaaaaa......", "...abbbbcba.....", "..adddddddaaaa..", "......aaaaaaaa.."] };
+    CAP[f < 3 ? "down" : f < 6 ? "up" : f < 9 ? "left" : "right"].forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== ".") a[y][x] = { a: 3, b: 4, c: 6, d: 7 }[ch]; }));
     for (let y = 10; y <= 12; y++) for (const x of side ? [7] : [5, 10]) if (a[y][x] === 2) a[y][x] = 4; // suspenders
     for (let x = 0; x < 16; x++) if (a[13][x] === 2) a[13][x] = 5; // tool belt
     if (!side) { a[13][6] = 6; a[13][9] = 6; } else a[13][f >= 9 ? 9 : 6] = 6; // tools on the belt
@@ -327,9 +331,30 @@ const GEN = {
     return outline(a);
   },
   // A full bin: trash heaped over the rim, drawn on top of the trash can.
+  // The theater's popcorn stand: a glass case heaped with popcorn on a red cart.
+  popcorn_stand: () => {
+    const a = mk(16, 32);
+    rect(a, 2, 4, 12, 13, 6); rect(a, 3, 10, 10, 6, 1); for (let x = 3; x < 13; x += 2) px(a, x, 9, 1); px(a, 6, 8, 1); px(a, 10, 8, 1); // the glass case of popcorn
+    rect(a, 1, 2, 14, 3, 2); rect(a, 4, 3, 8, 1, 4); // its red roof, gold trim
+    rect(a, 2, 17, 12, 11, 2); rect(a, 2, 17, 12, 2, 5); rect(a, 5, 21, 6, 4, 4); rect(a, 6, 22, 4, 2, 2); // the cart: a gold sign
+    rect(a, 3, 28, 2, 3, 3); rect(a, 11, 28, 2, 3, 3); // wheels
+    return outline(a);
+  },
+  // A bag of popcorn in hand (2 frames: full, then empty).
+  popcorn_bag: f => {
+    const a = mk(16, 8);
+    for (const o of [0, 8]) { rect(a, o + 2, 3, 4, 5, 2); px(a, o + 3, 4, 1); px(a, o + 5, 6, 1); }
+    rect(a, 2, 1, 4, 2, 1); px(a, 1, 2, 1); px(a, 6, 2, 1); // heaped (the full one)
+    return outline(a);
+  },
+  // A full trash can: the same can, its lid knocked askew and trash popping out of the top.
   trash_full: () => {
     const a = mk(16, 16);
-    rect(a, 3, 1, 10, 3, 1); px(a, 4, 0, 1); px(a, 9, 0, 1); rect(a, 5, 1, 2, 2, 2); rect(a, 10, 1, 2, 1, 5); px(a, 8, 2, 4);
+    rect(a, 3, 6, 10, 9, 2); for (let x = 5; x < 12; x += 3) rect(a, x, 8, 1, 6, 1); // the can, a little lower to make room
+    rect(a, 6, 2, 6, 4, 5); rect(a, 9, 1, 3, 2, 5); px(a, 8, 3, 7); px(a, 10, 4, 7); // crumpled paper heaped up
+    rect(a, 12, 4, 2, 4, 6); px(a, 11, 3, 6); // a red wrapper hanging over the rim
+    rect(a, 4, 3, 2, 3, 7); px(a, 4, 2, 6); // a cup sticking up
+    for (let i = 0; i < 6; i++) { px(a, 1 + i, 5 - Math.floor(i / 2), 1); px(a, 1 + i, 6 - Math.floor(i / 2), 1); } // the lid, knocked up on its side
     return outline(a);
   },
   jan_can: () => {
@@ -1240,7 +1265,9 @@ const SLOTS = [
   { key: "janitor", label: "Janitor", group: "People", w: 16, h: 16, layout: "char", pal: "janitor", gen: GEN.janitor, note: "Suspenders with a matching hat, and a tool belt. Does the museum's chores on the visit clock. " + CHAR_NOTE },
   { key: "jan_broom", label: "Janitor's broom", group: "People", w: 16, h: 16, frames: 2, pal: "broom", gen: GEN.jan_broom, note: "Two frames, side by side: the broom swishes between them while he sweeps the tile in front of him." },
   { key: "litter", label: "Litter", group: "Furniture", w: 16, h: 16, frames: 3, pal: "litter", gen: GEN.litter, note: "Three kinds side by side (48×16): a dropped cup, a wrapper, a napkin. On the floor by full bins; you can pick it up." },
-  { key: "trash_full", label: "Overflowing trash can", group: "Furniture", w: 16, h: 16, pal: "litter", gen: GEN.trash_full, note: "Drawn over a trash can once it's full: the trash heaped over the rim." },
+  { key: "popcorn_stand", label: "Popcorn stand", group: "Screening nook", w: 16, h: 32, pal: "popcorn", gen: GEN.popcorn_stand, note: "In the nook in the theater hallway. Popcorn for tokens (Shop tab); the empty bags end up in the bins." },
+  { key: "popcorn_bag", label: "Popcorn in hand", group: "Screening nook", w: 8, h: 8, frames: 2, pal: "popcorn", gen: GEN.popcorn_bag, note: "2 frames side by side (16×8): full, then empty." },
+  { key: "trash_full", label: "Full trash can", group: "Furniture", w: 16, h: 16, pal: "binfull", gen: GEN.trash_full, note: "Replaces a trash can once it's full: the lid askew and trash popping out of the top." },
   { key: "jan_can", label: "Janitor's garbage can", group: "People", w: 16, h: 16, pal: "jcan", gen: GEN.jan_can, note: "Rolls along beside the janitor; the dust from his sweeping goes in it." },
   { key: "usher", label: "Usher", group: "People", w: 16, h: 16, layout: "char", pal: "usher", gen: GEN.staff_uniform, note: "Behind the front desk. " + CHAR_NOTE },
   { key: "g2_floor", label: "Gallery Two floor", group: "Gallery Two", w: 16, h: 16, pal: "g2fl", gen: GEN.floor_wood, note: "Tiles seamlessly in every direction." },
@@ -1480,7 +1507,7 @@ function normalizePack(p) {
   // special: the café sign's drink, "" for automatic (the drink of the week, else a different regular drink each day).
   const shop = { items, featured: items.some(it => it.id === shin.featured) ? shin.featured : "",
     stock: Math.max(1, Math.min(40, Math.round(+shin.stock || 4))), special: ["coffee", "tea", "cocoa"].includes(shin.special) ? shin.special : "",
-    drinkPrice: Math.max(0, Math.min(99, Math.round(+shin.drinkPrice || 0))) };
+    drinkPrice: Math.max(0, Math.min(99, Math.round(+shin.drinkPrice || 0))), popcorn: Math.max(0, Math.min(99, Math.round(shin.popcorn === undefined ? 3 : +shin.popcorn || 0))) };
   // Bluu (Saturdays, Shop tab): which items he carries (null: everything in the shop, and old gifts),
   // whether the GOC shirt is on his table, his markup, and how often a thing is fake (percent).
   const bin = (shin.bluu && typeof shin.bluu === "object") ? shin.bluu : {};
@@ -1770,7 +1797,8 @@ const ROOMS = {
       "   #....#   ",                                 // a trash can alcove
       "    #...#   ", "    #...#   ", "    #...#   ", "    #...#   ",
       "    #....#  ",                                 // and another
-      "    #...#   ", "    #...#   ", "    #...#   ", "    #...#   ",
+      "    #...#   ",
+      "    #....#  ", "    #....#  ", "    #....#  ", // the popcorn nook (three tiles), the stand in the middle
       "   #....#   ",
       "    #...#   ", "    #...#   ", "    #...#   ", "    #...#   ", "    #...#   ",
       "    ##B##   ",
@@ -1781,8 +1809,9 @@ const ROOMS = {
       { key: "bench", x: 2, y: 6, sit: "up" }, { key: "bench", x: 8, y: 6, sit: "up" },
       { key: "planter", x: 1, y: 3, say: ["A planter. It's seen every episode."] }, { key: "planter", x: 10, y: 3, say: ["A planter, facing the screen. Of course."] },
       { key: "trash_can", x: 4, y: 12, event: { trash: true } }, { key: "trash_can", x: 8, y: 17, event: { trash: true } }, { key: "trash_can", x: 4, y: 22, event: { trash: true } },
+      { key: "popcorn_stand", x: 8, y: 20, tall: true, blockTop: true, event: { popcorn: true } },
     ],
-    posters: [[4, 9, "l"], [8, 10, "r"], [4, 15, "l"], [8, 13, "r"], [4, 18, "l"], [8, 20, "r"], [4, 24, "l"], [8, 24, "r"]],
+    posters: [[4, 9, "l"], [8, 10, "r"], [4, 15, "l"], [8, 13, "r"], [4, 18, "l"], [8, 22, "r"], [4, 24, "l"], [8, 24, "r"]],
     floorLights: [9, 11, 13, 15, 17, 19, 21, 23, 25, 27].flatMap(y => [[5, y, "l"], [7, y, "r"]]),
     events: [{ x: 6, y: 28, warp: ["museum", 40, 30, "down"] }],
     light: { dim: 0.4, spots: 0 },
@@ -1940,7 +1969,7 @@ const TEXT = {
   "tut.photo":         { g: "Tutorial", l: "Taking your first photo in the tutorial", v: [["Oh yeah, you can take photos.", "They don't help you here, though."]] },
   "tut.door":          { g: "Tutorial", l: "The lobby's Tutorial door", v: [["A door marked TUTORIAL. Take the training again?"]] },
   "patron.enjoyed":    { g: "Staff", l: "A Patreon member mentioning a game they enjoyed ({title}: a random game; one picked at random)", v: [["I played {title} last week. Really enjoyed it."], ["Have you tried {title}? I keep thinking about it."], ["{title} was so good. No notes."], ["I finally got around to {title}. Worth it."], ["Okay, {title}. Why didn't anyone tell me sooner?"]] },
-  "screen.guest":      { g: "Screening nook", l: "Someone sitting in the screening nook (takes turns)", v: [["Shh. It's getting to the good part."], ["I've seen this one four times."], ["The host talks fast. I like it."], ["Is there popcorn? There should be popcorn."], ["I came in for five minutes. That was an hour ago."]] },
+  "screen.guest":      { g: "Screening nook", l: "Someone sitting in the screening nook (takes turns)", v: [["Shh. It's getting to the good part."], ["I've seen this one four times."], ["The host talks fast. I like it."], ["[PLACEHOLDER: a screening nook guest line (replaces the popcorn one)]"], ["I came in for five minutes. That was an hour ago."]] },
   "screen.ask":        { g: "Screening nook", l: "Sitting down or looking at the screen ({title}: what's playing this hour)", v: [["Now playing: {title}. Stay for it?"]] },
   "screen.marquee":    { g: "Screening nook", l: "The red LED sign out front, before the title (letters, numbers and : - . ! ? ' & , / only)", v: [["NOW PLAYING:"]] },
   "screen.sign":       { g: "Screening nook", l: "Looking at the LED sign out front ({title}: what's playing this hour)", v: [["NOW PLAYING: {title}.", "It changes every hour. The sign is very proud of this."]] },
@@ -2106,6 +2135,10 @@ const TEXT = {
   "jan.overtime":      { g: "Janitor", l: "Still watering after the visit's loop is over (overtime)", v: [["[PLACEHOLDER: the janitor grumbling about overtime]"]] },
   "jan.break":         { g: "Janitor", l: "On his break in the staff room", v: [["[PLACEHOLDER: the janitor on his break]"]] },
   "jan.early":         { g: "Janitor", l: "On an early break, because the plants were already watered", v: [["[PLACEHOLDER: the janitor on an early break, thanks to whoever watered the plants]"]] },
+  "popcorn.ask":       { g: "Screening nook", l: "The popcorn stand ({price} tokens)", v: [["[PLACEHOLDER: the popcorn stand: a bag of popcorn for {price} tokens?]"]] },
+  "popcorn.got":       { g: "Screening nook", l: "Getting popcorn", v: [["[PLACEHOLDER: you get a bag of popcorn]"]] },
+  "popcorn.poor":      { g: "Screening nook", l: "Popcorn, without enough tokens", v: [["[PLACEHOLDER: not enough tokens for popcorn]"]] },
+  "popcorn.hands":     { g: "Screening nook", l: "Popcorn, with something already in your hands", v: [["[PLACEHOLDER: your hands are full already]"]] },
   "litter.pick":       { g: "Litter", l: "Picking up litter ({thing}: cup, wrapper or napkin)", v: [["[PLACEHOLDER: picking up a {thing} off the floor]"]] },
   "litter.handsFull":  { g: "Litter", l: "Trying to pick up more litter with your hands full (three pieces)", v: [["[PLACEHOLDER: hands full of litter already]"]] },
   "litter.binned":     { g: "Litter", l: "Putting litter in a bin ({n} pieces)", v: [["[PLACEHOLDER: dropping the litter in the bin]"]] },
@@ -5627,6 +5660,19 @@ class Game {
     if (mug) this.choose(this.tx("drink.useMug").join(" "), ["Yes, my mug", "No, a cup"], k => serve(k === 0 ? mug : ""), 1); else serve("");
   }
   /* Empty cups go in the bus tub or a trash can. */
+  /* The theater's popcorn stand: a bag for a few tokens (Shop tab). It's eaten like a drink (while you sit), and the
+     empty bag goes in a bin. */
+  popcornStand() {
+    const price = this.pack.settings.shop.popcorn;
+    if (this.drink) { this.say(this.tx("popcorn.hands")); return; }
+    this.choose(this.tx("popcorn.ask", { price }).join(" "), ["Yes", "No"], k => {
+      if (k !== 0) return;
+      if (!this.curator && (this.progress.tokens || 0) < price) { this.say(this.tx("popcorn.poor", { price })); return; }
+      if (!this.curator) { this.progress.tokens -= price; this.saveProgress(); this.updateHud(true); }
+      this.drink = { kind: 0, name: "Popcorn", popcorn: true, sips: 0, color: "", iced: false }; this.sipClock = 240; this.say(this.tx("popcorn.got"));
+    }, 1);
+  }
+  npcPopcorn() { return { kind: 0, popcorn: true, sips: 0, empty: false, t: 300 + Math.random() * 600 }; }
   bin(e) {
     const [bx, by] = [e.x !== undefined ? e.x : this.player.x + DIRS[this.player.dir][0], e.y !== undefined ? e.y : this.player.y + DIRS[this.player.dir][1]];
     if (this.carry && !e.tub) { // litter you picked up: as much as fits
@@ -5888,7 +5934,8 @@ class Game {
     for (const id in this.rooms) for (const n of this.rooms[id].npcs) {
       if (n.staff || n.role || n.usher || n.patrol || n.patron) continue;
       n.bag = false; n.drink = null; // one thing in hand at a time: a drink or a bag
-      if ((id === "lobby" || n.zone === "cafe") && Math.random() * 100 < L.drinks) n.drink = this.npcDrink();
+      if (id === "screening" && Math.random() * 100 < L.drinks * 2) n.drink = this.npcPopcorn(); // the theater: popcorn
+      else if ((id === "lobby" || n.zone === "cafe") && Math.random() * 100 < L.drinks) n.drink = this.npcDrink();
       else n.bag = Math.random() * 100 < L.bags;
     }
   }
@@ -6461,6 +6508,7 @@ class Game {
     else if (e.cafeSign) this.readCafeSign();
     else if (e.cafe) this.cafe();
     else if (e.trash) this.bin(e);
+    else if (e.popcorn) this.popcornStand();
     else if (e.upcoming) this.workbench();
     else if (e.pc) this.someonesPC();
     else if (e.patronBoard) this.readPatronBoard();
@@ -6923,7 +6971,7 @@ class Game {
     const [tx, ty] = c[(Math.random() * c.length) | 0]; L.push({ x: tx, y: ty, k: kind === undefined ? (Math.random() * 3) | 0 : kind, ox: ((Math.random() * 7) | 0) - 3, oy: ((Math.random() * 5) | 0) - 2 }); return true;
   }
   litterBins() { // the bins visitors use (the staff room's is the staff's own)
-    const out = []; for (const id of ["lobby", "museum"]) { const R = this.rooms && this.rooms[id]; if (R) for (const k in R.events) if (R.events[k].trash && !R.events[k].tub) { const [x, y] = k.split(",").map(Number); out.push([id, x, y]); } }
+    const out = []; for (const id of ["lobby", "museum", "screening"]) { const R = this.rooms && this.rooms[id]; if (R) for (const k in R.events) if (R.events[k].trash && !R.events[k].tub) { const [x, y] = k.split(",").map(Number); out.push([id, x, y]); } }
     return out;
   }
   updateLitter() {
@@ -6931,7 +6979,8 @@ class Game {
     const d = this.director(); if (d.paused) return;
     const set = this.pack.settings.litter, beat = d.over ? 3 : d.beat, busy = [0.5, 1, 1.3, 0.6][beat] * (d.crowd === "heavy" ? 1.3 : 1) * (this.tod() === "night" ? 0.5 : 1);
     const p = busy * (d.problems.includes("litter") ? 1.8 : 0.7) * set.rate / 100 / 30; // about a bin's worth in three minutes while it's busy
-    for (const [room, x, y] of this.litterBins()) if (Math.random() < p) { if (!this.binAdd(room, x, y)) this.dropLitter(room, x, y); } // someone tosses something in; a full bin: it lands beside it
+    const watching = this.rooms.screening ? Math.min(1, this.rooms.screening.npcs.filter(n => !n.staff && !n.janitor).length / 2) : 0; // the theater's bins fill while people are watching
+    for (const [room, x, y] of this.litterBins()) if (Math.random() < (room === "screening" ? p * watching : p)) { if (!this.binAdd(room, x, y)) this.dropLitter(room, x, y); } // someone tosses something in; a full bin: it lands beside it
   }
   litterInfo() {
     const bins = this.litterBins().map(([room, x, y]) => { const R = this.rooms[room], z = room === "museum" ? this.zoneAt(R, x, y) : null; return (z ? z.name : ROOMS[room].name) + " " + this.binFill(room, x, y) + "/" + this.pack.settings.litter.cap + (this.binFull(room, x, y) ? " (full)" : ""); });
@@ -6943,7 +6992,7 @@ class Game {
   }
   janNextLitter(room, x, y) { // the nearest litter, for the janitor to sweep up
     let best = null;
-    for (const id of ["lobby", "museum"]) for (const l of (this.litter && this.litter[id]) || []) { // where he is first
+    for (const id of ["lobby", "museum", "screening"]) for (const l of (this.litter && this.litter[id]) || []) { // where he is first
       const R = this.rooms[id], at = this.janBeside(R, l.x, l.y) || [l.x, l.y], d = (id === room ? 0 : 60) + Math.abs(at[0] - x) + Math.abs(at[1] - y);
       if (!best || d < best.d) best = { room: id, at, dir: this.janFace(at, l.x, l.y), act: "sweep", dur: 120, lit: l, where: "up litter", d };
     }
@@ -6956,9 +7005,15 @@ class Game {
      Then his break in the staff room: early if nobody left him any plants, overtime if the loop ended first.
      He goes between the lobby, the museum and the staff room through their doors. Out of sight he keeps to the same
      schedule: he simply turns up at his next stop once he'd have got there. */
+  janHop(from, to) { // the next room on his way: the lobby joins the museum and the staff room; the theater is off the museum
+    const LINKS = { lobby: ["museum", "staff"], museum: ["lobby", "screening"], staff: ["lobby"], screening: ["museum"] };
+    const prev = { [from]: null }, q = [from];
+    for (let i = 0; i < q.length; i++) for (const nx of LINKS[q[i]] || []) if (!(nx in prev)) { prev[nx] = q[i]; q.push(nx); }
+    if (!(to in prev)) return "lobby"; let c = to; while (prev[c] !== from && prev[c] !== null) c = prev[c]; return c;
+  }
   janStand(room, toward) { // where he stands to go through the door from one room toward another
     const R = this.rooms[room], def = ROOMS[room];
-    if (room === "museum" && def.exitTo) return def.exitTo;
+    if (room === "museum" && toward === "lobby" && def.exitTo) return def.exitTo;
     for (const k in R.events) {
       const e = R.events[k]; if (!e.warp || e.warp[0] !== toward) continue;
       const [x, y] = k.split(",").map(Number), at = [[0, 1], [0, -1], [1, 0], [-1, 0]].map(([dx, dy]) => [x + dx, y + dy]).find(([a, b]) => R.solid[b] && !R.solid[b][a]);
@@ -6966,13 +7021,13 @@ class Game {
     }
     return def.spawn;
   }
-  janArrive(room, from) { return room === "museum" ? (ROOMS.museum.enterAt || ROOMS.museum.spawn) : this.janStand(room, from); }
+  janArrive(room, from) { return room === "museum" && from === "lobby" ? (ROOMS.museum.enterAt || ROOMS.museum.spawn) : this.janStand(room, from); }
   janBeside(R, x, y) { return [[0, 1], [1, 0], [-1, 0], [0, -1]].map(([dx, dy]) => [x + dx, y + dy]).find(([a, b]) => R.solid[b] && !R.solid[b][a] && !R.events[a + "," + b]); }
   janFace(at, x, y) { return x > at[0] ? "right" : x < at[0] ? "left" : y > at[1] ? "down" : "up"; }
   janPlan(loop) { // this loop's three chores, the same for everyone on this day and loop
     let sd = strSeed(todayISO() + ":janitor:" + loop); const rnd = () => (sd = (Math.imul(sd, 1103515245) + 12345) >>> 0) / 4294967296;
     const trash = [];
-    for (const id of ["lobby", "museum", "staff"]) {
+    for (const id of ["lobby", "museum", "screening", "staff"]) { // in walking order: the theater's off the museum, the staff room off the lobby
       const R = this.rooms[id]; if (!R) continue;
       for (const k in R.events) if (R.events[k].trash) { const [x, y] = k.split(",").map(Number), at = this.janBeside(R, x, y); if (at) trash.push({ room: id, at, dir: this.janFace(at, x, y), act: "empty", dur: 150, bin: [x, y] }); }
     }
@@ -6990,7 +7045,7 @@ class Game {
   }
   janNextPlant(room, x, y) { // the nearest plant nobody has watered today
     let best = null;
-    for (const id of ["lobby", "museum", "staff"]) {
+    for (const id of ["lobby", "museum", "screening", "staff"]) {
       const R = this.rooms[id]; if (!R) continue;
       for (const k in R.events) {
         const e = R.events[k]; if (!e.plant || !this.isThirsty(e.plant)) continue;
@@ -7069,13 +7124,13 @@ class Game {
     }
     // Going: to the stop, or first to the door toward its room.
     if (stop.plant && !this.isThirsty(stop.plant)) { J.cur = null; return; } // someone beat him to it
-    const target = stop.room === J.room ? stop.at : this.janStand(J.room, stop.room === "lobby" || J.room === "lobby" ? stop.room : "lobby");
+    const target = stop.room === J.room ? stop.at : this.janStand(J.room, this.janHop(J.room, stop.room));
     const tk = J.room + ":" + target; if (J.tk !== tk) { J.tk = tk; J.eta = -1; n.route = null; J.stuck = 0; }
     // Out of sight: he's already there, but takes as long as the walk would (so he isn't left standing in a doorway).
     if (!vis && !(n.x === target[0] && n.y === target[1])) { J.eta = (Math.abs(target[0] - n.x) + Math.abs(target[1] - n.y)) * 46; n.x = target[0]; n.y = target[1]; }
     if (!vis && J.eta > 0) { J.eta--; return; }
     if (n.x === target[0] && n.y === target[1]) {
-      if (stop.room !== J.room) { J.door = stop.room === "lobby" || J.room === "lobby" ? stop.room : "lobby"; return; }
+      if (stop.room !== J.room) { J.door = this.janHop(J.room, stop.room); return; }
       if (stop.fill) { J.fillT = stop.dur; n.dir = stop.dir; return; }
       J.mode = "act"; J.t = stop.dur; n.dir = stop.dir; return;
     }
@@ -7317,10 +7372,9 @@ class Game {
     cache.set(s, c); return c;
   }
   drawProp(p, cx, cy) {
-    const ctx = this.ctx, k = p.plant && this.isThirsty(p.plant) ? "plant_thirsty" : p.key;
+    const ctx = this.ctx, k = p.plant && this.isThirsty(p.plant) ? "plant_thirsty" : p.key === "trash_can" && this.binFull(this.room.id, p.x, p.y) ? "trash_full" : p.key;
     const px0 = p.x * T - cx, py0 = p.y * T - (SLOT[k].h - T) - cy;
     this.drawSlot(k, k === "microwave_counter" ? (this.microwaved ? 1 : 0) : k === "office_tv" ? (this.tvOn ? 1 : 0) : this.frame(k), 0, px0, py0);
-    if (k === "trash_can" && this.binFull(this.room.id, p.x, p.y)) this.drawSlot("trash_full", 0, 0, px0, py0 - 3); // overflowing
     if (k === "microwave_counter" && this.boomT > 0) { const f = Math.floor((30 - this.boomT) / 5); if (f < 4) { this.drawSlot("sparkle", f, 0, px0 + 2, py0 - 8); this.drawSlot("sparkle", (f + 1) % 4, 0, px0 + 10, py0 - 4); } }
     if (p.unit !== undefined) ctx.drawImage(this.unitLayer(p.unit), Math.round(px0), Math.round(py0)); // the stacks, drawn once and placed on whole pixels (no shimmer as you walk)
     if (p.rack !== undefined) {
@@ -7481,6 +7535,7 @@ class Game {
     const k = d.kind, up = st > 6 && st < 36;
     const x = up ? { down: 4, up: 4, left: 2, right: 6 }[c.dir] : { down: 11, up: 2, left: 1, right: 8 }[c.dir], y = up ? 6 : 9;
     if (me && d.mug) { this.drawSlot("travel_mug", 0, 0, sx + x, sy + y); return; } // your travel mug: closed, so no steam
+    if (d.popcorn) { this.drawSlot("popcorn_bag", d.empty ? 1 : 0, 0, sx + x, sy + y); return; } // popcorn from the theater's stand
     if (d.iced) { const ic = this.icedCup(d.color || DRINKS[Math.min(k, 2)].color, d.empty); if (ic) this.ctx.drawImage(ic, sx + x, sy + y); else this.drawSlot("cup_iced", d.empty ? 1 : 0, 0, sx + x, sy + y); return; } // iced: a clear cup (empty: still clear), no steam
     if (d.empty) { this.drawSlot("cup_empty", 0, 0, sx + x, sy + y); return; }
     if (k === 3 && d.color && !this.overrides.cups) this.ctx.drawImage(this.weekCup(d.color), sx + x, sy + y); else this.drawSlot("cups", k, 0, sx + x, sy + y);
@@ -7741,7 +7796,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 litter";
+const VERSION = "2026-11-18 litter 2";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
