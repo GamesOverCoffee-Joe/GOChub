@@ -408,7 +408,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 director 7";
+window.GOQ_WANT = "2026-11-18 director 8";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -2333,6 +2333,7 @@ function renderVisitors() {
     pctIn("drinks", "Visitors with a drink", "Lobby and café only. They sip, finish, and drop the cup in a bin. Nobody carries a drink and a bag at once."),
     pctIn("bags", "Visitors with a shop bag", "Anywhere in the museum. The bag's art is under Art, People."),
     pctIn("photos", "Photos of a piece", "The chance a visitor who stops in front of a piece takes a photo of it. Keep it low."),
+    pctIn("coffee", "Visitors who go for a coffee", "Each time a visitor picks somewhere new to go, the chance it's the café counter: they order, wait facing the barista, and leave with a drink (about half find a stool to drink it on). Not while the barista's away. Some people coming in stop for a coffee first too, more of them while it's busy."),
     pctIn("sits", "Visitors who sit down", "Each time a visitor picks somewhere new to go, the chance it's a free bench or stool nearby. They sit 20 to 50 seconds, then go on their way."),
   ]));
   // The visit clock (living museum): how long a visit's loop is, and what happens when it ends.

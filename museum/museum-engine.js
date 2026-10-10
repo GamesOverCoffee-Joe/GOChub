@@ -1462,7 +1462,7 @@ function normalizePack(p) {
   // Museum life: the chance (0 to 100) that a visitor has a drink (lobby and café), carries a shop bag, or photographs a piece they stop at.
   const lin2 = (p.settings && p.settings.life) || {}, pct = (v, d) => Math.max(0, Math.min(100, Math.round(v === undefined ? d : +v || 0)));
   const shirts = (Array.isArray(lin2.shirts) ? lin2.shirts.filter(isHex) : []).slice(0, 10);
-  const life = { drinks: pct(lin2.drinks, 30), bags: pct(lin2.bags, 20), photos: pct(lin2.photos, 8), sits: pct(lin2.sits, 15),
+  const life = { drinks: pct(lin2.drinks, 30), bags: pct(lin2.bags, 20), photos: pct(lin2.photos, 8), sits: pct(lin2.sits, 15), coffee: pct(lin2.coffee, 10),
     shirtsOn: lin2.shirtsOn !== false, shirts: shirts.length ? shirts : SHIRT_COLORS.slice() }; // visitors' shirt colors: one is picked at random for each
   // The visit clock (living museum): how long one visit's loop runs, and whether it starts over when it ends or the museum
   // just stays at its usual crowd for the rest of the visit.
@@ -5149,8 +5149,11 @@ class Game {
     } else if (under) {
       const at = def.enterAt || def.exitTo || def.spawn, [x, y] = at || []; if (at === undefined || !this.tileFree(r, x, y) || (this.player.x === x && this.player.y === y)) return;
       // They head straight for somewhere in that wing (in front of a piece, if one's free) and only look around once there.
-      const zone = under[1].zone, goal = zone ? this.arrivalSpot(r, zone) : null;
-      r.npcs.push(Object.assign(this.crowdPerson(x, y, zone), { dir: "up", timer: goal ? 0 : 30, goalT: goal, alpha: 0, fadeIn: true, entering: true })); this.dirClock.last = { what: "in", t: this.t };
+      // Some stop at the café counter first (more of them while it's busy), then go on to their wing (Joe 10/10).
+      const zone = under[1].zone, cup = Math.random() * 100 < [20, 30, 40, 20][d.beat] ? this.freeCounterSpot(r) : null, goal = cup || (zone ? this.arrivalSpot(r, zone) : null);
+      const who = Object.assign(this.crowdPerson(x, y, zone), { dir: "up", timer: goal ? 0 : 30, goalT: goal, alpha: 0, fadeIn: true, entering: true });
+      if (cup) { who.coffee = true; who.drink = null; who.bag = false; }
+      r.npcs.push(who); this.dirClock.last = { what: "in", t: this.t };
     }
   }
   arrivalSpot(r, zone) {
@@ -6745,6 +6748,10 @@ class Game {
     }
     if (n.arrived) { // just stepped onto the spot they were heading for
       n.arrived = false;
+      if (n.coffee) { // at the café counter: order, and wait for it facing the barista
+        if (this.counterSpots(r0).some(([x, y]) => x === n.x && y === n.y)) { n.dir = "up"; n.ordering = true; n.timer = 150 + Math.random() * 150; return; }
+        n.coffee = false; // didn't make it to the counter: maybe next time
+      }
       const e = n.seat; if (e) { // the spot beside a seat: sit down
         if (Math.abs(n.x - e.x) + Math.abs(n.y - e.y) === 1 && !r0.npcs.some(m => m !== n && m.x === e.x && m.y === e.y) && !(this.player.x === e.x && this.player.y === e.y)) {
           n.sitFrom = [n.x, n.y]; n.x = e.x; n.y = e.y; n.dir = e.sit; n.sitting = true; n.seatT = 1200 + Math.random() * 1800; n.timer = 0; return; // 20 to 50 seconds
@@ -6757,7 +6764,12 @@ class Game {
     }
     if (n.pose && this.t - n.pose.t0 < n.pose.dur) return; // reacting to your photo
     if (n.snapT > 0) return; // taking a photo: hold still
-    if (n.timer > 0) { n.timer--; if (n.timer % 90 === 0 && Math.random() < 0.5) n.dir = DIRS_LIST[(Math.random() * 4) | 0]; return; }
+    if (n.timer > 0) { n.timer--; if (!n.ordering && n.timer % 90 === 0 && Math.random() < 0.5) n.dir = DIRS_LIST[(Math.random() * 4) | 0]; return; }
+    if (n.ordering) { // the drink's ready: take it, and about half the time find a stool in the café to drink it on
+      n.ordering = false; n.coffee = false; n.drink = this.npcDrink(); n.route = null; n.goalT = null;
+      const cz = this.cafeZone(r0), st = Math.random() < 0.5 ? this.seatFor(n, cz) : null;
+      if (st) { n.seat = st[0]; n.goalT = st[1]; } else n.timer = 30;
+    }
     if (this.binRun(n) && n.timer > 0) return;
     const r = this.room, noGo = (x, y) => !n.entering && r.noWander && r.noWander.has(x + "," + y);
     // Just came in through the doors: they start on the doorway, where visitors usually don't walk, so they may cross it
@@ -6776,8 +6788,9 @@ class Game {
       const views = opts.filter(([x, y]) => r.cases.some(c => c.piece && c.x === x && Math.abs(c.y - y) === 1) || r.hung.some(h => y === h.y + 2 && (h.x === x || h.x + 1 === x)));
       if (views.length && Math.random() < 0.5) opts.splice(0, opts.length, ...views);
       let t = n.goalT || null; // someone was in the way: try the same spot again
+      if (!t && n.random && !n.cur && !n.drink && !n.bag && Math.random() * 100 < this.pack.settings.life.coffee) { const sp = this.freeCounterSpot(r); if (sp) { n.coffee = true; n.seat = null; t = sp; } } // a coffee run (Joe 10/10)
       if (!t && n.random && !n.cur && Math.random() * 100 < this.pack.settings.life.sits) { const st = this.seatFor(n); if (st) { n.seat = st[0]; t = st[1]; } } // now and then, somewhere to sit
-      if (!t) { n.seat = null; t = opts[(Math.random() * opts.length) | 0]; }
+      if (!t) { n.seat = null; n.coffee = false; t = opts[(Math.random() * opts.length) | 0]; }
       n.goalT = t;
       n.route = t ? this.npcPath(n, t[0], t[1], n.entering) : null;
       if (!n.route || !n.route.length) { n.timer = 60 + Math.random() * 120; n.route = null; n.goalT = null; n.retry = 0; return; }
@@ -6801,8 +6814,8 @@ class Game {
   strollWait() { const sp = this.pack.settings.staff.patronSpeed; return Math.round(8 * (1 - sp) / sp); }
   /* Sitting down on their own: a free bench or stool near where they're strolling (Joe 10/9). Not seats kept for you
      (Thursday's trivia seat, Sunday's coffee). */
-  seatFor(n) {
-    const r = this.room, zid = r.zoneAt && n.zone, out = [];
+  seatFor(n, zone) {
+    const r = this.room, zid = r.zoneAt && (zone || n.zone), out = [];
     for (const k in r.events) {
       const e = r.events[k]; if (!e.sit || (r.keepFree && r.keepFree.has(k))) continue;
       if (zid && (this.zoneAt(r, e.x, e.y) || {}).id !== zid) continue;
@@ -6811,6 +6824,21 @@ class Game {
       if (from.length) out.push([e, from[(Math.random() * from.length) | 0]]);
     }
     return out.length ? out[(Math.random() * out.length) | 0] : null;
+  }
+  /* The café counter: where visitors stand to order (the row in front of it), if the barista is there to serve them. */
+  counterSpots(r) {
+    if (r.counterAt === undefined) {
+      const c = r.props.find(p => p.key === "cafe_counter"), w = c ? Math.max(1, Math.round((SLOT.cafe_counter ? SLOT.cafe_counter.w : 48) / T)) : 0, out = [];
+      if (c) for (let i = 0; i < w; i++) { const x = c.x + i, y = c.y + 1; if (r.solid[y] && !r.solid[y][x] && !(r.noWander && r.noWander.has(x + "," + y))) out.push([x, y]); }
+      r.counterAt = out;
+    }
+    return r.counterAt;
+  }
+  cafeZone(r) { const c = this.counterSpots(r)[0]; return c && r.zoneAt ? (this.zoneAt(r, c[0], c[1]) || {}).id : undefined; }
+  freeCounterSpot(r) {
+    if (!r.npcs.some(n => n.role === "barista")) return null; // on a break, or after hours: no coffee
+    const free = this.counterSpots(r).filter(([x, y]) => !(this.player.x === x && this.player.y === y) && !r.npcs.some(n => (n.x === x && n.y === y) || (n.coffee && n.goalT && n.goalT[0] === x && n.goalT[1] === y)));
+    return free.length ? free[(Math.random() * free.length) | 0] : null;
   }
   /* Shortest route for a visitor, around walls, furniture, people and no-go tiles (at most 40 steps). */
   npcPath(n, tx, ty, loose) { // loose: may cross the tiles visitors usually keep off (doorways), to leave or catch up
@@ -7430,7 +7458,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 director 7";
+const VERSION = "2026-11-18 director 8";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
