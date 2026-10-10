@@ -3640,7 +3640,15 @@ class Game {
       : a.secret ? "\u2606 ???  (a secret)" : "\u2606 " + a.name + ": " + a.desc + " (" + Math.min(this.stat(a.stat), a.target) + "/" + a.target + ")");
     this.read({ title: "ACHIEVEMENTS", sub: n + " of " + list.length + " unlocked", sections: [{ label: "", text: lines.join("\n") }] });
   }
-  resetProgress() { try { if (this.saveKey) localStorage.removeItem(this.saveKey); } catch (e) {} this.progress = this.loadProgress(); this.lightsOff.clear(); this.closing = false; this.closed = false; this.closingPaid = false; this.fol = null; this.dayStart = Object.assign({}, this.progress.tally); this.spook = null; this.figure = null; this.hideEnd(); this.updateHud(); this.rebuild(); }
+  resetProgress() { try { if (this.saveKey) localStorage.removeItem(this.saveKey); } catch (e) {} this.progress = this.loadProgress(); this.lightsOff.clear(); this.closing = false; this.closed = false; this.closingPaid = false; this.fol = null; this.dayStart = Object.assign({}, this.progress.tally); this.spook = null; this.figure = null; this.hideEnd(); this.restartLoop(); this.updateHud(); this.rebuild(); }
+  /* A fresh visit for the living museum: the clock back to minute 0, the Janitor back at the staff door, new deliveries,
+     empty bins, no litter, nobody in line. (Start the visit over, and the curator's preview.) */
+  restartLoop() {
+    const keep = this.dirClock ? this.dirClock.paused : false; this.dirClock = { t: 0, paused: keep };
+    if (this.jan) { const n = this.jan.npc; for (const id in this.rooms || {}) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== n); }
+    this.jan = null; this.sup = null; this.carryBox = null; this.bins = {}; this.litter = {}; this.carry = 0;
+    for (const id in this.rooms || {}) { this.rooms[id].fresh = true; for (const n of this.rooms[id].npcs) if (n.queue) n.queue = null; }
+  }
   /* Dust settles back over a few real days. A piece that's never been dusted starts dusty about half the time. */
   isDusty(p) { const d = this.progress.dusted[p.id]; return d ? daysBetween(d, todayISO()) >= 3 : strSeed(p.id) % 2 === 0; }
   /* Each day, roughly one piece in five hangs a little crooked until someone nudges it level. */
@@ -6860,6 +6868,7 @@ class Game {
       if (n.leaving) { this.walkOut(n, n.leaveTo || def.exitTo || ROOMS[this.room.id].spawn); continue; }
       if (n.janitor) { if (n.moving) this.advance(n); continue; } // the janitor goes by his routine (updateJanitor)
       if (n.queue && !n.moving && this.mode === "walk") { this.queueStep(n); continue; } // in (or joining) the café line
+      if (n.walkTo && !n.moving) { if (this.mode === "walk") this.walkToStep(n); continue; } // staff walking somewhere (the shopkeeper to his shelves and back)
       this.updateLife(n);
       if (n.follow) { this.followStep(n); continue; } // a curious visitor following you around
       if (n.moving) { this.advance(n); continue; }
@@ -7038,12 +7047,24 @@ class Game {
     const S = this.supState(), d = this.director(), M = this.rooms.museum, sk = M.npcs.find(n => n.role === "shopkeeper");
     // The shopkeeper: out stocking the shelves until his box comes up (or the rush is over and he opens anyway).
     const stocking = !S.shopDone && !this.closing && !d.over && d.beat < 2;
+    // In sight he walks there and back (after thanking you); out of sight he's simply there.
+    const seen = this.room === M;
     if (sk && stocking && !sk.stocking) {
       const u = M.props.find(p => p.unit !== undefined), at = u && this.janBeside(M, u.x, u.y);
-      if (at && this.tileFree(M, at[0], at[1]) && !(this.player.x === at[0] && this.player.y === at[1])) { sk.home = [sk.x, sk.y, sk.dir]; sk.x = at[0]; sk.y = at[1]; sk.dir = this.janFace(at, u.x, u.y); sk.stocking = true; }
+      if (at) { sk.home = sk.home || [sk.x, sk.y, sk.dir]; sk.stocking = true; sk.walkTo = { at, dir: this.janFace(at, u.x, u.y) }; if (!seen && this.tileFree(M, at[0], at[1])) { sk.x = at[0]; sk.y = at[1]; sk.dir = sk.walkTo.dir; sk.walkTo = null; } }
     } else if (sk && !stocking && sk.stocking) {
-      const [x, y, dir] = sk.home; if (this.tileFree(M, x, y) && !(this.player.x === x && this.player.y === y)) { sk.x = x; sk.y = y; sk.dir = dir; sk.stocking = false; }
+      const [x, y, dir] = sk.home; sk.stocking = false; sk.walkTo = { at: [x, y], dir };
+      if (!seen && this.tileFree(M, x, y)) { sk.x = x; sk.y = y; sk.dir = dir; sk.walkTo = null; }
     }
+  }
+  walkToStep(n) { // a staff member walking to a spot (at their own pace, around people), then facing the way they work
+    if (n.stepWait > 0) { n.stepWait--; return; }
+    const [tx, ty] = n.walkTo.at;
+    if (n.x === tx && n.y === ty) { n.dir = n.walkTo.dir; n.walkTo = null; n.route = null; return; }
+    if (!n.route || !n.route.length) n.route = this.npcPath(n, tx, ty, true);
+    const jump = () => { if (this.tileFree(this.room, tx, ty) && !(this.player.x === tx && this.player.y === ty)) { n.x = tx; n.y = ty; n.dir = n.walkTo.dir; n.walkTo = null; n.route = null; } n.walkStuck = 0; };
+    if (!n.route || !n.route.length) { if ((n.walkStuck = (n.walkStuck || 0) + 1) > 240) jump(); return; }
+    const d = n.route[0]; if (this.tryMove(n, d)) { n.route.shift(); n.stepWait = this.strollWait(); n.walkStuck = 0; } else { n.route = null; n.stepWait = 20; if ((n.walkStuck = (n.walkStuck || 0) + 20) > 240) jump(); }
   }
   /* The café line: a row of spots from the counter, out toward the nearest hallway and along it. */
   queueSpots(r) {
@@ -7966,7 +7987,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 supplies";
+const VERSION = "2026-11-18 supplies 2";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
