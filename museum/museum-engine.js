@@ -50,6 +50,8 @@ const PAL = {
   sconce:  ["#fff0b8", "#f0b850", "#9a6c34", "#3a2414"],
   cat:     [null, "#f0a050", "#c87028", "#2a1810", "#f8f0e0", "#f88898", "#a05018"],
   apron:   [null, "#f0d0b0", "#c86848", "#181820", "#f8f0c0"],
+  janitor: [null, "#d8a880", "#8aa8c0", "#181820", "#3c6a48", "#6a4424", "#c8c8c8"], // skin, shirt, outline, suspenders and hat, tool belt, tools
+  jcan:    [null, "#5a6a72", "#3e4a52", "#181820", "#8a9aa2"], // the janitor's rolling garbage can: body, shade, outline, rim
   guard:   [null, "#e8c098", "#283c64", "#181820", "#f0c040"],
   sky:     ["#f8f8ff", "#a8d8f8", "#78b8e8", "#4878b8", "#ffffff", "#ffe080", "#f89850", "#d05878", "#683878", "#181838", "#283058", "#f8f0c8"],
   shutter: [null, "#b8c0c8", "#7c8894", "#2a3038"],
@@ -295,6 +297,22 @@ const GEN = {
     rect(a, 4, 3, 8, 10, 2); rect(a, 5, 4, 6, 5, 1);
     for (let y = 5; y < 9; y += 2) rect(a, 6, y, 4, 1, 3);
     rect(a, 6, 10, 4, 2, 0); px(a, 7, 10, 1);
+    return outline(a);
+  },
+  // The janitor: a cap and suspenders in the same color, and a tool belt with a couple of tools hanging off it.
+  janitor: f => {
+    const a = CHAR_FRAMES[f].map(r => r.slice()), side = f >= 6;
+    for (let y = 1; y <= 3; y++) for (let x = 0; x < 16; x++) if (a[y][x] === 3 && !(y === 1 && (x === 5 || x === 10))) a[y][x] = 4; // the cap
+    if (!side) { for (let x = 2; x < 14; x++) if (a[4][x] === 3 && f < 3) a[4][x] = 4; } // its brim, from the front
+    for (let y = 10; y <= 12; y++) for (const x of side ? [7] : [5, 10]) if (a[y][x] === 2) a[y][x] = 4; // suspenders
+    for (let x = 0; x < 16; x++) if (a[13][x] === 2) a[13][x] = 5; // tool belt
+    if (!side) { a[13][6] = 6; a[13][9] = 6; } else a[13][f >= 9 ? 9 : 6] = 6; // tools on the belt
+    return a;
+  },
+  jan_can: () => {
+    const a = mk(16, 16);
+    rect(a, 3, 4, 10, 10, 1); rect(a, 3, 4, 2, 10, 2); rect(a, 2, 3, 12, 2, 4); rect(a, 4, 14, 2, 2, 3); rect(a, 10, 14, 2, 2, 3);
+    for (const x of [7, 10]) rect(a, x, 6, 1, 6, 2);
     return outline(a);
   },
   staff_uniform: f => {
@@ -1196,6 +1214,8 @@ const SLOTS = [
   { key: "railing", label: "Railing", group: "Floors", w: 16, h: 16, pal: "wood", gen: GEN.railing, note: "Blocks the way, like a low rail in front of something." },
   { key: "shop_bag", label: "Museum shop bag", group: "People", w: 8, h: 8, pal: "bag", gen: GEN.shop_bag, note: "Carried by some visitors. Held at their side, so draw it hanging from its handle." },
   { key: "phone", label: "Phone (taking a photo)", group: "People", w: 8, h: 8, pal: "ui", gen: GEN.phone, note: "Held up in front of you for a moment when you take a photo." },
+  { key: "janitor", label: "Janitor", group: "People", w: 16, h: 16, layout: "char", pal: "janitor", gen: GEN.janitor, note: "Suspenders with a matching hat, and a tool belt. Does the museum's chores on the visit clock. " + CHAR_NOTE },
+  { key: "jan_can", label: "Janitor's garbage can", group: "People", w: 16, h: 16, pal: "jcan", gen: GEN.jan_can, note: "Rolls along beside the janitor; the dust from his sweeping goes in it." },
   { key: "usher", label: "Usher", group: "People", w: 16, h: 16, layout: "char", pal: "usher", gen: GEN.staff_uniform, note: "Behind the front desk. " + CHAR_NOTE },
   { key: "g2_floor", label: "Gallery Two floor", group: "Gallery Two", w: 16, h: 16, pal: "g2fl", gen: GEN.floor_wood, note: "Tiles seamlessly in every direction." },
   { key: "g2_wall_top", label: "Gallery Two wall top", group: "Gallery Two", w: 16, h: 16, pal: "g2", gen: GEN.wall_top },
@@ -2050,6 +2070,14 @@ const TEXT = {
   "rules":             { g: "Staff", l: "Staff rules whiteboard", v: [["STAFF RULES", "1. Clock in at the staff door or the time clock. The ON SHIFT tag means you're working.", "2. On shift, every chore is a point: dusting, straightening, watering, finding the mug, wiping cases. A visitor who loves your recommendation, and closing up, are worth 3.", "3. Chores earn tokens for the gift shop, and staff tallies decide Employee of the Month.", "4. Clock out at the time clock. Leaving at closing clocks you out too.", "5. Do not touch anyone's yogurt."]] },
   "locker.mine":       { g: "Staff", l: "Your locker", v: [["Locker {locker}: {name}.", "Just your coat in here. Your gift shop finds are on display in the collection cabinet."]] },
   "locker.others":     { g: "Staff", l: "Other lockers (one per locker, in order)", v: [["A sticky note: \"Do not touch my yogurt.\""], ["Locked. It hums faintly."], ["Someone taped a pixel-art cat to this one."], ["Empty. It smells like old coffee."], ["A note in big letters: \"WAIT. WHY DID THAT HAPPEN?\""], ["Locked. There's a dent shaped like a controller."]] },
+  "jan.start":         { g: "Janitor", l: "Just out of the staff door, starting his chores", v: [["[PLACEHOLDER: the janitor starting his day]"]] },
+  "jan.sweep":         { g: "Janitor", l: "Sweeping (the dust goes in his garbage can)", v: [["[PLACEHOLDER: the janitor while he sweeps]"]] },
+  "jan.trash":         { g: "Janitor", l: "Taking the trash out of the bins", v: [["[PLACEHOLDER: the janitor emptying the bins]"]] },
+  "jan.wait":          { g: "Janitor", l: "Between chores, waiting for the next one", v: [["[PLACEHOLDER: the janitor between chores]"]] },
+  "jan.plants":        { g: "Janitor", l: "Watering the plants nobody got to", v: [["[PLACEHOLDER: the janitor watering the plants]"]] },
+  "jan.overtime":      { g: "Janitor", l: "Still watering after the visit's loop is over (overtime)", v: [["[PLACEHOLDER: the janitor grumbling about overtime]"]] },
+  "jan.break":         { g: "Janitor", l: "On his break in the staff room", v: [["[PLACEHOLDER: the janitor on his break]"]] },
+  "jan.early":         { g: "Janitor", l: "On an early break, because the plants were already watered", v: [["[PLACEHOLDER: the janitor on an early break, thanks to whoever watered the plants]"]] },
   "storage.garage":    { g: "Storage", l: "The wide garage door on the basement's north wall", v: [["[PLACEHOLDER: the basement's garage door, where deliveries come in]"]] },
   "vol.callName":      { g: "Volunteering", l: "What staff call you when you're volunteering (no badge)", v: [["volunteer"]] },
   "vol.in":            { g: "Volunteering", l: "Clocking in as a volunteer", v: [["[PLACEHOLDER: clocking in as a volunteer. Mention the shift sheet on the corkboard]"]] },
@@ -6513,7 +6541,7 @@ class Game {
       const c = this.cine; c.blend += (c.goal > c.blend ? 1 : -1) / 40; c.blend = Math.max(0, Math.min(1, c.blend));
       if (this.mode === "busy" && c.wait > 0 && --c.wait === 0 && c.then) { const fn = c.then; c.then = null; fn(); }
     }
-    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.updateDirector();
+    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.updateDirector(); this.updateJanitor();
     if (this.petT > 0) this.petT--;
     if (this.t % 20 === 0) this.flushToasts();
     if (this.flickerT > 0) this.flickerT--;
@@ -6684,6 +6712,7 @@ class Game {
     for (const n of this.room.npcs.slice()) {
       if (n.fadeIn) { n.alpha = Math.min(1, (n.alpha || 0) + 1 / 24); if (n.alpha >= 1) { n.fadeIn = false; delete n.alpha; } } // someone just came in through the doors
       if (n.leaving) { this.walkOut(n, n.leaveTo || def.exitTo || ROOMS[this.room.id].spawn); continue; }
+      if (n.janitor) { if (n.moving) this.advance(n); continue; } // the janitor goes by his routine (updateJanitor)
       this.updateLife(n);
       if (n.follow) { this.followStep(n); continue; } // a curious visitor following you around
       if (n.moving) { this.advance(n); continue; }
@@ -6824,6 +6853,144 @@ class Game {
       if (from.length) out.push([e, from[(Math.random() * from.length) | 0]]);
     }
     return out.length ? out[(Math.random() * out.length) | 0] : null;
+  }
+  /* ----- The janitor (living museum, Step 2; LIVING-MUSEUM-PLAN.md, Phase 2) -----
+     When the visit starts he comes out of the staff door with his garbage can and does three chores picked at random
+     (sweeping a part of the museum, the dust into his can, or a trash round, bin to bin), starting no more than one a
+     quarter. From the last quarter he waters any plant nobody has watered yet, which crosses it off the shift sheet.
+     Then his break in the staff room: early if nobody left him any plants, overtime if the loop ended first.
+     He goes between the lobby, the museum and the staff room through their doors. Out of sight he keeps to the same
+     schedule: he simply turns up at his next stop once he'd have got there. */
+  janStand(room, toward) { // where he stands to go through the door from one room toward another
+    const R = this.rooms[room], def = ROOMS[room];
+    if (room === "museum" && def.exitTo) return def.exitTo;
+    for (const k in R.events) {
+      const e = R.events[k]; if (!e.warp || e.warp[0] !== toward) continue;
+      const [x, y] = k.split(",").map(Number), at = [[0, 1], [0, -1], [1, 0], [-1, 0]].map(([dx, dy]) => [x + dx, y + dy]).find(([a, b]) => R.solid[b] && !R.solid[b][a]);
+      if (at) return at;
+    }
+    return def.spawn;
+  }
+  janArrive(room, from) { return room === "museum" ? (ROOMS.museum.enterAt || ROOMS.museum.spawn) : this.janStand(room, from); }
+  janBeside(R, x, y) { return [[0, 1], [1, 0], [-1, 0], [0, -1]].map(([dx, dy]) => [x + dx, y + dy]).find(([a, b]) => R.solid[b] && !R.solid[b][a] && !R.events[a + "," + b]); }
+  janFace(at, x, y) { return x > at[0] ? "right" : x < at[0] ? "left" : y > at[1] ? "down" : "up"; }
+  janPlan(loop) { // this loop's three chores, the same for everyone on this day and loop
+    let sd = strSeed(todayISO() + ":janitor:" + loop); const rnd = () => (sd = (Math.imul(sd, 1103515245) + 12345) >>> 0) / 4294967296;
+    const trash = [];
+    for (const id of ["lobby", "museum", "staff"]) {
+      const R = this.rooms[id]; if (!R) continue;
+      for (const k in R.events) if (R.events[k].trash) { const [x, y] = k.split(",").map(Number), at = this.janBeside(R, x, y); if (at) trash.push({ room: id, at, dir: this.janFace(at, x, y), act: "empty", dur: 150 }); }
+    }
+    const sweep = () => { // four spots in one part of the museum, or the lobby now and then
+      const M = this.rooms.museum, zones = M.zones ? M.zones.filter(z => z.kind === "room" || (z.kind === "hall" && z.id !== "lobbyhall")) : [];
+      const z = zones.length && rnd() < 0.85 ? zones[(rnd() * zones.length) | 0] : null, room = z ? "museum" : "lobby", R = this.rooms[room], tiles = [];
+      for (let y = 3; y < R.h - 1; y++) for (let x = 1; x < R.w - 1; x++) if (!R.solid[y][x] && !R.events[x + "," + y] && !(R.noWander && R.noWander.has(x + "," + y)) && (!z || (this.zoneAt(R, x, y) || {}).id === z.id)) tiles.push([x, y]);
+      const out = []; for (let i = 0; i < 4 && tiles.length; i++) out.push({ room, at: tiles.splice((rnd() * tiles.length) | 0, 1)[0], dir: "down", act: "sweep", dur: 240, where: z ? z.name : "the lobby" });
+      return out;
+    };
+    const chores = [trash, sweep(), sweep()].filter(c => c.length);
+    for (let i = chores.length - 1; i > 0; i--) { const j = (rnd() * (i + 1)) | 0; [chores[i], chores[j]] = [chores[j], chores[i]]; }
+    const stops = []; chores.forEach((c, k) => { c[0].notBefore = k; c.forEach(st => { st.chore = k + 1; stops.push(st); }); });
+    return stops;
+  }
+  janNextPlant(room, x, y) { // the nearest plant nobody has watered today
+    let best = null;
+    for (const id of ["lobby", "museum", "staff"]) {
+      const R = this.rooms[id]; if (!R) continue;
+      for (const k in R.events) {
+        const e = R.events[k]; if (!e.plant || !this.isThirsty(e.plant)) continue;
+        const [px, py] = k.split(",").map(Number), at = this.janBeside(R, px, py); if (!at) continue;
+        const d = (id === room ? 0 : 60) + Math.abs(at[0] - x) + Math.abs(at[1] - y);
+        if (!best || d < best.d) best = { room: id, at, dir: this.janFace(at, px, py), act: "water", dur: 180, plant: e.plant, name: e.name, d };
+      }
+    }
+    return best;
+  }
+  janBreakSpot() {
+    const R = this.rooms.staff; if (!R) return { room: "lobby", at: this.janStand("lobby", "staff"), dir: "down", act: "break", dur: Infinity };
+    const t = R.props.find(p => p.key === "break_table"), at = t && this.janBeside(R, t.x, t.y);
+    return { room: "staff", at: at || ROOMS.staff.spawn, dir: at ? this.janFace(at, t.x, t.y) : "down", act: "break", dur: Infinity };
+  }
+  updateJanitor() {
+    if (this.headless || !this.rooms || !this.rooms.lobby || !this.rooms.museum || !this.progress || this.tut) return; // not during the tutorial (its rooms aren't his)
+    const d = this.director(), key = todayISO() + ":" + d.loop;
+    let J = this.jan;
+    if (!J || J.key !== key) { // a new visit (or the loop started over, or a new day)
+      const n = J ? J.npc : { sheet: "janitor", janitor: true, staff: true, role: "janitor", x: 0, y: 0, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 0, lines: [], lineI: -1 };
+      if (!J) { const [x, y] = this.janStand("lobby", "staff"); n.x = x; n.y = y; n.alpha = 0; n.fadeIn = true; } // out of the staff door
+      J = this.jan = { key, stops: this.janPlan(d.loop), i: 0, mode: "go", t: 0, eta: -1, phase: "chores", npc: n, room: J ? J.room : "lobby", watered: 0, stuck: 0 };
+    }
+    const n = J.npc;
+    for (const id in this.rooms) { const R = this.rooms[id], has = R.npcs.includes(n); if (id === J.room && !has) R.npcs.push(n); else if (id !== J.room && has) R.npcs = R.npcs.filter(m => m !== n); }
+    // What he says depends on what he's doing.
+    let stop = J.phase === "chores" ? J.stops[J.i] : J.phase === "plants" ? J.cur : J.brk;
+    const say = J.phase === "break" ? (J.early ? "jan.early" : "jan.break") : J.phase === "plants" ? (d.over ? "jan.overtime" : "jan.plants") : J.mode === "wait" ? "jan.wait" : J.i === 0 && J.mode === "go" ? "jan.start" : stop && stop.act === "empty" ? "jan.trash" : "jan.sweep";
+    if (J.say !== say) { J.say = say; n.lines = this.pack.settings.text[say] || (TEXT[say] && TEXT[say].v) || [[say]]; n.lineI = -1; }
+    const vis = J.room === this.room.id;
+    if (!vis) { // out of sight: finish any step or fade-in at once (only the room you're in moves people along)
+      if (n.moving) { const [dx, dy] = DIRS[n.dir]; n.x += dx; n.y += dy; n.moving = false; n.prog = 0; }
+      if (n.fadeIn) { n.fadeIn = false; delete n.alpha; }
+    }
+    if (d.paused || this.tut || this.closing || (vis && this.mode !== "walk") || n.moving || n.fadeIn) return; // the clock's stopped, or he's mid-step, or you're talking to him
+    if (J.door) { // through a door: fade out, and on into the next room
+      if (vis && (n.alpha = (n.alpha === undefined ? 1 : n.alpha) - 1 / 24) > 0) return;
+      const from = J.room; J.room = J.door; J.door = null; const [x, y] = this.janArrive(J.room, from); n.x = x; n.y = y; n.route = null; J.eta = -1;
+      delete n.alpha; if (J.room === this.room.id) { n.alpha = 0; n.fadeIn = true; }
+      return;
+    }
+    // Which stop is next.
+    if (J.phase === "chores") {
+      if (!stop) { if (d.beat >= 3 || d.over) { J.phase = "plants"; J.cur = null; } else J.mode = "wait"; }
+      else if (stop.notBefore > d.beat && !d.over) J.mode = "wait";
+      else if (J.mode === "wait") J.mode = "go";
+    }
+    if (J.phase === "plants" && !J.cur) { J.cur = this.janNextPlant(J.room, n.x, n.y); J.mode = "go"; if (!J.cur) { J.phase = "break"; J.early = !J.watered && !d.over; J.brk = this.janBreakSpot(); } }
+    if (J.phase === "break" && !J.brk) J.brk = this.janBreakSpot();
+    if (J.mode !== "wait") { J.fill = null; J.fillT = 0; }
+    else if (J.fillT > 0) { if (vis) n.dir = Math.floor(J.fillT / 20) % 2 ? "left" : "right"; if (--J.fillT <= 0) J.fill = null; return; }
+    if (J.mode === "wait" && !J.fill) { // ahead of schedule: a bit of extra sweeping near where he is until it's time
+      const R = this.rooms[J.room], c = []; for (let dy = -5; dy <= 5; dy++) for (let dx = -5; dx <= 5; dx++) { const x = n.x + dx, y = n.y + dy; if (R.solid[y] && R.solid[y][x] === false && !R.events[x + "," + y] && !(R.noWander && R.noWander.has(x + "," + y)) && Math.abs(dx) + Math.abs(dy) >= 2) c.push([x, y]); }
+      if (c.length) J.fill = { room: J.room, at: c[(Math.random() * c.length) | 0], dir: "down", act: "sweep", dur: 240, where: "around", fill: true };
+    }
+    stop = J.mode === "wait" ? J.fill : J.phase === "chores" ? J.stops[J.i] : J.phase === "plants" ? J.cur : J.brk;
+    if (!stop) return;
+    if (J.mode === "act") {
+      if (vis && stop.act === "sweep") n.dir = Math.floor(J.t / 20) % 2 ? "left" : "right"; // sweeping, side to side
+      if (--J.t > 0) return;
+      if (stop.act === "water" && this.isThirsty(stop.plant)) { this.progress.watered[stop.plant] = todayISO(); this.saveProgress(); J.watered++; }
+      if (J.phase === "chores") J.i++; else if (J.phase === "plants") J.cur = null;
+      J.mode = "go"; return;
+    }
+    // Going: to the stop, or first to the door toward its room.
+    if (J.phase === "plants" && !this.isThirsty(stop.plant)) { J.cur = null; return; } // someone beat him to it
+    const target = stop.room === J.room ? stop.at : this.janStand(J.room, stop.room === "lobby" || J.room === "lobby" ? stop.room : "lobby");
+    const tk = J.room + ":" + target; if (J.tk !== tk) { J.tk = tk; J.eta = -1; n.route = null; J.stuck = 0; }
+    if (n.x === target[0] && n.y === target[1]) {
+      if (stop.room !== J.room) { J.door = stop.room === "lobby" || J.room === "lobby" ? stop.room : "lobby"; return; }
+      if (stop.fill) { J.fillT = stop.dur; n.dir = stop.dir; return; }
+      J.mode = "act"; J.t = stop.dur; n.dir = stop.dir; return;
+    }
+    if (!vis) { if (J.eta < 0) J.eta = (Math.abs(target[0] - n.x) + Math.abs(target[1] - n.y)) * 46; if (--J.eta <= 0) { n.x = target[0]; n.y = target[1]; J.eta = -1; } return; }
+    if (n.stepWait > 0) { n.stepWait--; return; }
+    if (!n.route || !n.route.length) n.route = this.npcPath(n, target[0], target[1], true);
+    const jump = () => { if (this.tileFree(this.room, target[0], target[1]) && !(this.player.x === target[0] && this.player.y === target[1])) { n.x = target[0]; n.y = target[1]; n.route = null; } J.stuck = 0; };
+    if (!n.route || !n.route.length) { if ((J.stuck += 1) > 300) jump(); return; } // boxed in for a while: he squeezes past
+    const dir = n.route[0];
+    if (this.tryMove(n, dir)) { n.route.shift(); n.stepWait = this.strollWait(); J.stuck = 0; }
+    else { n.route = null; n.dir = dir; n.stepWait = 20; if ((J.stuck += 20) > 300) jump(); }
+  }
+  janitorInfo() { // for the curator: where he is and what he's doing
+    const J = this.jan; if (!J) return "";
+    const R = ROOMS[J.room], z = J.room === "museum" && this.rooms.museum ? this.zoneAt(this.rooms.museum, J.npc.x, J.npc.y) : null, where = z ? z.name : R ? R.name : J.room;
+    const st = J.phase === "chores" ? J.stops[J.i] : J.cur;
+    const what = J.door ? "going through a door" : J.phase === "break" ? (J.early ? "on an early break" : "on his break") : J.phase === "plants" ? (this.director().over ? "overtime: " : "") + "watering " + (st ? "the " + (st.name || "plant") : "plants") + " (" + J.watered + " so far)"
+      : J.mode === "wait" ? "between chores, waiting for the next quarter" : st ? (st.act === "empty" ? "taking out the trash" : "sweeping " + st.where) + " (chore " + st.chore + " of 3)" : "";
+    return "Janitor: " + what + ", in " + where + ".";
+  }
+  findJanitor() { // the curator's "Find the janitor": go stand beside him
+    const J = this.jan; if (!J) return false;
+    const R = this.rooms[J.room], n = J.npc, at = [[0, 1], [1, 0], [-1, 0], [0, -1], [0, 2], [2, 0]].map(([dx, dy]) => [n.x + dx, n.y + dy]).find(([x, y]) => this.tileFree(R, x, y));
+    if (!at) return false; this.warp(J.room, at[0], at[1], this.janFace(at, n.x, n.y)); return true;
   }
   /* The café counter: where visitors stand to order (the row in front of it), if the barista is there to serve them. */
   counterSpots(r) {
@@ -7357,7 +7524,10 @@ class Game {
       const bagAt = c.bag && !c.sitting ? [sx + { down: 1, up: 9, left: 9, right: -1 }[c.dir], sy + 9] : null, bagFirst = bagAt && c.dir !== "down"; // a shop bag hangs at their side
       if (bagFirst) this.drawSlot("shop_bag", 0, 0, ...bagAt);
       if (cupFirst) this.drawCup(sx, sy, c);
+      const canAt = c.janitor && !c.sitting ? [sx + { down: 11, up: -11, left: -11, right: 11 }[c.dir], sy + 2] : null, canFirst = canAt && c.dir === "up";
+      if (canFirst) this.drawSlot("jan_can", 0, 0, ...canAt);
       this.drawSlot(sheet, c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
+      if (canAt && !canFirst) this.drawSlot("jan_can", 0, 0, ...canAt);
       if (c === this.player && !this.full) { // your gear: the GOQ hat and shades (a fake pair has only its right lens)
         if (this.using("hat") === "real") this.drawSlot("goq_hat", c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
         const sh = this.using("shades");
@@ -7458,7 +7628,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 director 8";
+const VERSION = "2026-11-18 janitor";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),

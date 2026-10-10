@@ -386,6 +386,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
               <button class="btn" type="button" id="unveilBtn" title="Stages the unveiling ceremony for the newest piece on display, as if it were unveiled today. Walk into its wing to see it.">An unveiling</button>
               <button class="btn" type="button" id="joeBtn" title="Joe turns up on the floor near you. Talk to him (or photograph him) to see the glitch.">Joe</button>
               <label class="btn" style="display:flex;gap:6px;align-items:center" title="Set how many tokens you have in this preview">Tokens <input id="walletIn" type="number" min="0" max="9999" style="width:70px"></label>
+              <button class="btn" type="button" id="janBtn" title="Go stand beside the janitor, wherever his chores have taken him">Find the janitor</button>
               <button class="btn" type="button" id="dayBtn" title="The next day: curious visitors come back, dust settles, the museum opens again">Tomorrow</button>
             </div></div>
           <div class="pvsec"><span class="pvh">Visit clock</span>
@@ -408,7 +409,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 director 8";
+window.GOQ_WANT = "2026-11-18 janitor";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -660,6 +661,7 @@ $("#unveilBtn").addEventListener("click", () => {
 });
 $("#walletIn").addEventListener("focus", () => { $("#walletIn").value = (game && game.progress && game.progress.tokens) || 0; });
 $("#walletIn").addEventListener("change", () => { if (!game || !game.progress) return; game.progress.tokens = Math.max(0, Math.min(9999, Math.round(+$("#walletIn").value || 0))); game.saveProgress(); game.updateHud(true); status("Test wallet: " + game.progress.tokens + " tokens."); });
+$("#janBtn").addEventListener("click", () => { game.closeAll(); if (!game.findJanitor()) status("Couldn't get beside the janitor just now. Try again in a moment.", true); stage.focus({ preventScroll: true }); });
 $("#dayBtn").addEventListener("click", () => { game.closeAll(); game.skipDay(); stage.focus({ preventScroll: true }); });
 // "Reset chores" also reopens the museum: visitors come back and the lights come on.
 
@@ -2768,7 +2770,7 @@ function showClock() {
   info.textContent = (d.over ? "The visit's loop has ended (" + d.minutes + " minutes); the museum stays at its usual crowd. Jump to a quarter to run it again." : "Minute " + m + ":" + String(sec).padStart(2, "0") + " of " + d.minutes + " · " + d.beatName + (d.loop ? " · loop " + (d.loop + 1) : "") + (d.running ? "" : d.paused ? " · paused" : " · stopped (closing or tutorial)") + ". This loop's problems (not built yet): " + names.join("; ") + ".");
   const here = d.here ? " In this room: " + d.here.now + " strolling, aiming for " + d.here.want + " (" + d.here.base + " at the busiest)." : " This room has no crowd of its own.";
   const last = d.last ? " Last: someone " + (d.last.what === "in" ? "came in through the doors" : "headed out") + ", " + d.last.ago + " s ago." : "";
-  info.textContent += here + last;
+  info.textContent += here + last + (game.janitorInfo ? " " + game.janitorInfo() : "");
   $("#clockPause").textContent = d.paused ? "Resume" : "Pause";
   document.querySelectorAll("#segBeat button").forEach(b => b.setAttribute("aria-pressed", String(!d.over && +b.dataset.v === d.beat)));
 }

@@ -484,6 +484,16 @@ Goal: character.
 - **Leaving looks like strolling:** rhythm departures (`stroll`) take the same little pauses between steps as strollers (`strollWait()`).
 - **Newcomers carry things:** `crowdPerson` gives a shop bag at `life.bags`, or (in the café, or rooms without a layout) a drink at `life.drinks`; `crowdBody` is the bare person.
 - (director 8, Joe 10/10) **Coffee runs:** when a stroller picks somewhere new, `life.coffee` (default 10%, Visitors tab) it's the café counter, if the barista's there (`freeCounterSpot`; the spots are the row in front of `cafe_counter`, `counterSpots`, cached as `r.counterAt`). They order facing up (`n.coffee` → `n.ordering`, 2.5–5 s), take a drink, and half the time sit on a free café stool (`seatFor(n, cafeZone)`). **Arrivals** stop at the counter first 20/30/40/20% of the time by beat, then go on to their wing (they keep their wing as `zone`, so the crowd count is right). The café line problem (Step 3) builds on this.
+
+**Living museum, Step 2: the janitor (2026-11-18 janitor, built 10/10).** (Plan: `LIVING-MUSEUM-PLAN.md`, Phase 2 and the Janitor row.)
+- One janitor (`this.jan`, his NPC `jan.npc`: `janitor: true`, `staff: true`, `role: "janitor"`), Art slots `janitor` (cap and suspenders in one color, tool belt) and `jan_can` (drawn beside him). He belongs to whichever of lobby / museum / staff room he's in (`jan.room`); `updateJanitor()` keeps him in that room's `npcs` even after a rebuild. Not during the tutorial.
+- **Plan per loop** (`janPlan(loop)`, seeded by date + loop): a trash round (every bin in the lobby, museum and staff room, in that order) and two sweeps (four spots in one museum room or hallway, or the lobby 15% of the time), shuffled. Chore k doesn't start before quarter k (`notBefore`); ahead of schedule he sweeps spots near him (`jan.fill`).
+- **Plants:** from the last quarter (or once the loop's over), the nearest thirsty plant in those three rooms, one after another (`janNextPlant`), setting `progress.watered` (so the shift sheet crosses it off and you can't water it again; it doesn't count toward your tally). A plant you water first is skipped.
+- **Break:** none left: beside the staff room's break table (`janBreakSpot`), `jan.early` if he watered none. Still watering when the loop ends: `jan.overtime` lines.
+- **Doors:** lobby ↔ museum (enters at `enterAt`, leaves from `exitTo`), lobby ↔ staff (`janStand`, `janArrive`). **Out of sight** he keeps the same schedule: each leg takes its walking time (46 frames a tile), then he's there; any step or fade-in in progress finishes at once.
+- **Talking:** his lines follow what he's doing (`jan.start`, `jan.sweep`, `jan.trash`, `jan.wait`, `jan.plants`, `jan.overtime`, `jan.break`, `jan.early`; Words → Janitor).
+- Curator → Preview → **Find the janitor** (`findJanitor()`), and the clock line says where he is and what he's doing (`janitorInfo()`).
+- Not yet: bins filling up and litter (Step 3), his name.
 - Curator → Preview tab → **Visit clock**: jump to a beat, pause or resume, +1 min, and a line with the minute, beat, loop and this loop's problems (`setVisitClock(min, paused)`).
 - Also: member shirt colors (`members[].shirts`; Staff tab "name, badge, orange pink"), the basement garage door (`garage_door`, storage `wallArt`, `storage.garage`).
 
