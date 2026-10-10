@@ -386,12 +386,14 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
               <button class="btn" type="button" id="unveilBtn" title="Stages the unveiling ceremony for the newest piece on display, as if it were unveiled today. Walk into its wing to see it.">An unveiling</button>
               <button class="btn" type="button" id="joeBtn" title="Joe turns up on the floor near you. Talk to him (or photograph him) to see the glitch.">Joe</button>
               <label class="btn" style="display:flex;gap:6px;align-items:center" title="Set how many tokens you have in this preview">Tokens <input id="walletIn" type="number" min="0" max="9999" style="width:70px"></label>
+              <button class="btn" type="button" id="lineBtn" title="Eight people already queued up at the café counter (go to the café first)">A long line</button>
               <button class="btn" type="button" id="binsBtn" title="Every bin in the lobby and museum full to the top, with a little litter beside each">Fill the bins</button>
               <button class="btn" type="button" id="janBtn" title="Go stand beside the janitor, wherever his chores have taken him">Find the janitor</button>
               <button class="btn" type="button" id="dayBtn" title="The next day: curious visitors come back, dust settles, the museum opens again">Tomorrow</button>
             </div></div>
           <div class="pvsec"><span class="pvh">Visit clock</span>
             <div class="seg" id="segBeat" role="group" aria-label="Jump to a beat"><button type="button" data-v="0" title="Jump to this quarter of the visit">Settling in</button><button type="button" data-v="1" title="Jump to this quarter of the visit">Getting busy</button><button type="button" data-v="2" title="Jump to this quarter of the visit">Rush</button><button type="button" data-v="3" title="Jump to this quarter of the visit">Winding down</button></div>
+            <div id="probPick" style="display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;font-size:.8rem" title="This loop's problems. Untick Auto to pick them by hand (the preview only)"></div>
             <div style="display:flex;gap:6px;align-items:center;margin-top:6px"><button class="btn" type="button" id="clockPause" title="Stop or start the visit clock in this preview">Pause</button><button class="btn" type="button" id="clockFwd" title="Skip ahead one minute">+1 min</button><span id="clockInfo" class="pv-hint" style="margin:0;text-align:left;flex:1"></span></div>
           </div>
           <div class="pvsec"><span class="pvh">Start fresh</span>
@@ -410,7 +412,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 litter 4";
+window.GOQ_WANT = "2026-11-18 supplies";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -662,6 +664,7 @@ $("#unveilBtn").addEventListener("click", () => {
 });
 $("#walletIn").addEventListener("focus", () => { $("#walletIn").value = (game && game.progress && game.progress.tokens) || 0; });
 $("#walletIn").addEventListener("change", () => { if (!game || !game.progress) return; game.progress.tokens = Math.max(0, Math.min(9999, Math.round(+$("#walletIn").value || 0))); game.saveProgress(); game.updateHud(true); status("Test wallet: " + game.progress.tokens + " tokens."); });
+$("#lineBtn").addEventListener("click", () => { const n = game.fillLine(8); status(n ? n + " people in line at the café." : "Go to the café first: the line starts at its counter.", !n); showClock(); stage.focus({ preventScroll: true }); });
 $("#binsBtn").addEventListener("click", () => { game.fillBins(); status("Every bin is full, with litter beside each."); showClock(); stage.focus({ preventScroll: true }); });
 $("#janBtn").addEventListener("click", () => { game.closeAll(); if (!game.findJanitor()) status("Couldn't get beside the janitor just now. Try again in a moment.", true); stage.focus({ preventScroll: true }); });
 $("#dayBtn").addEventListener("click", () => { game.closeAll(); game.skipDay(); stage.focus({ preventScroll: true }); });
@@ -2354,6 +2357,15 @@ function renderVisitors() {
     el("label", {}, [document.createTextNode("A bin holds"), el("small", { text: "Pieces of trash before it's full (2 to 20)." }), lCap]),
     el("label", {}, [document.createTextNode("How fast bins fill (%)"), el("small", { text: "100 fills a bin in about three busy minutes on a loop with the litter problem. 0 turns litter off." }), lRate]),
   ]));
+  st.line = st.line || { fast: 3, slow: 9, max: 10 };
+  const lnum = (k, lo, hi, d) => { const i = el("input", { type: "number", min: lo, max: hi, value: st.line[k] === undefined ? d : st.line[k], style: "max-width:120px" }); i.addEventListener("input", () => { st.line[k] = Math.max(lo, Math.min(hi, Math.round(+i.value || d))); changed(); }); return i; };
+  wrap.appendChild(el("h3", { text: "Café line", style: "margin:6px 0 4px" }));
+  wrap.appendChild(el("p", { class: "note", style: "margin:0 0 8px", text: "People wanting a coffee queue up from the counter, out toward the hallway, and step up as each order is served; they won't step aside (they're in line), and you queue like everyone else. On loops with the café-line problem, the barista needs her supplies from the basement: until someone brings them, every order takes the slow time, so the line grows at the rush." }));
+  wrap.appendChild(el("div", { class: "fields", style: "max-width:620px;margin:0 0 14px" }, [
+    el("label", {}, [document.createTextNode("Seconds an order (prepped)"), el("small", { text: "1 to 30." }), lnum("fast", 1, 30, 3)]),
+    el("label", {}, [document.createTextNode("Seconds an order (no supplies)"), el("small", { text: "1 to 60." }), lnum("slow", 1, 60, 9)]),
+    el("label", {}, [document.createTextNode("Longest line"), el("small", { text: "People; anyone else wanting a coffee comes back later." }), lnum("max", 2, 20, 10)]),
+  ]));
   wrap.appendChild(el("h3", { text: "Visit clock", style: "margin:6px 0 4px" }));
   wrap.appendChild(el("p", { class: "note", style: "margin:0 0 8px", text: "Each visit runs one loop from when the page opens: Settling in, Getting busy, Rush, Winding down, a quarter of the length each. After it ends the museum stays at its usual crowd for the rest of the visit, unless it starts over. Try it in the Preview tab (Apply to preview first)." }));
   wrap.appendChild(el("div", { class: "fields", style: "max-width:520px;margin:0 0 14px" }, [
@@ -2442,7 +2454,7 @@ function renderTokens() {
   const k = (key, label, note) => num(() => r[key], v => { r[key] = v; }, label, note);
   const sec = (title, kids) => wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [el("h3", { text: title, style: "margin:0 0 8px" }), el("div", { class: "fields" }, kids)]));
   sec("Recommending", [k("helped", "The right piece for a curious visitor", "Each time you recommend a visitor the piece they were looking for.")]);
-  sec("Chores", [k("dusted", "Dusting a frame"), k("straightened", "Straightening a frame"), k("watered", "Watering a plant"), k("mugs", "Returning the curator's mug"), k("litter", "Picking up litter (each piece, once it's in a bin or the janitor's can)"), k("wiped", "Wiping a case"), k("closings", "Closing the museum")]);
+  sec("Chores", [k("dusted", "Dusting a frame"), k("straightened", "Straightening a frame"), k("watered", "Watering a plant"), k("mugs", "Returning the curator's mug"), k("litter", "Picking up litter (each piece, once it's in a bin or the janitor's dustpan)"), k("supplies", "Bringing up a delivery box (the shop's stock or the café's supplies)"), k("wiped", "Wiping a case"), k("closings", "Closing the museum")]);
   sec("Days of the week", [k("boxes", "Monday: all five boxes for the conservator"), k("kid", "Tuesday: the lost kid back to his mom"),
     ...["a common photo", "an uncommon photo", "a rare photo", "the rarest photos"].map((t, i) => num(() => r.artist[i], v => { r.artist[i] = v; }, "Wednesday: the artist, for " + t)),
     k("trivia", "Thursday: each right trivia answer"), k("triviaPerfect", "Thursday: bonus for all five")]);
@@ -2787,11 +2799,20 @@ function showClock() {
   info.textContent = (d.over ? "The visit's loop has ended (" + d.minutes + " minutes); the museum stays at its usual crowd. Jump to a quarter to run it again." : "Minute " + m + ":" + String(sec).padStart(2, "0") + " of " + d.minutes + " · " + d.beatName + (d.loop ? " · loop " + (d.loop + 1) : "") + (d.running ? "" : d.paused ? " · paused" : " · stopped (closing or tutorial)") + ". This loop's problems (not built yet): " + names.join("; ") + ".");
   const here = d.here ? " In this room: " + d.here.now + " strolling, aiming for " + d.here.want + " (" + d.here.base + " at the busiest)." : " This room has no crowd of its own.";
   const last = d.last ? " Last: someone " + (d.last.what === "in" ? "came in through the doors" : "headed out") + ", " + d.last.ago + " s ago." : "";
-  info.textContent += here + last + (game.janitorInfo ? " " + game.janitorInfo() : "") + (game.litterInfo ? " " + game.litterInfo() : "");
+  info.textContent += here + last + (game.janitorInfo ? " " + game.janitorInfo() : "") + (game.litterInfo ? " " + game.litterInfo() : "") + (game.supplyInfo ? " " + game.supplyInfo() : "");
   $("#clockPause").textContent = d.paused ? "Resume" : "Pause";
   document.querySelectorAll("#segBeat button").forEach(b => b.setAttribute("aria-pressed", String(!d.over && +b.dataset.v === d.beat)));
 }
 setInterval(() => { if (tab === "preview") showClock(); }, 1000);
+/* This loop's problems: Auto (the director picks 3 or 4 by the date), or pick them by hand to try one. */
+(function problemPicker() {
+  const box = $("#probPick"); if (!box) return;
+  const auto = el("input", { type: "checkbox", checked: true }), boxes = {};
+  const apply = () => { if (auto.checked) game.setProblems(null); else game.setProblems(Object.keys(boxes).filter(id => boxes[id].checked)); Object.values(boxes).forEach(b => (b.disabled = auto.checked)); showClock(); };
+  box.appendChild(el("label", { style: "display:flex;gap:4px;align-items:center;font-weight:700" }, [auto, document.createTextNode("Auto")]));
+  GOQ.PROBLEMS.forEach(pr => { const c = el("input", { type: "checkbox", disabled: true }); boxes[pr.id] = c; c.addEventListener("change", apply); box.appendChild(el("label", { style: "display:flex;gap:4px;align-items:center" }, [c, document.createTextNode(pr.who + ": " + pr.label)])); });
+  auto.addEventListener("change", () => { if (!auto.checked) { const now = game.director().problems; Object.keys(boxes).forEach(id => (boxes[id].checked = now.includes(id))); } apply(); });
+})();
 
 /* ---------- Import and export ---------- */
 $("#exportBtn").addEventListener("click", async () => {

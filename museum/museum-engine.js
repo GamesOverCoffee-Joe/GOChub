@@ -93,6 +93,7 @@ const PAL = {
   kid:     [null, "#e8c098", "#f0a020", "#181820"],
   curatorp:[null, "#8a5a3a", "#34343e", "#141418"],
   dayboard:[null, "#6a4428", "#26362c", "#34463a", "#e8e8d8", "#4a2e18"],
+  supbox:  [null, "#c89858", "#9a6e38", "#181820", "#f0e8d8", "#c84838", "#5a3a20"], // cardboard, shade, outline, label, red (shop), brown (café)
   lbox:    [null, "#b8864a", "#8a5e2e", "#e0b878", "#5a3a1a", "#f4f0e0"],
   easel:   [null, "#8a5a32", "#5a3a1a", "#f4f0e6", "#c84a3a", "#3a6ac8", "#e0b040"],
   stall:   [null, "#c84a4a", "#f4f0e6", "#8a5a32", "#5a3a1a", "#181820"],
@@ -899,6 +900,12 @@ const GEN = {
   // easel, the Saturday pop-up table.
   kid: f => { const src = CHAR_FRAMES[f], a = mk(16, 16); for (let y = 0; y < 12; y++) for (let x = 0; x < 12; x++) { const v = src[Math.floor(y / 0.75)][Math.floor(x / 0.75)]; if (v >= 0) a[y + 4][x + 2] = v; } return a; },
   day_board: () => { const a = mk(32, 16); rect(a, 0, 0, 32, 12, 1); rect(a, 2, 1, 28, 9, 2); px(a, 6, 8, 3); px(a, 22, 2, 3); px(a, 26, 7, 3); rect(a, 2, 10, 28, 1, 5); rect(a, 3, 12, 2, 4, 5); rect(a, 27, 12, 2, 4, 5); return a; },
+  // A delivery box from the garage door: frame 0 the shop's stock (a red tag), frame 1 the café's supplies (a cup on the label).
+  supply_box: f => {
+    const a = mk(16, 16); rect(a, 2, 5, 12, 10, 1); rect(a, 2, 5, 12, 2, 2); rect(a, 7, 5, 2, 3, 2); rect(a, 4, 9, 8, 4, 4);
+    if (f === 0) { rect(a, 5, 10, 6, 2, 5); } else { rect(a, 6, 10, 3, 2, 6); px(a, 9, 10, 6); px(a, 6, 9, 4); }
+    return outline(a);
+  },
   lost_box: () => { const a = mk(16, 16); rect(a, 2, 5, 12, 10, 1); rect(a, 2, 5, 12, 2, 3); rect(a, 2, 14, 12, 1, 2); rect(a, 7, 5, 2, 10, 2); rect(a, 4, 9, 4, 3, 5); px(a, 5, 10, 4); px(a, 6, 10, 4); return outline(a, 4); },
   easel: () => { const a = mk(16, 32); for (let i = 0; i < 20; i++) { px(a, 4 + Math.round(i * 0.15), 11 + i, 2); px(a, 11 - Math.round(i * 0.15), 11 + i, 2); } rect(a, 7, 4, 2, 27, 1); rect(a, 2, 3, 12, 10, 1); rect(a, 3, 4, 10, 8, 3); rect(a, 4, 6, 3, 2, 4); rect(a, 8, 5, 3, 3, 5); rect(a, 5, 9, 5, 2, 6); rect(a, 2, 13, 12, 1, 2); return a; },
   popup_table: () => { const a = mk(32, 16); rect(a, 0, 4, 32, 8, 2); for (let x = 0; x < 32; x += 4) rect(a, x, 4, 2, 8, 1); rect(a, 0, 4, 32, 1, 4); rect(a, 2, 12, 2, 4, 3); rect(a, 28, 12, 2, 4, 3); return outline(a, 5); }, // outlined, like the rest of the furniture
@@ -1236,6 +1243,7 @@ const SLOTS = [
   { key: "kid", label: "Lost kid (Tuesdays)", group: "Days of the week", w: 16, h: 16, layout: "char", pal: "kid", gen: GEN.kid, note: "Smaller than the visitors. " + CHAR_NOTE },
   { key: "curator", label: "The curator", group: "Characters", w: 16, h: 16, layout: "char", pal: "curatorp", gen: GEN.character, note: "The curator in person: you, when you play on a curator badge; otherwise at a café table now and then on a Sunday, and at every unveiling. " + CHAR_NOTE },
   { key: "day_board", label: "Day board", group: "Days of the week", w: 32, h: 16, pal: "dayboard", gen: GEN.day_board, note: "In the lobby, left of the door to the museum. Today's day is chalked on it in the pixel font, centered on the slate (x 2 to 29, y 3 to 7)." },
+  { key: "supply_box", label: "Delivery box", group: "Days of the week", w: 16, h: 16, frames: 2, pal: "supbox", gen: GEN.supply_box, note: "2 frames side by side (32×16): the shop's stock, then the café's supplies. They turn up by the basement's garage door when the loop needs them; carried over your head." },
   { key: "lost_box", label: "Misplaced box (Mondays)", group: "Days of the week", w: 16, h: 16, pal: "lbox", gen: GEN.lost_box, note: "Five of these turn up around the museum on Mondays." },
   { key: "easel", label: "The artist's easel (Wednesdays)", group: "Days of the week", w: 16, h: 32, pal: "easel", gen: GEN.easel, note: "Two tiles tall." },
   { key: "popup_table", label: "Pop-up table (Saturdays)", group: "Days of the week", w: 32, h: 16, pal: "stall", gen: GEN.popup_table, note: "In the lobby on Saturdays. The three items for sale are drawn on top." },
@@ -1387,7 +1395,7 @@ const VISITOR_NAMES = ["Ada", "Bea", "Cal", "Dot", "Eli", "Fern", "Gus", "Hana",
 /* Chores that count toward staff points (recommending a visitor the right piece, and closing up, are worth 3). */
 const pts = n => n + " point" + (n === 1 ? "" : "s");
 /* Tokens each thing earns (curator, Tokens tab). Staff points (POINT_KINDS) are separate and don't change. */
-const REWARD_DEFAULTS = { dusted: 1, straightened: 1, watered: 1, mugs: 1, wiped: 1, litter: 1, helped: 5, closings: 3, boxes: 5, kid: 3, artist: [1, 3, 6, 12], trivia: 1, triviaPerfect: 2 };
+const REWARD_DEFAULTS = { dusted: 1, straightened: 1, watered: 1, mugs: 1, wiped: 1, litter: 1, supplies: 3, helped: 5, closings: 3, boxes: 5, kid: 3, artist: [1, 3, 6, 12], trivia: 1, triviaPerfect: 2 };
 const POINT_KINDS = ["dusted", "straightened", "watered", "mugs", "wiped", "helped", "closings"];
 const chorePoints = k => (k === "helped" || k === "closings" ? 3 : 1);
 const TEST_BADGES = [{ badge: "0001", key: "QQQQQQ", name: "Test Staff" }];
@@ -1548,6 +1556,8 @@ function normalizePack(p) {
   // just stays at its usual crowd for the rest of the visit.
   // Litter (living museum, Step 3): how much a bin holds before it overflows, and how fast the bins fill (percent).
   const lit = (p.settings && p.settings.litter) || {}, litter = { cap: Math.max(2, Math.min(20, Math.round(lit.cap === undefined ? 6 : +lit.cap || 6))), rate: Math.max(0, Math.min(400, Math.round(lit.rate === undefined ? 100 : +lit.rate || 0))) };
+  // The café line (living museum, Step 4): seconds to serve one order with the barista prepped or not, and the longest line.
+  const lnin = (p.settings && p.settings.line) || {}, line = { fast: Math.max(1, Math.min(30, Math.round(lnin.fast === undefined ? 3 : +lnin.fast || 3))), slow: Math.max(1, Math.min(60, Math.round(lnin.slow === undefined ? 9 : +lnin.slow || 9))), max: Math.max(2, Math.min(20, Math.round(lnin.max === undefined ? 10 : +lnin.max || 10))) };
   const vin = (p.settings && p.settings.visit) || {}, visit = { minutes: Math.max(4, Math.min(60, Math.round(vin.minutes === undefined ? 12 : +vin.minutes || 12))), repeat: !!vin.repeat };
   // Genres: the museum's rooms (Action, Puzzle...). A piece's genre is set by hand.
   const genres = normalizeGenres(p.settings && p.settings.genres), gids = new Set(genres.map(g => g.id));
@@ -1558,7 +1568,7 @@ function normalizePack(p) {
     nicknames: Array.isArray(ofin.nicknames) ? ofin.nicknames.map(n => str(n, 40)).filter(Boolean).slice(0, 12) : ["DeVaughn", "Boss", "Mr. curator sir"] }; // what people call a curator badge
   // Gifts set on the piece itself (before gifts were shop items) become shop items.
   pieces.forEach(pc => { if (pc.gift && pc.gift.name && !items.some(it => it.gift === pc.id)) items.push({ id: "gift-" + pc.id, name: pc.gift.name, price: pc.gift.price, description: pc.gift.description, image: null, gift: pc.id }); delete pc.gift; });
-  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, relations, curious, life, visit, litter, genres, office, friday, rewards: normalizeRewards(p.settings && p.settings.rewards), tutorialRev: Math.max(1, Math.min(9999, Math.round(+(p.settings && p.settings.tutorialRev) || 1))) }, samples: !Array.isArray(p.pieces) };
+  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, relations, curious, life, visit, litter, line, genres, office, friday, rewards: normalizeRewards(p.settings && p.settings.rewards), tutorialRev: Math.max(1, Math.min(9999, Math.round(+(p.settings && p.settings.tutorialRev) || 1))) }, samples: !Array.isArray(p.pieces) };
 }
 /* The curator's "Skip to tomorrow" moves every daily system forward together. */
 let DAY_SHIFT = 0;
@@ -2142,6 +2152,16 @@ const TEXT = {
   "jan.overtime":      { g: "Janitor", l: "Still watering after the visit's loop is over (overtime)", v: [["[PLACEHOLDER: the janitor grumbling about overtime]"]] },
   "jan.break":         { g: "Janitor", l: "On his break in the staff room", v: [["[PLACEHOLDER: the janitor on his break]"]] },
   "jan.early":         { g: "Janitor", l: "On an early break, because the plants were already watered", v: [["[PLACEHOLDER: the janitor on an early break, thanks to whoever watered the plants]"]] },
+  "supply.pickShop":   { g: "Supplies", l: "Picking up the shop's stock box in the basement", v: [["[PLACEHOLDER: a box of today's shop stock, by the garage door]"]] },
+  "supply.pickCafe":   { g: "Supplies", l: "Picking up the café's supply box in the basement", v: [["[PLACEHOLDER: a box of café supplies: cups, lids, beans]"]] },
+  "supply.hands":      { g: "Supplies", l: "Trying to carry a second box", v: [["[PLACEHOLDER: one box at a time]"]] },
+  "supply.wrong":      { g: "Supplies", l: "Bringing the shop's box to the barista, or the café's to the shopkeeper", v: [["[PLACEHOLDER: that box isn't for them]"]] },
+  "supply.shopThanks": { g: "Supplies", l: "The shopkeeper, when you bring today's stock (the shop opens)", v: [["[PLACEHOLDER: the shopkeeper thanks you for the stock and opens the shop]"]] },
+  "supply.cafeThanks": { g: "Supplies", l: "The barista, when you bring the café's supplies (she's ready for the rush)", v: [["[PLACEHOLDER: the barista thanks you for the supplies]"]] },
+  "supply.free":       { g: "Supplies", l: "Winding down: the barista's free drink, if you brought her supplies", v: [["[PLACEHOLDER: the barista gives you a free drink for helping earlier]"]] },
+  "shop.stocking":     { g: "Supplies", l: "The shop counter (or the shopkeeper) while he's still stocking the shelves", v: [["[PLACEHOLDER: the shopkeeper is busy stocking; the shop's not open yet]"]] },
+  "line.wait":         { g: "Supplies", l: "The café counter when there's a line ahead of you", v: [["[PLACEHOLDER: there's a line; join it at the back]"]] },
+  "line.inLine":       { g: "Supplies", l: "Asking someone in the café line to move", v: [["[PLACEHOLDER: sorry, I'm in line]"]] },
   "popcorn.ask":       { g: "Screening nook", l: "The popcorn stand ({price} tokens)", v: [["[PLACEHOLDER: the popcorn stand: a bag of popcorn for {price} tokens?]"]] },
   "popcorn.got":       { g: "Screening nook", l: "Getting popcorn", v: [["[PLACEHOLDER: you get a bag of popcorn]"]] },
   "popcorn.poor":      { g: "Screening nook", l: "Popcorn, without enough tokens", v: [["[PLACEHOLDER: not enough tokens for popcorn]"]] },
@@ -2305,7 +2325,7 @@ const TALK_DEFAULTS = {
 /* ---------- Achievements ----------
    Pure data: each one is a name, a description, one of these stats and a target. The curator's Achievements tab edits them. */
 const ACH_STATS = {
-  dusted: "Frames dusted", straightened: "Frames straightened", litter: "Litter picked up", watered: "Plants watered", mugs: "Mugs found", wiped: "Cases wiped",
+  dusted: "Frames dusted", straightened: "Frames straightened", litter: "Litter picked up", supplies: "Deliveries brought up", watered: "Plants watered", mugs: "Mugs found", wiped: "Cases wiped",
   helped: "Visitors who got the right piece", recs: "Games recommended to visitors", pets: "Times petting the cat", closings: "Times closing the museum", photos: "Photos taken",
   bothSides: "Cases read on both sides", items: "Gift shop items owned",
   drinks: "Drinks ordered", naps: "Bench naps", rooms: "Different rooms visited", microwave: "Microwave incidents", segway: "Segway rides",
@@ -5214,6 +5234,7 @@ class Game {
       const order = PROBLEMS.map(pr => [strSeed(key + pr.id), pr]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
       d.picks = { key, ids: order.slice(0, 3 + (strSeed(key) % 2)).map(pr => pr.id) };
     }
+    if (this.forceProblems) d.picks.ids = this.forceProblems.slice(); // the curator's preview: this loop's problems, picked by hand
     const r = this.room, plan = r && r.base ? Object.values(this.crowdPlan(r, beat)) : null, sum = k => plan.reduce((a, p) => a + (k === "now" ? p.now.length : p[k]), 0);
     const here = plan ? { now: sum("now"), want: sum("want"), base: sum("base"), room: r.id } : null;
     return { min, minutes: V.minutes, repeat: V.repeat, over, beat, beatName: over ? "Over for this visit" : BEATS[beat], loop, day, unveiling, running, crowd: this.crowdToday(), problems: over ? [] : d.picks.ids, paused: d.paused, here, last: d.last ? { what: d.last.what, ago: Math.round((this.t - d.last.t) / 60) } : null };
@@ -5240,7 +5261,7 @@ class Game {
       r.fresh = false;
       groups.forEach(([g, p]) => {
         const extra = p.now.length - p.want;
-        if (extra > 0) { const off = p.now.filter(far).slice(0, extra); r.npcs = r.npcs.filter(n => !off.includes(n)); }
+        if (extra > 0) { const off = p.now.filter(n => far(n) && !n.queue).slice(0, extra); r.npcs = r.npcs.filter(n => !off.includes(n)); }
         for (let i = 0; i < -extra; i++) { // more people: they're already around (strolling in that wing)
           const at = this.freeSpot(r, null, p.zone) || (p.zone ? null : this.freeSpot(r)); if (!at || Math.abs(at[0] - this.player.x) + Math.abs(at[1] - this.player.y) < 2) continue;
           r.npcs.push(this.crowdPerson(at[0], at[1], p.zone));
@@ -5253,14 +5274,14 @@ class Game {
     const over = groups.map(([g, p]) => [p.now.length - p.want, p]).filter(x => x[0] > 0).sort((x, y) => y[0] - x[0])[0];
     const under = groups.map(([g, p]) => [p.want - p.now.length, p]).filter(x => x[0] > 0).sort((x, y) => y[0] - x[0])[0];
     if (over) {
-      const n = over[1].now.find(n => !n.moving && !n.sitting && Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 2); if (n) { n.leaving = true; n.stroll = true; n.leaveT = 0; n.alpha = 1; n.route = null; n.aside = null; n.timer = 0; this.dirClock.last = { what: "out", t: this.t }; }
+      const n = over[1].now.find(n => !n.moving && !n.sitting && !n.queue && Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 2); if (n) { n.leaving = true; n.stroll = true; n.leaveT = 0; n.alpha = 1; n.route = null; n.aside = null; n.timer = 0; this.dirClock.last = { what: "out", t: this.t }; }
     } else if (under) {
       const at = def.enterAt || def.exitTo || def.spawn, [x, y] = at || []; if (at === undefined || !this.tileFree(r, x, y) || (this.player.x === x && this.player.y === y)) return;
       // They head straight for somewhere in that wing (in front of a piece, if one's free) and only look around once there.
       // Some stop at the café counter first (more of them while it's busy), then go on to their wing (Joe 10/10).
-      const zone = under[1].zone, cup = Math.random() * 100 < [20, 30, 40, 20][d.beat] ? this.freeCounterSpot(r) : null, goal = cup || (zone ? this.arrivalSpot(r, zone) : null);
-      const who = Object.assign(this.crowdPerson(x, y, zone), { dir: "up", timer: goal ? 0 : 30, goalT: goal, alpha: 0, fadeIn: true, entering: true });
-      if (cup) { who.coffee = true; who.drink = null; who.bag = false; }
+      const zone = under[1].zone, cup = Math.random() * 100 < [20, 30, 40, 20][d.beat] && this.lineOpen(r), goal = cup ? null : zone ? this.arrivalSpot(r, zone) : null;
+      const who = Object.assign(this.crowdPerson(x, y, zone), { dir: "up", timer: goal || cup ? 0 : 30, goalT: goal, alpha: 0, fadeIn: true, entering: true });
+      if (cup) { who.queue = { phase: "join" }; who.drink = null; who.bag = false; }
       r.npcs.push(who); this.dirClock.last = { what: "in", t: this.t };
     }
   }
@@ -5322,6 +5343,8 @@ class Game {
   shopCounter() {
     if (this.closing) { this.say(this.tx("shop.closed")); return; }
     if (this.onBreak === "shopkeeper") { this.say(this.tx("sun.break")); return; }
+    if (this.carryBox) { this.deliver("shopkeeper"); return; }
+    if (this.room.npcs.some(n => n.role === "shopkeeper" && n.stocking)) { this.say(this.tx("shop.stocking")); return; } // still stocking the shelves
     if (this.room.npcs.some(n => n.role === "shopkeeper")) {
       this.choose("Welcome in! What can I do for you?", ["Browse the shop", "Just chatting", "Never mind"], i => {
         if (i === 0) this.openShop();
@@ -5582,6 +5605,11 @@ class Game {
   cafe(menu) {
     if (this.closing) { this.say(this.tx("cafe.closed")); return; }
     if (this.onBreak === "barista") { this.say(this.tx("sun.break")); return; }
+    if (this.carryBox) { this.deliver("barista"); return; }
+    if (!menu && !this.tut && this.lineAhead()) { this.say(this.tx("line.wait")); return; } // there's a line: join it at the back
+    if (!menu && !this.drink && this.sup && this.sup.cafeDone && !this.sup.freeGiven && (this.director().beat >= 3 || this.director().over)) { // winding down: thanks for the help earlier
+      this.sup.freeGiven = true; this.drink = { kind: 0, name: this.pack.settings.shop.drinks[0].name, sips: 0, color: "", iced: !!this.pack.settings.shop.drinks[0].iced }; this.sipClock = 240; this.say(this.tx("supply.free")); return;
+    }
     if (!menu && !this.tut && this.weekday() === 4 && !this.dayState().thuDone && this.dayState().thuSeat) { // Thursday: the barista points you to the free seat, then takes your order
       this.say(this.tx("thu.ask"), () => this.cafe(true));
       return;
@@ -6649,7 +6677,7 @@ class Game {
       const c = this.cine; c.blend += (c.goal > c.blend ? 1 : -1) / 40; c.blend = Math.max(0, Math.min(1, c.blend));
       if (this.mode === "busy" && c.wait > 0 && --c.wait === 0 && c.then) { const fn = c.then; c.then = null; fn(); }
     }
-    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.updateDirector(); this.updateLitter(); this.updateJanitor();
+    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.updateDirector(); this.updateLitter(); this.updateSupplies(); this.updateJanitor();
     if (this.petT > 0) this.petT--;
     if (this.t % 20 === 0) this.flushToasts();
     if (this.flickerT > 0) this.flickerT--;
@@ -6803,9 +6831,13 @@ class Game {
       if (into) { into.x = fx; into.y = fy; into.moving = false; into.prog = 0; into.route = null; npc = into; }
       else if (out) { out.moving = false; out.prog = 0; out.route = null; npc = out; }
     }
+    if (npc && this.carryBox && (npc.role === "shopkeeper" || npc.role === "barista")) { this.deliver(npc.role); return; } // a delivery box for them
+    if (npc && npc.role === "shopkeeper" && npc.stocking) { this.say(this.tx("shop.stocking")); return; }
     if (npc && npc.janitor && this.carry) { this.faceYou(npc, 240); const k = this.carry; this.carry = 0; for (let i = 0; i < k; i++) this.count("litter"); this.say(this.tx("jan.takes", { n: k })); return; } // into his can
     if (npc) { npc.timer = 180; if (!this.deskStaff(npc) && !npc.sitting && !this.facingWall(npc)) this.faceYou(npc, 240); if (npc.patrol) npc.pause = 120; this.talkTo(npc); return; }
     const e = this.room.events[fx + "," + fy]; if (e) { this.runEvent(e); return; }
+    const bx = this.sup && this.sup.boxes.find(b => b.room === this.room.id && b.x === fx && b.y === fy); // a delivery box by the garage door
+    if (bx) { if (this.carryBox) { this.say(this.tx("supply.hands")); return; } this.sup.boxes.splice(this.sup.boxes.indexOf(bx), 1); this.carryBox = bx.kind; this.say(this.tx(bx.kind === "cafe" ? "supply.pickCafe" : "supply.pickShop")); return; }
     const L = this.litter && this.litter[this.room.id], li = L ? L.findIndex(l => l.x === fx && l.y === fy) : -1; // litter on the floor in front of you
     if (li >= 0) {
       if ((this.carry || 0) >= 3) { this.say(this.tx("litter.handsFull")); return; }
@@ -6827,6 +6859,7 @@ class Game {
       if (n.fadeIn) { n.alpha = Math.min(1, (n.alpha || 0) + 1 / 24); if (n.alpha >= 1) { n.fadeIn = false; delete n.alpha; } } // someone just came in through the doors
       if (n.leaving) { this.walkOut(n, n.leaveTo || def.exitTo || ROOMS[this.room.id].spawn); continue; }
       if (n.janitor) { if (n.moving) this.advance(n); continue; } // the janitor goes by his routine (updateJanitor)
+      if (n.queue && !n.moving && this.mode === "walk") { this.queueStep(n); continue; } // in (or joining) the café line
       this.updateLife(n);
       if (n.follow) { this.followStep(n); continue; } // a curious visitor following you around
       if (n.moving) { this.advance(n); continue; }
@@ -6841,6 +6874,7 @@ class Game {
 
   /* "Could I get by?": step to the nearest open tile that isn't straight ahead of you. Boxed in? They teleport. */
   askToMove(n, named) {
+    if (n.queue) { this.say(named(this.tx("line.inLine"))); return; } // in the café line: they keep their place
     const p = this.player, r = this.room, W = r.w, [fx, fy] = DIRS[p.dir], ahead = new Set();
     for (let k = 0; k <= 3; k++) ahead.add((p.x + fx * k) + "," + (p.y + fy * k));
     const prev = new Map([[n.y * W + n.x, -1]]), q = [[n.x, n.y, 0]]; let goal = null;
@@ -6931,7 +6965,7 @@ class Game {
       const views = opts.filter(([x, y]) => r.cases.some(c => c.piece && c.x === x && Math.abs(c.y - y) === 1) || r.hung.some(h => y === h.y + 2 && (h.x === x || h.x + 1 === x)));
       if (views.length && Math.random() < 0.5) opts.splice(0, opts.length, ...views);
       let t = n.goalT || null; // someone was in the way: try the same spot again
-      if (!t && n.random && !n.cur && !n.drink && !n.bag && Math.random() * 100 < this.pack.settings.life.coffee) { const sp = this.freeCounterSpot(r); if (sp) { n.coffee = true; n.seat = null; t = sp; } } // a coffee run (Joe 10/10)
+      if (!t && n.random && !n.cur && !n.drink && !n.bag && Math.random() * 100 < this.pack.settings.life.coffee * (this.director().beat === 2 ? 2.5 : 1) && this.lineOpen(r)) { n.queue = { phase: "join" }; n.seat = null; n.route = null; return; } // a coffee run: into the line (Joe 10/10)
       if (!t && n.random && !n.cur && Math.random() * 100 < this.pack.settings.life.sits) { const st = this.seatFor(n); if (st) { n.seat = st[0]; t = st[1]; } } // now and then, somewhere to sit
       if (!t) { n.seat = null; n.coffee = false; t = opts[(Math.random() * opts.length) | 0]; }
       n.goalT = t;
@@ -6968,6 +7002,119 @@ class Game {
     }
     return out.length ? out[(Math.random() * out.length) | 0] : null;
   }
+  /* ----- Supplies (living museum, Step 4: the supplies chain) -----
+     When the loop's problems include the shopkeeper's stock or the café line, that morning's deliveries turn up by the
+     basement's garage door: the shop's stock and the café's supplies, one box each. You carry one at a time.
+     - The shop's stock: until it's brought up, the shopkeeper is out on the floor stocking the shelves and the shop
+       isn't open (until the busy part's over, then he gives up and opens anyway).
+     - The café's supplies: with them the barista serves quickly; without them each order takes much longer, so at the
+       rush the line grows. Bring them and there's a free drink for you while it's winding down.
+     The line itself is always there: people wanting a coffee queue up in a row of spots from the counter, step up as
+     the one in front is served, and won't step aside for you (they're in line). You queue like everyone else. */
+  supState() {
+    const d = this.director(), key = todayISO() + ":" + d.loop;
+    if (!this.sup || this.sup.key !== key) {
+      const boxes = [], S = this.rooms && this.rooms.storage, spot = i => { // by the garage door (or wherever there's floor)
+        const g = S && (ROOMS.storage.wallArt || []).find(w => w.key === "garage_door"), gx = g ? g.x : 6, y = 3;
+        const c = [[gx, y], [gx + 2, y], [gx + 1, y + 1], [gx - 1, y], [gx + 3, y]].filter(([x, yy]) => S && S.solid[yy] && S.solid[yy][x] === false && !S.events[x + "," + yy]);
+        return c[i] || c[0] || [7, 4];
+      };
+      if (d.problems.includes("stock")) { const [x, y] = spot(0); boxes.push({ room: "storage", x, y, kind: "shop" }); }
+      if (d.problems.includes("line")) { const [x, y] = spot(boxes.length ? 1 : 0); boxes.push({ room: "storage", x, y, kind: "cafe" }); }
+      this.sup = { key, boxes, shopDone: !d.problems.includes("stock"), cafeDone: false, cafeNeeded: d.problems.includes("line"), freeGiven: false };
+      this.carryBox = null;
+    }
+    return this.sup;
+  }
+  deliver(role) {
+    const want = role === "shopkeeper" ? "shop" : "cafe";
+    if (this.carryBox !== want) { this.say(this.tx("supply.wrong")); return; }
+    this.carryBox = null; this.count("supplies");
+    if (want === "shop") this.sup.shopDone = true; else this.sup.cafeDone = true;
+    this.say(this.tx(want === "shop" ? "supply.shopThanks" : "supply.cafeThanks"));
+  }
+  updateSupplies() {
+    if (this.headless || this.tut || !this.rooms || !this.rooms.museum || !this.pack) return;
+    const S = this.supState(), d = this.director(), M = this.rooms.museum, sk = M.npcs.find(n => n.role === "shopkeeper");
+    // The shopkeeper: out stocking the shelves until his box comes up (or the rush is over and he opens anyway).
+    const stocking = !S.shopDone && !this.closing && !d.over && d.beat < 2;
+    if (sk && stocking && !sk.stocking) {
+      const u = M.props.find(p => p.unit !== undefined), at = u && this.janBeside(M, u.x, u.y);
+      if (at && this.tileFree(M, at[0], at[1]) && !(this.player.x === at[0] && this.player.y === at[1])) { sk.home = [sk.x, sk.y, sk.dir]; sk.x = at[0]; sk.y = at[1]; sk.dir = this.janFace(at, u.x, u.y); sk.stocking = true; }
+    } else if (sk && !stocking && sk.stocking) {
+      const [x, y, dir] = sk.home; if (this.tileFree(M, x, y) && !(this.player.x === x && this.player.y === y)) { sk.x = x; sk.y = y; sk.dir = dir; sk.stocking = false; }
+    }
+  }
+  /* The café line: a row of spots from the counter, out toward the nearest hallway and along it. */
+  queueSpots(r) {
+    if (r.queueAt !== undefined) return r.queueAt;
+    const front = this.counterSpots(r)[Math.floor(this.counterSpots(r).length / 2)], out = [];
+    if (front && r.zoneAt) {
+      const W = r.w, ok = (x, y) => r.solid[y] && r.solid[y][x] === false && !r.events[x + "," + y] && !(r.noWander && r.noWander.has(x + "," + y)) && !this.counterSpots(r).some(([a, b]) => (a !== front[0] || b !== front[1]) && a === x && b === y);
+      const hall = (x, y) => (this.zoneAt(r, x, y) || {}).kind === "hall", dist = new Map(), q = [];
+      for (let y = 0; y < r.h; y++) for (let x = 0; x < W; x++) if (ok(x, y) && hall(x, y)) { dist.set(y * W + x, 0); q.push([x, y]); }
+      for (let i = 0; i < q.length; i++) { const [x, y] = q[i], dd = dist.get(y * W + x); for (const [dx, dy] of Object.values(DIRS)) { const nx = x + dx, ny = y + dy, k = ny * W + nx; if (ok(nx, ny) && !dist.has(k)) { dist.set(k, dd + 1); q.push([nx, ny]); } } }
+      let [x, y] = front, dir = [0, 1]; out.push([x, y]);
+      for (let n = 0; n < 24; n++) { // down from the counter, then always toward the hallway (straight on when that's as good), then along it
+        const here = dist.has(y * W + x) ? dist.get(y * W + x) : 99;
+        const opts = Object.values(DIRS).map(([dx, dy]) => [dx, dy, x + dx, y + dy]).filter(([, , nx, ny]) => ok(nx, ny) && !out.some(([a, b]) => a === nx && b === ny));
+        const dv = o => (dist.has(o[3] * W + o[2]) ? dist.get(o[3] * W + o[2]) : 99) - (o[0] === dir[0] && o[1] === dir[1] ? 0.5 : 0);
+        const best = here > 0 ? opts.filter(o => dv(o) < here).sort((a, b) => dv(a) - dv(b))[0] : opts.find(o => o[0] === dir[0] && o[1] === dir[1]);
+        if (!best) break; dir = [best[0], best[1]]; x = best[2]; y = best[3]; out.push([x, y]);
+      }
+    }
+    return (r.queueAt = out);
+  }
+  lineOpen(r) { return !!r.npcs.some(n => n.role === "barista") && this.queueSpots(r).length > 0 && r.npcs.filter(n => n.queue).length < this.pack.settings.line.max; }
+  lineAhead() { // anyone in line who isn't behind you (or you're not in it at all)
+    const r = this.room, Q = this.queueSpots(r); if (!Q.length) return false;
+    const me = Q.findIndex(([x, y]) => x === this.player.x && y === this.player.y);
+    if (me === 0) return false;
+    return r.npcs.some(n => n.queue && n.queue.phase === "in" && (me < 0 || Q.findIndex(([x, y]) => x === n.x && y === n.y) < me));
+  }
+  serveTime() { const S = this.sup, L = this.pack.settings.line; return 60 * (S && S.cafeNeeded && !S.cafeDone ? L.slow : L.fast); }
+  queueStep(n) {
+    const r = this.room, Q = this.queueSpots(r), L = this.pack.settings.line;
+    if (!Q.length || !r.npcs.some(m => m.role === "barista") || this.closing) { n.queue = null; return; }
+    if (n.stepWait > 0) { n.stepWait--; return; }
+    const occ = (x, y) => (this.player.x === x && this.player.y === y) || r.npcs.some(m => m !== n && m.x === x && m.y === y);
+    const idx = Q.findIndex(([x, y]) => x === n.x && y === n.y);
+    if (n.queue.phase !== "in" || idx < 0) { // joining: walk to the first free spot behind everyone (nobody cuts in)
+      let last = -1; Q.forEach(([x, y], i) => { if (occ(x, y) || r.npcs.some(m => m !== n && m.queue && m.queue.to === i)) last = i; });
+      const to = last + 1;
+      if (to >= Q.length || to >= L.max) { n.queue = null; n.timer = 60; return; } // the line's too long: maybe later
+      n.queue.to = to;
+      if (idx === to) { n.queue.phase = "in"; n.route = null; return; }
+      if (!n.route || !n.route.length || n.queue.goal !== to) { n.queue.goal = to; n.route = this.npcPath(n, Q[to][0], Q[to][1], true); }
+      if (!n.route || !n.route.length) { if ((n.queue.stuck = (n.queue.stuck || 0) + 1) > 12) n.queue = null; n.stepWait = 20; return; }
+      const d = n.route[0]; if (this.tryMove(n, d)) { n.route.shift(); n.stepWait = this.strollWait(); } else { n.route = null; n.stepWait = 15; }
+      return;
+    }
+    n.queue.to = idx;
+    if (idx === 0) { // at the counter: order, and wait for it
+      n.dir = "up";
+      if (n.queue.serve === undefined) n.queue.serve = this.serveTime();
+      if (--n.queue.serve > 0) return;
+      n.queue = null; n.drink = this.npcDrink(); n.route = null; n.goalT = null; n.timer = 20; // served: off they go, and about half find a stool
+      const st = Math.random() < 0.5 ? this.seatFor(n, this.cafeZone(r)) : null; if (st) { n.seat = st[0]; n.goalT = st[1]; }
+      return;
+    }
+    const [px, py] = Q[idx - 1], dir = px > n.x ? "right" : px < n.x ? "left" : py > n.y ? "down" : "up";
+    if (!occ(px, py)) { if (this.tryMove(n, dir)) n.stepWait = 8; } else n.dir = dir; // step up when the spot ahead frees
+  }
+  supplyInfo() {
+    const S = this.sup; if (!S) return "";
+    const Q = this.rooms.museum ? this.rooms.museum.npcs.filter(n => n.queue && n.queue.phase === "in").length : 0;
+    const box = k => S.boxes.some(b => b.kind === k) ? "in the basement" : this.carryBox === k ? "in your hands" : "brought up";
+    return "Supplies: " + (S.shopDone && !S.boxes.some(b => b.kind === "shop") && this.carryBox !== "shop" ? (this.director().problems.includes("stock") ? "shop stock brought up" : "the shop's fine") : "shop stock " + box("shop") + (this.rooms.museum && this.rooms.museum.npcs.some(n => n.stocking) ? " (the shopkeeper's stocking)" : ""))
+      + "; " + (S.cafeNeeded ? "café supplies " + box("cafe") : "the café's prepped") + ". Line: " + Q + " waiting, " + Math.round(this.serveTime() / 60) + " s an order.";
+  }
+  fillLine(k) { // the curator's "A long line": k people already queued up
+    const r = this.room, Q = this.queueSpots(r); if (!Q.length) return 0; let n = 0;
+    for (let i = 0; i < Q.length && n < k; i++) { const [x, y] = Q[i]; if (!this.tileFree(r, x, y) || (this.player.x === x && this.player.y === y)) continue; r.npcs.push(Object.assign(this.crowdPerson(x, y, this.cafeZone(r)), { queue: { phase: "in" }, drink: null, bag: false, dir: "up" })); n++; }
+    return n;
+  }
+  setProblems(ids) { this.forceProblems = ids; if (this.dirClock) this.dirClock.picks = null; this.sup = null; }
   /* ----- Litter (living museum, Step 3: the litter chain) -----
      The bins in the lobby and the museum fill up as the visit goes on (faster while it's busy, on busy days, and on loops
      where the litter problem is one of the director's picks). A full bin overflows: whatever else goes in lands on the
@@ -7218,6 +7365,7 @@ class Game {
   /* ----- drawing ----- */
   /* A leaving visitor heads for the room's exit, then fades away. */
   walkOut(n, to) {
+    if (n.queue) n.queue = null; // heading home: out of the café line
     if (n.seat) { if (n.sitting && n.sitFrom) [n.x, n.y] = n.sitFrom; n.sitting = false; n.seat = null; } // sitting on their own: up first
     n.leaveT++;
     if (n.fading) { n.alpha -= 1 / 24; if (n.alpha <= 0) { this.room.npcs = this.room.npcs.filter(m => m !== n); if (n.onGone) n.onGone(); } return; }
@@ -7674,6 +7822,7 @@ class Game {
     for (const st of r.stairs) this.drawSlot(st.kind === "up" ? "stair_up" : "stair_down", 0, 0, st.x * T - cx, st.y * T - cy);
     this.drawReadBorders(r, cx, cy); // on the floor, under the cases and people
     for (const l of (this.litter && this.litter[r.id]) || []) this.drawSlot("litter", l.k, 0, l.x * T - cx + l.ox, l.y * T - cy + l.oy); // on the floor, under everyone
+    for (const b of (this.sup && this.sup.boxes) || []) if (b.room === r.id) this.drawSlot("supply_box", b.kind === "cafe" ? 1 : 0, 0, b.x * T - cx, b.y * T - cy); // deliveries waiting by the garage door
     for (const c of r.cases) this.drawCase(c, cx, cy);
     for (const p of r.props) this.drawProp(p, cx, cy);
     this.drawReadBorders(r, cx, cy, true); // read paintings: a faint sparkle
@@ -7714,6 +7863,7 @@ class Game {
       if (panAt && c.dir === "up") this.drawSlot("jan_dustpan", 0, 0, ...panAt);
       this.drawSlot(sheet, c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
       if (tbAt && !tbFirst) this.drawSlot("trash_bag", 0, 0, ...tbAt);
+      if (c === this.player && this.carryBox && !c.sitting) this.drawSlot("supply_box", this.carryBox === "cafe" ? 1 : 0, 0, sx, sy - 11); // a delivery box, carried over your head
       if (panAt && c.dir !== "up") this.drawSlot("jan_dustpan", 0, 0, ...panAt);
       if (broomAt && c.dir !== "up") this.drawSlot("jan_broom", broomF, 0, ...broomAt);
       if (c === this.player && !this.full) { // your gear: the GOQ hat and shades (a fake pair has only its right lens)
@@ -7816,7 +7966,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 litter 4";
+const VERSION = "2026-11-18 supplies";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
