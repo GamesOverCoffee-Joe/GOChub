@@ -388,6 +388,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
               <label class="btn" style="display:flex;gap:6px;align-items:center" title="Set how many tokens you have in this preview">Tokens <input id="walletIn" type="number" min="0" max="9999" style="width:70px"></label>
               <button class="btn" type="button" id="lineBtn" title="Eight people already queued up at the café counter (go to the café first)">A long line</button>
               <button class="btn" type="button" id="binsBtn" title="Every bin in the lobby and museum full to the top, with a little litter beside each">Fill the bins</button>
+              <button class="btn" type="button" id="tourBtn" title="Go stand beside the tour group (or, while he's missing, their lost kid)">Find the tour</button>
               <button class="btn" type="button" id="janBtn" title="Go stand beside the janitor, wherever his chores have taken him">Find the janitor</button>
               <button class="btn" type="button" id="dayBtn" title="The next day: curious visitors come back, dust settles, the museum opens again">Tomorrow</button>
             </div></div>
@@ -412,7 +413,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 supplies 4";
+window.GOQ_WANT = "2026-11-18 tour";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -666,6 +667,7 @@ $("#walletIn").addEventListener("focus", () => { $("#walletIn").value = (game &&
 $("#walletIn").addEventListener("change", () => { if (!game || !game.progress) return; game.progress.tokens = Math.max(0, Math.min(9999, Math.round(+$("#walletIn").value || 0))); game.saveProgress(); game.updateHud(true); status("Test wallet: " + game.progress.tokens + " tokens."); });
 $("#lineBtn").addEventListener("click", () => { const n = game.fillLine(8); status(n ? n + " people in line at the café." : "Go to the café first: the line starts at its counter.", !n); showClock(); stage.focus({ preventScroll: true }); });
 $("#binsBtn").addEventListener("click", () => { game.fillBins(); status("Every bin is full, with litter beside each."); showClock(); stage.focus({ preventScroll: true }); });
+$("#tourBtn").addEventListener("click", () => { game.closeAll(); if (!game.findTour()) status("No tour to find right now (its problem may be off), or no room beside them.", true); stage.focus({ preventScroll: true }); });
 $("#janBtn").addEventListener("click", () => { game.closeAll(); if (!game.findJanitor()) status("Couldn't get beside the janitor just now. Try again in a moment.", true); stage.focus({ preventScroll: true }); });
 $("#dayBtn").addEventListener("click", () => { game.closeAll(); game.skipDay(); stage.focus({ preventScroll: true }); });
 // "Reset chores" also reopens the museum: visitors come back and the lights come on.
@@ -2454,7 +2456,7 @@ function renderTokens() {
   const k = (key, label, note) => num(() => r[key], v => { r[key] = v; }, label, note);
   const sec = (title, kids) => wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [el("h3", { text: title, style: "margin:0 0 8px" }), el("div", { class: "fields" }, kids)]));
   sec("Recommending", [k("helped", "The right piece for a curious visitor", "Each time you recommend a visitor the piece they were looking for.")]);
-  sec("Chores", [k("dusted", "Dusting a frame"), k("straightened", "Straightening a frame"), k("watered", "Watering a plant"), k("mugs", "Returning the curator's mug"), k("litter", "Picking up litter (each piece, once it's in a bin or the janitor's dustpan)"), k("supplies", "Bringing up a delivery box (the shop's stock or the café's supplies)"), k("wiped", "Wiping a case"), k("closings", "Closing the museum")]);
+  sec("Chores", [k("dusted", "Dusting a frame"), k("straightened", "Straightening a frame"), k("watered", "Watering a plant"), k("mugs", "Returning the curator's mug"), k("litter", "Picking up litter (each piece, once it's in a bin or the janitor's dustpan)"), k("supplies", "Bringing up a delivery box (the shop's stock or the café's supplies)"), k("tour", "Helping the tour (the usher's coffee, explaining a piece, bringing the lost kid back: each)"), k("wiped", "Wiping a case"), k("closings", "Closing the museum")]);
   sec("Days of the week", [k("boxes", "Monday: all five boxes for the conservator"), k("kid", "Tuesday: the lost kid back to his mom"),
     ...["a common photo", "an uncommon photo", "a rare photo", "the rarest photos"].map((t, i) => num(() => r.artist[i], v => { r.artist[i] = v; }, "Wednesday: the artist, for " + t)),
     k("trivia", "Thursday: each right trivia answer"), k("triviaPerfect", "Thursday: bonus for all five")]);
@@ -2799,7 +2801,7 @@ function showClock() {
   info.textContent = (d.over ? "The visit's loop has ended (" + d.minutes + " minutes); the museum stays at its usual crowd. Jump to a quarter to run it again." : "Minute " + m + ":" + String(sec).padStart(2, "0") + " of " + d.minutes + " · " + d.beatName + (d.loop ? " · loop " + (d.loop + 1) : "") + (d.running ? "" : d.paused ? " · paused" : " · stopped (closing or tutorial)") + ". Problems on: " + names.join("; ") + (d.problems.some(id => !(GOQ.PROBLEMS.find(x => x.id === id) || {}).built) ? " (not built yet: " + d.problems.filter(id => !(GOQ.PROBLEMS.find(x => x.id === id) || {}).built).join(", ") + ")" : "") + ".");
   const here = d.here ? " In this room: " + d.here.now + " strolling, aiming for " + d.here.want + " (" + d.here.base + " at the busiest)." : " This room has no crowd of its own.";
   const last = d.last ? " Last: someone " + (d.last.what === "in" ? "came in through the doors" : "headed out") + ", " + d.last.ago + " s ago." : "";
-  info.textContent += here + last + (game.janitorInfo ? " " + game.janitorInfo() : "") + (game.litterInfo ? " " + game.litterInfo() : "") + (game.supplyInfo ? " " + game.supplyInfo() : "");
+  info.textContent += here + last + (game.janitorInfo ? " " + game.janitorInfo() : "") + (game.litterInfo ? " " + game.litterInfo() : "") + (game.supplyInfo ? " " + game.supplyInfo() : "") + (game.tourInfo ? " " + game.tourInfo() : "");
   $("#clockPause").textContent = d.paused ? "Resume" : "Pause";
   document.querySelectorAll("#segBeat button").forEach(b => b.setAttribute("aria-pressed", String(!d.over && +b.dataset.v === d.beat)));
 }
