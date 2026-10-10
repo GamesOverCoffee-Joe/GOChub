@@ -240,6 +240,8 @@ Built one step at a time, each playable on its own:
 5. **The tour chain**: the tour group, the usher's coffee, explaining a piece, the lost kid.
 6. **The two on their own**: the conservator, the mixed-up item.
 7. **Day modifiers and the unveiling.**
+8. **The cues pass** *(Joe 10/10: once the chains are done)*. Every problem gets a cue you can read before it's too late, designed together so they share one look (Joe noticed nothing told him the barista needed help, and barely anything for the shopkeeper). Starting points, from the problems table: the barista prepping alone with stacks of cups and boxes, the shopkeeper among the shelves with boxes and customers waiting at an empty counter, the usher's empty mug and yawning, full bins. Cheap ones to consider: the shift sheet listing the day's deliveries, a coworker remark, overheard visitor lines, a small emote over someone who needs a hand.
+9. **Small things found while testing** *(to look at with the cues pass)*: you can hold up the café line by standing at the counter and not ordering (Joe 10/10: funny; maybe just a reaction, like the people behind you getting impatient, rather than a fix).
 
 ### **Phase 4: NPC-to-NPC moments**
 

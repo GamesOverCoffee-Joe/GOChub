@@ -9,6 +9,7 @@ Ideas and chores parked on purpose. Nothing here is built yet.
 - **Placeholder text during the living museum work.** While we build the phases in `LIVING-MUSEUM-PLAN.md`, unwritten lines read `[PLACEHOLDER: …]` (the seven left as of 2026-10-09 do too). Outside that work, go back to the usual bracketed placeholders.
 - **The living museum plan.** The volunteer shift, coworkers doing chores, a daily rhythm and NPC-to-NPC moments, plus theater sound and the silly toys: all in `LIVING-MUSEUM-PLAN.md`, word for word. Joe adds changes there.
 
+- **Cues for the living museum's problems** (Joe 10/10): after the chains are built, a cues pass so every problem can be noticed in time (nothing points you to the barista's supplies yet, and the shopkeeper's is faint). Plan: `LIVING-MUSEUM-PLAN.md`, Build order 8. Also there: holding up the café line by standing at the counter without ordering.
 - **Photo chain-of-events mystery.** A long-haul chain: the conservator's secret exhibit, unlocked step by step through photos.
 - **What the figure is.** Still undecided.
 - **Batch fill.** The curator's Batch fill button stays: `batch-fill.html` will be uploaded later and updated then.
