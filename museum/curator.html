@@ -393,7 +393,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
             </div></div>
           <div class="pvsec"><span class="pvh">Visit clock</span>
             <div class="seg" id="segBeat" role="group" aria-label="Jump to a beat"><button type="button" data-v="0" title="Jump to this quarter of the visit">Settling in</button><button type="button" data-v="1" title="Jump to this quarter of the visit">Getting busy</button><button type="button" data-v="2" title="Jump to this quarter of the visit">Rush</button><button type="button" data-v="3" title="Jump to this quarter of the visit">Winding down</button></div>
-            <div id="probPick" style="display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;font-size:.8rem" title="This loop's problems. Untick Auto to pick them by hand (the preview only)"></div>
+            <div id="probPick" style="display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;font-size:.8rem" title="Every problem runs every loop. Untick Auto to turn some off and try others on their own (the preview only)"></div>
             <div style="display:flex;gap:6px;align-items:center;margin-top:6px"><button class="btn" type="button" id="clockPause" title="Stop or start the visit clock in this preview">Pause</button><button class="btn" type="button" id="clockFwd" title="Skip ahead one minute">+1 min</button><span id="clockInfo" class="pv-hint" style="margin:0;text-align:left;flex:1"></span></div>
           </div>
           <div class="pvsec"><span class="pvh">Start fresh</span>
@@ -412,7 +412,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 supplies 2";
+window.GOQ_WANT = "2026-11-18 supplies 3";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -2796,7 +2796,7 @@ $("#clockFwd").addEventListener("click", () => { const d = game.director(); game
 function showClock() {
   const d = game.director(), m = Math.floor(d.min), sec = Math.floor((d.min - m) * 60), info = $("#clockInfo"); if (!info) return;
   const names = d.problems.map(id => { const pr = GOQ.PROBLEMS.find(x => x.id === id); return pr ? pr.who + ": " + pr.label : id; });
-  info.textContent = (d.over ? "The visit's loop has ended (" + d.minutes + " minutes); the museum stays at its usual crowd. Jump to a quarter to run it again." : "Minute " + m + ":" + String(sec).padStart(2, "0") + " of " + d.minutes + " · " + d.beatName + (d.loop ? " · loop " + (d.loop + 1) : "") + (d.running ? "" : d.paused ? " · paused" : " · stopped (closing or tutorial)") + ". This loop's problems (not built yet): " + names.join("; ") + ".");
+  info.textContent = (d.over ? "The visit's loop has ended (" + d.minutes + " minutes); the museum stays at its usual crowd. Jump to a quarter to run it again." : "Minute " + m + ":" + String(sec).padStart(2, "0") + " of " + d.minutes + " · " + d.beatName + (d.loop ? " · loop " + (d.loop + 1) : "") + (d.running ? "" : d.paused ? " · paused" : " · stopped (closing or tutorial)") + ". Problems on: " + names.join("; ") + (d.problems.some(id => !(GOQ.PROBLEMS.find(x => x.id === id) || {}).built) ? " (not built yet: " + d.problems.filter(id => !(GOQ.PROBLEMS.find(x => x.id === id) || {}).built).join(", ") + ")" : "") + ".");
   const here = d.here ? " In this room: " + d.here.now + " strolling, aiming for " + d.here.want + " (" + d.here.base + " at the busiest)." : " This room has no crowd of its own.";
   const last = d.last ? " Last: someone " + (d.last.what === "in" ? "came in through the doors" : "headed out") + ", " + d.last.ago + " s ago." : "";
   info.textContent += here + last + (game.janitorInfo ? " " + game.janitorInfo() : "") + (game.litterInfo ? " " + game.litterInfo() : "") + (game.supplyInfo ? " " + game.supplyInfo() : "");
@@ -2804,7 +2804,7 @@ function showClock() {
   document.querySelectorAll("#segBeat button").forEach(b => b.setAttribute("aria-pressed", String(!d.over && +b.dataset.v === d.beat)));
 }
 setInterval(() => { if (tab === "preview") showClock(); }, 1000);
-/* This loop's problems: Auto (the director picks 3 or 4 by the date), or pick them by hand to try one. */
+/* This loop's problems: Auto (every one, every loop), or untick some to try others on their own. */
 (function problemPicker() {
   const box = $("#probPick"); if (!box) return;
   const auto = el("input", { type: "checkbox", checked: true }), boxes = {};

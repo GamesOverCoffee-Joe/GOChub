@@ -2381,11 +2381,11 @@ const REDUCED_MOTION = typeof matchMedia === "function" && matchMedia("(prefers-
 const BROWSE_LINES = [["Hmm. Hmm hmm hmm."], ["Should I get the mug? I should get the mug.", "...Or the tote."], ["I've been standing here a while.", "I'm very close to deciding."], ["Don't rush me. This is a big decision."]];
 const SIT_LINES = [["Best seat in the house."], ["I come here for the café. The art is a bonus."], ["Shh. I'm people-watching."]];
 const BEATS = ["Settling in", "Getting busy", "Rush", "Winding down"]; // the visit clock's four 3-minute beats
-const PROBLEMS = [ // the living museum's problems (LIVING-MUSEUM-PLAN.md); the director picks 3 or 4 a loop. Built later, one chain at a time.
-  { id: "usher", who: "Usher", beat: 0, chain: "tour", label: "needs coffee" }, { id: "stock", who: "Shopkeeper", beat: 0, chain: "supplies", label: "busy stocking" },
-  { id: "litter", who: "Visitors", beat: 1, chain: "litter", label: "litter by full bins" }, { id: "tour", who: "Tour group", beat: 1, chain: "tour", label: "the guide fumbles" },
-  { id: "line", who: "Barista", beat: 2, chain: "supplies", label: "the line blocks the walkway" }, { id: "item", who: "Staff on break", beat: 2, chain: "", label: "someone's item goes missing" },
-  { id: "janitor", who: "Janitor", beat: 3, chain: "litter", label: "overtime" }, { id: "conservator", who: "Conservator", beat: 3, chain: "", label: "dreaming in the wings" },
+const PROBLEMS = [ // the living museum's problems (LIVING-MUSEUM-PLAN.md): all of them every loop, each in its own quarter
+  { id: "usher", who: "Usher", beat: 0, chain: "tour", label: "needs coffee" }, { id: "stock", who: "Shopkeeper", beat: 0, chain: "supplies", label: "busy stocking", built: true },
+  { id: "litter", who: "Visitors", beat: 1, chain: "litter", label: "litter by full bins", built: true }, { id: "tour", who: "Tour group", beat: 1, chain: "tour", label: "the guide fumbles" },
+  { id: "line", who: "Barista", beat: 2, chain: "supplies", label: "the line blocks the walkway", built: true }, { id: "item", who: "Staff on break", beat: 2, chain: "", label: "someone's item goes missing" },
+  { id: "janitor", who: "Janitor", beat: 3, chain: "litter", label: "overtime", built: true }, { id: "conservator", who: "Conservator", beat: 3, chain: "", label: "dreaming in the wings" },
 ];
 const CROWD_LINES = [["What a nice museum."], ["I come here on my lunch break."], ["Have you seen the cat today?"], ["I always read both sides of the cases."],
   ["My friend told me about this place."], ["Honestly, I'm mostly here for the café."], ["Is it me, or is it busy today?"], ["I didn't know games could go in museums."],
@@ -5226,8 +5226,8 @@ class Game {
 
   /* ----- the director (living museum, Phase 3) -----
      One owner for the visit's rhythm, so systems don't fight. The visit clock is a 12-minute block that starts when the page
-     loads and loops; it pauses during closing and in the tutorial (not at night). Four beats of 3 minutes. Each loop, 3 or 4 of
-     the problems are active (picked by the day and the loop). Everyone asks the director what time it is; nobody keeps
+     loads (its length is Visitors tab → Visit clock); it pauses during closing and in the tutorial (not at night). Four
+     beats, a quarter each. Every problem happens every loop; the day changes their shape. Everyone asks the director what time it is; nobody keeps
      their own clock. Who's in charge of an NPC when two systems want them: npcOwner() (tutorial > closing > unveiling >
      weekday event > curious visitors > staff posts > the rhythm > idle). The rhythm only ever moves "idle" people.
      For now (Step 1) it does one visible thing: people trickle in early in the loop and drift out at the end. */
@@ -5238,10 +5238,9 @@ class Game {
     const unveiling = !!(this.pack && this.pack.pieces.some(p => p.unveil === today));
     const running = !over && !d.paused && !this.tut && !this.closing; // the loop keeps going at night (Joe 10/9); it stops for closing and the tutorial
     const key = today + ":" + day + ":" + loop;
-    if (!d.picks || d.picks.key !== key) { // this loop's problems: 3 or 4 of them, the same for everyone on this day and loop
-      const order = PROBLEMS.map(pr => [strSeed(key + pr.id), pr]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
-      d.picks = { key, ids: order.slice(0, 3 + (strSeed(key) % 2)).map(pr => pr.id) };
-    }
+    // Every problem, every loop (Joe 10/10: like Majora's Mask, the day changes their shape, not whether they happen;
+    // the timeline spaces them out so a player can learn the rhythm and prevent them all).
+    if (!d.picks || d.picks.key !== key) d.picks = { key, ids: PROBLEMS.map(pr => pr.id) };
     if (this.forceProblems) d.picks.ids = this.forceProblems.slice(); // the curator's preview: this loop's problems, picked by hand
     const r = this.room, plan = r && r.base ? Object.values(this.crowdPlan(r, beat)) : null, sum = k => plan.reduce((a, p) => a + (k === "now" ? p.now.length : p[k]), 0);
     const here = plan ? { now: sum("now"), want: sum("want"), base: sum("base"), room: r.id } : null;
@@ -7160,7 +7159,7 @@ class Game {
     if (this.headless || this.tut || this.closing || !this.rooms || !this.pack || this.t % 60) return; // once a second
     const d = this.director(); if (d.paused) return;
     const set = this.pack.settings.litter, beat = d.over ? 3 : d.beat, busy = [0.5, 1, 1.3, 0.6][beat] * (d.crowd === "heavy" ? 1.3 : 1) * (this.tod() === "night" ? 0.5 : 1);
-    const p = busy * (d.problems.includes("litter") ? 1.8 : 0.7) * set.rate / 100 / 30; // about a bin's worth in three minutes while it's busy
+    const p = busy * (d.problems.includes("litter") ? 1.8 : 0.7) * set.rate / 100 / 30 * 12 / d.minutes; // about a bin's worth in a busy quarter, however long the loop is
     const watching = this.rooms.screening ? Math.min(1, this.rooms.screening.npcs.filter(n => !n.staff && !n.janitor).length / 2) : 0; // the theater's bins fill while people are watching
     for (const [room, x, y] of this.litterBins()) if (Math.random() < (room === "screening" ? p * watching : p)) { if (!this.binAdd(room, x, y)) this.dropLitter(room, x, y); } // someone tosses something in; a full bin: it lands beside it
   }
@@ -7987,7 +7986,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 supplies 2";
+const VERSION = "2026-11-18 supplies 3";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
