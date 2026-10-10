@@ -249,6 +249,72 @@ Built one step at a time, each playable on its own:
 
 - Staff using the staff door, coming and going on their own business.
 
+### **Visitor personalities**
+
+*(Joe's idea 10/10; Claude's plan below, with Joe's answers folded in.)*
+
+Each visitor gets a personality when they come in, and personalities play off each other when they meet. Every personality has the same four attributes, each scored 0 to 4 (0 = never, 4 = as much as possible; walking speed only runs 1 to 3).
+
+| **Personality** | **1. Exhibits** | **2. Sitting** | **3. Speed** | **4. Interacting** |
+| --- | --- | --- | --- | --- |
+| **A. Enthusiast** | 4 | 0 | 2 | 3 |
+| **B. Casual** | 3 | 2 | 2 | 3 |
+| **C. People Person** | 1 | 0 | 3 | 4 |
+| **D. Introvert** | 3 | 4 | 1 | 0 |
+
+What each attribute changes:
+
+- **1. Exhibits:** how often they head for a spot in front of a piece instead of anywhere (today it's 50/50 for everyone), how long they stay there, whether they walk round to read the back of a case, and how often they take a photo.
+- **2. Sitting:** multiplies "Visitors who sit down" (Visitors tab): 0 never sits, 4 sits often and for longer.
+- **3. Speed:** how brisk their walk is and how long their little pauses between steps are (1 slow, 2 today's pace, 3 brisk).
+- **4. Interacting:** how often they start something when they pass another visitor (0 never starts anything). What happens is up to the grid.
+
+**When two meet (the grid).** Rows are whoever starts it, columns whoever they meet, so People Person meeting Introvert can differ from Introvert meeting People Person. No lines are heard or read between people *(Joe 10/10)*: everything is emotes over their heads (the same emote art as photo reactions, so it's all redrawable in Art) and small animations we can actually pull off at this size: a hop, stopping and turning to face each other, stepping back, turning away, walking side by side for a few steps. *(No pointing or nodding: it doesn't read in this format, Joe 10/10.)*
+
+The outcomes a square can pick from (first pass, to tune once we see it):
+
+- **Chat:** both stop, face each other, and trade "…" emotes for a few seconds.
+- **Hello:** an emote over one or both as they pass; nobody stops.
+- **Hit it off:** both hop, hearts, then walk side by side to a piece.
+- **Awkward:** the starter gets a "…", the other a shy emote and steps away.
+- **Annoyed:** an annoyed emote and they turn away.
+- **Ignore:** nothing happens.
+
+First-pass grid:
+
+| **Starts ↓ / meets →** | **Enthusiast** | **Casual** | **People Person** | **Introvert** |
+| --- | --- | --- | --- | --- |
+| **Enthusiast** | Hit it off | Hello | Chat | Ignore |
+| **Casual** | Hello | Chat | Chat | Hello |
+| **People Person** | Chat | Chat | Hit it off | Awkward |
+| **Introvert** | Ignore | Ignore | Ignore | Ignore |
+
+(The Introvert row barely matters: with Interacting at 0 they never start anything.)
+
+**Keeping it from turning chaotic** (each one a curator setting):
+
+- Only a few meetings at once in the whole museum.
+- Each person waits a while before starting another one.
+- Never in a doorway, the Lobby Hall, or the café line.
+- A meeting has a set length, then everyone carries on.
+
+**Who gets one:** ordinary visitors only. Patreon members don't get a personality *(Joe 10/10)*, and neither do staff, the Janitor, curious visitors while they're asking, the tutorial people, or anyone in a weekday event. The day of the week doesn't change the mix *(Joe 10/10)*.
+
+**In the curator** (a "Personalities" section in the Visitors tab):
+
+- A table: one row per personality, with its name, its four numbers, and its share of visitors (e.g. 30 / 35 / 20 / 15%). Add, rename or remove personalities (up to 6).
+- The grid: a dropdown in each square for the outcome, and how likely it is.
+- The limits above.
+- In the Preview tab: **Show personalities** (a small letter over each visitor's head, preview only), and **Make it happen → A meeting** (pick two personalities and they meet beside you).
+
+**Build order:**
+
+1. Personalities handed out as visitors arrive (by share), and the curator table.
+2. Attributes 1 to 3 wired into how people walk, look at the art and sit. Small, and it changes the crowd's feel right away.
+3. Meetings: the grid, the emotes and little animations, the limits and the preview tools. This is the big part, and it's most of Phase 4 (NPC-to-NPC moments), so it's built together with that.
+
+Claude's suggestion: 1 and 2 soon (after the supplies chain), 3 when we get to Phase 4.
+
 ### **Later**
 
 Built on all this:
