@@ -55,7 +55,7 @@ const PAL = {
   binfull: ["#e8eef4", "#9fb4c8", "#5a7088", "#1a2230", "#e8b24a", "#f0ece0", "#c84838", "#e8e0c8"], // the trash can's colors, plus paper, a red wrapper, a cup
   litter:  [null, "#f0ece0", "#c84838", "#181820", "#e8b24a", "#7a9ab8"], // paper, red wrapper, outline, gold, blue
   broom:   [null, "#a87838", "#d8b858", "#181820", "#c84838"], // handle, bristles, outline, band
-  jcan:    [null, "#5a6a72", "#3e4a52", "#181820", "#8a9aa2"], // the janitor's rolling garbage can: body, shade, outline, rim
+  jgear:   [null, "#5a6a72", "#3e4a52", "#181820", "#8a9aa2", "#2a2a30", "#e8b24a"], // the janitor's dustpan (body, shade, outline, rim) and trash bag (black, a yellow tie)
   guard:   [null, "#e8c098", "#283c64", "#181820", "#f0c040"],
   sky:     ["#f8f8ff", "#a8d8f8", "#78b8e8", "#4878b8", "#ffffff", "#ffe080", "#f89850", "#d05878", "#683878", "#181838", "#283058", "#f8f0c8"],
   shutter: [null, "#b8c0c8", "#7c8894", "#2a3038"],
@@ -357,10 +357,16 @@ const GEN = {
     for (let i = 0; i < 6; i++) { px(a, 1 + i, 5 - Math.floor(i / 2), 1); px(a, 1 + i, 6 - Math.floor(i / 2), 1); } // the lid, knocked up on its side
     return outline(a);
   },
-  jan_can: () => {
-    const a = mk(16, 16);
-    rect(a, 3, 4, 10, 10, 1); rect(a, 3, 4, 2, 10, 2); rect(a, 2, 3, 12, 2, 4); rect(a, 4, 14, 2, 2, 3); rect(a, 10, 14, 2, 2, 3);
-    for (const x of [7, 10]) rect(a, x, 6, 1, 6, 2);
+  // The janitor's dustpan, held low while he sweeps (8×8).
+  jan_dustpan: () => {
+    const a = mk(8, 8);
+    rect(a, 1, 4, 6, 3, 1); rect(a, 1, 6, 6, 1, 2); rect(a, 1, 4, 6, 1, 4); rect(a, 3, 1, 2, 3, 2); // the pan and its short handle
+    return outline(a);
+  },
+  // A tied trash bag, carried at his side on his trash round (8×8).
+  trash_bag: () => {
+    const a = mk(8, 8);
+    circ(a, 4, 5, 2.6, 5); rect(a, 3, 1, 2, 2, 5); px(a, 3, 2, 6); px(a, 4, 2, 6); px(a, 5, 4, 4); // a full bag, the tie on top
     return outline(a);
   },
   staff_uniform: f => {
@@ -1268,7 +1274,8 @@ const SLOTS = [
   { key: "popcorn_stand", label: "Popcorn stand", group: "Screening nook", w: 16, h: 32, pal: "popcorn", gen: GEN.popcorn_stand, note: "In the nook in the theater hallway. Popcorn for tokens (Shop tab); the empty bags end up in the bins." },
   { key: "popcorn_bag", label: "Popcorn in hand", group: "Screening nook", w: 8, h: 8, frames: 2, pal: "popcorn", gen: GEN.popcorn_bag, note: "2 frames side by side (16×8): full, then empty." },
   { key: "trash_full", label: "Full trash can", group: "Furniture", w: 16, h: 16, pal: "binfull", gen: GEN.trash_full, note: "Replaces a trash can once it's full: the lid askew and trash popping out of the top." },
-  { key: "jan_can", label: "Janitor's garbage can", group: "People", w: 16, h: 16, pal: "jcan", gen: GEN.jan_can, note: "Rolls along beside the janitor; the dust from his sweeping goes in it." },
+  { key: "jan_dustpan", label: "Janitor's dustpan", group: "People", w: 8, h: 8, pal: "jgear", gen: GEN.jan_dustpan, note: "Held low beside him while he sweeps; the dust (and any litter) goes in it." },
+  { key: "trash_bag", label: "Janitor's trash bag", group: "People", w: 8, h: 8, pal: "jgear", gen: GEN.trash_bag, note: "Carried at his side on his trash round, from the first bin he empties until he leaves it in the staff room." },
   { key: "usher", label: "Usher", group: "People", w: 16, h: 16, layout: "char", pal: "usher", gen: GEN.staff_uniform, note: "Behind the front desk. " + CHAR_NOTE },
   { key: "g2_floor", label: "Gallery Two floor", group: "Gallery Two", w: 16, h: 16, pal: "g2fl", gen: GEN.floor_wood, note: "Tiles seamlessly in every direction." },
   { key: "g2_wall_top", label: "Gallery Two wall top", group: "Gallery Two", w: 16, h: 16, pal: "g2", gen: GEN.wall_top },
@@ -2128,7 +2135,7 @@ const TEXT = {
   "locker.mine":       { g: "Staff", l: "Your locker", v: [["Locker {locker}: {name}.", "Just your coat in here. Your gift shop finds are on display in the collection cabinet."]] },
   "locker.others":     { g: "Staff", l: "Other lockers (one per locker, in order)", v: [["A sticky note: \"Do not touch my yogurt.\""], ["Locked. It hums faintly."], ["Someone taped a pixel-art cat to this one."], ["Empty. It smells like old coffee."], ["A note in big letters: \"WAIT. WHY DID THAT HAPPEN?\""], ["Locked. There's a dent shaped like a controller."]] },
   "jan.start":         { g: "Janitor", l: "Just out of the staff door, starting his chores", v: [["[PLACEHOLDER: the janitor starting his day]"]] },
-  "jan.sweep":         { g: "Janitor", l: "Sweeping (the dust goes in his garbage can)", v: [["[PLACEHOLDER: the janitor while he sweeps]"]] },
+  "jan.sweep":         { g: "Janitor", l: "Sweeping (the dust goes in his dustpan)", v: [["[PLACEHOLDER: the janitor while he sweeps]"]] },
   "jan.trash":         { g: "Janitor", l: "Taking the trash out of the bins", v: [["[PLACEHOLDER: the janitor emptying the bins]"]] },
   "jan.wait":          { g: "Janitor", l: "Between chores, waiting for the next one", v: [["[PLACEHOLDER: the janitor between chores]"]] },
   "jan.plants":        { g: "Janitor", l: "Watering the plants nobody got to", v: [["[PLACEHOLDER: the janitor watering the plants]"]] },
@@ -2144,7 +2151,7 @@ const TEXT = {
   "litter.binned":     { g: "Litter", l: "Putting litter in a bin ({n} pieces)", v: [["[PLACEHOLDER: dropping the litter in the bin]"]] },
   "litter.look":       { g: "Litter", l: "Looking at litter while your hands are full", v: [["[PLACEHOLDER: litter on the floor, and no room in your hands]"]] },
   "bin.full":          { g: "Litter", l: "A full bin (it won't take any more)", v: [["[PLACEHOLDER: the bin is full to the top]"]] },
-  "jan.takes":         { g: "Janitor", l: "Handing the janitor the litter you picked up (into his can)", v: [["[PLACEHOLDER: the janitor takes your litter for his can]"]] },
+  "jan.takes":         { g: "Janitor", l: "Handing the janitor the litter you picked up (into his dustpan)", v: [["[PLACEHOLDER: the janitor takes your litter]"]] },
   "storage.garage":    { g: "Storage", l: "The wide garage door on the basement's north wall", v: [["[PLACEHOLDER: the basement's garage door, where deliveries come in]"]] },
   "vol.callName":      { g: "Volunteering", l: "What staff call you when you're volunteering (no badge)", v: [["volunteer"]] },
   "vol.in":            { g: "Volunteering", l: "Clocking in as a volunteer", v: [["[PLACEHOLDER: clocking in as a volunteer. Mention the shift sheet on the corkboard]"]] },
@@ -6958,7 +6965,7 @@ class Game {
      The bins in the lobby and the museum fill up as the visit goes on (faster while it's busy, on busy days, and on loops
      where the litter problem is one of the director's picks). A full bin overflows: whatever else goes in lands on the
      floor beside it. You can pick litter up (three pieces at a time) and put it in a bin with room, or hand it to the
-     janitor for his can. His trash round empties the bins, and he stops to sweep up any litter he comes across, which
+     janitor. His trash round empties the bins, and he stops to sweep up any litter he comes across, which
      slows him down (and the plants wait). */
   binKey(room, x, y) { return room + ":" + x + "," + y; }
   binFill(room, x, y) { return (this.bins && this.bins[this.binKey(room, x, y)]) || 0; }
@@ -6999,8 +7006,8 @@ class Game {
     return best;
   }
   /* ----- The janitor (living museum, Step 2; LIVING-MUSEUM-PLAN.md, Phase 2) -----
-     When the visit starts he comes out of the staff door with his garbage can and does three chores picked at random
-     (sweeping a part of the museum, the dust into his can, or a trash round, bin to bin), starting no more than one a
+     When the visit starts he comes out of the staff door and does three chores picked at random (sweeping a part of the
+     museum, broom and dustpan, or a trash round, bin to bin, with a trash bag he leaves in the staff room at the end), starting no more than one a
      quarter. From the last quarter he waters any plant nobody has watered yet, which crosses it off the shift sheet.
      Then his break in the staff room: early if nobody left him any plants, overtime if the loop ended first.
      He goes between the lobby, the museum and the staff room through their doors. Out of sight he keeps to the same
@@ -7117,7 +7124,10 @@ class Game {
       if (--J.t > 0) return;
       n.sweep = false;
       if (stop.act === "water" && this.isThirsty(stop.plant)) { this.progress.watered[stop.plant] = todayISO(); this.saveProgress(); J.watered++; }
-      if (stop.act === "empty" && stop.bin && this.bins) this.bins[this.binKey(stop.room, stop.bin[0], stop.bin[1])] = 0; // emptied into his can
+      if (stop.act === "empty") { // emptied into his trash bag, which he carries till the round's over (and leaves in the staff room)
+        if (stop.bin && this.bins) this.bins[this.binKey(stop.room, stop.bin[0], stop.bin[1])] = 0;
+        const more = J.stops.slice(J.i + 1).some(st => st.act === "empty" && st.chore === stop.chore); n.trashBag = more && stop.room !== "staff";
+      }
       if (stop.lit) { const L = this.litter && this.litter[stop.room]; if (L) { const i = L.indexOf(stop.lit); if (i >= 0) L.splice(i, 1); } J.lit = null; J.swept = (J.swept || 0) + 1; J.mode = "go"; return; }
       if (J.phase === "chores") J.i++; else if (J.phase === "plants") J.cur = null;
       J.mode = "go"; return;
@@ -7689,12 +7699,15 @@ class Game {
       const bagAt = c.bag && !c.sitting ? [sx + { down: 1, up: 9, left: 9, right: -1 }[c.dir], sy + 9] : null, bagFirst = bagAt && c.dir !== "down"; // a shop bag hangs at their side
       if (bagFirst) this.drawSlot("shop_bag", 0, 0, ...bagAt);
       if (cupFirst) this.drawCup(sx, sy, c);
-      const canAt = c.janitor && !c.sitting ? [sx + { down: -11, up: 11, left: -11, right: 11 }[c.dir], sy + 2] : null, canFirst = canAt && c.dir === "up";
+      const tbAt = c.trashBag && !c.sitting ? [sx + { down: 1, up: 9, left: 9, right: -1 }[c.dir], sy + 9] : null, tbFirst = tbAt && c.dir !== "down"; // his trash bag hangs at his side
+      const panAt = c.sweep ? [sx + { down: 1, up: 7, left: -3, right: 11 }[c.dir], sy + { down: 11, up: 4, left: 10, right: 10 }[c.dir]] : null; // the dustpan, low beside the broom
       const broomAt = c.sweep ? [sx + { down: 6, up: 2, left: -7, right: 7 }[c.dir], sy + { down: 5, up: -3, left: 3, right: 3 }[c.dir]] : null, broomF = Math.floor(this.t / 14) % 2;
       if (broomAt && c.dir === "up") this.drawSlot("jan_broom", broomF, 0, ...broomAt);
-      if (canFirst) this.drawSlot("jan_can", 0, 0, ...canAt);
+      if (tbFirst) this.drawSlot("trash_bag", 0, 0, ...tbAt);
+      if (panAt && c.dir === "up") this.drawSlot("jan_dustpan", 0, 0, ...panAt);
       this.drawSlot(sheet, c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
-      if (canAt && !canFirst) this.drawSlot("jan_can", 0, 0, ...canAt);
+      if (tbAt && !tbFirst) this.drawSlot("trash_bag", 0, 0, ...tbAt);
+      if (panAt && c.dir !== "up") this.drawSlot("jan_dustpan", 0, 0, ...panAt);
       if (broomAt && c.dir !== "up") this.drawSlot("jan_broom", broomF, 0, ...broomAt);
       if (c === this.player && !this.full) { // your gear: the GOQ hat and shades (a fake pair has only its right lens)
         if (this.using("hat") === "real") this.drawSlot("goq_hat", c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
@@ -7796,7 +7809,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 litter 2";
+const VERSION = "2026-11-18 litter 3";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
