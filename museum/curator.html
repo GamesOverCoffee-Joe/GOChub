@@ -288,6 +288,19 @@ nav.jumps a:hover,nav.jumps a:focus-visible{border-color:var(--gold)}
 .seg button[aria-pressed="true"]{background:#e8b24a;color:#1a1014}
 .seg button:focus-visible{outline:2px solid #e8b24a;outline-offset:-2px}
 .pvgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+/* The visit clock's board: a fixed set of rows that keep their size as the words change (room for two or three lines each). */
+.cboard{margin-top:8px;border:2px solid #4b343b;border-radius:4px;background:#1e1317;padding:12px 14px;display:grid;grid-template-columns:7.5em 1fr;gap:8px 14px;font-size:1rem;line-height:1.4;color:#f6eedd}
+.cboard .ck{font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#e8b24a;padding-top:.2em}
+.cboard .cv{min-height:2.8em;overflow-wrap:anywhere}
+.cboard .cv.l3{min-height:4.2em}
+.cboard .ctime{grid-column:1 / -1;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;min-height:2.2em}
+.cboard .cbig{font-size:1.9rem;font-weight:800;font-variant-numeric:tabular-nums;min-width:4.6ch;color:#fff}
+.cboard .cbeat{font-size:1.15rem;font-weight:700;color:#e8b24a;min-width:9em}
+.cboard .cstate{font-size:.95rem;color:#d8c8b8}
+.cboard .cbar{grid-column:1 / -1;display:grid;grid-template-columns:repeat(4,1fr);gap:3px;height:22px;position:relative}
+.cboard .cbar span{background:#3a282e;border-radius:2px;font-size:.7rem;line-height:22px;text-align:center;color:#b8a8a0;overflow:hidden;white-space:nowrap}
+.cboard .cbar span.on{background:#5a3f2a;color:#f6eedd}
+.cboard .cbar i{position:absolute;top:-3px;bottom:-3px;width:3px;background:#fff;border-radius:2px;left:0}
 .pvgrid .btn{justify-content:center;font-size:.78rem;padding:.35em .3em;min-height:32px}
 .rmenu .btn{justify-content:flex-start}
 .wrow{margin:10px 0 14px}
@@ -394,8 +407,9 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
             </div></div>
           <div class="pvsec"><span class="pvh">Visit clock</span>
             <div class="seg" id="segBeat" role="group" aria-label="Jump to a beat"><button type="button" data-v="0" title="Jump to this quarter of the visit">Settling in</button><button type="button" data-v="1" title="Jump to this quarter of the visit">Getting busy</button><button type="button" data-v="2" title="Jump to this quarter of the visit">Rush</button><button type="button" data-v="3" title="Jump to this quarter of the visit">Winding down</button></div>
-            <div id="probPick" style="display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;font-size:.8rem" title="Every problem runs every loop. Untick Auto to turn some off and try others on their own (the preview only)"></div>
-            <div style="display:flex;gap:6px;align-items:center;margin-top:6px"><button class="btn" type="button" id="clockPause" title="Stop or start the visit clock in this preview">Pause</button><button class="btn" type="button" id="clockFwd" title="Skip ahead one minute">+1 min</button><span id="clockInfo" class="pv-hint" style="margin:0;text-align:left;flex:1"></span></div>
+            <div id="probPick" style="display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font-size:.92rem" title="Every problem runs every loop. Untick Auto to turn some off and try others on their own (the preview only)"></div>
+            <div style="display:flex;gap:6px;align-items:center;margin-top:6px"><button class="btn" type="button" id="clockPause" title="Stop or start the visit clock in this preview">Pause</button><button class="btn" type="button" id="clockFwd" title="Skip ahead one minute">+1 min</button></div>
+            <div id="clockBoard" class="cboard" aria-live="off"></div>
           </div>
           <div class="pvsec"><span class="pvh">Start fresh</span>
             <div class="pvgrid">
@@ -413,7 +427,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 lobby";
+window.GOQ_WANT = "2026-11-18 lobby 2";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -667,7 +681,7 @@ $("#walletIn").addEventListener("focus", () => { $("#walletIn").value = (game &&
 $("#walletIn").addEventListener("change", () => { if (!game || !game.progress) return; game.progress.tokens = Math.max(0, Math.min(9999, Math.round(+$("#walletIn").value || 0))); game.saveProgress(); game.updateHud(true); status("Test wallet: " + game.progress.tokens + " tokens."); });
 $("#lineBtn").addEventListener("click", () => { const n = game.fillLine(8); status(n ? n + " people in line at the café." : "Go to the café first: the line starts at its counter.", !n); showClock(); stage.focus({ preventScroll: true }); });
 $("#binsBtn").addEventListener("click", () => { game.fillBins(); status("Every bin is full, with litter beside each."); showClock(); stage.focus({ preventScroll: true }); });
-$("#tourBtn").addEventListener("click", () => { game.closeAll(); if (!game.findTour()) status("No tour to find right now (its problem may be off), or no room beside them.", true); stage.focus({ preventScroll: true }); });
+$("#tourBtn").addEventListener("click", () => { game.closeAll(); { const r = game.findTour(); if (r !== true) status({ off: "The tour's problem is off this loop (tick it under the visit clock).", tut: "No tour during the tutorial.", gone: "The tour's already left for today. Jump the clock back to a quarter to bring them back.", room: "Couldn't find a free spot near the tour." }[r] || "No tour to find right now.", true); } stage.focus({ preventScroll: true }); });
 $("#janBtn").addEventListener("click", () => { game.closeAll(); if (!game.findJanitor()) status("Couldn't get beside the janitor just now. Try again in a moment.", true); stage.focus({ preventScroll: true }); });
 $("#dayBtn").addEventListener("click", () => { game.closeAll(); game.skipDay(); stage.focus({ preventScroll: true }); });
 // "Reset chores" also reopens the museum: visitors come back and the lights come on.
@@ -2797,23 +2811,41 @@ document.querySelectorAll("#segBeat button").forEach(b => b.addEventListener("cl
 $("#clockPause").addEventListener("click", () => { const d = game.director(); game.setVisitClock(null, !d.paused); showClock(); });
 $("#clockFwd").addEventListener("click", () => { const d = game.director(); game.setVisitClock(Math.min(d.minutes - 0.01, d.min + 1)); showClock(); });
 function showClock() {
-  const d = game.director(), m = Math.floor(d.min), sec = Math.floor((d.min - m) * 60), info = $("#clockInfo"); if (!info) return;
-  const names = d.problems.map(id => { const pr = GOQ.PROBLEMS.find(x => x.id === id); return pr ? pr.who + ": " + pr.label : id; });
-  info.textContent = (d.over ? "The visit's loop has ended (" + d.minutes + " minutes); the museum stays at its usual crowd. Jump to a quarter to run it again." : "Minute " + m + ":" + String(sec).padStart(2, "0") + " of " + d.minutes + " · " + d.beatName + (d.loop ? " · loop " + (d.loop + 1) : "") + (d.running ? "" : d.paused ? " · paused" : " · stopped (closing or tutorial)") + ". Problems on: " + names.join("; ") + (d.problems.some(id => !(GOQ.PROBLEMS.find(x => x.id === id) || {}).built) ? " (not built yet: " + d.problems.filter(id => !(GOQ.PROBLEMS.find(x => x.id === id) || {}).built).join(", ") + ")" : "") + ".");
-  const here = d.here ? " In this room: " + d.here.now + " strolling, aiming for " + d.here.want + " (" + d.here.base + " at the busiest)." : " This room has no crowd of its own.";
-  const last = d.last ? " Last: someone " + (d.last.what === "in" ? "came in through the doors" : "headed out") + ", " + d.last.ago + " s ago." : "";
-  info.textContent += here + last + (game.janitorInfo ? " " + game.janitorInfo() : "") + (game.litterInfo ? " " + game.litterInfo() : "") + (game.supplyInfo ? " " + game.supplyInfo() : "") + (game.tourInfo ? " " + game.tourInfo() : "");
+  const B = $("#clockBoard"); if (!B) return;
+  if (!B.firstChild) { // built once; after this only the words change, so the panel keeps its size
+    const row = (k, id, cls) => [el("div", { class: "ck", text: k }), el("div", { class: "cv" + (cls ? " " + cls : ""), id })];
+    B.append(el("div", { class: "ctime" }, [el("span", { class: "cbig", id: "ckTime" }), el("span", { class: "cbeat", id: "ckBeat" }), el("span", { class: "cstate", id: "ckState" })]),
+      el("div", { class: "cbar", id: "ckBar" }, ["Settling in", "Getting busy", "Rush", "Winding down"].map(t => el("span", { text: t })).concat([el("i", { id: "ckMark" })])),
+      ...row("This room", "ckRoom"), ...row("Janitor", "ckJan"), ...row("Litter", "ckLit", "l3"), ...row("Supplies", "ckSup"), ...row("Tour", "ckTour"), ...row("Not built", "ckTodo"));
+  }
+  const d = game.director(), m = Math.floor(d.min), sec = Math.floor((d.min - m) * 60), set = (id, t) => { const e = $("#" + id); if (e.textContent !== t) e.textContent = t; };
+  const tail = (s, k) => (s || "").replace(new RegExp("^" + k + ":\\s*"), "") || "—"; // the label's already in the left column
+  set("ckTime", d.over ? "Over" : m + ":" + String(sec).padStart(2, "0"));
+  set("ckBeat", d.over ? "Loop ended" : d.beatName);
+  set("ckState", "of " + d.minutes + " min" + (d.loop ? " · loop " + (d.loop + 1) : "") + (d.over ? " · usual crowd; jump to a quarter to run it again" : d.running ? " · running" : d.paused ? " · paused" : " · stopped (closing or tutorial)"));
+  [...$("#ckBar").children].forEach((c, i) => { if (c.tagName === "SPAN") c.classList.toggle("on", !d.over && i === d.beat); });
+  $("#ckMark").style.left = "calc(" + (Math.min(1, d.min / d.minutes) * 100) + "% - 1px)";
+  set("ckRoom", (d.here ? d.here.now + " strolling, aiming for " + d.here.want + " (" + d.here.base + " at the busiest)." : "No crowd of its own.") + (d.last ? " Last: someone " + (d.last.what === "in" ? "came in" : "headed out") + ", " + d.last.ago + " s ago." : ""));
+  set("ckJan", tail(game.janitorInfo && game.janitorInfo(), "Janitor"));
+  set("ckLit", game.litterInfo ? game.litterInfo() : "—");
+  set("ckSup", tail(game.supplyInfo && game.supplyInfo(), "Supplies"));
+  set("ckTour", game.tourInfo && game.tourInfo() ? tail(game.tourInfo(), "Tour") : d.problems.includes("tour") ? "Not today (the tutorial's on, or no lobby)." : "Off this loop.");
+  const todo = d.problems.filter(id => !(GOQ.PROBLEMS.find(x => x.id === id) || {}).built).map(id => { const pr = GOQ.PROBLEMS.find(x => x.id === id); return pr ? pr.who + ": " + pr.label : id; });
+  set("ckTodo", todo.length ? todo.join("; ") + "." : "Nothing: every problem on this loop is built.");
   $("#clockPause").textContent = d.paused ? "Resume" : "Pause";
   document.querySelectorAll("#segBeat button").forEach(b => b.setAttribute("aria-pressed", String(!d.over && +b.dataset.v === d.beat)));
+  probSync();
 }
 setInterval(() => { if (tab === "preview") showClock(); }, 1000);
 /* This loop's problems: Auto (every one, every loop), or untick some to try others on their own. */
+let probSync = () => {};
 (function problemPicker() {
   const box = $("#probPick"); if (!box) return;
   const auto = el("input", { type: "checkbox", checked: true }), boxes = {};
   const apply = () => { if (auto.checked) game.setProblems(null); else game.setProblems(Object.keys(boxes).filter(id => boxes[id].checked)); Object.values(boxes).forEach(b => (b.disabled = auto.checked)); showClock(); };
+  probSync = () => { if (auto.checked) { const on = game.director().problems; Object.keys(boxes).forEach(id => (boxes[id].checked = on.includes(id))); } }; // on Auto the ticks show what's on
   box.appendChild(el("label", { style: "display:flex;gap:4px;align-items:center;font-weight:700" }, [auto, document.createTextNode("Auto")]));
-  GOQ.PROBLEMS.forEach(pr => { const c = el("input", { type: "checkbox", disabled: true }); boxes[pr.id] = c; c.addEventListener("change", apply); box.appendChild(el("label", { style: "display:flex;gap:4px;align-items:center" }, [c, document.createTextNode(pr.who + ": " + pr.label)])); });
+  GOQ.PROBLEMS.forEach(pr => { const c = el("input", { type: "checkbox", disabled: true }); boxes[pr.id] = c; c.addEventListener("change", apply); box.appendChild(el("label", { style: "display:flex;gap:4px;align-items:center" }, [c, document.createTextNode(pr.who + ": " + pr.label + (pr.built ? "" : " (not built)"))])); });
   auto.addEventListener("change", () => { if (!auto.checked) { const now = game.director().problems; Object.keys(boxes).forEach(id => (boxes[id].checked = now.includes(id))); } apply(); });
 })();
 

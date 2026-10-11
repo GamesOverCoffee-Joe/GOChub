@@ -2407,8 +2407,8 @@ const BROWSE_LINES = [["Hmm. Hmm hmm hmm."], ["Should I get the mug? I should ge
 const SIT_LINES = [["Best seat in the house."], ["I come here for the café. The art is a bonus."], ["Shh. I'm people-watching."]];
 const BEATS = ["Settling in", "Getting busy", "Rush", "Winding down"]; // the visit clock's four 3-minute beats
 const PROBLEMS = [ // the living museum's problems (LIVING-MUSEUM-PLAN.md): all of them every loop, each in its own quarter
-  { id: "usher", who: "Usher", beat: 0, chain: "tour", label: "needs coffee" }, { id: "stock", who: "Shopkeeper", beat: 0, chain: "supplies", label: "busy stocking", built: true },
-  { id: "litter", who: "Visitors", beat: 1, chain: "litter", label: "litter by full bins", built: true }, { id: "tour", who: "Tour group", beat: 1, chain: "tour", label: "the guide fumbles" },
+  { id: "usher", who: "Usher", beat: 0, chain: "tour", label: "needs coffee", built: true }, { id: "stock", who: "Shopkeeper", beat: 0, chain: "supplies", label: "busy stocking", built: true },
+  { id: "litter", who: "Visitors", beat: 1, chain: "litter", label: "litter by full bins", built: true }, { id: "tour", who: "Tour group", beat: 1, chain: "tour", label: "the guide fumbles", built: true },
   { id: "line", who: "Barista", beat: 2, chain: "supplies", label: "the line blocks the walkway", built: true }, { id: "item", who: "Staff on break", beat: 2, chain: "", label: "someone's item goes missing" },
   { id: "janitor", who: "Janitor", beat: 3, chain: "litter", label: "overtime", built: true }, { id: "conservator", who: "Conservator", beat: 3, chain: "", label: "dreaming in the wings" },
 ];
@@ -7246,11 +7246,18 @@ class Game {
     const ph = ["gathering in the lobby", "at " + (T.stop1 && T.stop1.piece ? T.stop1.piece.title : "a stop in a wing") + (T.coffee ? " (the usher had his coffee)" : T.explained ? " (you explained it)" : " (the usher's stumped)"), T.mood === "happy" ? "happy, on to " + (T.stop2 && T.stop2.piece ? T.stop2.piece.title : "another wing") : "bored, wandering off", T.kidDone ? "back in the lobby, kid found" : "back in the lobby, the kid's missing", "on their way out"][Math.max(0, T.phase)];
     return "Tour: " + ph + ". Usher's coffee: " + (T.coffee ? "yes" : "no") + ".";
   }
-  findTour() { // the curator's "Find the tour": beside the group, or the lost kid while he's missing
-    const T = this.tour; if (!T || !T.on) return false;
-    const n = T.phase === 3 && !T.kidDone ? T.members.find(m => m.tourKid) : T.members.find(m => !m.gone && !m.leaving); if (!n) return false;
-    const R = this.rooms[n.where], at = [[0, 1], [1, 0], [-1, 0], [0, -1], [0, 2], [2, 0]].map(([dx, dy]) => [n.x + dx, n.y + dy]).find(([x, y]) => this.tileFree(R, x, y));
-    if (!at) return false; this.warp(n.where, at[0], at[1], this.janFace(at, n.x, n.y)); return true;
+  findTour() { // the curator's "Find the tour": beside the group, or the lost kid while he's missing. true, or why not
+    if (this.tut) return "tut";
+    const T = this.tourState(); if (!T || !T.on) return "off";
+    const kid = T.phase === 3 && !T.kidDone ? T.members.find(m => m.tourKid && !m.gone) : null, all = T.members.filter(m => !m.gone && !m.leaving);
+    for (const n of kid ? [kid, ...all] : all) {
+      const R = this.rooms[n.where]; if (!R) continue;
+      for (let rad = 1; rad <= 4; rad++) for (let dy = -rad; dy <= rad; dy++) for (let dx = -rad; dx <= rad; dx++) { // the nearest free tile around them
+        if (Math.abs(dx) + Math.abs(dy) !== rad) continue; const x = n.x + dx, y = n.y + dy;
+        if (this.tileFree(R, x, y) && !R.events[x + "," + y]) { this.warp(n.where, x, y, this.janFace([x, y], n.x, n.y)); return true; }
+      }
+    }
+    return all.length ? "room" : "gone";
   }
   /* ----- Supplies (living museum, Step 4: the supplies chain) -----
      When the loop's problems include the shopkeeper's stock or the café line, that morning's deliveries turn up by the
@@ -8232,7 +8239,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 lobby";
+const VERSION = "2026-11-18 lobby 2";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
