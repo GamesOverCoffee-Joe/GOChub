@@ -2282,7 +2282,8 @@ const TEXT = {
   "school.found":      { g: "Tour", l: "Tuesday: bringing the lost kid back to the teacher ({n}: tokens)", by: "claude", v: [["THERE you are!", "Don't you EVER— okay. Okay. Deep breaths.", "Thank you. Here, {n} tokens. Please don't tell the principal."]] },
   "school.teacherBye": { g: "Tour", l: "Tuesday: the teacher on the way out", by: "claude", v: [["Okay friends, line up! Holding hands! Everybody's here!", "...", "Everybody's here."]] },
   "school.kid":        { g: "Tour", l: "Tuesday: one of the school kids", by: "claude", v: [["Is this a real museum or a pretend one?"], ["My mom says games rot your brain. My brain feels fine."], ["Are you the boss of the museum?"], ["*whispers* I touched the glass."]] },
-  "tour.kidBusy":      { g: "Tour", l: "The tour's kid off on his own, before the group notices he's gone (he doesn't know he's lost)", by: "claude", v: [["Shh. I'm almost at the next level."], ["I'm just looking. My group's right over... there. Somewhere."], ["Did you know this one has a secret ending? I didn't either. I'm finding out."]] },
+  "tour.kidBusy":      { g: "Tour", l: "The tour's kid at the arcade, before the group notices he's gone (he doesn't know he's lost)", by: "claude", v: [["Shh. I'm almost at the next level."], ["Did you know this one has a secret ending? I didn't either. I'm finding out."]] },
+  "tour.kidLooking":   { g: "Tour", l: "The tour's kid at a shop shelf, in a wing or in the screening nook, before anyone notices he's gone", by: "claude", v: [["I'm just looking. My group's right over... there. Somewhere."], ["How much is this one?", "How much is THIS one?"]] },
   "tour.kidWait":      { g: "Tour", l: "The tour's kid, waiting on the bench in the lobby before it starts", by: "claude", v: [["Is it starting yet?", "...", "Is it starting NOW?"], ["I'm gonna see a real museum!"]] },
   "tour.kidTag":       { g: "Tour", l: "The tour's kid while he's tagging along with his grown-up (before he wanders off)", by: "claude", v: [["I'm not supposed to talk to strangers.", "...", "Are you a stranger?"], ["*tugs on a sleeve* Can we go see the arcade?"], ["I'm staying RIGHT here. I promise."]] },
   "tour.kid":          { g: "Tour", l: "Finding the tour's lost kid (he follows you)", by: "claude", v: [["Oh! Am I lost?", "...", "I was just looking.", "Can you take me back to my group?"]] },
@@ -2290,6 +2291,7 @@ const TEXT = {
   "tour.kidFound":     { g: "Tour", l: "Bringing the kid back to his group ({n}: tokens)", by: "claude", v: [["There you are! Don't run off like that!", "Thank you so much.", "Here, {n} tokens."]] },
   "tour.bye":          { g: "Tour", l: "The group on its way out", by: "claude", v: [["Thanks for the tour! Bye!"], ["That was fun. We should come back."]] },
   "popcorn.ask":       { g: "Screening nook", l: "The popcorn stand ({price} tokens)", by: "claude", v: [["Popcorn. Buttery, salty, perfect.", "A bag for {price} tokens?"]] },
+  "popcorn.finished":  { g: "Screening nook", l: "Finishing your popcorn sitting down (not during an episode)", by: "claude", v: [["You finish the popcorn.", "There's always one kernel at the bottom. You leave it."], ["*crunch*", "...That was an unpopped one. Ow."]] },
   "popcorn.got":       { g: "Screening nook", l: "Getting popcorn", by: "claude", v: [["You got a bag of popcorn.", "It's still warm."]] },
   "popcorn.poor":      { g: "Screening nook", l: "Popcorn, without enough tokens", by: "claude", v: [["I don't have enough tokens for popcorn.", "Sad."]] },
   "popcorn.done":      { g: "Screening nook", l: "Finishing your popcorn as the episode ends", by: "claude", v: [["The episode's over and so is the popcorn."], ["Every last kernel. Gone."]] },
@@ -2476,6 +2478,7 @@ const SAMPLE_ACH = [
   { id: "helper", name: "Right This Way", desc: "Recommend 5 visitors the piece they were looking for.", stat: "helped", target: 5 },
   { id: "both-sides", name: "Both Sides Now", desc: "Read both sides of 10 display cases.", stat: "bothSides", target: 10 },
   { id: "skimmer", name: "TL;DR", desc: "Read at least one side of every piece in the museum.", stat: "oneSideAll", target: 1 },
+  { id: "janitor-now", name: "Look at Me, I Am the Janitor Now", desc: "Pick up 20 pieces of trash.", stat: "litter", target: 20 },
   { id: "cat", name: "Cat Person", desc: "Pet the cat 10 times.", stat: "pets", target: 10 },
   { id: "explorer", name: "Wayfinder", desc: "Visit every room in the museum.", stat: "rooms", target: 8 },
   { id: "closer", name: "Lights Out", desc: "Close the museum for the night.", stat: "closings", target: 1 },
@@ -6754,12 +6757,12 @@ class Game {
         this.sip = null;
         if (this.drink && ++this.drink.sips >= 4) { const n = this.drink.name.toLowerCase(); if (this.drink.kind === 2 && this.player.sitting && !this.player.bench) this.quest("finishOnStool");
           if (this.drink.mug) { this.drink = null; this.say(this.tx("gear.mugDone", { drink: n })); } // the empty mug goes back in your bag
-          else { this.drink.empty = true; this.say(this.tx(this.drink.staffBrew ? "brew.bad" : "drink.finished", { drink: n })); } }
+          else { this.drink.empty = true; this.say(this.tx(this.drink.staffBrew ? "brew.bad" : this.drink.popcorn ? "popcorn.finished" : "drink.finished", { drink: n })); } }
       }
       return;
     }
     const onTheGo = !p.sitting && !!this.drink && this.drink.mug === "real"; // a real travel mug: you sip while you walk around, just slower
-    if ((p.sitting || onTheGo) && this.drink && !this.drink.popcorn && !this.drink.empty && this.mode === "walk" && !(--this.sipClock > 0)) { this.sip = { t: 0 }; this.sipClock = onTheGo ? 420 : 170; } // !(> 0): a clock that was never set (you haven't sat down yet) counts as due
+    if ((p.sitting || onTheGo) && this.drink && !this.drink.empty && this.mode === "walk" && !(--this.sipClock > 0)) { this.sip = { t: 0 }; this.sipClock = onTheGo ? 420 : 170; } // !(> 0): a clock that was never set (you haven't sat down yet) counts as due
   }
 
   /* ----- world ----- */
@@ -7392,7 +7395,7 @@ class Game {
     const arcade = fronts.filter(f => f.what === "arcade_cabinet"), pickF = list => list[(rnd() * list.length) | 0];
     if (T.school) { // Tuesday's kid wanders into a wing, the café (the arcade or a shelf) or the screening nook, picked at random
       const nook = this.rooms.screening && this.freeSpot(this.rooms.screening, [6, 14, 6]), wing = this.freeSpot(M0, null, T.lostZone), cafe = fronts.length ? fronts[(rnd() * fronts.length) | 0] : null;
-      const opts = [wing && { room: "museum", at: wing, dir: "up" }, cafe && { room: "museum", at: cafe.at, dir: cafe.dir }, nook && { room: "screening", at: nook, dir: "up" }].filter(Boolean);
+      const opts = [wing && { room: "museum", at: wing, dir: "up" }, cafe && { room: "museum", at: cafe.at, dir: cafe.dir, what: cafe.what }, nook && { room: "screening", at: nook, dir: "up" }].filter(Boolean);
       T.lostSpot = opts.length ? opts[(rnd() * opts.length) | 0] : null; T.phase = -1; return;
     }
     T.lostSpot = fronts.length ? (arcade.length && rnd() < 0.5 ? pickF(arcade) : pickF(fronts.filter(f => f.what !== "arcade_cabinet").length ? fronts.filter(f => f.what !== "arcade_cabinet") : fronts)) : null;
@@ -7552,7 +7555,7 @@ class Game {
     }
     if (n.tourUsher) { // the usher leading the tour has his own lines, not the group's
       this.tourSay(T.phase >= 2 ? "usher.walkBack" : T.coffee ? "usher.guiding" : T.explained ? "usher.saved" : "usher.stumped"); return; }
-    if (n.tourKid && (T.phase === 3 || (T.school && T.phase === 2)) && !T.kidDone && !T.regrouped) { this.tourSay("tour.kidBusy"); return; } // off looking at something: he doesn't know he's lost yet
+    if (n.tourKid && (T.phase === 3 || (T.school && T.phase === 2)) && !T.kidDone && !T.regrouped) { this.tourSay(T.lostSpot && T.lostSpot.what === "arcade_cabinet" ? "tour.kidBusy" : "tour.kidLooking"); return; } // off looking at something: he doesn't know he's lost yet
     if (n.tourKid && T.phase === 3 && !T.kidDone) { // the lost kid
       if (this.fol === n) { this.tourSay("tour.kidAgain"); return; }
       if (this.fol) { this.say(this.tx("tue.busy")); return; }
@@ -8570,7 +8573,13 @@ class Game {
     const k = d.kind, up = st > 6 && st < 36;
     const x = up ? { down: 4, up: 4, left: 2, right: 6 }[c.dir] : { down: 11, up: 2, left: 1, right: 8 }[c.dir], y = up ? 6 : 9;
     if (me && d.mug) { this.drawSlot("travel_mug", 0, 0, sx + x, sy + y); return; } // your travel mug: closed, so no steam
-    if (d.popcorn) { this.drawSlot("popcorn_bag", d.empty ? 1 : 0, 0, sx + x, sy + y); return; } // popcorn from the theater's stand
+    if (d.popcorn) { // popcorn from the theater's stand: it stays in your lap; a piece hops from the bag to your mouth (Joe 10/11)
+      const bx = sx + { down: 11, up: 2, left: 1, right: 8 }[c.dir], by = sy + 9; this.drawSlot("popcorn_bag", d.empty ? 1 : 0, 0, bx, by + (st > 2 && st < 8 ? -1 : 0));
+      if (!d.empty && st > 6 && st < 30 && c.dir !== "up") { const f = (st - 6) / 24, mx = sx + { down: 7, left: 3, right: 11 }[c.dir], my = sy + 7, kx = Math.round(bx + 3 + (mx - bx - 3) * f), ky = Math.round(by + (my - by) * f - Math.sin(f * Math.PI) * 4);
+        this.ctx.fillStyle = "#c8902a"; this.ctx.fillRect(kx, ky + 1, 2, 1); this.ctx.fillStyle = "#fff4cc"; this.ctx.fillRect(kx, ky, 2, 1); } // one kernel, tossed in an arc
+      if (!d.empty && st >= 30 && st < 40 && c.dir !== "up" && (st >> 1) % 2) { this.ctx.fillStyle = "#fff4cc"; this.ctx.fillRect(sx + { down: 6, left: 2, right: 12 }[c.dir], sy + 9, 1, 1); } // a crumb, mid-munch
+      return;
+    }
     if (d.iced) { const ic = this.icedCup(d.color || DRINKS[Math.min(k, 2)].color, d.empty); if (ic) this.ctx.drawImage(ic, sx + x, sy + y); else this.drawSlot("cup_iced", d.empty ? 1 : 0, 0, sx + x, sy + y); return; } // iced: a clear cup (empty: still clear), no steam
     if (d.empty) { this.drawSlot("cup_empty", 0, 0, sx + x, sy + y); return; }
     if (k === 3 && d.color && !this.overrides.cups) this.ctx.drawImage(this.weekCup(d.color), sx + x, sy + y); else this.drawSlot("cups", k, 0, sx + x, sy + y);
@@ -8842,7 +8851,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 tuesday 6";
+const VERSION = "2026-11-18 tuesday 7";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

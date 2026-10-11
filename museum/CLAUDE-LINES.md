@@ -141,7 +141,7 @@ Not mine: "No refunds." and "You can't afford that." are Joe's.
 | Supplies | Looking at the gift shop's empty shelf | An empty shelf. Just dust and a price tag for something that isn't here. / Nothing on this shelf but a sticky note: "STOCK COMING. ALLEGEDLY." |
 | Supplies | Just chatting with the shopkeeper while a shelf's empty | Sorry, I can't stop looking at that empty shelf. ⏎ It's like a missing tooth. A missing merch tooth. / You know what sells really well? Things that are on the shelf. ⏎ ... ⏎ Not that I'd know today. |
 | Supplies | The barista once every order takes forever | I'm hand-washing mugs between orders. Mugs. In this economy. ⏎ Sorry for the wait. Truly. / Every order's taking forever. I'm using the backup grinder. ⏎ ... ⏎ The backup grinder is a hammer. |
-| Tour | The tour's kid off on his own, before anyone notices | Shh. I'm almost at the next level. / I'm just looking. My group's right over... there. Somewhere. / Did you know this one has a secret ending? I didn't either. I'm finding out. |
+| Tour | The tour's kid at the arcade, before anyone notices | Shh. I'm almost at the next level. / Did you know this one has a secret ending? I didn't either. I'm finding out. |
 
 (Removed: the teacher's head-count line at the rush, since nobody notices the kid's gone until they're back in the lobby.)
 
@@ -180,3 +180,10 @@ The trash bag replaced picking up three pieces by hand, so the "hands full", "in
 | --- | --- | --- |
 | Tour | Looking at the usher's empty mug | The usher's mug. Empty. ⏎ Just a sad little coffee ring at the bottom. ⏎ Someone's running on fumes. |
 | Tour | The usher, given staff coffee | Oh. Is that... from the staff room? ⏎ No, no. That's great. Thank you. ⏎ *sip* ⏎ ... ⏎ Mmm. Mm-hm. Very... hot. ⏎ Okay! Tour time. I'm awake. Probably. |
+
+## Added later (10/11, version "2026-11-18 tuesday 7")
+
+| Group | Line | What Claude wrote |
+| --- | --- | --- |
+| Tour | The tour's kid at a shelf, in a wing or in the nook | I'm just looking. My group's right over... there. Somewhere. / How much is this one? ⏎ How much is THIS one? |
+| Screening nook | Finishing popcorn sitting down | You finish the popcorn. ⏎ There's always one kernel at the bottom. You leave it. / *crunch* ⏎ ...That was an unpopped one. Ow. |
