@@ -6704,7 +6704,7 @@ class Game {
       const c = this.cine; c.blend += (c.goal > c.blend ? 1 : -1) / 40; c.blend = Math.max(0, Math.min(1, c.blend));
       if (this.mode === "busy" && c.wait > 0 && --c.wait === 0 && c.then) { const fn = c.then; c.then = null; fn(); }
     }
-    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.updateDirector(); this.updateLitter(); this.updateSupplies(); this.updateTour(); this.updateJanitor();
+    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.living("director", () => this.updateDirector()); this.living("litter", () => this.updateLitter()); this.living("supplies", () => this.updateSupplies()); this.living("tour", () => this.updateTour()); this.living("janitor", () => this.updateJanitor());
     if (this.petT > 0) this.petT--;
     if (this.t % 20 === 0) this.flushToasts();
     if (this.flickerT > 0) this.flickerT--;
@@ -7032,6 +7032,12 @@ class Game {
     }
     return out.length ? out[(Math.random() * out.length) | 0] : null;
   }
+  /* The living museum's systems each run guarded: if one hits a bug, it switches itself off for this visit (and says so
+     in the console) instead of stopping the whole game. */
+  living(name, fn) {
+    const off = this.livingOff || (this.livingOff = {}); if (off[name]) return;
+    try { fn(); } catch (e) { off[name] = true; if (typeof console !== "undefined") console.error("GOQ living museum: " + name + " stopped for this visit", e); }
+  }
   /* ----- The tour (living museum, Step 5: the tour chain) -----
      The usher needs a coffee before the tour (0–3), while a tour group gathers in the lobby. At 3–6 he leads them to a
      piece in one of the wings: with his coffee he explains it well; without, a question stumps him, and you can step in
@@ -7042,25 +7048,34 @@ class Game {
      otherwise. */
   tourState() {
     const d = this.director(), key = todayISO() + ":" + d.loop;
-    if (this.tour && this.tour.key === key) return this.tour;
+    if (this.tour && this.tour.key === key) { if (this.tour.on && this.tour.gen !== this.worldGen) this.tourPlan(this.tour); return this.tour; } // the museum was rebuilt (the pack loading): plan its stops again
     if (this.tour) this.endTour(true);
     const on = d.problems.includes("tour") && !!this.rooms.lobby && !!this.rooms.museum;
     let sd = strSeed(todayISO() + ":tour:" + d.loop); const rnd = () => (sd = (Math.imul(sd, 1103515245) + 12345) >>> 0) / 4294967296;
     const T = this.tour = { key, on, coffee: !d.problems.includes("usher"), asked: false, explained: false, mood: null, kidDone: false, members: [], phase: -1, rnd };
     if (!on) return T;
-    const L = this.rooms.lobby, ok = (R, x, y) => R.solid[y] && R.solid[y][x] === false && !R.events[x + "," + y] && !(R.noWander && R.noWander.has(x + "," + y));
-    const gather = []; for (let y = 5; y < L.h - 1; y++) for (let x = 8; x < L.w - 1; x++) if (ok(L, x, y)) gather.push([x, y]); // the lobby's right side, out of the way of the doors
-    T.gather = gather.slice(0, 6);
-    const cases = this.rooms.museum.cases.filter(c => c.piece && c.piece.kind === "episode" && c.state === "wall" && ok(this.rooms.museum, c.x, c.y + 1));
-    const pick = () => cases.splice((rnd() * cases.length) | 0, 1)[0];
-    T.stop1 = pick(); T.stop2 = pick() || T.stop1;
+    this.tourPlan(T);
     const sheets = ["visitor_a", "visitor_b", "visitor_c", "visitor_b"];
     for (let i = 0; i < 5; i++) {
       const kid = i === 4, at = T.gather[i] || T.gather[0] || [10, 6];
       T.members.push({ sheet: kid ? "kid" : sheets[i], x: at[0], y: at[1], dir: "left", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 0, still: true, tour: true, tourKid: kid, where: "lobby", lines: [], lineI: -1 });
     }
-    const lostR = (this.rooms.museum.zones || []).filter(z => z.kind === "room"); T.lostZone = lostR.length ? lostR[(rnd() * lostR.length) | 0].id : null; // where the kid ends up, the same all day
     return T;
+  }
+  tourPlan(T) { // where the group waits, its two stops and the kid's wing, on the museum as it's built now
+    T.gen = this.worldGen; let sd = strSeed(T.key + ":tour"); const rnd = () => (sd = (Math.imul(sd, 1103515245) + 12345) >>> 0) / 4294967296;
+    const L = this.rooms.lobby, ok = (R, x, y) => R.solid[y] && R.solid[y][x] === false && !R.events[x + "," + y] && !(R.noWander && R.noWander.has(x + "," + y));
+    const gather = []; for (let y = 5; y < L.h - 1; y++) for (let x = 8; x < L.w - 1; x++) if (ok(L, x, y)) gather.push([x, y]); // the lobby's right side, out of the way of the doors
+    T.gather = gather.slice(0, 6);
+    // Its stops: pieces on display in cases (an episode, ideally); failing that any piece in a case; failing that a spot in a wing.
+    const M0 = this.rooms.museum, walk = (x, y) => M0.solid[y] && M0.solid[y][x] === false, viewable = c => c.piece && walk(c.x, c.y + 1), best = M0.cases.filter(c => viewable(c) && c.piece.kind === "episode" && c.state === "wall");
+    const cases = best.length >= 2 ? best : M0.cases.filter(viewable);
+    const pick = () => cases.length ? cases.splice((rnd() * cases.length) | 0, 1)[0] : null;
+    const spot = () => { const zs = (M0.zones || []).filter(z => z.kind === "room"), z = zs.length ? zs[(rnd() * zs.length) | 0] : null, at = this.freeSpot(M0, null, z && z.id) || this.freeSpot(M0) || M0.spawn || [10, 10]; return { x: at[0], y: at[1] - 1, piece: null }; };
+    T.stop1 = pick() || spot(); T.stop2 = pick() || T.stop1;
+    T.explained = T.explained && !T.explainedNoPiece; if (!T.stop1.piece) { T.explained = true; T.explainedNoPiece = true; } else T.explainedNoPiece = false; // nothing on display to be stumped by
+    const lostR = (this.rooms.museum.zones || []).filter(z => z.kind === "room"); T.lostZone = lostR.length ? lostR[(rnd() * lostR.length) | 0].id : null; // where the kid ends up, the same all day
+    T.phase = -1; // replay the current part of the tour on the new map
   }
   endTour(quiet) { // the group's gone (a new loop, or a new visit): out of every room, the usher back at his desk
     const T = this.tour; if (!T) return;
@@ -7091,7 +7106,7 @@ class Game {
       } else if (phase === 1) { // the usher leaves his desk and leads them to the first piece
         const u = L.npcs.find(n => n.usher && !n.tourUsher);
         if (u) { T.deskUsher = u; L.npcs = L.npcs.filter(n => n !== u); }
-        T.guide = { sheet: "usher", x: u ? u.x : 3, y: u ? u.y : 3, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 0, still: true, tourUsher: true, where: "lobby", lines: [], lineI: -1 };
+        if (!T.guide) T.guide = { sheet: "usher", x: u ? u.x : 3, y: u ? u.y : 3, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 0, still: true, tourUsher: true, where: "lobby", lines: [], lineI: -1 };
         const c = T.stop1, at = [c.x, c.y + 1]; this.tourPlace(T.guide, "museum", at, "up");
         this.tourAround(M, at, T.members.length).forEach((p, i) => this.tourPlace(T.members[i], "museum", p, this.janFace(p, at[0], at[1])));
       } else if (phase === 2) { // happy: on to another wing (the usher goes back to his desk); bored: they wander off
@@ -7170,7 +7185,8 @@ class Game {
     }
     if (T.phase <= 0) { this.tourSay("tour.gather"); return; }
     if (T.phase === 1) { // at the stop
-      const c = T.stop1, piece = c.piece, title = piece.title;
+      const c = T.stop1, piece = c.piece, title = piece ? piece.title : "";
+      if (!piece) { this.tourSay("tour.happy"); return; }
       if (T.coffee) { this.tourSay("tour.sharp", { title }); return; }
       if (T.explained) { this.tourSay("tour.explained", { title }); return; }
       const q = this.tx("tour.question", { title });
@@ -7186,7 +7202,7 @@ class Game {
   }
   tourInfo() {
     const T = this.tour; if (!T || !T.on) return "";
-    const ph = ["gathering in the lobby", "at " + (T.stop1 ? T.stop1.piece.title : "a piece") + (T.coffee ? " (the usher had his coffee)" : T.explained ? " (you explained it)" : " (the usher's stumped)"), T.mood === "happy" ? "happy, on to " + (T.stop2 ? T.stop2.piece.title : "another piece") : "bored, wandering off", T.kidDone ? "back in the lobby, kid found" : "back in the lobby, the kid's missing", "on their way out"][Math.max(0, T.phase)];
+    const ph = ["gathering in the lobby", "at " + (T.stop1 && T.stop1.piece ? T.stop1.piece.title : "a stop in a wing") + (T.coffee ? " (the usher had his coffee)" : T.explained ? " (you explained it)" : " (the usher's stumped)"), T.mood === "happy" ? "happy, on to " + (T.stop2 && T.stop2.piece ? T.stop2.piece.title : "another wing") : "bored, wandering off", T.kidDone ? "back in the lobby, kid found" : "back in the lobby, the kid's missing", "on their way out"][Math.max(0, T.phase)];
     return "Tour: " + ph + ". Usher's coffee: " + (T.coffee ? "yes" : "no") + ".";
   }
   findTour() { // the curator's "Find the tour": beside the group, or the lost kid while he's missing
@@ -8174,7 +8190,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 tour";
+const VERSION = "2026-11-18 tour 2";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
