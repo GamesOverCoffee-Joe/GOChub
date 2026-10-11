@@ -2228,10 +2228,13 @@ const TEXT = {
   "supply.shopThanks": { g: "Supplies", l: "The shopkeeper, when you bring today's stock (the shop opens)", by: "claude", v: [["Oh thank goodness. Today's stock!", "I've been stuck back here reorganizing the same shelf for an hour.", "Shop's open!"]] },
   "supply.cafeThanks": { g: "Supplies", l: "The barista, when you bring the café's supplies (she's ready for the rush)", by: "claude", v: [["Cups! Lids! Beans! You're a lifesaver.", "Okay. Okay. Bring on the rush."]] },
   "supply.free":       { g: "Supplies", l: "Winding down: the barista's free drink, if you brought her supplies", by: "claude", v: [["Hey, you helped me out earlier.", "This one's on the house. Don't tell anyone."]] },
+  "shop.chatStock":    { g: "Supplies", l: "Just chatting with the shopkeeper while a shelf is still empty (today's stock never came up)", by: "claude", v: [["Sorry, I can't stop looking at that empty shelf.", "It's like a missing tooth. A missing merch tooth."], ["You know what sells really well? Things that are on the shelf.", "...", "Not that I'd know today."]] },
+  "shop.emptyShelf":   { g: "Supplies", l: "Looking at the gift shop's empty shelf (today's stock hasn't come up)", by: "claude", v: [["An empty shelf. Just dust and a price tag for something that isn't here."], ["Nothing on this shelf but a sticky note: \"STOCK COMING. ALLEGEDLY.\""]] },
   "shop.stocking":     { g: "Supplies", l: "The shop counter (or the shopkeeper) while he's still stocking the shelves", by: "claude", v: [["Sorry, still stocking. The shop's not open yet.", "If only someone would bring me the stock box from the basement..."]] },
   "line.wait":         { g: "Supplies", l: "The café counter when there's a line ahead of you", by: "claude", v: [["There's a line. I should wait my turn at the back."]] },
   "cafe.rushed":       { g: "Supplies", l: "The barista while she's rushing back and forth behind the counter (her supply box hasn't come up)", by: "claude", v: [["Sorry, sorry! I'm doing the work of three people back here.", "The supply box is still down in the basement and the rush is coming.", "...", "If anyone happened to bring it up, I'd love them forever."], ["Can't talk! Cups! Lids! Beans! None of which I have!"]] },
   "cafe.rushChat":     { g: "Supplies", l: "Just chatting with the barista while her supply box is still in the basement (stressed)", by: "claude", v: [["Chat? Now? I'm down to my last sleeve of cups.", "...", "Sorry. That came out wrong. I'm fine. Everything's fine."], ["I'd love to talk but the rush is coming and I have, like, four lids.", "Ask me again when I'm not panicking."]] },
+  "cafe.slowChat":     { g: "Supplies", l: "The barista once the rush hits and every order takes forever (her supplies never came up)", by: "claude", v: [["I'm hand-washing mugs between orders. Mugs. In this economy.", "Sorry for the wait. Truly."], ["Every order's taking forever. I'm using the backup grinder.", "...", "The backup grinder is a hammer."]] },
   "cafe.rushOrder":    { g: "Supplies", l: "The barista, after she dashes back to the counter to take your order", by: "claude", v: [["Oh! Hi! Sorry. *pant* What can I get you?"], ["Ah, a customer! One sec— okay. What'll it be?"]] },
   "line.impatient":    { g: "Supplies", l: "Someone behind you in the café line, when you stand at the counter without ordering (shown in the corner; one version picked at random)", by: "claude", v: [["Uh, are you gonna order?"], ["*sigh* Some of us have places to be."], ["Any day now..."], ["Do you need help reading the menu?"], ["I can hear my coffee getting cold and I don't even have it yet."]] },
   "line.inLine":       { g: "Supplies", l: "Asking someone in the café line to move", by: "claude", v: [["Sorry, I'm in line."], ["Uh, there's a line?"], ["I've been waiting here forever. I'm not moving."]] },
@@ -2272,11 +2275,11 @@ const TEXT = {
   "school.question":   { g: "Tour", l: "Tuesday: a kid asks the teacher about {title} and she doesn't know", by: "claude", v: [["Teacher, what's {title} about?", "...", "Well, um. It's about... feelings. And games. Game feelings.", "*the kids stare*"]] },
   "school.explained":  { g: "Tour", l: "Tuesday: after you explain {title} to the school group", by: "claude", v: [["WHOA.", "Can we play it? Can we play it right now?", "*the teacher mouths: thank you*"]] },
   "school.teacherThanks": { g: "Tour", l: "Tuesday: the teacher after you explained the piece for her", by: "claude", v: [["You're a lifesaver. They actually listened to you."]] },
-  "school.teacherCount": { g: "Tour", l: "Tuesday: the teacher counting heads during the rush (a kid's slipped off, she hasn't noticed yet)", by: "claude", v: [["One, two, three... and... three.", "That's fine. That's... probably fine."]] },
   "school.teacherPanic": { g: "Tour", l: "Tuesday: the teacher back in the lobby with a kid missing (stressed)", by: "claude", v: [["Have you seen a little kid? About this tall? Answers to every name but his own?", "I counted. I counted SO many times.", "Please. If you see him, bring him back to me."], ["Oh no, oh no, oh no. The permission slip said 'supervised.'"]] },
   "school.found":      { g: "Tour", l: "Tuesday: bringing the lost kid back to the teacher ({n}: tokens)", by: "claude", v: [["THERE you are!", "Don't you EVER— okay. Okay. Deep breaths.", "Thank you. Here, {n} tokens. Please don't tell the principal."]] },
   "school.teacherBye": { g: "Tour", l: "Tuesday: the teacher on the way out", by: "claude", v: [["Okay friends, line up! Holding hands! Everybody's here!", "...", "Everybody's here."]] },
   "school.kid":        { g: "Tour", l: "Tuesday: one of the school kids", by: "claude", v: [["Is this a real museum or a pretend one?"], ["My mom says games rot your brain. My brain feels fine."], ["Are you the boss of the museum?"], ["*whispers* I touched the glass."]] },
+  "tour.kidBusy":      { g: "Tour", l: "The tour's kid off on his own, before the group notices he's gone (he doesn't know he's lost)", by: "claude", v: [["Shh. I'm almost at the next level."], ["I'm just looking. My group's right over... there. Somewhere."], ["Did you know this one has a secret ending? I didn't either. I'm finding out."]] },
   "tour.kidWait":      { g: "Tour", l: "The tour's kid, waiting on the bench in the lobby before it starts", by: "claude", v: [["Is it starting yet?", "...", "Is it starting NOW?"], ["I'm gonna see a real museum!"]] },
   "tour.kidTag":       { g: "Tour", l: "The tour's kid while he's tagging along with his grown-up (before he wanders off)", by: "claude", v: [["I'm not supposed to talk to strangers.", "...", "Are you a stranger?"], ["*tugs on a sleeve* Can we go see the arcade?"], ["I'm staying RIGHT here. I promise."]] },
   "tour.kid":          { g: "Tour", l: "Finding the tour's lost kid (he follows you)", by: "claude", v: [["Oh! Am I lost?", "...", "I was just looking.", "Can you take me back to my group?"]] },
@@ -5359,7 +5362,10 @@ class Game {
   }
 
   /* ----- words ----- */
-  fmt(str, vars) { return this.roomNames(str).replace(/\{(\w+)\}/g, (m, k) => (vars && vars[k] !== undefined ? vars[k] : m)); }
+  fmt(str, vars) {
+    const out = this.roomNames(str).replace(/\{(\w+)\}/g, (m, k) => (vars && vars[k] !== undefined ? vars[k] : m));
+    return vars ? out.replace(/\b([Aa]n?|[Tt]he) ([Aa]n?|[Tt]he)\b/g, (m, a, b) => (a[0] === a[0].toUpperCase() ? b[0].toUpperCase() : b[0].toLowerCase()) + b.slice(1)) : out; // "A {desc}" with a desc that starts "A visitor...": one article, not two
+  }
   /* {room:upper} in any text: that room's or hallway's name right now (a museum room or hallway by its id, or a room like
      "lobby"), so renaming a room renames it everywhere it's mentioned. */
   roomNames(str) { return String(str).replace(/\{(room|ROOM):([\w-]+)\}/g, (m, k, id) => { const n = this.roomName(id); return n ? (k === "ROOM" ? n.toUpperCase() : n) : m; }); } // {ROOM:id}: in capitals
@@ -5532,6 +5538,7 @@ class Game {
         else if (i === 1) {
           this.quest("chat");
           if (!this.progress.shirt && (this.progress.quest || 0) >= SHIRT_STEPS.length) { this.progress.shirt = true; this.progress.quest = 0; this.saveProgress(); this.say(this.tx("shirt.reveal")); }
+          else if (this.sup && this.sup.stocking) this.say(this.tx("shop.chatStock")); // a shelf still empty: that's all he can think about
           else this.staffTalk("shopkeeper");
         }
       });
@@ -5909,7 +5916,7 @@ class Game {
   closeCafe() { this.el.cafe.style.display = "none"; this.cm = null; this.mode = "walk"; this.inputLock = true; }
   cafePick() {
     const m = this.cm, i = m.i, drinks = m.drinks;
-    if (i === drinks.length) { this.closeCafe(); if (this.sup && this.sup.cafeNeeded && !this.sup.cafeDone && !this.closing && !this.director().over) this.say(this.tx("cafe.rushChat")); else this.staffTalk("barista"); return; } // stressed while her supplies are still in the basement
+    if (i === drinks.length) { this.closeCafe(); if (this.sup && this.sup.cafeNeeded && !this.sup.cafeDone && !this.closing && !this.director().over) this.say(this.tx(this.director().beat >= 2 ? "cafe.slowChat" : "cafe.rushChat")); else this.staffTalk("barista"); return; } // stressed before the rush, swamped once orders are slow // stressed while her supplies are still in the basement
     if (i > drinks.length) { this.closeCafe(); return; }
     const d = drinks[i], price = m.cost(d);
     if (price && (this.progress.tokens || 0) < price) { m.msg = "That's " + price + " token" + (price > 1 ? "s" : "") + ". Chores earn tokens."; this.renderCafe(); return; }
@@ -6283,7 +6290,8 @@ class Game {
     if (npc) { // the picture itself is made after they react (personScene, in takePhoto)
       const th = { person: true, dark: dk };
       if (npc.member) return { desc: npc.member + (npc.patron ? ", on a break in the staff room." : npc.follow ? ", following you around the museum." : npc.cur ? ", looking curious." : npc.back ? ", back to tell you how a game went." : ", enjoying the museum.") + dark, thumb: th };
-      return { desc: (npc.patrol ? "The night guard, mid-rounds. They gave a little wave." : npc.usher ? "The usher at the front desk, smiling politely." : npc.still && npc.staff ? "The conservator, busy with something delicate." : npc.sitting ? "A visitor relaxing at the café." : npc.still ? "A visitor, deep in thought about a purchase." : "A visitor admiring the museum.") + dark, thumb: th };
+      const staffDesc = npc.janitor ? "The Janitor, mid-chore. He did not stop for the photo." : npc.role === "barista" ? "The barista behind the café counter." : npc.role === "shopkeeper" ? "The shopkeeper, minding the gift shop." : npc.consDream ? "The conservator, gazing at a case." : npc.tourUsher ? "The usher, leading a tour." : npc.teacher ? "A teacher keeping a field trip together. Barely." : npc.schoolKid || npc.tourKid || npc.kid ? "A kid on a museum trip." : npc.artist ? "The artist at the easel, in a rainbow shirt." : npc.vendor ? "Bluu, at his pop-up stall." : npc.itemPair ? (npc.member || "A volunteer") + ", on break." : npc.patron ? (npc.member || "A volunteer") + ", on shift." : npc.tour ? "Someone on a museum tour." : null;
+      return { desc: (staffDesc ? staffDesc : npc.patrol ? "The night guard, mid-rounds. They gave a little wave." : npc.usher ? "The usher at the front desk, smiling politely." : npc.still && npc.staff ? "The conservator, busy with something delicate." : npc.sitting ? "A visitor relaxing at the café." : npc.still ? "A visitor, deep in thought about a purchase." : "A visitor admiring the museum.") + dark, thumb: th };
     }
     if (r.cat && r.cat.x === fx && r.cat.y === fy) return { desc: this.pack.settings.staff.catName + ", napping. Adorable." + dark, rarity: 1, thumb: one("cat", fx, fy) };
     if (r.joe && r.joe.x === fx && r.joe.y === fy) return { desc: "The photo came out... wrong.", rarity: 3, thumb: { glitch: true } }; // Joe doesn't photograph
@@ -6326,7 +6334,7 @@ class Game {
     const facesArt = !n.moving && (this.room.cases.some(c => c.piece && c.x === n.x && Math.abs(c.y - n.y) === 1) || this.room.hung.some(h => n.y === h.y + 2 && (h.x === n.x || h.x + 1 === n.x)));
     const kind = n.shots >= 3 ? "annoyed" : n.patrol ? "guard" : n.usher ? "bow" : n.still && n.staff && !n.patron ? "busy" : n.follow ? "heart"
       : n.cur && !n.back ? "shy" : n.snapT > 0 ? "snapback" : n.sitting || n.patron ? "wave" : facesArt ? "startled" : "pose";
-    const who = n.member || (n.patrol ? "The night guard" : n.usher ? "The usher" : kind === "busy" ? "The conservator" : "A visitor");
+    const who = n.member || (n.patrol ? "The night guard" : n.usher || n.tourUsher ? "The usher" : n.janitor ? "The Janitor" : n.role === "barista" ? "The barista" : n.role === "shopkeeper" ? "The shopkeeper" : n.teacher ? "The teacher" : kind === "busy" || n.consDream ? "The conservator" : n.schoolKid || n.tourKid ? "A kid" : "A visitor");
     const face = OPP[p.dir], keep = n.homeDir !== undefined ? n.homeDir : n.dir;
     if (n.moving) { n.moving = false; n.prog = 0; } // mid-step (the guard on his rounds): they stop where they were, not step toward you
     if (kind === "busy") {} else if (kind === "shy") n.dir = p.dir; else n.dir = face; // the shy turn away; the busy don't look up
@@ -6789,7 +6797,7 @@ class Game {
     else if (e.featured) this.readFeatured();
     else if (e.sit) this.sit(e);
     else if (e.rack !== undefined) this.browseRack(e.rack);
-    else if (e.unit !== undefined) this.browseUnit(e.unit);
+    else if (e.unit !== undefined) { if (this.sup && this.sup.stocking && this.sup.emptyUnit === e.unit) this.say(this.tx("shop.emptyShelf")); else this.browseUnit(e.unit); } // the shelf waiting on today's stock
     else if (e.magazines) this.magazines();
     else if (e.collection) { if (!this.ownedItems().length) this.say(this.tx("cabinet.empty")); else this.say(this.tx("cabinet.intro"), () => this.openItems(true)); }
     else if (e.cat) this.petCat();
@@ -6860,7 +6868,7 @@ class Game {
     c.dir = d; const [dx, dy] = DIRS[d], nx = c.x + dx, ny = c.y + dy;
     if (c !== this.player && this.tour && !c.tourKid && !c.schoolKid) { // a grown-up walking into the kid who's tagging along with them: they swap places instead of getting stuck
       const k = this.room.npcs.find(m => (m.tourKid || m.schoolKid) && !m.moving && m.x === nx && m.y === ny && this.tour.members.includes(c) && (this.tour.phase === 1 || this.tour.phase === 2));
-      if (k) { k.x = c.x; k.y = c.y; k.route = null; }
+      if (k) { const kx = k.x, ky = k.y; k.x = c.x; k.y = c.y; k.route = null; if (this.blocked(nx, ny, c)) { k.x = kx; k.y = ky; } } // undone if something else is in the way too (never two on one tile)
     }
     if (this.blocked(nx, ny, c)) {
       if (c === this.player) {
@@ -6877,7 +6885,7 @@ class Game {
     if (c.bumpT > 0) c.bumpT--;
     if (!c.moving) return false;
     if (c.slow && (this.t & 1)) return false; // the night guard strolls at half speed
-    if (c !== this.player && !c.slow && !c.follow && (!c.leaving || c.stroll)) { c.spd = (c.spd || 0) + this.pack.settings.staff.patronSpeed; if (c.spd < 1) return false; c.spd -= 1; } // patrons: slower than you
+    if (c !== this.player && !c.slow && !c.follow && !c.tagging) { const ps = this.pack.settings.staff.patronSpeed, sp = c.leaving && !c.stroll ? Math.min(1, ps * 1.35) : ps; c.spd = (c.spd || 0) + sp; if (c.spd < 1) return false; c.spd -= 1; } // patrons: slower than you; heading out (the closing announcement) only a little brisker, not a stampede
     const behind = c.follow && c !== this.player && Math.abs(c.x - this.player.x) + Math.abs(c.y - this.player.y) > 1; // a follower who's dropped back catches up (they keep your pace)
     if ((c.prog += (c === this.player && this.segway) || behind ? 2 : 1) >= T) {
       c.x += DIRS[c.dir][0]; c.y += DIRS[c.dir][1]; c.prog = 0; c.moving = false;
@@ -7071,6 +7079,7 @@ class Game {
     if (npc && (npc.tour || npc.tourUsher)) { npc.timer = 180; if (!npc.walkTo) this.faceYou(npc, 240); this.tourTalk(npc); return; } // the tour group
     if (npc && npc.role === "shopkeeper" && npc.stocking) { this.say(this.tx("shop.stocking")); return; }
     if (npc && npc.role === "barista" && npc.pace) { this.say(this.tx("cafe.rushed")); return; } // why she's running back and forth
+    if (npc && npc.role === "barista" && this.sup && this.sup.cafeNeeded && !this.sup.cafeDone && !this.closing && this.director().beat >= 2 && !this.director().over) { this.say(this.tx("cafe.slowChat")); return; } // every order taking forever
     if (npc && npc.janitor && this.carry) { this.faceYou(npc, 240); const k = this.carry; this.carry = 0; for (let i = 0; i < k; i++) this.count("litter"); this.say(this.tx("jan.takes", { n: k })); return; } // into his can
     if (npc) { npc.timer = 180; if (!this.deskStaff(npc) && !npc.sitting && !this.facingWall(npc)) this.faceYou(npc, 240); if (npc.patrol) npc.pause = 120; this.talkTo(npc); return; }
     const e = this.room.events[fx + "," + fy]; if (e) { this.runEvent(e); return; }
@@ -7164,7 +7173,10 @@ class Game {
     { const p = this.player, [fx, fy] = DIRS[p.dir]; // you're facing them: they wait a couple of seconds (time to talk), then go on their way
       if (!p.moving && p.x + fx === n.x && p.y + fy === n.y) { if ((n.faceWait = (n.faceWait || 0) + 1) < 120) { n.route = null; return; } } else n.faceWait = 0; }
     if (n.seat && n.sitting) { // sitting down for a while; then up, back where they came from, and on their way
-      if (--n.seatT > 0 || this.player.x === n.sitFrom[0] && this.player.y === n.sitFrom[1] || r0.npcs.some(m => m !== n && m.x === n.sitFrom[0] && m.y === n.sitFrom[1])) return;
+      if (this.tourSeat(n) && n.seatT > 60) n.seatT = 60; // the tour group wants the bench back: up soon
+      if (--n.seatT > 0) return;
+      const taken = (x, y) => (this.player.x === x && this.player.y === y) || r0.npcs.some(m => m !== n && m.x === x && m.y === y);
+      if (taken(n.sitFrom[0], n.sitFrom[1])) { const side = Object.values(DIRS).map(([dx, dy]) => [n.x + dx, n.y + dy]).find(([x, y]) => this.tileFree(r0, x, y, n)); if (!side) { n.seatT = 30; return; } n.sitFrom = side; } // someone's where they sat down from: up the other side
       [n.x, n.y] = n.sitFrom; n.sitting = false; n.seat = null; n.dir = DIRS_LIST[(Math.random() * 4) | 0]; n.timer = 30; return;
     }
     if (n.arrived) { // just stepped onto the spot they were heading for
@@ -7328,16 +7340,17 @@ class Game {
     const T = this.tour, st = T.seats && T.seats[i];
     if (st) { this.tourPlace(n, "lobby", st.from, st.sit); n.goal.sit = st; } else this.tourPlace(n, "lobby", T.gather[i] || T.gather[0], "left");
   }
-  tourSit(n, st) { // onto the bench, if nobody's taken the seat meanwhile (otherwise they wait beside it)
-    const R = this.rooms[n.where]; if (!R || R.npcs.some(m => m !== n && m.x === st.x && m.y === st.y) || (this.room === R && this.player.x === st.x && this.player.y === st.y)) return;
+  tourSit(n, st) { // onto the bench; if someone's on it, another free seat (or a spot on the right of the lobby)
+    const R = this.rooms[n.where], T = this.tour, busy = s => !R || R.npcs.some(m => m !== n && m.x === s.x && m.y === s.y) || (this.room === R && this.player.x === s.x && this.player.y === s.y);
+    if (busy(st)) { const alt = T && (T.seats || []).find(s => !busy(s) && !T.members.some(m => m !== n && m.goal && m.goal.sit === s)); if (alt) this.tourPlace(n, "lobby", alt.from, alt.sit), n.goal.sit = alt; else if (T) { const i = T.members.indexOf(n); this.tourPlace(n, "lobby", T.gather[i] || T.gather[0], "left"); } return; }
     n.sitFrom = [n.x, n.y]; n.x = st.x; n.y = st.y; n.dir = st.sit; n.sitting = true;
   }
   tourStand(n) { if (n.sitting) { n.sitting = false; if (n.sitFrom) [n.x, n.y] = n.sitFrom; n.sitFrom = null; } }
   tourSeat(e) { // a bench seat saved for the tour group while they're in the lobby
-    const T = this.tour; return !!(T && T.on && (T.phase <= 0 || T.phase === 3) && this.room && this.room.id === "lobby" && (T.seats || []).some(s => s.x === e.x && s.y === e.y));
+    const T = this.tour; return !!(T && T.on && T.phase <= 3 && this.room && this.room.id === "lobby" && (T.seats || []).some(s => s.x === e.x && s.y === e.y)); // all visit long (they come back to them)
   }
-  tourAround(R, at, k) { // k spots around a point, for the group
-    const out = [], ok = (x, y) => R.solid[y] && R.solid[y][x] === false && !R.events[x + "," + y] && !(R.noWander && R.noWander.has(x + "," + y)) && !(x === at[0] && y === at[1]);
+  tourAround(R, at, k) { // k spots around a point, for the group (never the tile just below it: that's where you stand to talk to the guide there)
+    const out = [], ok = (x, y) => R.solid[y] && R.solid[y][x] === false && !R.events[x + "," + y] && !(R.noWander && R.noWander.has(x + "," + y)) && !(x === at[0] && y === at[1]) && !(x === at[0] && y === at[1] + 1);
     for (let rad = 1; rad <= 4 && out.length < k; rad++) for (let dy = -rad; dy <= rad; dy++) for (let dx = -rad; dx <= rad; dx++) { if (Math.abs(dx) + Math.abs(dy) !== rad) continue; const x = at[0] + dx, y = at[1] + dy; if (ok(x, y) && !out.some(([a, b]) => a === x && b === y) && out.length < k) out.push([x, y]); }
     return out;
   }
@@ -7347,7 +7360,7 @@ class Game {
     const d = this.director(), M = this.rooms.museum, L = this.rooms.lobby;
     const phase = this.closing ? 4 : d.over ? 4 : d.beat; // 4: on their way out
     if (phase !== T.phase) { // the next part of the tour: everyone gets somewhere new to be
-      const fresh = T.phase === -1; T.phase = phase;
+      const fresh = T.phase === -1; T.phase = phase; T.regrouped = false;
       if (phase === 0) { // waiting in the lobby (also after the curator jumps the clock back)
         T.members.forEach((n, i) => { n.still = true; n.random = false; n.queue = null; if (this.fol === n) { this.fol = null; n.follow = false; } this.tourHome(n, i);
           if (fresh && n.goal && n.goal.room === "lobby") { const g = n.goal; n.where = "lobby"; n.moving = false; n.walkTo = null; n.route = null; [n.x, n.y] = g.at; n.dir = g.dir; n.goal = null; if (g.sit) this.tourSit(n, g.sit); } }); // a new day or a rebuilt museum: they're already sitting when you walk in
@@ -7379,6 +7392,7 @@ class Game {
         if (T.guide) this.tourDrop(T.guide); T.guide = null; this.restoreUsher();
       }
     }
+    if (T.phase === 3 && !T.regrouped && T.members.filter(m => !m.tourKid && !m.gone).every(m => m.where === "lobby" && !m.goal)) T.regrouped = true; // back in the lobby: now they notice who's missing
     // Everyone in the tour belongs to the room they're in (rebuilds make new lists), and heads for their goal.
     for (const n of [...T.members, T.guide].filter(Boolean)) {
       if (n.leaving || n.gone) continue;
@@ -7392,10 +7406,11 @@ class Game {
   }
   kidTag(n, T) { // the kid sticks with one of the grown-ups, the way a follower sticks with you; if they queue for coffee, he waits by them
     const P = T.members.find(m => !m.tourKid && !m.schoolKid && !m.gone && !m.leaving); if (!P) return;
-    this.tourStand(n); if (n.where === P.where) n.walkTo = null; // (heading for a door, the walk there carries on)
+    n.tagging = true; this.tourStand(n); if (n.where === P.where) n.walkTo = null; // (heading for a door, the walk there carries on). tagging: kids keep up at full speed
     const R = this.rooms[P.where]; if (!R) return;
-    const ok = (x, y) => this.tileFree(R, x, y, n) && !R.events[x + "," + y] && !(R.queueAt || []).some(([qx, qy]) => qx === x && qy === y); // not in the café line's spots
-    const near = () => { const [bx, by] = DIRS[OPP[P.dir]] || [0, 1]; return ok(P.x + bx, P.y + by) ? [P.x + bx, P.y + by] : this.tourAround(R, [P.x, P.y], 3).find(([x, y]) => ok(x, y)); };
+    const back = !P.goal && !P.moving && !P.walkTo ? [P.x - DIRS[P.dir][0], P.y - DIRS[P.dir][1]] : null; // standing still at a piece: the tile behind them is where you'd talk to them from
+    const ok = (x, y) => this.tileFree(R, x, y, n) && !R.events[x + "," + y] && !(R.queueAt || []).some(([qx, qy]) => qx === x && qy === y) && !(back && back[0] === x && back[1] === y); // not in the café line's spots
+    const near = () => { const [bx, by] = DIRS[OPP[P.dir]] || [0, 1]; return ok(P.x + bx, P.y + by) ? [P.x + bx, P.y + by] : [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => [P.x + dx, P.y + dy]).find(([x, y]) => ok(x, y)) || this.tourAround(R, [P.x, P.y], 3).find(([x, y]) => ok(x, y)); };
     const vis = n.where === this.room.id;
     if (n.where !== P.where) { // they've gone through a door
       if (vis) { if (!n.goal || n.goal.room !== P.where) { n.goal = { room: P.where, at: [P.x, P.y], dir: "down" }; } this.tourMove(n); return; } // after them, through the door
@@ -7405,7 +7420,7 @@ class Game {
     n.goal = null; const d = Math.abs(n.x - P.x) + Math.abs(n.y - P.y);
     if (!vis) { if (d > 1) { const at = near(); if (at) { n.x = at[0]; n.y = at[1]; } } return; } // out of sight: just by them
     if (n.moving) return; // mid-step (updateNpcs walks it)
-    if (d <= 1) { n.lost = 0; if (!P.moving) n.dir = this.janFace([n.x, n.y], P.x, P.y); return; }
+    if (d <= 1 && !(back && back[0] === n.x && back[1] === n.y)) { n.lost = 0; if (!P.moving) n.dir = this.janFace([n.x, n.y], P.x, P.y); return; } // (in the spot behind them? shuffle round to the side)
     if (n.stepWait > 0) { n.stepWait--; return; }
     const goals = Object.values(DIRS).map(([dx, dy]) => [P.x + dx, P.y + dy]).filter(([x, y]) => ok(x, y) || (x === n.x && y === n.y)).sort((a, b) => Math.abs(a[0] - n.x) + Math.abs(a[1] - n.y) - (Math.abs(b[0] - n.x) + Math.abs(b[1] - n.y)));
     let dir = null; for (const [gx, gy] of goals) { const route = this.npcPath(n, gx, gy, true); if (route && route.length) { dir = route[0]; break; } }
@@ -7454,8 +7469,8 @@ class Game {
   }
   tourTalk(n) {
     const T = this.tour; if (!T) return;
-    if (T.school && (n.teacher || n.schoolKid) && !(n.teacher && this.fol && this.fol.tourKid && !T.kidDone)) { // Tuesday's school group (bringing the kid back to the teacher is handled below)
-      const k = n.teacher ? (T.phase <= 0 ? "school.teacherWait" : T.phase === 1 ? (T.explained ? "school.teacherThanks" : "school.teacherStop") : T.phase === 2 ? (T.kidDone ? "school.teacherStop" : "school.teacherCount") : T.phase === 3 ? (T.kidDone ? "school.teacherBye" : "school.teacherPanic") : "school.teacherBye") : "school.kid";
+    if (T.school && (n.teacher || n.schoolKid) && !(this.fol && this.fol.tourKid && !T.kidDone)) { // Tuesday's school group (bringing the kid back is handled below)
+      const k = n.teacher ? (T.phase <= 0 ? "school.teacherWait" : T.phase === 1 ? (T.explained ? "school.teacherThanks" : "school.teacherStop") : T.phase === 2 ? "school.teacherStop" : T.phase === 3 ? (T.kidDone ? "school.teacherBye" : T.regrouped ? "school.teacherPanic" : "school.teacherStop") : "school.teacherBye") : "school.kid";
       if (n.teacher && T.phase === 1 && !T.explained && T.stop1.piece) { const title = T.stop1.piece.title; this.say(this.tx("school.question", { title }), () => {
         if (!this.isRead(T.stop1.piece)) { this.tourSay("tour.unread", { title }); return; }
         this.ask(this.tx("tour.offer", { title }).join(" "), ["Explain it", "Not now"], i => { if (i !== 0) return; T.explained = true; this.count("tour"); this.tourSay("school.explained", { title }); }, 1); }); return; }
@@ -7463,13 +7478,14 @@ class Game {
     }
     if (n.tourUsher) { // the usher leading the tour has his own lines, not the group's
       this.tourSay(T.phase >= 2 ? "usher.walkBack" : T.coffee ? "usher.guiding" : T.explained ? "usher.saved" : "usher.stumped"); return; }
-    if (n.tourKid && (T.phase === 3 || (T.school && T.phase === 2)) && !T.kidDone) { // the lost kid
+    if (n.tourKid && (T.phase === 3 || (T.school && T.phase === 2)) && !T.kidDone && !T.regrouped) { this.tourSay("tour.kidBusy"); return; } // off looking at something: he doesn't know he's lost yet
+    if (n.tourKid && T.phase === 3 && !T.kidDone) { // the lost kid
       if (this.fol === n) { this.tourSay("tour.kidAgain"); return; }
       if (this.fol) { this.say(this.tx("tue.busy")); return; }
       this.say(this.tx("tour.kid"), () => { n.follow = true; n.still = false; n.route = null; n.goal = null; n.walkTo = null; n.lost = 0; this.fol = n; });
       return;
     }
-    if ((T.phase === 3 || (T.school && T.phase === 2 && n.teacher)) && this.fol && this.fol.tourKid && (this.room.id === "lobby" || T.school) && !T.kidDone) { // reunited with the group (on Tuesdays, with the teacher, wherever she is)
+    if (T.phase === 3 && T.regrouped && this.fol && this.fol.tourKid && !T.kidDone && n.tour) { // reunited with the group (talk to any of them)
       const k = this.fol, i = T.members.indexOf(k); this.fol = null; k.follow = false; k.still = true; T.kidDone = true; this.count("tour");
       if (T.phase >= 3) this.tourHome(k, i); else { k.goal = null; }
       this.tourSay(T.school ? "school.found" : "tour.kidFound", { n: this.pack.settings.rewards.tour }); return;
@@ -7488,7 +7504,7 @@ class Game {
       });
       return;
     }
-    const key = T.phase === 2 ? (T.mood === "happy" ? "tour.happy" : "tour.bored") : T.phase === 3 ? (T.kidDone ? "tour.bye" : "tour.regroup") : "tour.bye";
+    const key = T.phase === 2 || (T.phase === 3 && !T.regrouped) ? (T.mood === "happy" ? "tour.happy" : "tour.bored") : T.phase === 3 ? (T.kidDone ? "tour.bye" : "tour.regroup") : "tour.bye"; // on the way back they haven't noticed yet
     if (n.sitting || n.tourKid) { this.tourSay(key); return; }
     this.choose("They glance over.", ["Say hi", "Could I get by?"], i => { if (i === 0) this.tourSay(key); else if (i === 1) this.askToMove(n, p => p); }, -1); // after the tour, like any visitor
   }
@@ -8124,11 +8140,18 @@ class Game {
     if (!this.darkC) { this.darkC = document.createElement("canvas"); this.darkC.width = SW; this.darkC.height = SH; }
     const d = this.darkC.getContext("2d");
     d.globalCompositeOperation = "source-over"; d.clearRect(0, 0, SW, SH);
-    if (zoned) { // the museum: a dark room looks dark from the hallway too
-      const tx0 = Math.floor(cx / T), ty0 = Math.floor(cy / T);
-      for (let y = ty0; y <= ty0 + VH; y++) for (let x = tx0; x <= tx0 + VW; x++) {
-        d.fillStyle = "rgba(10,8,24," + (this.isDark(r, x, y) ? 0.86 : lit) + ")"; d.fillRect(x * T - cx, y * T - cy, T, T);
+    if (zoned) { // the museum: a dark room looks dark from the hallway too, with the dark easing off over a few tiles (Joe 10/11) instead of a hard edge
+      const tx0 = Math.floor(cx / T) - 1, ty0 = Math.floor(cy / T) - 1, W = VW + 3, H = VH + 3, R2 = 3, DK = 0.86, dk = [];
+      for (let y = -R2; y < H + R2; y++) { const row = []; for (let x = -R2; x < W + R2; x++) row.push(this.isDark(r, tx0 + x, ty0 + y)); dk.push(row); }
+      if (!this.lightTiny || this.lightTiny.width !== W || this.lightTiny.height !== H) { this.lightTiny = document.createElement("canvas"); this.lightTiny.width = W; this.lightTiny.height = H; }
+      const tc = this.lightTiny.getContext("2d"), img = tc.createImageData(W, H), px = img.data;
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        const dark = dk[y + R2][x + R2]; let dist = 99;
+        for (let j = -R2; j <= R2; j++) for (let i = -R2; i <= R2; i++) if (dk[y + R2 + j][x + R2 + i] !== dark) { const e = Math.hypot(i, j); if (e < dist) dist = e; }
+        const f = dist < 99 ? Math.max(0, 1 - (dist - 0.5) / R2) : 0, a = dark ? DK - (DK - lit) * 0.3 * f : lit + (DK - lit) * 0.75 * f, o = (y * W + x) * 4;
+        px[o] = 10; px[o + 1] = 8; px[o + 2] = 24; px[o + 3] = Math.round(a * 255);
       }
+      tc.putImageData(img, 0, 0); d.imageSmoothingEnabled = true; d.drawImage(this.lightTiny, 0, 0, W, H, tx0 * T - cx, ty0 * T - cy, W * T, H * T); // one pixel a tile, stretched smooth
     } else { d.fillStyle = "rgba(10,8,24," + dim + ")"; d.fillRect(0, 0, SW, SH); }
     d.globalCompositeOperation = "destination-out";
     const hole = (x, y, rx, ry, a) => {
@@ -8700,7 +8723,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 tuesday";
+const VERSION = "2026-11-18 tuesday 2";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

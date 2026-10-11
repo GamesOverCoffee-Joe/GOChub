@@ -136,3 +136,14 @@ Not mine: "No refunds." and "You can't afford that." are Joe's.
 | Tour | Tuesday: the teacher on the way out | Okay friends, line up! Holding hands! Everybody's here! ⏎ ... ⏎ Everybody's here. |
 | Tour | Tuesday: one of the school kids | Is this a real museum or a pretend one? / My mom says games rot your brain. My brain feels fine. / Are you the boss of the museum? / *whispers* I touched the glass. |
 | Achievements | Read at least one side of every piece | TL;DR — Read at least one side of every piece in the museum. |
+
+## Added later (10/11, version "2026-11-18 tuesday 2")
+
+| Group | Line | What Claude wrote |
+| --- | --- | --- |
+| Supplies | Looking at the gift shop's empty shelf | An empty shelf. Just dust and a price tag for something that isn't here. / Nothing on this shelf but a sticky note: "STOCK COMING. ALLEGEDLY." |
+| Supplies | Just chatting with the shopkeeper while a shelf's empty | Sorry, I can't stop looking at that empty shelf. ⏎ It's like a missing tooth. A missing merch tooth. / You know what sells really well? Things that are on the shelf. ⏎ ... ⏎ Not that I'd know today. |
+| Supplies | The barista once every order takes forever | I'm hand-washing mugs between orders. Mugs. In this economy. ⏎ Sorry for the wait. Truly. / Every order's taking forever. I'm using the backup grinder. ⏎ ... ⏎ The backup grinder is a hammer. |
+| Tour | The tour's kid off on his own, before anyone notices | Shh. I'm almost at the next level. / I'm just looking. My group's right over... there. Somewhere. / Did you know this one has a secret ending? I didn't either. I'm finding out. |
+
+(Removed: the teacher's head-count line at the rush, since nobody notices the kid's gone until they're back in the lobby.)
