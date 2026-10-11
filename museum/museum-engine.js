@@ -2012,17 +2012,17 @@ const TEXT = {
   "office.lockout":    { g: "Curator's office", l: "Third wrong code today: the keypad locks until tomorrow", v: [["[Third wrong code: the keypad locks itself until tomorrow]"]] },
   "office.open":       { g: "Curator's office", l: "The right code: the office opens for the first time", v: [["[The right code: the door to the curator's office opens for the first time]"]] },
   "office.digit":      { g: "Curator's office", l: "A wing's touch screen once every piece in it is read front and back ({digit}: this wing's digit, {room}: the wing)", v: [["[Note from the curator on the {room} touch screen: you've read everything here, and this wing's digit is {digit}]"]] },
-  "office.callsheet":  { g: "Curator's office", l: "The call sheet on the staff corkboard, after 5 visitors loved your picks (the wings are listed after it, in the order of the code)", v: [["[PLACEHOLDER: the call sheet pinned to the corkboard. Hint that the wings below are in the order of the code]"]] },
+  "office.callsheet":  { g: "Curator's office", l: "The call sheet on the staff corkboard, after 5 visitors loved your picks (the wings are listed after it, in the order of the code)", by: "claude", v: [["A call sheet, pinned under everything else.", "Someone circled the order the wings are listed in. Three times.", "Probably important."]] },
   "office.joe":        { g: "Curator's office", l: "Joe, the crochet robot, when you're clocked in ({name}: your badge name; picks one at random)", v: [["[Joe talks to you by name: {name}]"]] },
   "office.joeAnon":    { g: "Curator's office", l: "Joe, when you're not clocked in (picks one at random)", v: [["[Joe talks to you when he doesn't know your name]"]] },
   "office.books":      { g: "Curator's office", l: "The bookshelf: one book each (the first line is the spine, the rest is your note)", v: [["[Book 1 title]", "[Your note about book 1]"], ["[Book 2 title]", "[Your note about book 2]"], ["[Book 3 title]", "[Your note about book 3]"], ["[Book 4 title]", "[Your note about book 4]"], ["[Book 5 title]", "[Your note about book 5]"], ["[Book 6 title]", "[Your note about book 6]"]] },
   "office.shelf":      { g: "Curator's office", l: "The bookshelf, before picking a book", v: [["[The bookshelf: pick a book]"]] },
   "office.desk":       { g: "Curator's office", l: "The curator's computer, for anyone without a curator badge", v: [["[The curator's computer: two monitors, both off]"]] },
   "office.rec":        { g: "Curator's office", l: "The computer, for a curator badge ({state}: on or off)", v: [["[Recording mode is {state}. Hides the pop-ups, the ON SHIFT tag and the touch controls, holds the time of day, skips the tutorial]"]] },
-  "office.tower":      { g: "Curator's office", l: "The white PC tower (picks one at random)", v: [["[PLACEHOLDER: the white PC tower with its purple light]"]] },
+  "office.tower":      { g: "Curator's office", l: "The white PC tower (picks one at random)", by: "claude", v: [["A white PC tower with a purple light inside.", "It hums like it's thinking about something."], ["The purple light pulses slowly.", "It's either rendering something or it's alive."]] },
   "office.deck":       { g: "Curator's office", l: "The Steam Deck on the small table (picks one at random)", v: [["[The Steam Deck on the small table]"]] },
   "office.camera":     { g: "Curator's office", l: "The camera on its tripod (picks one at random)", v: [["[The camera on its tripod]"]] },
-  "office.light":      { g: "Curator's office", l: "The studio light with the soft box (picks one at random)", v: [["[PLACEHOLDER: the studio light with its soft box]"]] },
+  "office.light":      { g: "Curator's office", l: "The studio light with the soft box (picks one at random)", by: "claude", v: [["A big studio light with a soft box.", "Everything looks better in soft lighting. Even me."], ["The soft box light. It's off, but I still feel like I'm on camera."]] },
   "office.tvNone":     { g: "Curator's office", l: "The TV when there are no clip files yet", v: [["[The TV has nothing to show yet]"]] },
   "day.board.0":       { g: "Days of the week", l: "The lobby's day board on a Sunday", v: [["[Day board, Sunday: someone from the staff is having coffee in the café]"]] },
   "day.board.1":       { g: "Days of the week", l: "The day board on a Monday", v: [["[Day board, Monday: the conservator has lost some boxes]"]] },
@@ -2159,73 +2159,76 @@ const TEXT = {
   "rules":             { g: "Staff", l: "Staff rules whiteboard", v: [["STAFF RULES", "1. Clock in at the staff door or the time clock. The ON SHIFT tag means you're working.", "2. On shift, every chore is a point: dusting, straightening, watering, finding the mug, wiping cases. A visitor who loves your recommendation, and closing up, are worth 3.", "3. Chores earn tokens for the gift shop, and staff tallies decide Employee of the Month.", "4. Clock out at the time clock. Leaving at closing clocks you out too.", "5. Do not touch anyone's yogurt."]] },
   "locker.mine":       { g: "Staff", l: "Your locker", v: [["Locker {locker}: {name}.", "Just your coat in here. Your gift shop finds are on display in the collection cabinet."]] },
   "locker.others":     { g: "Staff", l: "Other lockers (one per locker, in order)", v: [["A sticky note: \"Do not touch my yogurt.\""], ["Locked. It hums faintly."], ["Someone taped a pixel-art cat to this one."], ["Empty. It smells like old coffee."], ["A note in big letters: \"WAIT. WHY DID THAT HAPPEN?\""], ["Locked. There's a dent shaped like a controller."]] },
-  "jan.start":         { g: "Janitor", l: "Just out of the staff door, starting his chores", v: [["[PLACEHOLDER: the janitor starting his day]"]] },
-  "jan.sweep":         { g: "Janitor", l: "Sweeping (the dust goes in his dustpan)", v: [["[PLACEHOLDER: the janitor while he sweeps]"]] },
-  "jan.trash":         { g: "Janitor", l: "Taking the trash out of the bins", v: [["[PLACEHOLDER: the janitor emptying the bins]"]] },
-  "jan.wait":          { g: "Janitor", l: "Between chores, waiting for the next one", v: [["[PLACEHOLDER: the janitor between chores]"]] },
-  "jan.plants":        { g: "Janitor", l: "Watering the plants nobody got to", v: [["[PLACEHOLDER: the janitor watering the plants]"]] },
-  "jan.overtime":      { g: "Janitor", l: "Still watering after the visit's loop is over (overtime)", v: [["[PLACEHOLDER: the janitor grumbling about overtime]"]] },
-  "jan.break":         { g: "Janitor", l: "On his break in the staff room", v: [["[PLACEHOLDER: the janitor on his break]"]] },
-  "jan.early":         { g: "Janitor", l: "On an early break, because the plants were already watered", v: [["[PLACEHOLDER: the janitor on an early break, thanks to whoever watered the plants]"]] },
-  "supply.pickShop":   { g: "Supplies", l: "Picking up the shop's stock box in the basement", v: [["[PLACEHOLDER: a box of today's shop stock, by the garage door]"]] },
-  "supply.pickCafe":   { g: "Supplies", l: "Picking up the café's supply box in the basement", v: [["[PLACEHOLDER: a box of café supplies: cups, lids, beans]"]] },
-  "supply.hands":      { g: "Supplies", l: "Trying to carry a second box", v: [["[PLACEHOLDER: one box at a time]"]] },
-  "supply.wrong":      { g: "Supplies", l: "Bringing the shop's box to the barista, or the café's to the shopkeeper", v: [["[PLACEHOLDER: that box isn't for them]"]] },
-  "supply.shopThanks": { g: "Supplies", l: "The shopkeeper, when you bring today's stock (the shop opens)", v: [["[PLACEHOLDER: the shopkeeper thanks you for the stock and opens the shop]"]] },
-  "supply.cafeThanks": { g: "Supplies", l: "The barista, when you bring the café's supplies (she's ready for the rush)", v: [["[PLACEHOLDER: the barista thanks you for the supplies]"]] },
-  "supply.free":       { g: "Supplies", l: "Winding down: the barista's free drink, if you brought her supplies", v: [["[PLACEHOLDER: the barista gives you a free drink for helping earlier]"]] },
-  "shop.stocking":     { g: "Supplies", l: "The shop counter (or the shopkeeper) while he's still stocking the shelves", v: [["[PLACEHOLDER: the shopkeeper is busy stocking; the shop's not open yet]"]] },
-  "line.wait":         { g: "Supplies", l: "The café counter when there's a line ahead of you", v: [["[PLACEHOLDER: there's a line; join it at the back]"]] },
-  "line.inLine":       { g: "Supplies", l: "Asking someone in the café line to move", v: [["[PLACEHOLDER: sorry, I'm in line]"]] },
-  "usher.tired":       { g: "Tour", l: "The usher before the tour, with no coffee (busy with the day's schedules)", v: [["[PLACEHOLDER: the usher, tired and busy with schedules, could really use a coffee]"]] },
-  "usher.give":        { g: "Tour", l: "Offering the usher your drink ({drink})", v: [["[PLACEHOLDER: give the usher your {drink}?]"]] },
-  "usher.notCoffee":   { g: "Tour", l: "The usher, if you offer him a drink that isn't coffee ({drink})", v: [["[PLACEHOLDER: the usher politely turns down your {drink}; only coffee will do]"]] },
-  "cons.dream":        { g: "Conservator", l: "The conservator at closing, in a wing in front of a glass case (version by how many days you've caught him there: the first, the second, and so on; the last repeats)", v: [["[PLACEHOLDER: the conservator, caught daydreaming at a case after closing: one day his own game could be in one of these]"], ["[PLACEHOLDER: the second time: he tells you a little about the game he made]"], ["[PLACEHOLDER: later days: he's still dreaming, a bit more hopeful each time]"]] },
-  "cons.again":        { g: "Conservator", l: "The conservator, talked to again the same closing", v: [["[PLACEHOLDER: the conservator, still at the case, lost in thought]"]] },
-  "cons.avoid":        { g: "Conservator", l: "The conservator on his way back to the basement once his wing's lights are off (avoidant)", v: [["[PLACEHOLDER: the conservator, flustered, hurrying back downstairs; he doesn't want to talk about it]"]] },
-  "item.break":        { g: "Break room", l: "Either member on break at 3–6 ({item}: the item on the table)", v: [["[PLACEHOLDER: break room chatter; the {item} is on the table]"]] },
-  "item.lost":         { g: "Break room", l: "The owner at 6–9, missing their item ({item}, {who}: the one who left)", v: [["[PLACEHOLDER: has anyone seen my {item}?]"]] },
-  "item.taker":        { g: "Break room", l: "Catching the one who's leaving with it ({item}, {owner})", v: [["[PLACEHOLDER: oh! this {item} isn't mine, it's {owner}'s. Could you take it back?]"]] },
-  "item.leaving":      { g: "Break room", l: "The one who's leaving, after handing it over", v: [["[PLACEHOLDER: heading home; thanks for catching that]"]] },
-  "item.carry":        { g: "Break room", l: "Talking to the one leaving while you still carry the item ({owner})", v: [["[PLACEHOLDER: you've got it, take it back to {owner}]"]] },
-  "item.thanks":       { g: "Break room", l: "Giving the owner their item back ({item}, {n}: tokens)", v: [["[PLACEHOLDER: my {item}! thanks ({n} tokens)]"]] },
-  "item.after":        { g: "Break room", l: "The owner after you've brought it back", v: [["[PLACEHOLDER: the owner, happy again]"]] },
-  "item.gone":         { g: "Break room", l: "The owner once it's walked out the door ({item}, {who})", v: [["[PLACEHOLDER: {who} must have taken my {item} home; I'll get it back next shift]"]] },
-  "usher.thanks":      { g: "Tour", l: "The usher, after you bring him a coffee", v: [["[PLACEHOLDER: the usher thanks you for the coffee; he's ready for the tour]"]] },
-  "usher.ready":       { g: "Tour", l: "The usher before the tour, with his coffee", v: [["[PLACEHOLDER: the usher, wide awake, about to lead the tour]"]] },
-  "usher.back":        { g: "Tour", l: "The usher back at his desk after the tour", v: [["[PLACEHOLDER: the usher, back from the tour]"]] },
-  "tour.gather":       { g: "Tour", l: "Someone in the tour group, waiting in the lobby", v: [["[PLACEHOLDER: a tour member waiting for the tour to start]"]] },
-  "tour.sharp":        { g: "Tour", l: "At the tour's stop, the usher with his coffee ({title})", v: [["[PLACEHOLDER: the usher explains {title} well; the group's happy]"]] },
-  "tour.question":     { g: "Tour", l: "At the tour's stop: a question about {title} the usher fumbles", v: [["[PLACEHOLDER: a tour member asks about {title}; the usher fumbles the answer]"]] },
-  "tour.offer":        { g: "Tour", l: "Choice: step in and explain {title}", v: [["[PLACEHOLDER: step in and explain {title}?]"]] },
-  "tour.unread":       { g: "Tour", l: "You'd like to help, but haven't read {title}'s placard (both sides)", v: [["[PLACEHOLDER: you haven't read {title} yet; its placard is right here]"]] },
-  "tour.explained":    { g: "Tour", l: "After you explain {title} to the group", v: [["[PLACEHOLDER: the group loved your explanation of {title}]"]] },
-  "tour.happy":        { g: "Tour", l: "Someone in a happy tour group, later on", v: [["[PLACEHOLDER: a happy tour member]"]] },
-  "tour.bored":        { g: "Tour", l: "Someone from a bored tour group, wandering off", v: [["[PLACEHOLDER: a bored tour member]"]] },
-  "tour.regroup":      { g: "Tour", l: "The group back in the lobby, missing a kid", v: [["[PLACEHOLDER: the group's back in the lobby, but one kid is missing]"]] },
-  "tour.kid":          { g: "Tour", l: "Finding the tour's lost kid (he follows you)", v: [["[PLACEHOLDER: the tour's lost kid; he'll follow you back to his group]"]] },
-  "tour.kidAgain":     { g: "Tour", l: "The lost kid, while he follows you", v: [["[PLACEHOLDER: the kid, following you back to the group in the lobby]"]] },
-  "tour.kidFound":     { g: "Tour", l: "Bringing the kid back to his group ({n}: tokens)", v: [["[PLACEHOLDER: the group's relieved to have the kid back]"]] },
-  "tour.bye":          { g: "Tour", l: "The group on its way out", v: [["[PLACEHOLDER: the tour group heading out]"]] },
-  "popcorn.ask":       { g: "Screening nook", l: "The popcorn stand ({price} tokens)", v: [["[PLACEHOLDER: the popcorn stand: a bag of popcorn for {price} tokens?]"]] },
-  "popcorn.got":       { g: "Screening nook", l: "Getting popcorn", v: [["[PLACEHOLDER: you get a bag of popcorn]"]] },
-  "popcorn.poor":      { g: "Screening nook", l: "Popcorn, without enough tokens", v: [["[PLACEHOLDER: not enough tokens for popcorn]"]] },
-  "popcorn.done":      { g: "Screening nook", l: "Finishing your popcorn as the episode ends", v: [["[PLACEHOLDER: the popcorn's gone by the end of the episode]"]] },
-  "bin.tubPopcorn":    { g: "Screening nook", l: "Trying to put a popcorn bag in the café's dish tub", v: [["[PLACEHOLDER: a popcorn bag goes in the trash, not the dish tub]"]] },
-  "popcorn.hands":     { g: "Screening nook", l: "Popcorn, with something already in your hands", v: [["[PLACEHOLDER: your hands are full already]"]] },
-  "litter.pick":       { g: "Litter", l: "Picking up litter ({thing}: cup, wrapper or napkin)", v: [["[PLACEHOLDER: picking up a {thing} off the floor]"]] },
-  "litter.handsFull":  { g: "Litter", l: "Trying to pick up more litter with your hands full (three pieces)", v: [["[PLACEHOLDER: hands full of litter already]"]] },
-  "litter.binned":     { g: "Litter", l: "Putting litter in a bin ({n} pieces)", v: [["[PLACEHOLDER: dropping the litter in the bin]"]] },
-  "litter.look":       { g: "Litter", l: "Looking at litter while your hands are full", v: [["[PLACEHOLDER: litter on the floor, and no room in your hands]"]] },
-  "bin.full":          { g: "Litter", l: "A full bin (it won't take any more)", v: [["[PLACEHOLDER: the bin is full to the top]"]] },
-  "jan.takes":         { g: "Janitor", l: "Handing the janitor the litter you picked up (into his dustpan)", v: [["[PLACEHOLDER: the janitor takes your litter]"]] },
-  "storage.garage":    { g: "Storage", l: "The wide garage door on the basement's north wall", v: [["[PLACEHOLDER: the basement's garage door, where deliveries come in]"]] },
+  "jan.start":         { g: "Janitor", l: "Just out of the staff door, starting his chores", by: "claude", v: [["Alright. Let's get this over with."], ["Morning. Don't track anything in."]] },
+  "jan.sweep":         { g: "Janitor", l: "Sweeping (the dust goes in his dustpan)", by: "claude", v: [["*swish swish*", "You'd be amazed what people drop in a museum."], ["Mind the dustpan."], ["*swish*", "...is that a whole french fry?"]] },
+  "jan.trash":         { g: "Janitor", l: "Taking the trash out of the bins", by: "claude", v: [["Who throws a full coffee in the trash?", "Every day. Every single day."], ["Trash day. Every day is trash day."]] },
+  "jan.wait":          { g: "Janitor", l: "Between chores, waiting for the next one", by: "claude", v: [["Waiting on the next thing.", "There's always a next thing."], ["Don't tell anyone I'm standing still."]] },
+  "jan.plants":        { g: "Janitor", l: "Watering the plants nobody got to", by: "claude", v: [["Plants don't water themselves.", "...apparently nobody else does either."], ["Hang in there, buddy. Water's coming."]] },
+  "jan.overtime":      { g: "Janitor", l: "Still watering after the visit's loop is over (overtime)", by: "claude", v: [["Overtime. Again.", "If someone had watered these earlier, I'd be on my couch right now."], ["*grumbles about plants*"]] },
+  "jan.home":          { g: "Janitor", l: "The Janitor at closing, done for the day and heading home", by: "claude", v: [["That's me done. Night.", "Don't let the lights hit you on the way out."], ["Clocking out. The floors are spotless. You're welcome."]] },
+  "jan.break":         { g: "Janitor", l: "On his break in the staff room", by: "claude", v: [["Break time. I'm not here.", "...", "You can't see me."], ["Shh. Five minutes."]] },
+  "jan.early":         { g: "Janitor", l: "On an early break, because the plants were already watered", by: "claude", v: [["Somebody watered all the plants already.", "Whoever you are, I owe you one.", "Early break, baby."]] },
+  "supply.pickShop":   { g: "Supplies", l: "Picking up the shop's stock box in the basement", by: "claude", v: [["A box labeled SHOP STOCK. It rattles.", "Sounds like souvenirs."]] },
+  "supply.pickCafe":   { g: "Supplies", l: "Picking up the café's supply box in the basement", by: "claude", v: [["A box of cups, lids and coffee beans.", "It smells amazing. I could just eat the beans."]] },
+  "supply.hands":      { g: "Supplies", l: "Trying to carry a second box", by: "claude", v: [["One box at a time. I'm a volunteer, not a forklift."]] },
+  "supply.wrong":      { g: "Supplies", l: "Bringing the shop's box to the barista, or the café's to the shopkeeper", by: "claude", v: [["Pretty sure this box isn't for them."]] },
+  "supply.shopThanks": { g: "Supplies", l: "The shopkeeper, when you bring today's stock (the shop opens)", by: "claude", v: [["Oh thank goodness. Today's stock!", "I've been stuck back here reorganizing the same shelf for an hour.", "Shop's open!"]] },
+  "supply.cafeThanks": { g: "Supplies", l: "The barista, when you bring the café's supplies (she's ready for the rush)", by: "claude", v: [["Cups! Lids! Beans! You're a lifesaver.", "Okay. Okay. Bring on the rush."]] },
+  "supply.free":       { g: "Supplies", l: "Winding down: the barista's free drink, if you brought her supplies", by: "claude", v: [["Hey, you helped me out earlier.", "This one's on the house. Don't tell anyone."]] },
+  "shop.stocking":     { g: "Supplies", l: "The shop counter (or the shopkeeper) while he's still stocking the shelves", by: "claude", v: [["Sorry, still stocking. The shop's not open yet.", "If only someone would bring me the stock box from the basement..."]] },
+  "line.wait":         { g: "Supplies", l: "The café counter when there's a line ahead of you", by: "claude", v: [["There's a line. I should wait my turn at the back."]] },
+  "line.inLine":       { g: "Supplies", l: "Asking someone in the café line to move", by: "claude", v: [["Sorry, I'm in line."], ["Uh, there's a line?"], ["I've been waiting here forever. I'm not moving."]] },
+  "usher.tired":       { g: "Tour", l: "The usher before the tour, with no coffee (busy with the day's schedules)", by: "claude", v: [["*yawn*", "Sorry. I've been staring at today's schedule since six.", "I'd do anything for a coffee right now."], ["Mmh? Oh, hi. Just...", "...", "Is it coffee o'clock yet?"]] },
+  "usher.give":        { g: "Tour", l: "Offering the usher your drink ({drink})", by: "claude", v: [["Give the usher your {drink}?"]] },
+  "usher.notCoffee":   { g: "Tour", l: "The usher, if you offer him a drink that isn't coffee ({drink})", by: "claude", v: [["Oh, a {drink}? That's sweet of you.", "But I need coffee. The real stuff."], ["I appreciate it, but a {drink} isn't going to save me today."]] },
+  "cons.dream":        { g: "Conservator", l: "The conservator at closing, in a wing in front of a glass case (version by how many days you've caught him there: the first, the second, and so on; the last repeats)", by: "claude", v: [["Oh. You.", "...", "I was just checking the glass. For smudges.", "...", "Fine. I was thinking one day my game could go in one of these.", "Stupid, right?"], ["You again.", "...", "It's a little puzzle game. About a lighthouse keeper.", "Nobody's played it but me.", "And my mom."], ["...", "Every time I look at these, I think maybe next year.", "Maybe."]] },
+  "cons.bye":          { g: "Conservator", l: "The conservator after your chat at the case, before he heads home", by: "claude", v: [["...", "Anyway. Nice chatting.", "I'm heading home. Don't tell anyone you saw me up here."]] },
+  "cons.leaving":      { g: "Conservator", l: "The conservator on his way out after your chat", by: "claude", v: [["Night, kid."], ["Get some sleep."]] },
+  "cons.avoid":        { g: "Conservator", l: "The conservator on his way home once his wing's lights went off (avoidant)", by: "claude", v: [["I wasn't doing anything. I'm going home.", "Goodnight."], ["Nope. Not now."]] },
+  "item.break":        { g: "Break room", l: "Either member on break at 3–6 ({item}: the item on the table)", by: "claude", v: [["Break time is the best time."], ["Don't touch the {item}. It's not mine, but still."], ["Five more minutes. Then back to it."]] },
+  "item.lost":         { g: "Break room", l: "The owner at 6–9, missing their item ({item}, {who}: the one who left)", by: "claude", v: [["Has anyone seen my {item}?", "I swear I left it right here."], ["My {item}! It was on the table!", "...wait, where did {who} go?"]] },
+  "item.taker":        { g: "Break room", l: "Catching the one who's leaving with it ({item}, {owner})", by: "claude", v: [["Hm? This {item}?", "...", "Oh no. This is {owner}'s.", "Could you take it back to them? I'm already late."]] },
+  "item.leaving":      { g: "Break room", l: "The one who's leaving, after handing it over", by: "claude", v: [["Thanks for catching that. Night!"]] },
+  "item.carry":        { g: "Break room", l: "Talking to the one leaving while you still carry the item ({owner})", by: "claude", v: [["You've got it! Get that back to {owner}."]] },
+  "item.thanks":       { g: "Break room", l: "Giving the owner their item back ({item}, {n}: tokens)", by: "claude", v: [["My {item}! Where did you find it?", "{who}?! Of course.", "Thank you. Here's {n} tokens."]] },
+  "item.after":        { g: "Break room", l: "The owner after you've brought it back", by: "claude", v: [["Never letting this out of my sight again."]] },
+  "item.gone":         { g: "Break room", l: "The owner once it's walked out the door ({item}, {who})", by: "claude", v: [["{who} must've taken my {item} home.", "Ugh. I'll get it back next shift."]] },
+  "supply.down":       { g: "Supplies", l: "Setting a delivery box down on the floor", by: "claude", v: [["You set the box down."], ["Box down. My arms thank me."]] },
+  "usher.thanks":      { g: "Tour", l: "The usher, after you bring him a coffee", by: "claude", v: [["Is that...coffee?", "For me?", "*sip*", "I can see colors again. Okay, let's do this tour!"]] },
+  "usher.ready":       { g: "Tour", l: "The usher before the tour, with his coffee", by: "claude", v: [["Fully caffeinated and ready to go!", "The tour starts soon. Grab a seat."]] },
+  "usher.back":        { g: "Tour", l: "The usher back at his desk after the tour", by: "claude", v: [["Back at the desk. That tour wore me out.", "Worth it though."]] },
+  "tour.gather":       { g: "Tour", l: "Someone in the tour group, waiting in the lobby", by: "claude", v: [["We're waiting on the tour. Is it starting soon?"], ["I hope the guide knows their stuff."], ["My feet are tired and we haven't even started."]] },
+  "tour.sharp":        { g: "Tour", l: "At the tour's stop, the usher with his coffee ({title})", by: "claude", v: [["And {title} is a perfect example of what the curator means.", "*the group nods along*"]] },
+  "tour.question":     { g: "Tour", l: "At the tour's stop: a question about {title} the usher fumbles", by: "claude", v: [["Excuse me, what's {title} actually about?", "...", "Uh. Well. It's...a game. That you play.", "*awkward silence*"]] },
+  "tour.offer":        { g: "Tour", l: "Choice: step in and explain {title}", by: "claude", v: [["Step in and explain {title}?"]] },
+  "tour.unread":       { g: "Tour", l: "You'd like to help, but haven't read {title}'s placard (both sides)", by: "claude", v: [["I'd help, but I haven't read {title} yet.", "The placard's right here. Both sides."]] },
+  "tour.explained":    { g: "Tour", l: "After you explain {title} to the group", by: "claude", v: [["Ohhh. That makes so much sense!", "Are you one of the guides? You should be."]] },
+  "tour.happy":        { g: "Tour", l: "Someone in a happy tour group, later on", by: "claude", v: [["Best tour I've been on. And I've been on, like, two."], ["I'm going to tell everyone about this place."]] },
+  "tour.bored":        { g: "Tour", l: "Someone from a bored tour group, wandering off", by: "claude", v: [["I'm just gonna look around on my own."], ["The guide didn't know anything. I'll read the placards myself."]] },
+  "tour.regroup":      { g: "Tour", l: "The group back in the lobby, missing a kid", by: "claude", v: [["Has anyone seen the kid?", "He was right behind us..."], ["Okay, everybody here? ...wait."]] },
+  "tour.kid":          { g: "Tour", l: "Finding the tour's lost kid (he follows you)", by: "claude", v: [["Oh! Am I lost?", "...", "I was just looking.", "Can you take me back to my group?"]] },
+  "tour.kidAgain":     { g: "Tour", l: "The lost kid, while he follows you", by: "claude", v: [["Are we there yet?"], ["I'm right behind you."]] },
+  "tour.kidFound":     { g: "Tour", l: "Bringing the kid back to his group ({n}: tokens)", by: "claude", v: [["There you are! Don't run off like that!", "Thank you so much.", "Here, {n} tokens."]] },
+  "tour.bye":          { g: "Tour", l: "The group on its way out", by: "claude", v: [["Thanks for the tour! Bye!"], ["That was fun. We should come back."]] },
+  "popcorn.ask":       { g: "Screening nook", l: "The popcorn stand ({price} tokens)", by: "claude", v: [["Popcorn. Buttery, salty, perfect.", "A bag for {price} tokens?"]] },
+  "popcorn.got":       { g: "Screening nook", l: "Getting popcorn", by: "claude", v: [["You got a bag of popcorn.", "It's still warm."]] },
+  "popcorn.poor":      { g: "Screening nook", l: "Popcorn, without enough tokens", by: "claude", v: [["I don't have enough tokens for popcorn.", "Sad."]] },
+  "popcorn.done":      { g: "Screening nook", l: "Finishing your popcorn as the episode ends", by: "claude", v: [["The episode's over and so is the popcorn."], ["Every last kernel. Gone."]] },
+  "bin.tubPopcorn":    { g: "Screening nook", l: "Trying to put a popcorn bag in the café's dish tub", by: "claude", v: [["The dish tub is for mugs. The popcorn bag goes in the trash."]] },
+  "popcorn.hands":     { g: "Screening nook", l: "Popcorn, with something already in your hands", by: "claude", v: [["My hands are full already."]] },
+  "litter.pick":       { g: "Litter", l: "Picking up litter ({thing}: cup, wrapper or napkin)", by: "claude", v: [["You pick up a {thing}. Gross."], ["A {thing}. People are animals."], ["You pick up the {thing}."]] },
+  "litter.handsFull":  { g: "Litter", l: "Trying to pick up more litter with your hands full (three pieces)", by: "claude", v: [["I can't carry any more trash.", "I need to find a bin."]] },
+  "litter.binned":     { g: "Litter", l: "Putting litter in a bin ({n} pieces)", by: "claude", v: [["*plunk*", "Much better."]] },
+  "litter.look":       { g: "Litter", l: "Looking at litter while your hands are full", by: "claude", v: [["More trash. My hands are full though."]] },
+  "bin.full":          { g: "Litter", l: "A full bin (it won't take any more)", by: "claude", v: [["This bin is full to the top.", "Someone should empty it."]] },
+  "jan.takes":         { g: "Janitor", l: "Handing the janitor the litter you picked up (into his dustpan)", by: "claude", v: [["Oh, thanks. Into the dustpan it goes.", "Didn't know volunteers did trash duty."]] },
+  "storage.garage":    { g: "Storage", l: "The wide garage door on the basement's north wall", by: "claude", v: [["The big garage door.", "This is where the deliveries come in. And the cold."]] },
   "vol.callName":      { g: "Volunteering", l: "What staff call you when you're volunteering (no badge)", v: [["volunteer"]] },
-  "vol.in":            { g: "Volunteering", l: "Clocking in as a volunteer", v: [["[PLACEHOLDER: clocking in as a volunteer. Mention the shift sheet on the corkboard]"]] },
-  "vol.favor":         { g: "Volunteering", l: "A coworker nearby when you do a chore off shift (shown in the corner; one version picked at random)", v: [["[PLACEHOLDER: a coworker, when you do a chore off shift. Like: Oh, you didn't have to do that]"]] },
-  "vol.can":           { g: "Volunteering", l: "The watering can on its hook in the staff room", v: [["[PLACEHOLDER: the watering can on its hook]"]] },
-  "vol.duster":        { g: "Volunteering", l: "Your locker: the feather duster inside", v: [["[PLACEHOLDER: the feather duster in your locker]"]] },
-  "shift.head":        { g: "Volunteering", l: "The shift sheet on the corkboard: the curator's note at the top", v: [["[PLACEHOLDER: the curator's note at the top of today's shift sheet]"]] },
+  "vol.in":            { g: "Volunteering", l: "Clocking in as a volunteer", by: "claude", v: [["*beep* You're on shift.", "The shift sheet on the corkboard has today's chores."]] },
+  "vol.favor":         { g: "Volunteering", l: "A coworker nearby when you do a chore off shift (shown in the corner; one version picked at random)", by: "claude", v: [["Oh, you didn't have to do that."], ["Thanks! I was getting to that."], ["Look at you, working off the clock."], ["Hey, I owe you one."]] },
+  "vol.can":           { g: "Volunteering", l: "The watering can on its hook in the staff room", by: "claude", v: [["The watering can. Hanging on its little hook.", "The plants are counting on me."]] },
+  "vol.duster":        { g: "Volunteering", l: "Your locker: the feather duster inside", by: "claude", v: [["A feather duster. It's seen things."]] },
+  "shift.head":        { g: "Volunteering", l: "The shift sheet on the corkboard: the curator's note at the top", by: "claude", v: [["Thanks for helping out today!", "Do what you can. Have fun with it. — The Curator"]] },
   "shift.plants":      { g: "Volunteering", l: "Shift sheet: plants still to water ({n}: how many)", v: [["Water the plants ({n} left)"]] },
   "shift.plantsDone":  { g: "Volunteering", l: "Shift sheet: every plant watered", v: [["Plants: done"]] },
   "shift.glass":       { g: "Volunteering", l: "Shift sheet: cases with fingerprints ({where}: which wings)", v: [["Wipe the glass: {where}"]] },
@@ -2235,12 +2238,12 @@ const TEXT = {
   "shift.mugDone":     { g: "Volunteering", l: "Shift sheet: the mug is found", v: [["Mug: found"]] },
   "shift.close":       { g: "Volunteering", l: "Shift sheet: closing up", v: [["Close up at the end of the day"]] },
   "shift.closeDone":   { g: "Volunteering", l: "Shift sheet: closed up today", v: [["Closing: done"]] },
-  "out.plants":        { g: "Volunteering", l: "Clocking out: a coworker, after you watered plants", v: [["[PLACEHOLDER: clocking out after watering plants. Like: Thanks for getting the plants]"]] },
-  "out.glass":         { g: "Volunteering", l: "Clocking out: after you wiped cases", v: [["[PLACEHOLDER: clocking out after wiping the cases]"]] },
-  "out.frames":        { g: "Volunteering", l: "Clocking out: after you dusted or straightened frames", v: [["[PLACEHOLDER: clocking out after dusting or straightening frames]"]] },
-  "out.helped":        { g: "Volunteering", l: "Clocking out: after you helped a curious visitor", v: [["[PLACEHOLDER: clocking out after helping a curious visitor]"]] },
-  "out.closed":        { g: "Volunteering", l: "Clocking out: after you closed up", v: [["[PLACEHOLDER: clocking out after closing up]"]] },
-  "out.none":          { g: "Volunteering", l: "Clocking out: you didn't do anything this shift", v: [["[PLACEHOLDER: clocking out after doing nothing. Like: Easy day, huh?]"]] },
+  "out.plants":        { g: "Volunteering", l: "Clocking out: a coworker, after you watered plants", by: "claude", v: [["Thanks for getting the plants."], ["The plants look happy. Nice work."]] },
+  "out.glass":         { g: "Volunteering", l: "Clocking out: after you wiped cases", by: "claude", v: [["The cases are spotless. I can see myself in them."]] },
+  "out.frames":        { g: "Volunteering", l: "Clocking out: after you dusted or straightened frames", by: "claude", v: [["The frames look great. Not a speck of dust."]] },
+  "out.helped":        { g: "Volunteering", l: "Clocking out: after you helped a curious visitor", by: "claude", v: [["Heard you helped someone find a game today. That's what it's all about."]] },
+  "out.closed":        { g: "Volunteering", l: "Clocking out: after you closed up", by: "claude", v: [["Thanks for closing up. Get home safe."]] },
+  "out.none":          { g: "Volunteering", l: "Clocking out: you didn't do anything this shift", by: "claude", v: [["Easy day, huh?"], ["Hey, sometimes you just need to show up."]] },
   "clock.out":         { g: "Staff", l: "Clocking out", v: [["You clock out. See you next shift, {name}.", "Chores won't count toward your staff tally until you clock in again."]] },
   "clock.curator":     { g: "Staff", l: "Time clock in curator mode", v: [["The time clock.", "You're the curator. You don't need to clock in."]] },
   "cabinet.empty":     { g: "Staff", l: "Collection cabinet, nothing bought yet", v: [["The collection cabinet. Glass shelves, waiting for things.", "Whatever you buy at the gift shop goes on display here."]] },
@@ -4140,13 +4143,13 @@ class Game {
     if (wd === 6) { // Saturday: the pop-up stall in the lobby
       const L = this.rooms.lobby, ok = ([x, y]) => L && this.tileFree(L, x, y) && this.tileFree(L, x + 1, y) && this.tileFree(L, x, y - 1) && L.solid[y + 1] && L.solid[y + 1][x] === false && !L.events[x + "," + y] && !L.events[(x + 1) + "," + y] && !L.events[x + "," + (y + 1)] && ![[x, y], [x + 1, y], [x, y - 1]].some(([a, b]) => a === ROOMS.lobby.spawn[0] && b === ROOMS.lobby.spawn[1]); // never on the spot you arrive at
       const all = []; if (L) for (let y = 4; y < L.h - 2; y++) for (let x = 1; x < L.w - 2; x++) all.push([x, y]); // the usual spots first, then anywhere it fits (the lobby gets rearranged)
-      // His two spots, a different one each week: up top in front of the day board (it sits one row behind him), or the lower
-      // left corner with the table a row up from the bottom wall, so there's room to step in front of it.
-      const db = L && L.props.find(p => p.key === "day_board"), top = db ? [db.x, db.y + 2] : [5, 4], corner = L ? [1, L.h - 3] : [1, 9];
+      // His two spots, a different one each week: up top by the front desk, or the lower left corner with the table a row up from
+      // the bottom wall, so there's room to step in front of it. (Not tied to the day board: Joe 10/11.)
+      const top = [5, 4], corner = L ? [1, L.h - 3] : [1, 9];
       const wk = Math.floor((new Date(todayISO() + "T12:00:00") - new Date(2024, 0, 6)) / 6048e5), two = wk % 2 ? [corner, top] : [top, corner];
       const spot = [...two, ...all].find(ok);
       if (L && spot) { const [x, y] = spot; L.props.push({ key: "popup_table", x, y }); L.solid[y][x] = L.solid[y][x + 1] = true; L.events[x + "," + y] = L.events[(x + 1) + "," + y] = { popup: true };
-        L.npcs.push(this.dayNpc({ sheet: "visitor_c", x, y: y - 1, vendor: true, member: "Bluu" })); L.solid[y - 1][x] = true; }
+        L.npcs.push(this.dayNpc({ sheet: "visitor_c", x, y: y - 1, vendor: true, member: "Bluu" })); } // he blocks his own tile while he's there (no wall left behind when he heads home at closing)
     }
     if (wd === 0 && m && !d.sunDone) { // Sunday: someone from the staff at a café table, with the stool across from them free for you
       const order = ["shopkeeper", "shopkeeper", "barista", "barista", "conservator", "conservator", "usher", "usher", ...(this.isCurator() ? [] : ["curator"])], role = d.sunRole || (d.sunRole = order[strSeed(todayISO() + "sun") % order.length]);
@@ -6913,6 +6916,10 @@ class Game {
     if (li >= 0) {
       if ((this.carry || 0) >= 3) { this.say(this.tx("litter.handsFull")); return; }
       const l = L.splice(li, 1)[0]; this.carry = (this.carry || 0) + 1; this.say(this.tx("litter.pick", { thing: ["cup", "wrapper", "napkin"][l.k] }));
+      return;
+    }
+    if (this.carryBox && this.sup && this.tileFree(this.room, fx, fy) && !this.room.events[fx + "," + fy] && !this.sup.boxes.some(b => b.room === this.room.id && b.x === fx && b.y === fy) && !(this.room.keepFree && this.room.keepFree.has(fx + "," + fy))) { // set the box down on the floor in front of you (pick it up again the same way)
+      this.sup.boxes.push({ room: this.room.id, x: fx, y: fy, kind: this.carryBox }); this.carryBox = null; this.say(this.tx("supply.down")); return;
     }
   }
   /* The shop browser ("Hmm. Hmm hmm hmm.") keeps staring at the shelf when you talk to them (Joe 10/9). */
@@ -7126,7 +7133,12 @@ class Game {
     const spot = () => { const zs = (M0.zones || []).filter(z => z.kind === "room"), z = zs.length ? zs[(rnd() * zs.length) | 0] : null, at = this.freeSpot(M0, null, z && z.id) || this.freeSpot(M0) || M0.spawn || [10, 10]; return { x: at[0], y: at[1] - 1, piece: null }; };
     T.stop1 = pick() || spot(); T.stop2 = pick() || T.stop1;
     T.explained = T.explained && !T.explainedNoPiece; if (!T.stop1.piece) { T.explained = true; T.explainedNoPiece = true; } else T.explainedNoPiece = false; // nothing on display to be stumped by
-    const lostR = (this.rooms.museum.zones || []).filter(z => z.kind === "room"); T.lostZone = lostR.length ? lostR[(rnd() * lostR.length) | 0].id : null; // where the kid ends up, the same all day
+    const lostR = (this.rooms.museum.zones || []).filter(z => z.kind === "room"); T.lostZone = lostR.length ? lostR[(rnd() * lostR.length) | 0].id : null;
+    // Where the kid ends up, the same all day: playing the arcade, or staring at the front of a shop shelf (Joe 10/11). A wing if there's neither.
+    const fronts = [], front = (p, w) => { for (let i = 0; i < w; i++) { const x = p.x + i, y = p.y + 1; if (walk(x, y) && !M0.events[x + "," + y]) { fronts.push({ at: [x, y], dir: "up", what: p.key }); return; } } };
+    M0.props.forEach(p => { if (p.key === "arcade_cabinet") front(p, 1); else if (p.key === "shelf_unit" || p.key === "item_rack") front(p, 2); });
+    const arcade = fronts.filter(f => f.what === "arcade_cabinet"), pickF = list => list[(rnd() * list.length) | 0];
+    T.lostSpot = fronts.length ? (arcade.length && rnd() < 0.5 ? pickF(arcade) : pickF(fronts.filter(f => f.what !== "arcade_cabinet").length ? fronts.filter(f => f.what !== "arcade_cabinet") : fronts)) : null;
     T.phase = -1; // replay the current part of the tour on the new map
   }
   endTour(quiet) { // the group's gone (a new loop, or a new visit): out of every room, the usher back at his desk
@@ -7163,9 +7175,10 @@ class Game {
     const d = this.director(), M = this.rooms.museum, L = this.rooms.lobby;
     const phase = this.closing ? 4 : d.over ? 4 : d.beat; // 4: on their way out
     if (phase !== T.phase) { // the next part of the tour: everyone gets somewhere new to be
-      T.phase = phase;
+      const fresh = T.phase === -1; T.phase = phase;
       if (phase === 0) { // waiting in the lobby (also after the curator jumps the clock back)
-        T.members.forEach((n, i) => { n.still = true; n.random = false; n.queue = null; if (this.fol === n) { this.fol = null; n.follow = false; } this.tourHome(n, i); });
+        T.members.forEach((n, i) => { n.still = true; n.random = false; n.queue = null; if (this.fol === n) { this.fol = null; n.follow = false; } this.tourHome(n, i);
+          if (fresh && n.goal && n.goal.room === "lobby") { const g = n.goal; n.where = "lobby"; n.moving = false; n.walkTo = null; n.route = null; [n.x, n.y] = g.at; n.dir = g.dir; n.goal = null; if (g.sit) this.tourSit(n, g.sit); } }); // a new day or a rebuilt museum: they're already sitting when you walk in
         if (T.guide) { this.tourDrop(T.guide); T.guide = null; } this.restoreUsher();
       } else if (phase === 1) { // the usher leaves his desk and leads them to the first piece
         const u = L.npcs.find(n => n.usher && !n.tourUsher);
@@ -7180,7 +7193,7 @@ class Game {
         else T.members.forEach(n => { n.goal = null; n.walkTo = null; if (n.where === "museum") { n.still = false; n.random = true; const z = this.zoneAt(M, n.x, n.y); n.zone = z && z.kind === "room" ? z.id : T.stop1 && (this.zoneAt(M, T.stop1.x, T.stop1.y) || {}).id; } }); // scattered: they stroll on their own
       } else if (phase === 3) { // back to the lobby to leave; the kid goes missing
         T.members.forEach((n, i) => { n.still = true; n.random = false; n.queue = null; n.seat = null; if (n.sitting) { n.sitting = false; if (n.sitFrom) [n.x, n.y] = n.sitFrom; } n.route = null;
-          if (n.tourKid) { const at = this.freeSpot(M, null, T.lostZone) || this.freeSpot(M); this.tourPlace(n, "museum", at, "down"); }
+          if (n.tourKid) { if (T.lostSpot) this.tourPlace(n, "museum", T.lostSpot.at, T.lostSpot.dir); else this.tourPlace(n, "museum", this.freeSpot(M, null, T.lostZone) || this.freeSpot(M), "down"); }
           else this.tourHome(n, i); });
       } else if (phase === 4) { // out the front doors (the kid too, found or not)
         T.members.forEach(n => { this.tourStand(n); if (this.fol === n) { this.fol = null; n.follow = false; } n.goal = null; n.walkTo = null; n.still = true; if (n.where === this.room.id && this.room.id === "lobby") { n.leaving = true; n.leaveT = 0; n.alpha = 1; } else this.tourDrop(n); });
@@ -7394,32 +7407,38 @@ class Game {
     const C = this.cons; if (!C) return;
     if (!this.closing || C.day !== todayISO()) { this.endCons(); return; } // the museum opened again
     const St = this.rooms.storage, usual = n => n.role === "conservator" && !n.consDream, n = C.npc;
-    if (n && C.state === "dream" && this.lightsOff.has(C.light)) { C.state = "home"; this.tourPlace(n, "storage", C.home ? [C.home.x, C.home.y] : [6, 7], (C.home && C.home.dir) || "up"); } // his wing went dark: back to the basement
-    if (n && C.state === "home" && n.where === "storage" && !n.goal) { this.tourDrop(n); C.npc = null; C.state = "back"; } // home: his usual self takes over
+    if (n && C.state === "dream" && this.lightsOff.has(C.light)) this.consLeave(true); // his wing went dark: he heads home, flustered
+    if (n && C.state === "home" && n.where === "lobby" && !n.goal && !n.leaving) { // at the front doors: out (fading, if you're there to see it)
+      if (this.room.id === "lobby") { n.leaving = true; n.leaveT = 0; n.alpha = 1; } else { this.tourDrop(n); C.npc = null; C.state = "gone"; }
+    }
+    if (n && n.leaving && (n.gone || !this.rooms.lobby.npcs.includes(n))) { C.npc = null; C.state = "gone"; } // walked out
     if (C.npc) { // he's out: the basement stays empty (rebuilds put his usual self back), and he's in the room he's in
       St.npcs = St.npcs.filter(m => !usual(m));
       const R = this.rooms[C.npc.where]; if (R && !R.npcs.includes(C.npc)) { for (const id in this.rooms) if (id !== C.npc.where) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== C.npc); R.npcs.push(C.npc); }
-      if (C.state === "home") this.tourMove(C.npc);
-    } else if (C.home && !St.npcs.some(usual)) St.npcs.push(C.home);
+      if (C.state === "home" && !C.npc.leaving) this.tourMove(C.npc);
+    } else St.npcs = St.npcs.filter(m => !usual(m)); // gone home for the night: the basement stays empty until the museum opens again
   }
   endCons() {
     const C = this.cons; if (!C) return; this.cons = null;
     for (const id in this.rooms || {}) this.rooms[id].npcs = this.rooms[id].npcs.filter(n => n !== C.npc);
     const St = this.rooms && this.rooms.storage; if (St && C.home && !St.npcs.some(n => n.role === "conservator")) St.npcs.push(C.home);
   }
+  consLeave(dark) { // off home through the front doors: flustered if his lights went out on him, content after a chat
+    const C = this.cons, n = C && C.npc; if (!n || C.state !== "dream") return;
+    C.state = "home"; C.dark = !!dark; this.tourPlace(n, "lobby", ROOMS.lobby.exitTo || ROOMS.lobby.spawn, "down");
+  }
   consTalk(n) {
     const C = this.cons; if (!C) return false;
-    if (C.state !== "dream") { this.say(this.tx("cons.avoid")); return true; }
-    if (C.talked) { this.say(this.tx("cons.again")); return true; }
-    C.talked = true; const k = this.progress.consTalks || 0, first = this.progress.consDay !== todayISO();
-    this.progress.consTalks = k + 1; this.progress.consDay = todayISO(); if (first) this.count("conservator"); this.saveProgress(); // tokens once a day
-    this.say(this.txAt("cons.dream", k)); return true;
+    if (C.state !== "dream") { this.say(this.tx(C.dark ? "cons.avoid" : "cons.leaving")); return true; }
+    const k = Math.max(0, (this.progress.consTalks || 0) - (C.talked ? 1 : 0)), first = this.progress.consDay !== todayISO();
+    if (!C.talked) { C.talked = true; this.progress.consTalks = k + 1; this.progress.consDay = todayISO(); if (first) this.count("conservator"); this.saveProgress(); } // tokens once a day
+    this.say([...this.txAt("cons.dream", k), ...this.tx("cons.bye")], () => this.consLeave(false)); return true; // then "nice chatting", and he heads home
   }
   consInfo() {
     const C = this.cons, n = C && C.npc, talks = " Days you've caught him: " + (this.progress.consTalks || 0) + ".";
     if (!C) return (this.closing ? "In the basement." : "In the basement until the closing announcement.") + talks;
     const where = n ? (n.where === "museum" ? ((this.zoneAt(this.rooms.museum, n.x, n.y) || {}).name || "the museum") : ROOMS[n.where].name.replace(/\s+/g, " ") ) : "the basement";
-    return (C.state === "dream" ? "Dreaming in front of a case in " + where + " until its lights go off" : C.state === "home" ? "Heading back to the basement (now in " + where + "), avoiding you" : "Back in the basement") + "." + (C.talked ? " You caught him this closing." : "") + talks;
+    return (C.state === "dream" ? "Dreaming in front of a case in " + where + " until you talk to him or its lights go off" : C.state === "home" ? "Heading home through the front doors (now in " + where + ")" + (C.dark ? ", avoiding you" : "") : "Gone home for the night; the basement's empty") + "." + (C.talked ? " You caught him this closing." : "") + talks;
   }
   tourInfo() {
     const T = this.tour; if (!T || !T.on) return "";
@@ -7557,7 +7576,7 @@ class Game {
   supplyInfo() {
     const S = this.sup; if (!S) return "";
     const Q = this.rooms.museum ? this.rooms.museum.npcs.filter(n => n.queue && n.queue.phase === "in").length : 0;
-    const box = k => S.boxes.some(b => b.kind === k) ? "in the basement" : this.carryBox === k ? "in your hands" : "brought up";
+    const box = k => { const b = S.boxes.find(b => b.kind === k); return b ? (b.room === "storage" ? "in the basement" : "set down in " + ROOMS[b.room].name.replace(/\s+/g, " ")) : this.carryBox === k ? "in your hands" : "brought up"; };
     return "Supplies: " + (S.shopDone && !S.boxes.some(b => b.kind === "shop") && this.carryBox !== "shop" ? (this.director().problems.includes("stock") ? "shop stock brought up" : "the shop's fine") : "shop stock " + box("shop") + (this.rooms.museum && this.rooms.museum.npcs.some(n => n.stocking) ? " (the shopkeeper's stocking)" : ""))
       + "; " + (S.cafeNeeded ? "café supplies " + box("cafe") : "the café's prepped") + ". Line: " + Q + " waiting, " + Math.round(this.serveTime() / 60) + " s an order.";
   }
@@ -7679,7 +7698,7 @@ class Game {
     const d = this.director(), key = todayISO() + ":" + d.loop;
     let J = this.jan;
     if (!J || J.key !== key) { // a new visit (or the loop started over, or a new day)
-      const n = J ? J.npc : { sheet: "janitor", janitor: true, staff: true, role: "janitor", x: 0, y: 0, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 0, lines: [], lineI: -1 };
+      const n = J ? Object.assign(J.npc, { leaving: false, gone: false }) : { sheet: "janitor", janitor: true, staff: true, role: "janitor", x: 0, y: 0, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 0, lines: [], lineI: -1 };
       if (!J) { const [x, y] = this.janStand("lobby", "staff"); n.x = x; n.y = y; n.alpha = 0; n.fadeIn = true; } // out of the staff door
       J = this.jan = { key, gen: this.worldGen, stops: this.janPlan(d.loop), i: 0, mode: "go", t: 0, eta: -1, phase: "chores", npc: n, room: J ? J.room : "lobby", watered: 0, stuck: 0 };
     } else if (J.gen !== this.worldGen) { // the museum was rebuilt (usually the pack loading just after the page opens): the same chores, on the new map
@@ -7688,17 +7707,20 @@ class Game {
       if (!R || !R.solid[n.y] || R.solid[n.y][n.x] !== false) { J.room = R ? J.room : "lobby"; const [x, y] = J.room === "lobby" ? this.janStand("lobby", "staff") : this.janArrive(J.room, "lobby"); n.x = x; n.y = y; } // stood somewhere that's a wall now
     }
     const n = J.npc;
+    if (J.phase === "gone") { if (!n.leaving) for (const id in this.rooms) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== n); return; } // gone home for the night
     for (const id in this.rooms) { const R = this.rooms[id], has = R.npcs.includes(n); if (id === J.room && !has) R.npcs.push(n); else if (id !== J.room && has) R.npcs = R.npcs.filter(m => m !== n); }
     // What he says depends on what he's doing.
     let stop = J.phase === "chores" ? J.stops[J.i] : J.phase === "plants" ? J.cur : J.brk;
-    const say = J.phase === "break" ? (J.early ? "jan.early" : "jan.break") : J.phase === "plants" ? (d.over ? "jan.overtime" : "jan.plants") : J.mode === "wait" ? "jan.wait" : J.i === 0 && J.mode === "go" ? "jan.start" : stop && stop.act === "empty" ? "jan.trash" : "jan.sweep";
+    const say = J.phase === "break" ? (J.brk && J.brk.act === "home" ? "jan.home" : J.early ? "jan.early" : "jan.break") : J.phase === "plants" ? (d.over ? "jan.overtime" : "jan.plants") : J.mode === "wait" ? "jan.wait" : J.i === 0 && J.mode === "go" ? "jan.start" : stop && stop.act === "empty" ? "jan.trash" : "jan.sweep";
     if (J.say !== say) { J.say = say; n.lines = this.pack.settings.text[say] || (TEXT[say] && TEXT[say].v) || [[say]]; n.lineI = -1; }
     const vis = J.room === this.room.id;
     if (!vis) { // out of sight: finish any step or fade-in at once (only the room you're in moves people along)
       if (n.moving) { const [dx, dy] = DIRS[n.dir]; n.x += dx; n.y += dy; n.moving = false; n.prog = 0; }
       if (n.fadeIn) { n.fadeIn = false; delete n.alpha; }
     }
-    if (d.paused || this.tut || this.closing || (vis && this.mode !== "walk") || n.moving || n.fadeIn) return; // the clock's stopped, or he's mid-step, or you're talking to him
+    if (d.paused || this.tut || (vis && this.mode !== "walk") || n.moving || n.fadeIn) return; // the clock's stopped, or he's mid-step, or you're talking to him
+    const late = d.over || this.closing; // the loop's over, or closing time: no more waiting for the next quarter
+    if (this.closing && J.phase === "break" && (!J.brk || J.brk.act !== "home")) { J.brk = { room: "lobby", at: ROOMS.lobby.exitTo || ROOMS.lobby.spawn, dir: "down", act: "home", dur: 1 }; J.mode = "go"; } // done for the day: home through the front doors
     if (J.door) { // through a door: fade out, and on into the next room
       if (vis && (n.alpha = (n.alpha === undefined ? 1 : n.alpha) - 1 / 24) > 0) return;
       const from = J.room; J.room = J.door; J.door = null; const [x, y] = this.janArrive(J.room, from); n.x = x; n.y = y; n.route = null; J.eta = -1;
@@ -7707,11 +7729,11 @@ class Game {
     }
     // Which stop is next.
     if (J.phase === "chores" && J.mode !== "act") {
-      if (!stop) { if (d.beat >= 3 || d.over) { J.phase = "plants"; J.cur = null; } else J.mode = "wait"; }
-      else if (stop.notBefore > d.beat && !d.over) J.mode = "wait";
+      if (!stop) { if (d.beat >= 3 || late) { J.phase = "plants"; J.cur = null; } else J.mode = "wait"; }
+      else if (stop.notBefore > d.beat && !late) J.mode = "wait";
       else if (J.mode === "wait") J.mode = "go";
     }
-    if (J.phase === "plants" && !J.cur) { J.cur = this.janNextPlant(J.room, n.x, n.y); J.mode = "go"; if (!J.cur) { J.phase = "break"; J.early = !J.watered && !d.over; J.brk = this.janBreakSpot(); } }
+    if (J.phase === "plants" && !J.cur) { J.cur = this.janNextPlant(J.room, n.x, n.y); J.mode = "go"; if (!J.cur) { J.phase = "break"; J.early = !J.watered && !late; J.brk = this.janBreakSpot(); } }
     if (J.phase === "break" && !J.brk) J.brk = this.janBreakSpot();
     if (J.mode !== "wait") { J.fill = null; J.fillT = 0; if (J.mode !== "act") n.sweep = false; }
     else if (J.fillT > 0) { n.sweep = true; if (--J.fillT <= 0) { J.fill = null; n.sweep = false; } return; }
@@ -7735,6 +7757,7 @@ class Game {
         const more = J.stops.slice(J.i + 1).some(st => st.act === "empty" && st.chore === stop.chore); n.trashBag = more && stop.room !== "staff";
       }
       if (stop.lit) { const L = this.litter && this.litter[stop.room]; if (L) { const i = L.indexOf(stop.lit); if (i >= 0) L.splice(i, 1); } J.lit = null; J.swept = (J.swept || 0) + 1; J.mode = "go"; return; }
+      if (stop.act === "home") { J.phase = "gone"; if (vis) { n.leaving = true; n.leaveT = 0; n.alpha = 1; } return; } // out the front doors
       if (J.phase === "chores") J.i++; else if (J.phase === "plants") J.cur = null;
       J.mode = "go"; return;
     }
@@ -7762,7 +7785,7 @@ class Game {
     const J = this.jan; if (!J) return "";
     const R = ROOMS[J.room], z = J.room === "museum" && this.rooms.museum ? this.zoneAt(this.rooms.museum, J.npc.x, J.npc.y) : null, where = z ? z.name : R ? R.name : J.room;
     const st = J.phase === "chores" ? J.stops[J.i] : J.cur;
-    const what = J.door ? "going through a door" : J.lit ? "sweeping up litter (" + (J.swept || 0) + " so far)" : J.phase === "break" ? (J.early ? "on an early break" : "on his break") : J.phase === "plants" ? (this.director().over ? "overtime: " : "") + "watering " + (st ? "the " + (st.name || "plant") : "plants") + " (" + J.watered + " so far)"
+    const what = J.door ? "going through a door" : J.lit ? "sweeping up litter (" + (J.swept || 0) + " so far)" : J.phase === "gone" ? "gone home for the night" : J.phase === "break" ? (J.brk && J.brk.act === "home" ? "done for the day, heading home" : J.early ? "on an early break" : "on his break") : J.phase === "plants" ? (this.director().over ? "overtime: " : "") + "watering " + (st ? "the " + (st.name || "plant") : "plants") + " (" + J.watered + " so far)"
       : J.mode === "wait" ? "between chores, waiting for the next quarter" : st ? (st.act === "empty" ? "taking out the trash" : "sweeping " + st.where) + " (chore " + st.chore + " of 3)" : "";
     return "Janitor: " + what + ", in " + where + ".";
   }
@@ -8420,8 +8443,12 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 step 6b";
-window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
+const VERSION = "2026-11-18 lines 2";
+/* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
+   version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
+const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
+  { "screen.guest": ["I keep telling myself one more episode."] });
+window.GOQ = { CLAUDE_LINES, PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
   spotRooms: () => Object.keys(ROOMS).filter(id => (ROOMS[id].spots || []).length).map(id => ({ id, name: ROOMS[id].name, n: ROOMS[id].spots.length })),
