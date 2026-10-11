@@ -1397,10 +1397,25 @@ const DEFAULT_CORKBOARD = [
 ];
 /* Sample gift shop items. The host replaces these in the curator's Shop tab. */
 const SAMPLE_ITEMS = [
-  { id: "goq-shades", name: "GOQ Shades", price: 12, description: "[GOQ Shades: description]", use: "shades" },
-  { id: "goq-hat", name: "GOQ Hat", price: 10, description: "[GOQ Hat: description]", use: "hat" },
-  { id: "goq-mug", name: "GOQ Travel Mug", price: 8, description: "[GOQ Travel Mug: description. Your café drinks come in it.]", use: "mug" },
-  { id: "goq-case", name: "GOQ Phone Case", price: 10, description: "[GOQ Phone Case: description]", use: "case" },
+  { id: "goq-shades", name: "GOQ Shades", price: 12, description: "A slick pair of shades.", use: "shades" },
+  { id: "goq-hat", name: "GOQ Hat", price: 10, description: "Well-made dad hat. It has the GOQ logo in yellow.", use: "hat" },
+  { id: "goq-mug", name: "GOQ Travel Mug", price: 8, description: "A travel mug. Finally, you can drink cafe drinks while you walk!", use: "mug" },
+  { id: "goq-case", name: "GOQ Phone Case", price: 10, description: "A neat case that makes your already flashy phone flashier.", use: "case" },
+];
+/* Bluu's exclusives (Joe 10/11): GOQ hats and shades in colorways the gift shop never made, only at his Saturday stall.
+   A recolor of the hat and shades art (swap: the art's own colors -> the new ones). Joe's hat: crown #6d6d6d, band #424242,
+   logo #f0c040 (the built-in placeholder's #c83a3a and #8a2020 too); the shades: frames #181820, lenses #34344a. Redraw
+   the art in other colors and these need updating. One of his three things each week. They can
+   be fakes like anything he sells (misspelled), except the ultra-rare red lenses, which are always the real deal. */
+const BLUU_GEAR = [
+  { id: "bx-hat-pinkblack", name: "Pink & Black GOQ Hat", use: "hat", swap: { "#6d6d6d": "#e870a8", "#424242": "#26262e", "#c83a3a": "#e870a8", "#8a2020": "#26262e" } },
+  { id: "bx-hat-blackpink", name: "Black & Pink GOQ Hat", use: "hat", swap: { "#6d6d6d": "#2c2c36", "#424242": "#e870a8", "#c83a3a": "#2c2c36", "#8a2020": "#e870a8", "#f0c040": "#e870a8" } },
+  { id: "bx-hat-whitegold", name: "White & Gold GOQ Hat", use: "hat", swap: { "#6d6d6d": "#f2eee4", "#424242": "#d8a830", "#c83a3a": "#f2eee4", "#8a2020": "#d8a830", "#f0c040": "#d8a830" } },
+  { id: "bx-hat-goldwhite", name: "Gold & White GOQ Hat", use: "hat", swap: { "#6d6d6d": "#e0b040", "#424242": "#f2eee4", "#c83a3a": "#e0b040", "#8a2020": "#f2eee4", "#f0c040": "#f2eee4" } },
+  { id: "bx-hat-purple", name: "Purple GOQ Hat", use: "hat", swap: { "#6d6d6d": "#8a5ac8", "#424242": "#5a3a8a", "#c83a3a": "#8a5ac8", "#8a2020": "#5a3a8a" } },
+  ...[["Red", "#c83a3a"], ["Blue", "#3a6ad0"], ["Green", "#3aa060"], ["Purple", "#8a5ac8"], ["White", "#f0ece4"], ["Gold", "#e0b040"], ["Teal", "#2aa0a0"], ["Pink", "#e870a8"]]
+    .map(([c, hex]) => ({ id: "bx-shades-" + c.toLowerCase(), name: c + " Frame GOQ Shades", use: "shades", swap: { "#181820": hex } })), // frames only, never a skin color
+  { id: "bx-shades-redlens", name: "Red Lens GOQ Shades", use: "shades", ultra: true, swap: { "#34344a": "#d02828", "#9ab0d0": "#ff9a8a" } },
 ];
 const DRINKS = [{ id: "coffee", name: "Coffee", color: "#5a3420" }, { id: "tea", name: "Tea", color: "#c89040" }, { id: "cocoa", name: "Cocoa", color: "#a06040" }]; // color: what shows through an iced cup
 /* Relationships: how the curator's experience of a game lined up with what its developer intended (the two placards).
@@ -1410,26 +1425,26 @@ const DRINKS = [{ id: "coffee", name: "Coffee", color: "#5a3420" }, { id: "tea",
    they wanted another ({title} is the piece): what they read there, in plain words. */
 const SAMPLE_RELATIONS = [
   { id: "same", name: "Same page", about: "The curator felt what the developer was going for.",
-    ask: ["[Asks for a game where the curator felt exactly what the developer was going for]", "[Asks for one where the curator and the developer were on the same page]"],
-    miss: ["[Reads {title}: the curator felt just what the developer meant. Not what they're after]"] },
+    ask: ["I'm looking for a game where the curator understood exactly what was going on.", "I want to play a game where the dev and the curator were on the same page."],
+    miss: ["This one says the curator felt what was intended. That's not what I'm looking for."] },
   { id: "halfway", name: "Halfway there", about: "Some of what the developer meant landed, some didn't.",
-    ask: ["[Asks for a game where the curator only half got what the developer was going for]", "[Asks for one where some of it came through and some didn't]"],
-    miss: ["[Reads {title}: some of it landed for the curator, some didn't. Not what they're after]"] },
+    ask: ["This is gonna sound weird, but I want to play a game where the curator only got HALF of what was intended.", "I'm looking for a game that the curator understood... ..but only partially. You know?"],
+    miss: ["This looks like the curator got roughly half of what was intended. Not what I'm looking for."] },
   { id: "student", name: "Student", about: "The curator wasn't the audience, but had fun once it all sank in.",
-    ask: ["[Asks for a game the curator wasn't the audience for, but learned to love]", "[Asks for one that clicked for the curator once they finally got it]"],
-    miss: ["[Reads {title}: the curator wasn't the audience, but came around to it. Not what they're after]"] },
+    ask: ["I want a game that the curator had to learn to love.", "I'm looking for something that made the curator stop at first but then it clicked later on."],
+    miss: ["This shows the curator didn't like the game at first, but it clicked later. Not really what I'm looking for."] },
   { id: "accident", name: "Happy accident", about: "The curator found something the developer didn't plan.",
-    ask: ["[Asks for a game where the curator found something the developer never meant to put there]", "[Asks for one that didn't turn out how the developer planned, but turned out great]"],
-    miss: ["[Reads {title}: the curator found something the developer didn't plan. Not what they're after]"] },
+    ask: ["I'm looking for a game where the curator discovered something that was never intended, and it ended up being the best part.", "I want to see a game where the curator stumbled onto something the dev never planned."],
+    miss: ["This says the curator stumbled onto something the developer never planned. That's not what I want."] },
   { id: "different", name: "Different feeling", about: "It made the curator feel something other than what was intended.",
-    ask: ["[Asks for a game that made the curator feel something totally different from what the developer meant]", "[Asks for one where the curator and the developer felt opposite things]"],
-    miss: ["[Reads {title}: the curator felt something other than what the developer meant. Not what they're after]"] },
+    ask: ["I would love to see a game where the curator felt the complete opposite of what was intended.", "Do you know of a game that intended a feeling but the curator got the opposite feeling?"],
+    miss: ["This says the dev wanted one feeling and the curator felt a totally different one. Not what I'm looking for."] },
   { id: "message", name: "Missed the message", about: "There was a deeper meaning, and it didn't come through.",
-    ask: ["[Asks for a game with a deeper meaning the curator didn't pick up on]", "[Asks for one where the developer was saying something the curator missed]"],
-    miss: ["[Reads {title}: the developer was saying something the curator missed. Not what they're after]"] },
+    ask: ["I want to see a game that had a message the curator didn't pick up on.", "You know of any games that the curator didn't even get the message of?"],
+    miss: ["This looks like the curator missed the message. Not what I'm looking for."] },
   { id: "notforme", name: "Not for me", about: "It does what the developer wanted; the curator just isn't its audience.",
-    ask: ["[Asks for a game that does what the developer wanted, but just wasn't the curator's thing]", "[Asks for one the curator respected but didn't love]"],
-    miss: ["[Reads {title}: it does what the developer wanted, it just wasn't for the curator. Not what they're after]"] },
+    ask: ["I'd like a game that the curator respected but didn't like.", "I'm looking for a game that the curator understood but didn't care for."],
+    miss: ["This one says the curator understood the game but just didn't like it. Not what I'm looking for."] },
 ];
 const VISITOR_NAMES = ["Ada", "Bea", "Cal", "Dot", "Eli", "Fern", "Gus", "Hana", "Ivo", "June", "Kit", "Lou", "Mae", "Nico", "Oona", "Pip", "Quinn", "Rosa", "Sol", "Tess",
   "Uma", "Vic", "Wren", "Yuki", "Arlo", "Bram", "Cleo", "Dex", "Esme", "Finn", "Gio", "Hal", "Iris", "Jude", "Kai", "Lark", "Milo", "Nell", "Otis", "Pia"];
@@ -1972,17 +1987,17 @@ const TUT_SPOTS = { r1Exit: [5, 8], glass: [6, 8], office: { rosie: [3, 6], skye
    Placeholders: {name} (who's clocked in, or "friend"; a curator badge gets one of the curator's nicknames), {cat}, {catRoom}, {title}, {date}, {drink}, {n}, {room}, {hint}, {floor}, {locker}. */
 const TEXT = {
   "case.empty":        { g: "Pieces", l: "Empty display case", v: [["An empty display case, waiting for a game."]] },
-  "unveil.call":       { g: "Unveiling", l: "The ceremony: the usher calls everyone's attention ({title}: the new piece)", v: [["[Usher: calls everyone's attention. The curator will now unveil {title}]"]] },
-  "unveil.curator":    { g: "Unveiling", l: "The ceremony: the curator, just before pulling the cloth off ({title})", v: [["[Curator: a few words about {title}]"]] },
-  "unveil.read":       { g: "Unveiling", l: "After the unveil: the usher invites everyone to read the placard ({title})", v: [["[Usher: go read the placard for {title}]"]] },
-  "unveil.arcade":     { g: "Unveiling", l: "After the unveil, if the piece has a game link: play it on the arcade cabinet ({title})", v: [["[Usher: you can play {title} on the arcade cabinet in the café]"]] },
-  "unveil.theater":    { g: "Unveiling", l: "After the unveil, if the piece has an episode: watch it in the screening nook ({title})", v: [["[Usher: the episode about {title} is on in the screening nook]"]] },
-  "unveil.drink":      { g: "Unveiling", l: "After the unveil, if the piece brings a drink: the drink of the week ({drink})", v: [["[Usher: to celebrate, there's a new drink at the café: {drink}]"]] },
-  "unveil.gift":       { g: "Unveiling", l: "After the unveil, if the piece brings a gift: everyone here gets one free ({item})", v: [["[Usher: and everyone here today gets a free {item}]"]] },
-  "unveil.got":        { g: "Unveiling", l: "The note when you get the unveil gift ({item})", v: [["[You got the {item}]"]] },
+  "unveil.call":       { g: "Unveiling", l: "The ceremony: the usher calls everyone's attention ({title}: the new piece)", v: [["Hello, may I have your attention please!", "The curator will now unveil the newest addition!"]] },
+  "unveil.curator":    { g: "Unveiling", l: "The ceremony: the curator, just before pulling the cloth off ({title})", v: [["Everyone please welcome {title}"]] },
+  "unveil.read":       { g: "Unveiling", l: "After the unveil: the usher invites everyone to read the placard ({title})", v: [["As always, check out the placard,"]] },
+  "unveil.arcade":     { g: "Unveiling", l: "After the unveil, if the piece has a game link: play it on the arcade cabinet ({title})", v: [["check out the store front page at the arcade machine,"]] },
+  "unveil.theater":    { g: "Unveiling", l: "After the unveil, if the piece has an episode: watch it in the screening nook ({title})", v: [["and see the episode in the theater!"]] },
+  "unveil.drink":      { g: "Unveiling", l: "After the unveil, if the piece brings a drink: the drink of the week ({drink})", v: [["To celebrate, we're offering a new drink called {drink} in the café!"]] },
+  "unveil.gift":       { g: "Unveiling", l: "After the unveil, if the piece brings a gift: everyone here gets one free ({item})", v: [["And everyone here today will receive the featured item: {item} for free!"]] },
+  "unveil.got":        { g: "Unveiling", l: "The note when you get the unveil gift ({item})", v: [["You got the {item}"]] },
   "case.covered":      { g: "Pieces", l: "Case under a cloth (unveiling soon)", v: [["Something is under a cloth in this case.", "The card says it will be unveiled on {date}."]] },
   "painting.covered":  { g: "Pieces", l: "Painting under a sheet (unveiling soon)", v: [["Something is hanging under a sheet.", "The card says it will be unveiled on {date}."]] },
-  "case.ends":         { g: "Pieces", l: "Reading a case from the side", v: [["The placards are on the front and the back. Walk around to read them."]] },
+  "case.ends":         { g: "Pieces", l: "Reading a case from the side", v: [["You can't read from the side. Front or back only."]] },
   "case.obsLabel":     { g: "Pieces", l: "Heading over the observation (one line)", v: [["THE CURATOR'S OBSERVATION"]] },
   "case.intLabel":     { g: "Pieces", l: "Heading over the developer's intention (one line)", v: [["THE DEVELOPER'S INTENTION"]] },
   "tut.hello":         { g: "Tutorial", l: "The usher, when you reach the desk (the last page asks for your badge)", v: [["Oh, hey! You must be the new hire.", "I'm happy to train you.", "First things first: can I get your badge number and key code?"]] },
@@ -1996,160 +2011,163 @@ const TEXT = {
   "tut.usher.go":      { g: "Tutorial", l: "The usher, while you're training", v: [["Go on, the door's right over there."]] },
   "tut.usher.great":   { g: "Tutorial", l: "The usher, when you come out front after helping all three visitors", v: [["You did great!", "Last thing: make the closing announcement on the intercom, then turn off the lights in both training rooms before you head out."]] },
   "tut.usher.closing": { g: "Tutorial", l: "The usher, before the closing announcement", v: [["The intercom's on the wall. Go on, make the announcement."]] },
-  "tut.usher.lights":  { g: "Tutorial", l: "The usher, while you turn off the lights", v: [["Lights off in both training rooms, then you're free to go."]] },
-  "tut.speaker":       { g: "Tutorial", l: "The speaker crackling on (before each speaker line)", v: [["*krrst* ...ding dong..."]] },
+  "tut.usher.lights":  { g: "Tutorial", l: "The usher, while you turn off the lights", v: [["Lights off in both training rooms, then you can go."]] },
+  "tut.speaker":       { g: "Tutorial", l: "The speaker crackling on (before each speaker line)", v: [["*ding dong*"]] },
   "tut.locked":        { g: "Tutorial", l: "A locked door", v: [["It's locked."]] },
   "tut.lockedStart":   { g: "Tutorial", l: "The speaker, when you try the way you came in", v: [["Yeah, ok, don't panic. This is part of the training."]] },
-  "tut.unlocked":      { g: "Tutorial", l: "The far door unlocking (one line)", v: [["*click* The far door unlocked."]] },
+  "tut.unlocked":      { g: "Tutorial", l: "The far door unlocking (one line)", v: [["*click* A door unlocked."]] },
   "tut.recommendFirst": { g: "Tutorial", l: "The speaker, when you try a door with visitors still waiting", v: [["You've still got visitors waiting on a recommendation. Help them out first."]] },
   "tut.ask":           { g: "Tutorial", l: "A visitor asking for a game ({want}: one of the asks for their relationship, in Visitors; the last page asks to follow)", v: [["Oh! Do you work here?", "Could you recommend me a game? {want}"]] },
   "tut.follow":        { g: "Tutorial", l: "A visitor, following you", v: [["Lead the way!"]] },
   "tut.remind":        { g: "Tutorial", l: "A visitor, reminding you what they want ({want})", v: [["{want}"]] },
   "tut.oneAtATime":    { g: "Tutorial", l: "Trying to lead two visitors at once", v: [["One visitor at a time! Finish helping the one you're with first."]] },
-  "tut.thanks":        { g: "Tutorial", l: "A visitor, after you recommend the right game ({title})", v: [["[Oh, {title}! That's exactly what I was looking for. Thanks!]"]] },
-  "tut.missFirst":     { g: "Tutorial", l: "The speaker, the first time you recommend the wrong game", v: [["[Not quite. Read both sides of a case: what the curator felt, and what the developer meant. Then find the one they're asking for]"]] },
+  "tut.thanks":        { g: "Tutorial", l: "A visitor, after you recommend the right game ({title})", v: [["{title}! Yes! Thank you!"]] },
+  "tut.missFirst":     { g: "Tutorial", l: "The speaker, the first time you recommend the wrong game", v: [["Not quite. Read both sides of the case to get a better understanding of what they're looking for."]] },
   "tut.after":         { g: "Tutorial", l: "A visitor, after telling you", v: [["Thanks again for the recommendation!"]] },
-  "tut.frame":         { g: "Tutorial", l: "The speaker, once you've read both sides of the middle game (after the door unlocks)", v: [["[People don't come here for genres. They come for the curator's story with a game: what the curator felt, next to what the developer meant]"]] },
+  "tut.frame":         { g: "Tutorial", l: "The speaker, once you've read both sides of the middle game (after the door unlocks)", v: [["The GOQ museum is about comparisons. Most people come here for a story, told by both the developer and the curator."]] },
   "tut.closeUp":       { g: "Tutorial", l: "The speaker, right after you help the third visitor", v: [["Nice work! That's pretty much the job.", "Come on out front for the last part of the training."]] },
   "tut.intercomEarly": { g: "Tutorial", l: "The intercom, before it's time", v: [["The office intercom. Not yet, though."]] },
-  "tut.announce":      { g: "Tutorial", l: "The tutorial's closing announcement", v: [["*ding-dong*", "Attention, visitors: the museum is closing for the night. Thanks for coming!"]] },
+  "tut.announce":      { g: "Tutorial", l: "The tutorial's closing announcement", v: [["*ding-dong*", "Attention, visitors: the museum is closing for the night. Thank you for coming!"]] },
   "tut.lightsEarly":   { g: "Tutorial", l: "A light switch, before it's time", v: [["Better leave the lights on while there's still training to do."]] },
   "tut.allDark":       { g: "Tutorial", l: "Both training rooms dark", v: [["That's both rooms. Head out the glass door when you're ready."]] },
-  "tut.lightsFirst":   { g: "Tutorial", l: "The speaker, at the glass door with lights still on", v: [["Lights, please! Both training rooms, before you go."]] },
+  "tut.lightsFirst":   { g: "Tutorial", l: "The speaker, at the glass door with lights still on", v: [["Wait, get the lights before you go."]] },
   "tut.waitVisitors":  { g: "Tutorial", l: "The glass door while visitors are still leaving", v: [["Let the visitors head out first."]] },
   "tut.notYet":        { g: "Tutorial", l: "The glass door in the middle of training", v: [["You can't leave in the middle of training!"]] },
   "tut.done":          { g: "Tutorial", l: "The speaker, as you leave", v: [["And that's training! Welcome to the team.", "The museum's all yours."]] },
   "tut.welcome":       { g: "Tutorial", l: "Arriving in the lobby after training", v: [["Welcome to the GOQ Museum."]] },
   "tut.bus.title":     { g: "Tutorial", l: "The middle game's title (it opens the far door)", v: [["Last Bus Home"]] },
-  "tut.bus.front":     { g: "Tutorial", l: "Last Bus Home: the curator's observation (front)", v: [["[I felt like the only person awake in the whole city, and that part really got me. But it felt lonely. Nobody talks, and the route just loops]"]] },
+  "tut.bus.front":     { g: "Tutorial", l: "Last Bus Home: the curator's observation (front)", v: [["You know when you play a game and get an experience that resonates deeply? This was one for me. The isolation, the dark colors, and the moody music all gave me a huge feeling of loneliness."]] },
   "tut.bus.back":      { g: "Tutorial", l: "Last Bus Home: the developer's intention (back)", v: [["The developer worked nights for six years and wanted quiet companionship: the only adult awake in the city, but not lonely about it. Regulars start waving at you, and the last passenger always says \"thanks, driver.\""]] },
   "tut.spoon.title":   { g: "Tutorial", l: "The right-hand game's title", v: [["Spoon Siege"]] },
-  "tut.spoon.front":   { g: "Tutorial", l: "Spoon Siege: the curator's observation (front)", v: [["[Flinging ants back to the start with a spoon made me feel weirdly powerful. It's cute and quirky, and I loved it]"]] },
+  "tut.spoon.front":   { g: "Tutorial", l: "Spoon Siege: the curator's observation (front)", v: [["It's a game where you try to fling ants with a spoon. I felt like a god playing it. All these little things under my command. Cute and quirky."]] },
   "tut.spoon.back":    { g: "Tutorial", l: "Spoon Siege: the developer's intention (back)", v: [["The developer didn't aim for any feeling. They made it to learn how pathfinding works, and it's set in a kitchen drawer because they had a fork on their desk."]] },
   "tut.sale.title":    { g: "Tutorial", l: "The left-hand game's title", v: [["Grandpa's Garage Sale"]] },
-  "tut.sale.front":    { g: "Tutorial", l: "Grandpa's Garage Sale: the curator's observation (front)", v: [["[Haggling every customer down to the last coin made me feel like a mastermind. I barely let Grandpa finish a sentence]"]] },
+  "tut.sale.front":    { g: "Tutorial", l: "Grandpa's Garage Sale: the curator's observation (front)", v: [["This game filled me with a sense of be a mastermind. I could out-haggle every person. The grandpa character was a weird addition, but it didn't take away from my entrepreneurial spirt."]] },
   "tut.sale.back":     { g: "Tutorial", l: "Grandpa's Garage Sale: the developer's intention (back)", v: [["The developer wanted bittersweet letting go: helping Grandpa downsize after Grandma passed. Every item has a story, and you earn more the less you let him talk. Selling well is meant to feel a little bad."]] },
   "tut.photo":         { g: "Tutorial", l: "Taking your first photo in the tutorial", v: [["Oh yeah, you can take photos.", "They don't help you here, though."]] },
   "tut.door":          { g: "Tutorial", l: "The lobby's Tutorial door", v: [["A door marked TUTORIAL. Take the training again?"]] },
-  "patron.enjoyed":    { g: "Staff", l: "A Patreon member mentioning a game they enjoyed ({title}: a random game; one picked at random)", v: [["I played {title} last week. Really enjoyed it."], ["Have you tried {title}? I keep thinking about it."], ["{title} was so good. No notes."], ["I finally got around to {title}. Worth it."], ["Okay, {title}. Why didn't anyone tell me sooner?"]] },
-  "screen.guest":      { g: "Screening nook", l: "Someone sitting in the screening nook (takes turns)", v: [["Shh. It's getting to the good part."], ["I've seen this one four times."], ["The host talks fast. I like it."], ["[PLACEHOLDER: a screening nook guest line (replaces the popcorn one)]"], ["I came in for five minutes. That was an hour ago."]] },
+  "patron.enjoyed":    { g: "Staff", l: "A Patreon member mentioning a game they enjoyed ({title}: a random game; one picked at random)", v: [["I played {title} last week. Really enjoyed it."], ["Have you tried {title}? I keep thinking about it."], ["{title} was so good. No notes."], ["I finally got around to {title}. Dope."], ["Okay, {title}. Why didn't anyone tell me sooner?"]] },
+  "screen.guest":      { g: "Screening nook", l: "Someone sitting in the screening nook (takes turns)", v: [["Shh. It's getting to the good part."], ["I've seen this one four times."], ["I literally only watch these to fall asleep."], ["I keep telling myself one more episode."], ["I came in for five minutes. That was an hour ago."]] },
   "screen.ask":        { g: "Screening nook", l: "Sitting down or looking at the screen ({title}: what's playing this hour)", v: [["Now playing: {title}. Stay for it?"]] },
   "screen.marquee":    { g: "Screening nook", l: "The red LED sign out front, before the title (letters, numbers and : - . ! ? ' & , / only)", v: [["NOW PLAYING:"]] },
-  "screen.sign":       { g: "Screening nook", l: "Looking at the LED sign out front ({title}: what's playing this hour)", v: [["NOW PLAYING: {title}.", "It changes every hour. The sign is very proud of this."]] },
+  "screen.sign":       { g: "Screening nook", l: "Looking at the LED sign out front ({title}: what's playing this hour)", v: [["NOW PLAYING: {title}.", "It changes every hour.", "Neat."]] },
   "screen.enter":      { g: "Screening nook", l: "The little notice walking in ({title})", v: [["Now playing: {title}"]] },
-  "office.locked":     { g: "Curator's office", l: "The office door's keypad before closing (it only works after hours)", v: [["[Keypad on the office door is dark: hint that it only works after the museum is closed, and that the code is somewhere only a real fan would find it]"]] },
+  "office.locked":     { g: "Curator's office", l: "The office door's keypad before closing (it only works after hours)", v: [["The door is locked and there's a keypad to get in.", "If you really want to get in, you could find the code somehow. I'd start by reading every single exhibit."]] },
   "office.keypad":     { g: "Curator's office", l: "The keypad's title, after hours", v: [["KEYPAD"]] },
-  "office.wrong":      { g: "Curator's office", l: "Wrong code on the keypad", v: [["[Wrong code: the keypad buzzes]"]] },
-  "office.lockout":    { g: "Curator's office", l: "Third wrong code today: the keypad locks until tomorrow", v: [["[Third wrong code: the keypad locks itself until tomorrow]"]] },
-  "office.open":       { g: "Curator's office", l: "The right code: the office opens for the first time", v: [["[The right code: the door to the curator's office opens for the first time]"]] },
-  "office.digit":      { g: "Curator's office", l: "A wing's touch screen once every piece in it is read front and back ({digit}: this wing's digit, {room}: the wing)", v: [["[Note from the curator on the {room} touch screen: you've read everything here, and this wing's digit is {digit}]"]] },
+  "office.wrong":      { g: "Curator's office", l: "Wrong code on the keypad", v: [["*buzz*", "Whoops. Wrong code.", "Looks like I have one more attempt."]] },
+  "office.lockout":    { g: "Curator's office", l: "Third wrong code today: the keypad locks until tomorrow", v: [["Welp, now it's locked. I'll have to try again tomorrow."]] },
+  "office.open":       { g: "Curator's office", l: "The right code: the office opens for the first time", v: [["*ding*", "The light turned green! It's open!"]] },
+  "office.digit":      { g: "Curator's office", l: "A wing's touch screen once every piece in it is read front and back ({digit}: this wing's digit, {room}: the wing)", v: [["{room} digit is {digit}"]] },
   "office.callsheet":  { g: "Curator's office", l: "The call sheet on the staff corkboard, after 5 visitors loved your picks (the wings are listed after it, in the order of the code)", by: "claude", v: [["A call sheet, pinned under everything else.", "Someone circled the order the wings are listed in. Three times.", "Probably important."]] },
-  "office.joe":        { g: "Curator's office", l: "Joe, the crochet robot, when you're clocked in ({name}: your badge name; picks one at random)", v: [["[Joe talks to you by name: {name}]"]] },
-  "office.joeAnon":    { g: "Curator's office", l: "Joe, when you're not clocked in (picks one at random)", v: [["[Joe talks to you when he doesn't know your name]"]] },
-  "office.books":      { g: "Curator's office", l: "The bookshelf: one book each (the first line is the spine, the rest is your note)", v: [["[Book 1 title]", "[Your note about book 1]"], ["[Book 2 title]", "[Your note about book 2]"], ["[Book 3 title]", "[Your note about book 3]"], ["[Book 4 title]", "[Your note about book 4]"], ["[Book 5 title]", "[Your note about book 5]"], ["[Book 6 title]", "[Your note about book 6]"]] },
-  "office.shelf":      { g: "Curator's office", l: "The bookshelf, before picking a book", v: [["[The bookshelf: pick a book]"]] },
-  "office.desk":       { g: "Curator's office", l: "The curator's computer, for anyone without a curator badge", v: [["[The curator's computer: two monitors, both off]"]] },
-  "office.rec":        { g: "Curator's office", l: "The computer, for a curator badge ({state}: on or off)", v: [["[Recording mode is {state}. Hides the pop-ups, the ON SHIFT tag and the touch controls, holds the time of day, skips the tutorial]"]] },
+  "office.joe":        { g: "Curator's office", l: "Joe, the crochet robot, when you're clocked in ({name}: your badge name; picks one at random)", v: [["Hello {name}. My name Joe."], ["Are you supposed to be in here?", "...", "Yes, I am supposed to be here."], ["\"Curator?\" Do you mean DeVaughn? He is not here at the moment."], ["What do you mean by \"what is your true nature?\"", "I am Joe."], ["I do not know what you mean.", "I am a crochet robot.", "That is the extent of my nature."]] },
+  "office.joeAnon":    { g: "Curator's office", l: "Joe, when you're not clocked in (picks one at random)", v: [["Hello. My name Joe."]] },
+  "office.books":      { g: "Curator's office", l: "The bookshelf: one book each (the first line is the spine, the rest is your note)", v: [["The Art of Game Design by Jesse Schell", "\"When you know how to listen, everyone is the guru.\""], ["House of Leaves by Mark Z. Danielewski", "Note: READ THIS ALREADY"], ["Uzumaki by Junji Ito", "Note: Well this is absolutely disgusting. I love it."], ["The Design Of Everyday Things by Don Norman", "“The vicious cycle starts: if you fail at something, you think it is your fault. Therefore you think you can’t do that task. As a result, next time you have to do the task, you believe you can’t, so you don’t even try. The result is that you can’t, just as you thought.”"], ["Cinematography: Theory And Practice by Blain Brown", "\"It’s easy to think of filmmaking as not much more than 'We’ll put the actors on the set and roll the camera.' Obviously, there is much more involved, but it’s important to understand that even if all you do is record what is in front of the camera, you are still making definite decisions about how the viewers are going to perceive the scene.\""]] },
+  "office.shelf":      { g: "Curator's office", l: "The bookshelf, before picking a book", v: [["The Curator's bookshelf. Let's see..."]] },
+  "office.desk":       { g: "Curator's office", l: "The curator's computer, for anyone without a curator badge", v: [["The curator's computer. Everything's powered down."]] },
+  "office.rec":        { g: "Curator's office", l: "The computer, for a curator badge ({state}: on or off)", v: [["Recording mode on"]] },
   "office.tower":      { g: "Curator's office", l: "The white PC tower (picks one at random)", by: "claude", v: [["A white PC tower with a purple light inside.", "It hums like it's thinking about something."], ["The purple light pulses slowly.", "It's either rendering something or it's alive."]] },
-  "office.deck":       { g: "Curator's office", l: "The Steam Deck on the small table (picks one at random)", v: [["[The Steam Deck on the small table]"]] },
-  "office.camera":     { g: "Curator's office", l: "The camera on its tripod (picks one at random)", v: [["[The camera on its tripod]"]] },
+  "office.deck":       { g: "Curator's office", l: "The Steam Deck on the small table (picks one at random)", v: [["A steam deck."]] },
+  "office.camera":     { g: "Curator's office", l: "The camera on its tripod (picks one at random)", v: [["A high-end cinema camera for YouTube videos?"], ["It says \"Blackmagic Cinema Camera 6K FF\"", "What does \"FF\" stand for?"]] },
   "office.light":      { g: "Curator's office", l: "The studio light with the soft box (picks one at random)", by: "claude", v: [["A big studio light with a soft box.", "Everything looks better in soft lighting. Even me."], ["The soft box light. It's off, but I still feel like I'm on camera."]] },
-  "office.tvNone":     { g: "Curator's office", l: "The TV when there are no clip files yet", v: [["[The TV has nothing to show yet]"]] },
-  "day.board.0":       { g: "Days of the week", l: "The lobby's day board on a Sunday", v: [["[Day board, Sunday: someone from the staff is having coffee in the café]"]] },
-  "day.board.1":       { g: "Days of the week", l: "The day board on a Monday", v: [["[Day board, Monday: the conservator has lost some boxes]"]] },
-  "day.board.2":       { g: "Days of the week", l: "The day board on a Tuesday", v: [["[Day board, Tuesday: keep an eye out for anyone who looks lost]"]] },
-  "day.board.3":       { g: "Days of the week", l: "The day board on a Wednesday", v: [["[Day board, Wednesday: an artist is sketching in one of the wings]"]] },
-  "day.board.4":       { g: "Days of the week", l: "The day board on a Thursday", v: [["[Day board, Thursday: trivia with the barista in the café]"]] },
-  "day.board.5":       { g: "Days of the week", l: "The day board on a Friday", v: [["[Day board, Friday: a Games Over Coffee episode in the screening nook]"]] },
-  "day.board.6":       { g: "Days of the week", l: "The day board on a Saturday", v: [["[Day board, Saturday: a pop-up stall in the lobby]"]] },
-  "mon.ask":           { g: "Days of the week", l: "Monday: the conservator, boxes still missing ({n}: how many found, {room}: where one of the others is). Version 1 the first time you talk to him that day, version 2 every time after", v: [["[Conservator, Monday: five boxes went missing around the museum, you've found {n}; vague hint that one is near {room}]"]] },
-  "mon.found":         { g: "Days of the week", l: "Monday: finding a box ({n}: found so far)", v: [["[Found a misplaced box. {n} of 5]"]] },
-  "mon.done":          { g: "Days of the week", l: "Monday: bringing the conservator all five ({n}: tokens)", v: [["[Conservator thanks you for finding all five boxes and gives you {n} tokens]"]] },
-  "mon.after":         { g: "Days of the week", l: "Monday: the conservator after you've found them", v: [["[Conservator, already thanked you today]"]] },
-  "tue.kid":           { g: "Days of the week", l: "Tuesday: the lost kid, the first time. One version per Tuesday, taking turns week to week ({clue}: where his mom is, like \"the Strategy wing\", \"the café\" or \"the Screening Nook\"; add your own \"in\" or \"to\")", v: [["[Lost kid: he can't find his mom. He thinks she's in {clue}]"]] },
-  "tue.again":         { g: "Days of the week", l: "Tuesday: talking to the kid while he follows you ({clue}: like \"the café\")", v: [["[Kid, following you: reminds you she's in {clue}]"]] },
-  "tue.mom":           { g: "Days of the week", l: "Tuesday: his mom, before you've brought him", v: [["[A worried mom: she's lost her son]"]] },
-  "tue.found":         { g: "Days of the week", l: "Tuesday: bringing the kid to his mom ({n}: tokens)", v: [["[Mom is so relieved, and gives you {n} tokens]"]] },
-  "tue.busy":          { g: "Days of the week", l: "Tuesday: the kid when someone else is already following you", v: [["[Kid: you're already helping someone]"]] },
-  "wed.easel":         { g: "Days of the week", l: "Wednesday: looking at the artist's easel (picks one at random)", v: [["[The artist's easel: what's on the canvas so far]"]] },
-  "wed.ask":           { g: "Days of the week", l: "Wednesday: the artist", v: [["[Artist: needs inspiration. Show him a photo?]"]] },
-  "wed.none":          { g: "Days of the week", l: "Wednesday: the artist, when you have no photos", v: [["[Artist: you don't have any photos to show]"]] },
-  "wed.r0":            { g: "Days of the week", l: "Wednesday: the artist's reaction to a common photo ({desc}, {n}: tokens)", v: [["[Artist, unimpressed by your photo, gives you {n} token anyway]"]] },
-  "wed.r1":            { g: "Days of the week", l: "Wednesday: the artist's reaction to an uncommon photo ({desc}, {n})", v: [["[Artist, mildly interested, gives you {n} tokens]"]] },
-  "wed.r2":            { g: "Days of the week", l: "Wednesday: the artist's reaction to a rare photo ({desc}, {n})", v: [["[Artist, excited about your photo, gives you {n} tokens]"]] },
-  "wed.r3":            { g: "Days of the week", l: "Wednesday: the artist's reaction to the rarest photos ({desc}, {n})", v: [["[Artist, speechless at your photo, gives you {n} tokens]"]] },
-  "wed.self":          { g: "Days of the week", l: "Wednesday: showing the artist a photo of himself (no tokens; you can show him another)", v: [["[Artist, not amused: a photo of himself is no inspiration]"]] },
-  "wed.ownEasel":      { g: "Days of the week", l: "Wednesday: showing the artist a photo of his own easel (no tokens; you can show him another)", v: [["[Artist, not amused: he's seen his own easel, thanks]"]] },
-  "wed.after":         { g: "Days of the week", l: "Wednesday: the artist after you've shown him a photo", v: [["[Artist, busy sketching your photo]"]] },
-  "wed.sketch":        { g: "Days of the week", l: "The artist's sketch on the staff corkboard, for a week ({desc}: the photo)", v: [["[The artist's sketch of your photo, pinned to the corkboard: {desc}]"]] },
-  "thu.ask":           { g: "Days of the week", l: "Thursday: the barista at the counter, before you've played (then the drink menu)", v: [["[Barista: it's trivia night. Take the empty seat at the café tables to play]"]] },
-  "thu.seat":          { g: "Days of the week", l: "Thursday: sitting down in the empty seat at the trivia tables (then Play / Not now)", v: [["[Trivia: five questions, ten seconds each. Ready?]"]] },
-  "thu.right":         { g: "Days of the week", l: "Thursday: a right answer", v: [["[Right!]"]] },
-  "thu.wrong":         { g: "Days of the week", l: "Thursday: a wrong answer (someone at a café table answers next; {answer}: the right one)", v: [["[Wrong!]"]] },
-  "thu.time":          { g: "Days of the week", l: "Thursday: out of time (someone at a café table answers next; {answer})", v: [["[Time's up!]"]] },
-  "thu.steal":         { g: "Days of the week", l: "Thursday: someone at a café table answers after you miss ({answer}: the right one)", v: [["[Someone else buzzes in: {answer}. Correct]"]] },
-  "thu.crowd":         { g: "Days of the week", l: "Thursday: talking to one of the trivia players at the café tables (picks one at random)", v: [["[Trivia player: waiting for the next round]"]] },
-  "thu.done":          { g: "Days of the week", l: "Thursday: the end of trivia ({n}: right answers, {tokens})", v: [["[Trivia over: {n} of 5 right, {tokens} tokens]"]] },
-  "thu.after":         { g: "Days of the week", l: "Thursday: the barista after you've played", v: [["[Barista: come back next Thursday for more trivia]"]] },
+  "office.tvNone":     { g: "Curator's office", l: "The TV when there are no clip files yet", v: [["It's a TV. Not the same TV from the Games Over Coffee show though (rip)."]] },
+  "day.board.0":       { g: "Days of the week", l: "The lobby's day board on a Sunday", v: [["Soothing Sunday: Drinks are half-off in the cafe!"]] },
+  "day.board.1":       { g: "Days of the week", l: "The day board on a Monday", v: [["A case of the Mondays: Today is shipment day. Please excuse the mess. If you find any boxes, please return them to the conservator in the lobby basement."]] },
+  "day.board.2":       { g: "Days of the week", l: "The day board on a Tuesday", v: [["Tiny Tuesday: Kids get a free souvenir!"]] },
+  "day.board.3":       { g: "Days of the week", l: "The day board on a Wednesday", v: [["Water-Color Wednesday: Artists are welcome to paint inside the museum!"]] },
+  "day.board.4":       { g: "Days of the week", l: "The day board on a Thursday", v: [["Trivia Thursday: Do you know your Qualia? Compete with some trivia at the cafe!"]] },
+  "day.board.5":       { g: "Days of the week", l: "The day board on a Friday", v: [["Feature Friday: Showing Games Over Coffee episodes in the theater!"]] },
+  "day.board.6":       { g: "Days of the week", l: "The day board on a Saturday", v: [["Sold Sunday: Talk to Bluu in the lobby to see some rare museum items!"]] },
+  "mon.ask":           { g: "Days of the week", l: "Monday: the conservator, boxes still missing ({n}: how many found, {room}: where one of the others is). Version 1 the first time you talk to him that day, version 2 every time after", v: [["Dog gone-it! Those shipment people will put those boxes anywhere.", "...", "Oh. Hey...uh... You. I've got a problem. I'm missing five boxes from the shipment. If you come across them, would you mind dropping them back here? Thanks."], ["That's {n}. Maybe you'll have some luck near the {room}."]] },
+  "mon.found":         { g: "Days of the week", l: "Monday: finding a box ({n}: found so far)", v: [["Found {n} of 5 boxes!"]] },
+  "mon.done":          { g: "Days of the week", l: "Monday: bringing the conservator all five ({n}: tokens)", v: [["Thank f...friggen gosh.", "Here's {n} tokens for your trouble."]] },
+  "mon.after":         { g: "Days of the week", l: "Monday: the conservator after you've found them", v: [["What do you want? I already gave you money."]] },
+  "tue.kid":           { g: "Days of the week", l: "Tuesday: the lost kid, the first time. One version per Tuesday, taking turns week to week ({clue}: where his mom is, like \"the Strategy wing\", \"the café\" or \"the Screening Nook\"; add your own \"in\" or \"to\")", v: [["*sniff* hello, I can't find my mommy.", "...", "I think she's in {clue}?"], ["Oh, hi. Uh, I uh, I'm lost. Could you walk me to {clue}? I think my mom is there."], ["Are you going to {clue}? Can I follow you?"]] },
+  "tue.again":         { g: "Days of the week", l: "Tuesday: talking to the kid while he follows you ({clue}: like \"the café\")", v: [["I think she's in {clue}"]] },
+  "tue.mom":           { g: "Days of the week", l: "Tuesday: his mom, before you've brought him", v: [["Oh my Gosh, my son, I swore he was right here! Excuse me, have you seen a little boy around?"], ["Oh my God oh my God oh my God oh my God oh my God..."]] },
+  "tue.found":         { g: "Days of the week", l: "Tuesday: bringing the kid to his mom ({n}: tokens)", v: [["THANK YOU!", "Oh my goodness.", "Here, please, take {n} tokens!"]] },
+  "tue.busy":          { g: "Days of the week", l: "Tuesday: the kid when someone else is already following you", v: [["I'll wait here until you're done helping that person."]] },
+  "wed.easel":         { g: "Days of the week", l: "Wednesday: looking at the artist's easel (picks one at random)", v: [["Looks like the easel is empty."]] },
+  "wed.ask":           { g: "Days of the week", l: "Wednesday: the artist", v: [["*sighs*", "Such is the torment of a soul without a body to thrive. If only I had a PHOTO to look at."], ["The canvas! She is empty! I need inspo!", "If only someone showed me  P H O T O"], ["Hey, uh, you. You got of a photo of something neat? The less common the better."]] },
+  "wed.none":          { g: "Days of the week", l: "Wednesday: the artist, when you have no photos", v: [["*murmuring*", "Huh? What to you want?", "I need a photo and you have none!", "Go take a photo and come back!"]] },
+  "wed.r0":            { g: "Days of the week", l: "Wednesday: the artist's reaction to a common photo ({desc}, {n}: tokens)", v: [["Oh. A {desc}.", "*Sigh*", "Sure, fine, here's {n} tokens."]] },
+  "wed.r1":            { g: "Days of the week", l: "Wednesday: the artist's reaction to an uncommon photo ({desc}, {n})", v: [["Hm... Ok, not too bad I guess.", "Thanks.", "Here's {n} tokens."]] },
+  "wed.r2":            { g: "Days of the week", l: "Wednesday: the artist's reaction to a rare photo ({desc}, {n})", v: [["Woah! A {desc}!", "Such glory! Such finesse! The subject of my dreams!", "Take {n} tokens!"]] },
+  "wed.r3":            { g: "Days of the week", l: "Wednesday: the artist's reaction to the rarest photos ({desc}, {n})", v: [["...", "How...", "How did you...", "(He's speechless)", "Take all my money.", "(He hands you {n} tokens)"], ["...", "I don't know what to say."]] },
+  "wed.self":          { g: "Days of the week", l: "Wednesday: showing the artist a photo of himself (no tokens; you can show him another)", v: [["Oh, I see. That's cute. Yes, I'm amazing, but please, I beg of you, give me something else."]] },
+  "wed.ownEasel":      { g: "Days of the week", l: "Wednesday: showing the artist a photo of his own easel (no tokens; you can show him another)", v: [["Mmhmm. An easel as inspiration for my easel.", "Be serious now. Find me something REAL."]] },
+  "wed.after":         { g: "Days of the week", l: "Wednesday: the artist after you've shown him a photo", v: [["(hmm, no, no, that's not right. Hmm..)"]] },
+  "wed.sketch":        { g: "Days of the week", l: "The artist's sketch on the staff corkboard, for a week ({desc}: the photo)", v: [["It's {desc} that the artist drew for you. It's actually really good."]] },
+  "thu.ask":           { g: "Days of the week", l: "Thursday: the barista at the counter, before you've played (then the drink menu)", v: [["Yo! It's trivia night! If You wanna play, grab a seat. What can I get you?"]] },
+  "thu.seat":          { g: "Days of the week", l: "Thursday: sitting down in the empty seat at the trivia tables (then Play / Not now)", v: [["Okay! Who's ready for some GOQ trivia?", "5 questions. 10 seconds per question. Ready?", "Go!"]] },
+  "thu.right":         { g: "Days of the week", l: "Thursday: a right answer", v: [["Correct!"]] },
+  "thu.wrong":         { g: "Days of the week", l: "Thursday: a wrong answer (someone at a café table answers next; {answer}: the right one)", v: [["Wrong! Who else?"]] },
+  "thu.time":          { g: "Days of the week", l: "Thursday: out of time (someone at a café table answers next; {answer})", v: [["Time's up!"]] },
+  "thu.steal":         { g: "Days of the week", l: "Thursday: someone at a café table answers after you miss ({answer}: the right one)", v: [["*bzz*", "Someone else: \"{answer}\"", "That's Correct!"]] },
+  "thu.crowd":         { g: "Days of the week", l: "Thursday: talking to one of the trivia players at the café tables (picks one at random)", v: [["TRIVIA! This is my favorite day."], ["Hey! You excited to play some GOQ trivia?"], ["Shh, I'm focusing. Mama needs those sweet tokens."], ["Why are there so many people here?"]] },
+  "thu.done":          { g: "Days of the week", l: "Thursday: the end of trivia ({n}: right answers, {tokens})", v: [["All done. You got {n} right!", "You won {tokens} tokens!"]] },
+  "thu.after":         { g: "Days of the week", l: "Thursday: the barista after you've played", v: [["We do this every Thursday. Come back next week!"]] },
   "thu.q.dev":         { g: "Days of the week", l: "Thursday: a question about who made a game ({title})", v: [["Who made {title}?"]] },
   "thu.q.wing":        { g: "Days of the week", l: "Thursday: a question about which wing a game is in ({title})", v: [["Which wing is {title} in?"]] },
   "thu.q.which":       { g: "Days of the week", l: "Thursday: a question about which game is in a wing ({room})", v: [["Which of these is in the {room}?"]] },
   "thu.questions":     { g: "Days of the week", l: "Thursday: your own questions (one per entry: the question, then the right answer, then three wrong ones; entries starting with [ are skipped)", v: [["[Your question]", "[Right answer]", "[Wrong answer]", "[Wrong answer]", "[Wrong answer]"]] },
   "screen.friday":     { g: "Screening nook", l: "The LED sign on Fridays, before the title (letters, numbers and : - . ! ? ' & , / only)", v: [["FRIDAY FEATURE:"]] },
-  "sat.window":        { g: "Bluu", l: "Under the name at the top of Bluu's stall window", by: "claude", v: [["One of a kind. Allegedly."], ["No refunds. No questions. No receipts."]] },
+  "sat.window":        { g: "Bluu", l: "The one heading on Bluu's stall window", v: [["No refunds."]] },
+  "sat.exHat":         { g: "Bluu", l: "Bluu's stall: one of his exclusive hats (a GOQ hat in colors the gift shop never made)", by: "claude", v: [["A GOQ hat in colors the gift shop never made. Don't ask where he got it."]] },
+  "sat.exShades":      { g: "Bluu", l: "Bluu's stall: one of his exclusive shades (colored frames)", by: "claude", v: [["GOQ shades with custom frames. You won't find these in the gift shop."]] },
+  "sat.ultra":         { g: "Bluu", l: "Bluu's stall: the ultra-rare red lens shades (always real)", by: "claude", v: [["Red lenses. The real deal. Everything looks like a boss fight now."]] },
   "sat.desc":          { g: "Bluu", l: "Bluu's stall: what it says about an item with no description of its own", by: "claude", v: [["Mint condition, innit. Basically."]] },
   "sat.bye":           { g: "Bluu", l: "Bluu, when you close his stall", by: "claude", v: [["Laters. Tell your mates."], ["Oi, come back when you're minted."]] },
-  "sat.vendor":        { g: "Bluu", l: "His greeting at the table", v: [["[Pop-up vendor: three things you can't get anywhere else, this week only]"]] },
-  "gear.lens":         { g: "Your stuff", l: "Putting on fake GOQ shades: a lens pops out (they stay on, half of them)", v: [["[One of the lenses pops out. Half the shades it is.]"]] },
-  "gear.hatSmall":     { g: "Your stuff", l: "Trying on a fake GOQ hat: it won't go on", v: [["[The hat is way too small. It sits on top of your head for a second, then falls off.]"]] },
-  "gear.mugDone":      { g: "Your stuff", l: "Finishing a drink from your (real) travel mug ({drink}: what it was); the mug goes back in your bag", v: [["[You finish your {drink}. The mug goes back in your bag]"]] },
+  "sat.vendor":        { g: "Bluu", l: "His greeting at the table", v: [["Hey fam, you've come to the right place innit?", "Smart chap like yourself knows where to pick 'em.", "Check the fit. 3 items.", "You'll never find these anywhere else."]] },
+  "gear.lens":         { g: "Your stuff", l: "Putting on fake GOQ shades: a lens pops out (they stay on, half of them)", v: [["As you put on the shades, one lens pops out."]] },
+  "gear.hatSmall":     { g: "Your stuff", l: "Trying on a fake GOQ hat: it won't go on", v: [["You try to put on the hat but it's much too small. It's a wonder they even make them this small."]] },
+  "gear.mugDone":      { g: "Your stuff", l: "Finishing a drink from your (real) travel mug ({drink}: what it was); the mug goes back in your bag", v: [["Whoo, that {drink} hit the spot. And now the travel mug shall disappear."]] },
   "shop.stock":        { g: "Gift shop", l: "Under GIFT SHOP in the shop menu: the stock changes every day", v: [["New stock every day."]] },
   "shop.limited":      { g: "Gift shop", l: "Before an unveil gift's description: it's only here for a while", v: [["Limited time only."]] },
   "cafe.sign":         { g: "Café", l: "The sign by the café: today's special ({drink}: its name; {n}: its price)", v: [["TODAY'S SPECIAL: {drink}.", "{n} tokens at the counter."]] },
   "drink.useMug":      { g: "Café", l: "Ordering when you own a travel mug", v: [["Do you want to use your travel mug?"]] },
-  "gear.leak":         { g: "Your stuff", l: "Walking with a drink in a fake travel mug: it leaks out (the mug goes back in your bag)", v: [["[Your travel mug leaks. Your drink is gone. Your shoes are not dry.]"]] },
-  "gear.caseBlocks":   { g: "Your stuff", l: "Taking a photo with a fake phone case on (no photo; take the case off in Wardrobe)", v: [["[The case covers the camera. The photo is just black.]", "[You could take the case off. My Stuff, Wardrobe.]"]] },
-  "sat.bought":        { g: "Bluu", l: "Buying something ({item})", v: [["[Bought the {item}]"]] },
-  "sat.broke":         { g: "Bluu", l: "Not enough tokens ({n}: the price)", v: [["[Not enough tokens: it costs {n}]"]] },
-  "sat.owned":         { g: "Bluu", l: "Something you already bought", v: [["[You already bought that one]"]] },
-  "sat.fake":          { g: "Bluu", l: "In your Souvenirs, one of his fakes ({item})", v: [["[It's a knockoff]"]] },
-  "sat.real":          { g: "Bluu", l: "In your Souvenirs, something real from him ({item})", v: [["[It's the real deal]"]] },
-  "sun.sitFirst":      { g: "Days of the week", l: "Sunday: talking to whoever's at the café table without sitting down", v: [["[They nod at the empty stool across the table]"]] },
-  "sun.shopkeeper":    { g: "Days of the week", l: "Sunday: coffee with the shopkeeper (picks one at random)", v: [["[Coffee with the shopkeeper]"]] },
-  "sun.barista":       { g: "Days of the week", l: "Sunday: coffee with the barista (picks one at random)", v: [["[Coffee with the barista]"]] },
-  "sun.conservator":   { g: "Days of the week", l: "Sunday: coffee with the conservator (picks one at random)", v: [["[Coffee with the conservator]"]] },
-  "sun.usher":         { g: "Days of the week", l: "Sunday: coffee with the usher (picks one at random)", v: [["[Coffee with the usher]"]] },
-  "sun.curator":       { g: "Days of the week", l: "Sunday: coffee with the curator (picks one at random)", v: [["[Coffee with the curator]"]] },
-  "sun.break":         { g: "Days of the week", l: "Sunday: the café counter or shop counter while that person is on their coffee break", v: [["[Nobody's here: they're on a coffee break]"]] },
+  "gear.leak":         { g: "Your stuff", l: "Walking with a drink in a fake travel mug: it leaks out (the mug goes back in your bag)", v: [["Your whole drink spilled.", "You look at the Travel mug and realize there's a hole in the bottom.", "Thanks Bluu."]] },
+  "gear.caseBlocks":   { g: "Your stuff", l: "Taking a photo with a fake phone case on (no photo; take the case off in Wardrobe)", v: [["...", "The picture is just black.", "Oh. The phone case is so malformed that it's blocking the camera.", "Christ."]] },
+  "sat.bought":        { g: "Bluu", l: "Buying something ({item})", v: [["You purchased the {item}"]] },
+  "sat.broke":         { g: "Bluu", l: "Not enough tokens ({n}: the price)", v: [["You can't afford that."]] },
+  "sat.owned":         { g: "Bluu", l: "Something you already bought", v: [["You already bought that."]] },
+  "sat.fake":          { g: "Bluu", l: "In your Souvenirs, one of his fakes ({item})", v: [["It's a {item}! But it's definitely fake. It's made of...styrofoam?"]] },
+  "sat.real":          { g: "Bluu", l: "In your Souvenirs, something real from him ({item})", v: [["Oh wow. This {item} is the real deal. Nice."]] },
+  "sun.sitFirst":      { g: "Days of the week", l: "Sunday: talking to whoever's at the café table without sitting down", v: [["Hey! Come join me."]] },
+  "sun.shopkeeper":    { g: "Days of the week", l: "Sunday: coffee with the shopkeeper (picks one at random)", v: [["You know, I remember when the only thing we sold was the GOQ shirt. It was like the only item that...", "Oh jeez, I'm taking about it again.", "...", "We don't have GOQ shirts anymore. Don't ask.", "Do something else. Read a magazine or something."], ["You know, I never get tired of the coffee here.", "There's something about the taste...it's like got a good funk to it or something.", "...", "Well that was fun."], ["What?", "The back wall?", "What are you talking about?", "No, it's not...", "*Looks*", "Wait...who painted a shelf on the wall!?"]] },
+  "sun.barista":       { g: "Days of the week", l: "Sunday: coffee with the barista (picks one at random)", v: [["Have you been keeping up with the price of beans lately? It's crazy. I started keeping day old coffee for... I mean each cup is fresh.", "I didn't mean...", "Hey, nice chat."], ["So what game is your favorite?", "...", "...", "Ok, that's fine, you don't have to answer the question.", "You play anything new lately?", "...", "...", "...Hey, I think my break is up."], ["I'll let you in on a secret.", "Those weekly drinks?", "I get to name them.", "I guess that wasn't a secret.", "...", "Nice talk."]] },
+  "sun.conservator":   { g: "Days of the week", l: "Sunday: coffee with the conservator (picks one at random)", v: [["Oh. Hey.", "It's a bit warmer up here.", "...", "...", "So ...baseball huh?", "...", "what?", "...", "Well ok then. See ya around kid."], ["You know, I made a game once.", "...", "It was stupid though. Heh.", "This coffee is much better than the staff coffee.", "(he looks around)", "You're not one of those silent-types are ya?", "...", "Well I'll catch ya later."]] },
+  "sun.usher":         { g: "Days of the week", l: "Sunday: coffee with the usher (picks one at random)", v: [["You ever talk to the conservator? He's grumpy.", "But he's like ALWAYS grumpy. You know why that is, right?", "OKAY, so word is that he's got an indie game he's been trying to get featured but the conservator says he can't. Apparently DeVaughn said \"a place where you just walk around and talk to people doesn't count as a game.\"", "Yeah, it's crazy, I think the curator wants to do something about it.", "Anyway, good chat, see ya!"], ["Have you been here on Tuesdays? For some reason, every Tuesday, there's this mom that, I swear, looses her child EVERY TIME.", "I'm not one to say when someone's a bad parent but, like, come on."], ["I heard there's a way to actually get into the curator's office. It has something to do with taking pictures or something...I can't remember. But I heard an employee got into the office once... I haven't seen them since.", "...", "Nah, I'm just playin.", "But seriously, don't mess with the curator's office."], ["You ever talk to Bluu? Yeah, they're a bit odd. I don't know why he's allowed to sell merch here honestly. And to be frank, his items look like they're just remixes of the same few objects.", "What's up with that?", "What? Oh, yeah, I buy his stuff all the time."]] },
+  "sun.curator":       { g: "Days of the week", l: "Sunday: coffee with the curator (picks one at random)", v: [["You know, this is pretty cool. This whole Pokemon aesthetic? I love it. Oh and check this out, I can speak in emoji: (⁠╯⁠°⁠□⁠°⁠）⁠╯⁠︵⁠ ⁠┻⁠━⁠┻", "...", "That sounded really weird."], ["You ever feel like life is passing at an agonizingly slow pace?", "I've got a cure. And it's not caffeine.", "Just use the Konami code."], ["You ever see that figure at night?", "...", "What. You know, the figure. The thing that just stands there.", "What is that?"], ["So, about your paycheck... what?", "Joe?", "Joe is in my office.", "I've never taken Joe out of the office.", "And don't try to get into my office."], ["You wanna see a magic trick?"]] },
+  "sun.break":         { g: "Days of the week", l: "Sunday: the café counter or shop counter while that person is on their coffee break", v: [["Nobody is here. Looks like they're on a coffee break."]] },
   "dir.head":          { g: "Signs", l: "The lobby directory: its first page", v: [["DIRECTORY"]] },
   "dir.middle":        { g: "Signs", l: "The lobby directory: the room in the middle ({place}: its name, like the café)", v: [["Straight up the hall: {place}, in the middle of the museum."]] },
   "dir.room":          { g: "Signs", l: "The lobby directory: one page for each other room ({place}: its name, {PLACE}: in capitals, {dir}: north, southeast..., {middle}: the room in the middle)", v: [["{PLACE}: {dir} of the {middle}."]] },
   "dir.storage":       { g: "Signs", l: "The lobby directory: the last page, about B1", v: [["B1 STORAGE: down the stairs, right here in the lobby. Staff only, mostly."]] },
   "hall.arrow":        { g: "Signs", l: "Looking at an arrow sign in a hallway ({place}: the room it points to, {PLACE}: in capitals, {arrow}: the arrow)", v: [["{PLACE} {arrow}", "This way to {place}."]] },
-  "hall.poster":       { g: "Screening nook", l: "Looking at a movie poster in the dark theater hallway (picks one at random)", v: [["[Movie poster in the dark hallway: too dark to make out, so describe what you can almost see]"]] },
-  "arcade.title":      { g: "Arcade", l: "The arcade cabinet's list title", v: [["INSERT COIN"]] },
-  "arcade.intro":      { g: "Arcade", l: "Walking up to the arcade cabinet", v: [["[Arcade intro: what the cabinet is, that it's free, and that it opens a museum game in a new tab]"]] },
-  "arcade.go":         { g: "Arcade", l: "Starting a game ({title})", v: [["[Starting a game: {title} opens in a new tab]"]] },
-  "arcade.blocked":    { g: "Arcade", l: "The browser blocked the new tab ({title})", v: [["The cabinet blinks. Tap PLAY to start {title}."]] },
+  "hall.poster":       { g: "Screening nook", l: "Looking at a movie poster in the dark theater hallway (picks one at random)", v: [["There's a poster here. It's dark to see what it is."]] },
+  "arcade.title":      { g: "Arcade", l: "The arcade cabinet's list title", v: [["GAME SELECT"]] },
+  "arcade.intro":      { g: "Arcade", l: "Walking up to the arcade cabinet", v: [["Looks like this lets you can open games in a new tab."]] },
+  "arcade.go":         { g: "Arcade", l: "Starting a game ({title})", v: [["Opening {title} in a new tab."]] },
+  "arcade.blocked":    { g: "Arcade", l: "The browser blocked the new tab ({title})", v: [["Looks like the tab is blocked."]] },
   "arcade.none":       { g: "Arcade", l: "No games with a Play link", v: [["The screen says GAME OVER. It's been saying that all day."]] },
   "screen.none":       { g: "Screening nook", l: "No episodes to show", v: [["Nothing's queued up. The screen just hums."]] },
-  "screen.look":       { g: "Screening nook", l: "Looking at the screen", v: [["The big screen. Have a seat to watch something."]] },
-  "react.startled":    { g: "Photo reactions", l: "Someone looking at a piece: startled, then a peace sign ({who})", v: [["{who} jumped, then threw up a peace sign."]] },
+  "screen.look":       { g: "Screening nook", l: "Looking at the screen", v: [["*someone calls out* Down in front! Sit down!"]] },
+  "react.startled":    { g: "Photo reactions", l: "Someone looking at a piece: startled, then a peace sign ({who})", v: [["{who} jumped, then smiled awkwardly."]] },
   "react.snapback":    { g: "Photo reactions", l: "Someone taking their own photo: they photograph you back ({who})", v: [["{who} took a photo of you right back."]] },
   "react.pose":        { g: "Photo reactions", l: "Someone walking around: they stop and pose ({who})", v: [["{who} stopped and struck a pose."]] },
   "react.wave":        { g: "Photo reactions", l: "Someone sitting down: a little wave ({who})", v: [["{who} gave you a little wave."]] },
   "react.shy":         { g: "Photo reactions", l: "A curious visitor waiting for a recommendation: shy ({who})", v: [["{who} got shy and hid their face."]] },
-  "react.heart":       { g: "Photo reactions", l: "Someone following you: a heart ({who})", v: [["{who} made a little heart with their hands."]] },
+  "react.heart":       { g: "Photo reactions", l: "Someone following you: a heart ({who})", v: [["{who} made a Gen Z heart with their hands. Ick."]] },
   "react.bow":         { g: "Photo reactions", l: "The usher: a polite bow ({who})", v: [["{who} gave a polite little bow."]] },
   "react.busy":        { g: "Photo reactions", l: "The conservator: too busy to look up ({who})", v: [["{who} didn't even look up. Busy."]] },
   "react.guard":       { g: "Photo reactions", l: "The night guard, startled ({who})", v: [["{who} jumped. \"Oh! It's just you.\""]] },
-  "react.annoyed":     { g: "Photo reactions", l: "The third photo of the same person in a row ({who})", v: [["{who} sighed. \"Okay, that's enough photos.\""]] },
+  "react.annoyed":     { g: "Photo reactions", l: "The third photo of the same person in a row ({who})", v: [["{who} sighed. \"Could you not?\""]] },
   "note.anon":         { g: "Visitor notes", l: "Heading over a visitor's note without a name", v: [["A VISITOR'S NOTE"]] },
   "note.from":         { g: "Visitor notes", l: "Heading over a visitor's note with a name ({who})", v: [["A NOTE FROM {who}"]] },
   "note.mine":         { g: "Visitor notes", l: "On the placard while your own note waits for the curator", v: [["(Your note is with the curator. It shows up here once they've read it.)"]] },
   "note.prompt":       { g: "Visitor notes", l: "At the top of the note card ({title})", v: [["How did {title} make you feel? The curator reads every note before it goes up."]] },
   "note.empty":        { g: "Visitor notes", l: "Sending an empty note", v: [["Write a few words first."]] },
-  "note.thanks":       { g: "Visitor notes", l: "After sending a note", v: [["You tucked your note into the little card holder under the placard.", "The curator will read it soon."]] },
+  "note.thanks":       { g: "Visitor notes", l: "After sending a note", v: [["You put your note into the little card holder.", "The curator will read it soon."]] },
   "note.slow":         { g: "Visitor notes", l: "Too many notes at once", v: [["The card holder is full for now. Try again a little later."]] },
   "note.fail":         { g: "Visitor notes", l: "A note that didn't send", v: [["Your note didn't send. Check your connection and try again."]] },
   "case.frontNote":    { g: "Pieces", l: "At the end of the front placard", v: [["Continues on other side \u2192"]] },
@@ -2157,25 +2175,25 @@ const TEXT = {
   "intercom.ask":      { g: "Closing up", l: "Intercom question", v: [["The intercom. Make the closing announcement?"]] },
   "intercom.announce": { g: "Closing up", l: "Closing announcement", v: [["*ding-dong*", "Attention, visitors: the museum is closing for the night.", "Please make your way to the exit. Thank you for visiting!"]] },
   "intercom.again":    { g: "Closing up", l: "Intercom after announcing", v: [["The announcement already went out."]] },
-  "lights.early":      { g: "Closing up", l: "Lights off before announcing (takes turns)", v: [["Click. From somewhere in the dark: \"Hey!\"", "You flick the lights right back on."], ["Click. A visitor keeps reading the placard by phone light.", "You turn the lights back on. Maybe announce closing first."], ["Click. Someone gasps like it's part of the exhibit.", "Click. Sorry, sorry."]] },
-  "lights.wait":       { g: "Closing up", l: "Lights off while visitors leave", v: [["Hang on, a few people are still on their way out."]] },
-  "lights.closed":     { g: "Closing up", l: "Every light is off", v: [["That's every light.", "The museum is closed for the night. Head out the front doors."]] },
-  "door.open":         { g: "Closing up", l: "Front doors while open", v: [["The museum just opened.", "Stay a while."]] },
+  "lights.early":      { g: "Closing up", l: "Lights off before announcing (takes turns)", v: [["Click. From somewhere in the dark: \"Hey!\"", "You flick the lights right back on."], ["Click. Someone gasps like it's part of the exhibit.", "Click. Sorry, sorry."]] },
+  "lights.wait":       { g: "Closing up", l: "Lights off while visitors leave", v: [["Easy there, a few people are still on their way out."]] },
+  "lights.closed":     { g: "Closing up", l: "Every light is off", v: [["That's every light.", "The museum is closed for the night. Head out the front doors.", "Be careful."]] },
+  "door.open":         { g: "Closing up", l: "Front doors while open", v: [["Oops, if I'm going to leave, I need to announce on the intercom."]] },
   "door.lockUp":       { g: "Closing up", l: "Front doors with lights still on ({rooms} lists them)", v: [["The lights are still on in: {rooms}.", "Turn them off before you lock up."]] },
   "spooky.intercom":   { g: "Closing up", l: "The intercom crackles by itself", v: [["*krrsh*", "...ding......\n.........dong...", "*krrsh*"]] },
-  "stairs.roof":       { g: "Floors", l: "Stairs to the roof (if a room has some)", v: [["I don't need to go to the roof."]] },
+  "stairs.roof":       { g: "Floors", l: "Stairs to the roof (if a room has some)", v: [["That's the roof access."], ["I don't need to go to the roof."], ["I can't go to the roof because the door...yeah the door is locked."], ["Ok, seriously, there's nothing there."], ["The roof isn't made. It's not a part of the game."]] },
   "move.ok":           { g: "Visitors", l: "A visitor stepping aside when you ask (one at random)", v: [["Oh! Sorry, go ahead."], ["My bad. All yours."], ["Oops, didn't see you there."]] },
-  "move.stuck":        { g: "Visitors", l: "A boxed-in visitor, before they teleport (one at random)", v: [["Oh, I'd love to, but I'm a little stuck..."], ["Move? Where? There's nowhere to... oh."]] },
-  "move.teleport":     { g: "Visitors", l: "You, after a boxed-in visitor teleports away (one at random)", v: [["...Did they just teleport?", "I'm going to pretend I didn't see that."], ["They're gone. Just gone.", "I should ask the curator what's in the coffee here."], ["*blink*", "Okay. Sure. People can just do that here, apparently."], ["Huh. I've played games with worse pathfinding."]] },
+  "move.stuck":        { g: "Visitors", l: "A boxed-in visitor, before they teleport (one at random)", v: [["Oh, I'd love to, but I'm a little stuck..."], ["Move? Where? There's nowhere to..."]] },
+  "move.teleport":     { g: "Visitors", l: "You, after a boxed-in visitor teleports away (one at random)", v: [["...Did they just teleport?", "I'm going to pretend I didn't see that."], ["...they just disappeared.", "I should ask the curator what's in the coffee here."], ["*blink*", "Uh...where'd they go?"], ["...I guess that's a good solution."]] },
   "workbench.empty":   { g: "Floors", l: "Workbench with nothing coming", v: [["The conservation workbench. Tools, gloves, a magnifying lamp.", "Nothing new in the pipeline... yet."]] },
   "workbench.intro":   { g: "Floors", l: "Workbench, before the list of crates", v: [["The conservation workbench. Crates waiting to go upstairs:"]] },
-  "window.day":        { g: "Lobby", l: "Window, daytime", v: [["Sunlight pours in. A perfect museum day."]] },
-  "window.sunset":     { g: "Lobby", l: "Window, sunset", v: [["The sky is going orange and pink.", "Closing time isn't far off."]] },
-  "window.night":      { g: "Lobby", l: "Window, night", v: [["It's dark out. The moon is keeping an eye on the museum."]] },
+  "window.day":        { g: "Lobby", l: "Window, daytime", v: [["Sunlight pours in. What a great day to be inside and away from grass."]] },
+  "window.sunset":     { g: "Lobby", l: "Window, sunset", v: [["The sky looks like an Outrun cover."]] },
+  "window.night":      { g: "Lobby", l: "Window, night", v: [["It's dark out.", "It's night at the museum..."]] },
   "guestbook.empty":   { g: "Lobby", l: "Guestbook with no entries", v: [["A guestbook lies open on the front desk.", "The first page is still blank."]] },
   "guestbook.intro":   { g: "Lobby", l: "Guestbook, before the entries", v: [["A guestbook lies open on the front desk."]] },
   "eotm.empty":        { g: "Staff", l: "Employee of the Month, no winner", v: [["EMPLOYEE OF THE MONTH", "The frame is empty. Maybe it'll be you."]] },
-  "cork.intro":        { g: "Staff", l: "Corkboard, before the notes", v: [["The corkboard. Notes for upcoming episodes, in the curator's handwriting."]] },
+  "cork.intro":        { g: "Staff", l: "Corkboard, before the notes", v: [["A corkboard. Looks like some important notes."]] },
   "board.title":       { g: "Staff", l: "Staff leaderboard, heading ({month})", v: [["STAFF LEADERBOARD: {month}"]] },
   "board.empty":       { g: "Staff", l: "Staff leaderboard, nobody yet", v: [["Nobody has any points this month yet.", "Clock in and do a chore to get on the board."]] },
   "board.offline":     { g: "Staff", l: "Staff leaderboard, staff office not set up", v: [["The board is blank. The staff office isn't open yet, so only this browser keeps a tally."]] },
@@ -2185,14 +2203,14 @@ const TEXT = {
   "eotm.sofar":        { g: "Staff", l: "Employee of the Month, nobody last month ({name}, {points}, {month})", v: [["EMPLOYEE OF THE MONTH", "{name}, leading {month} so far with {points} points."]] },
   "badge.wrong":       { g: "Staff", l: "Badge number or key not right", v: [["That badge didn't work. Check the number and key."]] },
   "badge.locked":      { g: "Staff", l: "Badge locked after too many tries", v: [["Too many tries with that badge. Wait 15 minutes, then try again."]] },
-  "badge.inactive":    { g: "Staff", l: "Badge turned off", v: [["That badge has been turned off. Ask the curator if that's a mistake."]] },
+  "badge.inactive":    { g: "Staff", l: "Badge turned off", v: [["That badge has been turned off. Ask DeVaughn if that's a mistake."]] },
   "badge.down":        { g: "Staff", l: "Can't reach the staff office to check a badge", v: [["Couldn't reach the staff office. Check your connection, or try again later."]] },
   "badge.expired":     { g: "Staff", l: "Clocked out because the badge stopped working", v: [["The staff office didn't recognize your badge anymore, so you've been clocked out.", "Clock in again with your badge number and key."]] },
   "net.down":          { g: "Staff", l: "Notice: chores can't reach the staff office", v: [["Staff office unreachable: chores won't count for now"]] },
   "cork.empty":        { g: "Staff", l: "Corkboard with no notes", v: [["The corkboard is bare. Just pins."]] },
-  "rules":             { g: "Staff", l: "Staff rules whiteboard", v: [["STAFF RULES", "1. Clock in at the staff door or the time clock. The ON SHIFT tag means you're working.", "2. On shift, every chore is a point: dusting, straightening, watering, finding the mug, wiping cases. A visitor who loves your recommendation, and closing up, are worth 3.", "3. Chores earn tokens for the gift shop, and staff tallies decide Employee of the Month.", "4. Clock out at the time clock. Leaving at closing clocks you out too.", "5. Do not touch anyone's yogurt."]] },
-  "locker.mine":       { g: "Staff", l: "Your locker", v: [["Locker {locker}: {name}.", "Just your coat in here. Your gift shop finds are on display in the collection cabinet."]] },
-  "locker.others":     { g: "Staff", l: "Other lockers (one per locker, in order)", v: [["A sticky note: \"Do not touch my yogurt.\""], ["Locked. It hums faintly."], ["Someone taped a pixel-art cat to this one."], ["Empty. It smells like old coffee."], ["A note in big letters: \"WAIT. WHY DID THAT HAPPEN?\""], ["Locked. There's a dent shaped like a controller."]] },
+  "rules":             { g: "Staff", l: "Staff rules whiteboard", v: [["STAFF RULES", "1. Clock in at the staff door or the time clock. The ON SHIFT tag means you're working.", "2. On shift, every chore is a point: watering plants, finding the mug, wiping cases. A visitor who loves your recommendation, and closing up, are worth 3.", "3. Chores earn tokens for the gift shop. Most points decide Employee of the Month.", "4. Clock out at the time clock. Leaving at closing clocks you out too.", "5. Do not touch anyone's yogurt."]] },
+  "locker.mine":       { g: "Staff", l: "Your locker", v: [["Locker {locker}: {name}.", "If you're looking for your items, they're in the glass case. These are just for aesthetics."]] },
+  "locker.others":     { g: "Staff", l: "Other lockers (one per locker, in order)", v: [["You just open people's lockers?", "That's a little weird."], ["That sure is a locker."], ["Oh look, it's a locker."], ["Empty. It smells like coffee."], ["A note in big letters: \"HE WANDERS AT IN DARKNESS\""], ["Locked.", "Why are you like this?"]] },
   "jan.start":         { g: "Janitor", l: "Just out of the staff door, starting his chores", by: "claude", v: [["Alright. Let's get this over with."], ["Morning. Don't track anything in."]] },
   "jan.sweep":         { g: "Janitor", l: "Sweeping (the dust goes in his dustpan)", by: "claude", v: [["*swish swish*", "You'd be amazed what people drop in a museum."], ["Mind the dustpan."], ["*swish*", "...is that a whole french fry?"]] },
   "jan.trash":         { g: "Janitor", l: "Taking the trash out of the bins", by: "claude", v: [["Who throws a full coffee in the trash?", "Every day. Every single day."], ["Trash day. Every day is trash day."]] },
@@ -2211,6 +2229,8 @@ const TEXT = {
   "supply.free":       { g: "Supplies", l: "Winding down: the barista's free drink, if you brought her supplies", by: "claude", v: [["Hey, you helped me out earlier.", "This one's on the house. Don't tell anyone."]] },
   "shop.stocking":     { g: "Supplies", l: "The shop counter (or the shopkeeper) while he's still stocking the shelves", by: "claude", v: [["Sorry, still stocking. The shop's not open yet.", "If only someone would bring me the stock box from the basement..."]] },
   "line.wait":         { g: "Supplies", l: "The café counter when there's a line ahead of you", by: "claude", v: [["There's a line. I should wait my turn at the back."]] },
+  "cafe.rushed":       { g: "Supplies", l: "The barista while she's rushing back and forth behind the counter (her supply box hasn't come up)", by: "claude", v: [["Sorry, sorry! I'm doing the work of three people back here.", "The supply box is still down in the basement and the rush is coming.", "...", "If anyone happened to bring it up, I'd love them forever."], ["Can't talk! Cups! Lids! Beans! None of which I have!"]] },
+  "cafe.rushOrder":    { g: "Supplies", l: "The barista, after she dashes back to the counter to take your order", by: "claude", v: [["Oh! Hi! Sorry. *pant* What can I get you?"], ["Ah, a customer! One sec— okay. What'll it be?"]] },
   "line.impatient":    { g: "Supplies", l: "Someone behind you in the café line, when you stand at the counter without ordering (shown in the corner; one version picked at random)", by: "claude", v: [["Uh, are you gonna order?"], ["*sigh* Some of us have places to be."], ["Any day now..."], ["Do you need help reading the menu?"], ["I can hear my coffee getting cold and I don't even have it yet."]] },
   "line.inLine":       { g: "Supplies", l: "Asking someone in the café line to move", by: "claude", v: [["Sorry, I'm in line."], ["Uh, there's a line?"], ["I've been waiting here forever. I'm not moving."]] },
   "usher.tired":       { g: "Tour", l: "The usher before the tour, with no coffee (busy with the day's schedules)", by: "claude", v: [["*yawn*", "Sorry. I've been staring at today's schedule since six.", "I'd do anything for a coffee right now."], ["Mmh? Oh, hi. Just...", "...", "Is it coffee o'clock yet?"]] },
@@ -2245,6 +2265,8 @@ const TEXT = {
   "tour.happy":        { g: "Tour", l: "Someone in a happy tour group, later on", by: "claude", v: [["Best tour I've been on. And I've been on, like, two."], ["I'm going to tell everyone about this place."]] },
   "tour.bored":        { g: "Tour", l: "Someone from a bored tour group, wandering off", by: "claude", v: [["I'm just gonna look around on my own."], ["The guide didn't know anything. I'll read the placards myself."]] },
   "tour.regroup":      { g: "Tour", l: "The group back in the lobby, missing a kid", by: "claude", v: [["Has anyone seen the kid?", "He was right behind us..."], ["Okay, everybody here? ...wait."]] },
+  "tour.kidWait":      { g: "Tour", l: "The tour's kid, waiting on the bench in the lobby before it starts", by: "claude", v: [["Is it starting yet?", "...", "Is it starting NOW?"], ["I'm gonna see a real museum!"]] },
+  "tour.kidTag":       { g: "Tour", l: "The tour's kid while he's tagging along with his grown-up (before he wanders off)", by: "claude", v: [["I'm not supposed to talk to strangers.", "...", "Are you a stranger?"], ["*tugs on a sleeve* Can we go see the arcade?"], ["I'm staying RIGHT here. I promise."]] },
   "tour.kid":          { g: "Tour", l: "Finding the tour's lost kid (he follows you)", by: "claude", v: [["Oh! Am I lost?", "...", "I was just looking.", "Can you take me back to my group?"]] },
   "tour.kidAgain":     { g: "Tour", l: "The lost kid, while he follows you", by: "claude", v: [["Are we there yet?"], ["I'm right behind you."]] },
   "tour.kidFound":     { g: "Tour", l: "Bringing the kid back to his group ({n}: tokens)", by: "claude", v: [["There you are! Don't run off like that!", "Thank you so much.", "Here, {n} tokens."]] },
@@ -2285,26 +2307,26 @@ const TEXT = {
   "out.none":          { g: "Volunteering", l: "Clocking out: you didn't do anything this shift", by: "claude", v: [["Easy day, huh?"], ["Hey, sometimes you just need to show up."]] },
   "clock.out":         { g: "Staff", l: "Clocking out", v: [["You clock out. See you next shift, {name}.", "Chores won't count toward your staff tally until you clock in again."]] },
   "clock.curator":     { g: "Staff", l: "Time clock in curator mode", v: [["The time clock.", "You're the curator. You don't need to clock in."]] },
-  "cabinet.empty":     { g: "Staff", l: "Collection cabinet, nothing bought yet", v: [["The collection cabinet. Glass shelves, waiting for things.", "Whatever you buy at the gift shop goes on display here."]] },
-  "cabinet.intro":     { g: "Staff", l: "Collection cabinet, before the list", v: [["The collection cabinet. Everything you've bought at the gift shop, on display."]] },
+  "cabinet.empty":     { g: "Staff", l: "Collection cabinet, nothing bought yet", v: [["The collection cabinet.", "Whatever you buy at the gift shop goes on display here."]] },
+  "cabinet.intro":     { g: "Staff", l: "Collection cabinet, before the list", v: [["Everything you've bought at the gift shop, on display."]] },
   "plant.water":       { g: "Chores", l: "Watering a plant", v: [["You water the {room}.", "It perks right up."]] },
   "plant.done":        { g: "Chores", l: "Plant already watered", v: [["The {room} has had enough water for today."]] },
   "mug.found":         { g: "Chores", l: "Finding the curator's mug", v: [["The curator's coffee mug, left behind again.", "It's still warm. You put it back in the staff room."]] },
   "cat.pet":           { g: "The cat", l: "Petting the cat (takes turns)", v: [["You pet {cat}.", "Purrrrr. Back to sleep."], ["{cat} stretches, blinks at you, and curls up tighter."], ["You scratch {cat} behind the ears.", "A tiny, approving mrrp."]] },
   "bench.wake":        { g: "Sitting", l: "Waking up on a bench", v: [["You wake up with a start.", "How long were you out?"]] },
   "drink.served":      { g: "Café", l: "Barista hands you a drink", v: [["Here's your {drink}. Careful, it's hot.", "Grab a seat if you like."]] },
-  "drink.finished":    { g: "Café", l: "Last sip", v: [["You finish your {drink}. Lovely.", "Now you're holding an empty cup."]] },
-  "drink.refill":      { g: "Café", l: "Refill", v: [["Here you go. Refills are on the house."]] },
+  "drink.finished":    { g: "Café", l: "Last sip", v: [["You finish your {drink}. Lovely.", "Now you're holding an empty cup."], ["That was better than the last one.", "My cup is empty."]] },
+  "drink.refill":      { g: "Café", l: "Refill", v: [["Here you go. Refills are on the house."], ["Oh, another refill? Yeah, sure."], ["Pulling an all nighter?"]] },
   "drink.noRefill":    { g: "Café", l: "Turning down a refill", v: [["The bus tub is at the end of the counter."]] },
   "drink.still":       { g: "Café", l: "Ordering while you still have one", v: [["You've still got your {drink}.", "Find a seat and enjoy it."]] },
   "bin.tub":           { g: "Café", l: "Empty cup into the bus tub", v: [["You set the cup in the bus tub. Clink."]] },
   "bin.trash":         { g: "Café", l: "Empty cup into a trash can", v: [["You drop the cup in the trash. Thunk."]] },
   "bin.tossFull":      { g: "Café", l: "Bin while your drink isn't finished (a cup): asks first", v: [["Throw away your full {drink}?"]] },
-  "bin.pourMug":       { g: "Café", l: "Bin while your travel mug still has a drink in it: asks first (the mug is never thrown away)", v: [["[Pour out your {drink}? The mug stays with you]"]] },
-  "bin.poured":        { g: "Café", l: "Poured out the drink in your travel mug", v: [["[You pour it out. The mug goes back in your bag]"]] },
+  "bin.pourMug":       { g: "Café", l: "Bin while your travel mug still has a drink in it: asks first (the mug is never thrown away)", v: [["You wanna pour out your {drink}?"]] },
+  "bin.poured":        { g: "Café", l: "Poured out the drink in your travel mug", v: [["*splash*", "Yeah, I didn't want that anyway.", "I'll just put my Travel Mug in my back pocket."]] },
   "bin.lookTub":       { g: "Café", l: "Looking at the bus tub", v: [["A bus tub full of cups waiting to be washed."]] },
-  "bin.lookTrash":     { g: "Café", l: "Looking at a trash can", v: [["A trash can. Mostly napkins and one sad receipt."]] },
-  "cafe.closed":       { g: "Café", l: "Café after closing", v: [["The café is closed. The espresso machine is cooling down."]] },
+  "bin.lookTrash":     { g: "Café", l: "Looking at a trash can", v: [["A trash can. Mostly napkins and one sad receipt."], ["Is that mug? Who throws away mugs?"]] },
+  "cafe.closed":       { g: "Café", l: "Café after closing", v: [["The café is closed."], ["There's an empty cup that has \"{cat}\" written on it."]] },
   "shop.closed":       { g: "Gift shop", l: "Counter after closing", v: [["The register is closed for the night.", "Nobody's behind the counter."]] },
   "shop.bye":          { g: "Gift shop", l: "Leaving the shop menu", v: [["Thanks for stopping by!"]] },
   "rack.empty":        { g: "Gift shop", l: "A stand with nothing for sale", v: [["A stand of little knickknacks.", "Nothing on this one is for sale. They're just here to keep you company."]] },
@@ -2320,17 +2342,17 @@ const TEXT = {
   "cur.closing":       { g: "Curious visitors", l: "Closing time while they follow you", v: [["Oh! Closing time already?", "I'll come back tomorrow. Save me a good one!"]] },
   "cur.recommend":     { g: "Curious visitors", l: "Question: recommend this piece?", v: [["Recommend {title} to {name}?"]] },
   "cur.unread":        { g: "Curious visitors", l: "Question: recommend a case you haven't read both sides of?", v: [["You haven't read both sides of {title} yet. Recommend it to {name} anyway?"]] },
-  "cur.thanks":        { g: "Curious visitors", l: "You recommend the right piece: what they say before they head out ({title})", v: [["[Oh, {title}! That's exactly what I was looking for]", "[I'll play it tonight and tell you how it went]"]] },
-  "cur.missNone":      { g: "Curious visitors", l: "You recommend a piece with no relationship set ({title}; usually each relationship has its own miss lines, in Visitors)", v: [["[Reads {title}: can't tell what the curator made of it. Not what they're after]"]] },
-  "cur.giveUp":        { g: "Curious visitors", l: "After a third piece that isn't what they wanted: they stop following you", v: [["[Thanks anyway! I'll keep looking around]"]] },
-  "cur.recall":        { g: "Curious visitors", l: "Question: recommend one from memory (the pieces you've recommended right before come next, by name)", v: [["[Which one comes to mind?]"]] },
-  "cur.back":          { g: "Curious visitors", l: "Back the next day, in the lobby: hello ({title}: the game you recommended; {hint}: \", the one where...\" from the piece)", v: [["[Back from yesterday: says hi, and that they played {title}{hint}]"]] },
-  "cur.agree":         { g: "Curious visitors", l: "Next day, picked at random: they see why the curator felt that way ({title})", v: [["[Can totally see why the curator felt that way about {title}]"]] },
-  "cur.disagree":      { g: "Curious visitors", l: "Next day, picked at random: they think the curator got it wrong ({title})", v: [["[Honestly? Thinks the curator got {title} wrong]"]] },
-  "cur.puzzled":       { g: "Curious visitors", l: "Next day, picked at random: they can't see where the curator got that ({title})", v: [["[Has no idea where the curator got that from, about {title}]"]] },
-  "cur.bye":           { g: "Curious visitors", l: "Back the next day: goodbye, before they head out ({title})", v: [["[Says thanks again, and heads out]"]] },
+  "cur.thanks":        { g: "Curious visitors", l: "You recommend the right piece: what they say before they head out ({title})", v: [["Oh! This is perfect! Ok, I'm gonna go home and give {title} a try. Thank you!"]] },
+  "cur.missNone":      { g: "Curious visitors", l: "You recommend a piece with no relationship set ({title}; usually each relationship has its own miss lines, in Visitors)", v: [["I don't see any observations here at all."]] },
+  "cur.giveUp":        { g: "Curious visitors", l: "After a third piece that isn't what they wanted: they stop following you", v: [["Thanks for your time! I'll keep looking."]] },
+  "cur.recall":        { g: "Curious visitors", l: "Question: recommend one from memory (the pieces you've recommended right before come next, by name)", v: [["Which one comes to mind?"]] },
+  "cur.back":          { g: "Curious visitors", l: "Back the next day, in the lobby: hello ({title}: the game you recommended; {hint}: \", the one where...\" from the piece)", v: [["Hey! Remember me from yesterday? You recommended {title} to me{hint}."]] },
+  "cur.agree":         { g: "Curious visitors", l: "Next day, picked at random: they see why the curator felt that way ({title})", v: [["I get it. I completely understand why the curator felt the way he felt about {title}"]] },
+  "cur.disagree":      { g: "Curious visitors", l: "Next day, picked at random: they think the curator got it wrong ({title})", v: [["I think the curator was absolutely wrong about {title}.", "I didn't get what he said at all."]] },
+  "cur.puzzled":       { g: "Curious visitors", l: "Next day, picked at random: they can't see where the curator got that ({title})", v: [["I have absolutely no idea what the curator was talking about with {title}."]] },
+  "cur.bye":           { g: "Curious visitors", l: "Back the next day: goodbye, before they head out ({title})", v: [["Anyway, thanks again! I'll see ya."], ["Thanks for the rec though! {title} will stay in my brain for a while."]] },
   "pc.boot":           { g: "Storage", l: "Turning on Someone's PC (before the stats)", v: [["Someone's PC whirs to life.", "There's one program on the desktop: PLAYER_STATS.EXE. It's about you. Somehow."]] },
-  "end.stats":         { g: "Closing up", l: "On the closing screen, after a few of your stats", v: [["All your stats are on the old PC in the basement."]] },
+  "end.stats":         { g: "Closing up", l: "On the closing screen, after a few of your stats", v: [["All your stats are on the PC in the basement."]] },
   "title.cat":         { g: "Staff profile titles", l: "Petting the cat a lot (variants take turns by day)", v: [["Cat Person (Diagnosed)"], ["Allergies Be Damned"]] },
   "title.naps":        { g: "Staff profile titles", l: "Bench naps", v: [["Narcoleptic Intern"], ["Sleeps on the Job, Literally"]] },
   "title.closer":      { g: "Staff profile titles", l: "Closing the museum often", v: [["Night Shift Goblin"], ["Turns Off Lights Professionally"]] },
@@ -2366,20 +2388,20 @@ const TEXT = {
   "shirt.reveal":      { g: "Secret shirt", l: "The shopkeeper hands over the shirt", v: [["...", "You did the whole thing, didn't you. The cocoa. The stool. The trash can. The nap.", "Fine. FINE. Here.", "You got the GOQ shirt! Wear it from the Start menu, under Wardrobe."]] },
   "respawn.quip":      { g: "Menu", l: "After respawning (one at random)", v: [["*bzzt*", "...Did you see that? I just teleported.", "Let's not tell the curator."], ["Okay, so, I can do that now, apparently.", "Don't think about it too hard. I'm not going to."], ["Whoa. Head rush.", "If anyone asks, I took the stairs."]] },
   "respawn.no":        { g: "Menu", l: "Respawn after closing", v: [["Teleporting around an empty, dark museum? Hard pass."]] },
-  "fridge":            { g: "Staff", l: "The staff fridge (one at random)", v: [["A note on the fridge: LABEL YOUR FOOD.", "Below it, a yogurt labeled NOT YOURS. Underlined twice."], ["Inside: three condiments, one sad lemon, and a sandwich older than some of the exhibits."], ["A drawing on the fridge door: the cat, rendered lovingly in crayon."]] },
-  "microwave.ask":     { g: "Staff", l: "Microwave question", v: [["The staff microwave. Heat up someone's lunch?"]] },
-  "microwave.boom":    { g: "Staff", l: "The microwave goes off (one at random)", v: [["*mmmm-mm-BWOMP*", "Whatever was in there has achieved a resonance cascade.", "The door is still closed. Nobody needs to know."], ["*BANG*", "That was a burrito. It is now a burrito-shaped memory.", "Someone, somewhere, felt that."]] },
-  "microwave.after":   { g: "Staff", l: "Microwave after the incident", v: [["The inside of the microwave is a crime scene.", "Nobody is going to clean that today."]] },
+  "fridge":            { g: "Staff", l: "The staff fridge (one at random)", v: [["There's a surprising amount of canned Yerba Mate in here."], ["What's that black cracker? Oh, it's a tomato."], ["Looks like there's a seasonal cookie from the cafe...the café doesn't have cookies."]] },
+  "microwave.ask":     { g: "Staff", l: "Microwave question", v: [["The staff microwave. Looks like there's a burrito in there. Heat it up?"]] },
+  "microwave.boom":    { g: "Staff", l: "The microwave goes off (one at random)", v: [["*mmmm-mm-BWOMP*", "...I'm just gonna walk away."], ["*BANG*", "...", "Why did I do that?"]] },
+  "microwave.after":   { g: "Staff", l: "Microwave after the incident", v: [["Yeah, let's not open that."]] },
   "patrons.intro":     { g: "Lobby", l: "Patron Board, before the names", v: [["Games Over Qualia is made possible by these wonderful people. Some of them are probably in the museum right now."]] },
   "patrons.empty":     { g: "Lobby", l: "Patron Board with no names yet", v: [["The Patron Board. The name plates are polished and waiting."]] },
-  "frame.ask":         { g: "Staff", l: "Your locker's photo frame, with your own photo", v: [["A little frame on your locker door, with a photo of you in it."]] },
+  "frame.ask":         { g: "Staff", l: "Your locker's photo frame, with your own photo", v: [["A little frame on your locker door, with a photo of you in it.", "Who put that here?"]] },
   "frame.has":         { g: "Staff", l: "Your locker's photo frame, with one of your photos", v: [["The little frame on your locker door."]] },
-  "frame.self":        { g: "Staff", l: "Looking at your own photo in the frame", v: [["You, on your first day. Not bad."]] },
+  "frame.self":        { g: "Staff", l: "Looking at your own photo in the frame", v: [["You, on your first day.", "...", "When was that taken?"]] },
   "frame.back":        { g: "Staff", l: "Putting your own photo back (the framed one is erased)", v: [["Put your own photo back? The photo in the frame now will be erased."]] },
   "frame.warn":        { g: "Staff", l: "Putting a photo in the frame (it moves out of your album)", v: [["Put this photo in your locker frame? It moves out of your album."]] },
   "frame.replace":     { g: "Staff", l: "Swapping the photo in the frame", v: [["Swap it in? The photo in the frame now will be erased, and this one moves out of your album."]] },
-  "frame.done":        { g: "Staff", l: "After framing a photo", v: [["You slide the photo into the little frame. Perfect."]] },
-  "figure.photo":      { g: "Closing up", l: "Photo album description of the figure", v: [["Something in the dark, staring back. When you look up from the phone, it's gone."]] },
+  "frame.done":        { g: "Staff", l: "After framing a photo", v: [["You slide the photo into the little frame."]] },
+  "figure.photo":      { g: "Closing up", l: "Photo album description of the figure", v: [["Something in the dark, staring back.", "You got a picture of it!"]] },
   "photos.none":       { g: "Menu", l: "Photo album, empty", v: [["No photos yet.", "Press B to take a photo of whatever's in front of you."]] },
   "menu.saved":        { g: "Menu", l: "After saving", v: [["Saved. You'll pick up right here next time."]] },
 };
@@ -3094,8 +3116,18 @@ class Game {
   }
   closeAll() { this.el.text.style.display = "none"; this.el.cu.style.display = "none"; this.txt = null; this.mode = "walk"; }
   sheet(key) {
+    if (key.includes("~")) return this.cache[key] || this.swapped(key);
     if (key.includes("@")) return this.cache[key] || this.tinted(key);
     return this.overrides[key] || this.cache[key] || (this.cache[key] = placeholder(key));
+  }
+  /* "goq_hat~bx-hat-purple": the art with one of Bluu's colorways swapped in (exact colors, from BLUU_GEAR). */
+  swapped(key) {
+    const [base, id] = key.split("~"), src = this.sheet(base), w = src.naturalWidth || src.width, h = src.naturalHeight || src.height, g = BLUU_GEAR.find(b => b.id === id);
+    if (!w || !h || !g) return src;
+    const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(src, 0, 0);
+    const d = x.getImageData(0, 0, w, h), px = d.data, rgb = hx => [1, 3, 5].map(i => parseInt(hx.slice(i, i + 2), 16)), map = Object.entries(g.swap).map(([a, b]) => [rgb(a), rgb(b)]);
+    for (let i = 0; i < px.length; i += 4) { if (!px[i + 3]) continue; const m = map.find(([a]) => Math.abs(a[0] - px[i]) < 6 && Math.abs(a[1] - px[i + 1]) < 6 && Math.abs(a[2] - px[i + 2]) < 6); if (m) { px[i] = m[1][0]; px[i + 1] = m[1][1]; px[i + 2] = m[1][2]; } }
+    x.putImageData(d, 0, 0); return (this.cache[key] = c);
   }
   /* "lobby_wall_upper@#4a4a50": the art recolored to that color, keeping its light and shade (its average lands on the color). */
   tinted(key) {
@@ -3117,7 +3149,7 @@ class Game {
   src(key) { return this.pack.assets[key] && this.overrides[key] ? this.pack.assets[key].src : this.sheet(key).toDataURL(); }
   frame(key) { const s = SLOT[key.split("@")[0]]; return s.frames > 1 && s.fps ? Math.floor((this.t / 60) * s.fps) % s.frames : 0; }
   drawSlot(key, col, row, dx, dy) {
-    const s = SLOT[key.split("@")[0]], img = this.sheet(key), iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+    const s = SLOT[key.split(/[@~]/)[0]], img = this.sheet(key), iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
     const sx = col * s.w, sy = row * s.h, w = Math.min(s.w, iw - sx), h = Math.min(s.h, ih - sy);
     if (w > 0 && h > 0) this.ctx.drawImage(img, sx, sy, w, h, dx, dy, w, h);
   }
@@ -4406,7 +4438,13 @@ class Game {
      A shop item's use (curator Shop tab, What it does) makes it do something once it's yours; Bluu's copies of it do too,
      except a fake does it badly: the shades lose a lens, the hat's too small, the mug leaks, the case covers the camera.
      A real one wins over a fake. Each can be switched off in My Stuff, Wardrobe (progress.gearOn). */
-  itemUse(it) { if (!it) return ""; if (it.popup) { const b = this.pack.settings.shop.items.find(q => q.id === it.base); return (b && b.use) || ""; } return it.use || ""; }
+  itemUse(it) { if (!it) return ""; if (it.popup) { const x = BLUU_GEAR.find(q => q.id === it.base); if (x) return x.use; const b = this.pack.settings.shop.items.find(q => q.id === it.base); return (b && b.use) || ""; } return it.use || ""; }
+  gearLooks(use) { // the colorways you own for real (Bluu's exclusives), and the one you've picked to wear ("" = the gift shop's own)
+    const p = this.progress, own = [...new Set((p.popups || []).filter(o => o.real && BLUU_GEAR.some(g => g.id === o.base && g.use === use)).map(o => o.base))];
+    const plain = (p.items || []).some(id => (this.pack.settings.shop.items.find(q => q.id === id) || {}).use === use) || (p.popups || []).some(o => o.real && !BLUU_GEAR.some(g => g.id === o.base) && this.itemUse(o) === use);
+    const pick = (p.gearPick || {})[use]; return { own, plain, pick: own.includes(pick) ? pick : !plain && own.length ? own[0] : "" };
+  }
+  gearKey(use) { const k = use === "hat" ? "goq_hat" : "goq_shades", L = this.gearLooks(use); return L.pick ? k + "~" + L.pick : k; }
   gear(use) {
     const sh = this.pack.settings.shop.items, p = this.progress;
     if ((p.items || []).some(id => (sh.find(q => q.id === id) || {}).use === use) || (p.popups || []).some(o => o.real && this.itemUse(o) === use)) return "real";
@@ -4436,6 +4474,12 @@ class Game {
       const name = spell ? misspell(b.name, h("sp" + i)) : b.name, color = fake && !spell && !b.alwaysFake ? colors[h("c" + i) % colors.length] : null;
       return { id: "bluu-" + key + "-" + i, name, base: b.id, color, price: Math.max(1, Math.round(b.price * bl.markup)), description: b.description || "", image: null, popup: true, fake, real: !fake, why: b.alwaysFake ? "always" : spell ? "spelling" : color ? "color" : "" };
     });
+    { // one of his three is always one of his exclusives: a colorway you can't get anywhere else (the red lenses about one week in twenty)
+      const pool = BLUU_GEAR.filter(g => !g.ultra), ex = h("ultra") % 100 < 5 ? BLUU_GEAR.find(g => g.ultra) : pool[h("ex") % pool.length];
+      const basePrice = ((sh.items.find(q => q.use === ex.use) || {}).price || 12), fake = !ex.ultra && h("realx") % 100 < bl.fakes;
+      const it = { id: "bluu-" + key + "-x", name: fake ? misspell(ex.name, h("spx")) : ex.name, base: ex.id, color: null, price: Math.max(1, Math.round(basePrice * bl.markup * (ex.ultra ? 2 : 1))), description: this.tx(ex.ultra ? "sat.ultra" : ex.use === "hat" ? "sat.exHat" : "sat.exShades").join(" "), image: null, popup: true, exclusive: true, fake, real: !fake, why: fake ? "spelling" : "" };
+      items.splice(Math.min(items.length, h("slot") % 3), 0, it); if (items.length > 3) items.pop();
+    }
     if (off) return items;
     return (this.popupCache = { key, items }).items;
   }
@@ -5492,6 +5536,8 @@ class Game {
     if (this.cache[ck]) return this.cache[ck];
     if (it.popup) { // a pop-up find: its base item (or Joe), recolored
       const c = document.createElement("canvas"); c.width = 16; c.height = 16; const x = c.getContext("2d"); x.imageSmoothingEnabled = false;
+      const ex = BLUU_GEAR.find(g => g.id === it.base);
+      if (ex) { x.imageSmoothingEnabled = false; if (ex.use === "shades") x.drawImage(this.sheet("goq_shades~" + ex.id), 3, 5, 10, 2, 0, 6, 16, 3.2); else x.drawImage(this.sheet("goq_hat~" + ex.id), 2, 0, 12, 5, 0, 3, 16, 6.7); return (this.cache[ck] = c); } // one of Bluu's colorways
       const base = it.base === "joe" ? null : it.base === "goc-shirt" ? { id: "goc-shirt", name: "GOC shirt" } : this.pack.settings.shop.items.find(q => q.id === it.base);
       if (base) x.drawImage(this.itemIcon(base), 0, 0); else x.drawImage(this.sheet("joe"), 0, 0, 16, 16, 0, 0, 16, 16);
       if (it.color) { x.globalCompositeOperation = "source-atop"; x.globalAlpha = 0.55; x.fillStyle = it.color; x.fillRect(0, 0, 16, 16); }
@@ -5586,10 +5632,9 @@ class Game {
     const box = this.el.shop, rows = this.shopRows(), own = this.progress.popups || (this.progress.popups = []), mine = it => own.some(o => o.id === it.id);
     this.shopSel = Math.max(0, Math.min(rows.length - 1, this.shopSel)); box.innerHTML = "";
     const head = document.createElement("div"); head.className = "gt-shop-head";
-    const t1 = document.createElement("span"); [..."BLUU'S BOUTIQUE"].forEach((ch, i) => { const c = document.createElement("span"); c.className = "jk"; c.textContent = ch === " " ? "\u00a0" : ch; c.style.transform = "rotate(" + ((hash(i, 7) % 15) - 7) + "deg) translateY(" + ((hash(i, 3) % 3) - 1) + "px)"; t1.appendChild(c); });
+    const t1 = document.createElement("span"); [...this.tx("sat.window").join(" ").toUpperCase()].forEach((ch, i) => { const c = document.createElement("span"); c.className = "jk"; c.textContent = ch === " " ? "\u00a0" : ch; c.style.transform = "rotate(" + ((hash(i, 7) % 15) - 7) + "deg) translateY(" + ((hash(i, 3) % 3) - 1) + "px)"; t1.appendChild(c); });
     const t2 = document.createElement("span"); t2.textContent = "TOKENS " + (this.progress.tokens || 0);
     head.appendChild(t1); head.appendChild(t2); box.appendChild(head);
-    const sub = document.createElement("div"); sub.style.textAlign = "center"; sub.textContent = this.tx("sat.window").join(" "); box.appendChild(sub);
     const split = document.createElement("div"); split.className = "gt-split"; box.appendChild(split);
     const list = document.createElement("div"); list.className = "gt-shop-list"; split.appendChild(list);
     rows.forEach((r, i) => {
@@ -5759,6 +5804,8 @@ class Game {
     if (this.onBreak === "barista") { this.say(this.tx("sun.break")); return; }
     if (this.carryBox) { this.deliver("barista"); return; }
     if (!menu && !this.tut && this.lineAhead()) { this.say(this.tx("line.wait")); return; } // there's a line: join it at the back
+    { const ba = !menu && this.room.npcs.find(n => n.role === "barista" && n.pace && n.home && !(n.x === n.home[0] && n.y === n.home[1]));
+      if (ba) { this.mode = "busy"; if (ba.moving) { const [dx, dy] = DIRS[ba.dir]; ba.x += dx; ba.y += dy; ba.moving = false; ba.prog = 0; } ba.dir = OPP[this.player.dir]; ba.pose = { kind: "startled", t0: this.t, dur: 40 }; this.rush = { ba, t: 0 }; return; } } // rushed off her feet: she notices you, dashes to her spot, then takes your order
     if (!menu && !this.drink && this.sup && this.sup.cafeDone && !this.sup.freeGiven && (this.director().beat >= 3 || this.director().over)) { // winding down: thanks for the help earlier
       this.sup.freeGiven = true; this.drink = { kind: 0, name: this.pack.settings.shop.drinks[0].name, sips: 0, color: "", iced: !!this.pack.settings.shop.drinks[0].iced }; this.sipClock = 240; this.say(this.tx("supply.free")); return;
     }
@@ -6336,6 +6383,11 @@ class Game {
     if (this.gear("hat") === "fake") add("Try on the GOQ hat", () => this.say(this.tx("gear.hatSmall")));
     else toggle("hat", "Take off the GOQ hat", "Put on the GOQ hat", "Hat on.", "Hat off.");
     toggle("case", "Take the case off your phone", "Put the case on your phone", "Phone case on.", "Phone case off.");
+    for (const use of ["hat", "shades"]) { // Bluu's colorways: switch between the ones you own
+      const L = this.gearLooks(use), all = [...(L.plain ? [""] : []), ...L.own]; if (all.length < 2) continue;
+      const name = id => id ? BLUU_GEAR.find(g => g.id === id).name : use === "hat" ? "GOQ Hat" : "GOQ Shades", nx = all[(all.indexOf(L.pick) + 1) % all.length];
+      add("Switch to the " + name(nx), () => { (p.gearPick = p.gearPick || {})[use] = nx; on[use] = true; this.showLoc(name(nx) + " on."); this.wardrobe(); });
+    }
     add("Back", () => this.myStuff());
     this.choose("Wardrobe", opts, k => { acts[k](); this.saveProgress(); }, opts.length - 1);
   }
@@ -6829,7 +6881,7 @@ class Game {
       const c = this.cine; c.blend += (c.goal > c.blend ? 1 : -1) / 40; c.blend = Math.max(0, Math.min(1, c.blend));
       if (this.mode === "busy" && c.wait > 0 && --c.wait === 0 && c.then) { const fn = c.then; c.then = null; fn(); }
     }
-    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.living("director", () => this.updateDirector()); this.living("litter", () => this.updateLitter()); this.living("supplies", () => this.updateSupplies()); this.living("tour", () => this.updateTour()); this.living("side", () => this.updateSide()); this.living("cons", () => this.updateCons()); this.living("hold", () => this.updateLineHold()); this.living("janitor", () => this.updateJanitor());
+    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.living("director", () => this.updateDirector()); this.living("litter", () => this.updateLitter()); this.living("supplies", () => this.updateSupplies()); this.living("tour", () => this.updateTour()); this.living("side", () => this.updateSide()); this.living("cons", () => this.updateCons()); this.living("hold", () => this.updateLineHold()); this.living("rush", () => this.updateRush()); this.living("janitor", () => this.updateJanitor());
     if (this.petT > 0) this.petT--;
     if (this.t % 20 === 0) this.flushToasts();
     if (this.flickerT > 0) this.flickerT--;
@@ -6987,6 +7039,7 @@ class Game {
     if (npc && (npc.consDream || npc.itemPair)) { if (!npc.walkTo && !npc.sitting) this.faceYou(npc, 240); if (this.sideTalk(npc)) return; } // the conservator out in the wings, the break room pair
     if (npc && (npc.tour || npc.tourUsher)) { npc.timer = 180; if (!npc.walkTo) this.faceYou(npc, 240); this.tourTalk(npc); return; } // the tour group
     if (npc && npc.role === "shopkeeper" && npc.stocking) { this.say(this.tx("shop.stocking")); return; }
+    if (npc && npc.role === "barista" && npc.pace) { this.say(this.tx("cafe.rushed")); return; } // why she's running back and forth
     if (npc && npc.janitor && this.carry) { this.faceYou(npc, 240); const k = this.carry; this.carry = 0; for (let i = 0; i < k; i++) this.count("litter"); this.say(this.tx("jan.takes", { n: k })); return; } // into his can
     if (npc) { npc.timer = 180; if (!this.deskStaff(npc) && !npc.sitting && !this.facingWall(npc)) this.faceYou(npc, 240); if (npc.patrol) npc.pause = 120; this.talkTo(npc); return; }
     const e = this.room.events[fx + "," + fy]; if (e) { this.runEvent(e); return; }
@@ -7286,18 +7339,32 @@ class Game {
       if (n.leaving || n.gone) continue;
       if (this.fol === n) { n.where = this.room.id; n.goal = null; continue; } // following you
       const R = this.rooms[n.where]; if (R && !R.npcs.includes(n)) { for (const id in this.rooms) if (id !== n.where) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== n); R.npcs.push(n); }
-      if (n.tourKid && (T.phase === 1 || T.phase === 2)) this.kidTag(n, T); // sticking with his grown-up until the group heads back
+      if (n.tourKid && (T.phase === 1 || T.phase === 2)) { this.kidTag(n, T); continue; } // sticking with his grown-up until the group heads back
       this.tourMove(n);
     }
     if (T.guide && T.phase === 2 && !T.guide.goal && T.guide.where === "lobby") { this.tourDrop(T.guide); T.guide = null; this.restoreUsher(); } // back at his desk
   }
-  kidTag(n, T) { // the kid follows one of the grown-ups around, the way he follows you; if they get in the café line, he waits by them
-    const P = T.members.find(m => !m.tourKid && !m.gone && !m.leaving); if (!P || n.moving) return;
-    const key = P.where + ":" + P.x + "," + P.y; if (n.tagKey === key && (n.goal || n.where === P.where)) return; n.tagKey = key;
-    if (n.where === P.where && Math.abs(n.x - P.x) + Math.abs(n.y - P.y) === 1) { n.goal = null; n.walkTo = null; n.dir = this.janFace([n.x, n.y], P.x, P.y); return; }
-    const R = this.rooms[P.where], [bx, by] = DIRS[OPP[P.dir]] || [0, 1], ok = (x, y) => R.solid[y] && R.solid[y][x] === false && !R.events[x + "," + y] && !(R.noWander && R.noWander.has(x + "," + y)) && !(R.queueAt || []).some(([qx, qy]) => qx === x && qy === y); // not in the café line's spots
-    const at = ok(P.x + bx, P.y + by) ? [P.x + bx, P.y + by] : this.tourAround(R, [P.x, P.y], 2).find(([x, y]) => ok(x, y)) || [P.x, P.y];
-    this.tourPlace(n, P.where, at, this.janFace(at, P.x, P.y)); n.walkTo = null; n.route = null;
+  kidTag(n, T) { // the kid sticks with one of the grown-ups, the way a follower sticks with you; if they queue for coffee, he waits by them
+    const P = T.members.find(m => !m.tourKid && !m.gone && !m.leaving); if (!P) return;
+    this.tourStand(n); n.walkTo = null;
+    const R = this.rooms[P.where]; if (!R) return;
+    const ok = (x, y) => this.tileFree(R, x, y, n) && !R.events[x + "," + y] && !(R.queueAt || []).some(([qx, qy]) => qx === x && qy === y); // not in the café line's spots
+    const near = () => { const [bx, by] = DIRS[OPP[P.dir]] || [0, 1]; return ok(P.x + bx, P.y + by) ? [P.x + bx, P.y + by] : this.tourAround(R, [P.x, P.y], 3).find(([x, y]) => ok(x, y)); };
+    const vis = n.where === this.room.id;
+    if (n.where !== P.where) { // they've gone through a door
+      if (vis) { if (!n.goal || n.goal.room !== P.where) { n.goal = { room: P.where, at: [P.x, P.y], dir: "down" }; } this.tourMove(n); return; } // after them, through the door
+      const at = near(); if (!at) return; for (const id in this.rooms) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== n);
+      n.where = P.where; n.x = at[0]; n.y = at[1]; n.goal = null; n.moving = false; R.npcs.push(n); if (n.where === this.room.id) { n.alpha = 0; n.fadeIn = true; } return;
+    }
+    n.goal = null; const d = Math.abs(n.x - P.x) + Math.abs(n.y - P.y);
+    if (!vis) { if (d > 1) { const at = near(); if (at) { n.x = at[0]; n.y = at[1]; } } return; } // out of sight: just by them
+    if (n.moving) return; // mid-step (updateNpcs walks it)
+    if (d <= 1) { n.lost = 0; if (!P.moving) n.dir = this.janFace([n.x, n.y], P.x, P.y); return; }
+    if (n.stepWait > 0) { n.stepWait--; return; }
+    const goals = Object.values(DIRS).map(([dx, dy]) => [P.x + dx, P.y + dy]).filter(([x, y]) => ok(x, y) || (x === n.x && y === n.y)).sort((a, b) => Math.abs(a[0] - n.x) + Math.abs(a[1] - n.y) - (Math.abs(b[0] - n.x) + Math.abs(b[1] - n.y)));
+    let dir = null; for (const [gx, gy] of goals) { const route = this.npcPath(n, gx, gy, true); if (route && route.length) { dir = route[0]; break; } }
+    if (dir && this.tryMove(n, dir)) { n.lost = 0; n.stepWait = 3; return; }
+    n.stepWait = 10; if ((n.lost = (n.lost || 0) + 10) > 150) { const at = near(); if (at) { n.x = at[0]; n.y = at[1]; } n.lost = 0; } // boxed in a while: he squeezes through
   }
   tourDrop(n) { n.gone = true; for (const id in this.rooms || {}) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== n); }
   tourMove(n) {
@@ -7313,8 +7380,8 @@ class Game {
         n.walkTo = null; n.route = null; delete n.fadeOut; R.npcs.push(n);
       };
       if (!vis) { through(); return; }
-      const st = this.janStand(n.where, hop);
-      if (n.x === st[0] && n.y === st[1]) { n.alpha = (n.alpha === undefined ? 1 : n.alpha) - 1 / 16; if (n.alpha <= 0) { delete n.alpha; through(); } return; }
+      const st = this.janStand(n.where, hop), Rn = this.rooms[n.where], dd = Math.abs(n.x - st[0]) + Math.abs(n.y - st[1]);
+      if ((n.x === st[0] && n.y === st[1]) || n.fadeOut || (dd <= 3 && !this.tileFree(Rn, st[0], st[1], n))) { n.fadeOut = true; n.walkTo = null; n.alpha = (n.alpha === undefined ? 1 : n.alpha) - 1 / 16; if (n.alpha <= 0) { delete n.alpha; through(); } return; } // at the door (or close, with someone else in the doorway): fade out and through, no queueing for one tile
       if (!n.walkTo) n.walkTo = { at: st, dir: n.dir };
       return;
     }
@@ -7354,7 +7421,8 @@ class Game {
       this.tourHome(k, i);
       this.tourSay("tour.kidFound", { n: this.pack.settings.rewards.tour }); return;
     }
-    if (T.phase <= 0) { this.tourSay("tour.gather"); return; }
+    if (T.phase <= 0) { this.tourSay(n.tourKid ? "tour.kidWait" : "tour.gather"); return; }
+    if (n.tourKid && (T.phase === 1 || T.phase === 2)) { this.tourSay("tour.kidTag"); return; } // tagging along with his grown-up
     if (T.phase === 1) { // at the stop
       const c = T.stop1, piece = c.piece, title = piece ? piece.title : "";
       if (!piece) { this.tourSay("tour.happy"); return; }
@@ -7617,6 +7685,13 @@ class Game {
     const next = r.npcs.find(n => n.queue && n.queue.phase === "in" && n.x === Q[1][0] && n.y === Q[1][1]); if (!next) { this.holdT = 0; return; }
     this.holdT = (this.holdT || 0) + 1;
     if (this.holdT === 360 || (this.holdT > 360 && (this.holdT - 360) % 540 === 0)) { next.pose = { kind: "annoyed", t0: this.t, dur: 100 }; this.showLoc(this.tx("line.impatient", null, true).join(" ")); }
+  }
+  updateRush() { // the barista's dash back to the till when you come to order while she's rushing about
+    const R = this.rush; if (!R) return; const n = R.ba, [hx, hy, hd] = n.home;
+    if (++R.t < 36 || R.t % 4) return; // a beat to notice you, then quick hops
+    if (n.x !== hx) { const nx = n.x + Math.sign(hx - n.x); if (this.tileFree(this.room, nx, n.y, n)) { n.dir = nx > n.x ? "right" : "left"; n.x = nx; } else { n.x = hx; n.y = hy; } return; }
+    n.dir = hd || "down"; n.pace.to = n.x; n.pace.t = 90; this.rush = null; this.mode = "walk";
+    this.say(this.tx("cafe.rushOrder"), () => this.cafe(true));
   }
   paceStep(n) { // a few quick steps one way, a beat, then back
     const P = n.pace; if (this.mode !== "walk" || --P.t > 0) return;
@@ -8467,9 +8542,9 @@ class Game {
       if (panAt && c.dir !== "up") this.drawSlot("jan_dustpan", 0, 0, ...panAt);
       if (broomAt && c.dir !== "up") this.drawSlot("jan_broom", broomF, 0, ...broomAt);
       if (c === this.player && !this.full) { // your gear: the GOQ hat and shades (a fake pair has only its right lens)
-        if (this.using("hat") === "real") this.drawSlot("goq_hat", c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
+        if (this.using("hat") === "real") this.drawSlot(this.gearKey("hat"), c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
         const sh = this.using("shades");
-        if (sh === "real") this.drawSlot("goq_shades", c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
+        if (sh === "real") this.drawSlot(this.gearKey("shades"), c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
         else if (sh === "fake") { ctx.save(); ctx.beginPath(); ctx.rect(sx + 8, sy, 8, 16); ctx.clip(); this.drawSlot("goq_shades", c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy); ctx.restore(); }
       }
       if (c !== this.player && /^visitor_[abc]$/.test(sheet) && !this.overrides[sheet]) { // their shirt, in their own color
@@ -8568,14 +8643,14 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cues 2";
+const VERSION = "2026-11-18 cues 3";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
   { "screen.guest": ["I keep telling myself one more episode."] });
 const CLAUDE_SHOP = { "goq-tote": "A sturdy canvas tote with the GOQ logo. Holds groceries, games and emotional baggage.", "goq-pin": "A shiny enamel pin with the GOQ logo. Looks great on a lanyard. Hint hint.",
   "goq-mousepad": "An extra-wide mousepad with the GOQ logo. Your desk has never looked this cozy.", "goq-lanyard": "A GOQ lanyard. Now you look like you work here. Do you?" }; // shop descriptions Claude wrote (Joe 10/11)
-window.GOQ = { CLAUDE_LINES, CLAUDE_SHOP, PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
+window.GOQ = { CLAUDE_LINES, CLAUDE_SHOP, BLUU_GEAR, PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
   spotRooms: () => Object.keys(ROOMS).filter(id => (ROOMS[id].spots || []).length).map(id => ({ id, name: ROOMS[id].name, n: ROOMS[id].spots.length })),

@@ -105,3 +105,17 @@ Two more, outside Words: a new version in the screening nook guest's lines ("I k
 | Gift shop items | GOQ Lanyard | A GOQ lanyard. Now you look like you work here. Do you? |
 
 Also, outside the Writers' Room (Curator → Rooms): the espresso machine ("The espresso machine. It hisses at you a little.") and the cup stacks ("Towers of to-go cups. Somebody counts these every night.").
+
+## Added later (10/11, version "2026-11-18 cues 3")
+
+| Group | Line | What Claude wrote |
+| --- | --- | --- |
+| Supplies | The barista while she's rushing back and forth | Sorry, sorry! I'm doing the work of three people back here. ⏎ The supply box is still down in the basement and the rush is coming. ⏎ ... ⏎ If anyone happened to bring it up, I'd love them forever. / Can't talk! Cups! Lids! Beans! None of which I have! |
+| Supplies | The barista after she dashes back to take your order | Oh! Hi! Sorry. *pant* What can I get you? / Ah, a customer! One sec— okay. What'll it be? |
+| Tour | The tour's kid on the bench before it starts | Is it starting yet? ⏎ ... ⏎ Is it starting NOW? / I'm gonna see a real museum! |
+| Tour | The tour's kid while he tags along | I'm not supposed to talk to strangers. ⏎ ... ⏎ Are you a stranger? / *tugs on a sleeve* Can we go see the arcade? / I'm staying RIGHT here. I promise. |
+| Bluu | One of his exclusive hats | A GOQ hat in colors the gift shop never made. Don't ask where he got it. |
+| Bluu | One of his exclusive shades | GOQ shades with custom frames. You won't find these in the gift shop. |
+| Bluu | The red lens shades | Red lenses. The real deal. Everything looks like a boss fight now. |
+
+Not mine: "No refunds." and "You can't afford that." are Joe's.
