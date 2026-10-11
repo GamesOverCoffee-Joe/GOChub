@@ -297,7 +297,8 @@ function buildCards() {
 }
 
 /* Claude's lines (Joe 10/11): a card is tagged "claude" while it still holds a version Claude wrote. */
-const isClaude = c => { const k = c.id.startsWith("t:") ? c.id.slice(2) : null, mine = k && GOQ.CLAUDE_LINES && GOQ.CLAUDE_LINES[k]; if (!mine) return false;
+const isClaude = c => { if (c.id.startsWith("s:")) { const d = GOQ.CLAUDE_SHOP && GOQ.CLAUDE_SHOP[c.id.slice(2)]; return !!d && c.fields[1].get() === d; } // a shop item's description
+  const k = c.id.startsWith("t:") ? c.id.slice(2) : null, mine = k && GOQ.CLAUDE_LINES && GOQ.CLAUDE_LINES[k]; if (!mine) return false;
   const cur = versionsOf("pages", c.fields[0].get()); return mine.some(v => cur.includes(v)); };
 let CARDS = [];
 const byId = id => CARDS.find(c => c.id === id);

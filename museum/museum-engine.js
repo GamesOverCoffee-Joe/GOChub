@@ -2096,6 +2096,9 @@ const TEXT = {
   "thu.q.which":       { g: "Days of the week", l: "Thursday: a question about which game is in a wing ({room})", v: [["Which of these is in the {room}?"]] },
   "thu.questions":     { g: "Days of the week", l: "Thursday: your own questions (one per entry: the question, then the right answer, then three wrong ones; entries starting with [ are skipped)", v: [["[Your question]", "[Right answer]", "[Wrong answer]", "[Wrong answer]", "[Wrong answer]"]] },
   "screen.friday":     { g: "Screening nook", l: "The LED sign on Fridays, before the title (letters, numbers and : - . ! ? ' & , / only)", v: [["FRIDAY FEATURE:"]] },
+  "sat.window":        { g: "Bluu", l: "Under the name at the top of Bluu's stall window", by: "claude", v: [["One of a kind. Allegedly."], ["No refunds. No questions. No receipts."]] },
+  "sat.desc":          { g: "Bluu", l: "Bluu's stall: what it says about an item with no description of its own", by: "claude", v: [["Mint condition, innit. Basically."]] },
+  "sat.bye":           { g: "Bluu", l: "Bluu, when you close his stall", by: "claude", v: [["Laters. Tell your mates."], ["Oi, come back when you're minted."]] },
   "sat.vendor":        { g: "Bluu", l: "His greeting at the table", v: [["[Pop-up vendor: three things you can't get anywhere else, this week only]"]] },
   "gear.lens":         { g: "Your stuff", l: "Putting on fake GOQ shades: a lens pops out (they stay on, half of them)", v: [["[One of the lenses pops out. Half the shades it is.]"]] },
   "gear.hatSmall":     { g: "Your stuff", l: "Trying on a fake GOQ hat: it won't go on", v: [["[The hat is way too small. It sits on top of your head for a second, then falls off.]"]] },
@@ -2208,6 +2211,7 @@ const TEXT = {
   "supply.free":       { g: "Supplies", l: "Winding down: the barista's free drink, if you brought her supplies", by: "claude", v: [["Hey, you helped me out earlier.", "This one's on the house. Don't tell anyone."]] },
   "shop.stocking":     { g: "Supplies", l: "The shop counter (or the shopkeeper) while he's still stocking the shelves", by: "claude", v: [["Sorry, still stocking. The shop's not open yet.", "If only someone would bring me the stock box from the basement..."]] },
   "line.wait":         { g: "Supplies", l: "The café counter when there's a line ahead of you", by: "claude", v: [["There's a line. I should wait my turn at the back."]] },
+  "line.impatient":    { g: "Supplies", l: "Someone behind you in the café line, when you stand at the counter without ordering (shown in the corner; one version picked at random)", by: "claude", v: [["Uh, are you gonna order?"], ["*sigh* Some of us have places to be."], ["Any day now..."], ["Do you need help reading the menu?"], ["I can hear my coffee getting cold and I don't even have it yet."]] },
   "line.inLine":       { g: "Supplies", l: "Asking someone in the café line to move", by: "claude", v: [["Sorry, I'm in line."], ["Uh, there's a line?"], ["I've been waiting here forever. I'm not moving."]] },
   "usher.tired":       { g: "Tour", l: "The usher before the tour, with no coffee (busy with the day's schedules)", by: "claude", v: [["*yawn*", "Sorry. I've been staring at today's schedule since six.", "I'd do anything for a coffee right now."], ["Mmh? Oh, hi. Just...", "...", "Is it coffee o'clock yet?"]] },
   "usher.give":        { g: "Tour", l: "Offering the usher your drink ({drink})", by: "claude", v: [["Give the usher your {drink}?"]] },
@@ -2226,6 +2230,10 @@ const TEXT = {
   "item.gone":         { g: "Break room", l: "The owner once it's walked out the door ({item}, {who})", by: "claude", v: [["{who} must've taken my {item} home.", "Ugh. I'll get it back next shift."]] },
   "supply.down":       { g: "Supplies", l: "Setting a delivery box down on the floor", by: "claude", v: [["You set the box down."], ["Box down. My arms thank me."]] },
   "usher.thanks":      { g: "Tour", l: "The usher, after you bring him a coffee", by: "claude", v: [["Is that...coffee?", "For me?", "*sip*", "I can see colors again. Okay, let's do this tour!"]] },
+  "usher.walkBack":    { g: "Tour", l: "The usher walking back to his desk after the tour's first stop", by: "claude", v: [["Back to the desk. Somebody's gotta answer the phone."], ["My part's done. They can take it from here."]] },
+  "usher.guiding":     { g: "Tour", l: "The usher at the tour's stop, with his coffee in him", by: "claude", v: [["Shh, I'm in the zone.", "Coffee and a captive audience. This is my Super Bowl."], ["Not now, I'm crushing it."]] },
+  "usher.stumped":     { g: "Tour", l: "The usher at the tour's stop without his coffee (the group's asking things he can't answer)", by: "claude", v: [["*whispers* Do you know anything about this one?", "...", "Me neither."], ["I swear I read this placard. At some point. In my life."]] },
+  "usher.saved":       { g: "Tour", l: "The usher at the stop after you explained the piece for him", by: "claude", v: [["You just saved my whole career.", "I'm telling everyone that was planned."]] },
   "usher.ready":       { g: "Tour", l: "The usher before the tour, with his coffee", by: "claude", v: [["Fully caffeinated and ready to go!", "The tour starts soon. Grab a seat."]] },
   "usher.back":        { g: "Tour", l: "The usher back at his desk after the tour", by: "claude", v: [["Back at the desk. That tour wore me out.", "Worth it though."]] },
   "tour.gather":       { g: "Tour", l: "Someone in the tour group, waiting in the lobby", by: "claude", v: [["We're waiting on the tour. Is it starting soon?"], ["I hope the guide knows their stuff."], ["My feet are tired and we haven't even started."]] },
@@ -3352,6 +3360,17 @@ class Game {
 .gt-split .gt-shop-row.on::before{top:calc(4px * var(--s));margin-top:0}
 .gt-split .gt-shop-row .pr{flex:none}
 .gt-tag{display:inline-block;padding:0 calc(2px * var(--s));background:#c83a3a;color:#fff8ec;border-radius:calc(1px * var(--s));transform:rotate(-4deg)}
+/* Bluu's stall (Saturdays): the gift shop's window, knocked crooked (Joe 10/11) */
+.gt-janky{transform:rotate(-0.7deg);background:#f4ecd8}
+.gt-janky .gt-shop-head .jk{display:inline-block}
+.gt-janky .gt-shop-row:nth-child(odd){transform:rotate(-1.4deg) translateX(calc(2px * var(--s)))}
+.gt-janky .gt-shop-row:nth-child(even){transform:rotate(1.1deg) translateX(calc(-1px * var(--s)))}
+.gt-janky .gt-shop-row .pr{background:#f2d24a;color:#3a2a08;padding:0 calc(2px * var(--s));transform:rotate(5deg);box-shadow:calc(1px * var(--s)) calc(1px * var(--s)) 0 #8a6a18}
+.gt-janky .gt-shop-row:nth-child(even) .pr{background:#e88a6a;transform:rotate(-4deg)}
+.gt-janky .gt-shop-row img{transform:rotate(-8deg)}
+.gt-janky .gt-detail{transform:rotate(1deg);border-left-style:dashed}
+.gt-janky .gt-detail .pic img{transform:rotate(-10deg) scale(1.08)}
+.gt-janky .gt-detail .t{transform:rotate(-2deg);letter-spacing:.06em}
 .gt-detail{overflow:auto;border-left:calc(1px * var(--s)) solid #c9b89a;padding-left:calc(5px * var(--s));display:flex;flex-direction:column;gap:calc(2px * var(--s))}
 .gt-detail .pic{position:relative;align-self:center;flex:none;display:grid;place-items:center;width:calc(34px * var(--s));height:calc(34px * var(--s));border-radius:50%;background:radial-gradient(circle,#fffaf0 0 54%,#e6cfa6 55% 66%,#d6b98a 67% 70%,transparent 71%)}
 .gt-detail .pic img{width:calc(24px * var(--s));height:calc(24px * var(--s));image-rendering:pixelated;object-fit:contain}
@@ -4420,17 +4439,7 @@ class Game {
     if (off) return items;
     return (this.popupCache = { key, items }).items;
   }
-  popupStall() {
-    const items = this.popupItems(), own = this.progress.popups || (this.progress.popups = []);
-    const show = () => this.openList(this.tx("sat.vendor").join(" ").slice(0, 60) || "POP-UP", [...items.map(it => it.name + " (" + it.price + " T)" + (own.some(o => o.id === it.id) ? " \u2713" : "")), "CLOSE"], i => {
-      const it = items[i]; if (!it) return;
-      if (own.some(o => o.id === it.id)) { this.say(this.tx("sat.owned"), show); return; }
-      if ((this.progress.tokens || 0) < it.price) { this.say(this.tx("sat.broke", { n: it.price }), show); return; }
-      this.progress.tokens -= it.price; own.push(it); this.progress.tally.popups = (this.progress.tally.popups || 0) + 1; this.saveProgress(); this.updateHud(true);
-      this.say(this.tx("sat.bought", { item: it.name }), show);
-    });
-    this.say(this.tx("sat.vendor"), show);
-  }
+  popupStall() { this.say(this.tx("sat.vendor"), () => this.openStall()); }
   /* Thursday: sitting in the one free seat at the café tables starts trivia (if you haven't played today). */
   triviaSeat(e) {
     const d = this.dayState(), seat = d.thuSeat;
@@ -5518,8 +5527,10 @@ class Game {
     this.mode = "shop"; this.shopSel = 0; this.shopMsg = ""; this.shopConfirm = null;
     this.el.shop.style.display = "block"; this.renderShop();
   }
-  closeShop() { this.el.shop.style.display = "none"; this.mode = "walk"; this.inputLock = true; }
+  closeShop() { this.el.shop.style.display = "none"; this.el.shop.classList.remove("gt-janky"); this.mode = "walk"; this.inputLock = true; if (this.stall) { this.stall = false; this.say(this.tx("sat.bye")); } }
+  openStall() { this.stall = true; this.el.shop.classList.add("gt-janky"); this.openShop(); } // Saturday: Bluu's stall, in the gift shop's window
   shopRows() {
+    if (this.stall) return [...this.popupItems().map(it => ({ item: it, popup: true })), { leave: true }]; // Bluu's three things
     const f = this.featuredId(), items = this.stockToday().slice().sort((a, b) => (b.id === f) - (a.id === f)), gift = this.weekGift();
     if (gift) { if (gift.id === f) items.unshift(gift); else items.splice(items.length && items[0].id === f ? 1 : 0, 0, gift); } // this week's unveil gift, on sale until the next one
     return [...items.map(it => ({ item: it })), { shirt: true }, { collection: true }, { leave: true }];
@@ -5541,6 +5552,7 @@ class Game {
     return d;
   }
   renderShop() {
+    if (this.stall) { this.renderStall(); return; }
     const box = this.el.shop, rows = this.shopRows(), owned = this.progress.items;
     this.shopSel = Math.max(0, Math.min(rows.length - 1, this.shopSel));
     box.innerHTML = "";
@@ -5570,7 +5582,44 @@ class Game {
     this.fitSplit(box, split); this.fitDetail(split);
     const sel = list.children[this.shopSel]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: "nearest" });
   }
+  renderStall() { // the same layout as the gift shop, but nothing's quite level (CSS: .gt-janky)
+    const box = this.el.shop, rows = this.shopRows(), own = this.progress.popups || (this.progress.popups = []), mine = it => own.some(o => o.id === it.id);
+    this.shopSel = Math.max(0, Math.min(rows.length - 1, this.shopSel)); box.innerHTML = "";
+    const head = document.createElement("div"); head.className = "gt-shop-head";
+    const t1 = document.createElement("span"); [..."BLUU'S BOUTIQUE"].forEach((ch, i) => { const c = document.createElement("span"); c.className = "jk"; c.textContent = ch === " " ? "\u00a0" : ch; c.style.transform = "rotate(" + ((hash(i, 7) % 15) - 7) + "deg) translateY(" + ((hash(i, 3) % 3) - 1) + "px)"; t1.appendChild(c); });
+    const t2 = document.createElement("span"); t2.textContent = "TOKENS " + (this.progress.tokens || 0);
+    head.appendChild(t1); head.appendChild(t2); box.appendChild(head);
+    const sub = document.createElement("div"); sub.style.textAlign = "center"; sub.textContent = this.tx("sat.window").join(" "); box.appendChild(sub);
+    const split = document.createElement("div"); split.className = "gt-split"; box.appendChild(split);
+    const list = document.createElement("div"); list.className = "gt-shop-list"; split.appendChild(list);
+    rows.forEach((r, i) => {
+      const row = document.createElement("div"); row.className = "gt-shop-row" + (i === this.shopSel ? " on" : "");
+      if (r.item) {
+        const img = document.createElement("img"); img.src = this.itemIcon(r.item).toDataURL(); img.alt = ""; row.appendChild(img);
+        const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = r.item.name; row.appendChild(nm);
+        const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = mine(r.item) ? "SOLD" : r.item.price + " T"; row.appendChild(pr);
+      } else { const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = "Leave"; row.appendChild(nm); }
+      row.addEventListener("click", e => { e.stopPropagation(); if (this.shopSel === i) this.shopSelect(); else { this.shopSel = i; this.shopConfirm = null; this.shopMsg = ""; this.renderShop(); } });
+      list.appendChild(row);
+    });
+    const it = rows[this.shopSel].item;
+    split.appendChild(this.detailPane(it ? { img: this.itemIcon(it).toDataURL(), tag: mine(it) ? "SOLD" : "RARE", title: it.name, price: mine(it) ? "Yours" : it.price + " tokens", desc: it.description || this.tx("sat.desc").join(" "), msg: this.shopMsg }
+      : { title: "Leave", desc: "Head back to the lobby.", msg: this.shopMsg }));
+    this.fitSplit(box, split); this.fitDetail(split);
+    const sel = list.children[this.shopSel]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: "nearest" });
+  }
+  stallSelect() {
+    const r = this.shopRows()[this.shopSel], t = this.progress.tokens || 0, own = this.progress.popups || (this.progress.popups = []);
+    if (r.leave) { this.closeShop(); return; }
+    const it = r.item;
+    if (own.some(o => o.id === it.id)) this.shopMsg = this.tx("sat.owned").join(" ");
+    else if (t < it.price) this.shopMsg = this.tx("sat.broke", { n: it.price }).join(" ");
+    else if (this.shopConfirm !== it.id) { this.shopConfirm = it.id; this.shopMsg = "Buy " + it.name + " for " + it.price + " tokens? Press A again."; }
+    else { this.progress.tokens = t - it.price; own.push(it); this.progress.tally.popups = (this.progress.tally.popups || 0) + 1; this.saveProgress(); this.updateHud(true); this.shopConfirm = null; this.shopMsg = this.tx("sat.bought", { item: it.name }).join(" "); }
+    this.renderShop();
+  }
   shopSelect() {
+    if (this.stall) { this.stallSelect(); return; }
     const r = this.shopRows()[this.shopSel], t = this.progress.tokens || 0;
     if (r.leave) { this.closeShop(); this.say(this.tx("shop.bye")); return; }
     if (r.shirt) { this.shopMsg = this.tx(this.progress.shirt ? "shirt.owned" : "shirt.tease").join(" "); this.renderShop(); return; }
@@ -6780,7 +6829,7 @@ class Game {
       const c = this.cine; c.blend += (c.goal > c.blend ? 1 : -1) / 40; c.blend = Math.max(0, Math.min(1, c.blend));
       if (this.mode === "busy" && c.wait > 0 && --c.wait === 0 && c.then) { const fn = c.then; c.then = null; fn(); }
     }
-    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.living("director", () => this.updateDirector()); this.living("litter", () => this.updateLitter()); this.living("supplies", () => this.updateSupplies()); this.living("tour", () => this.updateTour()); this.living("side", () => this.updateSide()); this.living("cons", () => this.updateCons()); this.living("janitor", () => this.updateJanitor());
+    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.living("director", () => this.updateDirector()); this.living("litter", () => this.updateLitter()); this.living("supplies", () => this.updateSupplies()); this.living("tour", () => this.updateTour()); this.living("side", () => this.updateSide()); this.living("cons", () => this.updateCons()); this.living("hold", () => this.updateLineHold()); this.living("janitor", () => this.updateJanitor());
     if (this.petT > 0) this.petT--;
     if (this.t % 20 === 0) this.flushToasts();
     if (this.flickerT > 0) this.flickerT--;
@@ -7222,7 +7271,7 @@ class Game {
         T.mood = T.coffee || T.explained ? "happy" : "bored";
         if (T.guide) this.tourPlace(T.guide, "lobby", T.deskUsher ? [T.deskUsher.x, T.deskUsher.y] : [3, 3], "down");
         if (T.mood === "happy") { const c = T.stop2, at = [c.x, c.y + 1]; this.tourAround(M, at, T.members.length + 1).forEach((p, i) => T.members[i] && this.tourPlace(T.members[i], "museum", p, this.janFace(p, c.x, c.y))); }
-        else T.members.forEach(n => { n.goal = null; n.walkTo = null; if (n.where === "museum") { n.still = false; n.random = true; const z = this.zoneAt(M, n.x, n.y); n.zone = z && z.kind === "room" ? z.id : T.stop1 && (this.zoneAt(M, T.stop1.x, T.stop1.y) || {}).id; } }); // scattered: they stroll on their own
+        else T.members.forEach(n => { if (n.tourKid) return; n.goal = null; n.walkTo = null; if (n.where === "museum") { n.still = false; n.random = true; const z = this.zoneAt(M, n.x, n.y); n.zone = z && z.kind === "room" ? z.id : T.stop1 && (this.zoneAt(M, T.stop1.x, T.stop1.y) || {}).id; } }); // scattered: they stroll on their own
       } else if (phase === 3) { // back to the lobby to leave; the kid goes missing
         T.members.forEach((n, i) => { n.still = true; n.random = false; n.queue = null; n.seat = null; if (n.sitting) { n.sitting = false; if (n.sitFrom) [n.x, n.y] = n.sitFrom; } n.route = null;
           if (n.tourKid) { if (T.lostSpot) this.tourPlace(n, "museum", T.lostSpot.at, T.lostSpot.dir); else this.tourPlace(n, "museum", this.freeSpot(M, null, T.lostZone) || this.freeSpot(M), "down"); }
@@ -7237,9 +7286,18 @@ class Game {
       if (n.leaving || n.gone) continue;
       if (this.fol === n) { n.where = this.room.id; n.goal = null; continue; } // following you
       const R = this.rooms[n.where]; if (R && !R.npcs.includes(n)) { for (const id in this.rooms) if (id !== n.where) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== n); R.npcs.push(n); }
+      if (n.tourKid && (T.phase === 1 || T.phase === 2)) this.kidTag(n, T); // sticking with his grown-up until the group heads back
       this.tourMove(n);
     }
     if (T.guide && T.phase === 2 && !T.guide.goal && T.guide.where === "lobby") { this.tourDrop(T.guide); T.guide = null; this.restoreUsher(); } // back at his desk
+  }
+  kidTag(n, T) { // the kid follows one of the grown-ups around, the way he follows you; if they get in the café line, he waits by them
+    const P = T.members.find(m => !m.tourKid && !m.gone && !m.leaving); if (!P || n.moving) return;
+    const key = P.where + ":" + P.x + "," + P.y; if (n.tagKey === key && (n.goal || n.where === P.where)) return; n.tagKey = key;
+    if (n.where === P.where && Math.abs(n.x - P.x) + Math.abs(n.y - P.y) === 1) { n.goal = null; n.walkTo = null; n.dir = this.janFace([n.x, n.y], P.x, P.y); return; }
+    const R = this.rooms[P.where], [bx, by] = DIRS[OPP[P.dir]] || [0, 1], ok = (x, y) => R.solid[y] && R.solid[y][x] === false && !R.events[x + "," + y] && !(R.noWander && R.noWander.has(x + "," + y)) && !(R.queueAt || []).some(([qx, qy]) => qx === x && qy === y); // not in the café line's spots
+    const at = ok(P.x + bx, P.y + by) ? [P.x + bx, P.y + by] : this.tourAround(R, [P.x, P.y], 2).find(([x, y]) => ok(x, y)) || [P.x, P.y];
+    this.tourPlace(n, P.where, at, this.janFace(at, P.x, P.y)); n.walkTo = null; n.route = null;
   }
   tourDrop(n) { n.gone = true; for (const id in this.rooms || {}) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== n); }
   tourMove(n) {
@@ -7283,6 +7341,8 @@ class Game {
   }
   tourTalk(n) {
     const T = this.tour; if (!T) return;
+    if (n.tourUsher) { // the usher leading the tour has his own lines, not the group's
+      this.tourSay(T.phase >= 2 ? "usher.walkBack" : T.coffee ? "usher.guiding" : T.explained ? "usher.saved" : "usher.stumped"); return; }
     if (n.tourKid && T.phase === 3 && !T.kidDone) { // the lost kid
       if (this.fol === n) { this.tourSay("tour.kidAgain"); return; }
       if (this.fol) { this.say(this.tx("tue.busy")); return; }
@@ -7547,6 +7607,16 @@ class Game {
       let a = home[0], b = home[0]; while (a > home[0] - 2 && ok(a - 1)) a--; while (b < home[0] + 2 && ok(b + 1)) b++;
       if (b > a) { ba.home = home; ba.pace = { a, b, to: b, t: 0 }; }
     } else if (ba && !rushed && ba.pace) { const [x, y, dir] = ba.home; ba.pace = null; ba.walkTo = { at: [x, y], dir }; if (!seen && this.tileFree(M, x, y)) { ba.x = x; ba.y = y; ba.dir = dir; ba.walkTo = null; } }
+  }
+  /* Holding up the café line (Joe 10/10–11: a reaction, not a fix): stand at the counter's front spot without ordering while
+     someone's waiting behind you, and after a few seconds they get impatient: an annoyed emote and a muttered line in the
+     corner, again every so often while you keep standing there. */
+  updateLineHold() {
+    const r = this.room, p = this.player; if (!r || r.id !== "museum" || this.mode !== "walk" || p.sitting || this.closing) { this.holdT = 0; return; }
+    const Q = this.queueSpots(r); if (Q.length < 2 || p.x !== Q[0][0] || p.y !== Q[0][1]) { this.holdT = 0; return; }
+    const next = r.npcs.find(n => n.queue && n.queue.phase === "in" && n.x === Q[1][0] && n.y === Q[1][1]); if (!next) { this.holdT = 0; return; }
+    this.holdT = (this.holdT || 0) + 1;
+    if (this.holdT === 360 || (this.holdT > 360 && (this.holdT - 360) % 540 === 0)) { next.pose = { kind: "annoyed", t0: this.t, dur: 100 }; this.showLoc(this.tx("line.impatient", null, true).join(" ")); }
   }
   paceStep(n) { // a few quick steps one way, a beat, then back
     const P = n.pace; if (this.mode !== "walk" || --P.t > 0) return;
@@ -8498,12 +8568,14 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cues";
+const VERSION = "2026-11-18 cues 2";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
   { "screen.guest": ["I keep telling myself one more episode."] });
-window.GOQ = { CLAUDE_LINES, PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
+const CLAUDE_SHOP = { "goq-tote": "A sturdy canvas tote with the GOQ logo. Holds groceries, games and emotional baggage.", "goq-pin": "A shiny enamel pin with the GOQ logo. Looks great on a lanyard. Hint hint.",
+  "goq-mousepad": "An extra-wide mousepad with the GOQ logo. Your desk has never looked this cozy.", "goq-lanyard": "A GOQ lanyard. Now you look like you work here. Do you?" }; // shop descriptions Claude wrote (Joe 10/11)
+window.GOQ = { CLAUDE_LINES, CLAUDE_SHOP, PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
   spotRooms: () => Object.keys(ROOMS).filter(id => (ROOMS[id].spots || []).length).map(id => ({ id, name: ROOMS[id].name, n: ROOMS[id].spots.length })),

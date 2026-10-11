@@ -86,3 +86,22 @@ Two more, outside Words: a new version in the screening nook guest's lines ("I k
 | Volunteering | Clocking out: after you helped a curious visitor | Heard you helped someone find a game today. That's what it's all about. |
 | Volunteering | Clocking out: after you closed up | Thanks for closing up. Get home safe. |
 | Volunteering | Clocking out: you didn't do anything this shift | Easy day, huh? / Hey, sometimes you just need to show up. |
+
+## Added later (10/11, version "2026-11-18 cues 2")
+
+| Group | Line | What Claude wrote |
+| --- | --- | --- |
+| Tour | The usher at the tour's stop, with his coffee | Shh, I'm in the zone. ⏎ Coffee and a captive audience. This is my Super Bowl. / Not now, I'm crushing it. |
+| Tour | The usher at the stop without his coffee | *whispers* Do you know anything about this one? ⏎ ... ⏎ Me neither. / I swear I read this placard. At some point. In my life. |
+| Tour | The usher after you explained the piece for him | You just saved my whole career. ⏎ I'm telling everyone that was planned. |
+| Tour | The usher walking back to his desk | Back to the desk. Somebody's gotta answer the phone. / My part's done. They can take it from here. |
+| Bluu | Under the name at the top of his stall window | One of a kind. Allegedly. / No refunds. No questions. No receipts. |
+| Bluu | An item with no description of its own | Mint condition, innit. Basically. |
+| Bluu | When you close his stall | Laters. Tell your mates. / Oi, come back when you're minted. |
+| Supplies | Someone behind you in the café line, when you hold it up | Uh, are you gonna order? / *sigh* Some of us have places to be. / Any day now... / Do you need help reading the menu? / I can hear my coffee getting cold and I don't even have it yet. |
+| Gift shop items | GOQ Tote Bag | A sturdy canvas tote with the GOQ logo. Holds groceries, games and emotional baggage. |
+| Gift shop items | GOQ Enamel Pin | A shiny enamel pin with the GOQ logo. Looks great on a lanyard. Hint hint. |
+| Gift shop items | GOQ Mousepad | An extra-wide mousepad with the GOQ logo. Your desk has never looked this cozy. |
+| Gift shop items | GOQ Lanyard | A GOQ lanyard. Now you look like you work here. Do you? |
+
+Also, outside the Writers' Room (Curator → Rooms): the espresso machine ("The espresso machine. It hisses at you a little.") and the cup stacks ("Towers of to-go cups. Somebody counts these every night.").
