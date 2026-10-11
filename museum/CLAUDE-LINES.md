@@ -69,9 +69,6 @@ Two more, outside Words: a new version in the screening nook guest's lines ("I k
 | Screening nook | Trying to put a popcorn bag in the café's dish tub | The dish tub is for mugs. The popcorn bag goes in the trash. |
 | Screening nook | Popcorn, with something already in your hands | My hands are full already. |
 | Litter | Picking up litter ({thing}: cup, wrapper or napkin) | You pick up a {thing}. Gross. / A {thing}. People are animals. / You pick up the {thing}. |
-| Litter | Trying to pick up more litter with your hands full (three pieces) | I can't carry any more trash. ⏎ I need to find a bin. |
-| Litter | Putting litter in a bin ({n} pieces) | *plunk* ⏎ Much better. |
-| Litter | Looking at litter while your hands are full | More trash. My hands are full though. |
 | Litter | A full bin (it won't take any more) | This bin is full to the top. ⏎ Someone should empty it. |
 | Janitor | Handing the janitor the litter you picked up (into his dustpan) | Oh, thanks. Into the dustpan it goes. ⏎ Didn't know volunteers did trash duty. |
 | Storage | The wide garage door on the basement's north wall | The big garage door. ⏎ This is where the deliveries come in. And the cold. |
@@ -158,3 +155,19 @@ Not mine: "No refunds." and "You can't afford that." are Joe's.
 | Café | It's ready | *ding* ⏎ One cup of staff coffee. It smells like a cardboard box. |
 | Café | Finishing a cup | You finish the staff coffee. ⏎ ... ⏎ That was not good. That was not good at all. / Every sip tasted like the inside of a filing cabinet. ⏎ Now you're holding an empty cup. |
 | Café | Hands full | My hands are full. And honestly, that's for the best. |
+
+## Added later (10/11, version "2026-11-18 tuesday 4")
+
+The trash bag replaced picking up three pieces by hand, so the "hands full", "into a bin" and "looking at litter" lines are gone.
+
+| Group | Line | What Claude wrote |
+| --- | --- | --- |
+| Litter | Litter without a trash bag | I'm not touching that with my bare hands. ⏎ There are trash bags in the staff room. |
+| Litter | The staff room can: take a bag? | A roll of trash bags under the can. Tear one off? |
+| Litter | Taking a bag | *rrrip* ⏎ One trash bag. I'm basically a professional now. |
+| Litter | Putting an unused bag back | You roll the bag back up and tuck it under the can. ⏎ Nobody saw that. |
+| Litter | An empty bag at another can | It's empty. I haven't even used it yet. |
+| Litter | The bag into an empty can | *fwump* ⏎ The whole bag goes in. Much better. / *fwump* ⏎ Out of sight, out of mind. |
+| Litter | The bag at a can that isn't empty | This can's got stuff in it already. ⏎ The bag needs an empty one. |
+| Litter | Holding anything else with the bag | Not with a bag of trash in my hand. / I'm holding garbage. Literally. One thing at a time. |
+| Janitor | Handing him your bag (rewritten) | Oh, a whole bag. Thanks. ⏎ Didn't know volunteers did trash duty. |

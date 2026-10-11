@@ -178,6 +178,7 @@ Every problem has:
 **The chains**
 
 - Bins (janitor's route) → litter (visitors) → more sweeping → janitor overtime ← unwatered plants
+  - *(Joe 10/11, built)* The janitor cleans up round a bin, then empties that bin, then moves on. You help with a trash bag from the staff room: pick up any amount, then put the bag in an empty can or hand it to him. With the bag you can't hold anything else, and without it you can't pick up litter.
 - Usher's coffee → how good the tour is → bored kids → a lost kid
 - Storage deliveries → the shopkeeper's stock (can't sell until it's out) and the barista's prep → the line → a blocked walkway *(Claude 10/9: both start in storage, and you carry one box at a time, so helping both means two trips)*
 
