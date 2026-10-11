@@ -4143,13 +4143,13 @@ class Game {
     if (wd === 6) { // Saturday: the pop-up stall in the lobby
       const L = this.rooms.lobby, ok = ([x, y]) => L && this.tileFree(L, x, y) && this.tileFree(L, x + 1, y) && this.tileFree(L, x, y - 1) && L.solid[y + 1] && L.solid[y + 1][x] === false && !L.events[x + "," + y] && !L.events[(x + 1) + "," + y] && !L.events[x + "," + (y + 1)] && ![[x, y], [x + 1, y], [x, y - 1]].some(([a, b]) => a === ROOMS.lobby.spawn[0] && b === ROOMS.lobby.spawn[1]); // never on the spot you arrive at
       const all = []; if (L) for (let y = 4; y < L.h - 2; y++) for (let x = 1; x < L.w - 2; x++) all.push([x, y]); // the usual spots first, then anywhere it fits (the lobby gets rearranged)
-      // His two spots, a different one each week: up top in front of the day board (it sits one row behind him), or the lower
-      // left corner with the table a row up from the bottom wall, so there's room to step in front of it.
-      const db = L && L.props.find(p => p.key === "day_board"), top = db ? [db.x, db.y + 2] : [5, 4], corner = L ? [1, L.h - 3] : [1, 9];
+      // His two spots, a different one each week: up top by the front desk, or the lower left corner with the table a row up from
+      // the bottom wall, so there's room to step in front of it. (Not tied to the day board: Joe 10/11.)
+      const top = [5, 4], corner = L ? [1, L.h - 3] : [1, 9];
       const wk = Math.floor((new Date(todayISO() + "T12:00:00") - new Date(2024, 0, 6)) / 6048e5), two = wk % 2 ? [corner, top] : [top, corner];
       const spot = [...two, ...all].find(ok);
       if (L && spot) { const [x, y] = spot; L.props.push({ key: "popup_table", x, y }); L.solid[y][x] = L.solid[y][x + 1] = true; L.events[x + "," + y] = L.events[(x + 1) + "," + y] = { popup: true };
-        L.npcs.push(this.dayNpc({ sheet: "visitor_c", x, y: y - 1, vendor: true, member: "Bluu" })); L.solid[y - 1][x] = true; }
+        L.npcs.push(this.dayNpc({ sheet: "visitor_c", x, y: y - 1, vendor: true, member: "Bluu" })); } // he blocks his own tile while he's there (no wall left behind when he heads home at closing)
     }
     if (wd === 0 && m && !d.sunDone) { // Sunday: someone from the staff at a café table, with the stool across from them free for you
       const order = ["shopkeeper", "shopkeeper", "barista", "barista", "conservator", "conservator", "usher", "usher", ...(this.isCurator() ? [] : ["curator"])], role = d.sunRole || (d.sunRole = order[strSeed(todayISO() + "sun") % order.length]);
@@ -8443,7 +8443,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 lines";
+const VERSION = "2026-11-18 lines 2";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
