@@ -2298,7 +2298,7 @@ const TEXT = {
   "bin.tubPopcorn":    { g: "Screening nook", l: "Trying to put a popcorn bag in the café's dish tub", by: "claude", v: [["The dish tub is for mugs. The popcorn bag goes in the trash."]] },
   "popcorn.hands":     { g: "Screening nook", l: "Popcorn, with something already in your hands", by: "claude", v: [["My hands are full already."]] },
   "litter.pick":       { g: "Litter", l: "Picking up litter ({thing}: cup, wrapper or napkin)", by: "claude", v: [["You pick up a {thing}. Gross."], ["A {thing}. People are animals."], ["You pick up the {thing}."]] },
-  "litter.noBag":      { g: "Litter", l: "Trying to pick up litter without a trash bag (they're in the staff room)", by: "claude", v: [["I'm not touching that with my bare hands.", "There are trash bags in the staff room."]] },
+  "litter.noBag":      { g: "Litter", l: "Trying to pick up litter without a trash bag (in the staff room, or the janitor has spares)", by: "claude", v: [["I'm not touching that with my bare hands.", "The janitor must have a spare trash bag."]] },
   "bag.ask":           { g: "Litter", l: "The staff room trash can, hands empty: take a trash bag? (one page, Yes/No)", by: "claude", v: [["A roll of trash bags under the can. Tear one off?"]] },
   "bag.take":          { g: "Litter", l: "Taking a trash bag", by: "claude", v: [["*rrrip*", "One trash bag. I'm basically a professional now."]] },
   "bag.back":          { g: "Litter", l: "Putting an unused trash bag back (staff room can)", by: "claude", v: [["You roll the bag back up and tuck it under the can.", "Nobody saw that."]] },
@@ -2308,6 +2308,9 @@ const TEXT = {
   "bag.notEmpty":      { g: "Litter", l: "Your trash bag at a can that isn't empty (the bag needs an empty one)", by: "claude", v: [["This can's got stuff in it already.", "The bag needs an empty one."]] },
   "bag.hands":         { g: "Litter", l: "Trying to hold something else with the trash bag in your hand", by: "claude", v: [["Not with a bag of trash in my hand."], ["I'm holding garbage. Literally. One thing at a time."]] },
   "bin.full":          { g: "Litter", l: "A full bin (it won't take any more)", by: "claude", v: [["This bin is full to the top.", "Someone should empty it."]] },
+  "jan.offerBag":      { g: "Janitor", l: "Talking to the janitor with empty hands while there's litter about: he offers you a trash bag (one page, then Take a bag / Not right now)", by: "claude", v: [["There's trash all over my floor. Again. You want to help? I've got a spare bag."]] },
+  "jan.gaveBag":       { g: "Janitor", l: "Taking the janitor's spare trash bag", by: "claude", v: [["*rrrip*", "Here. Pick up whatever you see, then put the bag in an empty can.", "Or bring it to me. I'm not picky."]] },
+  "jan.noBag":         { g: "Janitor", l: "Turning down the janitor's trash bag", by: "claude", v: [["Yeah. That's what everybody says."]] },
   "jan.takes":         { g: "Janitor", l: "Handing the janitor your trash bag, with litter in it", by: "claude", v: [["Oh, a whole bag. Thanks.", "Didn't know volunteers did trash duty."]] },
   "storage.garage":    { g: "Storage", l: "The wide garage door on the basement's north wall", by: "claude", v: [["The big garage door.", "This is where the deliveries come in. And the cold."]] },
   "vol.callName":      { g: "Volunteering", l: "What staff call you when you're volunteering (no badge)", v: [["volunteer"]] },
@@ -3830,6 +3833,9 @@ class Game {
   resetProgress() { this.mugSeed = undefined; try { if (this.saveKey) localStorage.removeItem(this.saveKey); } catch (e) {} this.progress = this.loadProgress(); this.lightsOff.clear(); this.closing = false; this.closed = false; this.closingPaid = false; this.fol = null; this.dayStart = Object.assign({}, this.progress.tally); this.spook = null; this.figure = null; this.hideEnd(); this.restartLoop(); this.updateHud(); this.rebuild(); }
   /* A fresh visit for the living museum: the clock back to minute 0, the Janitor back at the staff door, new deliveries,
      empty bins, no litter, nobody in line. (Start the visit over, and the curator's preview.) */
+  replayLoop() { // the curator's "Replay today's loop" (Settings): minute 0 again, everything in the loop fresh; progress untouched
+    this.closing = false; this.closed = false; this.fol = null; this.restartLoop(); this.rebuild(); this.showLoc("Today's loop starts over");
+  }
   restartLoop() {
     const keep = this.dirClock ? this.dirClock.paused : false; this.dirClock = { t: 0, paused: keep };
     if (this.progress && this.progress.day) { delete this.progress.day.loop; this.saveProgress(); } // a fresh loop today
@@ -7155,6 +7161,9 @@ class Game {
     if (npc && npc.role === "shopkeeper" && npc.stocking) { this.say(this.tx("shop.stocking")); return; }
     if (npc && npc.role === "barista" && npc.pace) { this.say(this.tx("cafe.rushed")); return; } // why she's running back and forth
     if (npc && npc.role === "barista" && this.sup && this.sup.cafeNeeded && !this.sup.cafeDone && !this.closing && this.director().beat >= 2 && !this.director().over) { this.say(this.tx("cafe.slowChat")); return; } // every order taking forever
+    if (npc && npc.janitor && this.trashBag == null && !this.carryBox && !this.carryItem && !this.drink && Object.values(this.litter || {}).some(L => L.length)) { // litter about: he'll take any help he can get (anyone, on shift or not: Joe 10/11)
+      this.faceYou(npc, 240); this.choose(this.tx("jan.offerBag").join(" "), ["Take a bag", "Not right now"], i => { if (i === 0) { this.trashBag = 0; this.say(this.tx("jan.gaveBag")); } else this.say(this.tx("jan.noBag")); }, 1); return;
+    }
     if (npc && npc.janitor && this.trashBag) { this.faceYou(npc, 240); const k = this.trashBag; this.trashBag = null; for (let i = 0; i < k; i++) this.count("litter"); this.say(this.tx("jan.takes", { n: k })); return; } // your bag, for him to deal with
     if (npc) { npc.timer = 180; if (!this.deskStaff(npc) && !npc.sitting && !this.facingWall(npc)) this.faceYou(npc, 240); if (npc.patrol) npc.pause = 120; this.talkTo(npc); return; }
     const e = this.room.events[fx + "," + fy]; if (e) { this.runEvent(e); return; }
@@ -8851,7 +8860,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 tuesday 7";
+const VERSION = "2026-11-18 tuesday 8";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

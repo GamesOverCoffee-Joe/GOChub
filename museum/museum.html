@@ -202,6 +202,10 @@ dialog.settings::backdrop{background:rgba(10,5,7,.7)}
       <div class="txt"><b>Vibrate on button presses</b><small>A tiny buzz when you press the D-pad, A or B.</small></div>
       <input type="checkbox" class="switch" id="optBuzz" aria-label="Vibrate on button presses">
     </div>
+    <div class="set-row" id="rowReplay" hidden>
+      <div class="txt"><b>Replay today's loop</b><small>For the curator: the visit clock back to minute 0 with fresh deliveries, bins, tour and Janitor. Your chores, tokens and photos stay.</small></div>
+      <button class="btn" type="button" id="replayLoop">Replay</button>
+    </div>
     <div class="set-row" id="rowPack">
       <div class="txt"><b>Museum pack</b><small id="packStatus2">Built-in placeholder art</small></div>
       <label class="btn" for="packFile">Load</label>
@@ -214,7 +218,7 @@ dialog.settings::backdrop{background:rgba(10,5,7,.7)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 tuesday 7";
+window.GOQ_WANT = "2026-11-18 tuesday 8";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -363,9 +367,11 @@ window.goqStart = function () {
   optSwap.addEventListener("change", () => { set.swapAB = optSwap.checked; game.swapAB = optSwap.checked; saveSet(); });
   if (navigator.vibrate) document.getElementById("rowBuzz").hidden = false;
   document.getElementById("setBtn").addEventListener("click", () => {
+    document.getElementById("rowReplay").hidden = !(testMode || curator || isLocal || (game.isCurator && game.isCurator())); // the curator's own tool
     optTap.checked = tapWalk(); optCtl.value = set.controls || "auto"; optBuzz.checked = set.haptics !== false; optSharp.checked = sharp(); optSwap.checked = !!set.swapAB; optVid.checked = set.screenVideo !== false;
     if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
   });
+  document.getElementById("replayLoop").addEventListener("click", () => { game.replayLoop(); dlg.close ? dlg.close() : dlg.removeAttribute("open"); });
   optTap.addEventListener("change", () => { set.tapWalk = optTap.checked; game.tapWalk = optTap.checked; saveSet(); });
 
   /* Phones and tablets: no accidental pinch or double-tap zoom anywhere on the page, even where the browser ignores the viewport

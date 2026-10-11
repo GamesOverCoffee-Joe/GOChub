@@ -163,7 +163,7 @@ The trash bag replaced picking up three pieces by hand, so the "hands full", "in
 
 | Group | Line | What Claude wrote |
 | --- | --- | --- |
-| Litter | Litter without a trash bag | I'm not touching that with my bare hands. ⏎ There are trash bags in the staff room. |
+| Litter | Litter without a trash bag | I'm not touching that with my bare hands. ⏎ The janitor must have a spare trash bag. |
 | Litter | The staff room can: take a bag? | A roll of trash bags under the can. Tear one off? |
 | Litter | Taking a bag | *rrrip* ⏎ One trash bag. I'm basically a professional now. |
 | Litter | Putting an unused bag back | You roll the bag back up and tuck it under the can. ⏎ Nobody saw that. |
@@ -187,3 +187,11 @@ The trash bag replaced picking up three pieces by hand, so the "hands full", "in
 | --- | --- | --- |
 | Tour | The tour's kid at a shelf, in a wing or in the nook | I'm just looking. My group's right over... there. Somewhere. / How much is this one? ⏎ How much is THIS one? |
 | Screening nook | Finishing popcorn sitting down | You finish the popcorn. ⏎ There's always one kernel at the bottom. You leave it. / *crunch* ⏎ ...That was an unpopped one. Ow. |
+
+## Added later (10/11, version "2026-11-18 tuesday 8")
+
+| Group | Line | What Claude wrote |
+| --- | --- | --- |
+| Janitor | Offering you a spare trash bag | There's trash all over my floor. Again. You want to help? I've got a spare bag. |
+| Janitor | You take it | *rrrip* ⏎ Here. Pick up whatever you see, then put the bag in an empty can. ⏎ Or bring it to me. I'm not picky. |
+| Janitor | You don't | Yeah. That's what everybody says. |
