@@ -413,7 +413,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 tour 2";
+window.GOQ_WANT = "2026-11-18 lobby";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -1138,7 +1138,7 @@ const PLACE_GROUPS = [
     { kind: "spot", name: "Painting spot", key: "wall_frame_wood", note: "Community pieces hang here. Tap the wall; it takes two tiles across both wall rows." },
     { kind: "prop", key: "overflow_screen", name: "Touch screen", note: "The room's extra pieces: episodes of its genre that don't fit in its cases. One per room is plenty." },
   ] },
-  { name: "Furniture", items: ["bench", "plant", "planter_wide", "sign_stand", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board"].map(k => ({ kind: "prop", key: k })) },
+  { name: "Furniture", items: ["bench", "bench_side", "plant", "planter_wide", "sign_stand", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board", "day_board"].map(k => ({ kind: "prop", key: k })) },
   { name: "Shop and café", items: ["shelf_unit", "magazine_rack", "item_rack", "shop_counter", "cafe_counter", "bus_tub", "cafe_table", "cafe_stool", "floor_lamp", "postcard_spinner", "basket", "planter", "cat_bed"].map(k => ({ kind: "prop", key: k }))
     .concat([{ kind: "decal", key: "rug" }]) },
   { name: "Storage and floors", items: [{ kind: "stairs", key: "stair_up", name: "Stairs up", note: "Step on it to change floors. Select it to choose where it leads." },
@@ -1161,7 +1161,7 @@ const PLACE_GROUPS = [
   ] },
   { name: "People", items: ["visitor_a", "visitor_b", "visitor_c", "shop_staff", "guard"].map(k => ({ kind: "visitor", key: k })) },
 ];
-const SIT_KEYS = { bench: "up", cafe_stool: "right" };
+const SIT_KEYS = { bench: "up", bench_side: "left", cafe_stool: "right" };
 const clone = o => JSON.parse(JSON.stringify(o));
 const R = { id: "lobby", tool: "select", brush: TILE_BRUSHES[0], place: null, sel: null, zoom: 0, panX: 0, panY: 0, undo: [], redo: [], img: null, grid: true, linking: null };
 
@@ -1572,6 +1572,7 @@ function placeAt(t) {
     if (p.key === "microwave_counter") prop.event = { microwave: true };
     if (p.key === "patron_board") { prop.blockTop = true; prop.event = { patronBoard: true }; }
     if (p.key === "shop_counter") prop.event = { shopCounter: true };
+    if (p.key === "day_board") prop.event = { dayBoard: true };
     if (p.key === "cafe_counter") prop.event = { cafe: true };
     if (p.key === "collection_cabinet") prop.collection = true;
     if (p.key === "whiteboard") prop.rules = true;

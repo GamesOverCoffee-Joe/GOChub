@@ -224,6 +224,12 @@ const GEN = {
     rect(a, 3, 10, 2, 4, 2); rect(a, 27, 10, 2, 4, 2);
     return outline(a);
   },
+  bench_side: () => { // the same bench turned sideways: back on the right, you sit facing left (mirrored when it faces right)
+    let a = mk(16, 32);
+    rect(a, 11, 1, 3, 26, 1); rect(a, 3, 5, 8, 22, 2); rect(a, 3, 5, 1, 22, 4);
+    rect(a, 3, 27, 8, 1, 1); rect(a, 4, 28, 2, 3, 2); rect(a, 9, 28, 2, 3, 2); rect(a, 12, 27, 2, 4, 2);
+    return outline(a);
+  },
   desk: () => {
     let a = mk(48, 16);
     rect(a, 0, 3, 48, 3, 1); rect(a, 0, 3, 48, 1, 0); rect(a, 1, 6, 46, 9, 2);
@@ -1145,6 +1151,7 @@ const SLOTS = [
 
   { key: "plant", label: "Potted plant", group: "Furniture", w: 16, h: 16, pal: "plant", gen: GEN.plant },
   { key: "bench", label: "Bench", group: "Furniture", w: 32, h: 16, pal: "wood", gen: GEN.bench },
+  { key: "bench_side", label: "Bench, sideways", group: "Furniture", w: 16, h: 32, pal: "wood", gen: GEN.bench_side, note: "Two tiles tall, one wide. Drawn with its back on the right so you sit facing left; it's mirrored when it's set to face right." },
   { key: "front_desk", label: "Front desk with guestbook", group: "Furniture", w: 48, h: 16, pal: "wood", gen: GEN.desk },
   { key: "sign_stand", label: "Sign stand", group: "Furniture", w: 16, h: 16, pal: "wood", gen: GEN.sign },
 
@@ -2786,7 +2793,7 @@ function buildRoom(id, pieces, o) {
       if (p.plant) r.events[(p.x + i) + "," + p.y] = { plant: p.plant, name: p.name };
       else if (p.key === "front_desk") r.events[(p.x + i) + "," + p.y] = i === 1 ? { usher: true } : { guestbook: true };
       else if (p.rules) r.events[(p.x + i) + "," + p.y] = { rules: true };
-      else if (p.sit) r.events[(p.x + i) + "," + p.y] = { sit: p.sit, x: p.x + i, y: p.y, say: p.say, bench: p.key === "bench" };
+      else if (p.sit) { const bench = p.key === "bench" || p.key === "bench_side"; r.events[(p.x + i) + "," + p.y] = { sit: p.sit, x: p.x + i, y: p.y, say: p.say, bench }; if (p.key === "bench_side") { r.solid[p.y - 1][p.x + i] = true; r.events[(p.x + i) + "," + (p.y - 1)] = { sit: p.sit, x: p.x + i, y: p.y - 1, say: p.say, bench }; } } // a sideways bench: two seats, one above the other
       else if (p.event) { r.events[(p.x + i) + "," + p.y] = Object.assign({}, p.event); if (p.tall && p.blockTop) r.events[(p.x + i) + "," + (p.y - 1)] = Object.assign({}, p.event); }
       else if (p.say) r.events[(p.x + i) + "," + p.y] = { say: p.say };
     }
@@ -2842,6 +2849,15 @@ function buildRoom(id, pieces, o) {
     r.cases.push(c); r.events[x + "," + y] = { caseAt: c };
   });
   (def.events || []).forEach(e => (r.events[e.x + "," + e.y] = Object.assign({ bump: !!e.warp }, e)));
+  { // The front doors go wherever they're painted (E): a resized room keeps working, and visitors come and go right in front of them.
+    const fronts = []; def.map.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === "E") fronts.push([x, y]); }));
+    if (fronts.length) {
+      for (const k in r.events) { const [x, y] = k.split(",").map(Number); if (r.events[k].frontDoor && def.map[y][x] !== "E") delete r.events[k]; }
+      fronts.forEach(([x, y]) => { if (!r.events[x + "," + y]) r.events[x + "," + y] = { frontDoor: true, bump: true }; });
+      const ex = def.exitTo, by = (x, y) => fronts.some(([fx, fy]) => fx === x && fy === y + 1);
+      if (!ex || !by(ex[0], ex[1])) def.exitTo = [fronts[0][0], fronts[0][1] - 1];
+    }
+  }
   if (lay) { // the museum: zones, a light switch in each room, doorways and stairs from the blueprint
     r.zones = lay.zones; r.zoneAt = lay.zoneAt;
     r.switches = lay.lights.map(l => ({ x: l.x, y: l.y, key: id + ":" + l.zone }));
@@ -4102,7 +4118,11 @@ class Game {
     if (wd === 6) { // Saturday: the pop-up stall in the lobby
       const L = this.rooms.lobby, ok = ([x, y]) => L && this.tileFree(L, x, y) && this.tileFree(L, x + 1, y) && this.tileFree(L, x, y - 1) && L.solid[y + 1] && L.solid[y + 1][x] === false && !L.events[x + "," + y] && !L.events[(x + 1) + "," + y] && !L.events[x + "," + (y + 1)] && ![[x, y], [x + 1, y], [x, y - 1]].some(([a, b]) => a === ROOMS.lobby.spawn[0] && b === ROOMS.lobby.spawn[1]); // never on the spot you arrive at
       const all = []; if (L) for (let y = 4; y < L.h - 2; y++) for (let x = 1; x < L.w - 2; x++) all.push([x, y]); // the usual spots first, then anywhere it fits (the lobby gets rearranged)
-      const spot = [[10, 7], [11, 7], [10, 4], [4, 6], ...all].find(ok);
+      // His two spots, a different one each week: up top in front of the day board (it sits one row behind him), or the lower
+      // left corner with the table a row up from the bottom wall, so there's room to step in front of it.
+      const db = L && L.props.find(p => p.key === "day_board"), top = db ? [db.x, db.y + 2] : [5, 4], corner = L ? [1, L.h - 3] : [1, 9];
+      const wk = Math.floor((new Date(todayISO() + "T12:00:00") - new Date(2024, 0, 6)) / 6048e5), two = wk % 2 ? [corner, top] : [top, corner];
+      const spot = [...two, ...all].find(ok);
       if (L && spot) { const [x, y] = spot; L.props.push({ key: "popup_table", x, y }); L.solid[y][x] = L.solid[y][x + 1] = true; L.events[x + "," + y] = L.events[(x + 1) + "," + y] = { popup: true };
         L.npcs.push(this.dayNpc({ sheet: "visitor_c", x, y: y - 1, vendor: true, member: "Bluu" })); L.solid[y - 1][x] = true; }
     }
@@ -7024,7 +7044,7 @@ class Game {
   seatFor(n, zone) {
     const r = this.room, zid = r.zoneAt && (zone || n.zone), out = [];
     for (const k in r.events) {
-      const e = r.events[k]; if (!e.sit || (r.keepFree && r.keepFree.has(k))) continue;
+      const e = r.events[k]; if (!e.sit || (r.keepFree && r.keepFree.has(k)) || this.tourSeat(e)) continue;
       if (zid && (this.zoneAt(r, e.x, e.y) || {}).id !== zid) continue;
       if (r.npcs.some(m => (m.x === e.x && m.y === e.y) || (m.seat === e)) || (this.player.x === e.x && this.player.y === e.y)) continue;
       const from = Object.values(DIRS).map(([dx, dy]) => [e.x + dx, e.y + dy]).filter(([x, y]) => r.solid[y] && !r.solid[y][x] && !(r.noWander && r.noWander.has(x + "," + y)));
@@ -7057,7 +7077,7 @@ class Game {
     this.tourPlan(T);
     const sheets = ["visitor_a", "visitor_b", "visitor_c", "visitor_b"];
     for (let i = 0; i < 5; i++) {
-      const kid = i === 4, at = T.gather[i] || T.gather[0] || [10, 6];
+      const kid = i === 4, st = T.seats[i], at = st ? st.from : T.gather[i] || T.gather[0] || [10, 6];
       T.members.push({ sheet: kid ? "kid" : sheets[i], x: at[0], y: at[1], dir: "left", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 0, still: true, tour: true, tourKid: kid, where: "lobby", lines: [], lineI: -1 });
     }
     return T;
@@ -7067,6 +7087,15 @@ class Game {
     const L = this.rooms.lobby, ok = (R, x, y) => R.solid[y] && R.solid[y][x] === false && !R.events[x + "," + y] && !(R.noWander && R.noWander.has(x + "," + y));
     const gather = []; for (let y = 5; y < L.h - 1; y++) for (let x = 8; x < L.w - 1; x++) if (ok(L, x, y)) gather.push([x, y]); // the lobby's right side, out of the way of the doors
     T.gather = gather.slice(0, 6);
+    // While they wait in the lobby they sit on its benches (out of everyone's way): each seat, and a free spot next to it to
+    // sit down from (the side it faces first), the right side of the lobby first.
+    const seats = Object.values(L.events).filter(e => e.sit && e.bench).sort((a, b) => b.x - a.x || a.y - b.y), used = new Set();
+    T.seats = [];
+    for (const e of seats) {
+      const [fx, fy] = DIRS[e.sit] || [0, 1], near = [[e.x + fx, e.y + fy], ...Object.values(DIRS).map(([dx, dy]) => [e.x + dx, e.y + dy])];
+      const from = near.find(([x, y]) => ok(L, x, y) && !used.has(x + "," + y)); if (!from) continue;
+      used.add(from[0] + "," + from[1]); T.seats.push({ x: e.x, y: e.y, sit: e.sit, from });
+    }
     // Its stops: pieces on display in cases (an episode, ideally); failing that any piece in a case; failing that a spot in a wing.
     const M0 = this.rooms.museum, walk = (x, y) => M0.solid[y] && M0.solid[y][x] === false, viewable = c => c.piece && walk(c.x, c.y + 1), best = M0.cases.filter(c => viewable(c) && c.piece.kind === "episode" && c.state === "wall");
     const cases = best.length >= 2 ? best : M0.cases.filter(viewable);
@@ -7086,7 +7115,19 @@ class Game {
   }
   restoreUsher() { const T = this.tour, L = this.rooms && this.rooms.lobby; if (T && T.deskUsher && L && !L.npcs.some(n => n.usher)) L.npcs.push(T.deskUsher); if (T) T.deskUsher = null; }
   tourPlace(n, room, at, dir) { // where someone in the tour group is headed (between rooms too)
-    n.goal = { room, at, dir };
+    this.tourStand(n); n.goal = { room, at, dir };
+  }
+  tourHome(n, i) { // back to the lobby: to their seat on a bench, or a spot on the right side if the benches run out
+    const T = this.tour, st = T.seats && T.seats[i];
+    if (st) { this.tourPlace(n, "lobby", st.from, st.sit); n.goal.sit = st; } else this.tourPlace(n, "lobby", T.gather[i] || T.gather[0], "left");
+  }
+  tourSit(n, st) { // onto the bench, if nobody's taken the seat meanwhile (otherwise they wait beside it)
+    const R = this.rooms[n.where]; if (!R || R.npcs.some(m => m !== n && m.x === st.x && m.y === st.y) || (this.room === R && this.player.x === st.x && this.player.y === st.y)) return;
+    n.sitFrom = [n.x, n.y]; n.x = st.x; n.y = st.y; n.dir = st.sit; n.sitting = true;
+  }
+  tourStand(n) { if (n.sitting) { n.sitting = false; if (n.sitFrom) [n.x, n.y] = n.sitFrom; n.sitFrom = null; } }
+  tourSeat(e) { // a bench seat saved for the tour group while they're in the lobby
+    const T = this.tour; return !!(T && T.on && (T.phase <= 0 || T.phase === 3) && this.room && this.room.id === "lobby" && (T.seats || []).some(s => s.x === e.x && s.y === e.y));
   }
   tourAround(R, at, k) { // k spots around a point, for the group
     const out = [], ok = (x, y) => R.solid[y] && R.solid[y][x] === false && !R.events[x + "," + y] && !(R.noWander && R.noWander.has(x + "," + y)) && !(x === at[0] && y === at[1]);
@@ -7101,7 +7142,7 @@ class Game {
     if (phase !== T.phase) { // the next part of the tour: everyone gets somewhere new to be
       T.phase = phase;
       if (phase === 0) { // waiting in the lobby (also after the curator jumps the clock back)
-        T.members.forEach((n, i) => { n.still = true; n.random = false; n.queue = null; if (this.fol === n) { this.fol = null; n.follow = false; } this.tourPlace(n, "lobby", T.gather[i] || T.gather[0], "left"); });
+        T.members.forEach((n, i) => { n.still = true; n.random = false; n.queue = null; if (this.fol === n) { this.fol = null; n.follow = false; } this.tourHome(n, i); });
         if (T.guide) { this.tourDrop(T.guide); T.guide = null; } this.restoreUsher();
       } else if (phase === 1) { // the usher leaves his desk and leads them to the first piece
         const u = L.npcs.find(n => n.usher && !n.tourUsher);
@@ -7117,9 +7158,9 @@ class Game {
       } else if (phase === 3) { // back to the lobby to leave; the kid goes missing
         T.members.forEach((n, i) => { n.still = true; n.random = false; n.queue = null; n.seat = null; if (n.sitting) { n.sitting = false; if (n.sitFrom) [n.x, n.y] = n.sitFrom; } n.route = null;
           if (n.tourKid) { const at = this.freeSpot(M, null, T.lostZone) || this.freeSpot(M); this.tourPlace(n, "museum", at, "down"); }
-          else this.tourPlace(n, "lobby", T.gather[i] || T.gather[0], "left"); });
+          else this.tourHome(n, i); });
       } else if (phase === 4) { // out the front doors (the kid too, found or not)
-        T.members.forEach(n => { if (this.fol === n) { this.fol = null; n.follow = false; } n.goal = null; n.walkTo = null; n.still = true; if (n.where === this.room.id && this.room.id === "lobby") { n.leaving = true; n.leaveT = 0; n.alpha = 1; } else this.tourDrop(n); });
+        T.members.forEach(n => { this.tourStand(n); if (this.fol === n) { this.fol = null; n.follow = false; } n.goal = null; n.walkTo = null; n.still = true; if (n.where === this.room.id && this.room.id === "lobby") { n.leaving = true; n.leaveT = 0; n.alpha = 1; } else this.tourDrop(n); });
         if (T.guide) this.tourDrop(T.guide); T.guide = null; this.restoreUsher();
       }
     }
@@ -7141,7 +7182,7 @@ class Game {
       const through = () => { // through the door into the next room
         const from = n.where; for (const id in this.rooms) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== n);
         n.where = hop; const R = this.rooms[hop];
-        if (hop === g.room && hop !== this.room.id) { n.x = g.at[0]; n.y = g.at[1]; n.dir = g.dir; n.goal = null; } // out of sight: already there
+        if (hop === g.room && hop !== this.room.id) { n.x = g.at[0]; n.y = g.at[1]; n.dir = g.dir; n.goal = null; if (g.sit) this.tourSit(n, g.sit); } // out of sight: already there
         else { const [x, y] = this.janArrive(hop, from); n.x = x; n.y = y; if (hop === this.room.id) { n.alpha = 0; n.fadeIn = true; } }
         n.walkTo = null; n.route = null; delete n.fadeOut; R.npcs.push(n);
       };
@@ -7151,8 +7192,8 @@ class Game {
       if (!n.walkTo) n.walkTo = { at: st, dir: n.dir };
       return;
     }
-    if (n.x === g.at[0] && n.y === g.at[1]) { if (!n.walkTo) { n.dir = g.dir; n.goal = null; } return; }
-    if (!vis) { if (this.tileFree(this.rooms[n.where], g.at[0], g.at[1])) { n.x = g.at[0]; n.y = g.at[1]; n.dir = g.dir; n.goal = null; } return; }
+    if (n.x === g.at[0] && n.y === g.at[1]) { if (!n.walkTo) { n.dir = g.dir; n.goal = null; if (g.sit) this.tourSit(n, g.sit); } return; }
+    if (!vis) { if (this.tileFree(this.rooms[n.where], g.at[0], g.at[1])) { n.x = g.at[0]; n.y = g.at[1]; n.dir = g.dir; n.goal = null; if (g.sit) this.tourSit(n, g.sit); } return; }
     if (!n.walkTo) n.walkTo = { at: g.at, dir: g.dir };
   }
   tourSay(key, vars) { this.say(this.tx(key, vars)); }
@@ -7180,7 +7221,7 @@ class Game {
     }
     if (T.phase === 3 && this.fol && this.fol.tourKid && this.room.id === "lobby" && !T.kidDone) { // reunited with the group
       const k = this.fol, i = T.members.indexOf(k); this.fol = null; k.follow = false; k.still = true; T.kidDone = true; this.count("tour");
-      this.tourPlace(k, "lobby", T.gather[i] || T.gather[0], "left");
+      this.tourHome(k, i);
       this.tourSay("tour.kidFound", { n: this.pack.settings.rewards.tour }); return;
     }
     if (T.phase <= 0) { this.tourSay("tour.gather"); return; }
@@ -7763,6 +7804,7 @@ class Game {
   drawProp(p, cx, cy) {
     const ctx = this.ctx, k = p.plant && this.isThirsty(p.plant) ? "plant_thirsty" : p.key === "trash_can" && this.binFull(this.room.id, p.x, p.y) ? "trash_full" : p.key;
     const px0 = p.x * T - cx, py0 = p.y * T - (SLOT[k].h - T) - cy;
+    if (k === "bench_side") { this.drawFlip(k, p.sit === "right", px0, py0); return; } // whoever sits on it is drawn over both seats
     this.drawSlot(k, k === "microwave_counter" ? (this.microwaved ? 1 : 0) : k === "office_tv" ? (this.tvOn ? 1 : 0) : this.frame(k), 0, px0, py0);
     if (k === "microwave_counter" && this.boomT > 0) { const f = Math.floor((30 - this.boomT) / 5); if (f < 4) { this.drawSlot("sparkle", f, 0, px0 + 2, py0 - 8); this.drawSlot("sparkle", (f + 1) % 4, 0, px0 + 10, py0 - 4); } }
     if (p.unit !== undefined) ctx.drawImage(this.unitLayer(p.unit), Math.round(px0), Math.round(py0)); // the stacks, drawn once and placed on whole pixels (no shimmer as you walk)
@@ -7882,7 +7924,7 @@ class Game {
   drawUppers(r, cx, cy) {
     const ctx = this.ctx, clip = (x, y, w, h, fn) => { ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip(); fn(); ctx.restore(); };
     for (const c of r.cases) clip(c.x * T - cx, c.y * T - T - cy, T, T, () => this.drawCase(c, cx, cy));
-    for (const p of r.props) { const s = SLOT[p.key]; if (s && s.h > T) clip(p.x * T - cx, p.y * T - (s.h - T) - cy, s.w, s.h - T, () => this.drawProp(p, cx, cy)); }
+    for (const p of r.props) { const s = SLOT[p.key]; if (s && s.h > T && p.key !== "bench_side") clip(p.x * T - cx, p.y * T - (s.h - T) - cy, s.w, s.h - T, () => this.drawProp(p, cx, cy)); }
     if (r.featuredAt) clip(r.featuredAt.x * T - cx, r.featuredAt.y * T - T - cy, T, T, () => this.drawFeatured(r, cx, cy));
   }
   /* A visitor telling you how your recommendation went: loved it = a happy hop, hearts and sparkles; liked it = one heart;
@@ -8190,7 +8232,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 tour 2";
+const VERSION = "2026-11-18 lobby";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
