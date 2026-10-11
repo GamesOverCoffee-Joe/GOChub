@@ -113,6 +113,7 @@ const PAL = {
   visitorA:[null, "#e8c098", "#c83838", "#181820"],
   visitorB:[null, "#c89060", "#8850c0", "#181820"],
   visitorC:[null, "#f8e0c0", "#58a048", "#181820"],
+  barista: [null, "#d8d4cc", "#8a8c94", "#1a1418", "#7a4a2a", "#c89a5a", "#f0ece4", "#c84a3a"], // steel light, steel, outline, wood, wood light, cup white, red
   breakitem: [null, "#4a4a5a", "#8a8aa0", "#181820", "#c84848", "#e8e0d0"], // band, cushion, outline, red, cream
   shirt:   [null, null, "#d8d8d8", null], // just the shirt pixels of the visitor sprites, gray so they tint to any color
 };
@@ -913,6 +914,28 @@ const GEN = {
     if (f === 0) { rect(a, 5, 10, 6, 2, 5); } else { rect(a, 6, 10, 3, 2, 6); px(a, 9, 10, 6); px(a, 6, 9, 4); }
     return outline(a);
   },
+  espresso_machine: () => { // behind the café counter: on a little cabinet against the wall
+    const a = mk(16, 32); rect(a, 1, 20, 14, 12, 4); rect(a, 1, 20, 14, 1, 5); rect(a, 3, 24, 10, 1, 5);
+    rect(a, 2, 7, 12, 12, 2); rect(a, 2, 7, 12, 2, 1); rect(a, 4, 13, 2, 2, 3); rect(a, 10, 13, 2, 2, 3); rect(a, 3, 18, 10, 1, 3); rect(a, 9, 15, 4, 1, 3); rect(a, 4, 16, 3, 2, 6); px(a, 11, 10, 7);
+    return outline(a);
+  },
+  coffee_grinder: () => {
+    const a = mk(16, 32); rect(a, 1, 20, 14, 12, 4); rect(a, 1, 20, 14, 1, 5); rect(a, 3, 24, 10, 1, 5);
+    rect(a, 5, 11, 6, 9, 2); rect(a, 5, 11, 6, 1, 1); rect(a, 4, 4, 8, 7, 1); rect(a, 5, 6, 6, 4, 4); rect(a, 7, 16, 2, 2, 3); px(a, 12, 13, 3); px(a, 13, 13, 3);
+    return outline(a);
+  },
+  cup_stacks: () => {
+    const a = mk(16, 32); rect(a, 1, 20, 14, 12, 4); rect(a, 1, 20, 14, 1, 5); rect(a, 3, 24, 10, 1, 5);
+    for (let y = 8; y < 20; y += 2) { rect(a, 2, y, 4, 2, 6); px(a, 2, y + 1, 1); } for (let y = 11; y < 20; y += 2) { rect(a, 7, y, 4, 2, 6); px(a, 7, y + 1, 1); } rect(a, 12, 14, 3, 6, 2); rect(a, 12, 14, 3, 1, 1);
+    return outline(a);
+  },
+  usher_mug: () => { const a = mk(8, 8); rect(a, 1, 2, 5, 6, 1); rect(a, 2, 2, 3, 1, 3); rect(a, 6, 3, 1, 3, 1); px(a, 7, 4, 1); return outline(a); }, // empty: dark inside
+  held_items: f => { // carried at someone's side: headphones, a lunchbox (the break room mix-up)
+    const a = mk(8, 8);
+    if (f === 0) { rect(a, 2, 1, 4, 1, 1); px(a, 1, 2, 1); px(a, 6, 2, 1); rect(a, 0, 3, 2, 3, 4); rect(a, 6, 3, 2, 3, 4); }
+    else { rect(a, 1, 3, 6, 5, 4); rect(a, 1, 4, 6, 1, 5); rect(a, 3, 1, 2, 1, 1); px(a, 2, 2, 1); px(a, 5, 2, 1); }
+    return outline(a);
+  },
   break_items: f => { // what's left on the staff room's break table: headphones, a lunchbox
     const a = mk(16, 16);
     if (f === 0) { rect(a, 4, 4, 8, 1, 1); rect(a, 3, 5, 1, 4, 1); rect(a, 12, 5, 1, 4, 1); rect(a, 2, 8, 3, 4, 4); rect(a, 11, 8, 3, 4, 4); px(a, 3, 9, 2); px(a, 12, 9, 2); }
@@ -1257,6 +1280,11 @@ const SLOTS = [
   { key: "kid", label: "Lost kid (Tuesdays)", group: "Days of the week", w: 16, h: 16, layout: "char", pal: "kid", gen: GEN.kid, note: "Smaller than the visitors. " + CHAR_NOTE },
   { key: "curator", label: "The curator", group: "Characters", w: 16, h: 16, layout: "char", pal: "curatorp", gen: GEN.character, note: "The curator in person: you, when you play on a curator badge; otherwise at a café table now and then on a Sunday, and at every unveiling. " + CHAR_NOTE },
   { key: "day_board", label: "Day board", group: "Days of the week", w: 32, h: 16, pal: "dayboard", gen: GEN.day_board, note: "In the lobby, left of the door to the museum. Today's day is chalked on it in the pixel font, centered on the slate (x 2 to 29, y 3 to 7)." },
+  { key: "espresso_machine", label: "Espresso machine", group: "Gift shop and café", w: 16, h: 32, pal: "barista", gen: GEN.espresso_machine, note: "Behind the café counter, on its own little cabinet against the wall. Two tiles tall." },
+  { key: "coffee_grinder", label: "Coffee grinder", group: "Gift shop and café", w: 16, h: 32, pal: "barista", gen: GEN.coffee_grinder, note: "Behind the café counter, on its own little cabinet. Two tiles tall." },
+  { key: "cup_stacks", label: "Cup stacks", group: "Gift shop and café", w: 16, h: 32, pal: "barista", gen: GEN.cup_stacks, note: "Stacks of to-go cups and lids behind the café counter, on a little cabinet. Two tiles tall." },
+  { key: "usher_mug", label: "Usher's empty mug", group: "Staff", w: 8, h: 8, pal: "kitchen", gen: GEN.usher_mug, note: "On the front desk while the usher's waiting on a coffee before the tour (the tour problem's cue). 8×8." },
+  { key: "held_items", label: "Break room items, held", group: "Days of the week", w: 8, h: 8, frames: 2, pal: "breakitem", gen: GEN.held_items, note: "2 frames side by side (16×8): headphones, then a lunchbox. Carried at the side (like a shop bag) by the one walking out with the wrong thing, and by you once you've got it back." },
   { key: "break_items", label: "Break room items", group: "Days of the week", w: 16, h: 16, frames: 2, pal: "breakitem", gen: GEN.break_items, note: "2 frames side by side (32×16): headphones, then a lunchbox. Left on the staff room's break table by the two members on break (3–6 in the loop); one of them walks off with the other's at 6–9." },
   { key: "supply_box", label: "Delivery box", group: "Days of the week", w: 16, h: 16, frames: 2, pal: "supbox", gen: GEN.supply_box, note: "2 frames side by side (32×16): the shop's stock, then the café's supplies. They turn up by the basement's garage door when the loop needs them; carried over your head." },
   { key: "lost_box", label: "Misplaced box (Mondays)", group: "Days of the week", w: 16, h: 16, pal: "lbox", gen: GEN.lost_box, note: "Five of these turn up around the museum on Mondays." },
@@ -1587,7 +1615,10 @@ function normalizePack(p) {
 }
 /* The curator's "Skip to tomorrow" moves every daily system forward together. */
 let DAY_SHIFT = 0;
-function todayISO() { const d = new Date(Date.now() + DAY_SHIFT * 864e5); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+/* "Today" is the day you opened the game: playing past midnight doesn't roll the stock, the drink of the week or anything
+   else daily over mid-visit (Joe 10/11). The next time you open it, it's the new day. */
+const SESSION_DAY = Date.now();
+function todayISO() { const d = new Date(SESSION_DAY + DAY_SHIFT * 864e5); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
 function daysBetween(a, b) { const t = s => { const [y, m, d] = s.split("-").map(Number); return Date.UTC(y, m - 1, d); }; return Math.round((t(b) - t(a)) / 864e5); }
 function niceDate(iso) {
   const [y, m, d] = iso.split("-").map(Number);
@@ -6943,6 +6974,7 @@ class Game {
       if (n.follow) { this.followStep(n); continue; } // a curious visitor following you around
       if (n.moving) { this.advance(n); continue; }
       if (n.aside) { this.stepAside(n); continue; }
+      if (n.pace) { this.paceStep(n); continue; } // the barista, rushed off her feet
       if (n.still) { if (n.faceT > 0 && this.mode === "walk" && --n.faceT <= 0 && n.homeDir !== undefined) { n.dir = n.homeDir; n.homeDir = undefined; } continue; }
       if (n.patrol) { this.patrol(n); continue; }
       if (n.bumpT > 0) n.bumpT--;
@@ -7496,13 +7528,30 @@ class Game {
     const stocking = !S.shopDone && !this.closing && !d.over && d.beat < 2;
     // In sight he walks there and back (after thanking you); out of sight he's simply there.
     const seen = this.room === M;
-    if (sk && stocking && !sk.stocking) {
-      const u = M.props.find(p => p.unit !== undefined), at = u && this.janBeside(M, u.x, u.y);
-      if (at) { sk.home = sk.home || [sk.x, sk.y, sk.dir]; sk.stocking = true; sk.walkTo = { at, dir: this.janFace(at, u.x, u.y) }; if (!seen && this.tileFree(M, at[0], at[1])) { sk.x = at[0]; sk.y = at[1]; sk.dir = sk.walkTo.dir; sk.walkTo = null; } }
-    } else if (sk && !stocking && sk.stocking) {
+    S.stocking = stocking; // the cue: one shelf stands empty while he's at it (drawProp)
+    const units = M.props.filter(p => p.unit !== undefined).map(u => ({ u, at: this.janBeside(M, u.x, u.y) })).filter(o => o.at);
+    if (S.emptyUnit === undefined && units.length) S.emptyUnit = units[units.length - 1].u.unit;
+    if (sk && stocking && !sk.stocking && units.length) { sk.home = sk.home || [sk.x, sk.y, sk.dir]; sk.stocking = true; sk.shelfI = -1; sk.inspT = 0; }
+    if (sk && stocking && sk.stocking && !sk.walkTo && --sk.inspT <= 0 && units.length) { // from shelf to shelf, a look at each (Joe 10/11)
+      sk.shelfI = (sk.shelfI + 1) % units.length; const { u, at } = units[sk.shelfI], dir = this.janFace(at, u.x, u.y); sk.inspT = 150 + ((Math.random() * 120) | 0);
+      sk.walkTo = { at, dir }; if (!seen && this.tileFree(M, at[0], at[1])) { sk.x = at[0]; sk.y = at[1]; sk.dir = dir; sk.walkTo = null; }
+    }
+    if (sk && !stocking && sk.stocking) {
       const [x, y, dir] = sk.home; sk.stocking = false; sk.walkTo = { at: [x, y], dir };
       if (!seen && this.tileFree(M, x, y)) { sk.x = x; sk.y = y; sk.dir = dir; sk.walkTo = null; }
     }
+    // The barista, prepping on her own (the café's box hasn't come up): back and forth behind the counter, quick (Joe 10/11).
+    const ba = M.npcs.find(n => n.role === "barista"), rushed = S.cafeNeeded && !S.cafeDone && !this.closing && !d.over && d.beat <= 2;
+    if (ba && rushed && !ba.pace) {
+      const home = ba.home || [ba.x, ba.y, ba.dir], ok = x => M.solid[home[1]] && M.solid[home[1]][x] === false && !M.events[x + "," + home[1]];
+      let a = home[0], b = home[0]; while (a > home[0] - 2 && ok(a - 1)) a--; while (b < home[0] + 2 && ok(b + 1)) b++;
+      if (b > a) { ba.home = home; ba.pace = { a, b, to: b, t: 0 }; }
+    } else if (ba && !rushed && ba.pace) { const [x, y, dir] = ba.home; ba.pace = null; ba.walkTo = { at: [x, y], dir }; if (!seen && this.tileFree(M, x, y)) { ba.x = x; ba.y = y; ba.dir = dir; ba.walkTo = null; } }
+  }
+  paceStep(n) { // a few quick steps one way, a beat, then back
+    const P = n.pace; if (this.mode !== "walk" || --P.t > 0) return;
+    if (n.x === P.to) { P.to = P.to === P.a ? P.b : P.a; P.t = 20; n.dir = "up"; return; } // a moment at the machine
+    const dir = P.to < n.x ? "left" : "right"; if (this.tryMove(n, dir)) P.t = 2; else { P.t = 15; P.to = P.to === P.a ? P.b : P.a; }
   }
   walkToStep(n) { // a staff member walking to a spot (at their own pace, around people), then facing the way they work
     if (n.stepWait > 0) { n.stepWait--; return; }
@@ -8017,12 +8066,13 @@ class Game {
     if (k === "bench_side") { this.drawFlip(k, p.sit === "right", px0, py0); return; } // whoever sits on it is drawn over both seats
     this.drawSlot(k, k === "microwave_counter" ? (this.microwaved ? 1 : 0) : k === "office_tv" ? (this.tvOn ? 1 : 0) : this.frame(k), 0, px0, py0);
     if (k === "microwave_counter" && this.boomT > 0) { const f = Math.floor((30 - this.boomT) / 5); if (f < 4) { this.drawSlot("sparkle", f, 0, px0 + 2, py0 - 8); this.drawSlot("sparkle", (f + 1) % 4, 0, px0 + 10, py0 - 4); } }
-    if (p.unit !== undefined) ctx.drawImage(this.unitLayer(p.unit), Math.round(px0), Math.round(py0)); // the stacks, drawn once and placed on whole pixels (no shimmer as you walk)
+    if (p.unit !== undefined && !(this.sup && this.sup.stocking && this.sup.emptyUnit === p.unit)) ctx.drawImage(this.unitLayer(p.unit), Math.round(px0), Math.round(py0)); // the stacks, drawn once and placed on whole pixels (no shimmer as you walk)
     if (p.rack !== undefined) {
       const it = this.rackItems(p.rack)[0];
       if (it) ctx.drawImage(this.itemIcon(it), px0 + 4, py0 + 3, 24, 24); // one item, big enough to fill both shelves
       else { this.drawSlot("trinkets", hash(p.rack, 1) % 8, 0, px0 + 12, py0 + 5); this.drawSlot("trinkets", hash(p.rack, 2) % 8, 0, px0 + 12, py0 + 18); }
     }
+    if (k === "front_desk" && this.room && this.room.id === "lobby" && this.tour && this.tour.on && !this.tour.coffee && this.tour.phase <= 0) this.drawSlot("usher_mug", 0, 0, px0 + 34, py0 - 3); // the cue: his mug's empty
     if (k === "day_board") { const t = this.chalkText(["SUN.", "MON.", "TUES.", "WED.", "THURS.", "FRI.", "SAT."][this.weekday()]); ctx.drawImage(t, px0 + 16 - Math.floor(t.width / 2), py0 + 3); }
     if (k === "cafe_sign") { const sp = this.cafeSpecial(); if (sp) ctx.drawImage(this.cupCanvas(sp.d, sp.k), px0 + 4, py0 + 12); }
     if (k === "popup_table") this.popupItems().forEach((it, i) => ctx.drawImage(this.itemIcon(it), px0 + 3 + i * 9, py0 + 1, 8, 8));
@@ -8331,6 +8381,9 @@ class Game {
       const cup = c === this.player ? this.drink : c.drink, cupFirst = cup && c.dir === "up";
       const bagAt = c.bag && !c.sitting ? [sx + { down: 1, up: 9, left: 9, right: -1 }[c.dir], sy + 9] : null, bagFirst = bagAt && c.dir !== "down"; // a shop bag hangs at their side
       if (bagFirst) this.drawSlot("shop_bag", 0, 0, ...bagAt);
+      const SI = this.side && this.side.item, held = SI && !c.sitting && ((c === this.player && this.carryItem) || (c.itemPair === "taker" && SI.phase >= 2 && !SI.got)) ? SI.kind : -1; // the break room mix-up: the item in hand
+      const heldAt = held >= 0 ? [sx + { down: 9, up: 1, left: 1, right: 9 }[c.dir], sy + 9] : null, heldFirst = heldAt && c.dir === "up";
+      if (heldFirst) this.drawSlot("held_items", held, 0, ...heldAt);
       if (cupFirst) this.drawCup(sx, sy, c);
       const tbAt = c.trashBag && !c.sitting ? [sx + { down: 1, up: 9, left: 9, right: -1 }[c.dir], sy + 9] : null, tbFirst = tbAt && c.dir !== "down"; // his trash bag hangs at his side
       const panAt = c.sweep ? [sx + { down: 1, up: 7, left: -3, right: 11 }[c.dir], sy + { down: 11, up: 4, left: 10, right: 10 }[c.dir]] : null; // the dustpan, low beside the broom
@@ -8355,6 +8408,7 @@ class Game {
       }
       if (cup && !cupFirst) this.drawCup(sx, sy, c);
       if (bagAt && !bagFirst) this.drawSlot("shop_bag", 0, 0, ...bagAt);
+      if (heldAt && !heldFirst) this.drawSlot("held_items", held, 0, ...heldAt);
       if (c !== this.player && c.snapT > 0) { // a visitor taking a photo of a piece: phone held up above their head, then a flash
         const ox = { down: 4, up: 4, left: 0, right: 8 }[c.dir], oy = c.dir === "up" ? -6 : 3;
         this.drawSlot("phone", 0, 0, sx + ox, sy + oy);
@@ -8381,6 +8435,7 @@ class Game {
         ctx.fillStyle = "rgba(24,24,32,.85)"; ctx.fillRect(nx, ny, w, 8); ctx.fillStyle = "#f8f0c0"; ctx.textBaseline = "top"; ctx.fillText(c.member, nx + 2, ny + 1);
       }
       if (bub >= 0) this.drawSlot("bubble", bub, 0, sx + 4, sy - 9 + (Math.floor(this.t / 20) % 2));
+      else if (c.janitor && !this.full && !c.pose && !c.leaving && this.jan && (this.jan.phase === "plants" || this.jan.lit) && this.t % 240 < 160) this.drawSlot("emote", 7, 0, sx + 4, sy - 10 + (Math.floor(this.t / 20) % 2)); // the cue: grumpy about chores somebody could've done (the plants, the litter)
       ctx.globalAlpha = 1;
     }
     this.drawUppers(r, cx, cy);
@@ -8443,7 +8498,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 lines 2";
+const VERSION = "2026-11-18 cues";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
