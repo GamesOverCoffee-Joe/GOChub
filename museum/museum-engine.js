@@ -2078,7 +2078,7 @@ const TEXT = {
   "day.board.3":       { g: "Days of the week", l: "The day board on a Wednesday", v: [["Water-Color Wednesday: Artists are welcome to paint inside the museum!"]] },
   "day.board.4":       { g: "Days of the week", l: "The day board on a Thursday", v: [["Trivia Thursday: Do you know your Qualia? Compete with some trivia at the cafe!"]] },
   "day.board.5":       { g: "Days of the week", l: "The day board on a Friday", v: [["Feature Friday: Showing Games Over Coffee episodes in the theater!"]] },
-  "day.board.6":       { g: "Days of the week", l: "The day board on a Saturday", v: [["Sold Sunday: Talk to Bluu in the lobby to see some rare museum items!"]] },
+  "day.board.6":       { g: "Days of the week", l: "The day board on a Saturday", v: [["Sold Saturday: Talk to Bluu in the lobby to see some rare museum items!"]] },
   "mon.ask":           { g: "Days of the week", l: "Monday: the conservator, boxes still missing ({n}: how many found, {room}: where one of the others is). Version 1 the first time you talk to him that day, version 2 every time after", v: [["Dog gone-it! Those shipment people will put those boxes anywhere.", "...", "Oh. Hey...uh... You. I've got a problem. I'm missing five boxes from the shipment. If you come across them, would you mind dropping them back here? Thanks."], ["That's {n}. Maybe you'll have some luck near the {room}."]] },
   "mon.found":         { g: "Days of the week", l: "Monday: finding a box ({n}: found so far)", v: [["Found {n} of 5 boxes!"]] },
   "mon.done":          { g: "Days of the week", l: "Monday: bringing the conservator all five ({n}: tokens)", v: [["Thank f...friggen gosh.", "Here's {n} tokens for your trouble."]] },
