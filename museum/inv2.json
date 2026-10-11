@@ -1,0 +1,17 @@
+[
+ {
+  "k": "thu.questions",
+  "g": "Days of the week",
+  "l": "Thursday: your own questions (one per entry: the question, then the right answer, then three wrong ones; entries starting with [ are skipped)",
+  "src": "engine",
+  "v": [
+   [
+    "[Your question]",
+    "[Right answer]",
+    "[Wrong answer]",
+    "[Wrong answer]",
+    "[Wrong answer]"
+   ]
+  ]
+ }
+]
