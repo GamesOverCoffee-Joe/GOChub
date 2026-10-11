@@ -15,6 +15,15 @@ Ideas and chores parked on purpose. Nothing here is built yet.
 - **Batch fill.** The curator's Batch fill button stays: `batch-fill.html` will be uploaded later and updated then.
 - **An art version of the writing app.** The same one-a-day idea, for the art slots.
 
+## Before building any living-museum problem (Claude's checklist)
+
+Both bad bugs so far (the Janitor stuck at the Lobby Hall door, the tour crash at 3:00) had the same cause, so check these every time:
+
+- **The museum is built twice.** The first build is the built-in stand-in; the second uses the pack (`buildWorld()` bumps `this.worldGen`). Anything planned ahead (spots, cases, pieces, wings, paths) must re-plan when `worldGen` changes. See `tourState()` and `janPlan` for the pattern.
+- **Have a fallback for everything it looks for.** No episode pieces, an empty wing, no free spot, a missing door: do something simpler, never leave an undefined spot to crash on later.
+- **Run it through `living(name, fn)`** in the update hook, so a bug switches only that problem off for the visit (the console names it) instead of freezing the game.
+- **Test in a fresh page**, standing still while the clock crosses each quarter, in both the game and the curator preview, not just by jumping straight to a beat after everything has loaded.
+
 This document has three parts:
 
 1. **What we have now.** The museum as it is on `main` (engine version `2026-10-06 life 4`).
