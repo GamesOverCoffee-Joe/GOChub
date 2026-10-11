@@ -1891,6 +1891,7 @@ const ROOMS = {
     ],
     posters: [[4, 9, "l"], [8, 10, "r"], [4, 15, "l"], [8, 13, "r"], [4, 18, "l"], [8, 22, "r"], [4, 24, "l"], [8, 24, "r"]],
     floorLights: [9, 11, 13, 15, 17, 19, 21, 23, 25, 27].flatMap(y => [[5, y, "l"], [7, y, "r"]]),
+    beams: [[8, 20]], // a spotlight on the popcorn stand
     events: [{ x: 6, y: 28, warp: ["museum", 40, 30, "down"] }],
     light: { dim: 0.4, spots: 0 },
     visitors: [],
@@ -2638,12 +2639,12 @@ prepLayoutRoom(ROOMS.museum);
    the level editor in curator.html writes them. Rooms are plain data, so a deep copy is enough. */
 const BUILTIN_ROOMS = JSON.parse(JSON.stringify(ROOMS));
 const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "runners", "lamps", "arrows", "murals", "tint", "windowAt", "intercom", "lightSwitch", "eotmAt",
-  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "enterAt", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt", "posters", "floorLights", "camAt", "colorGlows", "keypadAt"];
+  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "beams", "bunting", "catSpots", "mugSpots", "exitTo", "enterAt", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt", "posters", "floorLights", "camAt", "colorGlows", "keypadAt"];
 /* Light checks so a hand-edited or damaged pack can't break the game: rectangular map, sane size, a spawn on the map. */
 function normalizeRoom(id, d) {
   if (d && typeof d === "object" && d.layout) { d = Object.assign({}, d); prepLayoutRoom(d); }
   if (!d || typeof d !== "object" || !Array.isArray(d.map) || !d.map.length) return null;
-  const big = !!d.layout, h = Math.min(big ? LAYOUT_MAX_H : 24, Math.max(6, d.map.length)), w = Math.min(big ? LAYOUT_MAX_W : 48, Math.max(6, String(d.map[0]).length));
+  const big = !!d.layout, h = Math.min(big ? LAYOUT_MAX_H : 40, Math.max(6, d.map.length)), w = Math.min(big ? LAYOUT_MAX_W : 48, Math.max(6, String(d.map[0]).length));
   const map = []; for (let y = 0; y < h; y++) map.push(String(d.map[y] || "").padEnd(w, "#").slice(0, w).replace(/[^#^v.=DdSsEBH ]/g, "."));
   const out = {}; ROOM_KEYS.forEach(k => { if (d[k] !== undefined) out[k] = JSON.parse(JSON.stringify(d[k])); });
   out.map = map; out.name = str(d.name, 40) || id;
@@ -2900,7 +2901,7 @@ function buildRoom(id, pieces, o) {
     r.wallArt = def.wallArt;
     def.wallArt.forEach(w => { for (let i = 0; i < SLOT[w.key].w / T; i++) r.events[(w.x + i) + "," + ((w.y || 1) + 1)] = w.cafe && w.key !== "cafe_menu" ? { cafe: true } : { say: w.say || ["The café menu."] }; });
   }
-  r.decals = def.decals || []; r.glows = def.glows || []; r.bunting = !!def.bunting;
+  r.decals = def.decals || []; r.glows = def.glows || []; r.beams = def.beams || []; r.bunting = !!def.bunting;
   // Hallway dressing: carpet runner tiles [x, y, "h0".."v2"], accent lights on the wall [x, y], and arrow signs pointing the way.
   r.runners = runnerTiles(def);
   r.lamps = (def.lamps || []).filter(Array.isArray);
@@ -6848,7 +6849,8 @@ class Game {
     if (!c.moving) return false;
     if (c.slow && (this.t & 1)) return false; // the night guard strolls at half speed
     if (c !== this.player && !c.slow && !c.follow && (!c.leaving || c.stroll)) { c.spd = (c.spd || 0) + this.pack.settings.staff.patronSpeed; if (c.spd < 1) return false; c.spd -= 1; } // patrons: slower than you
-    if ((c.prog += c === this.player && this.segway ? 2 : 1) >= T) {
+    const behind = c.follow && c !== this.player && Math.abs(c.x - this.player.x) + Math.abs(c.y - this.player.y) > 1; // a follower who's dropped back catches up (they keep your pace)
+    if ((c.prog += (c === this.player && this.segway) || behind ? 2 : 1) >= T) {
       c.x += DIRS[c.dir][0]; c.y += DIRS[c.dir][1]; c.prog = 0; c.moving = false;
       if (c === this.player) {
         if (!this.full && this.progress.stats) this.progress.stats.steps++;
@@ -7061,7 +7063,7 @@ class Game {
   deskStaff(n) { return !!(n.usher || n.role === "shopkeeper" || n.role === "barista"); }
   /* Turn to face you. Someone who stands still turns back the way they were facing after t frames (while you're walking). */
   faceYou(n, t) {
-    if (n.still) { if (n.homeDir === undefined) n.homeDir = n.dir; n.faceT = t; }
+    if (n.still || n.viewing) { if (n.homeDir === undefined) n.homeDir = n.dir; n.faceT = t; } // and back to what they were looking at, after
     n.dir = OPP[this.player.dir];
   }
   updateNpcs() {
@@ -7137,7 +7139,7 @@ class Game {
       [n.x, n.y] = n.sitFrom; n.sitting = false; n.seat = null; n.dir = DIRS_LIST[(Math.random() * 4) | 0]; n.timer = 30; return;
     }
     if (n.arrived) { // just stepped onto the spot they were heading for
-      n.arrived = false;
+      n.arrived = false; { const ed = this.exhibitDir(r0, n.x, n.y); n.viewing = !!ed; if (ed) n.dir = ed; } // by a case or a painting: look at it
       if (n.coffee) { // at the café counter: order, and wait for it facing the barista
         if (this.counterSpots(r0).some(([x, y]) => x === n.x && y === n.y)) { n.dir = "up"; n.ordering = true; n.timer = 150 + Math.random() * 150; return; }
         n.coffee = false; // didn't make it to the counter: maybe next time
@@ -7154,7 +7156,8 @@ class Game {
     }
     if (n.pose && this.t - n.pose.t0 < n.pose.dur) return; // reacting to your photo
     if (n.snapT > 0) return; // taking a photo: hold still
-    if (n.timer > 0) { n.timer--; if (!n.ordering && n.timer % 90 === 0 && Math.random() < 0.5) n.dir = DIRS_LIST[(Math.random() * 4) | 0]; return; }
+    if (n.viewing && n.faceT > 0 && --n.faceT <= 0 && n.homeDir !== undefined) { n.dir = n.homeDir; n.homeDir = undefined; } // done talking: back to the piece
+    if (n.timer > 0) { n.timer--; if (!n.ordering && !n.viewing && n.timer % 90 === 0 && Math.random() < 0.5) n.dir = DIRS_LIST[(Math.random() * 4) | 0]; return; } // looking at a piece: they keep looking
     if (n.ordering) { // the drink's ready: take it, and about half the time find a stool in the café to drink it on
       n.ordering = false; n.coffee = false; n.drink = this.npcDrink(); n.route = null; n.goalT = null;
       const cz = this.cafeZone(r0), st = Math.random() < 0.5 ? this.seatFor(n, cz) : null;
@@ -7435,9 +7438,9 @@ class Game {
       });
       return;
     }
-    if (T.phase === 2) { this.tourSay(T.mood === "happy" ? "tour.happy" : "tour.bored"); return; }
-    if (T.phase === 3) { this.tourSay(T.kidDone ? "tour.bye" : "tour.regroup"); return; }
-    this.tourSay("tour.bye");
+    const key = T.phase === 2 ? (T.mood === "happy" ? "tour.happy" : "tour.bored") : T.phase === 3 ? (T.kidDone ? "tour.bye" : "tour.regroup") : "tour.bye";
+    if (n.sitting || n.tourKid) { this.tourSay(key); return; }
+    this.choose("They glance over.", ["Say hi", "Could I get by?"], i => { if (i === 0) this.tourSay(key); else if (i === 1) this.askToMove(n, p => p); }, -1); // after the tour, like any visitor
   }
   /* ----- Staff on break (living museum, Step 6) -----
      3–6: two Patreon members on shift take their break at the staff room table, an item on it (headphones or a lunchbox).
@@ -7669,12 +7672,16 @@ class Game {
       if (!seen && this.tileFree(M, x, y)) { sk.x = x; sk.y = y; sk.dir = dir; sk.walkTo = null; }
     }
     // The barista, prepping on her own (the café's box hasn't come up): back and forth behind the counter, quick (Joe 10/11).
-    const ba = M.npcs.find(n => n.role === "barista"), rushed = S.cafeNeeded && !S.cafeDone && !this.closing && !d.over && d.beat <= 2;
+    const ba = M.npcs.find(n => n.role === "barista"), rushed = S.cafeNeeded && !S.cafeDone && !this.closing && !d.over && d.beat < 2; // prepping alone, before the rush (once it hits, she's at the till serving)
     if (ba && rushed && !ba.pace) {
       const home = ba.home || [ba.x, ba.y, ba.dir], ok = x => M.solid[home[1]] && M.solid[home[1]][x] === false && !M.events[x + "," + home[1]];
       let a = home[0], b = home[0]; while (a > home[0] - 2 && ok(a - 1)) a--; while (b < home[0] + 2 && ok(b + 1)) b++;
       if (b > a) { ba.home = home; ba.pace = { a, b, to: b, t: 0 }; }
     } else if (ba && !rushed && ba.pace) { const [x, y, dir] = ba.home; ba.pace = null; ba.walkTo = { at: [x, y], dir }; if (!seen && this.tileFree(M, x, y)) { ba.x = x; ba.y = y; ba.dir = dir; ba.walkTo = null; } }
+  }
+  exhibitDir(r, x, y) { // standing at a piece on display: which way to face it (a case in front or behind, a painting on the wall above)
+    const c = (r.cases || []).find(c => c.piece && c.x === x && Math.abs(c.y - y) === 1); if (c) return c.y < y ? "up" : "down";
+    const h = (r.hung || []).find(h => y === h.y + 2 && (h.x === x || h.x + 1 === x)); return h ? "up" : null;
   }
   /* Holding up the café line (Joe 10/10–11: a reaction, not a fix): stand at the counter's front spot without ordering while
      someone's waiting behind you, and after a few seconds they get impatient: an annoyed emote and a muttered line in the
@@ -8092,6 +8099,7 @@ class Game {
     // Lamps go dark with their own lights: in the museum, a hallway's lamps stay lit while you stand in a dark wing.
     const lampOn = (x, y) => (r.zoneAt ? !this.isDark(r, x, y + 1) && !this.isDark(r, x, y) : !off);
     for (const [gx, gy] of r.glows) if (lampOn(gx, gy)) hole(gx * T + 8 - cx, gy * T - cy, 30, 26, 0.85);
+    for (const [bx, by] of r.beams) if (lampOn(bx, by)) { const x = bx * T + 8 - cx, y = by * T + 4 - cy; hole(x, y, 13, 15, 0.95); hole(x, y - 22, 8, 16, 0.55); hole(x, y + 10, 16, 6, 0.8); } // a spotlight: the thing it's on, the beam, the pool on the floor
     for (const [lx, ly] of r.lamps) if (lampOn(lx, ly)) hole(lx * T + 8 - cx, ly * T + 10 - cy, 16, 18, 0.7);
     if (r.featuredAt && spots > 0) hole(r.featuredAt.x * T + 8 - cx, r.featuredAt.y * T - cy, 14, 22, spots);
     if (r.windowAt && tod !== "night") hole(r.windowAt.x * T + 16 - cx, r.windowAt.y * T + 14 - cy, 22, 20, 0.6);
@@ -8118,6 +8126,15 @@ class Game {
       for (const [lx, ly] of r.lamps) { if (!lampOn(lx, ly)) continue;
         const x = lx * T + 8 - cx, y = ly * T + 6 - cy; if (x < -30 || y < -30 || x > SW + 30 || y > SH + 30) continue;
         const g = ctx.createRadialGradient(x, y, 1, x, y + 8, 24); g.addColorStop(0, "rgba(255,200,120,0.28)"); g.addColorStop(1, "rgba(255,200,120,0)"); ctx.fillStyle = g; ctx.fillRect(x - 24, y - 20, 48, 52);
+      }
+      ctx.globalCompositeOperation = "source-over";
+    }
+    if (r.beams.length) { // spotlights: a soft cone down from the ceiling, brightest at the bottom
+      ctx.globalCompositeOperation = "lighter";
+      for (const [bx, by] of r.beams) { if (!lampOn(bx, by)) continue;
+        const x = bx * T + 8 - cx, top = by * T - 44 - cy, bot = by * T + 14 - cy, g = ctx.createLinearGradient(0, top, 0, bot);
+        g.addColorStop(0, "rgba(255,236,190,0.02)"); g.addColorStop(1, "rgba(255,236,190,0.24)"); ctx.fillStyle = g;
+        ctx.beginPath(); ctx.moveTo(x - 3, top); ctx.lineTo(x + 3, top); ctx.lineTo(x + 13, bot); ctx.lineTo(x - 13, bot); ctx.closePath(); ctx.fill();
       }
       ctx.globalCompositeOperation = "source-over";
     }
@@ -8580,7 +8597,7 @@ class Game {
         ctx.fillStyle = "rgba(24,24,32,.85)"; ctx.fillRect(nx, ny, w, 8); ctx.fillStyle = "#f8f0c0"; ctx.textBaseline = "top"; ctx.fillText(c.member, nx + 2, ny + 1);
       }
       if (bub >= 0) this.drawSlot("bubble", bub, 0, sx + 4, sy - 9 + (Math.floor(this.t / 20) % 2));
-      else if (c.janitor && !this.full && !c.pose && !c.leaving && this.jan && (this.jan.phase === "plants" || this.jan.lit) && this.t % 240 < 160) this.drawSlot("emote", 7, 0, sx + 4, sy - 10 + (Math.floor(this.t / 20) % 2)); // the cue: grumpy about chores somebody could've done (the plants, the litter)
+      else if (c.janitor && !this.full && !c.pose && !c.leaving && this.jan && this.jan.phase === "plants" && this.t % 240 < 160) this.drawSlot("emote", 7, 0, sx + 4, sy - 10 + (Math.floor(this.t / 20) % 2)); // the cue: grumpy watering plants somebody could've done (litter's his job; no grumbling there)
       ctx.globalAlpha = 1;
     }
     this.drawUppers(r, cx, cy);
@@ -8643,7 +8660,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cues 3";
+const VERSION = "2026-11-18 cues 4";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
