@@ -150,9 +150,10 @@ Not mine: "No refunds." and "You can't afford that." are Joe's.
 | Group | Line | What Claude wrote |
 | --- | --- | --- |
 | Café | The staff coffee maker: make a cup? | The staff coffee maker. It makes one cup at a time. Slowly. Make a cup? |
-| Café | Starting it (corner) | *click* ...*whirr* / The machine wakes up. Grudgingly. |
-| Café | While it brews (corner) | *drip* / ...*drip* / Still going. / *gurgle* / Is it... done? No. / You could have walked to the café by now. |
-| Café | It's ready | *ding* ⏎ One cup of staff coffee. It smells like a cardboard box. |
+| Café | Starting it | *click* ...*whirr* ⏎ The machine wakes up. Grudgingly. ⏎ About thirty seconds. Allegedly. |
+| Café | While it brews, asking it ({s} seconds left) | *drip* ⏎ ...*drip* ⏎ About {s} more seconds. Allegedly. / *gurgle* ⏎ {s} seconds to go. ⏎ You could have walked to the café by now. |
+| Café | It's ready (corner) | *ding* |
+| Café | Taking the cup | One cup of staff coffee. It smells like a cardboard box. |
 | Café | Finishing a cup | You finish the staff coffee. ⏎ ... ⏎ That was not good. That was not good at all. / Every sip tasted like the inside of a filing cabinet. ⏎ Now you're holding an empty cup. |
 | Café | Hands full | My hands are full. And honestly, that's for the best. |
 
@@ -166,8 +167,16 @@ The trash bag replaced picking up three pieces by hand, so the "hands full", "in
 | Litter | The staff room can: take a bag? | A roll of trash bags under the can. Tear one off? |
 | Litter | Taking a bag | *rrrip* ⏎ One trash bag. I'm basically a professional now. |
 | Litter | Putting an unused bag back | You roll the bag back up and tuck it under the can. ⏎ Nobody saw that. |
-| Litter | An empty bag at another can | It's empty. I haven't even used it yet. |
+| Litter | An empty bag at another can: toss it? | It's empty. I haven't even used it yet. Toss it anyway? |
+| Litter | Tossing an empty bag | *fwip* ⏎ A perfectly good bag. Gone. You monster. |
 | Litter | The bag into an empty can | *fwump* ⏎ The whole bag goes in. Much better. / *fwump* ⏎ Out of sight, out of mind. |
 | Litter | The bag at a can that isn't empty | This can's got stuff in it already. ⏎ The bag needs an empty one. |
 | Litter | Holding anything else with the bag | Not with a bag of trash in my hand. / I'm holding garbage. Literally. One thing at a time. |
 | Janitor | Handing him your bag (rewritten) | Oh, a whole bag. Thanks. ⏎ Didn't know volunteers did trash duty. |
+
+## Added later (10/11, version "2026-11-18 tuesday 6")
+
+| Group | Line | What Claude wrote |
+| --- | --- | --- |
+| Tour | Looking at the usher's empty mug | The usher's mug. Empty. ⏎ Just a sad little coffee ring at the bottom. ⏎ Someone's running on fumes. |
+| Tour | The usher, given staff coffee | Oh. Is that... from the staff room? ⏎ No, no. That's great. Thank you. ⏎ *sip* ⏎ ... ⏎ Mmm. Mm-hm. Very... hot. ⏎ Okay! Tour time. I'm awake. Probably. |
