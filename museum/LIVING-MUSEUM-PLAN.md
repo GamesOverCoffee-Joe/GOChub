@@ -48,6 +48,17 @@ Saved 2026-10-09 so we can pick it up later word for word. Edit freely; mark cha
 
 - The clock is a **hybrid**: the real clock keeps the big things; a per-visit clock runs the busy/quiet rhythm. *(Joe: yes.)*
 
+- **The loop plays once a day** *(Joe 10/11, built)*. The first session of the day plays it. Come back later that day and it carries on where you left it. Once it's over it stays over: what you fixed stays fixed, and what you didn't is still there. The next day starts fresh.
+
+- **Random means random** *(Joe 10/11, built)*:
+
+| Kind | What |
+| --- | --- |
+| New every session | Things you find: the mug, the cat, dusty and crooked frames, fingerprints on cases, the conservator's case. Anything you cleaned today stays clean all day. |
+| Random, kept all day | The loop's tour, the break room mix-up, the janitor's chores, Wednesday's easel spot, who has Sunday off (weighted: the curator only rarely) |
+| Random, kept all week | Thursday's trivia seat |
+| By the date, on purpose | Who's on shift, the café special and drink of the week, the shop's stock, Bluu's stock, the crowd, the title line, the hourly episode, the weekday events |
+
 - Volunteer clock-in for everyone; the same tokens on or off shift. *(Used in Phase 1.)*
 
 - The rhythm runs in a **12-minute block that starts on arrival**. *(Joe: yes.)*

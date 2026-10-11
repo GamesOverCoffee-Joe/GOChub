@@ -1633,7 +1633,7 @@ let DAY_SHIFT = 0;
 /* "Today" is the day you opened the game: playing past midnight doesn't roll the stock, the drink of the week or anything
    else daily over mid-visit (Joe 10/11). The next time you open it, it's the new day. */
 const SESSION_DAY = Date.now();
-const RUN_SEED = (Math.random() * 1e9) | 0; // new every time the game starts: what's meant to be random (the tour's stops, the break room pair, the janitor's chores...) never repeats a set pattern, but holds steady while you play (Joe 10/11)
+const RUN_SEED = (Math.random() * 1e9) | 0; // new every time the game starts: the things you find (the cat, crooked and dusty frames, fingerprints, the conservator's case) are somewhere new every session (Joe 10/11)
 function todayISO() { const d = new Date(SESSION_DAY + DAY_SHIFT * 864e5); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
 function daysBetween(a, b) { const t = s => { const [y, m, d] = s.split("-").map(Number); return Date.UTC(y, m - 1, d); }; return Math.round((t(b) - t(a)) / 864e5); }
 function niceDate(iso) {
@@ -3061,6 +3061,7 @@ class Game {
     this.saveKey = opts.saveKey === undefined ? "goq-museum-progress" : opts.saveKey; // null = don't remember (the curator preview)
     this.progress = this.loadProgress(); this.lightsOff = new Set(); this.chore = null; this.closing = false; this.closed = false; this.flickI = 0; this.shift = {};
     this.forcedCrooked = new Set(); this.spook = null; this.figure = null; this.forceSpook = !!opts.spooky;
+    if (!this.headless && this.saveKey && typeof window !== "undefined") window.addEventListener("pagehide", () => this.saveLoop()); // the day's loop, kept as you leave
     this.tapWalk = !!opts.tapWalk; this.path = null; this.pathAct = null; this.camX = 0; this.camY = 0; this.haptics = opts.haptics !== false;
     this.timeOverride = ["day", "sunset", "night"].includes(opts.time) ? opts.time : null; this.lastTod = null; this.drink = null; this.sip = null;
     this.showTestBadge = !!opts.showTestBadge;
@@ -3779,7 +3780,7 @@ class Game {
     let p = null;
     try { if (this.saveKey) p = JSON.parse(localStorage.getItem(this.saveKey) || "null"); } catch (e) {}
     p = p && typeof p === "object" ? p : {};
-    return { dusted: p.dusted || {}, straightened: p.straightened || {}, watered: p.watered || {}, mug: p.mug || "",
+    return Object.assign({}, p, { dusted: p.dusted || {}, straightened: p.straightened || {}, watered: p.watered || {}, mug: p.mug || "",
       tally: Object.assign({ dusted: 0, straightened: 0, watered: 0, mugs: 0, closings: 0 }, p.tally || {}),
       staff: p.staff && p.staff.badge ? p.staff : null,   // who is clocked in on this browser (never the key)
       staffTally: p.staffTally || {}, lastBadge: p.lastBadge || null,
@@ -3790,7 +3791,7 @@ class Game {
       photos: Array.isArray(p.photos) ? p.photos.map(ph => { if (ph && ph.shot) delete ph.shot; return ph; }) : [], /* (2026-11-03 snapshots are drawn from their subject again) */ stamps: Array.isArray(p.stamps) ? p.stamps : [], where: p.where || null, sides: p.sides || {}, wiped: p.wiped || {},
       myNotes: p.myNotes || {}, reactions: p.reactions || {},
       // For the stats on Someone's PC: days, streaks, time, steps, walls, the dark, favorite drink, plant and photo subject, verdicts by genre.
-      stats: Object.assign({ days: 0, lastDay: "", streak: 0, best: 0, secs: 0, dark: 0, steps: 0, bumps: 0, drinks: {}, plants: {}, shots: {}, loved: {}, nope: 0 }, p.stats || {}), noteName: typeof p.noteName === "string" ? p.noteName : "", clientId: typeof p.clientId === "string" ? p.clientId : "" };                    // chores counted per badge while clocked in
+      stats: Object.assign({ days: 0, lastDay: "", streak: 0, best: 0, secs: 0, dark: 0, steps: 0, bumps: 0, drinks: {}, plants: {}, shots: {}, loved: {}, nope: 0 }, p.stats || {}), noteName: typeof p.noteName === "string" ? p.noteName : "", clientId: typeof p.clientId === "string" ? p.clientId : "" }); // (everything else saved comes back as it was: the day, curious visitors, Bluu's finds, the office...)                    // chores counted per badge while clocked in
   }
   saveProgress() { this.checkAchievements(); try { if (this.saveKey) localStorage.setItem(this.saveKey, JSON.stringify(this.progress)); } catch (e) {} }
   /* ----- achievements ----- */
@@ -3824,18 +3825,19 @@ class Game {
      empty bins, no litter, nobody in line. (Start the visit over, and the curator's preview.) */
   restartLoop() {
     const keep = this.dirClock ? this.dirClock.paused : false; this.dirClock = { t: 0, paused: keep };
+    if (this.progress && this.progress.day) { delete this.progress.day.loop; this.saveProgress(); } // a fresh loop today
     if (this.jan) { const n = this.jan.npc; for (const id in this.rooms || {}) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== n); }
     if (this.tour) this.endTour(true);
     this.endSide();
     this.jan = null; this.sup = null; this.carryBox = null; this.bins = {}; this.litter = {}; this.trashBag = null;
     for (const id in this.rooms || {}) { this.rooms[id].fresh = true; for (const n of this.rooms[id].npcs) if (n.queue) n.queue = null; }
   }
-  /* Dust settles back over a few real days. A piece that's never been dusted starts dusty about half the time. */
-  isDusty(p) { const d = this.progress.dusted[p.id]; return d ? daysBetween(d, todayISO()) >= 3 : strSeed(p.id) % 2 === 0; }
-  /* Each day, roughly one piece in five hangs a little crooked until someone nudges it level. */
+  /* Dust and crooked frames are new every session (Joe 10/11): about one piece in three dusty, one in five crooked, picked at
+     random each time the game starts. Whatever you've dusted or straightened today stays done for the rest of the day. */
+  isDusty(p) { const t = todayISO(); return this.progress.dusted[p.id] !== t && strSeed(t + p.id + ":dust:" + RUN_SEED) % 3 === 0; }
   isCrooked(p) {
     if (this.forcedCrooked && this.forcedCrooked.has(p.id)) return true;
-    const t = todayISO(); return this.progress.straightened[p.id] !== t && strSeed(t + p.id) % 5 === 0;
+    const t = todayISO(); return this.progress.straightened[p.id] !== t && strSeed(t + p.id + ":tilt:" + RUN_SEED) % 5 === 0;
   }
   isThirsty(id) { return this.progress.watered[id] !== todayISO(); }
   /* One press, one chore: a dusty frame gets dusted; a crooked one (once clean) gets straightened. Returns false when there's nothing to do. */
@@ -4190,6 +4192,8 @@ class Game {
      curator). What you've done today is kept in progress.day, so a reload doesn't reshuffle it. Every line is in Words. */
   weekday() { return this.dayOverride !== undefined && this.dayOverride !== null ? this.dayOverride : new Date(todayISO() + "T12:00:00").getDay(); }
   setDay(d) { this.dayOverride = d; this.rebuild(); }
+  daySeed() { const d = this.dayState(); if (typeof d.seed !== "number") { d.seed = (Math.random() * 1e9) | 0; this.saveProgress(); } return d.seed; } // random, kept all day: the loop's tour, break room pair and janitor (the loop plays once a day), the artist's spot, Sunday's guest
+  weekSeed() { const wk = Math.floor((new Date(todayISO() + "T12:00:00") - new Date(2024, 0, 7)) / 6048e5), w = this.progress.week; if (!w || w.wk !== wk) { this.progress.week = { wk, seed: (Math.random() * 1e9) | 0 }; this.saveProgress(); } return this.progress.week.seed; } // random, kept all week (the trivia seat)
   dayState() { const key = todayISO() + ":" + this.weekday(), d = this.progress.day; if (!d || d.key !== key) this.progress.day = { key }; return this.progress.day; }
   chalkText(s) { // white chalk letters for the day board
     const ck = "chalk|" + s; if (this.cache[ck]) return this.cache[ck];
@@ -4236,12 +4240,12 @@ class Game {
       const easelOk = (x, y) => this.tileFree(m, x, y) && !m.events[x + "," + y] && !this.byExhibit(m, x, y) && m.solid[y - 1] && m.solid[y - 1][x] === false && !this.byExhibit(m, x, y - 1);
       if (d.art && !(m.solid[d.art.y] && m.solid[d.art.y][d.art.x] === false && d.art.ex !== undefined)) d.art = null; // a spot saved before the layout (or this rule) changed
       if (!d.art) {
-        const wings = this.wingZones(), z = wings[strSeed(todayISO() + "art") % Math.max(1, wings.length)], spots = [];
+        const wings = this.wingZones(), z = wings[strSeed(todayISO() + "art" + this.daySeed()) % Math.max(1, wings.length)], spots = [];
         if (z) for (let y = 3; y < m.h - 1; y++) for (let x = 1; x < m.w - 1; x++) {
           if ((this.zoneAt(m, x, y) || {}).id !== z.id || !this.tileFree(m, x, y) || this.byExhibit(m, x, y) || m.events[x + "," + y] || (m.noWander && m.noWander.has(x + "," + y))) continue;
           const ex = [x + 1, x - 1].find(e => easelOk(e, y)); if (ex !== undefined) spots.push({ x, y, ex });
         }
-        if (spots.length) { d.art = spots[strSeed(todayISO() + "artspot") % spots.length]; this.saveProgress(); }
+        if (spots.length) { d.art = spots[strSeed(todayISO() + "artspot" + this.daySeed()) % spots.length]; this.saveProgress(); } // somewhere new each Wednesday (Joe 10/11)
       }
       if (d.art && this.dayTile(m, d.art.x, d.art.y)) {
         const artist = this.dayNpc({ sheet: "visitor_b", shirt: "rainbow", x: d.art.x, y: d.art.y, artist: true, member: "The artist", dir: d.art.ex < d.art.x ? "left" : "right" });
@@ -4251,7 +4255,7 @@ class Game {
       }
     }
     if (wd === 4 && m && !this.closing) { // Thursday: trivia players on every café stool but one (trivia night too)
-      const stools = m.props.filter(p => p.key === "cafe_stool" && p.sit), skip = stools.length ? strSeed(todayISO() + "seat") % stools.length : -1;
+      const stools = m.props.filter(p => p.key === "cafe_stool" && p.sit), skip = stools.length ? strSeed("seat" + this.weekSeed()) % stools.length : -1;
       { const cz = (m.zones || []).find(z => z.id === "cafe"); if (cz && !(m.unveilZones = m.unveilZones || []).includes(cz)) m.unveilZones.push(cz); } // trivia night: bunting over the café
       d.thuSeat = skip >= 0 ? { x: stools[skip].x, y: stools[skip].y } : null; // the one free seat: sit there to play
       if (d.thuSeat) { const { x, y } = d.thuSeat; /* all Thursday, before and after you've played */ m.npcs = m.npcs.filter(n => !(n.x === x && n.y === y)); (m.noWander = m.noWander || new Set()).add(x + "," + y); (m.keepFree = m.keepFree || new Set()).add(x + "," + y); } // kept free for you: nobody else steps on it
@@ -4274,9 +4278,12 @@ class Game {
         L.npcs.push(this.dayNpc({ sheet: "visitor_c", x, y: y - 1, vendor: true, member: "Bluu" })); } // he blocks his own tile while he's there (no wall left behind when he heads home at closing)
     }
     if (wd === 0 && m && !d.sunDone) { // Sunday: someone from the staff at a café table, with the stool across from them free for you
-      const order = ["shopkeeper", "shopkeeper", "barista", "barista", "conservator", "conservator", "usher", "usher", ...(this.isCurator() ? [] : ["curator"])], role = d.sunRole || (d.sunRole = order[strSeed(todayISO() + "sun") % order.length]);
+      // Who has the day off: random, weighted (Joe 10/11): the four staff equally, the curator only now and then (about one Sunday in fifteen).
+      const W = [["shopkeeper", 1], ["barista", 1], ["conservator", 1], ["usher", 1], ...(this.isCurator() ? [] : [["curator", 0.3]])], sum = W.reduce((a, w) => a + w[1], 0);
+      const pickSun = () => { let r = (strSeed(todayISO() + "sun" + this.daySeed()) % 10000) / 10000 * sum; for (const [k, w] of W) if ((r -= w) < 0) return k; return W[0][0]; };
+      const role = d.sunRole || (d.sunRole = pickSun());
       const def = ROOMS.museum, tables = (def.props || []).filter(p => p.key === "cafe_table").map(t => [t, (def.props || []).find(p => p.key === "cafe_stool" && p.sit === "right" && p.x === t.x - 1 && p.y === t.y), (def.props || []).find(p => p.key === "cafe_stool" && p.sit === "left" && p.x === t.x + 1 && p.y === t.y)]).filter(([, a, b]) => a && b);
-      const tb = tables[strSeed(todayISO() + "table") % Math.max(1, tables.length)];
+      const tb = tables[strSeed(todayISO() + "table" + this.daySeed()) % Math.max(1, tables.length)];
       if (tb) {
         const [, a, b] = tb; m.npcs = m.npcs.filter(n => !((n.x === a.x || n.x === b.x) && n.y === a.y)); // whoever was sitting there finds another seat
         m.npcs.push(this.dayNpc({ sheet: role === "usher" ? "usher" : role === "curator" ? "curator" : "shop_staff", x: a.x, y: a.y, sitting: true, dir: "right", sunGuest: role, member: role }));
@@ -5424,7 +5431,7 @@ class Game {
      weekday event > curious visitors > staff posts > the rhythm > idle). The rhythm only ever moves "idle" people.
      For now (Step 1) it does one visible thing: people trickle in early in the loop and drift out at the end. */
   director() {
-    const V = this.visitSet(), LOOP = V.minutes * 3600, d = this.dirClock || (this.dirClock = { t: 0, paused: false });
+    const V = this.visitSet(), LOOP = V.minutes * 3600, d = this.dirClock || (this.dirClock = { t: this.resumeLoop(), paused: false });
     const over = !V.repeat && d.t >= LOOP, t = over ? LOOP - 1 : d.t % LOOP, loop = V.repeat ? Math.floor(d.t / LOOP) : 0; // once per visit (Joe 10/9), unless it repeats
     const min = t / 3600, beat = Math.min(3, Math.floor(min / (V.minutes / 4))), day = this.weekday(), today = todayISO();
     const unveiling = !!(this.pack && this.pack.pieces.some(p => p.unveil === today));
@@ -5437,6 +5444,27 @@ class Game {
     const r = this.room, plan = r && r.base ? Object.values(this.crowdPlan(r, beat)) : null, sum = k => plan.reduce((a, p) => a + (k === "now" ? p.now.length : p[k]), 0);
     const here = plan ? { now: sum("now"), want: sum("want"), base: sum("base"), room: r.id } : null;
     return { min, minutes: V.minutes, repeat: V.repeat, over, beat, beatName: over ? "Over for this visit" : BEATS[beat], loop, day, unveiling, running, crowd: this.crowdToday(), problems: over ? [] : d.picks.ids, paused: d.paused, here, last: d.last ? { what: d.last.what, ago: Math.round((this.t - d.last.t) / 60) } : null };
+  }
+  /* ----- The loop plays once a day (Joe 10/11) -----
+     The day's loop (its clock, the deliveries, the bins and litter, how the tour and the break room mix-up went, how far
+     the janitor's got, what's in your hands) is saved with the day (progress.day.loop, every 5 seconds and as you leave).
+     Come back the same day and it carries on where you left it: a loop that's over stays over, and whatever wasn't fixed
+     is still there. The next day starts a fresh one. Its random picks come from daySeed(), so a resumed loop plans the same. */
+  loopSave() { if (this.headless || !this.saveKey || this.tut) return null; const d = this.progress && this.progress.day; return d && d.key === todayISO() + ":" + this.weekday() && d.loop || null; }
+  resumeLoop() { // the clock, the first time it's asked for this session (plus the bins and litter, and your trash bag)
+    const L = this.loopSave(); if (!L) return 0;
+    if (L.bins) this.bins = L.bins; if (L.litter) this.litter = L.litter; if (typeof L.trashBag === "number") this.trashBag = L.trashBag;
+    return Math.max(0, +L.t || 0);
+  }
+  saveLoop() {
+    if (this.headless || !this.saveKey || this.tut || !this.dirClock || !this.progress) return;
+    const S = this.sup, T = this.tour, I = this.side && this.side.item, J = this.jan;
+    this.dayState().loop = { t: this.dirClock.t, bins: this.bins || {}, litter: this.litter || {}, trashBag: this.trashBag == null ? null : this.trashBag,
+      sup: S ? { key: S.key, boxes: S.boxes, shopDone: S.shopDone, cafeDone: S.cafeDone, cafeNeeded: S.cafeNeeded, freeGiven: S.freeGiven, carryBox: this.carryBox || null } : null,
+      tour: T ? { key: T.key, kidDone: T.kidDone, asked: T.asked, explained: T.explained, mood: T.mood, coffee: T.coffee, usherBack: !!T.usherBack } : null,
+      item: I ? { key: this.side.key, got: I.got, done: I.done, left: I.left, carry: this.carryItem || null } : null,
+      jan: J ? { key: J.key, i: J.i, phase: J.phase === "plants" && J.cur ? "plants" : J.phase, watered: J.watered, early: !!J.early, swept: J.swept || 0, home: !!(J.brk && J.brk.act === "home") } : null };
+    this.saveProgress();
   }
   visitSet() { return (this.pack && this.pack.settings.visit) || { minutes: 12, repeat: false }; }
   setVisitClock(min, paused) { const d = this.dirClock || (this.dirClock = { t: 0, paused: false }), L = this.visitSet().minutes * 3600; if (min !== undefined && min !== null) d.t = (this.visitSet().repeat ? Math.floor(d.t / L) * L : 0) + Math.max(0, Math.min(L - 1, Math.round(min * 3600))); if (paused !== undefined) d.paused = !!paused; for (const id in this.rooms || {}) this.rooms[id].fresh = true; }
@@ -5454,6 +5482,7 @@ class Game {
   updateDirector() {
     if (this.headless) return;
     const d = this.director(); if (d.running) this.dirClock.t++;
+    if (this.t % 300 === 0) this.saveLoop();
     if (!(d.running || (d.over && !d.paused && !this.tut && !this.closing)) || !this.room || (this.t % 180 && !this.room.fresh)) return; // a decision every 3 seconds in the room you're in (right away after a jump)
     const r = this.room, def = ROOMS[r.id]; if (!def || !def.crowd || r.id === "staff" || ROOMS[r.id].tutorial) return;
     const plan = this.crowdPlan(r, d.beat), groups = Object.entries(plan), far = n => !n.moving && Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 3;
@@ -5825,7 +5854,7 @@ class Game {
   catBucket() { return Math.floor(Date.now() / (20 * 60 * 1000)); }
   moveCat() {
     for (const id in this.rooms) { const r = this.rooms[id]; if (!r.cat) continue; const { x, y } = r.cat; delete r.events[x + "," + y]; if (!r.props.some(p => p.catBed && p.x === x && p.y === y)) r.solid[y][x] = false; r.cat = null; }
-    const ids = Object.keys(ROOMS).filter(id => ROOMS[id].catSpots && this.rooms[id]), cs = strSeed("cat" + todayISO() + this.catBucket());
+    const ids = Object.keys(ROOMS).filter(id => ROOMS[id].catSpots && this.rooms[id]), cs = strSeed("cat" + todayISO() + this.catBucket() + ":" + RUN_SEED);
     for (let k = 0; k < ids.length; k++) {
       const id = ids[(cs + k) % ids.length], r = this.rooms[id], spots = ROOMS[id].catSpots, [x, y] = spots[(cs >>> 5) % spots.length];
       const bed = r.props.some(p => p.catBed && p.x === x && p.y === y);
@@ -5989,12 +6018,12 @@ class Game {
     if (!up.length) { this.say(this.tx("workbench.empty")); return; }
     this.say([...this.tx("workbench.intro"), ...up.map(p => "A crate labeled " + p.title.toUpperCase() + ". Unveiling " + niceDate(p.unveil) + ".")]);
   }
-  /* Fingerprints on cases: they build up a little each day, and visitors who linger by a case leave more. */
+  /* Fingerprints on cases: new every session (wiped today stays wiped), and visitors who linger by a case leave more. */
   prints(p) {
     if (p.tut) return 0;
-    // amount (0 to 1, set in the curator) is roughly the chance a case has picked up a smudge on a given day.
+    // amount (0 to 1, set in the curator) is roughly the chance a case has picked up a smudge each session.
     const amt = this.pack.settings.staff.fingerprints, t = todayISO(), w = (this.progress.wiped || {})[p.id];
-    const base = amt <= 0 ? 0 : w ? Math.min(3, Math.floor(daysBetween(w, t) * amt * 1.5)) : (strSeed(p.id + t) % 100 < amt * 100 ? 1 : 0);
+    const h = strSeed(p.id + t + ":prints:" + RUN_SEED), base = amt <= 0 || w === t ? 0 : h % 100 < amt * 100 ? 1 + ((h >>> 8) % 2) : 0; // new every session; wiped today stays wiped (Joe 10/11)
     if (amt <= 0) return 0;
     return Math.min(3, base + ((this.extraPrints || {})[p.id] || 0));
   }
@@ -6719,7 +6748,7 @@ class Game {
     if (this.pack && this.pack.rooms) applyRooms(this.pack.rooms); // the rooms are shared by every game on the page (the curator has two): build from this one's
     if (this.mugSeed === undefined) this.mugSeed = (Math.random() * 1e9) | 0; // somewhere different every time you start the game (Joe 10/11), steady while you play
     const today = todayISO(), rooms = Object.keys(ROOMS).filter(id => ROOMS[id].mugSpots), seed = strSeed("mug" + today + ":" + this.mugSeed);
-    const catRooms = Object.keys(ROOMS).filter(id => ROOMS[id].catSpots), cs = strSeed("cat" + today + this.catBucket());
+    const catRooms = Object.keys(ROOMS).filter(id => ROOMS[id].catSpots), cs = strSeed("cat" + today + this.catBucket() + ":" + RUN_SEED);
     const o = { genres: this.pack.settings.genres, curator: this.curator, today, hung: this.hungNow, tod: this.tod(), crowd: this.crowdToday(), catRoom: catRooms[cs % catRooms.length], catIndex: cs >>> 5,
       mugRoom: this.progress.mug === today ? null : rooms[seed % rooms.length], mugIndex: seed >>> 4, closing: this.closing };
     let n = 0, m = 0; o.spotStart = {}; o.caseStart = {};
@@ -7301,9 +7330,10 @@ class Game {
     if (this.tour && this.tour.key === key) { if (this.tour.on && this.tour.gen !== this.worldGen) this.tourPlan(this.tour); return this.tour; } // the museum was rebuilt (the pack loading): plan its stops again
     if (this.tour) this.endTour(true);
     const on = d.problems.includes("tour") && !!this.rooms.lobby && !!this.rooms.museum;
-    let sd = strSeed(todayISO() + ":tour:" + d.loop + ":" + RUN_SEED); const rnd = () => (sd = (Math.imul(sd, 1103515245) + 12345) >>> 0) / 4294967296;
+    let sd = strSeed(todayISO() + ":tour:" + d.loop + ":" + this.daySeed()); const rnd = () => (sd = (Math.imul(sd, 1103515245) + 12345) >>> 0) / 4294967296;
     const school = this.weekday() === 2; // Tuesdays: a school group, a teacher leading four kids (Joe 10/11)
     const T = this.tour = { key, on, school, coffee: school || !d.problems.includes("usher"), asked: false, explained: false, mood: null, kidDone: false, members: [], phase: -1, rnd };
+    { const L = this.loopSave(); if (L && L.tour && L.tour.key === key) { const { key: _k, ...st } = L.tour; Object.assign(T, st); } } // earlier today: how it went so far
     if (!on) return T;
     this.tourPlan(T);
     const sheets = ["visitor_a", "visitor_b", "visitor_c", "visitor_b"];
@@ -7314,7 +7344,7 @@ class Game {
     return T;
   }
   tourPlan(T) { // where the group waits, its two stops and the kid's wing, on the museum as it's built now
-    T.gen = this.worldGen; let sd = strSeed(T.key + ":tour:" + RUN_SEED); const rnd = () => (sd = (Math.imul(sd, 1103515245) + 12345) >>> 0) / 4294967296;
+    T.gen = this.worldGen; let sd = strSeed(T.key + ":tour:" + this.daySeed()); const rnd = () => (sd = (Math.imul(sd, 1103515245) + 12345) >>> 0) / 4294967296;
     const L = this.rooms.lobby, ok = (R, x, y) => R.solid[y] && R.solid[y][x] === false && !R.events[x + "," + y] && !(R.noWander && R.noWander.has(x + "," + y));
     const gather = []; for (let y = 5; y < L.h - 1; y++) for (let x = 8; x < L.w - 1; x++) if (ok(L, x, y)) gather.push([x, y]); // the lobby's right side, out of the way of the doors
     T.gather = gather.slice(0, 6);
@@ -7539,7 +7569,7 @@ class Game {
     const d = this.director(), key = todayISO() + ":" + d.loop;
     if (this.side && this.side.key === key) { if (this.side.gen !== this.worldGen) this.sidePlan(this.side); return this.side; }
     this.endSide();
-    let sd = strSeed(todayISO() + ":side:" + d.loop + ":" + RUN_SEED); const rnd = () => (sd = (Math.imul(sd, 1103515245) + 12345) >>> 0) / 4294967296;
+    let sd = strSeed(todayISO() + ":side:" + d.loop + ":" + this.daySeed()); const rnd = () => (sd = (Math.imul(sd, 1103515245) + 12345) >>> 0) / 4294967296;
     const S = this.side = { key, item: { on: d.problems.includes("item") && !!this.rooms.staff && !!this.rooms.lobby, got: false, done: false, left: false, phase: -1 } };
     const I = S.item; I.kind = (rnd() * 2) | 0; I.item = ["headphones", "lunchbox"][I.kind];
     const all = (this.pack.settings.staff.members || []).filter(m => !this.staff || (m.badge ? m.badge !== this.staff.badge : m.name.toLowerCase() !== this.staff.name.toLowerCase()));
@@ -7548,6 +7578,7 @@ class Game {
     while (pick.length < 2) pick.push({ name: ["A volunteer", "Another volunteer"][pick.length], shirts: [] }); // no members yet: stand-ins
     const person = (m, i, extra) => Object.assign({ sheet: ["visitor_a", "visitor_b", "visitor_c"][(strSeed(m.name) + i) % 3], x: 0, y: 0, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 0, still: true, staff: true, member: m.name, where: "staff", gone: true, lines: [], lineI: -1 }, m.shirts && m.shirts.length ? { shirt: m.shirts[0] } : {}, extra);
     I.owner = person(pick[0], 0, { itemPair: "owner" }); I.taker = person(pick[1], 1, { itemPair: "taker" });
+    { const L = this.loopSave(); if (L && L.item && L.item.key === key) { Object.assign(I, { got: !!L.item.got, done: !!L.item.done, left: !!L.item.left }); if (I.got && !I.done && L.item.carry) this.carryItem = L.item.carry; } } // earlier today
     this.sidePlan(S);
     return S;
   }
@@ -7731,6 +7762,7 @@ class Game {
       if (d.problems.includes("line")) { const [x, y] = spot(boxes.length ? 1 : 0); boxes.push({ room: "storage", x, y, kind: "cafe" }); }
       this.sup = { key, boxes, shopDone: !d.problems.includes("stock"), cafeDone: false, cafeNeeded: d.problems.includes("line"), freeGiven: false };
       this.carryBox = null;
+      const L = this.loopSave(); if (L && L.sup && L.sup.key === key) { const { carryBox, ...st } = L.sup; Object.assign(this.sup, st); this.carryBox = carryBox || null; } // earlier today: as you left it
     }
     return this.sup;
   }
@@ -7970,8 +8002,8 @@ class Game {
   janArrive(room, from) { return room === "museum" && from === "lobby" ? (ROOMS.museum.enterAt || ROOMS.museum.spawn) : this.janStand(room, from); }
   janBeside(R, x, y) { return [[0, 1], [1, 0], [-1, 0], [0, -1]].map(([dx, dy]) => [x + dx, y + dy]).find(([a, b]) => R.solid[b] && R.solid[b][a] === false && !R.events[a + "," + b]); }
   janFace(at, x, y) { return x > at[0] ? "right" : x < at[0] ? "left" : y > at[1] ? "down" : "up"; }
-  janPlan(loop) { // this loop's three chores (different every time the game starts, steady while you play)
-    let sd = strSeed(todayISO() + ":janitor:" + loop + ":" + RUN_SEED); const rnd = () => (sd = (Math.imul(sd, 1103515245) + 12345) >>> 0) / 4294967296;
+  janPlan(loop) { // this loop's three chores (random each day, kept all day: the loop plays once a day)
+    let sd = strSeed(todayISO() + ":janitor:" + loop + ":" + this.daySeed()); const rnd = () => (sd = (Math.imul(sd, 1103515245) + 12345) >>> 0) / 4294967296;
     const trash = [];
     for (const id of ["lobby", "museum", "screening", "staff"]) { // in walking order: the theater's off the museum, the staff room off the lobby
       const R = this.rooms[id]; if (!R) continue;
@@ -8015,6 +8047,11 @@ class Game {
       const n = J ? Object.assign(J.npc, { leaving: false, gone: false }) : { sheet: "janitor", janitor: true, staff: true, role: "janitor", x: 0, y: 0, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 0, lines: [], lineI: -1 };
       if (!J) { const [x, y] = this.janStand("lobby", "staff"); n.x = x; n.y = y; n.alpha = 0; n.fadeIn = true; } // out of the staff door
       J = this.jan = { key, gen: this.worldGen, stops: this.janPlan(d.loop), i: 0, mode: "go", t: 0, eta: -1, phase: "chores", npc: n, room: J ? J.room : "lobby", watered: 0, stuck: 0 };
+      const L = this.loopSave(); if (L && L.jan && L.jan.key === key) { // earlier today: as far as he'd got (he carries on from the staff door)
+        Object.assign(J, { i: Math.min(+L.jan.i || 0, J.stops.length), phase: ["chores", "plants", "break", "gone"].includes(L.jan.phase) ? L.jan.phase : "chores", watered: +L.jan.watered || 0, early: !!L.jan.early, swept: +L.jan.swept || 0 });
+        if (L.jan.home && J.phase === "break") J.brk = { room: "lobby", at: ROOMS.lobby.exitTo || ROOMS.lobby.spawn, dir: "down", act: "home", dur: 1 };
+        if (J.phase === "gone") { n.alpha = undefined; n.fadeIn = false; }
+      }
     } else if (J.gen !== this.worldGen) { // the museum was rebuilt (usually the pack loading just after the page opens): the same chores, on the new map
       J.gen = this.worldGen; const done = J.i; J.stops = this.janPlan(d.loop); J.i = Math.min(done, J.stops.length); J.cur = null; J.lit = null; J.can = null; J.brk = null; J.fill = null; J.fillT = 0; J.door = null; J.tk = null; J.eta = -1;
       if (J.mode === "act") J.mode = "go"; const n = J.npc, R = this.rooms[J.room]; n.route = null; n.moving = false; n.prog = 0;
@@ -8779,7 +8816,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 tuesday 4";
+const VERSION = "2026-11-18 tuesday 5";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
