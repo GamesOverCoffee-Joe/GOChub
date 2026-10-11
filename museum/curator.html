@@ -429,7 +429,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cues 4";
+window.GOQ_WANT = "2026-11-18 tuesday";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -1175,7 +1175,6 @@ const PLACE_GROUPS = [
     { kind: "marqueeAt", name: "Marquee doorway", key: "theater_door", note: "One big arched doorway with chasing bulbs. Tap the upper-left of a two-tile-wide doorway (both wall rows)." },
     { kind: "nowPlayingAt", name: "NOW PLAYING sign", key: "led_sign", note: "The red LED sign: four tiles wide across both wall rows. Tap the upper wall row where its left end goes. It shows a random episode each hour." },
     { kind: "glow", name: "Light", key: "floor_lamp", note: "A warm pool of light. Pieces get their own spotlights automatically; these are for lamps and corners." },
-    { kind: "beam", name: "Spotlight", key: "floor_lamp", note: "A narrow beam from the ceiling onto one tile: for a stand, a sign or anything you want people to notice. Tap the tile it lights. Shows in dim rooms (like the screening nook) and at night." },
   ] },
   { name: "People", items: ["visitor_a", "visitor_b", "visitor_c", "shop_staff", "guard"].map(k => ({ kind: "visitor", key: k })) },
 ];
@@ -1218,7 +1217,6 @@ function roomItems(d) {
   if (d.spawn) out.push({ type: "spawn", x: d.spawn[0], y: d.spawn[1], w: 1, h: 1, label: "Start spot" });
   (d.catSpots || []).forEach((p, i) => out.push({ type: "catSpot", i, x: p[0], y: p[1], w: 1, h: 1, label: "Cat nap spot" }));
   (d.glows || []).forEach((p, i) => out.push({ type: "glow", i, x: p[0], y: p[1], w: 1, h: 1, label: "Light" }));
-  (d.beams || []).forEach((p, i) => out.push({ type: "beam", i, x: p[0], y: p[1], w: 1, h: 1, label: "Spotlight" }));
   (d.mugSpots || []).forEach((p, i) => out.push({ type: "mugSpot", i, x: p[0], y: p[1], w: 1, h: 1, label: "Mug spot" }));
   [["lightSwitch", "Light switch", 1, 1], ["intercom", "Intercom", 1, 1], ["timeClock", "Time clock", 1, 1], ["keypadAt", "Office keypad", 1, 1], ["marqueeAt", "Marquee doorway", 2, 2], ["nowPlayingAt", "NOW PLAYING sign", 4, 2]].forEach(([k, l, w, h]) => { if (d[k]) out.push({ type: "fixed", key: k, x: d[k][0], y: d[k][1], w, h, label: l }); });
   [["windowAt", "Window"], ["eotmAt", "Employee of the Month"], ["corkboardAt", "Corkboard"], ["leaderboardAt", "Staff leaderboard"]].forEach(([k, l]) => { if (d[k]) out.push({ type: "fixed", key: k, x: d[k][0], y: 1, w: 2, h: 2, label: l }); });
@@ -1571,7 +1569,6 @@ function placeAt(t) {
   else if (p.kind === "intercom") d.intercom = [t.x, t.y];
   else if (p.kind === "marqueeAt" || p.kind === "nowPlayingAt") d[p.kind] = [t.x, t.y];
   else if (p.kind === "glow") (d.glows = d.glows || []).push([t.x, t.y]);
-  else if (p.kind === "beam") (d.beams = d.beams || []).push([t.x, t.y]);
   else if (p.kind === "visitor") (d.visitors = d.visitors || []).push({ sheet: p.key, x: t.x, y: t.y, dir: "down", lines: [["Hello!"]] });
   else if (p.kind === "stairs") (d.stairs = d.stairs || []).push({ x: t.x, y: t.y, kind: p.key === "stair_up" ? "up" : "down", to: null });
   else if (p.kind === "prop") {
@@ -1604,7 +1601,7 @@ function placeAt(t) {
   roomChanged(true);
 }
 function removeItem(d, it) {
-  const arr = { mural: "murals", lamp: "lamps", arrow: "arrows", glow: "glows", beam: "beams", visitor: "visitors", catSpot: "catSpots", mugSpot: "mugSpots", case: "cases", prop: "props", spot: "spots", wallArt: "wallArt", decal: "decals", stairs: "stairs" }[it.type];
+  const arr = { mural: "murals", lamp: "lamps", arrow: "arrows", glow: "glows", visitor: "visitors", catSpot: "catSpots", mugSpot: "mugSpots", case: "cases", prop: "props", spot: "spots", wallArt: "wallArt", decal: "decals", stairs: "stairs" }[it.type];
   if (arr) d[arr].splice(it.i, 1);
   else if (it.type === "fixed") delete d[it.key];
 }
@@ -1631,7 +1628,6 @@ function moveItem(d, it, dx, dy) {
   else if (it.type === "catSpot") { d.catSpots[it.i][0] += dx; d.catSpots[it.i][1] += dy; }
   else if (it.type === "mugSpot") { d.mugSpots[it.i][0] += dx; d.mugSpots[it.i][1] += dy; }
   else if (it.type === "glow") { d.glows[it.i][0] += dx; d.glows[it.i][1] += dy; }
-  else if (it.type === "beam") { d.beams[it.i][0] += dx; d.beams[it.i][1] += dy; }
   else if (it.type === "spawn") { d.spawn[0] += dx; d.spawn[1] += dy; }
   else if (it.type === "fixed") { d[it.key][0] += dx; if (sety) d[it.key][1] += dy; }
   if (!sety) it.y -= dy; // wall things stay on the wall rows
@@ -1783,13 +1779,13 @@ function layMove(t) {
   d.layout = L; recarve(d); roomChanged();
 }
 /* The things placed in a room, so a drag can move them from where they started. */
-const ITEM_KEYS = ["props", "cases", "spots", "wallArt", "decals", "glows", "beams", "catSpots", "mugSpots", "visitors", "featuredAt", "runners", "lamps", "arrows", "murals"];
+const ITEM_KEYS = ["props", "cases", "spots", "wallArt", "decals", "glows", "catSpots", "mugSpots", "visitors", "featuredAt", "runners", "lamps", "arrows", "murals"];
 function itemsOf(d) { const o = {}; ITEM_KEYS.forEach(k => { if (d[k] !== undefined) o[k] = clone(d[k]); }); return o; }
 function shiftItems(items, box, dx, dy) {
   const out = clone(items); if (!box || (!dx && !dy)) return out;
   const inside = (x, y) => x >= box.x && y >= box.y && x < box.x + box.w && y < box.y + box.h;
   ["props", "decals", "visitors", "wallArt", "arrows", "murals"].forEach(k => (out[k] || []).forEach(o => { if (inside(o.x, o.y === undefined ? 1 : o.y)) { o.x += dx; if (o.y !== undefined) o.y += dy; } }));
-  ["cases", "glows", "beams", "catSpots", "mugSpots", "runners", "lamps"].forEach(k => (out[k] || []).forEach(p => { if (inside(p[0], p[1])) { p[0] += dx; p[1] += dy; } }));
+  ["cases", "glows", "catSpots", "mugSpots", "runners", "lamps"].forEach(k => (out[k] || []).forEach(p => { if (inside(p[0], p[1])) { p[0] += dx; p[1] += dy; } }));
   (out.spots || []).forEach((p, i) => { if (Array.isArray(p) && inside(p[0], p[1])) { p[0] += dx; p[1] += dy; } });
   if (out.featuredAt && inside(out.featuredAt[0], out.featuredAt[1])) { out.featuredAt[0] += dx; out.featuredAt[1] += dy; }
   return out;

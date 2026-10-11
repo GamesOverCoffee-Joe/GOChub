@@ -119,3 +119,20 @@ Also, outside the Writers' Room (Curator → Rooms): the espresso machine ("The 
 | Bluu | The red lens shades | Red lenses. The real deal. Everything looks like a boss fight now. |
 
 Not mine: "No refunds." and "You can't afford that." are Joe's.
+
+## Added later (10/11, version "2026-11-18 tuesday")
+
+| Group | Line | What Claude wrote |
+| --- | --- | --- |
+| Supplies | Just chatting with the barista while she's stressed | Chat? Now? I'm down to my last sleeve of cups. ⏎ ... ⏎ Sorry. That came out wrong. I'm fine. Everything's fine. / I'd love to talk but the rush is coming and I have, like, four lids. ⏎ Ask me again when I'm not panicking. |
+| Tour | Tuesday: the teacher before the tour | Okay, friends, bottoms on the bench, please. ⏎ ... ⏎ Please. ⏎ *sigh* We're waiting for everyone to use the bathroom. / Field trip day. I've had three coffees and it's not enough. |
+| Tour | Tuesday: the teacher at a stop | Eyes up here, friends! Eyes on the glass, not ON the glass. ⏎ No fingerprints! / Who can tell me what this one is about? ⏎ ... ⏎ Anyone? |
+| Tour | Tuesday: a kid's question she fumbles | Teacher, what's {title} about? ⏎ ... ⏎ Well, um. It's about... feelings. And games. Game feelings. ⏎ *the kids stare* |
+| Tour | Tuesday: after you explain it | WHOA. ⏎ Can we play it? Can we play it right now? ⏎ *the teacher mouths: thank you* |
+| Tour | Tuesday: the teacher after you explained | You're a lifesaver. They actually listened to you. |
+| Tour | Tuesday: the teacher counting heads at the rush | One, two, three... and... three. ⏎ That's fine. That's... probably fine. |
+| Tour | Tuesday: the teacher with a kid missing | Have you seen a little kid? About this tall? Answers to every name but his own? ⏎ I counted. I counted SO many times. ⏎ Please. If you see him, bring him back to me. / Oh no, oh no, oh no. The permission slip said 'supervised.' |
+| Tour | Tuesday: bringing him back | THERE you are! ⏎ Don't you EVER— okay. Okay. Deep breaths. ⏎ Thank you. Here, {n} tokens. Please don't tell the principal. |
+| Tour | Tuesday: the teacher on the way out | Okay friends, line up! Holding hands! Everybody's here! ⏎ ... ⏎ Everybody's here. |
+| Tour | Tuesday: one of the school kids | Is this a real museum or a pretend one? / My mom says games rot your brain. My brain feels fine. / Are you the boss of the museum? / *whispers* I touched the glass. |
+| Achievements | Read at least one side of every piece | TL;DR — Read at least one side of every piece in the museum. |

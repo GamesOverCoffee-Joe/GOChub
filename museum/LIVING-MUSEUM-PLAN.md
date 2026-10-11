@@ -210,7 +210,7 @@ The three baseline chains: **litter** (the janitor's bin route → full bins →
 | Day | Litter chain | Tour chain | Supplies chain |
 | --- | --- | --- | --- |
 | **Mon** (boxes) |  |  | ↑ the boxes you find include coffee beans and cups, so the morning box chore feeds the café |
-| **Tue** (lost kid) | | ↑ a school group, more kids; the tour's lost kid is the Tuesday lost kid | |
+| **Tue** (lost kid) | | ↑ a school group, more kids; the tour's lost kid is the Tuesday lost kid *(✅ built 10/11: the Tuesday tour is a teacher and four kids, one wanders off at the rush; the old lost-kid-and-mom event is off)* | |
 | **Wed** (artist) | → litter collects around the easel | ↓ the tour stops at the easel, so fewer fumbles | |
 | **Thu** (trivia) | | | ↑ trivia setup in the barista's 0–3 prep; → the line moves to 9–12 |
 | **Fri** (episode) | → the litter moves to the Screening Nook | ↑ the usher is scheduling the showing and needs that coffee | |
