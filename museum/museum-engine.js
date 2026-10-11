@@ -2165,6 +2165,7 @@ const TEXT = {
   "jan.wait":          { g: "Janitor", l: "Between chores, waiting for the next one", v: [["[PLACEHOLDER: the janitor between chores]"]] },
   "jan.plants":        { g: "Janitor", l: "Watering the plants nobody got to", v: [["[PLACEHOLDER: the janitor watering the plants]"]] },
   "jan.overtime":      { g: "Janitor", l: "Still watering after the visit's loop is over (overtime)", v: [["[PLACEHOLDER: the janitor grumbling about overtime]"]] },
+  "jan.home":          { g: "Janitor", l: "The Janitor at closing, done for the day and heading home", v: [["[PLACEHOLDER: the Janitor, done for the day, heading home]"]] },
   "jan.break":         { g: "Janitor", l: "On his break in the staff room", v: [["[PLACEHOLDER: the janitor on his break]"]] },
   "jan.early":         { g: "Janitor", l: "On an early break, because the plants were already watered", v: [["[PLACEHOLDER: the janitor on an early break, thanks to whoever watered the plants]"]] },
   "supply.pickShop":   { g: "Supplies", l: "Picking up the shop's stock box in the basement", v: [["[PLACEHOLDER: a box of today's shop stock, by the garage door]"]] },
@@ -2181,8 +2182,9 @@ const TEXT = {
   "usher.give":        { g: "Tour", l: "Offering the usher your drink ({drink})", v: [["[PLACEHOLDER: give the usher your {drink}?]"]] },
   "usher.notCoffee":   { g: "Tour", l: "The usher, if you offer him a drink that isn't coffee ({drink})", v: [["[PLACEHOLDER: the usher politely turns down your {drink}; only coffee will do]"]] },
   "cons.dream":        { g: "Conservator", l: "The conservator at closing, in a wing in front of a glass case (version by how many days you've caught him there: the first, the second, and so on; the last repeats)", v: [["[PLACEHOLDER: the conservator, caught daydreaming at a case after closing: one day his own game could be in one of these]"], ["[PLACEHOLDER: the second time: he tells you a little about the game he made]"], ["[PLACEHOLDER: later days: he's still dreaming, a bit more hopeful each time]"]] },
-  "cons.again":        { g: "Conservator", l: "The conservator, talked to again the same closing", v: [["[PLACEHOLDER: the conservator, still at the case, lost in thought]"]] },
-  "cons.avoid":        { g: "Conservator", l: "The conservator on his way back to the basement once his wing's lights are off (avoidant)", v: [["[PLACEHOLDER: the conservator, flustered, hurrying back downstairs; he doesn't want to talk about it]"]] },
+  "cons.bye":          { g: "Conservator", l: "The conservator after your chat at the case, before he heads home", v: [["[PLACEHOLDER: nice chatting; he's heading home]"]] },
+  "cons.leaving":      { g: "Conservator", l: "The conservator on his way out after your chat", v: [["[PLACEHOLDER: the conservator, on his way out, says good night]"]] },
+  "cons.avoid":        { g: "Conservator", l: "The conservator on his way home once his wing's lights went off (avoidant)", v: [["[PLACEHOLDER: the conservator, flustered, hurrying home; he doesn't want to talk about it]"]] },
   "item.break":        { g: "Break room", l: "Either member on break at 3–6 ({item}: the item on the table)", v: [["[PLACEHOLDER: break room chatter; the {item} is on the table]"]] },
   "item.lost":         { g: "Break room", l: "The owner at 6–9, missing their item ({item}, {who}: the one who left)", v: [["[PLACEHOLDER: has anyone seen my {item}?]"]] },
   "item.taker":        { g: "Break room", l: "Catching the one who's leaving with it ({item}, {owner})", v: [["[PLACEHOLDER: oh! this {item} isn't mine, it's {owner}'s. Could you take it back?]"]] },
@@ -2191,6 +2193,7 @@ const TEXT = {
   "item.thanks":       { g: "Break room", l: "Giving the owner their item back ({item}, {n}: tokens)", v: [["[PLACEHOLDER: my {item}! thanks ({n} tokens)]"]] },
   "item.after":        { g: "Break room", l: "The owner after you've brought it back", v: [["[PLACEHOLDER: the owner, happy again]"]] },
   "item.gone":         { g: "Break room", l: "The owner once it's walked out the door ({item}, {who})", v: [["[PLACEHOLDER: {who} must have taken my {item} home; I'll get it back next shift]"]] },
+  "supply.down":       { g: "Supplies", l: "Setting a delivery box down on the floor", v: [["[PLACEHOLDER: you set the box down]"]] },
   "usher.thanks":      { g: "Tour", l: "The usher, after you bring him a coffee", v: [["[PLACEHOLDER: the usher thanks you for the coffee; he's ready for the tour]"]] },
   "usher.ready":       { g: "Tour", l: "The usher before the tour, with his coffee", v: [["[PLACEHOLDER: the usher, wide awake, about to lead the tour]"]] },
   "usher.back":        { g: "Tour", l: "The usher back at his desk after the tour", v: [["[PLACEHOLDER: the usher, back from the tour]"]] },
@@ -6913,6 +6916,10 @@ class Game {
     if (li >= 0) {
       if ((this.carry || 0) >= 3) { this.say(this.tx("litter.handsFull")); return; }
       const l = L.splice(li, 1)[0]; this.carry = (this.carry || 0) + 1; this.say(this.tx("litter.pick", { thing: ["cup", "wrapper", "napkin"][l.k] }));
+      return;
+    }
+    if (this.carryBox && this.sup && this.tileFree(this.room, fx, fy) && !this.room.events[fx + "," + fy] && !this.sup.boxes.some(b => b.room === this.room.id && b.x === fx && b.y === fy) && !(this.room.keepFree && this.room.keepFree.has(fx + "," + fy))) { // set the box down on the floor in front of you (pick it up again the same way)
+      this.sup.boxes.push({ room: this.room.id, x: fx, y: fy, kind: this.carryBox }); this.carryBox = null; this.say(this.tx("supply.down")); return;
     }
   }
   /* The shop browser ("Hmm. Hmm hmm hmm.") keeps staring at the shelf when you talk to them (Joe 10/9). */
@@ -7126,7 +7133,12 @@ class Game {
     const spot = () => { const zs = (M0.zones || []).filter(z => z.kind === "room"), z = zs.length ? zs[(rnd() * zs.length) | 0] : null, at = this.freeSpot(M0, null, z && z.id) || this.freeSpot(M0) || M0.spawn || [10, 10]; return { x: at[0], y: at[1] - 1, piece: null }; };
     T.stop1 = pick() || spot(); T.stop2 = pick() || T.stop1;
     T.explained = T.explained && !T.explainedNoPiece; if (!T.stop1.piece) { T.explained = true; T.explainedNoPiece = true; } else T.explainedNoPiece = false; // nothing on display to be stumped by
-    const lostR = (this.rooms.museum.zones || []).filter(z => z.kind === "room"); T.lostZone = lostR.length ? lostR[(rnd() * lostR.length) | 0].id : null; // where the kid ends up, the same all day
+    const lostR = (this.rooms.museum.zones || []).filter(z => z.kind === "room"); T.lostZone = lostR.length ? lostR[(rnd() * lostR.length) | 0].id : null;
+    // Where the kid ends up, the same all day: playing the arcade, or staring at the front of a shop shelf (Joe 10/11). A wing if there's neither.
+    const fronts = [], front = (p, w) => { for (let i = 0; i < w; i++) { const x = p.x + i, y = p.y + 1; if (walk(x, y) && !M0.events[x + "," + y]) { fronts.push({ at: [x, y], dir: "up", what: p.key }); return; } } };
+    M0.props.forEach(p => { if (p.key === "arcade_cabinet") front(p, 1); else if (p.key === "shelf_unit" || p.key === "item_rack") front(p, 2); });
+    const arcade = fronts.filter(f => f.what === "arcade_cabinet"), pickF = list => list[(rnd() * list.length) | 0];
+    T.lostSpot = fronts.length ? (arcade.length && rnd() < 0.5 ? pickF(arcade) : pickF(fronts.filter(f => f.what !== "arcade_cabinet").length ? fronts.filter(f => f.what !== "arcade_cabinet") : fronts)) : null;
     T.phase = -1; // replay the current part of the tour on the new map
   }
   endTour(quiet) { // the group's gone (a new loop, or a new visit): out of every room, the usher back at his desk
@@ -7163,9 +7175,10 @@ class Game {
     const d = this.director(), M = this.rooms.museum, L = this.rooms.lobby;
     const phase = this.closing ? 4 : d.over ? 4 : d.beat; // 4: on their way out
     if (phase !== T.phase) { // the next part of the tour: everyone gets somewhere new to be
-      T.phase = phase;
+      const fresh = T.phase === -1; T.phase = phase;
       if (phase === 0) { // waiting in the lobby (also after the curator jumps the clock back)
-        T.members.forEach((n, i) => { n.still = true; n.random = false; n.queue = null; if (this.fol === n) { this.fol = null; n.follow = false; } this.tourHome(n, i); });
+        T.members.forEach((n, i) => { n.still = true; n.random = false; n.queue = null; if (this.fol === n) { this.fol = null; n.follow = false; } this.tourHome(n, i);
+          if (fresh && n.goal && n.goal.room === "lobby") { const g = n.goal; n.where = "lobby"; n.moving = false; n.walkTo = null; n.route = null; [n.x, n.y] = g.at; n.dir = g.dir; n.goal = null; if (g.sit) this.tourSit(n, g.sit); } }); // a new day or a rebuilt museum: they're already sitting when you walk in
         if (T.guide) { this.tourDrop(T.guide); T.guide = null; } this.restoreUsher();
       } else if (phase === 1) { // the usher leaves his desk and leads them to the first piece
         const u = L.npcs.find(n => n.usher && !n.tourUsher);
@@ -7180,7 +7193,7 @@ class Game {
         else T.members.forEach(n => { n.goal = null; n.walkTo = null; if (n.where === "museum") { n.still = false; n.random = true; const z = this.zoneAt(M, n.x, n.y); n.zone = z && z.kind === "room" ? z.id : T.stop1 && (this.zoneAt(M, T.stop1.x, T.stop1.y) || {}).id; } }); // scattered: they stroll on their own
       } else if (phase === 3) { // back to the lobby to leave; the kid goes missing
         T.members.forEach((n, i) => { n.still = true; n.random = false; n.queue = null; n.seat = null; if (n.sitting) { n.sitting = false; if (n.sitFrom) [n.x, n.y] = n.sitFrom; } n.route = null;
-          if (n.tourKid) { const at = this.freeSpot(M, null, T.lostZone) || this.freeSpot(M); this.tourPlace(n, "museum", at, "down"); }
+          if (n.tourKid) { if (T.lostSpot) this.tourPlace(n, "museum", T.lostSpot.at, T.lostSpot.dir); else this.tourPlace(n, "museum", this.freeSpot(M, null, T.lostZone) || this.freeSpot(M), "down"); }
           else this.tourHome(n, i); });
       } else if (phase === 4) { // out the front doors (the kid too, found or not)
         T.members.forEach(n => { this.tourStand(n); if (this.fol === n) { this.fol = null; n.follow = false; } n.goal = null; n.walkTo = null; n.still = true; if (n.where === this.room.id && this.room.id === "lobby") { n.leaving = true; n.leaveT = 0; n.alpha = 1; } else this.tourDrop(n); });
@@ -7394,32 +7407,38 @@ class Game {
     const C = this.cons; if (!C) return;
     if (!this.closing || C.day !== todayISO()) { this.endCons(); return; } // the museum opened again
     const St = this.rooms.storage, usual = n => n.role === "conservator" && !n.consDream, n = C.npc;
-    if (n && C.state === "dream" && this.lightsOff.has(C.light)) { C.state = "home"; this.tourPlace(n, "storage", C.home ? [C.home.x, C.home.y] : [6, 7], (C.home && C.home.dir) || "up"); } // his wing went dark: back to the basement
-    if (n && C.state === "home" && n.where === "storage" && !n.goal) { this.tourDrop(n); C.npc = null; C.state = "back"; } // home: his usual self takes over
+    if (n && C.state === "dream" && this.lightsOff.has(C.light)) this.consLeave(true); // his wing went dark: he heads home, flustered
+    if (n && C.state === "home" && n.where === "lobby" && !n.goal && !n.leaving) { // at the front doors: out (fading, if you're there to see it)
+      if (this.room.id === "lobby") { n.leaving = true; n.leaveT = 0; n.alpha = 1; } else { this.tourDrop(n); C.npc = null; C.state = "gone"; }
+    }
+    if (n && n.leaving && (n.gone || !this.rooms.lobby.npcs.includes(n))) { C.npc = null; C.state = "gone"; } // walked out
     if (C.npc) { // he's out: the basement stays empty (rebuilds put his usual self back), and he's in the room he's in
       St.npcs = St.npcs.filter(m => !usual(m));
       const R = this.rooms[C.npc.where]; if (R && !R.npcs.includes(C.npc)) { for (const id in this.rooms) if (id !== C.npc.where) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== C.npc); R.npcs.push(C.npc); }
-      if (C.state === "home") this.tourMove(C.npc);
-    } else if (C.home && !St.npcs.some(usual)) St.npcs.push(C.home);
+      if (C.state === "home" && !C.npc.leaving) this.tourMove(C.npc);
+    } else St.npcs = St.npcs.filter(m => !usual(m)); // gone home for the night: the basement stays empty until the museum opens again
   }
   endCons() {
     const C = this.cons; if (!C) return; this.cons = null;
     for (const id in this.rooms || {}) this.rooms[id].npcs = this.rooms[id].npcs.filter(n => n !== C.npc);
     const St = this.rooms && this.rooms.storage; if (St && C.home && !St.npcs.some(n => n.role === "conservator")) St.npcs.push(C.home);
   }
+  consLeave(dark) { // off home through the front doors: flustered if his lights went out on him, content after a chat
+    const C = this.cons, n = C && C.npc; if (!n || C.state !== "dream") return;
+    C.state = "home"; C.dark = !!dark; this.tourPlace(n, "lobby", ROOMS.lobby.exitTo || ROOMS.lobby.spawn, "down");
+  }
   consTalk(n) {
     const C = this.cons; if (!C) return false;
-    if (C.state !== "dream") { this.say(this.tx("cons.avoid")); return true; }
-    if (C.talked) { this.say(this.tx("cons.again")); return true; }
-    C.talked = true; const k = this.progress.consTalks || 0, first = this.progress.consDay !== todayISO();
-    this.progress.consTalks = k + 1; this.progress.consDay = todayISO(); if (first) this.count("conservator"); this.saveProgress(); // tokens once a day
-    this.say(this.txAt("cons.dream", k)); return true;
+    if (C.state !== "dream") { this.say(this.tx(C.dark ? "cons.avoid" : "cons.leaving")); return true; }
+    const k = Math.max(0, (this.progress.consTalks || 0) - (C.talked ? 1 : 0)), first = this.progress.consDay !== todayISO();
+    if (!C.talked) { C.talked = true; this.progress.consTalks = k + 1; this.progress.consDay = todayISO(); if (first) this.count("conservator"); this.saveProgress(); } // tokens once a day
+    this.say([...this.txAt("cons.dream", k), ...this.tx("cons.bye")], () => this.consLeave(false)); return true; // then "nice chatting", and he heads home
   }
   consInfo() {
     const C = this.cons, n = C && C.npc, talks = " Days you've caught him: " + (this.progress.consTalks || 0) + ".";
     if (!C) return (this.closing ? "In the basement." : "In the basement until the closing announcement.") + talks;
     const where = n ? (n.where === "museum" ? ((this.zoneAt(this.rooms.museum, n.x, n.y) || {}).name || "the museum") : ROOMS[n.where].name.replace(/\s+/g, " ") ) : "the basement";
-    return (C.state === "dream" ? "Dreaming in front of a case in " + where + " until its lights go off" : C.state === "home" ? "Heading back to the basement (now in " + where + "), avoiding you" : "Back in the basement") + "." + (C.talked ? " You caught him this closing." : "") + talks;
+    return (C.state === "dream" ? "Dreaming in front of a case in " + where + " until you talk to him or its lights go off" : C.state === "home" ? "Heading home through the front doors (now in " + where + ")" + (C.dark ? ", avoiding you" : "") : "Gone home for the night; the basement's empty") + "." + (C.talked ? " You caught him this closing." : "") + talks;
   }
   tourInfo() {
     const T = this.tour; if (!T || !T.on) return "";
@@ -7557,7 +7576,7 @@ class Game {
   supplyInfo() {
     const S = this.sup; if (!S) return "";
     const Q = this.rooms.museum ? this.rooms.museum.npcs.filter(n => n.queue && n.queue.phase === "in").length : 0;
-    const box = k => S.boxes.some(b => b.kind === k) ? "in the basement" : this.carryBox === k ? "in your hands" : "brought up";
+    const box = k => { const b = S.boxes.find(b => b.kind === k); return b ? (b.room === "storage" ? "in the basement" : "set down in " + ROOMS[b.room].name.replace(/\s+/g, " ")) : this.carryBox === k ? "in your hands" : "brought up"; };
     return "Supplies: " + (S.shopDone && !S.boxes.some(b => b.kind === "shop") && this.carryBox !== "shop" ? (this.director().problems.includes("stock") ? "shop stock brought up" : "the shop's fine") : "shop stock " + box("shop") + (this.rooms.museum && this.rooms.museum.npcs.some(n => n.stocking) ? " (the shopkeeper's stocking)" : ""))
       + "; " + (S.cafeNeeded ? "café supplies " + box("cafe") : "the café's prepped") + ". Line: " + Q + " waiting, " + Math.round(this.serveTime() / 60) + " s an order.";
   }
@@ -7679,7 +7698,7 @@ class Game {
     const d = this.director(), key = todayISO() + ":" + d.loop;
     let J = this.jan;
     if (!J || J.key !== key) { // a new visit (or the loop started over, or a new day)
-      const n = J ? J.npc : { sheet: "janitor", janitor: true, staff: true, role: "janitor", x: 0, y: 0, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 0, lines: [], lineI: -1 };
+      const n = J ? Object.assign(J.npc, { leaving: false, gone: false }) : { sheet: "janitor", janitor: true, staff: true, role: "janitor", x: 0, y: 0, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 0, lines: [], lineI: -1 };
       if (!J) { const [x, y] = this.janStand("lobby", "staff"); n.x = x; n.y = y; n.alpha = 0; n.fadeIn = true; } // out of the staff door
       J = this.jan = { key, gen: this.worldGen, stops: this.janPlan(d.loop), i: 0, mode: "go", t: 0, eta: -1, phase: "chores", npc: n, room: J ? J.room : "lobby", watered: 0, stuck: 0 };
     } else if (J.gen !== this.worldGen) { // the museum was rebuilt (usually the pack loading just after the page opens): the same chores, on the new map
@@ -7688,17 +7707,20 @@ class Game {
       if (!R || !R.solid[n.y] || R.solid[n.y][n.x] !== false) { J.room = R ? J.room : "lobby"; const [x, y] = J.room === "lobby" ? this.janStand("lobby", "staff") : this.janArrive(J.room, "lobby"); n.x = x; n.y = y; } // stood somewhere that's a wall now
     }
     const n = J.npc;
+    if (J.phase === "gone") { if (!n.leaving) for (const id in this.rooms) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== n); return; } // gone home for the night
     for (const id in this.rooms) { const R = this.rooms[id], has = R.npcs.includes(n); if (id === J.room && !has) R.npcs.push(n); else if (id !== J.room && has) R.npcs = R.npcs.filter(m => m !== n); }
     // What he says depends on what he's doing.
     let stop = J.phase === "chores" ? J.stops[J.i] : J.phase === "plants" ? J.cur : J.brk;
-    const say = J.phase === "break" ? (J.early ? "jan.early" : "jan.break") : J.phase === "plants" ? (d.over ? "jan.overtime" : "jan.plants") : J.mode === "wait" ? "jan.wait" : J.i === 0 && J.mode === "go" ? "jan.start" : stop && stop.act === "empty" ? "jan.trash" : "jan.sweep";
+    const say = J.phase === "break" ? (J.brk && J.brk.act === "home" ? "jan.home" : J.early ? "jan.early" : "jan.break") : J.phase === "plants" ? (d.over ? "jan.overtime" : "jan.plants") : J.mode === "wait" ? "jan.wait" : J.i === 0 && J.mode === "go" ? "jan.start" : stop && stop.act === "empty" ? "jan.trash" : "jan.sweep";
     if (J.say !== say) { J.say = say; n.lines = this.pack.settings.text[say] || (TEXT[say] && TEXT[say].v) || [[say]]; n.lineI = -1; }
     const vis = J.room === this.room.id;
     if (!vis) { // out of sight: finish any step or fade-in at once (only the room you're in moves people along)
       if (n.moving) { const [dx, dy] = DIRS[n.dir]; n.x += dx; n.y += dy; n.moving = false; n.prog = 0; }
       if (n.fadeIn) { n.fadeIn = false; delete n.alpha; }
     }
-    if (d.paused || this.tut || this.closing || (vis && this.mode !== "walk") || n.moving || n.fadeIn) return; // the clock's stopped, or he's mid-step, or you're talking to him
+    if (d.paused || this.tut || (vis && this.mode !== "walk") || n.moving || n.fadeIn) return; // the clock's stopped, or he's mid-step, or you're talking to him
+    const late = d.over || this.closing; // the loop's over, or closing time: no more waiting for the next quarter
+    if (this.closing && J.phase === "break" && (!J.brk || J.brk.act !== "home")) { J.brk = { room: "lobby", at: ROOMS.lobby.exitTo || ROOMS.lobby.spawn, dir: "down", act: "home", dur: 1 }; J.mode = "go"; } // done for the day: home through the front doors
     if (J.door) { // through a door: fade out, and on into the next room
       if (vis && (n.alpha = (n.alpha === undefined ? 1 : n.alpha) - 1 / 24) > 0) return;
       const from = J.room; J.room = J.door; J.door = null; const [x, y] = this.janArrive(J.room, from); n.x = x; n.y = y; n.route = null; J.eta = -1;
@@ -7707,11 +7729,11 @@ class Game {
     }
     // Which stop is next.
     if (J.phase === "chores" && J.mode !== "act") {
-      if (!stop) { if (d.beat >= 3 || d.over) { J.phase = "plants"; J.cur = null; } else J.mode = "wait"; }
-      else if (stop.notBefore > d.beat && !d.over) J.mode = "wait";
+      if (!stop) { if (d.beat >= 3 || late) { J.phase = "plants"; J.cur = null; } else J.mode = "wait"; }
+      else if (stop.notBefore > d.beat && !late) J.mode = "wait";
       else if (J.mode === "wait") J.mode = "go";
     }
-    if (J.phase === "plants" && !J.cur) { J.cur = this.janNextPlant(J.room, n.x, n.y); J.mode = "go"; if (!J.cur) { J.phase = "break"; J.early = !J.watered && !d.over; J.brk = this.janBreakSpot(); } }
+    if (J.phase === "plants" && !J.cur) { J.cur = this.janNextPlant(J.room, n.x, n.y); J.mode = "go"; if (!J.cur) { J.phase = "break"; J.early = !J.watered && !late; J.brk = this.janBreakSpot(); } }
     if (J.phase === "break" && !J.brk) J.brk = this.janBreakSpot();
     if (J.mode !== "wait") { J.fill = null; J.fillT = 0; if (J.mode !== "act") n.sweep = false; }
     else if (J.fillT > 0) { n.sweep = true; if (--J.fillT <= 0) { J.fill = null; n.sweep = false; } return; }
@@ -7735,6 +7757,7 @@ class Game {
         const more = J.stops.slice(J.i + 1).some(st => st.act === "empty" && st.chore === stop.chore); n.trashBag = more && stop.room !== "staff";
       }
       if (stop.lit) { const L = this.litter && this.litter[stop.room]; if (L) { const i = L.indexOf(stop.lit); if (i >= 0) L.splice(i, 1); } J.lit = null; J.swept = (J.swept || 0) + 1; J.mode = "go"; return; }
+      if (stop.act === "home") { J.phase = "gone"; if (vis) { n.leaving = true; n.leaveT = 0; n.alpha = 1; } return; } // out the front doors
       if (J.phase === "chores") J.i++; else if (J.phase === "plants") J.cur = null;
       J.mode = "go"; return;
     }
@@ -7762,7 +7785,7 @@ class Game {
     const J = this.jan; if (!J) return "";
     const R = ROOMS[J.room], z = J.room === "museum" && this.rooms.museum ? this.zoneAt(this.rooms.museum, J.npc.x, J.npc.y) : null, where = z ? z.name : R ? R.name : J.room;
     const st = J.phase === "chores" ? J.stops[J.i] : J.cur;
-    const what = J.door ? "going through a door" : J.lit ? "sweeping up litter (" + (J.swept || 0) + " so far)" : J.phase === "break" ? (J.early ? "on an early break" : "on his break") : J.phase === "plants" ? (this.director().over ? "overtime: " : "") + "watering " + (st ? "the " + (st.name || "plant") : "plants") + " (" + J.watered + " so far)"
+    const what = J.door ? "going through a door" : J.lit ? "sweeping up litter (" + (J.swept || 0) + " so far)" : J.phase === "gone" ? "gone home for the night" : J.phase === "break" ? (J.brk && J.brk.act === "home" ? "done for the day, heading home" : J.early ? "on an early break" : "on his break") : J.phase === "plants" ? (this.director().over ? "overtime: " : "") + "watering " + (st ? "the " + (st.name || "plant") : "plants") + " (" + J.watered + " so far)"
       : J.mode === "wait" ? "between chores, waiting for the next quarter" : st ? (st.act === "empty" ? "taking out the trash" : "sweeping " + st.where) + " (chore " + st.chore + " of 3)" : "";
     return "Janitor: " + what + ", in " + where + ".";
   }
@@ -8420,7 +8443,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 step 6b";
+const VERSION = "2026-11-18 step 6c";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
