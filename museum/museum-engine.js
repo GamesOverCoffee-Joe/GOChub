@@ -2330,6 +2330,12 @@ const TEXT = {
   "cat.pet":           { g: "The cat", l: "Petting the cat (takes turns)", v: [["You pet {cat}.", "Purrrrr. Back to sleep."], ["{cat} stretches, blinks at you, and curls up tighter."], ["You scratch {cat} behind the ears.", "A tiny, approving mrrp."]] },
   "bench.wake":        { g: "Sitting", l: "Waking up on a bench", v: [["You wake up with a start.", "How long were you out?"]] },
   "drink.served":      { g: "Café", l: "Barista hands you a drink", v: [["Here's your {drink}. Careful, it's hot.", "Grab a seat if you like."]] },
+  "brew.ask":          { g: "Café", l: "The staff coffee maker: make yourself a cup? (free, but slow)", by: "claude", v: [["The staff coffee maker. It makes one cup at a time. Slowly. Make a cup?"]] },
+  "brew.start":        { g: "Café", l: "Starting the staff coffee maker (shown in the corner; one at random)", by: "claude", v: [["*click* ...*whirr*"], ["The machine wakes up. Grudgingly."]] },
+  "brew.wait":         { g: "Café", l: "While the staff coffee brews (shown in the corner every few seconds; one at random)", by: "claude", v: [["*drip*"], ["...*drip*"], ["Still going."], ["*gurgle*"], ["Is it... done? No."], ["You could have walked to the café by now."]] },
+  "brew.done":         { g: "Café", l: "The staff coffee's finally ready", by: "claude", v: [["*ding*", "One cup of staff coffee. It smells like a cardboard box."]] },
+  "brew.bad":          { g: "Café", l: "Finishing a cup of staff coffee", by: "claude", v: [["You finish the staff coffee.", "...", "That was not good. That was not good at all."], ["Every sip tasted like the inside of a filing cabinet.", "Now you're holding an empty cup."]] },
+  "brew.hands":        { g: "Café", l: "The staff coffee maker, with your hands full", by: "claude", v: [["My hands are full. And honestly, that's for the best."]] },
   "drink.finished":    { g: "Café", l: "Last sip", v: [["You finish your {drink}. Lovely.", "Now you're holding an empty cup."], ["That was better than the last one.", "My cup is empty."]] },
   "drink.refill":      { g: "Café", l: "Refill", v: [["Here you go. Refills are on the house."], ["Oh, another refill? Yeah, sure."], ["Pulling an all nighter?"]] },
   "drink.noRefill":    { g: "Café", l: "Turning down a refill", v: [["The bus tub is at the end of the counter."]] },
@@ -2892,6 +2898,7 @@ function buildRoom(id, pieces, o) {
       if (p.tall && p.blockTop && p.say) r.events[(p.x + i) + "," + (p.y - 1)] = { say: p.say };
       if (p.plant) r.events[(p.x + i) + "," + p.y] = { plant: p.plant, name: p.name };
       else if (p.key === "front_desk") r.events[(p.x + i) + "," + p.y] = i === 1 ? { usher: true } : { guestbook: true };
+      else if (p.key === "coffee_counter") r.events[(p.x + i) + "," + p.y] = { staffCoffee: true }; // the staff coffee maker: you can make a cup (slowly)
       else if (p.rules) r.events[(p.x + i) + "," + p.y] = { rules: true };
       else if (p.sit) { const bench = p.key === "bench" || p.key === "bench_side"; r.events[(p.x + i) + "," + p.y] = { sit: p.sit, x: p.x + i, y: p.y, say: p.say, bench }; if (p.key === "bench_side") { r.solid[p.y - 1][p.x + i] = true; r.events[(p.x + i) + "," + (p.y - 1)] = { sit: p.sit, x: p.x + i, y: p.y - 1, say: p.say, bench }; } } // a sideways bench: two seats, one above the other
       else if (p.event) { r.events[(p.x + i) + "," + p.y] = Object.assign({}, p.event); if (p.tall && p.blockTop) r.events[(p.x + i) + "," + (p.y - 1)] = Object.assign({}, p.event); }
@@ -6671,8 +6678,7 @@ class Game {
     p.bench = !!e.bench; this.sitIdle = 0; this.asleep = false;
     if (this.sundaySeat(e)) return; // Sunday: coffee with someone from the staff
     if (this.triviaSeat(e)) return; // Thursday: the free seat at the trivia tables
-    if (!this.drink && e.say) this.say(e.say);
-    else if (this.room.screenAt && this.episodes().length) this.screenAsk(); // the screening nook
+    if (this.room.screenAt && this.episodes().length) this.screenAsk(); // the screening nook
   }
   standUp(d) {
     const p = this.player; [p.x, p.y] = p.sitFrom; p.sitting = false; p.dir = d || p.dir; this.inputLock = true; this.asleep = false; this.sitIdle = 0; // a sip in progress finishes as you stand
@@ -6684,7 +6690,7 @@ class Game {
         this.sip = null;
         if (this.drink && ++this.drink.sips >= 4) { const n = this.drink.name.toLowerCase(); if (this.drink.kind === 2 && this.player.sitting && !this.player.bench) this.quest("finishOnStool");
           if (this.drink.mug) { this.drink = null; this.say(this.tx("gear.mugDone", { drink: n })); } // the empty mug goes back in your bag
-          else { this.drink.empty = true; this.say(this.tx("drink.finished", { drink: n })); } }
+          else { this.drink.empty = true; this.say(this.tx(this.drink.staffBrew ? "brew.bad" : "drink.finished", { drink: n })); } }
       }
       return;
     }
@@ -6787,6 +6793,7 @@ class Game {
     else if (e.shopCounter) this.shopCounter();
     else if (e.cafeSign) this.readCafeSign();
     else if (e.cafe) this.cafe();
+    else if (e.staffCoffee) this.staffCoffee();
     else if (e.trash) this.bin(e);
     else if (e.popcorn) this.popcornStand();
     else if (e.upcoming) this.workbench();
@@ -6920,7 +6927,7 @@ class Game {
       const c = this.cine; c.blend += (c.goal > c.blend ? 1 : -1) / 40; c.blend = Math.max(0, Math.min(1, c.blend));
       if (this.mode === "busy" && c.wait > 0 && --c.wait === 0 && c.then) { const fn = c.then; c.then = null; fn(); }
     }
-    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.living("director", () => this.updateDirector()); this.living("litter", () => this.updateLitter()); this.living("supplies", () => this.updateSupplies()); this.living("tour", () => this.updateTour()); this.living("side", () => this.updateSide()); this.living("cons", () => this.updateCons()); this.living("hold", () => this.updateLineHold()); this.living("rush", () => this.updateRush()); this.living("janitor", () => this.updateJanitor());
+    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.living("director", () => this.updateDirector()); this.living("litter", () => this.updateLitter()); this.living("supplies", () => this.updateSupplies()); this.living("tour", () => this.updateTour()); this.living("side", () => this.updateSide()); this.living("cons", () => this.updateCons()); this.living("hold", () => this.updateLineHold()); this.living("rush", () => this.updateRush()); this.living("brew", () => this.updateBrew()); this.living("janitor", () => this.updateJanitor());
     if (this.petT > 0) this.petT--;
     if (this.t % 20 === 0) this.flushToasts();
     if (this.flickerT > 0) this.flickerT--;
@@ -7464,7 +7471,7 @@ class Game {
       this.tourSay("usher.tired"); return;
     }
     if (T.phase <= 0) { this.tourSay("usher.ready"); return; }
-    if (T.phase >= 2) { this.tourSay("usher.back"); return; }
+    if (T.phase >= 2) { if (!T.usherBack) { T.usherBack = true; this.tourSay("usher.back"); } else this.staffTalk("usher"); return; } // back from the tour once, then his usual self
     this.staffTalk("usher");
   }
   tourTalk(n) {
@@ -7758,6 +7765,17 @@ class Game {
     const next = r.npcs.find(n => n.queue && n.queue.phase === "in" && n.x === Q[1][0] && n.y === Q[1][1]); if (!next) { this.holdT = 0; return; }
     this.holdT = (this.holdT || 0) + 1;
     if (this.holdT === 360 || (this.holdT > 360 && (this.holdT - 360) % 540 === 0)) { next.pose = { kind: "annoyed", t0: this.t, dur: 100 }; this.showLoc(this.tx("line.impatient", null, true).join(" ")); }
+  }
+  /* The staff coffee maker (Joe 10/11): you can make yourself a cup, free, but it takes a comically long time, and it's not good. */
+  staffCoffee() {
+    if (this.carryBox || this.carryItem || (this.drink && !this.drink.empty)) { this.say(this.tx("brew.hands")); return; }
+    this.ask(this.tx("brew.ask").join(" "), ["Make a cup", "Never mind"], i => { if (i !== 0) return; this.drink = null; this.mode = "busy"; this.brew = { t: 0 }; this.showLoc(this.tx("brew.start", null, true).join(" ")); }, 1);
+  }
+  updateBrew() {
+    const B = this.brew; if (!B) return; B.t++;
+    if (B.t % 150 === 0 && B.t < 600) this.showLoc(this.tx("brew.wait", null, true).join(" ")); // *drip* ... *drip*
+    if (B.t < 660) return;
+    this.brew = null; this.mode = "walk"; this.drink = { kind: 0, name: "Staff coffee", sips: 0, color: "#3a2418", iced: false, staffBrew: true }; this.sipClock = 240; this.say(this.tx("brew.done"));
   }
   updateRush() { // the barista's dash back to the till when you come to order while she's rushing about
     const R = this.rush; if (!R) return; const n = R.ba, [hx, hy, hd] = n.home;
@@ -8723,7 +8741,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 tuesday 2";
+const VERSION = "2026-11-18 tuesday 3";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

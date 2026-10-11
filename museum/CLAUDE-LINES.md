@@ -147,3 +147,14 @@ Not mine: "No refunds." and "You can't afford that." are Joe's.
 | Tour | The tour's kid off on his own, before anyone notices | Shh. I'm almost at the next level. / I'm just looking. My group's right over... there. Somewhere. / Did you know this one has a secret ending? I didn't either. I'm finding out. |
 
 (Removed: the teacher's head-count line at the rush, since nobody notices the kid's gone until they're back in the lobby.)
+
+## Added later (10/11, version "2026-11-18 tuesday 3")
+
+| Group | Line | What Claude wrote |
+| --- | --- | --- |
+| Café | The staff coffee maker: make a cup? | The staff coffee maker. It makes one cup at a time. Slowly. Make a cup? |
+| Café | Starting it (corner) | *click* ...*whirr* / The machine wakes up. Grudgingly. |
+| Café | While it brews (corner) | *drip* / ...*drip* / Still going. / *gurgle* / Is it... done? No. / You could have walked to the café by now. |
+| Café | It's ready | *ding* ⏎ One cup of staff coffee. It smells like a cardboard box. |
+| Café | Finishing a cup | You finish the staff coffee. ⏎ ... ⏎ That was not good. That was not good at all. / Every sip tasted like the inside of a filing cabinet. ⏎ Now you're holding an empty cup. |
+| Café | Hands full | My hands are full. And honestly, that's for the best. |
