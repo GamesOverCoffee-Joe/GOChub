@@ -113,6 +113,7 @@ const PAL = {
   visitorA:[null, "#e8c098", "#c83838", "#181820"],
   visitorB:[null, "#c89060", "#8850c0", "#181820"],
   visitorC:[null, "#f8e0c0", "#58a048", "#181820"],
+  breakitem: [null, "#4a4a5a", "#8a8aa0", "#181820", "#c84848", "#e8e0d0"], // band, cushion, outline, red, cream
   shirt:   [null, null, "#d8d8d8", null], // just the shirt pixels of the visitor sprites, gray so they tint to any color
 };
 
@@ -912,6 +913,12 @@ const GEN = {
     if (f === 0) { rect(a, 5, 10, 6, 2, 5); } else { rect(a, 6, 10, 3, 2, 6); px(a, 9, 10, 6); px(a, 6, 9, 4); }
     return outline(a);
   },
+  break_items: f => { // what's left on the staff room's break table: headphones, a lunchbox
+    const a = mk(16, 16);
+    if (f === 0) { rect(a, 4, 4, 8, 1, 1); rect(a, 3, 5, 1, 4, 1); rect(a, 12, 5, 1, 4, 1); rect(a, 2, 8, 3, 4, 4); rect(a, 11, 8, 3, 4, 4); px(a, 3, 9, 2); px(a, 12, 9, 2); }
+    else { rect(a, 3, 6, 10, 7, 4); rect(a, 3, 8, 10, 1, 5); rect(a, 6, 4, 4, 1, 1); px(a, 6, 5, 1); px(a, 9, 5, 1); }
+    return outline(a);
+  },
   lost_box: () => { const a = mk(16, 16); rect(a, 2, 5, 12, 10, 1); rect(a, 2, 5, 12, 2, 3); rect(a, 2, 14, 12, 1, 2); rect(a, 7, 5, 2, 10, 2); rect(a, 4, 9, 4, 3, 5); px(a, 5, 10, 4); px(a, 6, 10, 4); return outline(a, 4); },
   easel: () => { const a = mk(16, 32); for (let i = 0; i < 20; i++) { px(a, 4 + Math.round(i * 0.15), 11 + i, 2); px(a, 11 - Math.round(i * 0.15), 11 + i, 2); } rect(a, 7, 4, 2, 27, 1); rect(a, 2, 3, 12, 10, 1); rect(a, 3, 4, 10, 8, 3); rect(a, 4, 6, 3, 2, 4); rect(a, 8, 5, 3, 3, 5); rect(a, 5, 9, 5, 2, 6); rect(a, 2, 13, 12, 1, 2); return a; },
   popup_table: () => { const a = mk(32, 16); rect(a, 0, 4, 32, 8, 2); for (let x = 0; x < 32; x += 4) rect(a, x, 4, 2, 8, 1); rect(a, 0, 4, 32, 1, 4); rect(a, 2, 12, 2, 4, 3); rect(a, 28, 12, 2, 4, 3); return outline(a, 5); }, // outlined, like the rest of the furniture
@@ -1250,6 +1257,7 @@ const SLOTS = [
   { key: "kid", label: "Lost kid (Tuesdays)", group: "Days of the week", w: 16, h: 16, layout: "char", pal: "kid", gen: GEN.kid, note: "Smaller than the visitors. " + CHAR_NOTE },
   { key: "curator", label: "The curator", group: "Characters", w: 16, h: 16, layout: "char", pal: "curatorp", gen: GEN.character, note: "The curator in person: you, when you play on a curator badge; otherwise at a café table now and then on a Sunday, and at every unveiling. " + CHAR_NOTE },
   { key: "day_board", label: "Day board", group: "Days of the week", w: 32, h: 16, pal: "dayboard", gen: GEN.day_board, note: "In the lobby, left of the door to the museum. Today's day is chalked on it in the pixel font, centered on the slate (x 2 to 29, y 3 to 7)." },
+  { key: "break_items", label: "Break room items", group: "Days of the week", w: 16, h: 16, frames: 2, pal: "breakitem", gen: GEN.break_items, note: "2 frames side by side (32×16): headphones, then a lunchbox. Left on the staff room's break table by the two members on break (3–6 in the loop); one of them walks off with the other's at 6–9." },
   { key: "supply_box", label: "Delivery box", group: "Days of the week", w: 16, h: 16, frames: 2, pal: "supbox", gen: GEN.supply_box, note: "2 frames side by side (32×16): the shop's stock, then the café's supplies. They turn up by the basement's garage door when the loop needs them; carried over your head." },
   { key: "lost_box", label: "Misplaced box (Mondays)", group: "Days of the week", w: 16, h: 16, pal: "lbox", gen: GEN.lost_box, note: "Five of these turn up around the museum on Mondays." },
   { key: "easel", label: "The artist's easel (Wednesdays)", group: "Days of the week", w: 16, h: 32, pal: "easel", gen: GEN.easel, note: "Two tiles tall." },
@@ -1402,7 +1410,7 @@ const VISITOR_NAMES = ["Ada", "Bea", "Cal", "Dot", "Eli", "Fern", "Gus", "Hana",
 /* Chores that count toward staff points (recommending a visitor the right piece, and closing up, are worth 3). */
 const pts = n => n + " point" + (n === 1 ? "" : "s");
 /* Tokens each thing earns (curator, Tokens tab). Staff points (POINT_KINDS) are separate and don't change. */
-const REWARD_DEFAULTS = { dusted: 1, straightened: 1, watered: 1, mugs: 1, wiped: 1, litter: 1, supplies: 3, tour: 3, helped: 5, closings: 3, boxes: 5, kid: 3, artist: [1, 3, 6, 12], trivia: 1, triviaPerfect: 2 };
+const REWARD_DEFAULTS = { dusted: 1, straightened: 1, watered: 1, mugs: 1, wiped: 1, litter: 1, supplies: 3, tour: 3, item: 3, conservator: 2, helped: 5, closings: 3, boxes: 5, kid: 3, artist: [1, 3, 6, 12], trivia: 1, triviaPerfect: 2 };
 const POINT_KINDS = ["dusted", "straightened", "watered", "mugs", "wiped", "helped", "closings"];
 const chorePoints = k => (k === "helped" || k === "closings" ? 3 : 1);
 const TEST_BADGES = [{ badge: "0001", key: "QQQQQQ", name: "Test Staff" }];
@@ -2171,6 +2179,17 @@ const TEXT = {
   "line.inLine":       { g: "Supplies", l: "Asking someone in the café line to move", v: [["[PLACEHOLDER: sorry, I'm in line]"]] },
   "usher.tired":       { g: "Tour", l: "The usher before the tour, with no coffee (busy with the day's schedules)", v: [["[PLACEHOLDER: the usher, tired and busy with schedules, could really use a coffee]"]] },
   "usher.give":        { g: "Tour", l: "Offering the usher your drink ({drink})", v: [["[PLACEHOLDER: give the usher your {drink}?]"]] },
+  "usher.notCoffee":   { g: "Tour", l: "The usher, if you offer him a drink that isn't coffee ({drink})", v: [["[PLACEHOLDER: the usher politely turns down your {drink}; only coffee will do]"]] },
+  "cons.dream":        { g: "Conservator", l: "The conservator in the wings at 9–12, in front of an empty spot (version by how many visits you've talked to him there: the first, the second, and so on; the last repeats)", v: [["[PLACEHOLDER: the conservator, caught daydreaming at an empty spot: one day his own game could hang here]"], ["[PLACEHOLDER: the second time: he tells you a little about the game he made]"], ["[PLACEHOLDER: later visits: he's still dreaming, a bit more hopeful each time]"]] },
+  "cons.again":        { g: "Conservator", l: "The conservator, talked to again on the same loop", v: [["[PLACEHOLDER: the conservator, still at the empty spot, waves you on]"]] },
+  "item.break":        { g: "Break room", l: "Either member on break at 3–6 ({item}: the item on the table)", v: [["[PLACEHOLDER: break room chatter; the {item} is on the table]"]] },
+  "item.lost":         { g: "Break room", l: "The owner at 6–9, missing their item ({item}, {who}: the one who left)", v: [["[PLACEHOLDER: has anyone seen my {item}?]"]] },
+  "item.taker":        { g: "Break room", l: "Catching the one who's leaving with it ({item}, {owner})", v: [["[PLACEHOLDER: oh! this {item} isn't mine, it's {owner}'s. Could you take it back?]"]] },
+  "item.leaving":      { g: "Break room", l: "The one who's leaving, after handing it over", v: [["[PLACEHOLDER: heading home; thanks for catching that]"]] },
+  "item.carry":        { g: "Break room", l: "Talking to the one leaving while you still carry the item ({owner})", v: [["[PLACEHOLDER: you've got it, take it back to {owner}]"]] },
+  "item.thanks":       { g: "Break room", l: "Giving the owner their item back ({item}, {n}: tokens)", v: [["[PLACEHOLDER: my {item}! thanks ({n} tokens)]"]] },
+  "item.after":        { g: "Break room", l: "The owner after you've brought it back", v: [["[PLACEHOLDER: the owner, happy again]"]] },
+  "item.gone":         { g: "Break room", l: "The owner once it's walked out the door ({item}, {who})", v: [["[PLACEHOLDER: {who} must have taken my {item} home; I'll get it back next shift]"]] },
   "usher.thanks":      { g: "Tour", l: "The usher, after you bring him a coffee", v: [["[PLACEHOLDER: the usher thanks you for the coffee; he's ready for the tour]"]] },
   "usher.ready":       { g: "Tour", l: "The usher before the tour, with his coffee", v: [["[PLACEHOLDER: the usher, wide awake, about to lead the tour]"]] },
   "usher.back":        { g: "Tour", l: "The usher back at his desk after the tour", v: [["[PLACEHOLDER: the usher, back from the tour]"]] },
@@ -2409,8 +2428,8 @@ const BEATS = ["Settling in", "Getting busy", "Rush", "Winding down"]; // the vi
 const PROBLEMS = [ // the living museum's problems (LIVING-MUSEUM-PLAN.md): all of them every loop, each in its own quarter
   { id: "usher", who: "Usher", beat: 0, chain: "tour", label: "needs coffee", built: true }, { id: "stock", who: "Shopkeeper", beat: 0, chain: "supplies", label: "busy stocking", built: true },
   { id: "litter", who: "Visitors", beat: 1, chain: "litter", label: "litter by full bins", built: true }, { id: "tour", who: "Tour group", beat: 1, chain: "tour", label: "the guide fumbles", built: true },
-  { id: "line", who: "Barista", beat: 2, chain: "supplies", label: "the line blocks the walkway", built: true }, { id: "item", who: "Staff on break", beat: 2, chain: "", label: "someone's item goes missing" },
-  { id: "janitor", who: "Janitor", beat: 3, chain: "litter", label: "overtime", built: true }, { id: "conservator", who: "Conservator", beat: 3, chain: "", label: "dreaming in the wings" },
+  { id: "line", who: "Barista", beat: 2, chain: "supplies", label: "the line blocks the walkway", built: true }, { id: "item", who: "Staff on break", beat: 2, chain: "", label: "someone's item goes missing", built: true },
+  { id: "janitor", who: "Janitor", beat: 3, chain: "litter", label: "overtime", built: true }, { id: "conservator", who: "Conservator", beat: 3, chain: "", label: "dreaming in the wings", built: true },
 ];
 const CROWD_LINES = [["What a nice museum."], ["I come here on my lunch break."], ["Have you seen the cat today?"], ["I always read both sides of the cases."],
   ["My friend told me about this place."], ["Honestly, I'm mostly here for the café."], ["Is it me, or is it busy today?"], ["I didn't know games could go in museums."],
@@ -3681,6 +3700,7 @@ class Game {
     const keep = this.dirClock ? this.dirClock.paused : false; this.dirClock = { t: 0, paused: keep };
     if (this.jan) { const n = this.jan.npc; for (const id in this.rooms || {}) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== n); }
     if (this.tour) this.endTour(true);
+    this.endSide();
     this.jan = null; this.sup = null; this.carryBox = null; this.bins = {}; this.litter = {}; this.carry = 0;
     for (const id in this.rooms || {}) { this.rooms[id].fresh = true; for (const n of this.rooms[id].npcs) if (n.queue) n.queue = null; }
   }
@@ -6724,7 +6744,7 @@ class Game {
       const c = this.cine; c.blend += (c.goal > c.blend ? 1 : -1) / 40; c.blend = Math.max(0, Math.min(1, c.blend));
       if (this.mode === "busy" && c.wait > 0 && --c.wait === 0 && c.then) { const fn = c.then; c.then = null; fn(); }
     }
-    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.living("director", () => this.updateDirector()); this.living("litter", () => this.updateLitter()); this.living("supplies", () => this.updateSupplies()); this.living("tour", () => this.updateTour()); this.living("janitor", () => this.updateJanitor());
+    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.living("director", () => this.updateDirector()); this.living("litter", () => this.updateLitter()); this.living("supplies", () => this.updateSupplies()); this.living("tour", () => this.updateTour()); this.living("side", () => this.updateSide()); this.living("janitor", () => this.updateJanitor());
     if (this.petT > 0) this.petT--;
     if (this.t % 20 === 0) this.flushToasts();
     if (this.flickerT > 0) this.flickerT--;
@@ -6879,6 +6899,7 @@ class Game {
       else if (out) { out.moving = false; out.prog = 0; out.route = null; npc = out; }
     }
     if (npc && this.carryBox && (npc.role === "shopkeeper" || npc.role === "barista")) { this.deliver(npc.role); return; } // a delivery box for them
+    if (npc && (npc.consDream || npc.itemPair)) { if (!npc.walkTo && !npc.sitting) this.faceYou(npc, 240); if (this.sideTalk(npc)) return; } // the conservator out in the wings, the break room pair
     if (npc && (npc.tour || npc.tourUsher)) { npc.timer = 180; if (!npc.walkTo) this.faceYou(npc, 240); this.tourTalk(npc); return; } // the tour group
     if (npc && npc.role === "shopkeeper" && npc.stocking) { this.say(this.tx("shop.stocking")); return; }
     if (npc && npc.janitor && this.carry) { this.faceYou(npc, 240); const k = this.carry; this.carry = 0; for (let i = 0; i < k; i++) this.count("litter"); this.say(this.tx("jan.takes", { n: k })); return; } // into his can
@@ -7201,6 +7222,8 @@ class Game {
     const T = this.tour, d = this.director();
     if (T.phase <= 0 && !T.coffee) {
       const dr = this.drink;
+      const coffee = dr && ((this.pack.settings.shop.drinks.find(x => x.id === "coffee") || {}).name === dr.name || /coffee|latte|espresso|mocha|cappuccino|americano|macchiato|cold brew/i.test(dr.name)); // the café's coffee, or anything coffee by its name (a coffee drink of the week)
+      if (dr && !dr.empty && !dr.mug && !dr.popcorn && !coffee) { this.tourSay("usher.notCoffee", { drink: dr.name.toLowerCase() }); return; }
       if (dr && !dr.empty && !dr.mug && !dr.popcorn) {
         this.ask(this.tx("usher.give", { drink: dr.name.toLowerCase() }).join(" "), ["Give it to him", "Keep it"], i => { if (i !== 0) return; this.drink = null; T.coffee = true; this.count("tour"); this.tourSay("usher.thanks"); }, 1);
         return;
@@ -7240,6 +7263,148 @@ class Game {
     if (T.phase === 2) { this.tourSay(T.mood === "happy" ? "tour.happy" : "tour.bored"); return; }
     if (T.phase === 3) { this.tourSay(T.kidDone ? "tour.bye" : "tour.regroup"); return; }
     this.tourSay("tour.bye");
+  }
+  /* ----- The two on their own (living museum, Step 6) -----
+     The conservator (9–12): leaves storage and stands in a wing in front of an empty spot, dreaming of the day his own game
+     goes up. Talk to him: not a fix, a moment; his lines grow over the visits you've talked to him there.
+     Staff on break (3–6, then 6–9): two Patreon members on shift take their break at the staff room table, an item on it
+     (headphones or a lunchbox). At 6–9 one of them heads for the front doors with the other's by mistake, has a word by the
+     doors, and leaves four fifths of the way into the quarter. Catch them, take it back to the owner in the staff room.
+     All of them are copies, walked about like the tour (tourMove), with their usual selves lifted out of the room meanwhile. */
+  sideState() {
+    const d = this.director(), key = todayISO() + ":" + d.loop;
+    if (this.side && this.side.key === key) { if (this.side.gen !== this.worldGen) this.sidePlan(this.side); return this.side; }
+    this.endSide();
+    let sd = strSeed(todayISO() + ":side:" + d.loop); const rnd = () => (sd = (Math.imul(sd, 1103515245) + 12345) >>> 0) / 4294967296;
+    const S = this.side = { key, cons: { on: d.problems.includes("conservator") && !!this.rooms.storage && !!this.rooms.museum, talked: false, phase: -1 },
+      item: { on: d.problems.includes("item") && !!this.rooms.staff && !!this.rooms.lobby, got: false, done: false, left: false, phase: -1 } };
+    const I = S.item; I.kind = (rnd() * 2) | 0; I.item = ["headphones", "lunchbox"][I.kind];
+    const all = (this.pack.settings.staff.members || []).filter(m => !this.staff || (m.badge ? m.badge !== this.staff.badge : m.name.toLowerCase() !== this.staff.name.toLowerCase()));
+    const seed = strSeed("members" + todayISO()), shift = all.map((m, i) => ({ m, k: hash(seed, i) })).sort((a, b) => a.k - b.k).map(x => x.m).slice(0, 2 + seed % 2); // who's on shift today (placeMembers)
+    const pick = shift.map(m => [rnd(), m]).sort((a, b) => a[0] - b[0]).map(x => x[1]).slice(0, 2);
+    while (pick.length < 2) pick.push({ name: ["A volunteer", "Another volunteer"][pick.length], shirts: [] }); // no members yet: stand-ins
+    const person = (m, i, extra) => Object.assign({ sheet: ["visitor_a", "visitor_b", "visitor_c"][(strSeed(m.name) + i) % 3], x: 0, y: 0, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 0, still: true, staff: true, member: m.name, where: "staff", gone: true, lines: [], lineI: -1 }, m.shirts && m.shirts.length ? { shirt: m.shirts[0] } : {}, extra);
+    I.owner = person(pick[0], 0, { itemPair: "owner" }); I.taker = person(pick[1], 1, { itemPair: "taker" });
+    this.sidePlan(S);
+    return S;
+  }
+  sidePlan(S) { // spots on the museum as it's built now (planned again once the pack loads)
+    S.gen = this.worldGen; const C = S.cons, I = S.item;
+    if (C.on) { // in front of an empty spot in a wing: a painting spot with nothing hung, an empty case, or failing those any case
+      const M = this.rooms.museum, room = (x, y) => { const z = this.zoneAt(M, x, y); return !!(z && z.kind === "room"); }, walk = (x, y) => M.solid[y] && M.solid[y][x] === false;
+      const hung = new Set((M.hung || []).map(h => h.x + "," + h.y)), ok = list => list.filter(o => room(o.at[0], o.at[1]) && walk(o.at[0], o.at[1]) && !M.events[o.at[0] + "," + o.at[1]]);
+      const spots = ok((ROOMS.museum.spots || []).filter(sp => Array.isArray(sp) && !hung.has(sp[0] + "," + sp[1])).map(([x, y]) => ({ at: [x, y + 2], dir: "up" })));
+      const empty = ok(M.cases.filter(c => !c.piece).map(c => ({ at: [c.x, c.y + 1], dir: "up" }))), any = ok(M.cases.map(c => ({ at: [c.x, c.y + 1], dir: "up" })));
+      const pool = spots.length ? spots : empty.length ? empty : any;
+      if (pool.length) C.spot = pool[strSeed(S.key + ":cons") % pool.length];
+      else { const z = (M.zones || []).find(z => z.kind === "room"); C.spot = { at: this.freeSpot(M, null, z && z.id) || this.freeSpot(M) || M.spawn || [10, 10], dir: "up" }; }
+      C.empty = !!(spots.length || empty.length); C.phase = -1;
+    }
+    if (I.on) { // around the break table (or the middle of the room, if it's been moved out)
+      const St = this.rooms.staff, t = St.props.find(p => p.key === "break_table"), at = t ? [t.x + 1, t.y] : [Math.floor(St.w / 2), Math.floor(St.h / 2)];
+      const around = this.tourAround(St, at, 2); I.seatO = around[0] || at; I.seatT = around[1] || around[0] || at; I.table = t ? { x: t.x + 1, y: t.y } : null;
+      const L = this.rooms.lobby, ex = ROOMS.lobby.exitTo || ROOMS.lobby.spawn; I.door = this.tourAround(L, ex, 3)[2] || this.tourAround(L, ex, 1)[0] || ex; // a word by the front doors, out of the doorway
+      I.phase = -1;
+    }
+  }
+  endSide() { // a new loop or visit: the copies out of every room, the originals back
+    const S = this.side; if (!S) return;
+    const all = [S.cons.npc, S.item.owner, S.item.taker].filter(Boolean);
+    for (const id in this.rooms || {}) this.rooms[id].npcs = this.rooms[id].npcs.filter(n => !all.includes(n));
+    if (S.cons.home && this.rooms && this.rooms.storage && !this.rooms.storage.npcs.some(n => n.role === "conservator")) this.rooms.storage.npcs.push(S.cons.home);
+    this.side = null; this.carryItem = null;
+    if (S.item.lifted) this.placeMembers();
+  }
+  updateSide() {
+    if (this.headless || this.tut || !this.rooms || !this.rooms.museum || !this.pack) return;
+    const S = this.sideState(), d = this.director(), C = S.cons, I = S.item;
+    const beat = this.closing || d.over ? 4 : d.beat, inBeat = (d.min - d.beat * d.minutes / 4) / (d.minutes / 4);
+    if (C.on) {
+      const out = beat === 3 ? 1 : 0, St = this.rooms.storage;
+      if (out !== C.phase) { C.phase = out;
+        if (out) { // off to the wings
+          const h = St.npcs.find(n => n.role === "conservator" && !n.consDream); if (h) { C.home = h; St.npcs = St.npcs.filter(n => n !== h); }
+          const from = C.home || { sheet: "shop_staff", x: 6, y: 7 };
+          if (!C.npc) C.npc = { sheet: from.sheet, x: from.x, y: from.y, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 0, still: true, staff: true, role: "conservator", consDream: true, where: "storage", lines: [], lineI: -1 };
+          C.npc.homeward = false; C.npc.gone = false; this.tourPlace(C.npc, "museum", C.spot.at, C.spot.dir);
+        } else if (C.npc) { const h = C.home; this.tourPlace(C.npc, "storage", h ? [h.x, h.y] : [6, 7], (h && h.dir) || "up"); C.npc.homeward = true; } // back to his crates
+      }
+      if (C.npc && C.npc.homeward && C.npc.where === "storage" && !C.npc.goal) { this.tourDrop(C.npc); C.npc = null; } // home: his usual self takes over
+      const usual = n => n.role === "conservator" && !n.consDream;
+      if (C.home) { if (C.npc) St.npcs = St.npcs.filter(n => !usual(n)); else if (!St.npcs.some(usual)) St.npcs.push(C.home); } // rebuilds put him back: not while he's out
+    }
+    if (I.on) {
+      const ph = beat === 1 ? 1 : beat === 2 ? (inBeat >= 0.8 ? 3 : 2) : beat === 3 ? 4 : 0, St = this.rooms.staff;
+      if (ph !== I.phase) { const was = I.phase; I.phase = ph;
+        if (ph === 0) { // before the break, or a new go at the loop
+          for (const id in this.rooms) this.rooms[id].npcs = this.rooms[id].npcs.filter(n => n !== I.owner && n !== I.taker);
+          I.owner.gone = I.taker.gone = true; I.got = I.done = I.left = false; this.carryItem = null;
+          if (I.lifted) { I.lifted = false; this.placeMembers(); }
+        } else {
+          if (was <= 0) { // on break: the pair at the table, their usual selves lifted out of the staff room
+            I.lifted = true;
+            for (const [n, at] of [[I.owner, I.seatO], [I.taker, I.seatT]]) { Object.assign(n, { gone: false, leaving: false, where: "staff", goal: null, walkTo: null }); delete n.alpha; if (this.room !== St) { n.x = at[0]; n.y = at[1]; } else this.tourPlace(n, "staff", at, "up"); n.dir = I.table ? this.janFace(at, I.table.x, I.table.y) : "up"; }
+            if (this.room === St) for (const [n, at] of [[I.owner, I.seatO], [I.taker, I.seatT]]) n.goal.dir = n.dir;
+            if (ph >= 3) { I.left = true; I.taker.gone = true; } // jumped straight past it: already gone home
+          }
+          if (ph === 2) this.tourPlace(I.taker, "lobby", I.door, "down");
+          if (ph >= 3 && !I.left) { // out through the front doors (with it, unless you caught them)
+            const n = I.taker; n.goal = null; n.walkTo = null; I.left = true;
+            if (n.where === "lobby" && this.room.id === "lobby") { n.leaving = true; n.leaveT = 0; n.alpha = 1; } else this.tourDrop(n);
+          }
+        }
+      }
+      if (I.lifted) { const names = [I.owner.member, I.taker.member]; St.npcs = St.npcs.filter(n => !(n.patron && names.includes(n.member))); } // rebuilds put their usual selves back: not while they're the pair
+    }
+    for (const n of [C.on && C.npc, I.on && I.phase >= 1 && I.owner, I.on && I.phase >= 1 && I.taker].filter(Boolean)) { // everyone in the room they're in, heading for their goal
+      if (n.leaving || n.gone) continue;
+      const R = this.rooms[n.where]; if (R && !R.npcs.includes(n)) { for (const id in this.rooms) if (id !== n.where) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== n); R.npcs.push(n); }
+      this.tourMove(n);
+    }
+  }
+  sideTalk(n) { // true when it's been handled
+    const S = this.side; if (!S) return false;
+    if (n.consDream) {
+      const d = this.dayState(); if (this.weekday() === 1 && d.boxes && !d.monDone) return false; // Monday's boxes still come first
+      const C = S.cons; if (C.talked) { this.say(this.tx("cons.again")); return true; }
+      C.talked = true; const k = this.progress.consTalks || 0; this.progress.consTalks = k + 1; this.count("conservator"); this.saveProgress();
+      this.say(this.txAt("cons.dream", k)); return true;
+    }
+    const I = S.item, vars = { item: I.item, owner: I.owner.member, who: I.taker.member, n: this.pack.settings.rewards.item };
+    if (I.phase === 1) { this.say(this.tx("item.break", vars)); return true; }
+    if (n.itemPair === "taker") {
+      if (!I.got) { I.got = true; this.carryItem = I.item; this.say(this.tx("item.taker", vars)); return true; }
+      this.say(this.tx(this.carryItem ? "item.carry" : "item.leaving", vars)); return true;
+    }
+    if (n.itemPair === "owner") {
+      if (I.done) { this.say(this.tx("item.after", vars)); return true; }
+      if (this.carryItem) { I.done = true; this.carryItem = null; this.count("item"); this.say(this.tx("item.thanks", vars)); return true; }
+      this.say(this.tx(I.left ? "item.gone" : "item.lost", vars)); return true;
+    }
+    return false;
+  }
+  sideInfo(which) { // for the curator's clock board
+    const S = this.side; if (!S) return "";
+    if (which === "cons") {
+      const C = S.cons; if (!C.on) return "Off this loop."; const n = C.npc, where = n ? (n.where === "museum" ? ((this.zoneAt(this.rooms.museum, n.x, n.y) || {}).name || "the museum") : ROOMS[n.where].name) : "Storage";
+      return (C.phase === 1 ? "Out in the wings, in front of " + (C.empty ? "an empty spot" : "a piece (no empty spots)") : "In storage until the last quarter") + "; now in " + where + "." + (C.talked ? " You've talked to him this loop." : "") + " Visits talked: " + (this.progress.consTalks || 0) + ".";
+    }
+    const I = S.item; if (!I.on) return "Off this loop.";
+    const st = ["not on break yet", "on break, the " + I.item + " on the table", I.taker.member + " heading for the front doors with " + I.owner.member + "'s " + I.item, I.taker.member + " has gone home", I.taker.member + " has gone home"][Math.max(0, I.phase)];
+    return I.owner.member + " and " + I.taker.member + ": " + st + "." + (I.done ? " Given back." : I.got ? " You have it." : I.left && I.phase >= 3 ? " It went with them." : "");
+  }
+  findSide(which) { // the curator's Find buttons: beside the conservator, or the break room pair
+    if (this.tut) return "tut";
+    const S = this.sideState(), I = S.item, list = which === "cons" ? (S.cons.on ? [S.cons.npc, this.rooms.storage && this.rooms.storage.npcs.find(n => n.role === "conservator")] : null) : I.on ? [I.phase === 2 ? I.taker : null, I.owner] : null;
+    if (!list) return "off";
+    for (const n of list) {
+      if (!n || n.gone || n.leaving) continue; const where = n.where || "storage", R = this.rooms[where]; if (!R) continue;
+      for (let rad = 1; rad <= 4; rad++) for (let dy = -rad; dy <= rad; dy++) for (let dx = -rad; dx <= rad; dx++) {
+        if (Math.abs(dx) + Math.abs(dy) !== rad) continue; const x = n.x + dx, y = n.y + dy;
+        if (this.tileFree(R, x, y) && !R.events[x + "," + y]) { this.warp(where, x, y, this.janFace([x, y], n.x, n.y)); return true; }
+      }
+    }
+    return which === "cons" ? "home" : "notyet";
   }
   tourInfo() {
     const T = this.tour; if (!T || !T.on) return "";
@@ -7386,7 +7551,7 @@ class Game {
     for (let i = 0; i < Q.length && n < k; i++) { const [x, y] = Q[i]; if (!this.tileFree(r, x, y) || (this.player.x === x && this.player.y === y)) continue; r.npcs.push(Object.assign(this.crowdPerson(x, y, this.cafeZone(r)), { queue: { phase: "in" }, drink: null, bag: false, dir: "up" })); n++; }
     return n;
   }
-  setProblems(ids) { this.forceProblems = ids; if (this.dirClock) this.dirClock.picks = null; this.sup = null; if (this.tour) this.endTour(true); }
+  setProblems(ids) { this.forceProblems = ids; if (this.dirClock) this.dirClock.picks = null; this.sup = null; if (this.tour) this.endTour(true); this.endSide(); }
   /* ----- Litter (living museum, Step 3: the litter chain) -----
      The bins in the lobby and the museum fill up as the visit goes on (faster while it's busy, on busy days, and on loops
      where the litter problem is one of the director's picks). A full bin overflows: whatever else goes in lands on the
@@ -7439,7 +7604,7 @@ class Game {
      He goes between the lobby, the museum and the staff room through their doors. Out of sight he keeps to the same
      schedule: he simply turns up at his next stop once he'd have got there. */
   janHop(from, to) { // the next room on his way: the lobby joins the museum and the staff room; the theater is off the museum
-    const LINKS = { lobby: ["museum", "staff"], museum: ["lobby", "screening"], staff: ["lobby"], screening: ["museum"] };
+    const LINKS = { lobby: ["museum", "staff", "storage"], museum: ["lobby", "screening"], staff: ["lobby"], screening: ["museum"], storage: ["lobby"] };
     const prev = { [from]: null }, q = [from];
     for (let i = 0; i < q.length; i++) for (const nx of LINKS[q[i]] || []) if (!(nx in prev)) { prev[nx] = q[i]; q.push(nx); }
     if (!(to in prev)) return "lobby"; let c = to; while (prev[c] !== from && prev[c] !== null) c = prev[c]; return c;
@@ -7449,13 +7614,13 @@ class Game {
     if (room === "museum" && toward === "lobby" && def.exitTo) return def.exitTo;
     for (const k in R.events) {
       const e = R.events[k]; if (!e.warp || e.warp[0] !== toward) continue;
-      const [x, y] = k.split(",").map(Number), at = [[0, 1], [0, -1], [1, 0], [-1, 0]].map(([dx, dy]) => [x + dx, y + dy]).find(([a, b]) => R.solid[b] && !R.solid[b][a]);
+      const [x, y] = k.split(",").map(Number), at = [[0, 1], [0, -1], [1, 0], [-1, 0]].map(([dx, dy]) => [x + dx, y + dy]).find(([a, b]) => R.solid[b] && R.solid[b][a] === false); // inside the room (a side door's outer neighbor is off the map)
       if (at) return at;
     }
     return def.spawn;
   }
   janArrive(room, from) { return room === "museum" && from === "lobby" ? (ROOMS.museum.enterAt || ROOMS.museum.spawn) : this.janStand(room, from); }
-  janBeside(R, x, y) { return [[0, 1], [1, 0], [-1, 0], [0, -1]].map(([dx, dy]) => [x + dx, y + dy]).find(([a, b]) => R.solid[b] && !R.solid[b][a] && !R.events[a + "," + b]); }
+  janBeside(R, x, y) { return [[0, 1], [1, 0], [-1, 0], [0, -1]].map(([dx, dy]) => [x + dx, y + dy]).find(([a, b]) => R.solid[b] && R.solid[b][a] === false && !R.events[a + "," + b]); }
   janFace(at, x, y) { return x > at[0] ? "right" : x < at[0] ? "left" : y > at[1] ? "down" : "up"; }
   janPlan(loop) { // this loop's three chores, the same for everyone on this day and loop
     let sd = strSeed(todayISO() + ":janitor:" + loop); const rnd = () => (sd = (Math.imul(sd, 1103515245) + 12345) >>> 0) / 4294967296;
@@ -8095,6 +8260,7 @@ class Game {
     for (const st of r.stairs) this.drawSlot(st.kind === "up" ? "stair_up" : "stair_down", 0, 0, st.x * T - cx, st.y * T - cy);
     this.drawReadBorders(r, cx, cy); // on the floor, under the cases and people
     for (const l of (this.litter && this.litter[r.id]) || []) this.drawSlot("litter", l.k, 0, l.x * T - cx + l.ox, l.y * T - cy + l.oy); // on the floor, under everyone
+    { const I = this.side && this.side.item; if (I && I.on && I.phase === 1 && I.table && r.id === "staff") this.drawSlot("break_items", I.kind, 0, I.table.x * T - cx, I.table.y * T - 8 - cy); } // the item on the break table
     for (const b of (this.sup && this.sup.boxes) || []) if (b.room === r.id) this.drawSlot("supply_box", b.kind === "cafe" ? 1 : 0, 0, b.x * T - cx, b.y * T - cy); // deliveries waiting by the garage door
     for (const c of r.cases) this.drawCase(c, cx, cy);
     for (const p of r.props) this.drawProp(p, cx, cy);
@@ -8239,7 +8405,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 lobby 2";
+const VERSION = "2026-11-18 step 6";
 window.GOQ = { PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
