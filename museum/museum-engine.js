@@ -4318,19 +4318,25 @@ class Game {
     }
     if (wd === 3 && m) { // Wednesday: the artist at his easel in one of the wings (picked together, so he always has one)
       const easelOk = (x, y) => this.tileFree(m, x, y) && !m.events[x + "," + y] && !this.byExhibit(m, x, y) && m.solid[y - 1] && m.solid[y - 1][x] === false && !this.byExhibit(m, x, y - 1);
-      if (d.art && !(m.solid[d.art.y] && m.solid[d.art.y][d.art.x] === false && d.art.ex !== undefined)) d.art = null; // a spot saved before the layout (or this rule) changed
+      // Never in anyone's way (Joe 10/12): the floor all round him and his easel must still join up, so a passage or doorway is never closed off.
+      const openAround = (x, ex, y) => { const lo = Math.min(x, ex) - 1, hi = Math.max(x, ex) + 1, ring = [];
+        for (let yy = y - 1; yy <= y + 1; yy++) for (let xx = lo; xx <= hi; xx++) if (!(yy === y && (xx === x || xx === ex)) && m.solid[yy] && m.solid[yy][xx] === false) ring.push(xx + "," + yy);
+        if (!ring.length) return false; const set = new Set(ring), seen = new Set([ring[0]]), q = [ring[0]];
+        while (q.length) { const [cx, cy] = q.pop().split(",").map(Number); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const k = (cx + dx) + "," + (cy + dy); if (set.has(k) && !seen.has(k)) { seen.add(k); q.push(k); } } }
+        return seen.size === set.size; };
+      if (d.art && !(m.solid[d.art.y] && m.solid[d.art.y][d.art.x] === false && d.art.ex !== undefined && openAround(d.art.x, d.art.ex, d.art.y))) d.art = null; // a spot saved before the layout (or this rule) changed
       if (!d.art) {
         const wings = this.wingZones(), z = wings[strSeed(todayISO() + "art" + this.daySeed()) % Math.max(1, wings.length)], spots = [];
         if (z) for (let y = 3; y < m.h - 1; y++) for (let x = 1; x < m.w - 1; x++) {
           if ((this.zoneAt(m, x, y) || {}).id !== z.id || !this.tileFree(m, x, y) || this.byExhibit(m, x, y) || m.events[x + "," + y] || (m.noWander && m.noWander.has(x + "," + y))) continue;
-          const ex = [x + 1, x - 1].find(e => easelOk(e, y)); if (ex !== undefined) spots.push({ x, y, ex });
+          const ex = [x + 1, x - 1].find(e => easelOk(e, y) && openAround(x, e, y)); if (ex !== undefined) spots.push({ x, y, ex });
         }
         if (spots.length) { d.art = spots[strSeed(todayISO() + "artspot" + this.daySeed()) % spots.length]; this.saveProgress(); } // somewhere new each Wednesday (Joe 10/11)
       }
       if (d.art && this.dayTile(m, d.art.x, d.art.y)) {
         const artist = this.dayNpc({ sheet: "visitor_b", shirt: "rainbow", x: d.art.x, y: d.art.y, artist: true, member: "The artist", dir: d.art.ex < d.art.x ? "left" : "right" });
         m.npcs.push(artist);
-        const ex = this.dayTile(m, d.art.ex, d.art.y) && easelOk(d.art.ex, d.art.y) ? d.art.ex : [d.art.x + 1, d.art.x - 1].find(e => easelOk(e, d.art.y));
+        const ex = this.dayTile(m, d.art.ex, d.art.y) && easelOk(d.art.ex, d.art.y) ? d.art.ex : [d.art.x + 1, d.art.x - 1].find(e => easelOk(e, d.art.y) && openAround(d.art.x, e, d.art.y));
         if (ex !== undefined) { m.props.push({ key: "easel", x: ex, y: d.art.y, tall: true }); m.solid[d.art.y][ex] = true; m.events[ex + "," + d.art.y] = { say: "wed.easel" }; artist.dir = ex < d.art.x ? "left" : "right"; }
       }
     }
@@ -9029,7 +9035,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 6";
+const VERSION = "2026-11-18 cards 7";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
