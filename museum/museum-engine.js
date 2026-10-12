@@ -1530,6 +1530,7 @@ function normalizePiece(p, i) {
     drinkPrice: Math.max(0, Math.min(99, Math.round(+p.drinkPrice || 0))), drinkIced: !!p.drinkIced, // the drink of the week's price, and whether it's served iced
     drinkColor: isHex(p.drinkColor) ? p.drinkColor : "", drinkLine: Array.isArray(p.drinkLine) ? p.drinkLine.map(x => str(x, 200)).filter(Boolean).slice(0, 6) : [], // its cup color, and what the barista says
     gift: p.gift && str(p.gift.name, 50) ? { name: str(p.gift.name, 50), description: str(p.gift.description, 160), price: Math.max(1, Math.min(99, Math.round(+p.gift.price || 5))) } : null, // and its gift
+    episodeTitle: str(p.episodeTitle, 140), cardBlurb: str(p.cardBlurb, 140), noCard: !!p.noCard, // its trading card: the episode's title (Cards tab fetches it), a blurb (else the hint), or no card at all
     hint: str(p.hint, 160), pick: !!p.pick, rel: str(p.rel, 30), genre: str(p.genre, 30), blend: str(p.blend, 30), // blend: a second category it also belongs to
     colors: colors.length >= 2 ? colors : ["#f0ecf8", "#a898d0", "#584a88", "#1a1430"],
     style: STYLES.includes(p.style) ? p.style : STYLES[strSeed(str(p.title, 80) || String(i)) % STYLES.length],
@@ -1626,7 +1627,11 @@ function normalizePack(p) {
     nicknames: Array.isArray(ofin.nicknames) ? ofin.nicknames.map(n => str(n, 40)).filter(Boolean).slice(0, 12) : ["DeVaughn", "Boss", "Mr. curator sir"] }; // what people call a curator badge
   // Gifts set on the piece itself (before gifts were shop items) become shop items.
   pieces.forEach(pc => { if (pc.gift && pc.gift.name && !items.some(it => it.gift === pc.id)) items.push({ id: "gift-" + pc.id, name: pc.gift.name, price: pc.gift.price, description: pc.gift.description, image: null, gift: pc.id }); delete pc.gift; });
-  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, relations, curious, life, visit, litter, line, genres, office, friday, rewards: normalizeRewards(p.settings && p.settings.rewards), tutorialRev: Math.max(1, Math.min(9999, Math.round(+(p.settings && p.settings.tutorialRev) || 1))) }, samples: !Array.isArray(p.pieces) };
+  // Trading cards (Cards tab): prices (a single, a pack of three, Bluu's rare and his cheap commons), the chance (percent) each
+  // card in a pack is rare, and how often (percent of Saturdays) Bluu has a rare. on: false hides cards from the shop.
+  const cdin = (p.settings && p.settings.cards) || {}, cn = (v, d, hi) => Math.max(0, Math.min(hi, Math.round(v === undefined ? d : +v || 0)));
+  const cards = { on: cdin.on !== false, single: cn(cdin.single, 10, 999), pack: cn(cdin.pack, 25, 999), rare: cn(cdin.rare, 20, 999), bluuCommon: cn(cdin.bluuCommon, 3, 999), packRare: cn(cdin.packRare, 2, 100), bluuRare: cn(cdin.bluuRare, 15, 100) };
+  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, relations, curious, life, visit, litter, line, genres, office, friday, cards, rewards: normalizeRewards(p.settings && p.settings.rewards), tutorialRev: Math.max(1, Math.min(9999, Math.round(+(p.settings && p.settings.tutorialRev) || 1))) }, samples: !Array.isArray(p.pieces) };
 }
 /* The curator's "Skip to tomorrow" moves every daily system forward together. */
 let DAY_SHIFT = 0;
@@ -2113,6 +2118,12 @@ const TEXT = {
   "thu.q.which":       { g: "Days of the week", l: "Thursday: a question about which game is in a wing ({room})", v: [["Which of these is in the {room}?"]] },
   "thu.questions":     { g: "Days of the week", l: "Thursday: your own questions (one per entry: the question, then the right answer, then three wrong ones; entries starting with [ are skipped)", v: [["[Your question]", "[Right answer]", "[Wrong answer]", "[Wrong answer]", "[Wrong answer]"]] },
   "screen.friday":     { g: "Screening nook", l: "The LED sign on Fridays, before the title (letters, numbers and : - . ! ? ' & , / only)", v: [["FRIDAY FEATURE:"]] },
+  "card.single":       { g: "Cards", l: "The gift shop's single trading card (its description)", by: "claude", v: [["One GOQ Museum trading card, sealed. Could be anyone in here."]] },
+  "card.pack":         { g: "Cards", l: "The gift shop's pack of three trading cards (its description)", by: "claude", v: [["Three cards in a foil pack. Every so often, one of them is shiny."]] },
+  "card.none":         { g: "Cards", l: "Opening your binder with no cards yet", by: "claude", v: [["Your binder's empty.", "The gift shop sells cards. Just saying."]] },
+  "card.fake":         { g: "Cards", l: "In your binder, a fake card from Bluu", by: "claude", v: [["Hang on. The gold is yellow marker.", "And they spelled it wrong."]] },
+  "sat.card":          { g: "Bluu", l: "Bluu's stall: a cheap common trading card (real, or not)", by: "claude", v: [["Mint condition. Barely touched it. Probably."]] },
+  "sat.rareCard":      { g: "Bluu", l: "Bluu's stall: a rare trading card (always real)", by: "claude", v: [["Shiny one, this. Don't ask where I got it.", "...It's real though. Swear down."]] },
   "sat.window":        { g: "Bluu", l: "The one heading on Bluu's stall window", v: [["No refunds."]] },
   "sat.exHat":         { g: "Bluu", l: "Bluu's stall: one of his exclusive hats (a GOQ hat in colors the gift shop never made)", by: "claude", v: [["A GOQ hat in colors the gift shop never made. Don't ask where he got it."]] },
   "sat.exShades":      { g: "Bluu", l: "Bluu's stall: one of his exclusive shades (colored frames)", by: "claude", v: [["GOQ shades with custom frames. You won't find these in the gift shop."]] },
@@ -3359,6 +3370,7 @@ class Game {
     el.shop = h("gt-box gt-shop");
     el.cafe = h("gt-box gt-shop gt-cafe");
     el.album = h("gt-box gt-shop gt-album");
+    el.cardView = h("gt-cardview"); el.cardView.addEventListener("click", e => { e.stopPropagation(); this.press("a"); });
     el.reader = h("gt-box gt-reader");
     el.reader.addEventListener("click", e => { if (e.target.tagName === "A" || e.target.tagName === "BUTTON") return; e.stopPropagation(); if (this.rd && this.rd.sel >= 0) this.rdUse(); else this.press("a"); });
     el.badgeWrap = h("gt-badgewrap");
@@ -3452,6 +3464,44 @@ class Game {
 .gt-janky .gt-detail{transform:rotate(1deg);border-left-style:dashed}
 .gt-janky .gt-detail .pic img{transform:rotate(-10deg) scale(1.08)}
 .gt-janky .gt-detail .t{transform:rotate(-2deg);letter-spacing:.06em}
+@property --ga{syntax:'<angle>';inherits:false;initial-value:0deg}
+.gt-cardview{position:absolute;inset:0;z-index:9;display:none;flex-direction:column;align-items:center;justify-content:center;gap:calc(3px * var(--s));background:rgba(10,6,8,.78)}
+.gt-card-cap{font-family:var(--pixel, monospace);font-size:calc(6px * var(--s));color:#f4dca0;min-height:calc(6px * var(--s));text-shadow:calc(1px * var(--s)) calc(1px * var(--s)) 0 #000}
+.gt-card-cap.rare{color:#fff4c8;text-shadow:0 0 calc(4px * var(--s)) #ffd860,0 0 calc(2px * var(--s)) #ff8ab8}
+.gt-card-hint{font-family:var(--pixel, monospace);font-size:calc(4px * var(--s));color:#c8b898;max-width:calc(150px * var(--s));text-align:center;line-height:1.5}
+.gt-card{--g:#e8c070;position:relative;width:calc(104px * var(--s));height:calc(146px * var(--s));box-sizing:border-box;border-radius:calc(5px * var(--s));padding:calc(3px * var(--s));background:#7c2434;box-shadow:0 calc(3px * var(--s)) calc(8px * var(--s)) rgba(0,0,0,.6);flex:none;text-align:left}
+.gt-card .in{position:relative;height:100%;box-sizing:border-box;border-radius:calc(3px * var(--s));background:#141012;border:calc(1px * var(--s)) solid #e8c070;padding:calc(3.5px * var(--s));display:flex;flex-direction:column;overflow:hidden}
+.gt-card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:calc(3px * var(--s))}
+.gt-card .t{font-family:var(--pixel, monospace);font-size:calc(4.5px * var(--s));line-height:1.35;color:#f4dca0;text-shadow:calc(.5px * var(--s)) calc(.5px * var(--s)) 0 #000}
+.gt-card .no{font-family:var(--pixel, monospace);font-size:calc(3px * var(--s));color:#9a8060;white-space:nowrap}
+.gt-card .art{margin-top:calc(3px * var(--s));height:calc(53px * var(--s));flex:none;background:#000 center/cover;border:calc(1px * var(--s)) solid #e8c070;box-shadow:0 0 0 calc(1px * var(--s)) #4a1420;position:relative;overflow:hidden}
+.gt-card .accent{height:calc(1.5px * var(--s));margin-top:calc(3px * var(--s));flex:none;background:var(--g);border-radius:calc(1px * var(--s));box-shadow:0 0 calc(3px * var(--s)) var(--g)}
+.gt-card .bl{flex:1;margin-top:calc(3px * var(--s));font-family:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;font-style:italic;font-size:calc(5.5px * var(--s));line-height:1.3;color:#efe6d2;overflow:hidden}
+.gt-card .ep{margin:0 calc(-3.5px * var(--s));padding:calc(2.5px * var(--s)) calc(4px * var(--s));background:#7c2434;border-top:calc(.5px * var(--s)) solid #e8c070;border-bottom:calc(.5px * var(--s)) solid #e8c070;font-family:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;font-size:calc(4.5px * var(--s));line-height:1.25;color:#f4dca0;display:flex;gap:calc(2.5px * var(--s));align-items:center}
+.gt-card .ep b{color:#fbe7a8;font-size:calc(3.5px * var(--s))}
+.gt-card .foot{display:flex;justify-content:center;padding-top:calc(2.5px * var(--s))}
+.gt-card .foot svg{width:calc(38px * var(--s));height:auto;display:block}
+.gt-card.rare{background:conic-gradient(from var(--ga),#e8c070,#fff4c8,#ff8ab8,#8ad8ff,#c8ffb0,#fff4c8,#e8c070,#a87a30,#e8c070);animation:gtCardSpin 3.2s linear infinite}
+.gt-card.rare .in{border-color:#fff4c8}
+.gt-card.rare .in::after{content:"";position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 42%,rgba(255,250,220,.55) 50%,transparent 58%);transform:translateX(-70%);animation:gtCardSheen 3.2s ease-in-out infinite;pointer-events:none;mix-blend-mode:screen}
+.gt-card.rare .art::after{content:"";position:absolute;inset:0;background:linear-gradient(125deg,rgba(255,120,200,.22),rgba(120,220,255,.22),rgba(255,240,120,.22),rgba(255,120,200,.22));background-size:300% 300%;animation:gtCardHolo 3.2s linear infinite;mix-blend-mode:screen}
+.gt-card .spark{position:absolute;width:calc(4.5px * var(--s));height:calc(4.5px * var(--s));pointer-events:none;animation:gtCardTw 1.6s ease-in-out infinite}
+.gt-card .spark::before,.gt-card .spark::after{content:"";position:absolute;background:#fffbe8;left:calc(2px * var(--s));top:0;width:calc(.5px * var(--s));height:calc(4.5px * var(--s));box-shadow:0 0 calc(1.5px * var(--s)) #fff}
+.gt-card .spark::after{left:0;top:calc(2px * var(--s));width:calc(4.5px * var(--s));height:calc(.5px * var(--s))}
+.gt-card.fake{background:#a04858;transform:rotate(-1.2deg)}
+.gt-card.fake .in{border-color:#d8cc48}
+.gt-card.fake .t{color:#e8e070}
+.gt-card.fake .art{filter:saturate(.55) hue-rotate(18deg);border-color:#d8cc48}
+.gt-card.fake .ep{background:#a04858}
+@keyframes gtCardSpin{to{--ga:360deg}}
+@keyframes gtCardSheen{0%,15%{transform:translateX(-70%)}55%,100%{transform:translateX(70%)}}
+@keyframes gtCardHolo{to{background-position:300% 300%}}
+@keyframes gtCardTw{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1)}}
+.gt-binder{grid-template-columns:repeat(6,1fr) !important}
+.gt-bslot{aspect-ratio:5/7;border:calc(1px * var(--s)) solid #7c2434;background:#241a1c center/cover;color:#7a6a58;font-family:var(--pixel, monospace);font-size:calc(5px * var(--s));cursor:pointer;padding:0;border-radius:calc(1.5px * var(--s))}
+.gt-bslot.empty{background:#2a2226;border-style:dashed}
+.gt-bslot.rare{border-color:#f4dca0;box-shadow:0 0 calc(3px * var(--s)) #ffd860}
+.gt-bslot.on{outline:calc(1.5px * var(--s)) solid #e8c070;outline-offset:calc(1px * var(--s))}
 .gt-detail{overflow:auto;border-left:calc(1px * var(--s)) solid #c9b89a;padding-left:calc(5px * var(--s));display:flex;flex-direction:column;gap:calc(2px * var(--s))}
 .gt-detail .pic{position:relative;align-self:center;flex:none;display:grid;place-items:center;width:calc(34px * var(--s));height:calc(34px * var(--s));border-radius:50%;background:radial-gradient(circle,#fffaf0 0 54%,#e6cfa6 55% 66%,#d6b98a 67% 70%,transparent 71%)}
 .gt-detail .pic img{width:calc(24px * var(--s));height:calc(24px * var(--s));image-rendering:pixelated;object-fit:contain}
@@ -4556,6 +4606,14 @@ class Game {
       const it = { id: "bluu-" + key + "-x", name: fake ? misspell(ex.name, h("spx")) : ex.name, base: ex.id, color: null, price: Math.max(1, Math.round(basePrice * bl.markup * (ex.ultra ? 2 : 1))), description: this.tx(ex.ultra ? "sat.ultra" : ex.use === "hat" ? "sat.exHat" : "sat.exShades").join(" "), image: null, popup: true, exclusive: true, fake, real: !fake, why: fake ? "spelling" : "" };
       items.splice(Math.min(items.length, h("slot") % 3), 0, it); if (items.length > 3) items.pop();
     }
+    { // trading cards (Joe 10/11): a cheap common (real, or not), and on some Saturdays a rare (always real)
+      const L = this.cardList(), C = this.pack.settings.cards;
+      if (L.length && C.on) {
+        const cp = L[h("card") % L.length], fake = h("cardfake") % 100 < bl.fakes;
+        items.push({ id: "bluu-" + key + "-cc", name: (fake ? misspell(cp.title, strSeed(cp.id)) : cp.title) + " card", base: "card", card: cp.id, cardKind: fake ? "f" : "c", color: null, price: C.bluuCommon, description: this.tx("sat.card").join(" "), image: null, popup: true, fake, real: !fake, why: fake ? "spelling" : "" });
+        if (h("rarecard") % 100 < C.bluuRare) { const rp = L[h("rarepick") % L.length]; items.push({ id: "bluu-" + key + "-cr", name: rp.title + " card (shiny)", base: "card", card: rp.id, cardKind: "r", color: null, price: C.rare, description: this.tx("sat.rareCard").join(" "), image: null, popup: true, fake: false, real: true }); }
+      }
+    }
     if (off) return items;
     return (this.popupCache = { key, items }).items;
   }
@@ -5635,6 +5693,7 @@ class Game {
     return (this.cache[ck] = c);
   }
   itemIcon(it) {
+    if (it.cardSlot) return this.cardIcon(it.cardSlot); if (it.base === "card") return this.cardIcon(it.cardKind === "r" ? "rare" : "single"); // trading cards
     const ck = "icon|" + it.id + "|" + (it.image ? it.image.length : 0);
     if (this.cache[ck]) return this.cache[ck];
     if (it.popup) { // a pop-up find: its base item (or Joe), recolored
@@ -5680,9 +5739,7 @@ class Game {
   openStall() { this.stall = true; this.el.shop.classList.add("gt-janky"); this.openShop(); } // Saturday: Bluu's stall, in the gift shop's window
   shopRows() {
     if (this.stall) return [...this.popupItems().map(it => ({ item: it, popup: true })), { leave: true }]; // Bluu's three things
-    const f = this.featuredId(), items = this.stockToday().slice().sort((a, b) => (b.id === f) - (a.id === f)), gift = this.weekGift();
-    if (gift) { if (gift.id === f) items.unshift(gift); else items.splice(items.length && items[0].id === f ? 1 : 0, 0, gift); } // this week's unveil gift, on sale until the next one
-    return [...items.map(it => ({ item: it })), { shirt: true }, { collection: true }, { leave: true }];
+    return [...this.shopLineup().map(it => ({ item: it })), { shirt: true }, { collection: true }, { leave: true }]; // featured, two merch, a card, a pack (Joe 10/11)
   }
   /* A split menu: the list on the left, the highlighted thing large on the right. Sized to the box, so nothing runs off the bottom. */
   fitSplit(box, split) { const bs = getComputedStyle(box), room = box.getBoundingClientRect().bottom - split.getBoundingClientRect().top - parseFloat(bs.paddingBottom) - parseFloat(bs.borderBottomWidth) - 4 * (this.scale || 1); if (room > 30) split.style.height = Math.floor(room) + "px";
@@ -5732,7 +5789,7 @@ class Game {
     const sel = list.children[this.shopSel]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: "nearest" });
   }
   renderStall() { // the same layout as the gift shop, but nothing's quite level (CSS: .gt-janky)
-    const box = this.el.shop, rows = this.shopRows(), own = this.progress.popups || (this.progress.popups = []), mine = it => own.some(o => o.id === it.id);
+    const box = this.el.shop, rows = this.shopRows(), own = this.progress.popups || (this.progress.popups = []), mine = it => own.some(o => o.id === it.id) || (this.progress.bluuCards || []).includes(it.id);
     this.shopSel = Math.max(0, Math.min(rows.length - 1, this.shopSel)); box.innerHTML = "";
     const head = document.createElement("div"); head.className = "gt-shop-head";
     const t1 = document.createElement("span"); [...this.tx("sat.window").join(" ").toUpperCase()].forEach((ch, i) => { const c = document.createElement("span"); c.className = "jk"; c.textContent = ch === " " ? "\u00a0" : ch; c.style.transform = "rotate(" + ((hash(i, 7) % 15) - 7) + "deg) translateY(" + ((hash(i, 3) % 3) - 1) + "px)"; t1.appendChild(c); });
@@ -5760,9 +5817,13 @@ class Game {
     const r = this.shopRows()[this.shopSel], t = this.progress.tokens || 0, own = this.progress.popups || (this.progress.popups = []);
     if (r.leave) { this.closeShop(); return; }
     const it = r.item;
-    if (own.some(o => o.id === it.id)) this.shopMsg = this.tx("sat.owned").join(" ");
+    if (own.some(o => o.id === it.id) || (this.progress.bluuCards || []).includes(it.id)) this.shopMsg = this.tx("sat.owned").join(" ");
     else if (t < it.price) this.shopMsg = this.tx("sat.broke", { n: it.price }).join(" ");
     else if (this.shopConfirm !== it.id) { this.shopConfirm = it.id; this.shopMsg = "Buy " + it.name + " for " + it.price + " tokens? Press A again."; }
+    else if (it.base === "card") { // a card: into your binder (not Souvenirs), and you see it right away
+      this.progress.tokens = t - it.price; (this.progress.bluuCards || (this.progress.bluuCards = [])).push(it.id); this.shopConfirm = null; this.shopMsg = ""; this.updateHud(true);
+      const p = this.pack.pieces.find(q => q.id === it.card); if (p) { this.addCard(p.id, it.cardKind); this.showCards([{ p, kind: it.cardKind }], "shop"); return; }
+    }
     else { this.progress.tokens = t - it.price; own.push(it); this.progress.tally.popups = (this.progress.tally.popups || 0) + 1; this.saveProgress(); this.updateHud(true); this.shopConfirm = null; this.shopMsg = this.tx("sat.bought", { item: it.name }).join(" "); }
     this.renderShop();
   }
@@ -5779,6 +5840,12 @@ class Game {
       this.renderShop(); return;
     }
     const it = r.item;
+    if (it.cardSlot) { // a card or a pack: as many as you like; they open right away
+      if (t < it.price) this.shopMsg = "You need " + (it.price - t) + " more token" + (it.price - t === 1 ? "" : "s") + ". Chores earn tokens.";
+      else if (this.shopConfirm !== it.id) { this.shopConfirm = it.id; this.shopMsg = "Buy a " + (it.cardSlot === "pack" ? "pack of three" : "card") + " for " + it.price + " tokens? Press A again."; }
+      else { this.progress.tokens = t - it.price; this.shopConfirm = null; this.shopMsg = ""; this.updateHud(); const got = this.buyCards(it.cardSlot); this.showCards(got, "shop"); return; }
+      this.renderShop(); return;
+    }
     if (this.progress.items.includes(it.id)) this.shopMsg = "You already have this one.";
     else if (t < it.price) this.shopMsg = "You need " + (it.price - t) + " more token" + (it.price - t === 1 ? "" : "s") + ". Chores earn tokens.";
     else if (this.shopConfirm !== it.id) { this.shopConfirm = it.id; this.shopMsg = "Buy " + it.name + " for " + it.price + " tokens? Press A again."; }
@@ -5789,8 +5856,8 @@ class Game {
     this.renderShop();
   }
   /* Each stand (rack or shelving unit) shows one of today's stock, in Shop-tab order. A stand without an item gets trinkets. */
-  unitGoods(u) { const it = this.stockToday()[u], out = []; for (let k = 0; k < 6; k++) out.push(it ? { item: it } : { trinket: hash(u, k) % 8 }); return out; } // one item per stand, in menu order
-  rackItems(i) { const items = this.stockToday(); return [items[i] || null]; } // one item per stand, in menu order
+  unitGoods(u) { const it = this.shopLineup()[u], out = []; for (let k = 0; k < 6; k++) out.push(it ? { item: it } : { trinket: hash(u, k) % 8 }); return out; } // one item per stand, in menu order
+  rackItems(i) { const items = this.shopLineup(); return [items[i] || null]; } // one item per stand, in menu order
   browseUnit(u) { this.browseRack(u); } // each stand shows its one item, same as a rack
   browseRack(i) {
     const items = this.rackItems(i).filter(Boolean);
@@ -5807,6 +5874,96 @@ class Game {
       this.say([it.name.toUpperCase(), ...(it.description ? [it.description] : []), note], () => { this.el.cuImg.classList.remove("item"); show(k + 1); });
     };
     show(0);
+  }
+  /* ----- Trading cards (Joe 10/11) -----
+     One card for every piece on display (each unveil adds one), in a common and a rare (very shiny) form. The gift shop sells a
+     single (a random common) and a pack of three (each card has settings.cards.packRare percent to be rare). Bluu sells a cheap
+     common that might be fake, and on some Saturdays a real rare. progress.cards: { pieceId: { c, r, f } } (commons, rares, fakes). */
+  cardList() { const t = todayISO(); return this.pack.pieces.filter(p => !p.tut && !p.noCard && (!p.unveil || p.unveil <= t)).sort((a, b) => ((a.unveil || "") < (b.unveil || "") ? -1 : (a.unveil || "") > (b.unveil || "") ? 1 : 0)); }
+  cardsOwned() { return this.progress.cards || (this.progress.cards = {}); }
+  addCard(id, kind) { const o = this.cardsOwned(), c = o[id] || (o[id] = { c: 0, r: 0, f: 0 }); c[kind] = (c[kind] || 0) + 1; this.progress.tally.cards = (this.progress.tally.cards || 0) + 1; this.saveProgress(); }
+  randomCard(rare) { const L = this.cardList(); if (!L.length) return null; return { p: L[(Math.random() * L.length) | 0], kind: Math.random() * 100 < rare ? "r" : "c" }; }
+  cardItems() { const C = this.pack.settings.cards; return [{ id: "card-single", name: "Trading card", price: C.single, description: this.tx("card.single").join(" "), cardSlot: "single" }, { id: "card-pack", name: "Card pack (3)", price: C.pack, description: this.tx("card.pack").join(" "), cardSlot: "pack" }]; }
+  shopLineup(off) { // the gift shop (Joe 10/11): the featured item, two museum merch (anything else that isn't a card), a single card, a pack
+    const f = this.featuredId(off), feat = this.pack.settings.shop.items.find(it => it.id === f) || null, gift = this.weekGift();
+    const merch = [...(gift && (!feat || gift.id !== feat.id) ? [gift] : []), ...this.stockToday(off).filter(it => !feat || it.id !== feat.id)].slice(0, 2);
+    return [feat, ...merch, ...(this.pack.settings.cards.on && this.cardList().length ? this.cardItems() : [])].filter(Boolean);
+  }
+  buyCards(slot) { const out = []; for (let i = 0; i < (slot === "pack" ? 3 : 1); i++) { const c = this.randomCard(slot === "pack" ? this.pack.settings.cards.packRare : 0); if (c) out.push(c); } out.forEach(c => this.addCard(c.p.id, c.kind)); return out; }
+  cardIcon(kind) { // 16×16 for the shop list and the stands: a card (red, or gold for a rare), or a foil pack
+    const ck = "cardicon|" + kind; if (this.cache[ck]) return this.cache[ck];
+    const a = mk(16, 16);
+    if (kind === "pack") { rect(a, 3, 1, 10, 14, 1); for (let x = 3; x < 13; x += 2) { px(a, x, 1, 2); px(a, x + 1, 14, 2); } rect(a, 4, 3, 8, 1, 2); rect(a, 5, 5, 6, 6, 0); rect(a, 6, 6, 4, 4, 2); px(a, 7, 7, 3); rect(a, 4, 12, 8, 1, 2); }
+    else { rect(a, 3, 1, 10, 14, kind === "rare" ? 2 : 1); rect(a, 4, 2, 8, 12, 0); rect(a, 5, 3, 6, 5, 4); rect(a, 5, 9, 6, 1, 2); rect(a, 5, 11, 4, 1, 3); rect(a, 5, 12, 5, 1, 3); if (kind === "rare") { px(a, 12, 1, 3); px(a, 3, 14, 3); } }
+    return (this.cache[ck] = paint([outline(a, 5)], 16, 16, 1, ["#141012", "#9a3040", "#e8c070", "#fff4c8", "#6a8ad8", "#1a0c10"]));
+  }
+  museumLogo(fake) { // GOQ (after the banner's letters) in gold, MUSEUM in red under it. A fake: yellow marker, and spelled wrong
+    const g = fake ? "#d8cc48" : "url(#goqGold)", word = fake ? "MUSUEM" : "MUSEUM", L = '<path d="M86 26 A34 34 0 1 0 96 50 L66 50"/><circle cx="150" cy="50" r="34"/><circle cx="238" cy="50" r="34"/><path d="M247 62 L272 92"/>';
+    return '<svg viewBox="0 0 300 132" xmlns="http://www.w3.org/2000/svg" aria-label="GOQ Museum"><defs><linearGradient id="goqGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbe7a8"/><stop offset=".55" stop-color="#e8c070"/><stop offset="1" stop-color="#a87a30"/></linearGradient></defs>' +
+      '<g fill="none" stroke="#000" stroke-opacity=".55" stroke-width="12" transform="translate(2,3)">' + L + '</g><g fill="none" stroke="' + g + '" stroke-width="12">' + L + '</g>' +
+      '<rect x="28" y="112" width="58" height="2" fill="#e8c070"/><rect x="214" y="112" width="58" height="2" fill="#e8c070"/><text x="150" y="121" text-anchor="middle" font-family="Press Start 2P, monospace" font-size="15" letter-spacing="5" fill="#d8485a">' + word + '</text></svg>';
+  }
+  /* One card as a DOM element (the card view, the binder, the curator's Cards tab). kind: c common, r rare, f fake. */
+  cardElement(p, kind) {
+    const L = this.cardList(), no = Math.max(1, L.indexOf(p) + 1), mk2 = (cls, parent, tag) => { const e = document.createElement(tag || "div"); if (cls) e.className = cls; if (parent) parent.appendChild(e); return e; };
+    const genre = (this.pack.settings.genres || []).find(g => g.id === p.genre), card = mk2("gt-card" + (kind === "r" ? " rare" : kind === "f" ? " fake" : ""));
+    card.style.setProperty("--g", genre ? genre.color : "#e8c070");
+    const inn = mk2("in", card), top = mk2("top", inn);
+    mk2("t", top).textContent = kind === "f" ? misspell(p.title, strSeed(p.id)) : p.title;
+    mk2("no", top).textContent = String(no).padStart(2, "0") + "/" + String(L.length).padStart(2, "0");
+    const art = mk2("art", inn); art.style.backgroundImage = 'url("' + (p.image || this.pieceArt(p).toDataURL()) + '")'; if (!p.image) art.style.imageRendering = "pixelated";
+    mk2("accent", inn); // the category's color, as an accent (no name: Joe 10/11)
+    const hint = p.cardBlurb || (p.hint ? p.hint.charAt(0).toUpperCase() + p.hint.slice(1) + (/[.!?]$/.test(p.hint) ? "" : ".") : "");
+    mk2("bl", inn).textContent = hint;
+    const ep = mk2("ep", inn); mk2("", ep, "b").textContent = "\u25B6"; mk2("", ep, "span").textContent = p.episodeTitle || "Games Over Coffee";
+    mk2("foot", inn).innerHTML = this.museumLogo(kind === "f");
+    if (kind === "r") for (const [x, y, d] of [[-1, -1, 0], [94, 8, 0.5], [90, 132, 1], [2, 114, 0.8], [50, -1, 1.2]]) { const sp = mk2("spark", card, "i"); sp.style.left = "calc(" + x + "px * var(--s))"; sp.style.top = "calc(" + y + "px * var(--s))"; sp.style.animationDelay = d + "s"; }
+    return card;
+  }
+  /* The card view: a card (or a pack's three, one at a time) big in the middle. A or B for the next; back to the shop, the
+     binder or the floor after the last. */
+  showCards(list, back) {
+    if (!list.length) { if (back === "shop") this.renderShop(); return; }
+    this.cardQ = list; this.cardI = 0; this.cardBack = back || ""; this.mode = "card"; this.el.cardView.style.display = "flex"; this.renderCardView();
+  }
+  renderCardView() {
+    const v = this.el.cardView, q = this.cardQ, c = q[this.cardI], own = (this.cardsOwned()[c.p.id] || {})[c.kind] || 0; v.innerHTML = "";
+    const cap = document.createElement("div"); cap.className = "gt-card-cap" + (c.kind === "r" ? " rare" : "");
+    cap.textContent = c.look ? "" : c.kind === "r" ? "RARE!" : own <= 1 ? "NEW!" : "YOU HAVE " + own; v.appendChild(cap);
+    v.appendChild(this.cardElement(c.p, c.kind));
+    const hint = document.createElement("div"); hint.className = "gt-card-hint"; hint.textContent = c.msg || (q.length > 1 ? (this.cardI + 1) + " / " + q.length + "   A: next" : "A: done"); v.appendChild(hint);
+  }
+  cardNext() {
+    if (++this.cardI < this.cardQ.length) { this.renderCardView(); return; }
+    this.el.cardView.style.display = "none"; this.el.cardView.innerHTML = ""; const back = this.cardBack; this.cardQ = null;
+    if (back === "shop") { this.mode = "shop"; this.renderShop(); } else if (back === "binder") { this.mode = "binder"; this.renderBinder(); } else { this.mode = "walk"; this.inputLock = true; }
+  }
+  /* The binder (My Stuff → Cards): a slot for every card, in order. The ones you have show their art; a rare gets a gold edge. */
+  openBinder() { if (!this.cardList().length) { this.say(this.tx("card.none")); return; } this.mode = "binder"; this.binderSel = this.binderSel || 0; this.el.album.style.display = "block"; this.renderBinder(); }
+  closeBinder() { this.el.album.style.display = "none"; this.mode = "walk"; this.inputLock = true; }
+  renderBinder() {
+    const box = this.el.album, L = this.cardList(), own = this.cardsOwned(), has = p => own[p.id] && (own[p.id].c || own[p.id].r || own[p.id].f);
+    this.binderSel = Math.max(0, Math.min(L.length - 1, this.binderSel)); box.innerHTML = "";
+    const head = document.createElement("div"); head.className = "gt-shop-head";
+    const t1 = document.createElement("span"); t1.textContent = "CARD BINDER"; const t2 = document.createElement("span"); t2.textContent = L.filter(has).length + "/" + L.length + " FOUND";
+    head.appendChild(t1); head.appendChild(t2); box.appendChild(head);
+    const grid = document.createElement("div"); grid.className = "gt-album-grid gt-binder"; box.appendChild(grid);
+    L.forEach((p, i) => {
+      const o = own[p.id] || {}, cell = document.createElement("button"); cell.type = "button"; cell.className = "gt-bslot" + (i === this.binderSel ? " on" : "") + (o.r ? " rare" : "") + (has(p) ? "" : " empty");
+      if (has(p) && p.image) cell.style.backgroundImage = 'url("' + p.image + '")'; else cell.textContent = String(i + 1);
+      cell.addEventListener("click", e => { e.stopPropagation(); if (this.binderSel === i) this.binderAct(); else { this.binderSel = i; this.renderBinder(); } });
+      grid.appendChild(cell);
+    });
+    const cur = L[this.binderSel], o = own[cur.id] || {}, det = document.createElement("p"); det.className = "gt-shop-detail";
+    const bits = [o.c ? o.c + " common" : "", o.r ? o.r + " rare" : "", o.f ? o.f + " fake" : ""].filter(Boolean);
+    det.textContent = "#" + (this.binderSel + 1) + " " + (has(cur) ? cur.title + ": " + bits.join(", ") + ". (A to look.)" : "Not found yet.");
+    box.appendChild(det);
+    const sel = grid.children[this.binderSel]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: "nearest" });
+  }
+  binderAct() {
+    const p = this.cardList()[this.binderSel], o = this.cardsOwned()[p.id] || {}, list = [];
+    if (o.r) list.push({ p, kind: "r", look: true }); if (o.c) list.push({ p, kind: "c", look: true }); if (o.f) list.push({ p, kind: "f", look: true, msg: this.tx("card.fake", null, true).join(" ") });
+    if (list.length) this.showCards(list, "binder");
   }
   ownedItems() { return this.pack.settings.shop.items.filter(it => this.progress.items.includes(it.id)).concat(this.progress.popups || []); } // shop souvenirs and gifts, then Bluu's finds
   /* The collection cabinet: up to 12 of your souvenirs, the ones you picked in Souvenirs (or the first 12 until you pick). */
@@ -6476,11 +6633,13 @@ class Game {
   myStuff() {
     const n = (this.progress.photos || []).length;
     const an = Object.keys(this.progress.ach || {}).length + "/" + this.pack.settings.achievements.length;
-    const sv = this.ownedItems().length, opts = ["Photos (" + n + ")", "Souvenirs (" + sv + ")", "Achievements (" + an + ")", ...(this.progress.shirt || ["shades", "hat", "case"].some(u => this.gear(u)) ? ["Wardrobe"] : []), "Back"];
+    const sv = this.ownedItems().length, cl = this.cardList(), co = cl.filter(p => { const o = this.cardsOwned()[p.id]; return o && (o.c || o.r || o.f); }).length;
+    const opts = ["Photos (" + n + ")", "Souvenirs (" + sv + ")", ...(cl.length ? ["Cards (" + co + "/" + cl.length + ")"] : []), "Achievements (" + an + ")", ...(this.progress.shirt || ["shades", "hat", "case"].some(u => this.gear(u)) ? ["Wardrobe"] : []), "Back"];
     this.choose("MY STUFF", opts, k => {
       const o = opts[k];
       if (o.startsWith("Photos")) { if (!n) this.say(this.tx("photos.none")); else this.openAlbum(); }
       else if (o.startsWith("Souvenirs")) { if (!sv) this.say(this.tx("cabinet.empty")); else this.openItems(); }
+      else if (o.startsWith("Cards")) { if (!co) this.say(this.tx("card.none")); else this.openBinder(); }
       else if (o.startsWith("Achievements")) this.showAchievements();
       else if (o === "Wardrobe") this.wardrobe();
       else this.openMenu();
@@ -7035,6 +7194,15 @@ class Game {
       if (has("left")) i--; if (has("right")) i++; if (has("up")) i -= cols; if (has("down")) i += cols;
       if (i !== this.albumSel) { this.albumSel = Math.max(0, Math.min(n - 1, i)); this.renderAlbum(); }
       if (has("a")) this.albumAct(); else if (has("b") || has("start")) this.closeAlbum();
+      return;
+    }
+    if (this.mode === "card") { if (has("a") || has("b")) this.cardNext(); return; }
+    if (this.mode === "binder") {
+      const n = this.cardList().length, cols = 6;
+      let i = this.binderSel;
+      if (has("left")) i--; if (has("right")) i++; if (has("up")) i -= cols; if (has("down")) i += cols;
+      if (i !== this.binderSel) { this.binderSel = Math.max(0, Math.min(n - 1, i)); this.renderBinder(); }
+      if (has("a")) this.binderAct(); else if (has("b") || has("start")) this.closeBinder();
       return;
     }
     if (this.mode === "items") {
@@ -8860,7 +9028,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 tuesday 8";
+const VERSION = "2026-11-18 cards 1";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

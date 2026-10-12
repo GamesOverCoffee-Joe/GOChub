@@ -345,6 +345,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
       <button role="tab" id="tab-staff" aria-selected="false" aria-controls="main">Staff</button>
       <button role="tab" id="tab-visitors" aria-selected="false" aria-controls="main">Visitors</button>
       <button role="tab" id="tab-shop" aria-selected="false" aria-controls="main">Shop</button>
+      <button role="tab" id="tab-cards" aria-selected="false" aria-controls="main">Cards</button>
       <button role="tab" id="tab-tokens" aria-selected="false" aria-controls="main">Tokens</button>
       <button role="tab" id="tab-rooms" aria-selected="false" aria-controls="main">Rooms</button>
       <button role="tab" id="tab-words" aria-selected="false" aria-controls="main">Words</button>
@@ -429,7 +430,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 tuesday 8";
+window.GOQ_WANT = "2026-11-18 cards 1";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -510,6 +511,7 @@ function packOut() {
     if (p.unveil) o.unveil = p.unveil;
     if (p.drink) { o.drink = p.drink; if (p.drinkColor) o.drinkColor = p.drinkColor; if (p.drinkLine && p.drinkLine.length) o.drinkLine = p.drinkLine; if (p.drinkPrice) o.drinkPrice = p.drinkPrice; if (p.drinkIced) o.drinkIced = true; }
     if (p.pick) o.pick = true;
+    if (p.episodeTitle) o.episodeTitle = p.episodeTitle; if (p.cardBlurb) o.cardBlurb = p.cardBlurb; if (p.noCard) o.noCard = true; // its trading card (Cards tab)
     if (p.image) o.image = p.image; else { o.colors = p.colors; o.style = p.style; }
     return o;
   }) };
@@ -693,7 +695,7 @@ $("#dayBtn").addEventListener("click", () => { game.closeAll(); game.skipDay(); 
 let tab = "art", current = "atlas";
 function setTab(t) {
   tab = t;
-  ["art", "pieces", "staff", "visitors", "shop", "tokens", "rooms", "words", "ach", "notes", "preview"].forEach(k => $("#tab-" + k).setAttribute("aria-selected", t === k));
+  ["art", "pieces", "staff", "visitors", "shop", "cards", "tokens", "rooms", "words", "ach", "notes", "preview"].forEach(k => $("#tab-" + k).setAttribute("aria-selected", t === k));
   $("#app").classList.toggle("no-side", t !== "art");
   render();
 }
@@ -702,6 +704,7 @@ $("#tab-pieces").addEventListener("click", () => setTab("pieces"));
 $("#tab-staff").addEventListener("click", () => setTab("staff"));
 $("#tab-visitors").addEventListener("click", () => setTab("visitors"));
 $("#tab-shop").addEventListener("click", () => setTab("shop"));
+$("#tab-cards").addEventListener("click", () => setTab("cards"));
 $("#tab-rooms").addEventListener("click", () => setTab("rooms"));
 $("#tab-words").addEventListener("click", () => setTab("words"));
 $("#tab-ach").addEventListener("click", () => setTab("ach"));
@@ -733,7 +736,7 @@ function renderPreviewTab() {
   wrap.appendChild(el("p", { class: "note", text: "These change only the live preview on the right, never the pack or anyone's save. Each row is a setting (the lit one is on); the buttons make something happen right away." }));
   wrap.appendChild($("#pvMenu")); showClock();
 }
-function renderTab() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "visitors") renderVisitors(); else if (tab === "shop") renderShop(); else if (tab === "tokens") renderTokens(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else if (tab === "notes") renderNotes(); else if (tab === "preview") renderPreviewTab(); else renderPieces(); }
+function renderTab() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "visitors") renderVisitors(); else if (tab === "shop") renderShop(); else if (tab === "cards") renderCards(); else if (tab === "tokens") renderTokens(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else if (tab === "notes") renderNotes(); else if (tab === "preview") renderPreviewTab(); else renderPieces(); }
 
 /* ---------- Image helpers ---------- */
 function readFile(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error("That file couldn't be read.")); r.readAsDataURL(file); }); }
@@ -2480,6 +2483,54 @@ function renderTokens() {
     k("trivia", "Thursday: each right trivia answer"), k("triviaPerfect", "Thursday: bonus for all five")]);
   wrap.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small quiet", text: "Back to the defaults", onclick: () => { draft.settings.rewards = JSON.parse(JSON.stringify(D)); changed({ now: true }); renderTokens(); } })]));
 }
+/* ---------- Cards (Joe 10/11) ----------
+   Every piece on display has a trading card, common and rare. Prices and odds, and each card's episode title (looked up on
+   YouTube from the piece's episode link, like the GOC link grabber), blurb, or no card at all. */
+let cardsFetched = false;
+const ytId = url => { const m = String(url || "").match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/); return m ? m[1] : ""; };
+async function ytTitle(url) { const id = ytId(url); if (!id) return ""; try { const r = await fetch("https://www.youtube.com/oembed?format=json&url=" + encodeURIComponent("https://www.youtube.com/watch?v=" + id)); if (r.ok) return ((await r.json()).title || "").trim(); } catch (e) {} return ""; }
+async function fetchCardTitles(all, note) {
+  const list = draft.pieces.filter(p => !p.tut && ytId(p.episodeUrl) && (all || !p.episodeTitle)); if (!list.length) { if (note) note.textContent = all ? "No episode links to look up." : "Every card with an episode link has its title."; return; }
+  let got = 0;
+  for (let i = 0; i < list.length; i++) { if (note) note.textContent = "Looking up " + (i + 1) + " of " + list.length + "…"; const t = await ytTitle(list[i].episodeUrl); if (t) { list[i].episodeTitle = t; got++; } }
+  if (note) note.textContent = got + " of " + list.length + " title" + (list.length === 1 ? "" : "s") + " found" + (got < list.length ? " (the rest: a private video, or YouTube didn't answer; type those in)" : "") + ".";
+  if (got) { changed({ now: true }); if (tab === "cards") renderCards(true); }
+}
+function renderCards(keepNote) {
+  const main = $("#main"), oldNote = keepNote && main.querySelector("#cardFetchNote") ? main.querySelector("#cardFetchNote").textContent : ""; main.innerHTML = "";
+  const C = draft.settings.cards = Object.assign({ on: true, single: 10, pack: 25, rare: 20, bluuCommon: 3, packRare: 2, bluuRare: 15 }, draft.settings.cards || {});
+  const wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
+  wrap.appendChild(el("h2", { class: "title", text: "Trading cards" }));
+  wrap.appendChild(el("p", { text: "Every piece on display has a card, in a common and a rare (shiny) form; a piece with an unveil date gets its card that day. The gift shop sells a single card (always a common) and a pack of three (each card has a small chance to be rare). Bluu sells a cheap common that might be fake, and on some Saturdays a real rare. Players keep them in My Stuff → Cards. Changes show in the preview after Apply to preview." }));
+  const num = (k, label, hi, note) => { const i = el("input", { type: "number", min: 0, max: hi, value: C[k], style: "max-width:110px", "aria-label": label }); i.addEventListener("input", () => { C[k] = Math.max(0, Math.min(hi, Math.round(+i.value || 0))); changed(); odds(); }); return el("label", {}, [document.createTextNode(label), i, note ? el("small", { class: "note", text: note }) : null]); };
+  const on = el("input", { type: "checkbox", checked: C.on !== false }); on.addEventListener("change", () => { C.on = on.checked; changed({ now: true }); });
+  const oddsNote = el("p", { class: "note", style: "margin:6px 0 0" }), odds = () => { const p = C.packRare / 100, pk = 1 - Math.pow(1 - p, 3); oddsNote.textContent = pk > 0 ? "About 1 pack in " + Math.max(1, Math.round(1 / pk)) + " has a rare, and Bluu has one about 1 Saturday in " + (C.bluuRare > 0 ? Math.max(1, Math.round(100 / C.bluuRare)) : "never") + "." : "Packs never have a rare."; };
+  wrap.appendChild(el("section", { class: "prow", style: "display:block;margin:10px 0 16px" }, [el("h3", { text: "Prices and odds", style: "margin:0 0 8px" }),
+    el("label", { class: "check" }, [on, document.createTextNode(" Sell cards in the gift shop and at Bluu's stall")]),
+    el("div", { class: "fields", style: "margin-top:8px" }, [num("single", "Single card (tokens)", 999), num("pack", "Pack of three (tokens)", 999), num("rare", "Bluu's rare card (tokens)", 999), num("bluuCommon", "Bluu's common card (tokens)", 999),
+      num("packRare", "Chance each card in a pack is rare (%)", 100), num("bluuRare", "Saturdays Bluu has a rare (%)", 100)]), oddsNote]));
+  odds();
+  const note = el("p", { class: "note", id: "cardFetchNote", style: "margin:6px 0 0", text: oldNote });
+  wrap.appendChild(el("section", { class: "prow", style: "display:block;margin:10px 0 16px" }, [el("h3", { text: "Episode titles", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 8px", text: "Each card names the Games Over Coffee episode its piece came from. The titles come from YouTube, from each piece's episode link (the same lookup as the GOC link grabber). New pieces get theirs looked up when you open this tab; you can also type one in." }),
+    el("div", { class: "row" }, [el("button", { type: "button", class: "btn small", text: "Look up missing titles", onclick: () => fetchCardTitles(false, note) }), el("button", { type: "button", class: "btn small quiet", text: "Look them all up again", onclick: () => fetchCardTitles(true, note) })]), note]));
+  const today = GOQ.todayISO(), list = draft.pieces.filter(p => !p.tut).slice().sort((a, b) => ((a.unveil || "") < (b.unveil || "") ? -1 : (a.unveil || "") > (b.unveil || "") ? 1 : 0));
+  if (!list.length) wrap.appendChild(el("p", { class: "empty", text: "No pieces yet (Pieces tab)." }));
+  list.forEach(p => {
+    const prev = el("div", { style: "--s:1.5;display:flex;gap:10px;flex-wrap:wrap" }), rare = el("input", { type: "checkbox" });
+    const draw = () => { prev.innerHTML = ""; try { prev.appendChild(game.cardElement(p, rare.checked ? "r" : "c")); } catch (e) { prev.textContent = "(preview unavailable)"; } };
+    rare.addEventListener("change", draw);
+    const text = (k, label, ph, max) => { const i = el("input", { type: "text", value: p[k] || "", placeholder: ph || "", maxlength: max || 140 }); i.addEventListener("input", () => { p[k] = i.value; changed(); draw(); }); return el("label", { class: "wide" }, [document.createTextNode(label), i]); };
+    const no = el("input", { type: "checkbox", checked: !!p.noCard }); no.addEventListener("change", () => { p.noCard = no.checked; changed(); });
+    const when = p.unveil && p.unveil > today ? "Its card arrives on its unveil, " + p.unveil + "." : "In the binder now.";
+    wrap.appendChild(el("section", { class: "prow", style: "display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap" }, [prev,
+      el("div", { class: "fields", style: "flex:1;min-width:240px" }, [el("p", { class: "wide", style: "margin:0;font-weight:700", text: p.title }), el("p", { class: "wide note", style: "margin:0", text: when }),
+        text("episodeUrl", "Episode link (from the piece)", "https://youtu.be/…", 300), text("episodeTitle", "Episode title", "Look up, or type it in"), text("cardBlurb", "Card blurb", p.hint ? "Blank: " + p.hint : "One short line"),
+        el("label", { class: "check" }, [rare, document.createTextNode(" Show the rare")]), el("label", { class: "check" }, [no, document.createTextNode(" No card for this piece")])])]));
+    draw();
+  });
+  if (!cardsFetched) { cardsFetched = true; if (list.some(p => ytId(p.episodeUrl) && !p.episodeTitle)) fetchCardTitles(false, note); } // new pieces: their titles, without asking
+}
 /* ---------- Shop ---------- */
 async function itemImage(file) {
   const src = await readFile(file), img = await loadImg(src);
@@ -2540,13 +2591,13 @@ function renderShop() {
     function drawStock() {
       const keep = game.pack.settings.shop; let days = [];
       try { game.pack.settings.shop = GOQ.normalizePack({ settings: { shop: sh } }).settings.shop; game.stockCache = null;
-        days = [0, 1, 2].map(o => { const f = game.featuredId(o); return game.stockToday(o).map(it => it.name + (it.id === f ? " (featured)" : "")).join(", "); }); }
+        days = [0, 1, 2].map(o => { const f = game.featuredId(o); return game.shopLineup(o).map(it => it.name + (it.id === f ? " (featured)" : "")).join(", "); }); }
       finally { game.pack.settings.shop = keep; game.stockCache = null; }
       stock.innerHTML = ""; ["Today", "Tomorrow", "The day after"].forEach((d, i) => stock.appendChild(el("div", {}, [el("b", { text: d + ": " }), document.createTextNode(days[i] || "nothing")])));
     }
     wrap.appendChild(el("section", { class: "prow", style: "display:block;margin:10px 0 16px" }, [el("h3", { text: "Featured item and today's stock", style: "margin:0 0 4px" }),
-      el("p", { class: "note", style: "margin:0 0 8px", text: "The shop carries a different mix of your items each day (the same for every player), one per stand. Picking a featured item keeps it on the shelves and on the pedestal every day, even over an unveil gift. Unveil gifts are extra, marked LIMITED, until the next unveil." }),
-      el("div", { class: "fields" }, [el("label", {}, [document.createTextNode("Featured item"), fsel]), el("label", {}, [document.createTextNode("Items on the shelves each day"), n])]),
+      el("p", { class: "note", style: "margin:0 0 8px", text: "Five spots, one per stand: the featured item, two museum merch (a different pair each day, the same for every player; this week's unveil gift takes one of them, marked LIMITED, until the next unveil), a single trading card and a pack of three (Cards tab). Picking a featured item keeps it in the first spot every day." }),
+      el("div", { class: "fields" }, [el("label", {}, [document.createTextNode("Featured item"), fsel])]),
       el("h4", { text: "On the shelves", style: "margin:10px 0 4px" }), stock]));
     drawStock(); }
   if (!sh.items.length) wrap.appendChild(el("p", { class: "empty", text: "No items yet. Add the first one below." }));

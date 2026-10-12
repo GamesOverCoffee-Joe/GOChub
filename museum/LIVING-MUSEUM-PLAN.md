@@ -382,28 +382,17 @@ Not built yet.
 
 - Size: small.
 
-### **Silly toys**
+### **Trading cards** *(Joe 10/11: replaces the silly toys; built in "cards 1")*
 
-Shop items that do nothing useful, just fun. **Joe's pick:** Comfy Socks (slide everywhere like ice).
+Toys that play with the games themselves. Every piece on display has a card in a common and a rare (very shiny) form, and each unveil adds one.
 
-| **Toy**                                                                                                              | **What it does**                                                                                                     | **Bluu's fake**                                                                                                      |
-| -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Comfy Socks                                                                                                          | Slide until you bump something                                                                                       | One sock missing: you slide in slow circles                                                                          |
-| Light-up Sneakers                                                                                                    | Glowing footprints that fade; draw on the floor in a dark wing after closing                                         | Only the left lights up                                                                                              |
-| Squeaky Shoes                                                                                                        | Every step squeaks; people turn; quiet wings get annoyed; the cat follows                                            | They squeak one step late                                                                                            |
-| Bouncy Ball                                                                                                          | Kick it: it ricochets, bonks visitors, knocks frames crooked, the cat chases it; the guard confiscates it at closing | A lump of clay                                                                                                       |
-| Popcorn                                                                                                              | Toss at people, random reactions                                                                                     | Packing peanuts                                                                                                      |
-| Bubble Wand                                                                                                          | Bubbles drift through rooms and doorways; visitors pop them, the cat swats them                                      | No soap                                                                                                              |
-| Paper Airplane                                                                                                       | Glides, lands somewhere random; a visitor may read it and throw it back                                              | A crumpled napkin                                                                                                    |
-| Kazoo                                                                                                                | Direction buttons are notes; visitors bob along                                                                      | One sad note                                                                                                         |
-| Rubber Chicken                                                                                                       | Squawk, everyone jumps; do it enough and the guard confiscates it                                                    | It wheezes                                                                                                           |
-| Whoopee Cushion                                                                                                      | Leave it on a stool or bench for the next visitor (or sit on it yourself)                                            | Flat: it just sighs                                                                                                  |
-| Fake Mustache                                                                                                        | Staff don't recognize you and call you by a made-up name                                                             | It falls off when you talk                                                                                           |
-| Foam Finger                                                                                                          | Point at anything and nearby visitors cheer for it                                                                   | A regular finger, drawn on                                                                                           |
+| Where | What |
+| --- | --- |
+| Gift shop | Spot 4: a single card (a random common), 10 tokens. Spot 5: a pack of three, 25 tokens, each card a small chance to be rare. |
+| Bluu's stall | A cheap common that might be fake; on some Saturdays a real rare, 20 tokens. |
+| Binder | My Stuff → Cards: a slot for every card. |
+| Curator | Cards tab: prices, odds, each card's episode title (looked up from YouTube), blurb, or no card. |
 
-- **Favorites:** Comfy Socks, Bouncy Ball, Bubble Wand, Whoopee Cushion. Then Popcorn, Rubber Chicken, Light-up Sneakers.
+- **The card:** black, red and gold. The title, the art, a thin stripe in the category's color, a short blurb, the episode it came from, and the museum logo.
 
-- **Open questions:** which ones (replace Tote/Pin/Mousepad/Lanyard, or add more: the shop rotates now), and worn (Wardrobe) vs used (a "Use…" spot in My Stuff or a quick button).
-
-
-
+- **Still to design:** the binder's look, and anything that rewards a full set.

@@ -195,3 +195,14 @@ The trash bag replaced picking up three pieces by hand, so the "hands full", "in
 | Janitor | Offering you a spare trash bag | There's trash all over my floor. Again. You want to help? I've got a spare bag. |
 | Janitor | You take it | *rrrip* ⏎ Here. Pick up whatever you see, then put the bag in an empty can. ⏎ Or bring it to me. I'm not picky. |
 | Janitor | You don't | Yeah. That's what everybody says. |
+
+## Added later (10/11, version "2026-11-18 cards 1")
+
+| Group | Line | What Claude wrote |
+| --- | --- | --- |
+| Cards | The single card (description) | One GOQ Museum trading card, sealed. Could be anyone in here. |
+| Cards | The pack of three (description) | Three cards in a foil pack. Every so often, one of them is shiny. |
+| Cards | Empty binder | Your binder's empty. ⏎ The gift shop sells cards. Just saying. |
+| Cards | A fake card from Bluu, in the binder | Hang on. The gold is yellow marker. ⏎ And they spelled it wrong. |
+| Bluu | His cheap common card | Mint condition. Barely touched it. Probably. |
+| Bluu | His rare card | Shiny one, this. Don't ask where I got it. ⏎ ...It's real though. Swear down. |
