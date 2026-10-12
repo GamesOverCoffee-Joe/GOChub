@@ -3948,8 +3948,19 @@ class Game {
       if (f) { this.fol = null; f.follow = false; if (f.cur) { f.cur.state = "waiting"; f.cur.room = null; } this.saveProgress(); setTimeout(() => this.say(this.tx("cur.closing")), 300); }
       for (const id in this.rooms) if (this.rooms[id] !== this.room) this.rooms[id].npcs = this.rooms[id].npcs.filter(n => n.staff);
       this.living("cons", () => this.consOut()); // the conservator slips out to the wings
+      this.addGuards(); // the night guards start their rounds
       this.room.npcs.filter(n => !n.staff).forEach((n, i) => { n.leaving = true; n.leaveT = -i * 6; n.alpha = 1; n.timer = 0; n.route = null; n.aside = null; });
     });
+  }
+  addGuards() { // the rooms' guards (visitors with a patrol) only come on at closing: the announcement brings them in (they used to need a rebuild, so they never showed up: Joe 10/12)
+    for (const id in this.rooms) { const R = this.rooms[id], def = ROOMS[id]; if (!R || !def) continue;
+      (def.visitors || []).filter(v => v.patrol).forEach(v => {
+        if (R.npcs.some(n => n.patrol && n.guardOf === v)) return;
+        let at = [v.x, v.y]; if (!this.tileFree(R, at[0], at[1])) at = this.freeSpot(R, [v.x, v.y, 4]) || this.freeSpot(R); if (!at) return;
+        const n = { sitting: false, still: false, staff: true, patrol: v.patrol, role: v.role || "guard", slow: v.slow, goRight: true, pause: 0, stuck: 0, sheet: v.sheet, x: at[0], y: at[1], dir: "down", moving: false, prog: 0, step: false, bumpT: 0, timer: 60, lines: v.lines, lineI: -1, guardOf: v };
+        if (R === this.room) { n.alpha = 0; n.fadeIn = true; } R.npcs.push(n);
+      });
+    }
   }
   /* Lights. Each room has its own switch; in the museum, each of its rooms does (its "zone"). Hallways stay lit until
      every room's lights are off. Keys: a room's id, or "museum:action" for a zone. */
@@ -4089,6 +4100,9 @@ class Game {
   /* Open again without reloading: visitors return, lights come on, you start at the front doors. */
   reopen() {
     this.lightsOff.clear(); this.closing = false; this.closed = false; this.closingPaid = false; this.dayStart = Object.assign({}, this.progress.tally);
+    { const J = this.jan; if (J && (J.phase === "gone" || (J.brk && J.brk.act === "home"))) { // he'd gone home for the night: back he comes, on with what he hadn't finished (Joe 10/12)
+      const n = J.npc; J.phase = J.i < J.stops.length ? "chores" : "plants"; J.brk = null; J.cur = null; J.lit = null; J.can = null; J.door = null; J.mode = "go"; J.eta = -1; J.tk = null;
+      n.leaving = false; n.gone = false; n.route = null; n.moving = false; n.prog = 0; J.room = "lobby"; const [x, y] = this.janStand("lobby", "staff"); n.x = x; n.y = y; n.alpha = 0; n.fadeIn = true; } }
     this.spook = null; this.figure = null; this.hideEnd(); this.trans = null; this.fade = 0; this.mode = "walk"; this.microwaved = false;
     this.rebuild();
     const w = this.endKind === "brb" && this.progress.where;
@@ -7753,7 +7767,7 @@ class Game {
         else T.members.forEach(n => { if (n.tourKid) return; n.goal = null; n.walkTo = null; if (n.where === "museum") { n.still = false; n.random = true; const z = this.zoneAt(M, n.x, n.y); n.zone = z && z.kind === "room" ? z.id : T.stop1 && (this.zoneAt(M, T.stop1.x, T.stop1.y) || {}).id; } }); // scattered: they stroll on their own
       } else if (phase === 3) { // back to the lobby to leave; the kid goes missing
         T.members.forEach((n, i) => { n.still = true; n.random = false; n.queue = null; n.seat = null; if (n.sitting) { n.sitting = false; if (n.sitFrom) [n.x, n.y] = n.sitFrom; } n.route = null;
-          if (n.tourKid && !T.school) { if (T.lostSpot) this.tourPlace(n, T.lostSpot.room || "museum", T.lostSpot.at, T.lostSpot.dir); else this.tourPlace(n, "museum", this.freeSpot(M, null, T.lostZone) || this.freeSpot(M), "down"); }
+          if (n.tourKid && !T.school && !T.kidDone) { if (T.lostSpot) this.tourPlace(n, T.lostSpot.room || "museum", T.lostSpot.at, T.lostSpot.dir); else this.tourPlace(n, "museum", this.freeSpot(M, null, T.lostZone) || this.freeSpot(M), "down"); }
           else if (!(n.tourKid && T.school && !T.kidDone)) this.tourHome(n, i); }); // the school's kid is already off somewhere since the rush
       } else if (phase === 4) { // out the front doors (the kid too, found or not)
         T.members.forEach(n => { this.tourStand(n); if (this.fol === n) { this.fol = null; n.follow = false; } n.goal = null; n.walkTo = null; n.still = true; if (n.where === this.room.id && this.room.id === "lobby") { n.leaving = true; n.leaveT = 0; n.alpha = 1; } else this.tourDrop(n); });
@@ -9152,7 +9166,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 14";
+const VERSION = "2026-11-18 cards 15";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
