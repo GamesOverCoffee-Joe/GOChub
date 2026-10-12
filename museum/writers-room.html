@@ -151,6 +151,10 @@ input.one:focus{border-color:var(--gold);outline:none}
 .gbox .gb{white-space:pre-wrap;overflow:hidden;height:100%;overflow-wrap:anywhere}
 .gbox .pg{position:absolute;right:calc(3px * var(--s));bottom:calc(1px * var(--s));font-size:calc(5px * var(--s));line-height:1;color:#808090}
 .gmeasure{position:absolute;left:-9999px;top:0;visibility:hidden}
+.relbox{border:2px solid var(--line, #d8c8b8);border-left:6px solid #c8a868;border-radius:6px;padding:8px 12px;margin:0 0 12px;background:rgba(200,168,104,.08)}
+.relbox b{display:block;margin-bottom:2px}
+.relbox p{margin:2px 0;font-size:.92rem}
+.relbox .for{color:#7a5a20;font-style:italic}
 .cardq{background:#141012;border:2px solid #e8c070;box-shadow:0 0 0 4px #7c2434;border-radius:4px;padding:12px 14px;max-width:300px;margin:6px 4px}
 .cardq .q{font-style:italic;color:#efe6d2;font-size:1.05rem;line-height:1.35}
 .cardq .sig{text-align:right;color:#c8a868;font-size:.85rem;margin-top:4px}
@@ -299,12 +303,22 @@ function buildCards() {
   // The curator's quote on each piece's trading card (Joe 10/12)
   raw.pieces.forEach((p, i) => {
     const P = () => raw.pieces[i];
-    cards.push({ id: "q:" + p.id, cat: "lines", area: "Trading cards", title: p.title || "Untitled", sub: "card quote", where: "Cards", preview: "quote",
+    cards.push({ id: "q:" + p.id, cat: "lines", area: "Trading cards", title: p.title || "Untitled", sub: "card quote", where: "Cards", preview: "quote", rel: () => P().rel || "",
       fields: [{ kind: "para", label: "The curator's quote, on its trading card (signed \u2014 the curator)", get: () => P().cardBlurb || "", set: v => { P().cardBlurb = v; } }] });
   });
   return cards;
 }
 
+/* What each connection means for a card quote (Claude's guidance; the meanings themselves are the curator's Visitors tab). */
+const REL_QUOTE = {
+  same: "you felt exactly what the developer was going for. Show it landing, fully.",
+  halfway: "part of it landed and part didn't. Name both halves.",
+  student: "it wasn't for you at first. Say what made it click.",
+  accident: "the best part was something the developer never planned. Name what you found.",
+  different: "it made you feel something other than what was intended. Say what you felt instead.",
+  message: "there was a deeper meaning that didn't come through. Say what you got, and that the rest passed you by.",
+  notforme: "it does what it set out to do; you're just not its audience. Respect, without love.",
+};
 /* Claude's lines (Joe 10/11): a card is tagged "claude" while it still holds a version Claude wrote. */
 const isClaude = c => { if (c.id.startsWith("a:")) { const d = GOQ.CLAUDE_ACH && GOQ.CLAUDE_ACH[c.id.slice(2)]; return !!d && c.fields[0].get() === d.name && c.fields[1].get() === d.desc; } // an achievement Claude wrote
   if (c.id.startsWith("q:")) { const d = GOQ.CLAUDE_QUOTES && GOQ.CLAUDE_QUOTES[c.id.slice(2)]; return !!d && c.fields[0].get() === d; } // a card quote
@@ -555,6 +569,11 @@ function renderCard() {
   const briefs = c.fields.map(f => flat(f.kind, f.get())).join("\n").match(/\[[^\]\n]*\]/g);
   if (briefs && fresh.some(Boolean)) $app.appendChild(el("div", { class: "brief" }, [el("b", { text: "What it's for" }), [...new Set(briefs)].slice(0, 4).map(s => s.slice(1, -1)).join(" · ")]));
   if (c.note) $app.appendChild(el("p", { class: "small", style: "margin:-6px 0 12px", text: c.note }));
+  if (c.rel) { // a card quote: the curator's connection with the game, what it means, and what the quote should carry (Joe 10/12)
+    const rid = c.rel(), R = (N.settings.relations || []).find(r => r.id === rid);
+    $app.appendChild(R ? el("div", { class: "relbox" }, [el("b", { text: "Connection: " + R.name }), el("p", { text: R.about }), REL_QUOTE[rid] ? el("p", { class: "for", text: "For the quote: " + REL_QUOTE[rid] }) : null])
+      : el("div", { class: "relbox" }, [el("b", { text: "No connection set" }), el("p", { text: "Pick one for this piece in the curator (Pieces tab): it's what the curious visitors ask about, and what the quote should carry." })]));
+  }
 
   // Placeholder chips: tap to drop {name} and friends where the cursor is
   const vars = varsIn(c.title, ...c.fields.map(f => flat(f.kind, f.def ? f.def() : "")), ...c.fields.map(f => flat(f.kind, f.get())), c.note || "").filter(v => !/^\{(room|ROOM):/.test(v) || true);
