@@ -469,7 +469,6 @@ const GEN = {
     return outline(a);
   },
   // Phase 6: gift shop, café, evening
-  floor_shop: () => fillFn(mk(16, 16), (x, y) => { const d = (x + y) % 16, e = (x - y + 16) % 16; return d === 0 || e === 0 ? 1 : hash(x, y) % 23 === 0 ? 4 : 0; }),
   shop_counter: () => {
     const a = mk(48, 16);
     rect(a, 0, 3, 48, 13, 2); rect(a, 0, 3, 48, 3, 1); rect(a, 0, 3, 48, 1, 0);
@@ -2516,10 +2515,7 @@ const TEXT = {
   "title.notes":       { g: "Staff profile titles", l: "Leaving notes", v: [["Has Opinions"]] },
   "title.shirt":       { g: "Staff profile titles", l: "Having the GOQ shirt", v: [["Big Goron Energy"]] },
   "title.new":         { g: "Staff profile titles", l: "Brand new (nothing earned yet)", v: [["Just Got Here"], ["Still Looking for the Bathroom"]] },
-  "pc.idle":           { g: "Storage", l: "Someone's PC (waiting for its new job)", v: [["Someone's PC hums quietly.", "A sticky note on the monitor: RESERVED FOR SOMETHING NEW."]] },
   "screen.empty":      { g: "Rooms", l: "A room's touch screen when every piece fits in the cases ({room})", v: [["The little screen glows.", "EVERY PIECE IN {room} IS ON DISPLAY. Nothing waiting here."]] },
-  "pc.on":             { g: "Floors", l: "Turning on Someone's PC", v: [["You turned on Someone's PC.", "Accessed the museum archive."]] },
-  "pc.empty":          { g: "Floors", l: "The archive is empty", v: [["The archive is empty.", "Every piece is on display right now."]] },
   "mag.1":             { g: "Magazines", l: "Magazine 1 (first line is the title; each line after is a paragraph)", v: [["Pixel Monthly", "This month: why every menu in a cozy game should make a little sound when you open it. We asked twelve players. Eleven said yes. The twelfth asked what a menu was.", "Also inside: the case for walking slower. Games that let you stroll tend to get remembered as places, not as tasks. Something to think about next time a game hands you a sprint button."]] },
   "mag.2":             { g: "Magazines", l: "Magazine 2", v: [["Curator's Digest", "Ten things museum staff wish visitors knew. Number one: the backs of the display cases are not the boring side. Number four: the cat is not an exhibit, but she does accept compliments.", "Letters page: a reader asks whether there are bad mechanics. Our editor replies that there are only mechanics in the wrong game, and then goes back to wiping fingerprints off the glass."]] },
   "mag.3":             { g: "Magazines", l: "Magazine 3 (holds the secret shirt riddle)", v: [["Thread Count Quarterly", "FASHION: THE SHIRT THAT GOT AWAY. Years ago the museum shop sold a GOQ shirt. Then, one day, it didn't. The shopkeeper won't say why. But the shopkeeper still has one, and rumor says it goes to whoever proves they've lived the full museum day, in order:", "First, something sweet and brown from the café. Drink it all, sitting on a stool, not a bench. Throw the cup out by the front doors, not in the tub. Give a plant a drink of its own. Photograph the cat. Take the lobby stairs all the way down, and wake up the old PC. Walk the {room:upper} from the {room:puzzle} to the {room:strategy}. Sleep on the bench in that hall. Then visit the shopkeeper and just chat. Three times. In a row.", "Do it out of order, and you'll have to start over. The shopkeeper notices everything."]] },
@@ -8639,7 +8635,6 @@ class Game {
     this.progress.chill = !!on; this.saveProgress(); this.janOff();
     if (!keep && !this.forceProblems) { if (this.dirClock) this.dirClock.picks = null; this.sup = null; if (this.tour) this.endTour(true); this.endSide(); }
   }
-  thirstyPlants() { let n = 0; for (const id of ["lobby", "museum", "screening", "staff"]) { if (!this.rooms || !this.rooms[id]) continue; for (const k in this.rooms[id].events) { const e = this.rooms[id].events[k]; if (e.plant && this.isThirsty(e.plant)) n++; } } return n; }
   solvedInfo() { // the curator's preview: what counts as fixed so far this loop
     if (this.chillOn()) return "Chill museum is on: no problems.";
     const S = this.solvedNow(), what = { usher: "usher's coffee", tour: "happy tour + kid back", stock: "shop stock", line: "café supplies", litter: "the jammed can unjammed", item: "item returned", janitor: "the pile by it cleaned up before the Janitor's last quarter", cons: "a chat with the conservator at closing" };
@@ -8967,11 +8962,6 @@ class Game {
       : J.phase === "rounds" ? "on his rounds, sweeping " + (J.fill ? J.fill.where : "here and there") + " till the day's over" : J.mode === "wait" ? "between chores, waiting for the next quarter" : st ? (st.act === "empty" ? "taking out the trash" : "sweeping " + st.where) + " (chore " + st.chore + " of 3)" : "";
     return "Janitor: " + what + ", in " + where + ".";
   }
-  findJanitor() { // the curator's "Find the janitor": go stand beside him
-    const J = this.jan; if (!J) return false;
-    const R = this.rooms[J.room], n = J.npc, at = [[0, 1], [1, 0], [-1, 0], [0, -1], [0, 2], [2, 0]].map(([dx, dy]) => [n.x + dx, n.y + dy]).find(([x, y]) => this.tileFree(R, x, y));
-    if (!at) return false; this.warp(J.room, at[0], at[1], this.janFace(at, n.x, n.y)); return true;
-  }
   /* The café counter: where visitors stand to order (the row in front of it), if the barista is there to serve them. */
   counterSpots(r) {
     if (r.counterAt === undefined) {
@@ -8982,12 +8972,6 @@ class Game {
     return r.counterAt;
   }
   cafeZone(r) { const c = this.counterSpots(r)[0]; return c && r.zoneAt ? (this.zoneAt(r, c[0], c[1]) || {}).id : undefined; }
-  freeCounterSpot(r) {
-    if (!r.npcs.some(n => n.role === "barista")) return null; // on a break, or after hours: no coffee
-    const free = this.counterSpots(r).filter(([x, y]) => !(this.player.x === x && this.player.y === y) && !r.npcs.some(n => (n.x === x && n.y === y) || (n.coffee && n.goalT && n.goalT[0] === x && n.goalT[1] === y)));
-    return free.length ? free[(Math.random() * free.length) | 0] : null;
-  }
-  /* Shortest route for a visitor, around walls, furniture, people and no-go tiles (at most 40 steps). */
   kidSwap(n, x, y) { // a tour grown-up may plan a route through the tour's kid (they swap places on the way: tryMove), never around him as if he were a wall (Joe 10/12)
     const T = this.tour, r = this.room; if (!T || n.tourKid || n.schoolKid || !(T.members.includes(n) || n === T.guide)) return false;
     if (!r.solid[y] || r.solid[y][x] !== false || (this.player.x === x && this.player.y === y)) return false;
@@ -9652,7 +9636,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 39";
+const VERSION = "2026-11-18 cards 40";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
