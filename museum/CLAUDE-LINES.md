@@ -206,3 +206,43 @@ The trash bag replaced picking up three pieces by hand, so the "hands full", "in
 | Cards | A fake card from Bluu, in the binder | Hang on. The gold is yellow marker. ⏎ And they spelled it wrong. |
 | Bluu | His cheap common card | Mint condition. Barely touched it. Probably. |
 | Bluu | His rare card | Shiny one, this. Don't ask where I got it. ⏎ ...It's real though. Swear down. |
+
+## The curator's quotes on the cards (10/12, version "2026-11-18 cards 8")
+
+Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from the piece's notes and its connection (same page, halfway, student, happy accident, different feeling, missed the message, not for me), the same connection the curious visitors ask about. Shown in quotes, signed "— the curator".
+
+| Piece | Connection | Quote |
+| --- | --- | --- |
+| Comets Have Feathers | same | No yellow paint, no hand-holding. Just me, a dragon and the whole sky. I got it completely. |
+| Absorber | notforme | Deep, clever, and built for someone who isn't me. I respect it from a safe distance. |
+| Hyperbaric | message | A glowing dot gave me cosmic dread. What it was really about, I never felt. |
+| Club Soko | message | I had a blast pushing drunks around. The warning about drinking went right past me. |
+| Sonak | student | It kept me at arm's length, until the wizard I'd built started to feel like mine. |
+| Zeroth | student | It wouldn't tell me a thing. Then termites ate my bow, and I was hooked. |
+| Sneaky - The Game | different | It wanted me sweating in the shadows. I just memorized the guards like homework. |
+| Manboobs The Mini Game | same | Touch everything, for no reason at all. The first game I ever found myself in. |
+| Zenomatrix | same | Make the thing you fear the thing you control. I felt every bit of that turn. |
+| ESiON | different | Built to unsettle me. Instead it became my favorite place to sit and fish. |
+| Near The Fear | message | I felt the shadow on my heels. What it was saying about anxiety, I missed. |
+| Polariball | accident | It wanted pinball fever. I found my calm in the snake mode instead. |
+| Depth Complaint | same | An unfinished game, finished by its own jokes. I was in on every one. |
+| Cyber Volley | different | A hard story in a world that never asked me to care. I kept looking for the stakes. |
+| Acrobatic Car | notforme | Made for the obsessed flash-game kid. I never got the chance to become him. |
+| Credit Farm/Debtician | different | The synergies sang. Why I was buying beach balls on credit, I'll never know. |
+| Enemies Within | different | It reached for grief and despair. I kept laughing, and I'm still not sure why. |
+| Ominoflux | halfway | I played it like Tetris and lost. Once I chased the gems, it finally clicked. |
+| Tangled Crisis | halfway | The maze vanishes when you move. I never quite needed to remember it. |
+| Monster Freaks! | different | It wanted me to feel cool finding its secrets. I just kept looking for the exit. |
+| Spring Escape Deep Down | halfway | A tiny root in a giant world. I loved the root. The world felt smaller than promised. |
+| Warlord's Penance | notforme | I fought the game instead of learning it. It's fair. It just isn't for me. |
+| Diecast | halfway | Big numbers, big dopamine. I chased the categories and forgot the totals. |
+| Hope Timbre | message | Beautiful dream puzzles. I warmed the whole world without noticing I had. |
+| Minicraft TD | same | No grind, just tinkering. Every level felt like my own little invention. |
+| Orion Wars | notforme | A whole galaxy on a lunch break. Fun rhythm, but I'm a long-campaign kind of person. |
+| Seeing Double | same | Two halves of one screen, aching to meet. I felt every reunion. |
+| AI'm Domingo | different | It wanted me to feel persuaded. I just felt quizzed, hunting for the right answer. |
+| Survivor TD | accident | Stop defending, start hunting. That's when it became my game. |
+| Stella Incus | different | Meant to spark wonder. I wandered a ship where everything mattered the same. |
+| Cave Escape | halfway | It taught me everything without a word. The darkness in its caves only flickered. |
+| Hovershot | halfway | Every shot shoves you backward. Pure joy, until I couldn't tell which way to grow. |
+| Spacecat Solitaire | halfway | Cats, missions, meteors. The game I loved was the plain deal underneath. |

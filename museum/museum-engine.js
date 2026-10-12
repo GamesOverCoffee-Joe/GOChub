@@ -2394,7 +2394,7 @@ const TEXT = {
   "cur.missNone":      { g: "Curious visitors", l: "You recommend a piece with no relationship set ({title}; usually each relationship has its own miss lines, in Visitors)", v: [["I don't see any observations here at all."]] },
   "cur.giveUp":        { g: "Curious visitors", l: "After a third piece that isn't what they wanted: they stop following you", v: [["Thanks for your time! I'll keep looking."]] },
   "cur.recall":        { g: "Curious visitors", l: "Question: recommend one from memory (the pieces you've recommended right before come next, by name)", v: [["Which one comes to mind?"]] },
-  "cur.back":          { g: "Curious visitors", l: "Back the next day, in the lobby: hello ({title}: the game you recommended; {hint}: \", the one where...\" from the piece)", v: [["Hey! Remember me from yesterday? You recommended {title} to me{hint}."]] },
+  "cur.back":          { g: "Curious visitors", l: "Back the next day, in the lobby: hello ({title}: the game you recommended; {hint}: empty now, the pieces' \"the one where...\" hints are gone)", v: [["Hey! Remember me from yesterday? You recommended {title} to me{hint}."]] },
   "cur.agree":         { g: "Curious visitors", l: "Next day, picked at random: they see why the curator felt that way ({title})", v: [["I get it. I completely understand why the curator felt the way he felt about {title}"]] },
   "cur.disagree":      { g: "Curious visitors", l: "Next day, picked at random: they think the curator got it wrong ({title})", v: [["I think the curator was absolutely wrong about {title}.", "I didn't get what he said at all."]] },
   "cur.puzzled":       { g: "Curious visitors", l: "Next day, picked at random: they can't see where the curator got that ({title})", v: [["I have absolutely no idea what the curator was talking about with {title}."]] },
@@ -3484,7 +3484,9 @@ class Game {
 .gt-card .gtc-art{margin-top:calc(3px * var(--s));height:calc(53px * var(--s));flex:none;background:#000 center/cover;border:calc(1px * var(--s)) solid #e8c070;box-shadow:0 0 0 calc(1px * var(--s)) #4a1420;position:relative;overflow:hidden}
 .gt-card .gtc-pip{position:absolute;right:calc(2px * var(--s));bottom:calc(2px * var(--s));width:32%;aspect-ratio:16/9;background:#000 center/cover;border:calc(.75px * var(--s)) solid #e8c070;box-shadow:0 0 0 calc(.5px * var(--s)) #141012,0 calc(1px * var(--s)) calc(2px * var(--s)) rgba(0,0,0,.6);z-index:1}
 .gt-card .gtc-accent{height:calc(1.5px * var(--s));margin-top:calc(3px * var(--s));flex:none;background:var(--g);border-radius:calc(1px * var(--s));box-shadow:0 0 calc(3px * var(--s)) var(--g)}
-.gt-card .gtc-bl{flex:1;margin-top:calc(3px * var(--s));font-family:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;font-style:italic;font-size:calc(5.5px * var(--s));line-height:1.3;color:#efe6d2;overflow:hidden}
+.gt-card .gtc-bl{flex:1;margin-top:calc(3px * var(--s));font-family:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;font-style:italic;font-size:calc(5px * var(--s));line-height:1.28;color:#efe6d2;overflow:hidden}
+.gt-card .gtc-q{display:block}
+.gt-card .gtc-sig{display:block;text-align:right;font-style:normal;font-size:calc(4px * var(--s));color:#c8a868;margin-top:calc(1px * var(--s));letter-spacing:.02em}
 .gt-card .gtc-ep{margin:0 calc(-3.5px * var(--s));padding:calc(2.5px * var(--s)) calc(4px * var(--s));background:#7c2434;border-top:calc(.5px * var(--s)) solid #e8c070;border-bottom:calc(.5px * var(--s)) solid #e8c070;font-family:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;font-size:calc(4.5px * var(--s));line-height:1.25;color:#f4dca0;display:flex;gap:calc(2.5px * var(--s));align-items:center}
 .gt-card .gtc-yt{position:relative;flex:none;width:calc(7.5px * var(--s));height:calc(5.5px * var(--s));box-sizing:border-box;background:#ff1a1a;border:calc(.6px * var(--s)) solid #fff4c8;border-radius:calc(1.6px * var(--s));box-shadow:0 0 0 calc(.4px * var(--s)) #4a1420}
 .gt-card .gtc-yt::after{content:"";position:absolute;left:52%;top:50%;transform:translate(-40%,-50%);border-style:solid;border-width:calc(1.3px * var(--s)) 0 calc(1.3px * var(--s)) calc(2.1px * var(--s));border-color:transparent transparent transparent #fff}
@@ -5996,8 +5998,8 @@ class Game {
     if (thumb) { art.style.backgroundImage = 'url("' + thumb + '")'; const pip = mk2("gtc-pip", art); pip.style.backgroundImage = 'url("' + gameArt + '")'; if (!p.image) pip.style.imageRendering = "pixelated"; } // the episode's thumbnail, the game in the corner
     else { art.style.backgroundImage = 'url("' + gameArt + '")'; if (!p.image) art.style.imageRendering = "pixelated"; }
     mk2("gtc-accent", inn); // the category's color, as an accent (no name: Joe 10/11)
-    const hint = p.cardBlurb || (p.hint ? p.hint.charAt(0).toUpperCase() + p.hint.slice(1) + (/[.!?]$/.test(p.hint) ? "" : ".") : "");
-    mk2("gtc-bl", inn).textContent = hint;
+    const bl = mk2("gtc-bl", inn); // the curator's take, as a quote: the connection they had with the game (Joe 10/12)
+    if (p.cardBlurb) { mk2("gtc-q", bl, "span").textContent = "\u201C" + p.cardBlurb.replace(/^["\u201C]+|["\u201D]+$/g, "") + "\u201D"; mk2("gtc-sig", bl, "span").textContent = "\u2014 the curator"; }
     const ep = mk2("gtc-ep", inn); mk2("gtc-yt", ep, "i"); mk2("", ep, "span").textContent = p.episodeTitle || "Games Over Coffee"; // a red play button (outlined, so it shows on the red band: Joe 10/12), then the YouTube title
     mk2("gtc-foot", inn).innerHTML = this.museumLogo(kind === "f");
     if (kind === "r") for (const [x, y, d] of [[-1, -1, 0], [94, 8, 0.5], [90, 132, 1], [2, 114, 0.8], [50, -1, 1.2]]) { const sp = mk2("gtc-spark", card, "i"); sp.style.left = "calc(" + x + "px * var(--s))"; sp.style.top = "calc(" + y + "px * var(--s))"; sp.style.animationDelay = d + "s"; }
@@ -9124,7 +9126,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 thumbs 3";
+const VERSION = "2026-11-18 cards 8";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
