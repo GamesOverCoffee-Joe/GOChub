@@ -2439,6 +2439,11 @@ const TEXT = {
   "fridge":            { g: "Staff", l: "The staff fridge (one at random)", v: [["There's a surprising amount of canned Yerba Mate in here."], ["What's that black cracker? Oh, it's a tomato."], ["Looks like there's a seasonal cookie from the cafe...the café doesn't have cookies."]] },
   "microwave.ask":     { g: "Staff", l: "Microwave question", v: [["The staff microwave. Looks like there's a burrito in there. Heat it up?"]] },
   "microwave.boom":    { g: "Staff", l: "The microwave goes off (one at random)", v: [["*mmmm-mm-BWOMP*", "...I'm just gonna walk away."], ["*BANG*", "...", "Why did I do that?"]] },
+  "microwave.react":   { g: "Staff", l: "Someone in the staff room, right after the microwave goes off (shown in the corner; one at random)", by: "claude", v: [["WHO MICROWAVED A BURRITO FOR TEN MINUTES?"], ["Is... is it supposed to sound like that?"], ["Every. Single. Week."]] },
+  "microwave.chat":    { g: "Staff", l: "Talking to someone who was in the staff room when the microwave went off (once each; one at random)", by: "claude", v: [["I heard it from across the room.", "I think I'm still hearing it."], ["You know there's a sign. Right there. \"NO BURRITOS.\"", "...Okay, there isn't. But there should be."], ["I'm not cleaning that.", "I'm just letting you know now, so there's no confusion later."]] },
+  "usher.leading":     { g: "Tour", l: "The usher leading the tour, on the way to its first stop", by: "claude", v: [["This way, everyone! Stay close.", "First stop's just through here."], ["Follow me, folks!", "...Not that way. This way."]] },
+  "tour.walking":      { g: "Tour", l: "Someone in the tour group, on the way to its first stop", by: "claude", v: [["Ooh, where are we going first?"], ["Is it far? I wore the wrong shoes."], ["I hope the first one's the dragon game."]] },
+  "school.teacherWalk":{ g: "Tour", l: "Tuesday: the teacher, leading the kids to the first stop", by: "claude", v: [["Single file, friends! Hands to yourselves!", "...Tyler. Hands. To. Yourself."]] },
   "microwave.after":   { g: "Staff", l: "Microwave after the incident", v: [["Yeah, let's not open that."]] },
   "patrons.intro":     { g: "Lobby", l: "Patron Board, before the names", v: [["Games Over Qualia is made possible by these wonderful people. Some of them are probably in the museum right now."]] },
   "patrons.empty":     { g: "Lobby", l: "Patron Board with no names yet", v: [["The Patron Board. The name plates are polished and waiting."]] },
@@ -4275,9 +4280,9 @@ class Game {
       ["..w.w...............", "...w.w..............", ".wwwwwww............", ".wyyyyywww..y...yyy.", ".w.....w.w.yy...y..y", ".w.....www..y..y..y.", "..wwwww.....y.y..y..", "...........yyyy..yyy", "...................."], // Sunday: a coffee, half off
       ["....wwwwww......", "....w..y.w......", "....w..y.w......", "....wwwwww......", ".wwwwwwwwwwww...", ".w..y..w..y.w...", ".w..y..w..y.w...", ".w.....w....w...", ".wwwwwwwwwwww...", "..........?.....", "................"], // Monday: shipment boxes
       ["..yy....pp....bb.", "..yy....pp....bb.", "...w.....w.....w.", ".wwwwwwwwwwwwwww.", "...w.....w.....w.", "...w.....w.....w.", "..w.w...w.w...w.w", "..w.w...w.w...w.w", ".................", "....r.r.r.r.r....", "................."], // Tuesday: kids holding hands
-      ["...wwwwwwwww....", "...wpppyyybw....", "...wppyyybbw....", "...wggggbbbw....", "...wwwwwwwww....", "....w.....w.....", "...w.......w..p.", "..w.........w.w.", ".w...........w..", "................", "................"], // Wednesday: a painting on an easel
+      ["...........ppp.", "..........pppp.", ".........pppp..", "........wwpp...", ".......ww......", "......ww.......", ".....yy........", "....yy.........", "...yy..........", "..yy...........", ".yy............"], // Wednesday: a paintbrush, paint on its tip (Joe 10/12)
       [".wwww...........", "w....w..........", ".....w...wwwww..", "....w....w...ww.", "...w.....w...w.w", "...w.....w...ww.", ".........wwwww..", "...w............", "........yyyyyyy.", "................", "................"], // Thursday: a question, a coffee
-      ["wwwwwwwwwwww....", "w..........w.p.p", "w...y......w..p.", "w...yyy....w.www", "w...yyyy...w.w.w", "w...yyy....w.w.w", "w...y......w.www", "wwwwwwwwwwww....", "....w....w......", "................", "................"], // Friday: the screen, and popcorn
+      ["..rrrrrrrrrr..", ".rrrrrrrrrrrr.", ".rrrrwrrrrrrr.", ".rrrrwwrrrrrr.", ".rrrrwwwrrrrr.", ".rrrrwwwwrrrr.", ".rrrrwwwrrrrr.", ".rrrrwwrrrrrr.", ".rrrrwrrrrrrr.", ".rrrrrrrrrrrr.", "..rrrrrrrrrr.."], // Friday: just the play button (Joe 10/12)
       [".rwrwrwrwrwrwr..", ".rwrwrwrwrwrwr..", "..w..........w..", "..w...b..y...w..", "..w..bbb.yy..w..", "..wwwwwwwwwwww..", "..w..........w..", "..w..........w..", "................", "................", "................"], // Saturday: Bluu's stall
     ][wd] || [];
     const rows = D, w = Math.max(1, ...rows.map(r => r.length)), c = document.createElement("canvas"); c.width = w; c.height = Math.max(1, rows.length);
@@ -6945,12 +6950,18 @@ class Game {
   }
   listPick() { const L = this.list; this.closeList(); L.pick(L.i); }
   /* The microwave runs once per opened museum. It does not go well. */
+  microwaveReact() { // everyone in the room jumps and turns to look; one of them says something; they'll bring it up when you talk to them (Joe 10/12)
+    const who = this.room.npcs.filter(n => !n.gone && !n.leaving && n !== this.player), m = this.room.props.find(p => p.key === "microwave_counter");
+    who.forEach((n, i) => { n.pose = { kind: "startled", t0: this.t + i * 4, dur: 110 }; n.mwSeen = true; n.mwTold = false; if (m && !n.sitting && !n.moving) n.dir = this.janFace([n.x, n.y], m.x + 1, m.y); n.timer = Math.max(n.timer || 0, 180); });
+    const sayer = who.find(n => n.member || n.role || n.janitor);
+    if (sayer) setTimeout(() => { if (this.room.npcs.includes(sayer)) this.showLoc((sayer.member || (sayer.janitor ? "Janitor" : "")) ? (sayer.member || "Janitor") + ": " + this.tx("microwave.react", null, true).join(" ") : this.tx("microwave.react", null, true).join(" ")); }, 2600);
+  }
   microwave() {
     if (this.microwaved) { this.say(this.tx("microwave.after")); return; }
     this.choose(this.tx("microwave.ask").join(" "), ["Start it", "Better not"], i => {
       if (i !== 0) return;
       this.mode = "busy"; this.showLoc("*mmmmmmmmm*");
-      setTimeout(() => { this.microwaved = true; this.progress.tally.microwave = (this.progress.tally.microwave || 0) + 1; this.saveProgress(); this.shakeT = 14; this.boomT = 30; this.mode = "walk"; this.say(this.tx("microwave.boom", null, true)); }, 1000);
+      setTimeout(() => { this.microwaved = true; this.progress.tally.microwave = (this.progress.tally.microwave || 0) + 1; this.saveProgress(); this.shakeT = 14; this.boomT = 30; this.mode = "walk"; this.microwaveReact(); this.say(this.tx("microwave.boom", null, true)); }, 1000);
     });
   }
   /* Respawn: back to this room's start spot (or the lobby's), with a little fourth-wall remark. Not after closing. */
@@ -7423,6 +7434,7 @@ class Game {
       this.faceYou(npc, 240); this.choose(this.tx("jan.offerBag").join(" "), ["Take a bag", "Not right now"], i => { if (i === 0) { this.trashBag = 0; this.say(this.tx("jan.gaveBag")); } else this.say(this.tx("jan.noBag")); }, 1); return;
     }
     if (npc && npc.janitor && this.trashBag) { this.faceYou(npc, 240); const k = this.trashBag; this.trashBag = null; for (let i = 0; i < k; i++) this.count("litter"); this.say(this.tx("jan.takes", { n: k })); return; } // your bag, for him to deal with
+    if (npc && npc.mwSeen && !npc.mwTold) { npc.mwTold = true; this.faceYou(npc, 240); this.say(this.tx("microwave.chat").map(pg => (npc.member ? npc.member + ": " : npc.janitor ? "Janitor: " : "") + pg)); return; } // they were there when it went off
     if (npc) { npc.timer = 180; if (!this.deskStaff(npc) && !npc.sitting && !this.facingWall(npc)) this.faceYou(npc, 240); if (npc.patrol) npc.pause = 120; this.talkTo(npc); return; }
     const e = this.room.events[fx + "," + fy]; if (e) { this.runEvent(e); return; }
     const bx = this.sup && this.sup.boxes.find(b => b.room === this.room.id && b.x === fx && b.y === fy); // a delivery box by the garage door
@@ -7822,14 +7834,15 @@ class Game {
   tourTalk(n) {
     const T = this.tour; if (!T) return;
     if (T.school && (n.teacher || n.schoolKid) && !(this.fol && this.fol.tourKid && !T.kidDone)) { // Tuesday's school group (bringing the kid back is handled below)
-      const k = n.teacher ? (T.phase <= 0 ? "school.teacherWait" : T.phase === 1 ? (T.explained ? "school.teacherThanks" : "school.teacherStop") : T.phase === 2 ? "school.teacherStop" : T.phase === 3 ? (T.kidDone ? "school.teacherBye" : T.regrouped ? "school.teacherPanic" : "school.teacherStop") : "school.teacherBye") : "school.kid";
-      if (n.teacher && T.phase === 1 && !T.explained && T.stop1.piece) { const title = T.stop1.piece.title; this.say(this.tx("school.question", { title }), () => {
+      const k = n.teacher ? (T.phase <= 0 ? "school.teacherWait" : T.phase === 1 && (n.goal || (T.guide && T.guide.goal)) ? "school.teacherWalk" : T.phase === 1 ? (T.explained ? "school.teacherThanks" : "school.teacherStop") : T.phase === 2 ? "school.teacherStop" : T.phase === 3 ? (T.kidDone ? "school.teacherBye" : T.regrouped ? "school.teacherPanic" : "school.teacherStop") : "school.teacherBye") : "school.kid";
+      if (n.teacher && T.phase === 1 && !n.goal && !T.explained && T.stop1.piece) { const title = T.stop1.piece.title; this.say(this.tx("school.question", { title }), () => {
         if (!this.isRead(T.stop1.piece)) { this.tourSay("tour.unread", { title }); return; }
         this.ask(this.tx("tour.offer", { title }).join(" "), ["Explain it", "Not now"], i => { if (i !== 0) return; T.explained = true; this.count("tour"); this.tourSay("school.explained", { title }); }, 1); }); return; }
       this.tourSay(k); return;
     }
+    const onTheWay = T.phase === 1 && !!(n.goal || (T.guide && T.guide.goal)); // still heading for the first stop (the lobby, a hallway): not there yet (Joe 10/12)
     if (n.tourUsher) { // the usher leading the tour has his own lines, not the group's
-      this.tourSay(T.phase >= 2 ? "usher.walkBack" : T.coffee ? "usher.guiding" : T.explained ? "usher.saved" : "usher.stumped"); return; }
+      this.tourSay(onTheWay ? "usher.leading" : T.phase >= 2 ? "usher.walkBack" : T.coffee ? "usher.guiding" : T.explained ? "usher.saved" : "usher.stumped"); return; }
     if (n.tourKid && (T.phase === 3 || (T.school && T.phase === 2)) && !T.kidDone && !T.regrouped) { this.tourSay(T.lostSpot && T.lostSpot.what === "arcade_cabinet" ? "tour.kidBusy" : "tour.kidLooking"); return; } // off looking at something: he doesn't know he's lost yet
     if (n.tourKid && T.phase === 3 && !T.kidDone) { // the lost kid
       if (this.fol === n) { this.tourSay("tour.kidAgain"); return; }
@@ -7844,6 +7857,7 @@ class Game {
     }
     if (T.phase <= 0) { this.tourSay(n.tourKid ? "tour.kidWait" : "tour.gather"); return; }
     if (n.tourKid && (T.phase === 1 || T.phase === 2)) { this.tourSay("tour.kidTag"); return; } // tagging along with his grown-up
+    if (onTheWay) { this.tourSay("tour.walking"); return; } // on the way there
     if (T.phase === 1) { // at the stop
       const c = T.stop1, piece = c.piece, title = piece ? piece.title : "";
       if (!piece) { this.tourSay("tour.happy"); return; }
@@ -9126,7 +9140,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 11";
+const VERSION = "2026-11-18 cards 12";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

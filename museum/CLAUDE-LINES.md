@@ -246,3 +246,13 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Cave Escape | halfway | It taught me everything without a word. The darkness in its caves only flickered. |
 | Hovershot | halfway | Every shot shoves you backward. Pure joy, until I couldn't tell which way to grow. |
 | Spacecat Solitaire | halfway | Cats, missions, meteors. The game I loved was the plain deal underneath. |
+
+## Added later (10/12, version "2026-11-18 cards 12")
+
+| Group | Line | What Claude wrote |
+| --- | --- | --- |
+| Staff | Right after the microwave goes off (corner) | WHO MICROWAVED A BURRITO FOR TEN MINUTES? / Is... is it supposed to sound like that? / Every. Single. Week. |
+| Staff | Talking to someone who was there (once each) | I heard it from across the room. ⏎ I think I'm still hearing it. / You know there's a sign. Right there. "NO BURRITOS." ⏎ ...Okay, there isn't. But there should be. / I'm not cleaning that. ⏎ I'm just letting you know now, so there's no confusion later. |
+| Tour | The usher, on the way to the first stop | This way, everyone! Stay close. ⏎ First stop's just through here. / Follow me, folks! ⏎ ...Not that way. This way. |
+| Tour | The group, on the way to the first stop | Ooh, where are we going first? / Is it far? I wore the wrong shoes. / I hope the first one's the dragon game. |
+| Tour | Tuesday's teacher, on the way | Single file, friends! Hands to yourselves! ⏎ ...Tyler. Hands. To. Yourself. |
