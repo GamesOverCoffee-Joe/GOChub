@@ -302,6 +302,8 @@ nav.jumps a:hover,nav.jumps a:focus-visible{border-color:var(--gold)}
 .cboard .cbar span.on{background:#5a3f2a;color:#f6eedd}
 .cboard .cbar i{position:absolute;top:-3px;bottom:-3px;width:3px;background:#fff;border-radius:2px;left:0}
 .pvgrid .btn{justify-content:center;font-size:.78rem;padding:.35em .3em;min-height:32px}
+.trig{grid-template-columns:repeat(auto-fill,minmax(170px,1fr)) !important}
+.trig .btn{white-space:normal;line-height:1.25;text-align:left;justify-content:flex-start;height:auto;padding:.45em .6em;overflow-wrap:anywhere}
 .rmenu .btn{justify-content:flex-start}
 .wrow{margin:10px 0 14px}
 .wrow textarea,.wtalk textarea{width:100%;min-height:64px;margin-top:4px}
@@ -389,29 +391,29 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
           <div class="pvsec"><span class="pvh">Time of day</span>
             <div class="seg" id="segTime" role="group" aria-label="Time of day"><button type="button" data-v="" title="Follow the real clock">Clock</button><button type="button" data-v="day">Day</button><button type="button" data-v="sunset">Sunset</button><button type="button" data-v="night">Night</button></div></div>
           <div class="pvsec"><span class="pvh">Day of the week</span>
-            <div class="seg" id="segDay" role="group" aria-label="Day of the week"><button type="button" data-v="" title="Follow the real calendar">Auto</button><button type="button" data-v="1">Mon</button><button type="button" data-v="2">Tue</button><button type="button" data-v="3">Wed</button><button type="button" data-v="4">Thu</button><button type="button" data-v="5">Fri</button><button type="button" data-v="6">Sat</button><button type="button" data-v="0">Sun</button></div></div>
+            <div class="seg" id="segDay" role="group" aria-label="Day of the week"><button type="button" data-v="" title="Follow the real calendar">Auto</button><button type="button" data-v="1">Mon</button><button type="button" data-v="2">Tue</button><button type="button" data-v="3">Wed</button><button type="button" data-v="4">Thu</button><button type="button" data-v="5">Fri</button><button type="button" data-v="6">Sat</button><button type="button" data-v="0">Sun</button></div>
+            <div style="display:flex;gap:6px;margin-top:4px"><button class="btn" type="button" id="dayBtn" title="The next day: a new loop, curious visitors come back, the museum opens again">Tomorrow</button></div></div>
+          <div class="pvsec"><span class="pvh">Test triggers</span>
+            <p class="note" style="margin:0 0 4px;font-size:.85rem">Every day's event, the loop's problems, closing and the finds. A stop sets the day and the quarter it needs, then puts you beside it. Next and Back hop through them in order; Check everything visits every stop on every day and lists anything that went wrong.</p>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button class="btn" type="button" id="trigPrev" title="The stop before">&#9664; Back</button><button class="btn" type="button" id="trigNext" title="The next stop">Next &#9654;</button><button class="btn" type="button" id="trigAll" title="Visit every stop on every day of the week (about a minute) and list anything that went wrong">Check everything</button></div>
+            <div id="trigMsg" class="note" style="margin:4px 0;min-height:1.4em;font-size:.88rem"></div>
+            <div id="trigReport" class="note" style="font-size:.82rem;max-height:160px;overflow:auto"></div>
+            <div id="trigList"></div>
+            <div id="errBox" class="note" style="margin-top:6px;font-size:.85rem"></div></div>
           <div class="pvsec"><span class="pvh">Spooky moments</span>
             <div class="seg" id="segSpook" role="group" aria-label="Spooky moments"><button type="button" data-v="rare" title="About one closing in five, as players get it">Rare</button><button type="button" data-v="always" title="Every time the lights go out (handy for recording)">Every closing</button></div></div>
           <div class="pvsec"><span class="pvh">Test pieces</span>
             <div class="seg" id="segTest" role="group" aria-label="Test pieces"><button type="button" data-v="off">Off</button><button type="button" data-v="on" title="60 placeholder pieces, so the oldest go to the rooms' touch screens. Never saved to the pack.">60 placeholders</button></div></div>
           <div class="pvsec"><span class="pvh">Make it happen</span>
             <div class="pvgrid">
-              <button class="btn" type="button" id="figureBtn" title="The figure appears right now, beside or behind you, with this room's lights off. Turn and photograph it before it's gone.">The figure</button>
-              <button class="btn" type="button" id="unveilBtn" title="Stages the unveiling ceremony for the newest piece on display, as if it were unveiled today. Walk into its wing to see it.">An unveiling</button>
-              <button class="btn" type="button" id="joeBtn" title="Joe turns up on the floor near you. Talk to him (or photograph him) to see the glitch.">Joe</button>
               <label class="btn" style="display:flex;gap:6px;align-items:center" title="Set how many tokens you have in this preview">Tokens <input id="walletIn" type="number" min="0" max="9999" style="width:70px"></label>
               <button class="btn" type="button" id="lineBtn" title="Eight people already queued up at the café counter (go to the café first)">A long line</button>
               <button class="btn" type="button" id="binsBtn" title="Every bin in the lobby and museum full to the top, with a little litter beside each">Fill the bins</button>
-              <button class="btn" type="button" id="tourBtn" title="Go stand beside the tour group (or, while he's missing, their lost kid)">Find the tour</button>
-              <button class="btn" type="button" id="consBtn" title="Go stand beside the conservator (in the basement, or after the closing announcement, at a case in one of the wings)">Find the conservator</button>
-              <button class="btn" type="button" id="itemBtn" title="Go stand beside the break room pair (from 3:00): the one heading out with the wrong thing, or the owner">Find the break room</button>
-              <button class="btn" type="button" id="janBtn" title="Go stand beside the janitor, wherever his chores have taken him">Find the janitor</button>
-              <button class="btn" type="button" id="dayBtn" title="The next day: curious visitors come back, dust settles, the museum opens again">Tomorrow</button>
             </div></div>
           <div class="pvsec"><span class="pvh">Visit clock</span>
             <div class="seg" id="segBeat" role="group" aria-label="Jump to a beat"><button type="button" data-v="0" title="Jump to this quarter of the visit">Settling in</button><button type="button" data-v="1" title="Jump to this quarter of the visit">Getting busy</button><button type="button" data-v="2" title="Jump to this quarter of the visit">Rush</button><button type="button" data-v="3" title="Jump to this quarter of the visit">Winding down</button></div>
             <div id="probPick" style="display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font-size:.92rem" title="Every problem runs every loop. Untick Auto to turn some off and try others on their own (the preview only)"></div>
-            <div style="display:flex;gap:6px;align-items:center;margin-top:6px"><button class="btn" type="button" id="clockPause" title="Stop or start the visit clock in this preview">Pause</button><button class="btn" type="button" id="clockFwd" title="Skip ahead one minute">+1 min</button></div>
+            <div style="display:flex;gap:6px;align-items:center;margin-top:6px"><button class="btn" type="button" id="clockPause" title="Stop or start the visit clock in this preview">Pause</button><button class="btn" type="button" id="clockFwd" title="Skip ahead one minute">+1 min</button><button class="btn" type="button" id="clockReplay" title="The loop starts over at 0:00: fresh deliveries, bins, tour and janitor (chores, tokens and photos stay)">Replay the loop</button></div>
             <div id="clockBoard" class="cboard" aria-live="off"></div>
           </div>
           <div class="pvsec"><span class="pvh">Start fresh</span>
@@ -423,14 +425,14 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
         </div>
     </div>
     <p class="pv-hint" id="ver" style="font-size:.75rem"></p>
-    <p class="pv-hint" id="pvHint">Click the preview, then walk with the arrow keys or WASD. Z or Space to look and hang, X to go back or take a photo, Enter for the menu.</p>
+    <p class="pv-hint" id="pvHint">Click the preview, then walk with the arrow keys or WASD (hold Shift to hurry). Z or Space to look and hang, X to go back or take a photo, Enter for the menu. Hold up or down in a menu to scroll.</p>
   </aside>
 </div>
 <script>
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 7";
+window.GOQ_WANT = "2026-11-18 test 1";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -668,26 +670,10 @@ seg("segTest", testPieces ? "on" : "off", async v => { testPieces = v === "on"; 
 $("#recrate").addEventListener("click", () => { game.resetHangs(); stage.focus({ preventScroll: true }); });
 $("#rechore").addEventListener("click", () => { game.resetProgress(); status("The preview's visit starts over"); stage.focus({ preventScroll: true }); });
 $("#reread").addEventListener("click", () => { game.resetRead(); stage.focus({ preventScroll: true }); });
-$("#figureBtn").addEventListener("click", () => {
-  game.closeAll(); if (!game.summonFigure()) status("No room for the figure here. Try a bigger room.", true);
-  stage.focus({ preventScroll: true });
-});
-$("#joeBtn").addEventListener("click", () => {
-  game.closeAll(); if (!game.summonJoe()) status("No floor free near you for Joe. Try somewhere roomier.", true);
-  stage.focus({ preventScroll: true });
-});
-$("#unveilBtn").addEventListener("click", () => {
-  game.closeAll(); const t = game.testUnveil();
-  status(t ? "Staged the unveiling of " + t + ". Walk into its wing (from outside it) to see the ceremony." : "No piece on display to unveil.", !t);
-  stage.focus({ preventScroll: true });
-});
 $("#walletIn").addEventListener("focus", () => { $("#walletIn").value = (game && game.progress && game.progress.tokens) || 0; });
 $("#walletIn").addEventListener("change", () => { if (!game || !game.progress) return; game.progress.tokens = Math.max(0, Math.min(9999, Math.round(+$("#walletIn").value || 0))); game.saveProgress(); game.updateHud(true); status("Test wallet: " + game.progress.tokens + " tokens."); });
 $("#lineBtn").addEventListener("click", () => { const n = game.fillLine(8); status(n ? n + " people in line at the café." : "Go to the café first: the line starts at its counter.", !n); showClock(); stage.focus({ preventScroll: true }); });
 $("#binsBtn").addEventListener("click", () => { game.fillBins(); status("Every bin is full, with litter beside each."); showClock(); stage.focus({ preventScroll: true }); });
-["cons", "item"].forEach(w => $("#" + w + "Btn").addEventListener("click", () => { game.closeAll(); const r = game.findSide(w); if (r !== true) status({ off: "That problem's off this loop (tick it under the visit clock).", tut: "Not during the tutorial.", gone: "Couldn't find him right now.", notyet: "They're not on break yet (it starts in the second quarter), or both have gone." }[r] || "Couldn't find them right now.", true); stage.focus({ preventScroll: true }); }));
-$("#tourBtn").addEventListener("click", () => { game.closeAll(); { const r = game.findTour(); if (r !== true) status({ off: "The tour's problem is off this loop (tick it under the visit clock).", tut: "No tour during the tutorial.", gone: "The tour's already left for today. Jump the clock back to a quarter to bring them back.", room: "Couldn't find a free spot near the tour." }[r] || "No tour to find right now.", true); } stage.focus({ preventScroll: true }); });
-$("#janBtn").addEventListener("click", () => { game.closeAll(); if (!game.findJanitor()) status("Couldn't get beside the janitor just now. Try again in a moment.", true); stage.focus({ preventScroll: true }); });
 $("#dayBtn").addEventListener("click", () => { game.closeAll(); game.skipDay(); stage.focus({ preventScroll: true }); });
 // "Reset chores" also reopens the museum: visitors come back and the lights come on.
 
@@ -734,7 +720,7 @@ function renderPreviewTab() {
   const wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
   wrap.appendChild(el("h2", { class: "title", text: "Preview options" }));
   wrap.appendChild(el("p", { class: "note", text: "These change only the live preview on the right, never the pack or anyone's save. Each row is a setting (the lit one is on); the buttons make something happen right away." }));
-  wrap.appendChild($("#pvMenu")); showClock();
+  wrap.appendChild($("#pvMenu")); showClock(); drawTriggers(); showErrors(); showDaySeg();
 }
 function renderTab() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "visitors") renderVisitors(); else if (tab === "shop") renderShop(); else if (tab === "cards") renderCards(); else if (tab === "tokens") renderTokens(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else if (tab === "notes") renderNotes(); else if (tab === "preview") renderPreviewTab(); else renderPieces(); }
 
@@ -2864,13 +2850,14 @@ function pieceRow(p, i, place) {
 document.querySelectorAll("#segBeat button").forEach(b => b.addEventListener("click", () => { game.setVisitClock(+b.dataset.v * game.director().minutes / 4); showClock(); stage.focus({ preventScroll: true }); }));
 $("#clockPause").addEventListener("click", () => { const d = game.director(); game.setVisitClock(null, !d.paused); showClock(); });
 $("#clockFwd").addEventListener("click", () => { const d = game.director(); game.setVisitClock(Math.min(d.minutes - 0.01, d.min + 1)); showClock(); });
+$("#clockReplay").addEventListener("click", () => { game.replayLoop(); showClock(); stage.focus({ preventScroll: true }); });
 function showClock() {
   const B = $("#clockBoard"); if (!B) return;
   if (!B.firstChild) { // built once; after this only the words change, so the panel keeps its size
     const row = (k, id, cls) => [el("div", { class: "ck", text: k }), el("div", { class: "cv" + (cls ? " " + cls : ""), id })];
     B.append(el("div", { class: "ctime" }, [el("span", { class: "cbig", id: "ckTime" }), el("span", { class: "cbeat", id: "ckBeat" }), el("span", { class: "cstate", id: "ckState" })]),
       el("div", { class: "cbar", id: "ckBar" }, ["Settling in", "Getting busy", "Rush", "Winding down"].map(t => el("span", { text: t })).concat([el("i", { id: "ckMark" })])),
-      ...row("This room", "ckRoom"), ...row("Janitor", "ckJan"), ...row("Litter", "ckLit", "l3"), ...row("Supplies", "ckSup"), ...row("Tour", "ckTour"), ...row("Conservator", "ckCons"), ...row("Break room", "ckItem"), ...row("Not built", "ckTodo"));
+      ...row("This room", "ckRoom"), ...row("Janitor", "ckJan"), ...row("Litter", "ckLit", "l3"), ...row("Supplies", "ckSup"), ...row("Tour", "ckTour"), ...row("Conservator", "ckCons"), ...row("Break room", "ckItem"));
   }
   const d = game.director(), m = Math.floor(d.min), sec = Math.floor((d.min - m) * 60), set = (id, t) => { const e = $("#" + id); if (e.textContent !== t) e.textContent = t; };
   const tail = (s, k) => (s || "").replace(new RegExp("^" + k + ":\\s*"), "") || "—"; // the label's already in the left column
@@ -2884,15 +2871,63 @@ function showClock() {
   set("ckLit", game.litterInfo ? game.litterInfo() : "—");
   set("ckSup", tail(game.supplyInfo && game.supplyInfo(), "Supplies"));
   set("ckTour", game.tourInfo && game.tourInfo() ? tail(game.tourInfo(), "Tour") : d.problems.includes("tour") ? "Not today (the tutorial's on, or no lobby)." : "Off this loop.");
-  set("ckCons", (game.sideInfo && game.sideInfo("cons")) || (d.problems.includes("conservator") ? "Not today (the tutorial's on)." : "Off this loop."));
+  set("ckCons", (game.sideInfo && game.sideInfo("cons")) || "In the basement until the closing announcement.");
   set("ckItem", (game.sideInfo && game.sideInfo("item")) || (d.problems.includes("item") ? "Not today (the tutorial's on)." : "Off this loop."));
-  const todo = d.problems.filter(id => !(GOQ.PROBLEMS.find(x => x.id === id) || {}).built).map(id => { const pr = GOQ.PROBLEMS.find(x => x.id === id); return pr ? pr.who + ": " + pr.label : id; });
-  set("ckTodo", todo.length ? todo.join("; ") + "." : "Nothing: every problem on this loop is built.");
   $("#clockPause").textContent = d.paused ? "Resume" : "Pause";
   document.querySelectorAll("#segBeat button").forEach(b => b.setAttribute("aria-pressed", String(!d.over && +b.dataset.v === d.beat)));
   probSync();
 }
 setInterval(() => { if (tab === "preview") showClock(); }, 1000);
+/* Test triggers (Joe 10/12): every event as a stop. Pick one (or hop with Back and Next) and you're set up beside it. */
+let trigI = -1, trigBusy = false;
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const DAYN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+function showDaySeg() { const v = game.dayOverride === null || game.dayOverride === undefined ? "" : String(game.dayOverride); document.querySelectorAll("#segDay button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === v)); }
+async function goTrigger(i, quiet) {
+  const L = game.testTriggers(), t = L[(i + L.length) % L.length]; trigI = L.indexOf(t);
+  let r; try { game.testPrep(t); showDaySeg(); await wait(450); r = game.testGo(t); } catch (e) { r = "It broke: " + e.message; game.crash(e, "test: " + t.label); }
+  if (!quiet) { $("#trigMsg").textContent = (trigI + 1) + "/" + L.length + " · " + t.label + (t.day !== undefined ? " (" + DAYN[t.day] + ")" : "") + ": " + (r === true ? "you're beside it." : r); drawTriggers(); showErrors(); showClock(); stage.focus({ preventScroll: true }); }
+  return r;
+}
+function drawTriggers() {
+  const box = $("#trigList"); if (!box) return; box.innerHTML = ""; const L = game.testTriggers(), groups = [...new Set(L.map(t => t.group))];
+  groups.forEach(g => { box.appendChild(el("div", { class: "pvh", style: "margin:6px 0 2px", text: g }));
+    box.appendChild(el("div", { class: "pvgrid trig" }, L.map((t, i) => t.group !== g ? null : el("button", { type: "button", class: "btn" + (i === trigI ? " primary" : ""), text: t.label, title: (t.day !== undefined ? DAYN[t.day] + ". " : "") + (t.beat !== undefined ? "Jumps the clock to " + ["0:00", "3:00", "6:00", "9:00"][t.beat] + ". " : ""), onclick: () => goTrigger(i) })).filter(Boolean))); });
+}
+function showErrors() {
+  const box = $("#errBox"); if (!box) return; const E = game.errors || [], off = Object.keys(game.livingOff || {}); box.innerHTML = "";
+  if (!E.length && !off.length) { box.textContent = "No errors this session."; return; }
+  box.appendChild(el("b", { text: E.length + " error" + (E.length === 1 ? "" : "s") + " this session" + (off.length ? " · stopped: " + off.join(", ") : "") + " " }));
+  box.appendChild(el("button", { type: "button", class: "btn small quiet", text: "Clear", onclick: () => { game.errors = []; game.livingOff = {}; showErrors(); } }));
+  E.slice(-8).forEach(x => box.appendChild(el("div", { text: "[" + x.at + "] " + x.where + (x.room ? " (in " + x.room + ")" : "") + ": " + x.msg + (x.n > 1 ? " ×" + x.n : "") })));
+}
+$("#trigNext").addEventListener("click", () => goTrigger(trigI + 1));
+$("#trigPrev").addEventListener("click", () => goTrigger(trigI < 0 ? -1 : trigI - 1));
+$("#trigAll").addEventListener("click", async () => { // every stop, on every day: anything that throws (now, or in the frames after) is listed
+  if (trigBusy) return; trigBusy = true; const btn = $("#trigAll"), before = (game.errors || []).length, notes = [], misses = []; btn.disabled = true;
+  const L = game.testTriggers(); let n = 0;
+  try {
+    for (const wd of [1, 2, 3, 4, 5, 6, 0]) {
+      game.setDay(wd); showDaySeg(); game.replayLoop(); await wait(300);
+      for (let i = 0; i < L.length; i++) {
+        const t = L[i]; if (t.day !== undefined && t.day !== wd) continue; if (t.id === "figure" || t.id === "unveil") continue; // (the figure and the unveiling stage themselves: try those by hand)
+        $("#trigMsg").textContent = "Checking " + DAYN[wd] + ": " + t.label + "…"; n++;
+        const errs = (game.errors || []).length, r = await goTrigger(i, true); await wait(350);
+        if ((game.errors || []).length > errs) notes.push(DAYN[wd] + " · " + t.label + ": " + game.errors[game.errors.length - 1].msg);
+        else if (r !== true) misses.push(DAYN[wd] + " · " + t.label + ": " + r); // no error, but you couldn't be put beside it
+      }
+      game.closeAll();
+    }
+  } finally {
+    game.setDay(null); showDaySeg(); game.replayLoop(); btn.disabled = false; trigBusy = false; trigI = -1; drawTriggers(); showErrors(); showClock();
+    const found = (game.errors || []).length - before;
+    $("#trigMsg").textContent = "Checked " + n + " stops on all seven days: " + (found ? found + " error" + (found === 1 ? "" : "s") + " (listed below)." : "no errors.") + (misses.length ? " " + misses.length + " stop" + (misses.length === 1 ? "" : "s") + " couldn't put you beside it (often fine: already found, or not there that day):" : "");
+    const rep = $("#trigReport"); rep.innerHTML = ""; [...notes.map(x => "Error: " + x), ...misses].forEach(x => rep.appendChild(el("div", { text: x })));
+  }
+});
+setInterval(() => { if (tab === "preview") showErrors(); }, 3000);
+game.ready.then(() => { drawTriggers(); showErrors(); }); // the list is in the preview's Options panel too
+
 /* This loop's problems: Auto (every one, every loop), or untick some to try others on their own. */
 let probSync = () => {};
 (function problemPicker() {

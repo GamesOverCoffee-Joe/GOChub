@@ -3072,6 +3072,7 @@ function buildRoom(id, pieces, o) {
 /* ---------- Game ---------- */
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const OPP = { up: "down", down: "up", left: "right", right: "left" };
+const MENU_MODES = new Set(["choice", "shop", "cafe", "album", "items", "binder", "list"]); // menus where a held direction repeats
 const KEYMAP = { ArrowUp: "up", KeyW: "up", ArrowDown: "down", KeyS: "down", ArrowLeft: "left", KeyA: "left", ArrowRight: "right", KeyD: "right",
   KeyZ: "a", Space: "a", KeyJ: "a", KeyX: "b", Escape: "start", Backspace: "bk", KeyK: "b", Enter: "start", KeyP: "start" }; // bk: back in menus, never a photo
 
@@ -3110,8 +3111,9 @@ class Game {
     this.last = performance.now(); this.acc = 0;
     const tick = now => {
       this.acc += Math.min(100, now - this.last); this.last = now; this.pollPad();
-      while (this.acc >= 1000 / 60) { this.update(); this.acc -= 1000 / 60; }
-      this.draw(); requestAnimationFrame(tick);
+      while (this.acc >= 1000 / 60) { try { this.update(); } catch (e) { this.crash(e, "update"); } this.acc -= 1000 / 60; } // a bad frame is logged (the curator's Preview tab lists it), never a frozen game
+      try { this.draw(); } catch (e) { this.crash(e, "draw"); }
+      requestAnimationFrame(tick);
     };
     if (!opts.headless) requestAnimationFrame(tick); // headless: drawn only when asked (the curator's map editor)
   }
@@ -3249,8 +3251,9 @@ class Game {
       if (DIRS[k]) { this.held = this.held.filter(d => d !== k); this.held.push(k); }
       this.queue.push(this.swapAB && (k === "a" || k === "b") ? (k === "a" ? "b" : "a") : k); // Settings: Swap A and B
     });
-    window.addEventListener("keyup", e => { const k = KEYMAP[e.code]; if (k && DIRS[k]) this.held = this.held.filter(d => d !== k); });
-    window.addEventListener("blur", () => { this.held = []; this.virt = []; });
+    window.addEventListener("keyup", e => { const k = KEYMAP[e.code]; if (k && DIRS[k]) this.held = this.held.filter(d => d !== k); if (e.code === "ShiftLeft" || e.code === "ShiftRight") this.hurryKey = false; });
+    window.addEventListener("keydown", e => { if ((e.code === "ShiftLeft" || e.code === "ShiftRight") && !isField(e.target)) this.hurryKey = true; }); // hold Shift to hurry
+    window.addEventListener("blur", () => { this.held = []; this.virt = []; this.hurryKey = false; });
     this.wrap.addEventListener("pointerdown", e => {
       this.wrap.focus({ preventScroll: true });
       if (e.target === this.canvas) this.tapStart = { x: e.clientX, y: e.clientY, t: performance.now() };
@@ -3349,10 +3352,12 @@ class Game {
     dirs.filter(d => !was.includes(d)).forEach(d => this.hold(d, true, "pad"));
     this.padDirs = dirs;
     const now = { a: b(this.swapAB ? 1 : 0), b: b(this.swapAB ? 0 : 1), start: b(9) || b(8) }, prev = this.padPrev || {};
+    this.hurryPad = b(4) || b(5) || b(6) || b(7); // a shoulder button or trigger: hurry
     for (const k in now) if (now[k] && !prev[k]) this.press(k, "pad");
     if (!this.padSeen && (dirs.length || now.a || now.b || now.start)) { this.padSeen = true; this.showLoc("Controller connected"); }
     this.padPrev = now;
   }
+  hurrying() { return !!(this.hurryKey || this.hurryPad) && this.mode === "walk" && !this.fol; } // Shift, or a shoulder button: twice the pace (not with someone following you)
   heldDir() { const all = this.held.concat(this.virt); return all.length ? all[all.length - 1] : null; }
 
   /* ----- UI ----- */
@@ -5882,6 +5887,65 @@ class Game {
     };
     show(0);
   }
+  /* ----- The curator's test triggers (Preview tab, Joe 10/12) -----
+     Every day's event, each of the loop's problems, closing and the things you find, as stops to hop between: testPrep sets
+     the day and the quarter it needs, then (a moment later, once the museum has caught up) testGo puts you beside it. */
+  testTriggers() {
+    const at = (room, x, y) => [room, x, y], counter = () => { const c = this.rooms.museum && this.counterSpots(this.rooms.museum)[0]; return c || null; };
+    return [
+      { id: "mon-box", group: "Days", day: 1, label: "Mon: a misplaced box", find: () => { const d = this.dayState(), b = (d.boxes || []).find(b => !(d.found || []).includes(b.i)); return b ? at("museum", b.x, b.y) : "All five are found today."; } },
+      { id: "mon-cons", group: "Days", day: 1, label: "Mon: the conservator (boxes go to him)", find: () => this.npcAt(n => n.role === "conservator" && !n.consDream) || "He's not in the basement right now." },
+      { id: "tue-tour", group: "Days", day: 2, beat: 0, label: "Tue: the school group", run: () => this.findTour() },
+      { id: "tue-kid", group: "Days", day: 2, beat: 2, label: "Tue: a kid wanders off", run: () => this.findTour() },
+      { id: "wed-artist", group: "Days", day: 3, label: "Wed: the artist", find: () => this.npcAt(n => n.artist) || "No spot for him today." },
+      { id: "thu-seat", group: "Days", day: 4, label: "Thu: the trivia seat", find: () => { const s = this.dayState().thuSeat; return s ? at("museum", s.x, s.y) : "No free café stool."; } },
+      { id: "fri-seat", group: "Days", day: 5, label: "Fri: the feature's free seat", find: () => { const r = this.rooms.screening, k = r && r.keepFree && [...r.keepFree][0]; return k ? at("screening", ...k.split(",").map(Number)) : "No screening nook."; } },
+      { id: "sat-bluu", group: "Days", day: 6, label: "Sat: Bluu's stall", find: () => this.npcAt(n => n.vendor) || "No room for his stall." },
+      { id: "sun-guest", group: "Days", day: 0, label: "Sun: staff at a café table", find: () => { const s = this.dayState().sunSeat; return s ? at("museum", s.x, s.y) : "Already chatted today, or no café table."; } },
+      { id: "unveil", group: "Days", label: "An unveiling (any day)", run: () => { const t = this.testUnveil(); return t ? "Staged " + t + ". Walk into its wing to see the ceremony." : "No piece on display."; } },
+      { id: "usher", group: "The loop", beat: 0, label: "0:00 The usher's empty mug", find: () => this.npcAt(n => n.usher && !n.tourUsher) || "He's off with the tour." },
+      { id: "boxes", group: "The loop", beat: 0, label: "0:00 The deliveries (basement)", find: () => { const S = this.supState(), b = S.boxes.find(b => b.room === "storage") || S.boxes[0]; return b ? at(b.room, b.x, b.y) : "Both boxes are already up."; } },
+      { id: "stocking", group: "The loop", beat: 0, label: "0:00 The shopkeeper stocking", find: () => this.npcAt(n => n.role === "shopkeeper") },
+      { id: "litter", group: "The loop", beat: 1, label: "3:00 Litter by full bins", run: () => { this.fillBins(); const b = this.litterBins().find(b => b[0] === "museum") || this.litterBins()[0]; return b ? this.goBeside(b[0], b[1], b[2]) : "No bins."; } },
+      { id: "tour", group: "The loop", beat: 1, label: "3:00 The tour at its first stop", run: () => this.findTour() },
+      { id: "line", group: "The loop", beat: 2, label: "6:00 The café line", run: () => { const c = counter(); if (!c) return "No café counter."; const r = this.goBeside("museum", c[0], c[1]); this.fillLine(6); return r; } },
+      { id: "item", group: "The loop", beat: 2, label: "6:00 The break room mix-up", run: () => this.findSide("item") },
+      { id: "kid", group: "The loop", beat: 3, label: "9:00 The lost kid", run: () => this.findTour() },
+      { id: "janitor", group: "The loop", beat: 3, label: "9:00 The janitor's overtime", run: () => this.findJanitor() || "Couldn't get beside him just now." },
+      { id: "intercom", group: "Closing", label: "The intercom (make the announcement)", find: () => { const a = this.rooms.lobby && this.rooms.lobby.intercomAt; return a ? at("lobby", a.x, a.y) : "No intercom."; } },
+      { id: "cons", group: "Closing", label: "The conservator (after the announcement)", run: () => this.findSide("cons") },
+      { id: "mug", group: "Finds", label: "The curator's mug", find: () => { for (const id in this.rooms) if (this.rooms[id].mug) return at(id, this.rooms[id].mug.x, this.rooms[id].mug.y); return "Already found today."; } },
+      { id: "cat", group: "Finds", label: "The cat", find: () => { for (const id in this.rooms) if (this.rooms[id].cat) return at(id, this.rooms[id].cat.x, this.rooms[id].cat.y); return "No cat right now."; } },
+      { id: "curious", group: "Finds", label: "A curious visitor", find: () => this.npcAt(n => n.cur && !n.follow) || "None waiting right now." },
+      { id: "crooked", group: "Finds", label: "A crooked frame", find: () => this.frameAt(p => this.isCrooked(p)) || "Nothing's crooked this session." },
+      { id: "dusty", group: "Finds", label: "A dusty frame", find: () => this.frameAt(p => this.isDusty(p)) || "Nothing's dusty this session." },
+      { id: "plant", group: "Finds", label: "A thirsty plant", find: () => { for (const id in this.rooms) for (const k in this.rooms[id].events) { const e = this.rooms[id].events[k]; if (e.plant && this.isThirsty(e.plant)) return at(id, ...k.split(",").map(Number)); } return "Every plant's watered today."; } },
+      { id: "joe", group: "Finds", label: "Joe", run: () => (this.summonJoe() ? true : "No floor free near you.") },
+      { id: "figure", group: "Finds", label: "The figure", run: () => (this.summonFigure() ? "Turn around." : "No room for it here.") },
+      { id: "shop", group: "Shops", label: "The gift shop (cards)", find: () => this.npcAt(n => n.role === "shopkeeper") || "The shopkeeper's away." },
+      { id: "cafe", group: "Shops", label: "The café counter", find: () => { const c = counter(); return c ? at("museum", c[0], c[1]) : "No café counter."; } },
+      { id: "staffroom", group: "Shops", label: "The staff room (bags, coffee maker)", find: () => { const r = this.rooms.staff, k = r && Object.keys(r.events).find(k => r.events[k].staffCoffee || r.events[k].trash); return k ? at("staff", ...k.split(",").map(Number)) : "No staff room."; } },
+    ];
+  }
+  testPrep(t) { // the day and the quarter the stop needs
+    this.closeAll(); if (this.el.shop) this.el.shop.style.display = "none"; if (this.el.album) this.el.album.style.display = "none"; if (this.el.cardView) this.el.cardView.style.display = "none"; if (this.el.choice) this.el.choice.style.display = "none";
+    if (t.day !== undefined && this.weekday() !== t.day) this.setDay(t.day);
+    if (t.beat !== undefined) { const d = this.director(); if (d.over || d.beat !== t.beat) this.setVisitClock(t.beat * d.minutes / 4 + 0.05); }
+  }
+  testGo(t) { // then beside it: true, or why not
+    const r = t.run ? t.run() : (f => (Array.isArray(f) ? this.goBeside(...f) : f))(t.find());
+    return r === true ? true : typeof r === "string" ? ({ off: "That's off this loop (tick it under the visit clock).", tut: "Not during the tutorial.", gone: "Gone for now (jump the clock back to bring them back).", notyet: "Not yet: try a later quarter.", room: "They're between rooms; try again in a moment." }[r] || r) : "Couldn't get there just now.";
+  }
+  goBeside(room, x, y) {
+    const R = this.rooms[room]; if (!R) return "That room isn't built.";
+    for (let rad = 1; rad <= 5; rad++) for (let dy = -rad; dy <= rad; dy++) for (let dx = -rad; dx <= rad; dx++) {
+      if (Math.abs(dx) + Math.abs(dy) !== rad) continue; const tx = x + dx, ty = y + dy;
+      if (this.tileFree(R, tx, ty) && !R.events[tx + "," + ty]) { this.warp(room, tx, ty, this.janFace([tx, ty], x, y)); return true; }
+    }
+    return "No free floor beside it.";
+  }
+  npcAt(fn) { for (const id in this.rooms || {}) { const n = this.rooms[id].npcs.find(m => !m.gone && !m.leaving && fn(m)); if (n) return [id, n.x, n.y]; } return null; }
+  frameAt(fn) { for (const id in this.rooms || {}) { const r = this.rooms[id]; for (const k in r.events) { const sp = r.events[k] && r.events[k].spot; if (sp && sp.state === "wall" && sp.piece && fn(sp.piece)) return [id, ...k.split(",").map(Number)]; } } return null; }
   /* ----- Trading cards (Joe 10/11) -----
      One card for every piece on display (each unveil adds one), in a common and a rare (very shiny) form. The gift shop sells a
      single (a random common) and a pack of three (each card has settings.cards.packRare percent to be rare). Bluu sells a cheap
@@ -6674,9 +6738,9 @@ class Game {
   showControls() {
     const sw = this.swapAB, A = sw ? "B" : "A", B = sw ? "A" : "B";
     const pages = {
-      keyboard: { label: "KEYBOARD", text: "Move: arrow keys or WASD. " + A + " (look, talk, read): Z, Space or J. " + B + " (photo, and back in menus): X. Back in menus: K or Backspace. Pause: Enter, Esc or P." + (sw ? " (A and B are swapped in Settings.)" : "") },
+      keyboard: { label: "KEYBOARD", text: "Move: arrow keys or WASD. Hurry: hold Shift. " + A + " (look, talk, read): Z, Space or J. " + B + " (photo, and back in menus): X. Back in menus: K or Backspace. Pause: Enter, Esc or P. In a menu, hold up or down to scroll; Esc closes it." + (sw ? " (A and B are swapped in Settings.)" : "") },
       touch: { label: "TOUCH", text: "Move with the on-screen pad. A looks, talks and reads. B takes a photo, and goes back in menus. START pauses. With Tap to walk on (Settings), tap where you want to go, or tap something to walk over and use it." },
-      pad: { label: "CONTROLLER", text: "Move: D-pad or left stick. " + A + " (look, talk, read): the bottom button. " + B + " (photo, and back in menus): the right button. Pause: Start or Select. Writing a note shows a keyboard: the D-pad picks a key, A types it, B deletes, Start sends." + (sw ? " (A and B are swapped in Settings.)" : "") },
+      pad: { label: "CONTROLLER", text: "Move: D-pad or left stick. Hurry: hold a shoulder button. " + A + " (look, talk, read): the bottom button. " + B + " (photo, and back in menus): the right button. Pause: Start or Select. Writing a note shows a keyboard: the D-pad picks a key, A types it, B deletes, Start sends." + (sw ? " (A and B are swapped in Settings.)" : "") },
     };
     const first = this.lastInput === "pad" ? "pad" : this.lastInput === "touch" ? "touch" : "keyboard";
     this.read({ title: "CONTROLS", sections: [first, ...["keyboard", "touch", "pad"].filter(k => k !== first)].map(k => pages[k]) }, () => this.openMenu());
@@ -7134,7 +7198,7 @@ class Game {
     if (c.slow && (this.t & 1)) return false; // the night guard strolls at half speed
     if (c !== this.player && !c.slow && !c.follow && !c.tagging) { const ps = this.pack.settings.staff.patronSpeed, sp = c.leaving && !c.stroll ? Math.min(1, ps * 1.35) : ps; c.spd = (c.spd || 0) + sp; if (c.spd < 1) return false; c.spd -= 1; } // patrons: slower than you; heading out (the closing announcement) only a little brisker, not a stampede
     const behind = c.follow && c !== this.player && Math.abs(c.x - this.player.x) + Math.abs(c.y - this.player.y) > 1; // a follower who's dropped back catches up (they keep your pace)
-    if ((c.prog += (c === this.player && this.segway) || behind ? 2 : 1) >= T) {
+    if ((c.prog += (c === this.player && (this.segway || this.hurrying())) || behind ? 2 : 1) >= T) {
       c.x += DIRS[c.dir][0]; c.y += DIRS[c.dir][1]; c.prog = 0; c.moving = false;
       if (c === this.player) {
         if (!this.full && this.progress.stats) this.progress.stats.steps++;
@@ -7149,7 +7213,11 @@ class Game {
   }
   update() {
     this.t++;
-    const q = this.queue.map(k => (k === "bk" ? (this.mode === "walk" ? null : "b") : k)).filter(Boolean); this.queue = []; // K / Backspace: back, but no photo
+    const q = this.queue.map(k => (k === "bk" ? (this.mode === "walk" ? null : "b") : k)).filter(Boolean); this.queue = [];
+    { // menus: hold a direction and it repeats (a short wait, then steadily), so long lists are quick to get through
+      const hd = MENU_MODES.has(this.mode) ? this.heldDir() : null, R = this.menuRep;
+      if (!hd) this.menuRep = null; else if (!R || R.d !== hd) this.menuRep = { d: hd, t: 0 }; else if (++R.t >= 18 && (R.t - 18) % 5 === 0) q.push(hd);
+    } // K / Backspace: back, but no photo
     // Up, up, down, down, left, right, left, right, B, A, Start: a Segway. Enter it again to park it. That Start doesn't open the menu.
     if (this.mode === "walk") for (const k of q) if (KONAMI.includes(k)) {
       (this.kbuf = this.kbuf || []).push(k); if (this.kbuf.length > KONAMI.length) this.kbuf.shift();
@@ -7203,7 +7271,7 @@ class Game {
       if (has("a")) this.albumAct(); else if (has("b") || has("start")) this.closeAlbum();
       return;
     }
-    if (this.mode === "card") { if (has("a") || has("b")) this.cardNext(); return; }
+    if (this.mode === "card") { if (has("a") || has("b") || has("start")) this.cardNext(); return; }
     if (this.mode === "binder") {
       const n = this.cardList().length, cols = 6;
       let i = this.binderSel;
@@ -7228,7 +7296,7 @@ class Game {
     if (this.mode === "shop") {
       const n = this.shopRows().length;
       if (has("up") || has("down")) { this.shopSel = (this.shopSel + (has("up") ? n - 1 : 1)) % n; this.shopConfirm = null; this.shopMsg = ""; this.renderShop(); }
-      if (has("a")) this.shopSelect(); else if (has("b")) this.closeShop();
+      if (has("a")) this.shopSelect(); else if (has("b") || has("start")) this.closeShop(); // Esc closes it too, like every other menu
       return;
     }
     if (this.mode === "form" && this.kp) {
@@ -7521,9 +7589,16 @@ class Game {
   }
   /* The living museum's systems each run guarded: if one hits a bug, it switches itself off for this visit (and says so
      in the console) instead of stopping the whole game. */
+  crash(e, where) { // keep a short log of errors (the curator's Preview tab shows it); the first time one turns up, get back to walking
+    const msg = (e && e.message) || String(e), L = this.errors || (this.errors = []), same = L.find(x => x.msg === msg && x.where === where);
+    if (same) { same.n++; return; }
+    L.push({ where, msg, n: 1, room: this.room && this.room.id, at: new Date().toLocaleTimeString() }); if (L.length > 40) L.shift();
+    if (typeof console !== "undefined") console.error("GOQ: " + where, e);
+    if (where === "update" || where === "draw") { try { this.el.text.style.display = "none"; this.el.choice.style.display = "none"; this.txt = null; if (this.mode !== "walk") { this.mode = "walk"; this.inputLock = true; } } catch (e2) {} }
+  }
   living(name, fn) {
     const off = this.livingOff || (this.livingOff = {}); if (off[name]) return;
-    try { fn(); } catch (e) { off[name] = true; if (typeof console !== "undefined") console.error("GOQ living museum: " + name + " stopped for this visit", e); }
+    try { fn(); } catch (e) { off[name] = true; this.crash(e, name + " (stopped for this visit)"); }
   }
   /* ----- The tour (living museum, Step 5: the tour chain) -----
      The usher needs a coffee before the tour (0–3), while a tour group gathers in the lobby. At 3–6 he leads them to a
@@ -9035,7 +9110,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 7";
+const VERSION = "2026-11-18 test 1";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
