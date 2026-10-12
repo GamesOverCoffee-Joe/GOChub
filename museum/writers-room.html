@@ -151,6 +151,9 @@ input.one:focus{border-color:var(--gold);outline:none}
 .gbox .gb{white-space:pre-wrap;overflow:hidden;height:100%;overflow-wrap:anywhere}
 .gbox .pg{position:absolute;right:calc(3px * var(--s));bottom:calc(1px * var(--s));font-size:calc(5px * var(--s));line-height:1;color:#808090}
 .gmeasure{position:absolute;left:-9999px;top:0;visibility:hidden}
+.cardq{background:#141012;border:2px solid #e8c070;box-shadow:0 0 0 4px #7c2434;border-radius:4px;padding:12px 14px;max-width:300px;margin:6px 4px}
+.cardq .q{font-style:italic;color:#efe6d2;font-size:1.05rem;line-height:1.35}
+.cardq .sig{text-align:right;color:#c8a868;font-size:.85rem;margin-top:4px}
 .led{background:#0c0a0c;border:3px solid #2a2228;border-radius:4px;padding:8px 10px;font-family:var(--pixel);font-size:11px;line-height:1.4;color:#ff4a3a;text-shadow:0 0 6px #ff3020;white-space:nowrap;overflow-x:auto;max-width:100%}
 .listprev{display:flex;flex-wrap:wrap;gap:6px}
 .listprev span{background:#f8f8f0;color:#181820;font-family:var(--pixel);font-size:9px;line-height:1.5;padding:4px 8px;border-radius:3px}
@@ -293,11 +296,18 @@ function buildCards() {
     fields.push({ kind: "line", label: "How a visitor would describe it (\"I tried " + (p.title || "it") + ", the one where…\")", get: () => P().hint || "", set: v => { P().hint = v; } });
     cards.push({ id: "p:" + p.id, cat: "placards", area: "Placards", title: p.title || "Untitled", sub: p.developer || "", where: "Pieces", preview: "placard", fields });
   });
+  // The curator's quote on each piece's trading card (Joe 10/12)
+  raw.pieces.forEach((p, i) => {
+    const P = () => raw.pieces[i];
+    cards.push({ id: "q:" + p.id, cat: "lines", area: "Trading cards", title: p.title || "Untitled", sub: "card quote", where: "Cards", preview: "quote",
+      fields: [{ kind: "para", label: "The curator's quote, on its trading card (signed \u2014 the curator)", get: () => P().cardBlurb || "", set: v => { P().cardBlurb = v; } }] });
+  });
   return cards;
 }
 
 /* Claude's lines (Joe 10/11): a card is tagged "claude" while it still holds a version Claude wrote. */
 const isClaude = c => { if (c.id.startsWith("a:")) { const d = GOQ.CLAUDE_ACH && GOQ.CLAUDE_ACH[c.id.slice(2)]; return !!d && c.fields[0].get() === d.name && c.fields[1].get() === d.desc; } // an achievement Claude wrote
+  if (c.id.startsWith("q:")) { const d = GOQ.CLAUDE_QUOTES && GOQ.CLAUDE_QUOTES[c.id.slice(2)]; return !!d && c.fields[0].get() === d; } // a card quote
   if (c.id.startsWith("s:")) { const d = GOQ.CLAUDE_SHOP && GOQ.CLAUDE_SHOP[c.id.slice(2)]; return !!d && c.fields[1].get() === d; } // a shop item's description
   const k = c.id.startsWith("t:") ? c.id.slice(2) : null, mine = k && GOQ.CLAUDE_LINES && GOQ.CLAUDE_LINES[k]; if (!mine) return false;
   const cur = versionsOf("pages", c.fields[0].get()); return mine.some(v => cur.includes(v)); };
@@ -602,6 +612,11 @@ function renderCard() {
     if (c.preview === "placard") {
       label = "On the placard";
       state.forEach((s, i) => { const t = (s.vers[0] || s.ph[0] || "").trim(); if (!t) return; const f = c.fields[i]; stage.appendChild(el("div", { class: "placard" }, [el("b", { class: /Intention/.test(f.label) ? "red" : "", text: f.label.replace(/ \(.*$/, "").toUpperCase() }), fillVars(t)])); });
+    } else if (c.preview === "quote") { // as it sits on the card: in quotes, signed
+      label = "On the card";
+      const q = txt.trim().replace(/^["\u201C]+|["\u201D]+$/g, "");
+      stage.appendChild(el("div", { class: "cardq" }, [el("div", { class: "q", text: q ? "\u201C" + q + "\u201D" : "" }), el("div", { class: "sig", text: "\u2014 the curator" })]));
+      if (q.length > 95) stage.appendChild(el("p", { class: "warn", style: "color:#f08a6a", text: "Long for a card: it may not all fit (about 95 letters does)." }));
     } else if (c.preview === "led") {
       const line = txt.replace(/\n/g, " ").toUpperCase();
       stage.appendChild(el("div", { class: "led", text: line + " ACROBATIC CAR" }));
