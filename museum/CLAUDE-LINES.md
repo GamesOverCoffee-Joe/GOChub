@@ -66,7 +66,6 @@ Two more, outside Words: a new version in the screening nook guest's lines ("I k
 | Screening nook | Getting popcorn | You got a bag of popcorn. ⏎ It's still warm. |
 | Screening nook | Popcorn, without enough tokens | I don't have enough tokens for popcorn. ⏎ Sad. |
 | Screening nook | Finishing your popcorn as the episode ends | The episode's over and so is the popcorn. / Every last kernel. Gone. |
-| Screening nook | Trying to put a popcorn bag in the café's dish tub | The dish tub is for mugs. The popcorn bag goes in the trash. |
 | Screening nook | Popcorn, with something already in your hands | My hands are full already. |
 | Litter | Picking up litter ({thing}: cup, wrapper or napkin) | You pick up a {thing}. Gross. / A {thing}. People are animals. / You pick up the {thing}. |
 | Litter | A full bin (it won't take any more) | This bin is full to the top. ⏎ Someone should empty it. |
