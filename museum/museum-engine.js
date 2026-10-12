@@ -2234,6 +2234,18 @@ const TEXT = {
   "jan.home":          { g: "Janitor", l: "The Janitor at closing, done for the day and heading home", by: "claude", v: [["That's me done. Night.", "Don't let the lights hit you on the way out."], ["Clocking out. The floors are spotless. You're welcome."]] },
   "jan.break":         { g: "Janitor", l: "On his break in the staff room", by: "claude", v: [["Break time. I'm not here.", "...", "You can't see me."], ["Shh. Five minutes."]] },
   "jan.early":         { g: "Janitor", l: "On an early break, because the plants were already watered", by: "claude", v: [["Somebody watered all the plants already.", "Whoever you are, I owe you one.", "Early break, baby."]] },
+  "chill.intro":       { g: "Chill museum", l: "The curator, when you've solved every problem in one loop (first time only; the game pauses)", by: "claude", v: [["Hey. Got a second?", "I've been watching the cameras. Not in a creepy way. In a curator way.", "Everything went right today. Like... everything."]] },
+  "chill.usher":       { g: "Chill museum", l: "The curator: what you did for the usher", by: "claude", v: [["You got the usher a coffee before the tour. He actually knew what he was talking about for once."]] },
+  "chill.tour":        { g: "Chill museum", l: "The curator: what you did for the tour group (a happy tour, the lost kid walked back)", by: "claude", v: [["The tour group left happy. And you walked that kid back before anybody had to panic."]] },
+  "chill.stock":       { g: "Chill museum", l: "The curator: what you did for the shopkeeper", by: "claude", v: [["You hauled the shop's stock up from the basement, so the shop opened on time."]] },
+  "chill.line":        { g: "Chill museum", l: "The curator: what you did for the barista", by: "claude", v: [["You got the café its supplies early, so the line never made it into the hallway."]] },
+  "chill.litter":      { g: "Chill museum", l: "The curator: what you did about the litter", by: "claude", v: [["You picked up the trash by the full bins. Nobody had to step over a wrapper."]] },
+  "chill.item":        { g: "Chill museum", l: "The curator: what you did for the staff on break ({who} took {owner}'s {item})", by: "claude", v: [["You caught {who} heading out the door with {owner}'s {item}.", "Back to {owner} it went. Crisis averted."]] },
+  "chill.janitor":     { g: "Chill museum", l: "The curator: what you did for the Janitor", by: "claude", v: [["You watered the plants before the Janitor got to them. He took his break early.", "He'll never admit it, but he was thrilled."]] },
+  "chill.outro":       { g: "Chill museum", l: "The curator, before asking if you want to keep it chill", by: "claude", v: [["So... you fixed my whole museum.", "If you want, I can keep it like this. No more problems. Just a chill day at the museum, every day.", "Or you can keep things the way they've been. I won't judge. Much."]] },
+  "chill.ask":         { g: "Chill museum", l: "The curator's question (the answers: Keep it chill / Keep it as is)", by: "claude", v: [["So what'll it be?"]] },
+  "chill.settings":    { g: "Chill museum", l: "The curator, after you answer: where the setting lives", by: "claude", v: [["You can change your mind any time. It's the Chill museum switch in Settings.", "That's the gear button at the top right, outside the game window."]] },
+  "chill.again":       { g: "Chill museum", l: "Notice: every problem solved again, in a later loop", by: "claude", v: [["Every problem solved. Again. Show-off."]] },
   "supply.pickShop":   { g: "Supplies", l: "Picking up the shop's stock box in the basement", by: "claude", v: [["A box labeled SHOP STOCK. It rattles.", "Sounds like souvenirs."]] },
   "supply.pickCafe":   { g: "Supplies", l: "Picking up the café's supply box in the basement", by: "claude", v: [["A box of cups, lids and coffee beans.", "It smells amazing. I could just eat the beans."]] },
   "supply.hands":      { g: "Supplies", l: "Trying to carry a second box", by: "claude", v: [["One box at a time. I'm a volunteer, not a forklift."]] },
@@ -4141,6 +4153,7 @@ class Game {
   }
   count(kind, target) {
     this.progress.tally[kind] = (this.progress.tally[kind] || 0) + 1;
+    if (kind === "litter") this.markSolved("litter");
     this.earn(this.pack.settings.rewards[kind] !== undefined ? this.pack.settings.rewards[kind] : 1); // Tokens tab
     const s = this.staff; if (!s) { this.favor(kind); return; }
     const t = this.progress.staffTally[s.badge] || (this.progress.staffTally[s.badge] = { name: s.name });
@@ -5583,7 +5596,7 @@ class Game {
     const key = today + ":" + day + ":" + loop;
     // Every problem, every loop (Joe 10/10: like Majora's Mask, the day changes their shape, not whether they happen;
     // the timeline spaces them out so a player can learn the rhythm and prevent them all).
-    if (!d.picks || d.picks.key !== key) d.picks = { key, ids: PROBLEMS.map(pr => pr.id) };
+    if (!d.picks || d.picks.key !== key) d.picks = { key, ids: this.chillOn() ? [] : PROBLEMS.map(pr => pr.id) }; // the chill museum (Settings): nothing goes wrong
     if (this.forceProblems) d.picks.ids = this.forceProblems.slice(); // the curator's preview: this loop's problems, picked by hand
     const r = this.room, plan = r && r.base ? Object.values(this.crowdPlan(r, beat)) : null, sum = k => plan.reduce((a, p) => a + (k === "now" ? p.now.length : p[k]), 0);
     const here = plan ? { now: sum("now"), want: sum("want"), base: sum("base"), room: r.id } : null;
@@ -7297,7 +7310,7 @@ class Game {
       const c = this.cine; c.blend += (c.goal > c.blend ? 1 : -1) / 40; c.blend = Math.max(0, Math.min(1, c.blend));
       if (this.mode === "busy" && c.wait > 0 && --c.wait === 0 && c.then) { const fn = c.then; c.then = null; fn(); }
     }
-    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.living("director", () => this.updateDirector()); this.living("litter", () => this.updateLitter()); this.living("supplies", () => this.updateSupplies()); this.living("tour", () => this.updateTour()); this.living("side", () => this.updateSide()); this.living("cons", () => this.updateCons()); this.living("hold", () => this.updateLineHold()); this.living("rush", () => this.updateRush()); this.living("brew", () => this.updateBrew()); this.living("janitor", () => this.updateJanitor());
+    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.living("director", () => this.updateDirector()); this.living("litter", () => this.updateLitter()); this.living("supplies", () => this.updateSupplies()); this.living("tour", () => this.updateTour()); this.living("side", () => this.updateSide()); this.living("cons", () => this.updateCons()); this.living("hold", () => this.updateLineHold()); this.living("rush", () => this.updateRush()); this.living("brew", () => this.updateBrew()); this.living("janitor", () => this.updateJanitor()); if (this.t % 30 === 0) this.living("solved", () => this.checkSolved());
     if (this.petT > 0) this.petT--;
     if (this.t % 20 === 0) this.flushToasts();
     if (this.flickerT > 0) this.flickerT--;
@@ -7676,10 +7689,10 @@ class Game {
     const d = this.director(), key = todayISO() + ":" + d.loop;
     if (this.tour && this.tour.key === key) { if (this.tour.on && this.tour.gen !== this.worldGen) this.tourPlan(this.tour); return this.tour; } // the museum was rebuilt (the pack loading): plan its stops again
     if (this.tour) this.endTour(true);
-    const on = d.problems.includes("tour") && !!this.rooms.lobby && !!this.rooms.museum;
+    const on = (d.problems.includes("tour") || this.chillOn()) && !!this.rooms.lobby && !!this.rooms.museum; // chill: the tour still comes through, happy, and nobody gets lost
     let sd = strSeed(todayISO() + ":tour:" + d.loop + ":" + this.daySeed()); const rnd = () => (sd = (Math.imul(sd, 1103515245) + 12345) >>> 0) / 4294967296;
     const school = this.weekday() === 2; // Tuesdays: a school group, a teacher leading four kids (Joe 10/11)
-    const T = this.tour = { key, on, school, coffee: school || !d.problems.includes("usher"), asked: false, explained: false, mood: null, kidDone: false, members: [], phase: -1, rnd };
+    const T = this.tour = { key, on, school, coffee: school || !d.problems.includes("usher"), asked: false, explained: this.chillOn(), mood: null, kidDone: this.chillOn(), members: [], phase: -1, rnd };
     { const L = this.loopSave(); if (L && L.tour && L.tour.key === key) { const { key: _k, ...st } = L.tour; Object.assign(T, st); } } // earlier today: how it went so far
     if (!on) return T;
     this.tourPlan(T);
@@ -8276,6 +8289,40 @@ class Game {
     const r = this.room, Q = this.queueSpots(r); if (!Q.length) return 0; let n = 0;
     for (let i = 0; i < Q.length && n < k; i++) { const [x, y] = Q[i]; if (!this.tileFree(r, x, y) || (this.player.x === x && this.player.y === y)) continue; r.npcs.push(Object.assign(this.crowdPerson(x, y, this.cafeZone(r)), { queue: { phase: "in" }, drink: null, bag: false, dir: "up" })); n++; }
     return n;
+  }
+  /* ----- The chill museum (Joe 10/12) -----
+     Play without any of the problems: a switch in Settings (there from the start), or the curator offers it the first time you
+     solve every problem in one loop. Solved ones are kept for the loop as they happen (some states reset later on). */
+  chillOn() { return !!(this.progress && this.progress.chill); }
+  setChill(on, keep) { // keep: leave this loop as it is (everything's already solved)
+    this.progress.chill = !!on; this.saveProgress();
+    if (!keep && !this.forceProblems) { if (this.dirClock) this.dirClock.picks = null; this.sup = null; if (this.tour) this.endTour(true); this.endSide(); }
+  }
+  solvedNow() { const d = this.director(), key = todayISO() + ":" + d.loop, P = this.progress; if (!P.solved || P.solved.key !== key) P.solved = { key, ids: [], vars: {} }; return P.solved; }
+  markSolved(id, vars) { const S = this.solvedNow(); if (S.ids.includes(id)) return; S.ids.push(id); if (vars) Object.assign(S.vars, vars); this.saveProgress(); }
+  checkSolved() {
+    if (this.headless || this.tut || this.forceProblems || this.chillOn() || !this.rooms || !this.rooms.museum || !this.pack) return;
+    const d = this.director(); if (d.over || d.problems.length < PROBLEMS.length) return;
+    const T = this.tour, Su = this.sup, I = this.side && this.side.item, J = this.jan;
+    if (T && (!T.on || T.coffee)) this.markSolved("usher"); // (Tuesday's teacher leads instead: nothing to fix there)
+    if (T && (!T.on || (T.mood === "happy" && T.kidDone))) this.markSolved("tour");
+    if (Su && Su.shopDone) this.markSolved("stock");
+    if (Su && (Su.cafeDone || !Su.cafeNeeded)) this.markSolved("line");
+    if (I && (!I.on || I.done)) this.markSolved("item", I.on ? { who: I.taker.member, owner: I.owner.member, item: I.item } : {});
+    if (J && J.early) this.markSolved("janitor");
+    const S = this.solvedNow(); if (S.shown || !PROBLEMS.every(p => S.ids.includes(p.id))) return;
+    if (this.mode !== "walk" || this.trans || this.closing || this.inputLock) return; // when you're free: not mid-conversation
+    S.shown = true; this.saveProgress();
+    if (this.progress.chillOffered) { this.showLoc(this.tx("chill.again")[0]); return; }
+    this.progress.chillOffered = true; this.saveProgress();
+    const dc = this.dirClock, was = dc && dc.paused; if (dc) dc.paused = true; // the game stops while the curator talks
+    const C = pages => pages.map((pg, i) => (i === 0 ? "Curator: " : "") + pg);
+    const pages = [...C(this.tx("chill.intro")), ...PROBLEMS.flatMap(p => (S.ids.includes(p.id) && TEXT["chill." + p.id] ? C(this.tx("chill." + p.id, p.id === "item" ? S.vars : {})) : [])), ...C(this.tx("chill.outro"))];
+    const done = () => { if (dc) dc.paused = was; };
+    this.say(pages, () => this.choose("Curator: " + this.tx("chill.ask").join(" "), ["Keep it chill", "Keep it as is"], i => {
+      if (i === 0) this.setChill(true, true);
+      this.say(C(this.tx("chill.settings")), done);
+    }, 1));
   }
   setProblems(ids) { this.forceProblems = ids; if (this.dirClock) this.dirClock.picks = null; this.sup = null; if (this.tour) this.endTour(true); this.endSide(); }
   /* ----- Litter (living museum, Step 3: the litter chain) -----
@@ -9188,7 +9235,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 19";
+const VERSION = "2026-11-18 cards 20";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

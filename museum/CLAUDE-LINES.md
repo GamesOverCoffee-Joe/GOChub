@@ -256,3 +256,15 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Tour | The usher, on the way to the first stop | This way, everyone! Stay close. ⏎ First stop's just through here. / Follow me, folks! ⏎ ...Not that way. This way. |
 | Tour | The group, on the way to the first stop | Ooh, where are we going first? / Is it far? I wore the wrong shoes. / I hope the first one's the dragon game. |
 | Tour | Tuesday's teacher, on the way | Single file, friends! Hands to yourselves! ⏎ ...Tyler. Hands. To. Yourself. |
+| Chill museum | The curator, when you've solved every problem in one loop | Hey. Got a second? ⏎ I've been watching the cameras. Not in a creepy way. In a curator way. ⏎ Everything went right today. Like... everything. |
+| Chill museum | The curator: the usher | You got the usher a coffee before the tour. He actually knew what he was talking about for once. |
+| Chill museum | The curator: the tour group | The tour group left happy. And you walked that kid back before anybody had to panic. |
+| Chill museum | The curator: the shopkeeper | You hauled the shop's stock up from the basement, so the shop opened on time. |
+| Chill museum | The curator: the barista | You got the café its supplies early, so the line never made it into the hallway. |
+| Chill museum | The curator: the litter | You picked up the trash by the full bins. Nobody had to step over a wrapper. |
+| Chill museum | The curator: the staff on break | You caught {who} heading out the door with {owner}'s {item}. ⏎ Back to {owner} it went. Crisis averted. |
+| Chill museum | The curator: the Janitor | You watered the plants before the Janitor got to them. He took his break early. ⏎ He'll never admit it, but he was thrilled. |
+| Chill museum | The curator, before asking | So... you fixed my whole museum. ⏎ If you want, I can keep it like this. No more problems. Just a chill day at the museum, every day. ⏎ Or you can keep things the way they've been. I won't judge. Much. |
+| Chill museum | The curator's question | So what'll it be? |
+| Chill museum | The curator, after you answer | You can change your mind any time. It's the Chill museum switch in Settings. ⏎ That's the gear button at the top right, outside the game window. |
+| Chill museum | Notice: every problem solved again | Every problem solved. Again. Show-off. |
