@@ -432,7 +432,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 thumbs 1";
+window.GOQ_WANT = "2026-11-18 thumbs 2";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -2483,7 +2483,7 @@ async function fetchCardTitles(all, note) {
   if (got) { changed({ now: true }); if (tab === "cards") renderCards(true); }
 }
 /* Episode thumbnails (Joe 10/12): fetched from YouTube in this browser, made card-sized (480×270), and handed over as one zip of
-   thumbs/<video id>.jpg to unzip next to museum.html. The cards use them once they're on the site. */
+   museum/thumbs/<video id>.jpg to unzip at the top of the repo. The cards use them once they're on the site. */
 const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
 function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
 function makeZip(files) { // stored (no compression: JPEGs don't shrink anyway)
@@ -2514,11 +2514,11 @@ async function ytThumb(id) { // the biggest one YouTube has, cropped to 16:9, 48
 async function downloadThumbs(note) {
   const ids = [...new Set(draft.pieces.filter(p => !p.tut).map(p => GOQ.ytVideoId(p.episodeUrl)).filter(Boolean))]; if (!ids.length) { note.textContent = "No pieces have an episode link."; return; }
   const files = [], missing = []; let blocked = false;
-  for (let i = 0; i < ids.length; i++) { note.textContent = "Getting thumbnail " + (i + 1) + " of " + ids.length + "…"; const b = await ytThumb(ids[i]); if (b === "cors") { blocked = true; break; } if (b) files.push({ name: "thumbs/" + ids[i] + ".jpg", data: b }); else missing.push(ids[i]); }
+  for (let i = 0; i < ids.length; i++) { note.textContent = "Getting thumbnail " + (i + 1) + " of " + ids.length + "…"; const b = await ytThumb(ids[i]); if (b === "cors") { blocked = true; break; } if (b) files.push({ name: "museum/thumbs/" + ids[i] + ".jpg", data: b }); else missing.push(ids[i]); }
   if (blocked) { note.textContent = "This browser wouldn't let the page copy YouTube's thumbnails. Try another browser (Chrome or Firefox), or save them by hand: https://i.ytimg.com/vi/VIDEO_ID/maxresdefault.jpg, saved as thumbs/VIDEO_ID.jpg."; return; }
   if (!files.length) { note.textContent = "No thumbnails came back (private videos, or YouTube didn't answer)."; return; }
   download("thumbs.zip", makeZip(files));
-  note.textContent = "Downloaded thumbs.zip (" + files.length + " thumbnail" + (files.length === 1 ? "" : "s") + (missing.length ? "; " + missing.length + " missing" : "") + "). Unzip it in the museum folder, next to museum.html, so there's a thumbs folder, then push. The cards use them from then on (new episodes: download again).";
+  note.textContent = "Downloaded thumbs.zip (" + files.length + " thumbnail" + (files.length === 1 ? "" : "s") + (missing.length ? "; " + missing.length + " missing" : "") + "). Unzip it at the top of the GOChub folder (it makes museum/thumbs), then push. The cards use them from then on (new episodes: download again).";
 }
 function renderCards(keepNote) {
   const main = $("#main"), oldNote = keepNote && main.querySelector("#cardFetchNote") ? main.querySelector("#cardFetchNote").textContent : ""; main.innerHTML = "";
@@ -2540,7 +2540,7 @@ function renderCards(keepNote) {
     el("div", { class: "row" }, [el("button", { type: "button", class: "btn small", text: "Look up missing titles", onclick: () => fetchCardTitles(false, note) }), el("button", { type: "button", class: "btn small quiet", text: "Look them all up again", onclick: () => fetchCardTitles(true, note) })]), note]));
   const tnote = el("p", { class: "note", style: "margin:6px 0 0" }), have = Object.values(game.thumbState || {}).filter(v => v === "ok").length;
   wrap.appendChild(el("section", { class: "prow", style: "display:block;margin:10px 0 16px" }, [el("h3", { text: "Episode thumbnails", style: "margin:0 0 4px" }),
-    el("p", { class: "note", style: "margin:0 0 8px", text: "The big picture on each card is its episode's YouTube thumbnail, with the game's art small in the corner. Download them all as one zip, unzip it in the museum folder (next to museum.html, so there's a thumbs folder) and push. A card without a thumbnail shows the game's art. " + (have ? have + " thumbnail" + (have === 1 ? " is" : "s are") + " in the folder now." : "None are in the folder yet.") }),
+    el("p", { class: "note", style: "margin:0 0 8px", text: "The big picture on each card is its episode's YouTube thumbnail, with the game's art small in the corner. Download them all as one zip, unzip it at the top of the GOChub folder (it fills museum/thumbs) and push. A card without a thumbnail shows the game's art. " + (have ? have + " thumbnail" + (have === 1 ? " is" : "s are") + " in the folder now." : "None are in the folder yet.") }),
     el("div", { class: "row" }, [el("button", { type: "button", class: "btn small", text: "Download thumbnails (zip)", onclick: () => downloadThumbs(tnote) })]), tnote]));
   const today = GOQ.todayISO(), list = draft.pieces.filter(p => !p.tut).slice().sort((a, b) => ((a.unveil || "") < (b.unveil || "") ? -1 : (a.unveil || "") > (b.unveil || "") ? 1 : 0));
   if (!list.length) wrap.appendChild(el("p", { class: "empty", text: "No pieces yet (Pieces tab)." }));
