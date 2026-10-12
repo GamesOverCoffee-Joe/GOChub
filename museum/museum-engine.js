@@ -7743,9 +7743,14 @@ class Game {
     const phase = this.closing ? 4 : d.over ? 4 : d.beat; // 4: on their way out
     if (phase !== T.phase) { // the next part of the tour: everyone gets somewhere new to be
       const fresh = T.phase === -1; T.phase = phase; T.regrouped = false;
+      if (phase < 4) T.members.forEach(n => { if (!n.gone && !n.leaving) return; // reopened after they'd gone home at closing: back in through the front doors
+        const ex = ROOMS.lobby.exitTo || ROOMS.lobby.spawn, at = this.freeSpot(L, [ex[0], ex[1], 4]) || this.freeSpot(L) || [ex[0], ex[1]];
+        Object.assign(n, { gone: false, leaving: false, fading: false, leaveTo: null, route: null, walkTo: null, goal: null, moving: false, prog: 0, sitting: false, sitFrom: null, where: "lobby", x: at[0], y: at[1], dir: "up" });
+        if (this.room === L) { n.alpha = 0; n.fadeIn = true; } else delete n.alpha; for (const id in this.rooms) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== n); L.npcs.push(n); }); // in the room now, so the next one gets a spot of their own
       if (phase === 0) { // waiting in the lobby (also after the curator jumps the clock back)
         T.members.forEach((n, i) => { n.still = true; n.random = false; n.queue = null; if (this.fol === n) { this.fol = null; n.follow = false; } this.tourHome(n, i);
-          if (fresh && n.goal && n.goal.room === "lobby") { const g = n.goal; n.where = "lobby"; n.moving = false; n.walkTo = null; n.route = null; [n.x, n.y] = g.at; n.dir = g.dir; n.goal = null; if (g.sit) this.tourSit(n, g.sit); } }); // a new day or a rebuilt museum: they're already sitting when you walk in
+          if (fresh && n.goal && n.goal.room === "lobby") { const g = n.goal; n.where = "lobby"; n.moving = false; n.walkTo = null; n.route = null; [n.x, n.y] = g.at; n.dir = g.dir; n.goal = null; if (g.sit) this.tourSit(n, g.sit);
+            const g2 = n.goal; if (g2 && g2.room === "lobby" && this.tileFree(L, g2.at[0], g2.at[1], n)) { [n.x, n.y] = g2.at; n.dir = g2.dir; n.goal = null; if (g2.sit) this.tourSit(n, g2.sit); } } }); // a new day or a rebuilt museum: they're already sitting when you walk in (someone on their seat: straight to another, not a walk over)
         if (T.guide) { this.tourDrop(T.guide); T.guide = null; } this.restoreUsher();
       } else if (phase === 1 && T.school) { // the teacher leads the kids to the first piece (the usher stays at his desk)
         const c = T.stop1, at = [c.x, c.y + 1], tch = T.members[0];
@@ -9166,7 +9171,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 16";
+const VERSION = "2026-11-18 cards 17";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
