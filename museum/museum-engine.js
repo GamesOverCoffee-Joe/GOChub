@@ -1893,7 +1893,7 @@ const ROOMS = {
       { key: "bench", x: 2, y: 4, sit: "up" }, { key: "bench", x: 8, y: 4, sit: "up" },
       { key: "bench", x: 2, y: 6, sit: "up" }, { key: "bench", x: 8, y: 6, sit: "up" },
       { key: "planter", x: 1, y: 3, say: ["A planter. It's seen every episode."] }, { key: "planter", x: 10, y: 3, say: ["A planter, facing the screen. Of course."] },
-      { key: "trash_can", x: 4, y: 12, event: { trash: true } }, { key: "trash_can", x: 8, y: 17, event: { trash: true } }, { key: "trash_can", x: 4, y: 22, event: { trash: true } },
+      { key: "trash_can", x: 8, y: 17, event: { trash: true } }, // one can in the nook (Joe 10/12: three was too many)
       { key: "popcorn_stand", x: 8, y: 20, tall: true, blockTop: true, event: { popcorn: true } },
     ],
     posters: [[4, 9, "l"], [8, 10, "r"], [4, 15, "l"], [8, 13, "r"], [4, 18, "l"], [8, 22, "r"], [4, 24, "l"], [8, 24, "r"]],
@@ -2239,9 +2239,9 @@ const TEXT = {
   "chill.tour":        { g: "Chill museum", l: "The curator: what you did for the tour group (a happy tour, the lost kid walked back)", by: "claude", v: [["The tour group left happy. And you walked that kid back before anybody had to panic."]] },
   "chill.stock":       { g: "Chill museum", l: "The curator: what you did for the shopkeeper", by: "claude", v: [["You hauled the shop's stock up from the basement, so the shop opened on time."]] },
   "chill.line":        { g: "Chill museum", l: "The curator: what you did for the barista", by: "claude", v: [["You got the café its supplies early, so the line never made it into the hallway."]] },
-  "chill.litter":      { g: "Chill museum", l: "The curator: what you did about the litter", by: "claude", v: [["You picked up the trash by the full bins. Nobody had to step over a wrapper."]] },
+  "chill.litter":      { g: "Chill museum", l: "The curator: what you did about the jammed trash can", by: "claude", v: [["You pulled the cup out of that jammed trash can. People could actually throw stuff away again."]] },
   "chill.item":        { g: "Chill museum", l: "The curator: what you did for the staff on break ({who} took {owner}'s {item})", by: "claude", v: [["You caught {who} heading out the door with {owner}'s {item}.", "Back to {owner} it went. Crisis averted."]] },
-  "chill.janitor":     { g: "Chill museum", l: "The curator: what you did for the Janitor", by: "claude", v: [["You watered the plants before the Janitor got to them. He took his break early.", "He'll never admit it, but he was thrilled."]] },
+  "chill.janitor":     { g: "Chill museum", l: "The curator: what you did for the Janitor (the pile by the jammed can, cleaned before he had to)", by: "claude", v: [["And the Janitor never had to sweep up around it. He got his whole break.", "He'll never admit it, but he was thrilled."]] },
   "chill.outro":       { g: "Chill museum", l: "The curator, before asking if you want to keep it chill", by: "claude", v: [["So... you fixed my whole museum.", "If you want, I can keep it like this. No more problems. Just a chill day at the museum, every day.", "Or you can keep things the way they've been. I won't judge. Much."]] },
   "chill.ask":         { g: "Chill museum", l: "The curator's question (the answers: Keep it chill / Keep it as is)", by: "claude", v: [["So what'll it be?"]] },
   "chill.settings":    { g: "Chill museum", l: "The curator, after you answer: where the setting lives", by: "claude", v: [["You can change your mind any time. It's the Chill museum switch in Settings.", "That's the gear button at the top right, outside the game window."]] },
@@ -2324,6 +2324,10 @@ const TEXT = {
   "litter.pick":       { g: "Litter", l: "Picking up litter ({thing}: cup, wrapper or napkin)", by: "claude", v: [["You pick up a {thing}. Gross."], ["A {thing}. People are animals."], ["You pick up the {thing}."]] },
   "litter.noBag":      { g: "Litter", l: "Trying to pick up litter without a trash bag (in the staff room, or the janitor has spares)", by: "claude", v: [["I'm not touching that with my bare hands.", "The janitor must have a spare trash bag."]] },
   "bag.ask":           { g: "Litter", l: "The staff room trash can, hands empty: take a trash bag? (one page, Yes/No)", by: "claude", v: [["A roll of trash bags under the can. Tear one off?"]] },
+  "jam.look":          { g: "Litter", l: "The jammed trash can, hands free (one page, then Pull it out / Leave it)", by: "claude", v: [["There's a cup wedged in the flap. Nothing else is getting in there. Pull it out?"]] },
+  "jam.hands":         { g: "Litter", l: "The jammed trash can, with something in your hands", by: "claude", v: [["The flap won't budge. There's a cup wedged in it.", "You'll need both hands free to work it loose."]] },
+  "jam.fixed":         { g: "Litter", l: "Pulling the cup out of the jammed trash can (it's yours to throw away now)", by: "claude", v: [["*squeak* ...*pop*", "Got it. The flap swings free again.", "Now, where to put this cup..."]] },
+  "jam.janitor":       { g: "Janitor", l: "The Janitor at the jammed trash can, sweeping up round it (and the notice when he pulls the cup out)", by: "claude", v: [["Who jams a cup in a trash can?", "Every. Single. Day."], ["I was on my break.", "I was ON. MY. BREAK."]] },
   "bag.take":          { g: "Litter", l: "Taking a trash bag", by: "claude", v: [["*rrrip*", "One trash bag. I'm basically a professional now."]] },
   "bag.back":          { g: "Litter", l: "Putting an unused trash bag back (staff room can)", by: "claude", v: [["You roll the bag back up and tuck it under the can.", "Nobody saw that."]] },
   "bag.unused":        { g: "Litter", l: "Your trash bag's still empty, at a can outside the staff room: toss it? (one page, then Toss it / Keep it)", by: "claude", v: [["It's empty. I haven't even used it yet. Toss it anyway?"]] },
@@ -2559,9 +2563,9 @@ const SIT_LINES = [["Best seat in the house."], ["I come here for the café. The
 const BEATS = ["Settling in", "Getting busy", "Rush", "Winding down"]; // the visit clock's four 3-minute beats
 const PROBLEMS = [ // the living museum's problems (LIVING-MUSEUM-PLAN.md): all of them every loop, each in its own quarter
   { id: "usher", who: "Usher", beat: 0, chain: "tour", label: "needs coffee", built: true }, { id: "stock", who: "Shopkeeper", beat: 0, chain: "supplies", label: "busy stocking", built: true },
-  { id: "litter", who: "Visitors", beat: 1, chain: "litter", label: "litter by full bins", built: true }, { id: "tour", who: "Tour group", beat: 1, chain: "tour", label: "the guide fumbles", built: true },
+  { id: "litter", who: "Visitors", beat: 1, chain: "litter", label: "a jammed trash can", built: true }, { id: "tour", who: "Tour group", beat: 1, chain: "tour", label: "the guide fumbles", built: true },
   { id: "line", who: "Barista", beat: 2, chain: "supplies", label: "the line blocks the walkway", built: true }, { id: "item", who: "Staff on break", beat: 2, chain: "", label: "someone's item goes missing", built: true },
-  { id: "janitor", who: "Janitor", beat: 3, chain: "litter", label: "overtime", built: true },
+  { id: "janitor", who: "Janitor", beat: 3, chain: "litter", label: "sweeping up round the jammed can", built: true },
 ];
 const CROWD_LINES = [["What a nice museum."], ["I come here on my lunch break."], ["Have you seen the cat today?"], ["I always read both sides of the cases."],
   ["My friend told me about this place."], ["Honestly, I'm mostly here for the café."], ["Is it me, or is it busy today?"], ["I didn't know games could go in museums."],
@@ -4157,7 +4161,6 @@ class Game {
   }
   count(kind, target) {
     this.progress.tally[kind] = (this.progress.tally[kind] || 0) + 1;
-    if (kind === "litter") this.markSolved("litter");
     this.earn(this.pack.settings.rewards[kind] !== undefined ? this.pack.settings.rewards[kind] : 1); // Tokens tab
     const s = this.staff; if (!s) { this.favor(kind); return; }
     const t = this.progress.staffTally[s.badge] || (this.progress.staffTally[s.badge] = { name: s.name });
@@ -5632,6 +5635,7 @@ class Game {
       sup: S ? { key: S.key, boxes: S.boxes, shopDone: S.shopDone, cafeDone: S.cafeDone, cafeNeeded: S.cafeNeeded, freeGiven: S.freeGiven, carryBox: this.carryBox || null } : null,
       tour: T ? { key: T.key, kidDone: T.kidDone, asked: T.asked, explained: T.explained, mood: T.mood, coffee: T.coffee, usherBack: !!T.usherBack } : null,
       item: I ? { key: this.side.key, got: I.got, done: I.done, left: I.left, carry: this.carryItem || null } : null,
+      jam: this.jam ? { key: this.jam.key, jammed: this.jam.jammed, fixedBy: this.jam.fixedBy, janSwept: this.jam.janSwept } : null,
       jan: J ? { key: J.key, i: J.i, phase: J.phase === "plants" && J.cur ? "plants" : J.phase, watered: J.watered, early: !!J.early, swept: J.swept || 0, home: !!(J.brk && J.brk.act === "home") } : null };
     this.saveProgress();
   }
@@ -5976,12 +5980,12 @@ class Game {
       { id: "usher", group: "The loop", beat: 0, label: "0:00 The usher's empty mug", find: () => this.npcAt(n => n.usher && !n.tourUsher) || "He's off with the tour." },
       { id: "boxes", group: "The loop", beat: 0, label: "0:00 The deliveries (basement)", find: () => { const S = this.supState(), b = S.boxes.find(b => b.room === "storage") || S.boxes[0]; return b ? at(b.room, b.x, b.y) : "Both boxes are already up."; } },
       { id: "stocking", group: "The loop", beat: 0, label: "0:00 The shopkeeper stocking", find: () => this.npcAt(n => n.role === "shopkeeper") || (this.onBreak === "shopkeeper" ? "He has the day off (he's Sunday's guest at the café)." : "The shopkeeper's away.") },
-      { id: "litter", group: "The loop", beat: 1, label: "3:00 Litter by full bins", run: () => { this.fillBins(); const b = this.litterBins().find(b => b[0] === "museum") || this.litterBins()[0]; return b ? this.goBeside(b[0], b[1], b[2]) : "No bins."; } },
+      { id: "litter", group: "The loop", beat: 1, label: "3:00 The jammed trash can", run: () => { const J = this.jamState(); if (!J.on) return "No jammed can this loop."; J.jammed = true; J.fixedBy = null; return this.goBeside(J.room, J.x, J.y); } },
       { id: "tour", group: "The loop", beat: 1, label: "3:00 The tour at its first stop", run: () => this.findTour() },
       { id: "line", group: "The loop", beat: 2, label: "6:00 The café line", run: () => { const c = counter(); if (!c) return "No café counter."; const r = this.goBeside("museum", c[0], c[1]); this.fillLine(6); return r; } },
       { id: "item", group: "The loop", beat: 2, label: "6:00 The break room mix-up", run: () => this.findSide("item") },
       { id: "kid", group: "The loop", beat: 3, label: "9:00 The lost kid", run: () => this.findTour() },
-      { id: "janitor", group: "The loop", beat: 3, label: "9:00 The janitor's overtime", run: () => this.findJanitor() || "Couldn't get beside him just now." },
+      { id: "janitor", group: "The loop", beat: 3, label: "9:00 The Janitor gets to the jammed can", run: () => { const J = this.jamState(); if (!J.on) return "No jammed can this loop."; J.jammed = true; J.fixedBy = null; for (let i = 0; i < 4; i++) this.dropLitter(J.room, J.x, J.y); return this.goBeside(J.room, J.x, J.y); } },
       { id: "intercom", group: "Closing", label: "The intercom (make the announcement)", find: () => { const a = this.rooms.lobby && this.rooms.lobby.intercomAt; return a ? at("lobby", a.x, a.y) : "No intercom."; } },
       { id: "cons", group: "Closing", label: "The conservator (after the announcement)", run: () => this.findSide("cons") },
       { id: "mug", group: "Finds", label: "The curator's mug", find: () => { for (const id in this.rooms) if (this.rooms[id].mug) return at(id, this.rooms[id].mug.x, this.rooms[id].mug.y); return "Already found today."; } },
@@ -6328,6 +6332,7 @@ class Game {
   bin(e) {
     if (e.tub && this.drink && this.drink.popcorn) { this.say(this.tx("bin.tubPopcorn")); return; } // a popcorn bag goes in the trash, not the café's dish tub
     const [bx, by] = [e.x !== undefined ? e.x : this.player.x + DIRS[this.player.dir][0], e.y !== undefined ? e.y : this.player.y + DIRS[this.player.dir][1]];
+    if (!e.tub && this.isJammed(this.room.id, bx, by)) { this.jamTalk(); return; } // a cup wedged in the flap
     if (this.trashBag != null && !e.tub) { // your trash bag: into an empty can (an unused one goes back on the roll in the staff room)
       const k = this.trashBag;
       if (!k) { if (this.room.id === "staff") { this.trashBag = null; this.say(this.tx("bag.back")); } else this.choose(this.tx("bag.unused").join(" "), ["Toss it", "Keep it"], i => { if (i === 0) { this.trashBag = null; this.say(this.tx("bag.tossed")); } }, 1); return; } // an empty one: toss it if you like (Joe 10/11)
@@ -6612,10 +6617,12 @@ class Game {
     if (!n.drink || !n.drink.empty || n.sitting || n.still) return false;
     const r = this.room, bins = Object.keys(r.events).filter(k => r.events[k].trash).map(k => k.split(",").map(Number));
     if (!bins.length) { n.drink = null; return false; }
-    const near = bins.find(([x, y]) => Math.abs(x - n.x) + Math.abs(y - n.y) === 1);
-    if (near) { // in it goes; a full bin, and it ends up on the floor beside it
-      n.drink = null; n.dir = near[0] > n.x ? "right" : near[0] < n.x ? "left" : near[1] > n.y ? "down" : "up"; n.route = null; n.timer = 120;
-      if (!this.binAdd(r.id, near[0], near[1])) this.dropLitter(r.id, near[0], near[1], 0);
+    const J = this.jam, jam = J && J.on && J.jammed && J.room === r.id ? [J.x, J.y] : null, dist = ([x, y]) => Math.abs(x - n.x) + Math.abs(y - n.y);
+    if (jam && (n.jamGo || dist(jam) <= 12)) bins.sort((a, b) => (b[0] === jam[0] && b[1] === jam[1]) - (a[0] === jam[0] && a[1] === jam[1]) || dist(a) - dist(b)); else bins.sort((a, b) => dist(a) - dist(b)); // the nearest; the jammed one if they were headed there
+    const near = bins.find(([x, y]) => dist([x, y]) === 1 && (!n.jamGo || !jam || (x === jam[0] && y === jam[1])));
+    if (near) { // in it goes; the jammed one: they push at the flap, give up, and leave it on the floor beside it
+      n.drink = null; n.jamGo = false; n.dir = near[0] > n.x ? "right" : near[0] < n.x ? "left" : near[1] > n.y ? "down" : "up"; n.route = null; n.timer = 120;
+      if (!this.binAdd(r.id, near[0], near[1])) { this.dropLitter(r.id, near[0], near[1], 0); n.pose = { kind: "annoyed", t0: this.t, dur: 100 }; }
       return true;
     }
     if (!n.route || !n.route.length) {
@@ -8327,7 +8334,7 @@ class Game {
   thirstyPlants() { let n = 0; for (const id of ["lobby", "museum", "screening", "staff"]) { if (!this.rooms || !this.rooms[id]) continue; for (const k in this.rooms[id].events) { const e = this.rooms[id].events[k]; if (e.plant && this.isThirsty(e.plant)) n++; } } return n; }
   solvedInfo() { // the curator's preview: what counts as fixed so far this loop
     if (this.chillOn()) return "Chill museum is on: no problems.";
-    const S = this.solvedNow(), what = { usher: "usher's coffee", tour: "happy tour + kid back", stock: "shop stock", line: "café supplies", litter: "litter bagged", item: "item returned", janitor: "every plant watered first (" + this.thirstyPlants() + " still thirsty)" };
+    const S = this.solvedNow(), what = { usher: "usher's coffee", tour: "happy tour + kid back", stock: "shop stock", line: "café supplies", litter: "the jammed can unjammed", item: "item returned", janitor: "the pile by it cleaned up before the Janitor's last quarter" };
     const left = PROBLEMS.filter(p => !S.ids.includes(p.id)).map(p => what[p.id]);
     return S.ids.length + " of " + PROBLEMS.length + " solved" + (left.length ? ". Still to do: " + left.join(", ") + "." : S.shown ? ". The curator's already said so." : ". The curator's on the way (when you're free).");
   }
@@ -8342,7 +8349,8 @@ class Game {
     if (Su && Su.shopDone) this.markSolved("stock");
     if (Su && (Su.cafeDone || !Su.cafeNeeded)) this.markSolved("line");
     if (I && (!I.on || I.done)) this.markSolved("item", I.on ? { who: I.taker.member, owner: I.owner.member, item: I.item } : {});
-    if (J && (J.early || (!J.watered && !this.thirstyPlants()))) this.markSolved("janitor"); // every plant watered before he got to any of them (Joe 10/12: whenever that is, even if litter has kept him late)
+    const Jm = this.jamState(); if (!Jm.on || Jm.fixedBy === "you") this.markSolved("litter"); // the jammed can: you pulled the cup out
+    if (!Jm.on || (!Jm.jammed && !Jm.janSwept && !this.jamLitter().length)) this.markSolved("janitor"); // and he never had to sweep round it
     const S = this.solvedNow(); if (S.shown || !PROBLEMS.every(p => S.ids.includes(p.id))) return;
     if (this.mode !== "walk" || this.trans || this.closing || this.inputLock) return; // when you're free: not mid-conversation
     S.shown = true; this.saveProgress();
@@ -8366,9 +8374,46 @@ class Game {
      else (Joe 10/11). Each piece of litter belongs to the bin nearest it: the janitor sweeps up round a bin, then empties
      that bin, then moves on (on his trash round, and whenever he spots litter between chores), which slows him down. */
   binKey(room, x, y) { return room + ":" + x + "," + y; }
-  binFill(room, x, y) { if (this.noJanitor()) return 0; return (this.bins && this.bins[this.binKey(room, x, y)]) || 0; }
-  binFull(room, x, y) { return this.binFill(room, x, y) >= this.pack.settings.litter.cap; }
-  binAdd(room, x, y) { if (this.binFull(room, x, y)) return false; const b = this.bins || (this.bins = {}), k = this.binKey(room, x, y); b[k] = (b[k] || 0) + 1; return true; }
+  binFill(room, x, y) { return this.isJammed(room, x, y) ? this.pack.settings.litter.cap : 0; } // bins are bottomless (Joe 10/12): only the jammed one takes nothing
+  binFull(room, x, y) { return this.isJammed(room, x, y); }
+  binAdd(room, x, y) { return !this.isJammed(room, x, y); }
+  /* ----- The jammed can (Joe 10/12) -----
+     Trash on the floor means something's wrong. Each loop, one can out where people are (the lobby or the museum, never the
+     theater or the basement) has a cup wedged in its flap from the start: it's drawn overflowing. From the busy part of the
+     day, visitors who come to throw something away push at it, give up and leave it beside it (in the room you're in, you
+     see them do it), up to a pile. Pull the cup out (hands free) and it takes trash again; then bag up the pile.
+     The Janitor doesn't get to it till his last quarter (on his break, he comes back out for it): he sweeps the pile, pulls
+     the cup out himself, and grumbles. Solved: you unjammed it ("litter"); and he never had to sweep round it ("janitor"). */
+  jamState() {
+    const d = this.director(), key = todayISO() + ":" + d.loop, picks = this.dirClock && this.dirClock.picks ? this.dirClock.picks.ids : d.problems;
+    let J = this.jam;
+    if (!J || J.key !== key) {
+      J = this.jam = { key, jammed: true, fixedBy: null, janSwept: false, gen: -1 };
+      const L = this.loopSave(); if (L && L.jam && L.jam.key === key) Object.assign(J, { jammed: !!L.jam.jammed, fixedBy: L.jam.fixedBy || null, janSwept: !!L.jam.janSwept }); // earlier today
+    }
+    J.on = picks.includes("litter") && !this.noJanitor() && !this.chillOn();
+    if (J.gen !== this.worldGen) { // which can, on the rooms as they're built now
+      J.gen = this.worldGen; const cans = this.litterBins().filter(([r]) => r === "lobby" || r === "museum");
+      const c = cans.length ? cans[strSeed(todayISO() + ":jam:" + d.loop + ":" + this.daySeed()) % cans.length] : null;
+      if (c) { J.room = c[0]; J.x = c[1]; J.y = c[2]; } else J.on = false;
+    }
+    if (J.room === undefined) J.on = false;
+    return J;
+  }
+  isJammed(room, x, y) { if (!this.rooms || !this.pack || this.tut) return false; const J = this.jamState(); return J.on && J.jammed && J.room === room && J.x === x && J.y === y; }
+  jamLitter() { const J = this.jam; if (!J || !J.on) return []; return ((this.litter && this.litter[J.room]) || []).filter(l => { const b = this.litterBin(J.room, l); return b && b[0] === J.x && b[1] === J.y; }); }
+  jamDue() { const d = this.director(); return d.over || this.closing || d.beat >= 3; } // the Janitor's last quarter: he gets to it now
+  isJamBin(room, bin) { const J = this.jam; return !!(J && J.on && bin && J.room === room && J.x === bin[0] && J.y === bin[1]); }
+  jamTalk() { // you, at the jammed can
+    const J = this.jam, busy = (this.drink && !this.drink.empty) || this.carryBox || this.carryItem || this.trashBag != null || (this.drink && this.drink.empty);
+    if (busy) { this.say(this.tx("jam.hands")); return; }
+    this.choose(this.tx("jam.look").join(" "), ["Pull it out", "Leave it"], i => {
+      if (i !== 0) return;
+      J.jammed = false; J.fixedBy = "you"; this.markSolved("litter"); this.saveLoop();
+      this.drink = { kind: 0, name: "Cup", empty: true, sips: 4, color: "", iced: false }; // the cup that was stuck: yours to throw away now
+      this.say(this.tx("jam.fixed"));
+    }, 1);
+  }
   dropLitter(room, x, y, kind) { if (this.noJanitor()) return; // a piece of litter on a free floor tile near (x, y) (none while the Janitor is switched off)
     const R = this.rooms[room], L = (this.litter || (this.litter = {}))[room] || (this.litter[room] = []); if (!R || L.length >= 12) return false;
     const c = []; for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const tx = x + dx, ty = y + dy; if (R.solid[ty] && R.solid[ty][tx] === false && !R.events[tx + "," + ty] && !(R.noWander && R.noWander.has(tx + "," + ty)) && !L.some(l => l.x === tx && l.y === ty)) c.push([tx, ty]); }
@@ -8382,18 +8427,24 @@ class Game {
   updateLitter() {
     if (this.headless || this.tut || this.closing || !this.rooms || !this.pack || this.t % 60) return; // once a second
     const d = this.director(); if (d.paused || this.noJanitor()) return;
-    const set = this.pack.settings.litter, beat = d.over ? 3 : d.beat, busy = [0.5, 1, 1.3, 0.6][beat] * (d.crowd === "heavy" ? 1.3 : 1) * (this.tod() === "night" ? 0.5 : 1);
-    const p = busy * (d.problems.includes("litter") ? 1.8 : 0.7) * set.rate / 100 / 30 * 12 / d.minutes; // about a bin's worth in a busy quarter, however long the loop is
-    const watching = this.rooms.screening ? Math.min(1, this.rooms.screening.npcs.filter(n => !n.staff && !n.janitor).length / 2) : 0; // the theater's bins fill while people are watching
-    for (const [room, x, y] of this.litterBins()) if (Math.random() < (room === "screening" ? p * watching : p)) { if (!this.binAdd(room, x, y)) this.dropLitter(room, x, y); } // someone tosses something in; a full bin: it lands beside it
+    const J = this.jamState(), beat = d.over ? 3 : d.beat; if (!J.on || !J.jammed || beat < 1) return; // nothing on the floor but round the jammed can, from the busy part of the day
+    const set = this.pack.settings.litter, busy = [0, 1, 1.3, 0.6][beat] * (d.crowd === "heavy" ? 1.3 : 1) * (this.tod() === "night" ? 0.5 : 1);
+    if (this.jamLitter().length >= set.cap || Math.random() >= busy * set.rate / 100 / 25 * 12 / d.minutes) return; // about one every 25 seconds while it's busy, up to a pile (Litter tab: how big)
+    const R = this.rooms[J.room];
+    if (this.room === R) { // you're here: someone comes over to throw a cup away, pushes at the flap, and leaves it beside it
+      const free = n => !n.staff && !n.still && !n.queue && !n.seat && !n.follow && !n.cur && !n.drink && !n.bag && !n.leaving && !n.tourKid && !n.janitor && !(this.tour && this.tour.members.includes(n));
+      const who = R.npcs.filter(n => free(n) && Math.abs(n.x - J.x) + Math.abs(n.y - J.y) <= 12).sort((a, b) => Math.abs(a.x - J.x) + Math.abs(a.y - J.y) - Math.abs(b.x - J.x) - Math.abs(b.y - J.y))[0];
+      if (who) { who.drink = Object.assign(this.npcDrink(), { empty: true }); who.jamGo = true; return; }
+    }
+    this.dropLitter(J.room, J.x, J.y);
   }
   litterInfo() {
-    const bins = this.litterBins().map(([room, x, y]) => { const R = this.rooms[room], z = room === "museum" ? this.zoneAt(R, x, y) : null; return (z ? z.name : ROOMS[room].name) + " " + this.binFill(room, x, y) + "/" + this.pack.settings.litter.cap + (this.binFull(room, x, y) ? " (full)" : ""); });
+    const J = this.jamState(), R = J.on && this.rooms[J.room], z = R && J.room === "museum" ? this.zoneAt(R, J.x, J.y) : null, where = R ? (z ? z.name : ROOMS[J.room].name) : "";
     const n = Object.values(this.litter || {}).reduce((a, L) => a + L.length, 0);
-    return "Bins: " + bins.join(", ") + ". Litter on the floor: " + n + (this.trashBag != null ? ", your trash bag has " + this.trashBag : "") + ".";
+    return (!J.on ? "No jammed can this loop." : J.jammed ? "The " + where + " can is jammed." : "The " + where + " can was unjammed by " + (J.fixedBy === "you" ? "you" : "the Janitor") + ".") + " Litter on the floor: " + n + (this.trashBag != null ? ", your trash bag has " + this.trashBag : "") + ".";
   }
-  fillBins() { // the curator's "Fill the bins": every bin full, and a little litter beside each
-    for (const [room, x, y] of this.litterBins()) { (this.bins || (this.bins = {}))[this.binKey(room, x, y)] = this.pack.settings.litter.cap; this.dropLitter(room, x, y); this.dropLitter(room, x, y); }
+  fillBins() { // the curator's "Jam a can": today's can jammed again, with a pile beside it
+    const J = this.jamState(); if (!J.on) return; J.jammed = true; J.fixedBy = null; for (let i = 0; i < this.pack.settings.litter.cap; i++) this.dropLitter(J.room, J.x, J.y);
   }
   litterBin(room, l) { // the bin a piece of litter belongs to: the nearest one in its room (null if the room has none)
     let best = null; for (const [id, x, y] of this.litterBins()) if (id === room) { const d = Math.abs(x - l.x) + Math.abs(y - l.y); if (!best || d < best.d) best = { x, y, d }; }
@@ -8408,10 +8459,13 @@ class Game {
   }
   janNextCan(room, x, y) { // the bin with litter round it, nearest him (where he is first): he'll sweep round it, then empty it
     let best = null;
+    const J = this.jamState(), due = this.jamDue();
+    if (J.on && J.jammed && due) { const R = this.rooms[J.room], at = R && this.janBeside(R, J.x, J.y); if (at) return { room: J.room, bin: [J.x, J.y], at, dir: this.janFace(at, J.x, J.y), d: 0, jam: true }; } // his last quarter: the jammed can, even with nothing round it yet
     for (const id of ["lobby", "museum", "screening"]) for (const l of (this.litter && this.litter[id]) || []) {
       const d = (id === room ? 0 : 60) + Math.abs(l.x - x) + Math.abs(l.y - y); if (best && d >= best.d) continue;
       const R = this.rooms[id], bin = this.litterBin(id, l), at = bin && this.janBeside(R, bin[0], bin[1]);
-      best = { room: id, bin: at ? bin : null, at, dir: at ? this.janFace(at, bin[0], bin[1]) : "down", d };
+      if (!due && this.isJamBin(id, bin)) continue; // round the jammed can: not till his last quarter
+      best = { room: id, bin: at ? bin : null, at, dir: at ? this.janFace(at, bin[0], bin[1]) : "down", d, jam: this.isJamBin(id, bin) };
     }
     return best;
   }
@@ -8443,10 +8497,10 @@ class Game {
   janFace(at, x, y) { return x > at[0] ? "right" : x < at[0] ? "left" : y > at[1] ? "down" : "up"; }
   janPlan(loop) { // this loop's three chores (random each day, kept all day: the loop plays once a day)
     let sd = strSeed(todayISO() + ":janitor:" + loop + ":" + this.daySeed()); const rnd = () => (sd = (Math.imul(sd, 1103515245) + 12345) >>> 0) / 4294967296;
-    const trash = [];
+    const trash = []; this.jamState(); // (which can's jammed, so his round leaves it till his last quarter)
     for (const id of ["lobby", "museum", "screening", "staff"]) { // in walking order: the theater's off the museum, the staff room off the lobby
       const R = this.rooms[id]; if (!R) continue;
-      for (const k in R.events) if (R.events[k].trash) { const [x, y] = k.split(",").map(Number), at = this.janBeside(R, x, y); if (at) trash.push({ room: id, at, dir: this.janFace(at, x, y), act: "empty", dur: 150, bin: [x, y] }); }
+      for (const k in R.events) if (R.events[k].trash) { const [x, y] = k.split(",").map(Number), at = this.janBeside(R, x, y); if (at && !this.isJamBin(id, [x, y])) trash.push({ room: id, at, dir: this.janFace(at, x, y), act: "empty", dur: 150, bin: [x, y] }); }
     }
     const sweep = () => { // four spots in one part of the museum, or the lobby now and then
       const M = this.rooms.museum, zones = M.zones ? M.zones.filter(z => z.kind === "room" || (z.kind === "hall" && z.id !== "lobbyhall")) : [];
@@ -8502,7 +8556,7 @@ class Game {
     for (const id in this.rooms) { const R = this.rooms[id], has = R.npcs.includes(n); if (id === J.room && !has) R.npcs.push(n); else if (id !== J.room && has) R.npcs = R.npcs.filter(m => m !== n); }
     // What he says depends on what he's doing.
     let stop = J.phase === "chores" ? J.stops[J.i] : J.phase === "plants" ? J.cur : J.brk;
-    const say = J.phase === "break" ? (J.brk && J.brk.act === "home" ? "jan.home" : J.early ? "jan.early" : "jan.break") : J.phase === "plants" ? (d.over ? "jan.overtime" : "jan.plants") : J.mode === "wait" ? "jan.wait" : J.i === 0 && J.mode === "go" ? "jan.start" : stop && stop.act === "empty" ? "jan.trash" : "jan.sweep";
+    const say = J.lit && J.lit.jam ? "jam.janitor" : J.phase === "break" ? (J.brk && J.brk.act === "home" ? "jan.home" : J.early ? "jan.early" : "jan.break") : J.phase === "plants" ? (d.over ? "jan.overtime" : "jan.plants") : J.mode === "wait" ? "jan.wait" : J.i === 0 && J.mode === "go" ? "jan.start" : stop && stop.act === "empty" ? "jan.trash" : "jan.sweep";
     if (J.say !== say) { J.say = say; n.lines = this.pack.settings.text[say] || (TEXT[say] && TEXT[say].v) || [[say]]; n.lineI = -1; }
     const vis = J.room === this.room.id;
     if (!vis) { // out of sight: finish any step or fade-in at once (only the room you're in moves people along)
@@ -8535,12 +8589,14 @@ class Game {
     // Litter, bin by bin (Joe 10/11): he sweeps up round a bin, then empties that bin, then moves on. On his trash round
     // that's each bin on it; otherwise, when there's litter about, the bin it's round (that's what makes him late). Not on his break.
     if (J.lit && J.lit.lit && !((this.litter && this.litter[J.lit.room]) || []).includes(J.lit.lit)) J.lit = null; // someone picked it up
-    if (!J.lit && J.mode !== "act" && J.phase !== "break" && !J.fillT) {
+    const jamCall = this.jamDue() && this.jam && this.jam.on && (this.jam.jammed || this.jamLitter().length) && J.phase === "break" && J.brk && J.brk.act !== "home"; // on his break: he comes back out for the jammed can
+    if (!J.lit && J.mode !== "act" && (J.phase !== "break" || jamCall) && !J.fillT) {
       const cur = J.phase === "chores" && J.mode !== "wait" ? J.stops[J.i] : null;
       if (cur && cur.act === "empty" && cur.bin) { J.can = null; J.lit = this.janSweepAt(cur.room, cur.bin); } // the round's bin: its litter first, then the round's stop empties it
       else {
         if (!J.can) J.can = this.janNextCan(J.room, n.x, n.y);
-        if (J.can) { J.lit = this.janSweepAt(J.can.room, J.can.bin) || (J.can.bin ? { room: J.can.room, at: J.can.at, dir: J.can.dir, act: "empty", dur: 150, bin: J.can.bin, can: true } : null); if (!J.lit) J.can = null; }
+        const unjam = J.can && J.can.jam && this.jam && this.jam.jammed; // the jammed can: the cup out of the flap first, then the pile
+        if (J.can) { J.lit = (!unjam && this.janSweepAt(J.can.room, J.can.bin)) || (J.can.bin ? { room: J.can.room, at: J.can.at, dir: J.can.dir, act: "empty", dur: 150, bin: J.can.bin, can: true } : null); if (!J.lit) J.can = null; else if (J.can.jam) J.lit.jam = true; }
       }
       if (J.lit) { J.mode = "go"; J.fill = null; }
     }
@@ -8550,13 +8606,16 @@ class Game {
       n.sweep = stop.act === "sweep"; // sweeping the tile in front of him (the broom's drawn there)
       if (--J.t > 0) return;
       n.sweep = false;
-      if (stop.can) { if (this.bins) this.bins[this.binKey(stop.room, stop.bin[0], stop.bin[1])] = 0; J.lit = null; J.can = null; J.mode = "go"; return; } // swept round it, now emptied: on to whatever's next
+      if (stop.can) { // swept round it, now emptied: on to whatever's next
+        if (this.isJamBin(stop.room, stop.bin) && this.jam.jammed) { this.jam.jammed = false; this.jam.fixedBy = "janitor"; this.jam.janSwept = true; this.saveLoop(); if (vis) this.showLoc("Janitor: " + this.tx("jam.janitor", null, true).join(" ")); }
+        J.lit = null; J.can = null; J.mode = "go"; return;
+      }
       if (stop.act === "water" && this.isThirsty(stop.plant)) { this.progress.watered[stop.plant] = todayISO(); this.saveProgress(); J.watered++; }
       if (stop.act === "empty") { // emptied into his trash bag, which he carries till the round's over (and leaves in the staff room)
         if (stop.bin && this.bins) this.bins[this.binKey(stop.room, stop.bin[0], stop.bin[1])] = 0;
         const more = J.stops.slice(J.i + 1).some(st => st.act === "empty" && st.chore === stop.chore); n.trashBag = more && stop.room !== "staff";
       }
-      if (stop.lit) { const L = this.litter && this.litter[stop.room]; if (L) { const i = L.indexOf(stop.lit); if (i >= 0) L.splice(i, 1); } J.lit = null; J.swept = (J.swept || 0) + 1; J.mode = "go"; return; }
+      if (stop.lit) { const L = this.litter && this.litter[stop.room]; if (L) { const i = L.indexOf(stop.lit); if (i >= 0) L.splice(i, 1); } if (stop.jam && this.jam) this.jam.janSwept = true; J.lit = null; J.swept = (J.swept || 0) + 1; J.mode = "go"; return; }
       if (stop.act === "home") { J.phase = "gone"; if (vis) { n.leaving = true; n.leaveT = 0; n.alpha = 1; } return; } // out the front doors
       if (J.phase === "chores") J.i++; else if (J.phase === "plants") J.cur = null;
       J.mode = "go"; return;
@@ -9206,7 +9265,7 @@ class Game {
         ctx.fillStyle = "rgba(24,24,32,.85)"; ctx.fillRect(nx, ny, w, 8); ctx.fillStyle = "#f8f0c0"; ctx.textBaseline = "top"; ctx.fillText(c.member, nx + 2, ny + 1);
       }
       if (bub >= 0) this.drawSlot("bubble", bub, 0, sx + 4, sy - 9 + (Math.floor(this.t / 20) % 2));
-      else if (c.janitor && !this.full && !c.pose && !c.leaving && this.jan && this.jan.phase === "plants" && this.t % 240 < 160) this.drawSlot("emote", 7, 0, sx + 4, sy - 10 + (Math.floor(this.t / 20) % 2)); // the cue: grumpy watering plants somebody could've done (litter's his job; no grumbling there)
+      else if (c.janitor && !this.full && !c.pose && !c.leaving && this.jan && (this.jan.phase === "plants" || (this.jan.lit && this.jan.lit.jam)) && this.t % 240 < 160) this.drawSlot("emote", 7, 0, sx + 4, sy - 10 + (Math.floor(this.t / 20) % 2)); // the cue: grumpy watering plants somebody could've done (litter's his job; no grumbling there)
       ctx.globalAlpha = 1;
     }
     this.drawUppers(r, cx, cy);
@@ -9269,7 +9328,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 24";
+const VERSION = "2026-11-18 cards 25";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

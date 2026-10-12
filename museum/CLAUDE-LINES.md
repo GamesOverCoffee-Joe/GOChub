@@ -261,10 +261,14 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Chill museum | The curator: the tour group | The tour group left happy. And you walked that kid back before anybody had to panic. |
 | Chill museum | The curator: the shopkeeper | You hauled the shop's stock up from the basement, so the shop opened on time. |
 | Chill museum | The curator: the barista | You got the café its supplies early, so the line never made it into the hallway. |
-| Chill museum | The curator: the litter | You picked up the trash by the full bins. Nobody had to step over a wrapper. |
+| Chill museum | The curator: the jammed can | You pulled the cup out of that jammed trash can. People could actually throw stuff away again. |
 | Chill museum | The curator: the staff on break | You caught {who} heading out the door with {owner}'s {item}. ⏎ Back to {owner} it went. Crisis averted. |
-| Chill museum | The curator: the Janitor | You watered the plants before the Janitor got to them. He took his break early. ⏎ He'll never admit it, but he was thrilled. |
+| Chill museum | The curator: the Janitor | And the Janitor never had to sweep up around it. He got his whole break. ⏎ He'll never admit it, but he was thrilled. |
 | Chill museum | The curator, before asking | So... you fixed my whole museum. ⏎ If you want, I can keep it like this. No more problems. Just a chill day at the museum, every day. ⏎ Or you can keep things the way they've been. I won't judge. Much. |
 | Chill museum | The curator's question | So what'll it be? |
 | Chill museum | The curator, after you answer | You can change your mind any time. It's the Chill museum switch in Settings. ⏎ That's the gear button at the top right, outside the game window. |
 | Chill museum | Notice: every problem solved again | Every problem solved. Again. Show-off. |
+| Litter | The jammed trash can, hands free | There's a cup wedged in the flap. Nothing else is getting in there. Pull it out? |
+| Litter | The jammed trash can, with something in your hands | The flap won't budge. There's a cup wedged in it. ⏎ You'll need both hands free to work it loose. |
+| Litter | Pulling the cup out of the jammed trash can | *squeak* ...*pop* ⏎ Got it. The flap swings free again. ⏎ Now, where to put this cup... |
+| Janitor | The Janitor at the jammed trash can | Who jams a cup in a trash can? ⏎ Every. Single. Day. / I was on my break. ⏎ I was ON. MY. BREAK. |
