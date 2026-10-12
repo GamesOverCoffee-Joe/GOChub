@@ -3129,7 +3129,7 @@ class Game {
     this.ready = this.setPack(pack); this.updateHud();
     this.ready.then(() => { this.started = true; if (this.needTutorial()) this.startTutorial(); }); // a new player starts with the tutorial
     this.markDay();
-    setTimeout(() => { if (!this.tut && !this.needTutorial()) this.showLoc("GOQ Museum: " + (this.zone ? this.zone.name : this.room.name)); }, 400);
+    setTimeout(() => { if (!this.tut && !this.needTutorial()) this.showLoc("GOQ Museum: " + (this.zone ? this.zone.name : this.room.name), "place"); }, 400);
     this.last = performance.now(); this.acc = 0;
     const tick = now => {
       this.acc += Math.min(100, now - this.last); this.last = now; this.pollPad();
@@ -3694,17 +3694,27 @@ class Game {
   }
   /* Short notices (room names, "Stamp!", "Photo saved"...). They wait while a placard, menu or text box is open,
      then show one at a time. */
-  showLoc(name) { if (this.recording()) return; (this.toastQ = this.toastQ || []).push(name); this.flushToasts(); }
+  /* Toasts show one at a time. So they don't pile up (Joe 10/12: reading a run of exhibits), a newer one of the same kind
+     replaces one still waiting (where you are, how many pieces you've read, the lights), tokens add up into one, and when
+     there's a line each shows for less time. Everything else (achievements, notices) always gets its turn. */
+  showLoc(name, kind) {
+    if (this.recording()) return; const Q = this.toastQ = this.toastQ || [];
+    kind = kind || (/^Read \d+ of \d+ pieces$/.test(name) ? "read" : /^Lights (on|off)$/.test(name) ? "lights" : /^\+\d+ tokens?$/.test(name) ? "tokens" : null);
+    if (kind === "tokens") { const o = Q.find(t => t.kind === "tokens"); if (o) { const n = +o.text.match(/\d+/)[0] + +name.match(/\d+/)[0]; o.text = "+" + n + " token" + (n === 1 ? "" : "s"); return; } }
+    else if (kind) { const i = Q.findIndex(t => t.kind === kind); if (i >= 0) { Q.splice(i, 1); } }
+    Q.push({ text: name, kind }); this.flushToasts();
+  }
   /* A menu is opening over a toast (an achievement, say): put it back at the front of the line to show once the menu closes. */
   holdToast() {
     if (!this.toastBusy) return;
-    const el = this.el.loc; clearTimeout(this._locT); (this.toastQ = this.toastQ || []).unshift(el.textContent);
+    const el = this.el.loc; clearTimeout(this._locT); (this.toastQ = this.toastQ || []).unshift({ text: el.textContent, kind: this.toastKind || null });
     el.classList.remove("on"); this.toastBusy = false;
   }
   flushToasts() {
     if (!this.toastQ || !this.toastQ.length || this.toastBusy || !(this.mode === "walk" || this.mode === "busy")) return;
-    const el = this.el.loc; el.textContent = this.toastQ.shift(); el.classList.add("on"); this.toastBusy = true;
-    clearTimeout(this._locT); this._locT = setTimeout(() => { el.classList.remove("on"); setTimeout(() => { this.toastBusy = false; this.flushToasts(); }, 300); }, 2000);
+    const el = this.el.loc, t = this.toastQ.shift(); el.textContent = t.text; this.toastKind = t.kind; el.classList.add("on"); this.toastBusy = true;
+    const ms = this.toastQ.length >= 2 ? 1200 : this.toastQ.length ? 1600 : 2000; // quicker while others wait
+    clearTimeout(this._locT); this._locT = setTimeout(() => { el.classList.remove("on"); setTimeout(() => { this.toastBusy = false; this.flushToasts(); }, 300); }, ms);
   }
   say(pages, done) {
     pages = this.paginate((pages || []).map(p => this.roomNames(p))); // what things say can name rooms with {room:id}
@@ -7127,7 +7137,7 @@ class Game {
     p.x = x; p.y = y; p.dir = dir; p.moving = false; p.prog = 0; p.sitting = false; this.asleep = false; this.sitIdle = 0; this.sip = null; this.path = null; this.pathAct = null;
     this.updateHud();
     this.zone = null; if (this.room.zoneAt) { this.zoneCheck(quiet); quiet = true; }
-    if (!quiet) this.showLoc(this.room.name.replace(/\s+/g, " "));
+    if (!quiet) this.showLoc(this.room.name.replace(/\s+/g, " "), "place");
     this.bringFollower();
     if (this.fol && this.fol.tutId) this.fol.room = id;
   }
@@ -7146,7 +7156,7 @@ class Game {
     const cer = (this.ceremonies || []).find(q => q.zone === z && !q.done);
     if (cer && this.room.id === "museum") { if (this.mode === "walk" && !this.trans) this.startCeremony(cer); else { const a = this.afterTrans; this.afterTrans = () => { if (a) a(); this.startCeremony(cer); }; } }
     this.visit(this.room.id + ":" + z.id);
-    if (!quiet) this.showLoc(z.name);
+    if (!quiet) this.showLoc(z.name, "place");
   }
   warp(to, x, y, dir, after) {
     if (to === "screening" && this.room && this.room.id === "museum") { const a = after, p = this.nowPlaying(); after = () => { if (p) this.showLoc(this.tx("screen.enter", { title: p.title })[0]); if (a) a(); }; }
@@ -9329,7 +9339,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 28";
+const VERSION = "2026-11-18 cards 29";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
