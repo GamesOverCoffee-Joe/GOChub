@@ -5625,7 +5625,8 @@ class Game {
   loopSave() { if (this.headless || !this.saveKey || this.tut) return null; const d = this.progress && this.progress.day; return d && d.key === todayISO() + ":" + this.weekday() && d.loop || null; }
   resumeLoop() { // the clock, the first time it's asked for this session (plus the bins and litter, and your trash bag)
     const L = this.loopSave(); if (!L) return 0;
-    if (L.bins) this.bins = L.bins; if (L.litter) this.litter = L.litter; if (typeof L.trashBag === "number") this.trashBag = L.trashBag;
+    if (L.bins) this.bins = L.bins;
+    if (L.litter) { this.litter = {}; for (const id in L.litter) this.litter[id] = (L.litter[id] || []).filter(l => l && l.jam); } // only the jammed can's pile: litter saved before it (bins filling up) is swept away (Joe 10/12) if (typeof L.trashBag === "number") this.trashBag = L.trashBag;
     return Math.max(0, +L.t || 0);
   }
   saveLoop() {
@@ -8418,7 +8419,7 @@ class Game {
     const R = this.rooms[room], L = (this.litter || (this.litter = {}))[room] || (this.litter[room] = []); if (!R || L.length >= 12) return false;
     const c = []; for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const tx = x + dx, ty = y + dy; if (R.solid[ty] && R.solid[ty][tx] === false && !R.events[tx + "," + ty] && !(R.noWander && R.noWander.has(tx + "," + ty)) && !L.some(l => l.x === tx && l.y === ty)) c.push([tx, ty]); }
     if (!c.length) return false;
-    const [tx, ty] = c[(Math.random() * c.length) | 0]; L.push({ x: tx, y: ty, k: kind === undefined ? (Math.random() * 3) | 0 : kind, ox: ((Math.random() * 7) | 0) - 3, oy: ((Math.random() * 5) | 0) - 2 }); return true;
+    const [tx, ty] = c[(Math.random() * c.length) | 0]; L.push({ x: tx, y: ty, k: kind === undefined ? (Math.random() * 3) | 0 : kind, ox: ((Math.random() * 7) | 0) - 3, oy: ((Math.random() * 5) | 0) - 2, jam: 1 }); return true; // jam: from the jammed can (all litter is, now)
   }
   litterBins() { // the bins visitors use (the staff room's is the staff's own)
     const out = []; for (const id of ["lobby", "museum", "screening"]) { const R = this.rooms && this.rooms[id]; if (R) for (const k in R.events) if (R.events[k].trash && !R.events[k].tub) { const [x, y] = k.split(",").map(Number); out.push([id, x, y]); } }
@@ -9328,7 +9329,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 27";
+const VERSION = "2026-11-18 cards 28";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
