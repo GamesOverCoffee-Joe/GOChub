@@ -7203,8 +7203,10 @@ class Game {
   tryMove(c, d) {
     c.dir = d; const [dx, dy] = DIRS[d], nx = c.x + dx, ny = c.y + dy;
     if (c !== this.player && this.tour && !c.tourKid && !c.schoolKid) { // a grown-up walking into the kid who's tagging along with them: they swap places instead of getting stuck
-      const k = this.room.npcs.find(m => (m.tourKid || m.schoolKid) && !m.moving && m.x === nx && m.y === ny && this.tour.members.includes(c) && (this.tour.phase === 1 || this.tour.phase === 2));
-      if (k) { const kx = k.x, ky = k.y; k.x = c.x; k.y = c.y; k.route = null; if (this.blocked(nx, ny, c)) { k.x = kx; k.y = ky; } } // undone if something else is in the way too (never two on one tile)
+      const T = this.tour, ours = T.members.includes(c) || c === T.guide; // the group, and the usher leading it
+      const inWay = m => m.x === nx && m.y === ny || (m.moving && m.x + DIRS[m.dir][0] === nx && m.y + DIRS[m.dir][1] === ny); // standing there, or stepping into it (he walks at their pace now, so he's often mid-step)
+      const k = ours && (T.phase >= 0 && T.phase <= 3) && this.room.npcs.find(m => (m.tourKid || m.schoolKid) && m !== this.fol && inWay(m));
+      if (k) { const was = [k.x, k.y, k.moving, k.prog, k.dir]; k.x = c.x; k.y = c.y; k.moving = false; k.prog = 0; k.route = null; k.stepWait = 6; if (this.blocked(nx, ny, c)) [k.x, k.y, k.moving, k.prog, k.dir] = was; } // undone if something else is in the way too (never two on one tile)
     }
     if (this.blocked(nx, ny, c)) {
       if (c === this.player) {
@@ -8487,6 +8489,12 @@ class Game {
     return free.length ? free[(Math.random() * free.length) | 0] : null;
   }
   /* Shortest route for a visitor, around walls, furniture, people and no-go tiles (at most 40 steps). */
+  kidSwap(n, x, y) { // a tour grown-up may plan a route through the tour's kid (they swap places on the way: tryMove), never around him as if he were a wall (Joe 10/12)
+    const T = this.tour, r = this.room; if (!T || n.tourKid || n.schoolKid || !(T.members.includes(n) || n === T.guide)) return false;
+    if (!r.solid[y] || r.solid[y][x] !== false || (this.player.x === x && this.player.y === y)) return false;
+    const here = r.npcs.filter(m => m !== n && (m.x === x && m.y === y || (m.moving && m.x + DIRS[m.dir][0] === x && m.y + DIRS[m.dir][1] === y)));
+    return here.length > 0 && here.every(m => (m.tourKid || m.schoolKid) && m !== this.fol);
+  }
   npcPath(n, tx, ty, loose) { // loose: may cross the tiles visitors usually keep off (doorways), to leave or catch up
     const r = this.room, W = r.w, prev = new Map(), start = n.y * W + n.x, goal = ty * W + tx, q = [start];
     prev.set(start, -1);
@@ -8495,7 +8503,7 @@ class Game {
       const cx = c % W, cy = (c / W) | 0;
       for (const [dx, dy] of Object.values(DIRS)) {
         const nx = cx + dx, ny = cy + dy, k = ny * W + nx;
-        if (nx < 1 || ny < 3 || nx >= W - 1 || ny >= r.h - 1 || prev.has(k) || this.blocked(nx, ny, n) || (!loose && r.noWander && r.noWander.has(nx + "," + ny))) continue;
+        if (nx < 1 || ny < 3 || nx >= W - 1 || ny >= r.h - 1 || prev.has(k) || (this.blocked(nx, ny, n) && !this.kidSwap(n, nx, ny)) || (!loose && r.noWander && r.noWander.has(nx + "," + ny))) continue;
         prev.set(k, c); q.push(k);
       }
     }
@@ -9140,7 +9148,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 12";
+const VERSION = "2026-11-18 cards 13";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
