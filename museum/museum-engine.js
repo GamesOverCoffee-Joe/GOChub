@@ -4204,7 +4204,16 @@ class Game {
     if (tokens > 0 || (this.zone && this.zone.id === "cafe")) {
       const c = document.createElement("span"); c.className = "chip tok" + (pulse ? " pulse" : ""); c.textContent = tokens + " T"; c.title = tokens + " gift shop tokens"; h.appendChild(c);
     }
+    const ct = this.clockText(); this.lastClock = ct;
+    if (ct) { const c = document.createElement("span"); c.className = "chip clock"; c.textContent = ct; c.title = "The museum's clock: the visit runs 10 AM to 6 PM"; h.appendChild(c); }
     h.style.display = h.children.length ? "flex" : "none";
+  }
+  /* The museum's clock (Joe 10/12): the visit's loop as a day from 10 AM to 6 PM, in ten-minute steps, so you can tell what
+     time it is in the museum (when things happen). Not in the chill museum, the tutorial, or before the rooms are up. */
+  clockText() {
+    if (!this.rooms || !this.rooms.museum || this.tut || this.chillOn() || !this.pack || this.headless) return "";
+    const d = this.director(), m = 600 + (d.over ? 480 : Math.floor(Math.min(1, d.min / d.minutes) * 48) * 10), h = Math.floor(m / 60), mm = m % 60;
+    return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.day] + " " + ((h + 11) % 12 + 1) + ":" + String(mm).padStart(2, "0") + (h < 12 ? " AM" : " PM");
   }
   /* Chores on this badge's tally. Kept in the browser, so closing up and reopening never resets it. */
   staffChores() {
@@ -5909,7 +5918,8 @@ class Game {
   openStall() { this.stall = true; this.el.shop.classList.add("gt-janky"); this.openShop(); } // Saturday: Bluu's stall, in the gift shop's window
   shopRows() {
     if (this.stall) return [...this.popupItems().map(it => ({ item: it, popup: true })), ...(this.sellRows("bluu").length ? [{ sell: true }] : []), { leave: true }]; // Bluu's three things
-    return [...this.shopLineup().map(it => ({ item: it })), { shirt: true }, { collection: true }, ...(this.sellRows("shop").length ? [{ sell: true }] : []), { leave: true }]; // featured, two merch, a card, a pack (Joe 10/11)
+    const L = this.shopLineup(), S = this.sup, gone = S && S.stocking && S.emptyUnit !== undefined ? L[S.emptyUnit] : null; // the empty shelf's item: not for sale till its stock comes up (Joe 10/12)
+    return [...L.filter(it => it !== gone).map(it => ({ item: it })), { shirt: true }, { collection: true }, ...(this.sellRows("shop").length ? [{ sell: true }] : []), { leave: true }]; // featured, two merch, a card, a pack (Joe 10/11)
   }
   /* Selling cards back (Joe 10/12): to the gift shop or to Bluu, one at a time, for half what a card costs (a common at the
      single-card price, a rare at the rare price). Bluu takes fakes too (half his cheap card's price); the gift shop doesn't. */
@@ -6908,11 +6918,10 @@ class Game {
   }
   saveAsk(resume) { // Save: saved (the tutorial starts over next time), then "Save and quit?" No: back to playing (or the conversation you paused)
     if (!this.tut) this.saveWhere();
-    const q = (this.tut ? "The tutorial starts over next time." : this.tx("menu.saved").join(" ")) + " Save and quit?";
-    this.choose(q, ["No", "Yes, quit"], i => {
+    this.say(this.tut ? ["The tutorial starts over next time."] : this.tx("menu.saved"), () => this.choose("Save and quit?", ["No", "Yes, quit"], i => { // (the question on its own: it was cut off after the saved line, Joe 10/12)
       if (i !== 1) { if (resume) resume(); return; }
       if (this.tut) this.cleanTutorial(); this.mode = "busy"; this.trans = { t: 0, dur: 24, switched: false, fn: () => this.showEnd("brb"), hold: true };
-    }, 0);
+    }, 0));
   }
   /* ----- The curator's field notes (Joe 10/12) -----
      A notebook left on the end of the lobby's front desk: the curator's notes on everything that keeps going wrong. You find it
@@ -7525,7 +7534,7 @@ class Game {
       const c = this.cine; c.blend += (c.goal > c.blend ? 1 : -1) / 40; c.blend = Math.max(0, Math.min(1, c.blend));
       if (this.mode === "busy" && c.wait > 0 && --c.wait === 0 && c.then) { const fn = c.then; c.then = null; fn(); }
     }
-    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.living("director", () => this.updateDirector()); this.living("litter", () => this.updateLitter()); this.living("supplies", () => this.updateSupplies()); this.living("tour", () => this.updateTour()); this.living("side", () => this.updateSide()); this.living("cons", () => this.updateCons()); this.living("hold", () => this.updateLineHold()); this.living("rush", () => this.updateRush()); this.living("brew", () => this.updateBrew()); this.living("janitor", () => this.updateJanitor()); if (this.t % 30 === 0) this.living("solved", () => this.checkSolved());
+    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.living("director", () => this.updateDirector()); this.living("litter", () => this.updateLitter()); this.living("supplies", () => this.updateSupplies()); this.living("tour", () => this.updateTour()); this.living("side", () => this.updateSide()); this.living("cons", () => this.updateCons()); this.living("hold", () => this.updateLineHold()); this.living("rush", () => this.updateRush()); this.living("brew", () => this.updateBrew()); this.living("janitor", () => this.updateJanitor()); if (this.t % 30 === 0) this.living("solved", () => this.checkSolved()); if (this.t % 60 === 0 && this.clockText() !== this.lastClock) this.updateHud(); // the clock chip ticks
     if (this.petT > 0) this.petT--;
     if (this.t % 20 === 0) this.flushToasts();
     if (this.flickerT > 0) this.flickerT--;
@@ -9477,7 +9486,6 @@ class Game {
         ctx.fillStyle = "rgba(24,24,32,.85)"; ctx.fillRect(nx, ny, w, 8); ctx.fillStyle = "#f8f0c0"; ctx.textBaseline = "top"; ctx.fillText(c.member, nx + 2, ny + 1);
       }
       if (bub >= 0) this.drawSlot("bubble", bub, 0, sx + 4, sy - 9 + (Math.floor(this.t / 20) % 2));
-      else if (c.janitor && !this.full && !c.pose && !c.leaving && this.jan && (this.jan.phase === "plants" || (this.jan.lit && this.jan.lit.jam)) && this.t % 240 < 160) this.drawSlot("emote", 7, 0, sx + 4, sy - 10 + (Math.floor(this.t / 20) % 2)); // the cue: grumpy watering plants somebody could've done (litter's his job; no grumbling there)
       ctx.globalAlpha = 1;
     }
     this.drawUppers(r, cx, cy);
@@ -9540,7 +9548,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 34";
+const VERSION = "2026-11-18 cards 35";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
