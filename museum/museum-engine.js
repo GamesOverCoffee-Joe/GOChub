@@ -7549,7 +7549,8 @@ class Game {
     if (goal !== null) {
       const out = []; let c = goal;
       while (prev.get(c) !== -1) { const pc = prev.get(c), dx = (c % W) - (pc % W), dy = ((c / W) | 0) - ((pc / W) | 0); out.unshift(dx > 0 ? "right" : dx < 0 ? "left" : dy > 0 ? "down" : "up"); c = pc; }
-      this.say(named(this.tx("move.ok", null, true)), () => { n.route = null; n.goal = null; n.aside = out; n.stepWait = 0; });
+      const tourOne = this.tour && (this.tour.members.includes(n) || n === this.tour.guide); // the tour keeps their place in it: they step aside, then carry on where they were headed
+      this.say(named(this.tx("move.ok", null, true)), () => { n.route = null; if (!tourOne) n.goal = null; else n.walkTo = null; n.aside = out; n.stepWait = 0; }); // (their walk there starts again once they've stepped aside)
       return;
     }
     // Nowhere to step: somewhere open in this room, away from you.
@@ -7558,7 +7559,7 @@ class Game {
     const to = spots[(Math.random() * spots.length) | 0];
     if (!to) { this.say(named(this.tx("move.stuck", null, true))); return; }
     this.say(named(this.tx("move.stuck", null, true)), () => {
-      n.x = to[0]; n.y = to[1]; n.moving = false; n.prog = 0; n.route = null; n.aside = null; n.goal = null; n.timer = 240;
+      n.x = to[0]; n.y = to[1]; n.moving = false; n.prog = 0; n.route = null; n.aside = null; if (!(this.tour && (this.tour.members.includes(n) || n === this.tour.guide))) n.goal = null; else n.walkTo = null; n.timer = 240;
       this.flickerT = 16; this.say(this.tx("move.teleport", null, true));
     });
   }
@@ -7746,7 +7747,7 @@ class Game {
   }
   restoreUsher() { const T = this.tour, L = this.rooms && this.rooms.lobby; if (T && T.deskUsher && L && !L.npcs.some(n => n.usher)) L.npcs.push(T.deskUsher); if (T) T.deskUsher = null; }
   tourPlace(n, room, at, dir) { // where someone in the tour group is headed (between rooms too)
-    this.tourStand(n); n.goal = { room, at, dir };
+    this.tourStand(n); n.aside = null; n.goal = { room, at, dir };
   }
   tourHome(n, i) { // back to the lobby: to their seat on a bench, or a spot on the right side if the benches run out
     const T = this.tour, st = T.seats && T.seats[i];
@@ -7815,6 +7816,7 @@ class Game {
       if (n.leaving || n.gone) continue;
       if (this.fol === n) { n.where = this.room.id; n.goal = null; continue; } // following you
       const R = this.rooms[n.where]; if (R && !R.npcs.includes(n)) { for (const id in this.rooms) if (id !== n.where) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== n); R.npcs.push(n); }
+      if (n.aside) { if (n.where !== this.room.id) n.aside = null; else continue; } // stepping out of your way first ("Could I get by?"): then on with the tour
       const tags = T.school ? (n.schoolKid && (T.phase === 1 || T.phase === 2)) || (n.tourKid && (T.phase === 1 || (T.phase === 2 && T.kidDone))) : n.tourKid && (T.phase === 1 || T.phase === 2);
       if (tags) { this.kidTag(n, T); continue; } // sticking with his grown-up (on Tuesdays, the teacher) until the group heads back
       this.tourMove(n);
@@ -8310,27 +8312,34 @@ class Game {
     this.progress.chill = !!on; this.saveProgress(); this.janOff();
     if (!keep && !this.forceProblems) { if (this.dirClock) this.dirClock.picks = null; this.sup = null; if (this.tour) this.endTour(true); this.endSide(); }
   }
+  thirstyPlants() { let n = 0; for (const id of ["lobby", "museum", "screening", "staff"]) { if (!this.rooms || !this.rooms[id]) continue; for (const k in this.rooms[id].events) { const e = this.rooms[id].events[k]; if (e.plant && this.isThirsty(e.plant)) n++; } } return n; }
+  solvedInfo() { // the curator's preview: what counts as fixed so far this loop
+    if (this.chillOn()) return "Chill museum is on: no problems.";
+    const S = this.solvedNow(), what = { usher: "usher's coffee", tour: "happy tour + kid back", stock: "shop stock", line: "café supplies", litter: "litter bagged", item: "item returned", janitor: "every plant watered first (" + this.thirstyPlants() + " still thirsty)" };
+    const left = PROBLEMS.filter(p => !S.ids.includes(p.id)).map(p => what[p.id]);
+    return S.ids.length + " of " + PROBLEMS.length + " solved" + (left.length ? ". Still to do: " + left.join(", ") + "." : S.shown ? ". The curator's already said so." : ". The curator's on the way (when you're free).");
+  }
   solvedNow() { const d = this.director(), key = todayISO() + ":" + d.loop, P = this.progress; if (!P.solved || P.solved.key !== key) P.solved = { key, ids: [], vars: {} }; return P.solved; }
   markSolved(id, vars) { const S = this.solvedNow(); if (S.ids.includes(id)) return; S.ids.push(id); if (vars) Object.assign(S.vars, vars); this.saveProgress(); }
   checkSolved() {
     if (this.headless || this.tut || this.forceProblems || this.chillOn() || !this.rooms || !this.rooms.museum || !this.pack) return;
-    const d = this.director(); if (d.over || d.problems.length < PROBLEMS.length) return;
+    const dc = this.dirClock; if (!dc || !dc.picks || dc.picks.ids.length < PROBLEMS.length) return; // every problem in this loop (still counts after the loop's over: the lost kid, say)
     const T = this.tour, Su = this.sup, I = this.side && this.side.item, J = this.jan;
     if (T && (!T.on || T.coffee)) this.markSolved("usher"); // (Tuesday's teacher leads instead: nothing to fix there)
     if (T && (!T.on || (T.mood === "happy" && T.kidDone))) this.markSolved("tour");
     if (Su && Su.shopDone) this.markSolved("stock");
     if (Su && (Su.cafeDone || !Su.cafeNeeded)) this.markSolved("line");
     if (I && (!I.on || I.done)) this.markSolved("item", I.on ? { who: I.taker.member, owner: I.owner.member, item: I.item } : {});
-    if (J && J.early) this.markSolved("janitor");
+    if (J && (J.early || (!J.watered && !this.thirstyPlants()))) this.markSolved("janitor"); // every plant watered before he got to any of them (Joe 10/12: whenever that is, even if litter has kept him late)
     const S = this.solvedNow(); if (S.shown || !PROBLEMS.every(p => S.ids.includes(p.id))) return;
     if (this.mode !== "walk" || this.trans || this.closing || this.inputLock) return; // when you're free: not mid-conversation
     S.shown = true; this.saveProgress();
     if (this.progress.chillOffered) { this.showLoc(this.tx("chill.again")[0]); return; }
     this.progress.chillOffered = true; this.saveProgress();
-    const dc = this.dirClock, was = dc && dc.paused; if (dc) dc.paused = true; // the game stops while the curator talks
+    const was = dc.paused; dc.paused = true; // the game stops while the curator talks
     const C = pages => pages.map((pg, i) => (i === 0 ? "Curator: " : "") + pg);
     const pages = [...C(this.tx("chill.intro")), ...PROBLEMS.flatMap(p => (S.ids.includes(p.id) && TEXT["chill." + p.id] ? C(this.tx("chill." + p.id, p.id === "item" ? S.vars : {})) : [])), ...C(this.tx("chill.outro"))];
-    const done = () => { if (dc) dc.paused = was; };
+    const done = () => { dc.paused = was; };
     this.say(pages, () => this.choose("Curator: " + this.tx("chill.ask").join(" "), ["Keep it chill", "Keep it as is"], i => {
       if (i === 0) this.setChill(true, true);
       this.say(C(this.tx("chill.settings")), done);
@@ -9248,7 +9257,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 22";
+const VERSION = "2026-11-18 cards 23";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

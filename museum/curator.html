@@ -432,7 +432,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 22";
+window.GOQ_WANT = "2026-11-18 cards 23";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -2899,7 +2899,7 @@ function showClock() {
     const row = (k, id, cls) => [el("div", { class: "ck", text: k }), el("div", { class: "cv" + (cls ? " " + cls : ""), id })];
     B.append(el("div", { class: "ctime" }, [el("span", { class: "cbig", id: "ckTime" }), el("span", { class: "cbeat", id: "ckBeat" }), el("span", { class: "cstate", id: "ckState" })]),
       el("div", { class: "cbar", id: "ckBar" }, ["Settling in", "Getting busy", "Rush", "Winding down"].map(t => el("span", { text: t })).concat([el("i", { id: "ckMark" })])),
-      ...row("This room", "ckRoom"), ...row("Janitor", "ckJan"), ...row("Litter", "ckLit", "l3"), ...row("Supplies", "ckSup"), ...row("Tour", "ckTour"), ...row("Conservator", "ckCons"), ...row("Break room", "ckItem"));
+      ...row("This room", "ckRoom"), ...row("Janitor", "ckJan"), ...row("Litter", "ckLit", "l3"), ...row("Supplies", "ckSup"), ...row("Tour", "ckTour"), ...row("Conservator", "ckCons"), ...row("Break room", "ckItem"), ...row("Solved", "ckSolved"));
   }
   const d = game.director(), m = Math.floor(d.min), sec = Math.floor((d.min - m) * 60), set = (id, t) => { const e = $("#" + id); if (e.textContent !== t) e.textContent = t; };
   const tail = (s, k) => (s || "").replace(new RegExp("^" + k + ":\\s*"), "") || "—"; // the label's already in the left column
@@ -2915,6 +2915,7 @@ function showClock() {
   set("ckTour", game.tourInfo && game.tourInfo() ? tail(game.tourInfo(), "Tour") : d.problems.includes("tour") ? "Not today (the tutorial's on, or no lobby)." : "Off this loop.");
   set("ckCons", (game.sideInfo && game.sideInfo("cons")) || "In the basement until the closing announcement.");
   set("ckItem", (game.sideInfo && game.sideInfo("item")) || (d.problems.includes("item") ? "Not today (the tutorial's on)." : "Off this loop."));
+  set("ckSolved", (game.solvedInfo && game.solvedInfo()) || "—");
   $("#clockPause").textContent = d.paused ? "Resume" : "Pause";
   document.querySelectorAll("#segBeat button").forEach(b => b.setAttribute("aria-pressed", String(!d.over && +b.dataset.v === d.beat)));
   probSync();
