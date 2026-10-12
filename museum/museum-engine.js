@@ -2222,7 +2222,7 @@ const TEXT = {
   "badge.expired":     { g: "Staff", l: "Clocked out because the badge stopped working", v: [["The staff office didn't recognize your badge anymore, so you've been clocked out.", "Clock in again with your badge number and key."]] },
   "net.down":          { g: "Staff", l: "Notice: chores can't reach the staff office", v: [["Staff office unreachable: chores won't count for now"]] },
   "cork.empty":        { g: "Staff", l: "Corkboard with no notes", v: [["The corkboard is bare. Just pins."]] },
-  "rules":             { g: "Staff", l: "Staff rules whiteboard", v: [["STAFF RULES", "1. Clock in at the staff door or the time clock. The ON SHIFT tag means you're working.", "2. On shift, every chore is a point: watering plants, finding the mug, wiping cases. A visitor who loves your recommendation, and closing up, are worth 3.", "3. Chores earn tokens for the gift shop. Most points decide Employee of the Month.", "4. Clock out at the time clock. Leaving at closing clocks you out too.", "5. Do not touch anyone's yogurt."]] },
+  "rules":             { g: "Staff", l: "Staff rules whiteboard", v: [["STAFF RULES", "1. Clock in at the staff door or the time clock. The ON SHIFT tag means you're working.", "2. On shift, every chore is a point: watering plants, finding the mug, wiping cases. A visitor who loves your recommendation, and closing up, are worth 3.", "3. Chores earn tokens for the gift shop. Most points decide Employee of the Month.", "4. Clock out at the time clock: that's when your points go on the board. Leaving at closing clocks you out too.", "5. Do not touch anyone's yogurt."]] },
   "locker.mine":       { g: "Staff", l: "Your locker", v: [["Locker {locker}: {name}.", "If you're looking for your items, they're in the glass case. These are just for aesthetics."]] },
   "locker.others":     { g: "Staff", l: "Other lockers (one per locker, in order)", v: [["You just open people's lockers?", "That's a little weird."], ["That sure is a locker."], ["Oh look, it's a locker."], ["Empty. It smells like coffee."], ["A note in big letters: \"HE WANDERS AT IN DARKNESS\""], ["Locked.", "Why are you like this?"]] },
   "jan.start":         { g: "Janitor", l: "Just out of the staff door, starting his chores", by: "claude", v: [["Alright. Let's get this over with."], ["Morning. Don't track anything in."]] },
@@ -4081,7 +4081,7 @@ class Game {
     add(d("watered"), "plant watered", "plants watered"); add(d("mugs"), "mug returned", "mugs returned");
     const e = this.el.end;
     let sum = bits.length ? "Tonight: " + bits.join(", ") + "." : "Thanks for visiting.";
-    if (this.staff && kind !== "brb") { sum += " " + this.staff.name + " clocked out."; this.progress.staff = null; this.saveProgress(); this.updateHud(); }
+    if (this.staff && kind !== "brb") { sum += " " + this.staff.name + " clocked out."; this.clockOutDuties(); this.progress.staff = null; this.saveProgress(); this.updateHud(); }
     if (kind === "brb") sum = "Saved.";
     else { // three of your stats, at random, and where to find the rest
       const rows = this.statRows().filter(r => r[0] !== "READING" || !/ of \d/.test(String(r[2]))).sort(() => Math.random() - 0.5).slice(0, 3);
@@ -4146,7 +4146,7 @@ class Game {
     const t = this.progress.staffTally[s.badge] || (this.progress.staffTally[s.badge] = { name: s.name });
     t[kind] = (t[kind] || 0) + 1; t.name = s.name;
     this.shift[kind] = (this.shift[kind] || 0) + 1;
-    if (POINT_KINDS.includes(kind)) this.sendDuty(kind, target);
+    if (POINT_KINDS.includes(kind) && s.token) { (this.progress.shiftDuties || (this.progress.shiftDuties = [])).push({ t: s.token, k: kind, g: String(target || "").slice(0, 60) }); this.saveProgress(); } // held until you clock out (Joe 10/12)
     this.updateHud();
   }
   /* Off shift, a chore is a favor: a coworker nearby notices (not every time). On shift it's just the job. */
@@ -5257,6 +5257,7 @@ class Game {
   /* The leaderboard and Employee of the Month: fetched on load and when you walk into the lobby or staff room (at most every 5 minutes). */
   refreshBoard(force) {
     if (!this.online()) { this.board = null; this.boardErr = false; return; }
+    this.sendOutbox(); // chores from a clock-out that couldn't get through last time
     const now = Date.now(); if (this.boardBusy || (!force && now - this.boardAt < 300000)) return;
     this.boardBusy = true; this.boardAt = now;
     this.rpc("get_leaderboard").then(b => { this.board = b && Array.isArray(b.top) ? b : null; this.boardErr = !this.board; })
@@ -5270,15 +5271,31 @@ class Game {
     if (a && a.name) return { pages: [this.tx(a.sofar ? "eotm.sofar" : "eotm.auto", { name: a.name, points: a.points, month: a.month })] };
     return null;
   }
-  /* Send one chore to the staff office. If it can't be reached, say so once; if the badge stopped working, clock out. */
-  sendDuty(kind, target) {
-    const s = this.staff; if (!s || !s.token || !this.online()) return;
-    this.rpc("log_duty", { p_token: s.token, p_duty: kind, p_target: String(target || "").slice(0, 60) }).then(r => {
-      if (r && r.ok === false && (r.reason === "session" || r.reason === "inactive")) {
-        if (this.staff && this.staff.token === s.token) { this.progress.staff = null; this.progress.lastBadge = null; this.saveProgress(); this.updateHud(); }
-        const show = () => (this.mode === "walk" ? this.say(this.tx("badge.expired")) : setTimeout(show, 500)); show();
-      } else if (r && r.counted) this.boardAt = 0;
-    }).catch(() => { if (!this.netWarned) { this.netWarned = true; this.showLoc(this.tx("net.down")[0]); } });
+  /* Chores go to the staff office when you clock out (Joe 10/12: that's what clocking out is for), not as you do them.
+     Clocking out moves this shift's chores to the outbox and sends them; any that can't get through wait there for the next try (the next page load). */
+  clockOutDuties() {
+    const P = this.progress, list = P.shiftDuties || []; P.shiftDuties = [];
+    if (list.length) P.dutyOutbox = [...(P.dutyOutbox || []), ...list];
+    this.saveProgress(); this.sendOutbox();
+  }
+  async sendOutbox() {
+    const P = this.progress; if (this.outboxBusy || !(P.dutyOutbox || []).length || !this.online()) return;
+    this.outboxBusy = true;
+    try {
+      while ((P.dutyOutbox || []).length) {
+        const d = P.dutyOutbox[0]; let r;
+        try { r = await this.rpc("log_duty", { p_token: d.t, p_duty: d.k, p_target: d.g }); }
+        catch (e) { if (/^HTTP 4/.test(e && e.message)) { P.dutyOutbox.shift(); this.saveProgress(); continue; } // turned away for good: drop that one, not the rest
+          if (!this.netWarned) { this.netWarned = true; this.showLoc(this.tx("net.down")[0]); } break; } // offline: try again next time
+        P.dutyOutbox.shift(); this.saveProgress();
+        if (r && r.ok === false && (r.reason === "session" || r.reason === "inactive")) { // that badge stopped working: its chores can't count
+          P.dutyOutbox = P.dutyOutbox.filter(x => x.t !== d.t); this.saveProgress();
+          if (this.staff && this.staff.token === d.t) { P.staff = null; P.shiftDuties = []; this.updateHud(); }
+          if (P.lastBadge && P.lastBadge.token === d.t) P.lastBadge = null;
+          this.saveProgress(); const show = () => (this.mode === "walk" ? this.say(this.tx("badge.expired")) : setTimeout(show, 500)); show();
+        } else if (r && r.counted) this.boardAt = 0;
+      }
+    } finally { this.outboxBusy = false; }
   }
   readLeaderboard() {
     if (!this.online()) {
@@ -5415,7 +5432,7 @@ class Game {
     this.choose("On shift as " + this.staff.name + ". " + n + " point" + (n === 1 ? "" : "s") + " on your tally. Clock out?",
       ["Clock out", "Keep working"], i => {
         if (i !== 0) return;
-        const name = this.callName(), remark = this.clockOutRemark(); this.progress.staff = null; this.saveProgress(); this.updateHud();
+        const name = this.callName(), remark = this.clockOutRemark(); this.clockOutDuties(); this.progress.staff = null; this.saveProgress(); this.updateHud();
         this.say([...this.tx("clock.out", { name }), ...remark]);
       });
   }
@@ -6595,7 +6612,7 @@ class Game {
     const r = this.rooms && this.rooms.staff; if (!r) return;
     r.npcs = r.npcs.filter(n => !n.patron);
     const all = (this.pack.settings.staff.members || []).filter(m => !this.staff || (m.badge ? m.badge !== this.staff.badge : m.name.toLowerCase() !== this.staff.name.toLowerCase()));
-    const seed = strSeed("members" + todayISO() + ":" + RUN_SEED), list = all.map((m, i) => ({ m, k: hash(seed, i) })).sort((a, b) => a.k - b.k).map(x => x.m);
+    const seed = strSeed("members" + todayISO()), list = all.map((m, i) => ({ m, k: hash(seed, i) })).sort((a, b) => a.k - b.k).map(x => x.m);
     list.slice(0, 2 + seed % 2).forEach((m, i) => this.addVisitor("staff", { name: m.name, sheet: ["visitor_a", "visitor_b", "visitor_c"][(seed + i) % 3] }, Object.assign({ patron: true, staff: true }, m.shirts && m.shirts.length ? { shirt: m.shirts[(seed + i) % m.shirts.length] } : {}))); // a member's own shirt colors (Staff tab), a different one day to day
     this.lastStaffKey = this.staff ? this.staff.badge + "|" + this.staff.name : "";
   }
@@ -7913,7 +7930,7 @@ class Game {
     const S = this.side = { key, roster, item: { on: d.problems.includes("item") && !!this.rooms.staff && !!this.rooms.lobby, got: false, done: false, left: false, phase: -1 } };
     const I = S.item; I.kind = (rnd() * 2) | 0; I.item = ["headphones", "lunchbox"][I.kind];
     const all = (this.pack.settings.staff.members || []).filter(m => !this.staff || (m.badge ? m.badge !== this.staff.badge : m.name.toLowerCase() !== this.staff.name.toLowerCase()));
-    const seed = strSeed("members" + todayISO() + ":" + RUN_SEED), shift = all.map((m, i) => ({ m, k: hash(seed, i) })).sort((a, b) => a.k - b.k).map(x => x.m).slice(0, 2 + seed % 2); // who's on shift today (placeMembers)
+    const seed = strSeed("members" + todayISO()), shift = all.map((m, i) => ({ m, k: hash(seed, i) })).sort((a, b) => a.k - b.k).map(x => x.m).slice(0, 2 + seed % 2); // who's on shift today (placeMembers)
     const pick = (shift.length >= 2 ? shift : all).map(m => [rnd(), m]).sort((a, b) => a[0] - b[0]).map(x => x[1]).slice(0, 2);
     if (pick.length < 2) { I.on = false; I.owner = I.taker = { member: "" }; return S; } // only Patreon members, never made-up volunteers (Joe 10/11): fewer than two, no mix-up today
     const person = (m, i, extra) => Object.assign({ sheet: ["visitor_a", "visitor_b", "visitor_c"][(strSeed(m.name) + i) % 3], x: 0, y: 0, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 0, still: true, staff: true, member: m.name, where: "staff", gone: true, lines: [], lineI: -1 }, m.shirts && m.shirts.length ? { shirt: m.shirts[0] } : {}, extra);
@@ -9171,7 +9188,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 18";
+const VERSION = "2026-11-18 cards 19";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
