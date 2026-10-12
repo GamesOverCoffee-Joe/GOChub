@@ -1656,7 +1656,7 @@ function normalizePack(p) {
   const lit = (p.settings && p.settings.litter) || {}, litter = { cap: Math.max(2, Math.min(20, Math.round(lit.cap === undefined ? 6 : +lit.cap || 6))), rate: Math.max(0, Math.min(400, Math.round(lit.rate === undefined ? 100 : +lit.rate || 0))) };
   // The café line (living museum, Step 4): seconds to serve one order with the barista prepped or not, and the longest line.
   const lnin = (p.settings && p.settings.line) || {}, line = { fast: Math.max(1, Math.min(30, Math.round(lnin.fast === undefined ? 3 : +lnin.fast || 3))), slow: Math.max(1, Math.min(60, Math.round(lnin.slow === undefined ? 9 : +lnin.slow || 9))), max: Math.max(2, Math.min(20, Math.round(lnin.max === undefined ? 10 : +lnin.max || 10))) };
-  const vin = (p.settings && p.settings.visit) || {}, visit = { minutes: Math.max(4, Math.min(60, Math.round(vin.minutes === undefined ? 12 : +vin.minutes || 12))), repeat: !!vin.repeat };
+  const vin = (p.settings && p.settings.visit) || {}, visit = { minutes: Math.max(4, Math.min(60, Math.round(vin.minutes === undefined ? 12 : +vin.minutes || 12))), repeat: !!vin.repeat, dialLabel: vin.dialLabel === "static" ? "static" : "slide" }; // (the label kept too, or "always showing" never stuck, Joe 10/12)
   // Genres: the museum's rooms (Action, Puzzle...). A piece's genre is set by hand.
   const genres = normalizeGenres(p.settings && p.settings.genres), gids = new Set(genres.map(g => g.id));
   pieces.forEach(pc => { if (!gids.has(pc.genre)) pc.genre = ""; if (!gids.has(pc.blend) || pc.blend === pc.genre) pc.blend = ""; });
@@ -3567,9 +3567,9 @@ class Game {
 .gt-shop{left:calc(8px * var(--s));right:calc(8px * var(--s));top:calc(6px * var(--s));bottom:calc(6px * var(--s));padding:0 calc(4px * var(--s));z-index:7;
   display:none;font-size:calc(6px * var(--s));line-height:1.4;overflow:hidden}
 .gt-shop-head{display:flex;justify-content:space-between;color:#7c5a0c;font-size:calc(7px * var(--s));margin:0 0 calc(3px * var(--s))}
-.gt-shop-list{max-height:calc(80px * var(--s));overflow:auto}
+.gt-shop-list{max-height:calc(80px * var(--s));overflow:auto;padding-top:calc(2px * var(--s))}
 .gt-split{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:calc(5px * var(--s));min-height:0}
-.gt-split .gt-shop-list{max-height:none;height:100%;overflow-x:hidden;overflow-y:auto}
+.gt-split .gt-shop-list{max-height:none;height:100%;box-sizing:border-box;padding-top:calc(2px * var(--s));overflow-x:hidden;overflow-y:auto}
 .gt-split .gt-shop-row .nm{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.2;overflow-wrap:anywhere}
 .gt-split .gt-shop-row{align-items:flex-start;padding-top:calc(2px * var(--s));padding-bottom:calc(2px * var(--s))}
 .gt-split .gt-shop-row.on::before{top:calc(4px * var(--s));margin-top:0}
@@ -3628,7 +3628,7 @@ class Game {
 .gt-bslot.empty{background:#2a2226;border-style:dashed}
 .gt-bslot.rare{border-color:#f4dca0;box-shadow:0 0 calc(3px * var(--s)) #ffd860}
 .gt-bslot.on{outline:calc(1.5px * var(--s)) solid #e8c070;outline-offset:calc(1px * var(--s))}
-.gt-detail{overflow:auto;border-left:calc(1px * var(--s)) solid #c9b89a;padding-left:calc(5px * var(--s));display:flex;flex-direction:column;gap:calc(2px * var(--s))}
+.gt-detail{overflow:auto;padding-top:calc(4px * var(--s));border-left:calc(1px * var(--s)) solid #c9b89a;padding-left:calc(5px * var(--s));display:flex;flex-direction:column;gap:calc(2px * var(--s))}
 .gt-detail .pic{position:relative;align-self:center;flex:none;display:grid;place-items:center;width:calc(34px * var(--s));height:calc(34px * var(--s));border-radius:50%;background:radial-gradient(circle,#fffaf0 0 54%,#e6cfa6 55% 66%,#d6b98a 67% 70%,transparent 71%)}
 .gt-detail .pic img{width:calc(24px * var(--s));height:calc(24px * var(--s));image-rendering:pixelated;object-fit:contain}
 .gt-detail .pic .gt-tag{position:absolute;right:calc(-6px * var(--s));top:calc(2px * var(--s));transform:rotate(12deg);box-shadow:0 calc(1px * var(--s)) 0 #6a1a1a}
@@ -9649,7 +9649,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 37";
+const VERSION = "2026-11-18 cards 38";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
