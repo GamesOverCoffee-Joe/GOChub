@@ -3707,12 +3707,13 @@ class Game {
   /* A menu is opening over a toast (an achievement, say): put it back at the front of the line to show once the menu closes. */
   holdToast() {
     if (!this.toastBusy) return;
-    const el = this.el.loc; clearTimeout(this._locT); (this.toastQ = this.toastQ || []).unshift({ text: el.textContent, kind: this.toastKind || null });
+    const el = this.el.loc; clearTimeout(this._locT); (this.toastQ = this.toastQ || []).unshift({ text: el.textContent, kind: this.toastKind || null, held: true });
     el.classList.remove("on"); this.toastBusy = false;
   }
   flushToasts() {
     if (!this.toastQ || !this.toastQ.length || this.toastBusy || !(this.mode === "walk" || this.mode === "busy")) return;
     const el = this.el.loc, t = this.toastQ.shift(); el.textContent = t.text; this.toastKind = t.kind; el.classList.add("on"); this.toastBusy = true;
+    if (!t.held) { const N = this.notices = this.notices || []; N.unshift({ text: t.text, at: Date.now() }); N.length = Math.min(N.length, 40); } // for Recent notices in the pause menu
     const ms = this.toastQ.length >= 2 ? 1200 : this.toastQ.length ? 1600 : 2000; // quicker while others wait
     clearTimeout(this._locT); this._locT = setTimeout(() => { el.classList.remove("on"); setTimeout(() => { this.toastBusy = false; this.flushToasts(); }, 300); }, ms);
   }
@@ -6776,15 +6777,23 @@ class Game {
       });
       return;
     }
-    const opts = ["My Stuff", "Controls", "Respawn", "Save", "Save and quit", "Back"];
+    const opts = ["My Stuff", "Recent notices", "Controls", "Respawn", "Save", "Save and quit", "Back"];
     this.choose("PAUSED", opts, k => {
       const o = opts[k];
       if (o === "My Stuff") this.myStuff();
+      else if (o === "Recent notices") this.recentNotices();
       else if (o === "Controls") this.showControls();
       else if (o === "Respawn") this.respawn();
       else if (o === "Save") { this.saveWhere(); this.say(this.tx("menu.saved")); }
       else if (o === "Save and quit") { this.saveWhere(); this.mode = "busy"; this.trans = { t: 0, dur: 24, switched: false, fn: () => this.showEnd("brb"), hold: true }; }
     });
+  }
+  /* Recent notices (Joe 10/12): the toasts shown this visit, newest first, so a missed one can be read again. */
+  recentNotices() {
+    const N = this.notices || [], ago = at => { const m = Math.floor((Date.now() - at) / 60000); return m < 1 ? "just now" : m === 1 ? "1 min ago" : m < 60 ? m + " min ago" : Math.floor(m / 60) + " hr ago"; };
+    this.read({ title: "RECENT NOTICES", sub: N.length ? N.length + " this visit, newest first" : "This visit",
+      sections: N.length ? Array.from({ length: Math.ceil(N.length / 7) }, (_, i) => ({ label: "", text: N.slice(i * 7, i * 7 + 7).map(n => ago(n.at) + " · " + n.text).join("\n") })) // seven to a page
+        : [{ label: "", text: "Nothing yet. The little notices at the top of the screen (achievements, tokens, where you are) show up here once they've been shown." }] }, () => this.openMenu());
   }
   /* Paused in the middle of a conversation: skip the tutorial, or save and quit; Back picks the conversation up where it was. */
   pauseText() {
@@ -9339,7 +9348,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 29";
+const VERSION = "2026-11-18 cards 30";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
