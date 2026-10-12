@@ -3478,7 +3478,8 @@ class Game {
 .gt-card .gtc-accent{height:calc(1.5px * var(--s));margin-top:calc(3px * var(--s));flex:none;background:var(--g);border-radius:calc(1px * var(--s));box-shadow:0 0 calc(3px * var(--s)) var(--g)}
 .gt-card .gtc-bl{flex:1;margin-top:calc(3px * var(--s));font-family:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;font-style:italic;font-size:calc(5.5px * var(--s));line-height:1.3;color:#efe6d2;overflow:hidden}
 .gt-card .gtc-ep{margin:0 calc(-3.5px * var(--s));padding:calc(2.5px * var(--s)) calc(4px * var(--s));background:#7c2434;border-top:calc(.5px * var(--s)) solid #e8c070;border-bottom:calc(.5px * var(--s)) solid #e8c070;font-family:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;font-size:calc(4.5px * var(--s));line-height:1.25;color:#f4dca0;display:flex;gap:calc(2.5px * var(--s));align-items:center}
-.gt-card .gtc-ep b{color:#fbe7a8;font-size:calc(3.5px * var(--s))}
+.gt-card .gtc-yt{position:relative;flex:none;width:calc(7.5px * var(--s));height:calc(5.5px * var(--s));box-sizing:border-box;background:#ff1a1a;border:calc(.6px * var(--s)) solid #fff4c8;border-radius:calc(1.6px * var(--s));box-shadow:0 0 0 calc(.4px * var(--s)) #4a1420}
+.gt-card .gtc-yt::after{content:"";position:absolute;left:52%;top:50%;transform:translate(-40%,-50%);border-style:solid;border-width:calc(1.3px * var(--s)) 0 calc(1.3px * var(--s)) calc(2.1px * var(--s));border-color:transparent transparent transparent #fff}
 .gt-card .gtc-foot{display:flex;justify-content:center;padding-top:calc(2.5px * var(--s))}
 .gt-card .gtc-foot svg{width:calc(38px * var(--s));height:auto;display:block}
 .gt-card.rare{background:conic-gradient(from var(--ga),#e8c070,#fff4c8,#ff8ab8,#8ad8ff,#c8ffb0,#fff4c8,#e8c070,#a87a30,#e8c070);animation:gtCardSpin 3.2s linear infinite}
@@ -5915,7 +5916,7 @@ class Game {
     mk2("gtc-accent", inn); // the category's color, as an accent (no name: Joe 10/11)
     const hint = p.cardBlurb || (p.hint ? p.hint.charAt(0).toUpperCase() + p.hint.slice(1) + (/[.!?]$/.test(p.hint) ? "" : ".") : "");
     mk2("gtc-bl", inn).textContent = hint;
-    const ep = mk2("gtc-ep", inn); mk2("", ep, "b").textContent = "\u25B6"; mk2("", ep, "span").textContent = p.episodeTitle || "Games Over Coffee";
+    const ep = mk2("gtc-ep", inn); mk2("gtc-yt", ep, "i"); mk2("", ep, "span").textContent = p.episodeTitle || "Games Over Coffee"; // a red play button (outlined, so it shows on the red band: Joe 10/12), then the YouTube title
     mk2("gtc-foot", inn).innerHTML = this.museumLogo(kind === "f");
     if (kind === "r") for (const [x, y, d] of [[-1, -1, 0], [94, 8, 0.5], [90, 132, 1], [2, 114, 0.8], [50, -1, 1.2]]) { const sp = mk2("gtc-spark", card, "i"); sp.style.left = "calc(" + x + "px * var(--s))"; sp.style.top = "calc(" + y + "px * var(--s))"; sp.style.animationDelay = d + "s"; }
     return card;
@@ -9028,7 +9029,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 4";
+const VERSION = "2026-11-18 cards 5";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
