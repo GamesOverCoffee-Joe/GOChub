@@ -6324,7 +6324,7 @@ class Game {
       for (let i = 0; i < k; i++) this.count("litter"); this.say(this.tx("bag.binned", { n: k })); return;
     }
     if (this.trashBag != null && e.tub) { this.say(this.tx("bag.hands")); return; }
-    if (!e.tub && this.room.id === "staff" && !this.drink && !this.carryBox && !this.carryItem) { // the roll of trash bags under the staff room's can
+    if (!e.tub && this.room.id === "staff" && !this.noJanitor() && !this.drink && !this.carryBox && !this.carryItem) { // the roll of trash bags under the staff room's can (not while the Janitor is switched off: no trash to pick up)
       this.choose(this.tx("bag.ask").join(" "), ["Yes", "No"], k => { if (k === 0) { this.trashBag = 0; this.say(this.tx("bag.take")); } }, 1); return;
     }
     if (this.drink && this.drink.empty && !e.tub && this.binFull(this.room.id, bx, by)) { this.say(this.tx("bin.full")); return; }
@@ -9248,7 +9248,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 21";
+const VERSION = "2026-11-18 cards 22";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
