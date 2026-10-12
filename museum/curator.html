@@ -410,6 +410,11 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
               <button class="btn" type="button" id="lineBtn" title="Eight people already queued up at the café counter (go to the café first)">A long line</button>
               <button class="btn" type="button" id="binsBtn" title="Today's jammed trash can jammed again, with a full pile of litter beside it">Jam the can</button>
             </div></div>
+          <div class="pvsec"><span class="pvh">Force stock</span>
+            <div class="note" style="font-size:.85rem;margin:0 0 6px">To test: what's on the gift shop's shelves, and on Bluu's table on Saturday (each real or fake). This preview only; Clear goes back to the day's own stock.</div>
+            <div id="forceGift" style="display:grid;gap:4px;margin-bottom:8px"></div>
+            <div id="forceBluu" style="display:grid;gap:4px"></div>
+            <div style="display:flex;gap:6px;margin-top:6px"><button class="btn" type="button" id="forceApply">Stock it</button><button class="btn" type="button" id="forceClear">Clear</button></div></div>
           <div class="pvsec"><span class="pvh">Visit clock</span>
             <div class="seg" id="segBeat" role="group" aria-label="Jump to a beat"><button type="button" data-v="0" title="Jump to this quarter of the visit">Settling in</button><button type="button" data-v="1" title="Jump to this quarter of the visit">Getting busy</button><button type="button" data-v="2" title="Jump to this quarter of the visit">Rush</button><button type="button" data-v="3" title="Jump to this quarter of the visit">Winding down</button></div>
             <div id="probPick" style="display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font-size:.92rem" title="Every problem runs every loop. Untick Auto to turn some off and try others on their own (the preview only)"></div>
@@ -432,7 +437,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 32";
+window.GOQ_WANT = "2026-11-18 cards 33";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -673,6 +678,18 @@ $("#reread").addEventListener("click", () => { game.resetRead(); stage.focus({ p
 $("#walletIn").addEventListener("focus", () => { $("#walletIn").value = (game && game.progress && game.progress.tokens) || 0; });
 $("#walletIn").addEventListener("change", () => { if (!game || !game.progress) return; game.progress.tokens = Math.max(0, Math.min(9999, Math.round(+$("#walletIn").value || 0))); game.saveProgress(); game.updateHud(true); status("Test wallet: " + game.progress.tokens + " tokens."); });
 $("#lineBtn").addEventListener("click", () => { const n = game.fillLine(8); status(n ? n + " people in line at the café." : "Go to the café first: the line starts at its counter.", !n); showClock(); stage.focus({ preventScroll: true }); });
+/* Force stock (Joe 10/12): three gift shop slots and three of Bluu's, from what the game can carry. */
+function forceFill() {
+  if (!game.stockChoices) return; const gs = game.stockChoices(), bs = game.bluuChoices(), F = game.forceStock || { gift: [], bluu: [] };
+  const opt = (list, v) => '<option value="">(the day\'s own)</option>' + list.map(c => '<option value="' + c.id + '"' + (c.id === v ? " selected" : "") + ">" + c.name.replace(/</g, "&lt;") + "</option>").join("");
+  $("#forceGift").innerHTML = [0, 1, 2].map(i => '<label style="display:flex;gap:6px;align-items:center;font-size:.9rem">Gift shop ' + (i + 1) + ' <select data-g="' + i + '" style="flex:1;min-width:0">' + opt(gs, (F.gift || [])[i]) + "</select></label>").join("");
+  $("#forceBluu").innerHTML = [0, 1, 2].map(i => { const b = (F.bluu || [])[i] || {}; return '<label style="display:flex;gap:6px;align-items:center;font-size:.9rem">Bluu ' + (i + 1) + ' <select data-b="' + i + '" style="flex:1;min-width:0">' + opt(bs, b.id) + '</select><span style="white-space:nowrap"><input type="checkbox" data-bf="' + i + '"' + (b.fake ? " checked" : "") + "> fake</span></label>"; }).join("");
+}
+$("#forceApply").addEventListener("click", () => {
+  const gift = [0, 1, 2].map(i => $('[data-g="' + i + '"]').value || null), bluu = [0, 1, 2].map(i => ({ id: $('[data-b="' + i + '"]').value || null, fake: $('[data-bf="' + i + '"]').checked }));
+  game.setForceStock({ gift, bluu }); status(game.forceStock ? "Stocked. Visit the gift shop (or Bluu's stall on a Saturday) to see it." : "Nothing picked: the day's own stock."); stage.focus({ preventScroll: true });
+});
+$("#forceClear").addEventListener("click", () => { game.setForceStock(null); forceFill(); status("Back to the day's own stock."); });
 $("#binsBtn").addEventListener("click", () => { game.fillBins(); status("Today's can is jammed, with a pile beside it."); showClock(); stage.focus({ preventScroll: true }); });
 $("#dayBtn").addEventListener("click", () => { game.closeAll(); game.skipDay(); stage.focus({ preventScroll: true }); });
 // "Reset chores" also reopens the museum: visitors come back and the lights come on.
@@ -722,7 +739,7 @@ function renderPreviewTab() {
   wrap.appendChild(el("p", { class: "note", text: "These change only the live preview on the right, never the pack or anyone's save. Each row is a setting (the lit one is on); the buttons make something happen right away." }));
   wrap.appendChild($("#pvMenu")); showClock(); drawTriggers(); showErrors(); showDaySeg();
 }
-function renderTab() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "visitors") renderVisitors(); else if (tab === "shop") renderShop(); else if (tab === "cards") renderCards(); else if (tab === "tokens") renderTokens(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else if (tab === "notes") renderNotes(); else if (tab === "preview") renderPreviewTab(); else renderPieces(); }
+function renderTab() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "visitors") renderVisitors(); else if (tab === "shop") renderShop(); else if (tab === "cards") renderCards(); else if (tab === "tokens") renderTokens(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else if (tab === "notes") renderNotes(); else if (tab === "preview") { renderPreviewTab(); forceFill(); } else renderPieces(); }
 
 /* ---------- Image helpers ---------- */
 function readFile(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error("That file couldn't be read.")); r.readAsDataURL(file); }); }

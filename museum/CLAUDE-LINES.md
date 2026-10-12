@@ -272,4 +272,5 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Litter | The jammed trash can, with something in your hands | The flap won't budge. There's a cup wedged in it. ⏎ You'll need both hands free to work it loose. |
 | Litter | Pulling the cup out of the jammed trash can | *squeak* ...*pop* ⏎ Got it. The flap swings free again. ⏎ Now, where to put this cup... |
 | Janitor | The Janitor at the jammed trash can | Who jams a cup in a trash can? ⏎ Every. Single. Day. / I was on my break. ⏎ I was ON. MY. BREAK. |
-| Janitor | Talking to the Janitor after you unjammed the trash can and cleaned up round it (once) | Somebody pulled a cup out of that jammed can. And picked up the mess. ⏎ ...That was you, wasn't it? ⏎ Thanks. Don't make it a habit. I'd be out of a job. |
+| Janitor | Talking to the Janitor after you unjammed the trash can and cleaned up round it (once) | Somebody pulled a cup out of that jammed can. And picked up the mess. ⏎ ...That was you, wasn't it? ⏎ Thanks. Really. |
+| Chill museum | The curator: the conservator (stopped to talk with him at closing) | And you stopped to talk to the conservator at closing. He doesn't get a lot of that. ⏎ He won't say so, but it made his night. |
