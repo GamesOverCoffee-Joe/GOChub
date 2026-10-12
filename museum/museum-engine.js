@@ -3985,6 +3985,10 @@ class Game {
     }
     return out;
   }
+  nearZone(r, x, y) { // the name of the closest wing or hallway to a spot (for hints)
+    let best = null; if (r && r.zoneAt) for (let yy = 0; yy < r.h; yy++) for (let xx = 0; xx < r.w; xx++) { const z = this.zoneAt(r, xx, yy); if (!z) continue; const dd = Math.abs(xx - x) + Math.abs(yy - y); if (!best || dd < best.d) best = { d: dd, z }; }
+    return best ? best.z.name : "café";
+  }
   zoneAt(r, x, y) { const z = r && r.zoneAt && r.zoneAt[y] ? r.zoneAt[y][x] : -1; return z >= 0 ? r.zones[z] : null; }
   lightKey(r, x, y) { const z = this.zoneAt(r, x, y); return z ? r.id + ":" + z.id : r.id; }
   isDark(r, x, y) {
@@ -4348,6 +4352,14 @@ class Game {
     const wd = this.weekday(), d = this.dayState(), m = this.rooms.museum; this.onBreak = null;
     if (wd === 1 && m && !d.monDone) { // Monday: five misplaced boxes
       if (!d.boxes) { d.boxes = []; for (let i = 0; i < 5; i++) { const at = this.freeSpot(m); if (at && !d.boxes.some(b => b.x === at[0] && b.y === at[1])) d.boxes.push({ x: at[0], y: at[1], i }); } d.found = []; this.saveProgress(); }
+      // A spot that isn't open floor on the museum as it's built now (picked before the pack's layout loaded, or the rooms
+      // were edited since), or where someone's planted for the day: somewhere new, and remembered (Joe 10/12: they were in walls).
+      const open = (x, y) => m.solid[y] && m.solid[y][x] === false && !m.events[x + "," + y] && !!this.zoneAt(m, x, y) && !(m.noWander && m.noWander.has(x + "," + y));
+      let moved = false;
+      for (const b of d.boxes) if (!d.found.includes(b.i) && !(open(b.x, b.y) && this.dayTile(m, b.x, b.y))) {
+        for (let k = 0; k < 20; k++) { const at = this.freeSpot(m); if (at && open(at[0], at[1]) && !d.boxes.some(o => o !== b && o.x === at[0] && o.y === at[1])) { b.x = at[0]; b.y = at[1]; moved = true; break; } }
+      }
+      if (moved) this.saveProgress();
       for (const b of d.boxes) if (!d.found.includes(b.i) && this.dayTile(m, b.x, b.y)) { m.props.push({ key: "lost_box", x: b.x, y: b.y }); m.solid[b.y][b.x] = true; m.events[b.x + "," + b.y] = { lostBox: b.i }; }
     }
     if (false && wd === 2 && m && !d.kidDone) { // Tuesday: the lost kid and his mom (replaced by the school group tour: Joe 10/11)
@@ -4520,7 +4532,7 @@ class Game {
     if (n.role === "conservator" && wd === 1 && d.boxes) {
       if (d.monDone) { this.say(this.tx("mon.after")); return true; }
       const left = d.boxes.filter(b => !d.found.includes(b.i));
-      if (left.length) { const z = this.zoneAt(this.rooms.museum, left[0].x, left[0].y), i = d.monTalks || 0; d.monTalks = i + 1; this.saveProgress(); this.say(this.txAt("mon.ask", i, { n: d.found.length, room: z ? z.name : "the museum" })); return true; } // the first version once, then the next
+      if (left.length) { const z = this.zoneAt(this.rooms.museum, left[0].x, left[0].y), i = d.monTalks || 0; d.monTalks = i + 1; this.saveProgress(); this.say(this.txAt("mon.ask", i, { n: d.found.length, room: z ? z.name : this.nearZone(this.rooms.museum, left[0].x, left[0].y) })); return true; } // the first version once, then the next
       const nb = this.pack.settings.rewards.boxes; d.monDone = true; this.earn(nb); this.progress.tally.boxes = (this.progress.tally.boxes || 0) + 1; this.saveProgress(); this.say(this.tx("mon.done", { n: nb })); return true;
     }
     if (n.kid) {
@@ -9257,7 +9269,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 23";
+const VERSION = "2026-11-18 cards 24";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
