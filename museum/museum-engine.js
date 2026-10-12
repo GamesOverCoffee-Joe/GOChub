@@ -4000,6 +4000,19 @@ class Game {
     }
     return out;
   }
+  /* Where staff work: the floor behind the café counter and the shop counter (the strip a counter faces away from), as "x,y" keys. */
+  behindCounters(r) {
+    const out = new Set(), floor = (x, y) => r.solid[y] && r.solid[y][x] === false && !r.events[x + "," + y];
+    for (const k in r.events) { const e = r.events[k]; if (!e.cafe && !e.shopCounter) continue; const [x, y] = k.split(",").map(Number);
+      if (floor(x, y - 1)) for (const dx of [-1, 1]) for (let xx = x; floor(xx, y - 1) && Math.abs(xx - x) < 6; xx += dx) out.add(xx + "," + (y - 1)); } // the staff's side: above it
+    return out;
+  }
+  reachFrom(r, from, block) { // the open floor you can walk to from a spot (block: one more "x,y" taken as solid)
+    const seen = new Set(), q = [], ok = (x, y) => r.solid[y] && r.solid[y][x] === false && !r.events[x + "," + y] && (x + "," + y) !== block;
+    if (!from || !ok(from[0], from[1])) return seen; seen.add(from[0] + "," + from[1]); q.push(from);
+    while (q.length) { const [x, y] = q.pop(); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const k = (x + dx) + "," + (y + dy); if (!seen.has(k) && ok(x + dx, y + dy)) { seen.add(k); q.push([x + dx, y + dy]); } } }
+    return seen;
+  }
   nearZone(r, x, y) { // the name of the closest wing or hallway to a spot (for hints)
     let best = null; if (r && r.zoneAt) for (let yy = 0; yy < r.h; yy++) for (let xx = 0; xx < r.w; xx++) { const z = this.zoneAt(r, xx, yy); if (!z) continue; const dd = Math.abs(xx - x) + Math.abs(yy - y); if (!best || dd < best.d) best = { d: dd, z }; }
     return best ? best.z.name : "café";
@@ -4368,7 +4381,9 @@ class Game {
       if (!d.boxes) { d.boxes = []; for (let i = 0; i < 5; i++) { const at = this.freeSpot(m); if (at && !d.boxes.some(b => b.x === at[0] && b.y === at[1])) d.boxes.push({ x: at[0], y: at[1], i }); } d.found = []; this.saveProgress(); }
       // A spot that isn't open floor on the museum as it's built now (picked before the pack's layout loaded, or the rooms
       // were edited since), or where someone's planted for the day: somewhere new, and remembered (Joe 10/12: they were in walls).
-      const open = (x, y) => m.solid[y] && m.solid[y][x] === false && !m.events[x + "," + y] && !!this.zoneAt(m, x, y) && !(m.noWander && m.noWander.has(x + "," + y));
+      const behind = this.behindCounters(m), reach = this.reachFrom(m, ROOMS.museum.enterAt || ROOMS.museum.spawn);
+      const open = (x, y) => m.solid[y] && m.solid[y][x] === false && !m.events[x + "," + y] && !!this.zoneAt(m, x, y) && !(m.noWander && m.noWander.has(x + "," + y))
+        && !behind.has(x + "," + y) && reach.has(x + "," + y) && this.reachFrom(m, ROOMS.museum.enterAt || ROOMS.museum.spawn, x + "," + y).size === reach.size - 1; // not behind a counter (Joe 10/12: the barista stands in the way), and never cutting anything off
       let moved = false;
       for (const b of d.boxes) if (!d.found.includes(b.i) && !(open(b.x, b.y) && this.dayTile(m, b.x, b.y))) {
         for (let k = 0; k < 20; k++) { const at = this.freeSpot(m); if (at && open(at[0], at[1]) && !d.boxes.some(o => o !== b && o.x === at[0] && o.y === at[1])) { b.x = at[0]; b.y = at[1]; moved = true; break; } }
@@ -9348,7 +9363,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 30";
+const VERSION = "2026-11-18 cards 31";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
