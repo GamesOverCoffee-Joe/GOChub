@@ -4366,7 +4366,7 @@ class Game {
       if (tb) {
         const [, a, b] = tb; m.npcs = m.npcs.filter(n => !((n.x === a.x || n.x === b.x) && n.y === a.y)); // whoever was sitting there finds another seat
         m.npcs.push(this.dayNpc({ sheet: role === "usher" ? "usher" : role === "curator" ? "curator" : "shop_staff", x: a.x, y: a.y, sitting: true, dir: "right", sunGuest: role, member: role }));
-        d.sunSeat = { x: b.x, y: b.y }; (m.noWander = m.noWander || new Set()).add(b.x + "," + b.y);
+        d.sunSeat = { x: b.x, y: b.y }; (m.noWander = m.noWander || new Set()).add(b.x + "," + b.y); (m.keepFree = m.keepFree || new Set()).add(b.x + "," + b.y); // kept for you: nobody else sits there
         if (role === "barista" || role === "shopkeeper") { m.npcs = m.npcs.filter(n => n.role !== role); this.onBreak = role; } // away from their counter
       }
     }
@@ -9028,7 +9028,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 3";
+const VERSION = "2026-11-18 cards 4";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
