@@ -432,7 +432,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 test 1";
+window.GOQ_WANT = "2026-11-18 thumbs 1";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -2482,6 +2482,44 @@ async function fetchCardTitles(all, note) {
   if (note) note.textContent = got + " of " + list.length + " title" + (list.length === 1 ? "" : "s") + " found" + (got < list.length ? " (the rest: a private video, or YouTube didn't answer; type those in)" : "") + ".";
   if (got) { changed({ now: true }); if (tab === "cards") renderCards(true); }
 }
+/* Episode thumbnails (Joe 10/12): fetched from YouTube in this browser, made card-sized (480×270), and handed over as one zip of
+   thumbs/<video id>.jpg to unzip next to museum.html. The cards use them once they're on the site. */
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function makeZip(files) { // stored (no compression: JPEGs don't shrink anyway)
+  const enc = new TextEncoder(), parts = [], central = []; let off = 0;
+  const u16 = v => [v & 255, (v >>> 8) & 255], u32 = v => [v & 255, (v >>> 8) & 255, (v >>> 16) & 255, (v >>> 24) & 255];
+  for (const f of files) {
+    const name = enc.encode(f.name), crc = crc32(f.data), n = f.data.length;
+    const head = new Uint8Array([...u32(0x04034b50), ...u16(20), ...u16(0), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(n), ...u32(n), ...u16(name.length), ...u16(0)]);
+    parts.push(head, name, f.data);
+    central.push(new Uint8Array([...u32(0x02014b50), ...u16(20), ...u16(20), ...u16(0), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(n), ...u32(n), ...u16(name.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(off)]), name);
+    off += head.length + name.length + n;
+  }
+  const cdSize = central.reduce((a, b) => a + b.length, 0);
+  return new Blob([...parts, ...central, new Uint8Array([...u32(0x06054b50), ...u16(0), ...u16(0), ...u16(files.length), ...u16(files.length), ...u32(cdSize), ...u32(off), ...u16(0)])], { type: "application/zip" });
+}
+async function ytThumb(id) { // the biggest one YouTube has, cropped to 16:9, 480×270 JPEG bytes (or null)
+  for (const q of ["maxresdefault", "sddefault", "hqdefault", "mqdefault"]) {
+    try {
+      const r = await fetch("https://i.ytimg.com/vi/" + id + "/" + q + ".jpg", { mode: "cors" }); if (!r.ok) continue;
+      const bmp = await createImageBitmap(await r.blob()); if (q !== "mqdefault" && bmp.width <= 120) continue; // (YouTube's grey "no thumbnail" stand-in)
+      const W = 480, H = 270, c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
+      const sh = Math.min(bmp.height, bmp.width * 9 / 16), sw = sh * 16 / 9; x.imageSmoothingQuality = "high"; x.drawImage(bmp, (bmp.width - sw) / 2, (bmp.height - sh) / 2, sw, sh, 0, 0, W, H);
+      const blob = await new Promise(res => c.toBlob(res, "image/jpeg", 0.86)); return new Uint8Array(await blob.arrayBuffer());
+    } catch (e) { if (e instanceof TypeError) return "cors"; }
+  }
+  return null;
+}
+async function downloadThumbs(note) {
+  const ids = [...new Set(draft.pieces.filter(p => !p.tut).map(p => GOQ.ytVideoId(p.episodeUrl)).filter(Boolean))]; if (!ids.length) { note.textContent = "No pieces have an episode link."; return; }
+  const files = [], missing = []; let blocked = false;
+  for (let i = 0; i < ids.length; i++) { note.textContent = "Getting thumbnail " + (i + 1) + " of " + ids.length + "…"; const b = await ytThumb(ids[i]); if (b === "cors") { blocked = true; break; } if (b) files.push({ name: "thumbs/" + ids[i] + ".jpg", data: b }); else missing.push(ids[i]); }
+  if (blocked) { note.textContent = "This browser wouldn't let the page copy YouTube's thumbnails. Try another browser (Chrome or Firefox), or save them by hand: https://i.ytimg.com/vi/VIDEO_ID/maxresdefault.jpg, saved as thumbs/VIDEO_ID.jpg."; return; }
+  if (!files.length) { note.textContent = "No thumbnails came back (private videos, or YouTube didn't answer)."; return; }
+  download("thumbs.zip", makeZip(files));
+  note.textContent = "Downloaded thumbs.zip (" + files.length + " thumbnail" + (files.length === 1 ? "" : "s") + (missing.length ? "; " + missing.length + " missing" : "") + "). Unzip it in the museum folder, next to museum.html, so there's a thumbs folder, then push. The cards use them from then on (new episodes: download again).";
+}
 function renderCards(keepNote) {
   const main = $("#main"), oldNote = keepNote && main.querySelector("#cardFetchNote") ? main.querySelector("#cardFetchNote").textContent : ""; main.innerHTML = "";
   const C = draft.settings.cards = Object.assign({ on: true, single: 10, pack: 25, rare: 20, bluuCommon: 3, packRare: 2, bluuRare: 15 }, draft.settings.cards || {});
@@ -2500,6 +2538,10 @@ function renderCards(keepNote) {
   wrap.appendChild(el("section", { class: "prow", style: "display:block;margin:10px 0 16px" }, [el("h3", { text: "Episode titles", style: "margin:0 0 4px" }),
     el("p", { class: "note", style: "margin:0 0 8px", text: "Each card names the Games Over Coffee episode its piece came from. The titles come from YouTube, from each piece's episode link (the same lookup as the GOC link grabber). New pieces get theirs looked up when you open this tab; you can also type one in." }),
     el("div", { class: "row" }, [el("button", { type: "button", class: "btn small", text: "Look up missing titles", onclick: () => fetchCardTitles(false, note) }), el("button", { type: "button", class: "btn small quiet", text: "Look them all up again", onclick: () => fetchCardTitles(true, note) })]), note]));
+  const tnote = el("p", { class: "note", style: "margin:6px 0 0" }), have = Object.values(game.thumbState || {}).filter(v => v === "ok").length;
+  wrap.appendChild(el("section", { class: "prow", style: "display:block;margin:10px 0 16px" }, [el("h3", { text: "Episode thumbnails", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 8px", text: "The big picture on each card is its episode's YouTube thumbnail, with the game's art small in the corner. Download them all as one zip, unzip it in the museum folder (next to museum.html, so there's a thumbs folder) and push. A card without a thumbnail shows the game's art. " + (have ? have + " thumbnail" + (have === 1 ? " is" : "s are") + " in the folder now." : "None are in the folder yet.") }),
+    el("div", { class: "row" }, [el("button", { type: "button", class: "btn small", text: "Download thumbnails (zip)", onclick: () => downloadThumbs(tnote) })]), tnote]));
   const today = GOQ.todayISO(), list = draft.pieces.filter(p => !p.tut).slice().sort((a, b) => ((a.unveil || "") < (b.unveil || "") ? -1 : (a.unveil || "") > (b.unveil || "") ? 1 : 0));
   if (!list.length) wrap.appendChild(el("p", { class: "empty", text: "No pieces yet (Pieces tab)." }));
   list.forEach(p => {

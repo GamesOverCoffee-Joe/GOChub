@@ -142,6 +142,7 @@ function misspell(name, seed) {
   return name.replace(/o/, "0");
 }
 function hash(x, y) { let h = (x * 374761393 + y * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return (h ^ (h >>> 16)) >>> 0; }
+function ytVideoId(url) { const m = String(url || "").match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/); return m ? m[1] : ""; } // a YouTube link's video id
 function strSeed(s) { let h = 7; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; }
 function hexRgb(h) { h = h.replace("#", ""); return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]; }
 const isHex = c => typeof c === "string" && /^#[0-9a-f]{6}$/i.test(c);
@@ -3142,6 +3143,7 @@ class Game {
       ...pack.settings.shop.items.filter(x => x.image).map(async x => { const img = await loadImage(x.image); if (img) ii[x.id] = img; }),
     ]);
     this.itemImgs = ii;
+    this.loadThumbs(pack);
     if (token !== this.packToken) return;
     // Keep the art already drawn (tiles, tints, murals) when the pack's art hasn't changed; redraw piece art either way.
     const sig = Object.keys(pack.assets).sort().map(k => k + ":" + pack.assets[k].src.length + pack.assets[k].src.slice(-24)).join("|");
@@ -3480,6 +3482,7 @@ class Game {
 .gt-card .gtc-t{font-family:var(--pixel, monospace);font-size:calc(4.5px * var(--s));line-height:1.35;color:#f4dca0;text-shadow:calc(.5px * var(--s)) calc(.5px * var(--s)) 0 #000}
 .gt-card .gtc-no{font-family:var(--pixel, monospace);font-size:calc(3px * var(--s));color:#9a8060;white-space:nowrap}
 .gt-card .gtc-art{margin-top:calc(3px * var(--s));height:calc(53px * var(--s));flex:none;background:#000 center/cover;border:calc(1px * var(--s)) solid #e8c070;box-shadow:0 0 0 calc(1px * var(--s)) #4a1420;position:relative;overflow:hidden}
+.gt-card .gtc-pip{position:absolute;right:calc(2px * var(--s));bottom:calc(2px * var(--s));width:32%;aspect-ratio:16/9;background:#000 center/cover;border:calc(.75px * var(--s)) solid #e8c070;box-shadow:0 0 0 calc(.5px * var(--s)) #141012,0 calc(1px * var(--s)) calc(2px * var(--s)) rgba(0,0,0,.6);z-index:1}
 .gt-card .gtc-accent{height:calc(1.5px * var(--s));margin-top:calc(3px * var(--s));flex:none;background:var(--g);border-radius:calc(1px * var(--s));box-shadow:0 0 calc(3px * var(--s)) var(--g)}
 .gt-card .gtc-bl{flex:1;margin-top:calc(3px * var(--s));font-family:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;font-style:italic;font-size:calc(5.5px * var(--s));line-height:1.3;color:#efe6d2;overflow:hidden}
 .gt-card .gtc-ep{margin:0 calc(-3.5px * var(--s));padding:calc(2.5px * var(--s)) calc(4px * var(--s));background:#7c2434;border-top:calc(.5px * var(--s)) solid #e8c070;border-bottom:calc(.5px * var(--s)) solid #e8c070;font-family:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;font-size:calc(4.5px * var(--s));line-height:1.25;color:#f4dca0;display:flex;gap:calc(2.5px * var(--s));align-items:center}
@@ -5950,6 +5953,12 @@ class Game {
      One card for every piece on display (each unveil adds one), in a common and a rare (very shiny) form. The gift shop sells a
      single (a random common) and a pack of three (each card has settings.cards.packRare percent to be rare). Bluu sells a cheap
      common that might be fake, and on some Saturdays a real rare. progress.cards: { pieceId: { c, r, f } } (commons, rares, fakes). */
+  /* Episode thumbnails for the cards (Joe 10/12): museum/thumbs/<video id>.jpg, from the Cards tab's zip. A missing one: the game art. */
+  loadThumbs(pack) {
+    if (this.headless || typeof Image === "undefined") return; const st = this.thumbState || (this.thumbState = {});
+    for (const p of (pack || this.pack).pieces) { const v = ytVideoId(p.episodeUrl); if (!v || st[v]) continue; st[v] = "loading"; const im = new Image(); im.onload = () => { st[v] = "ok"; }; im.onerror = () => { st[v] = "no"; }; im.src = "thumbs/" + v + ".jpg"; }
+  }
+  cardThumb(p) { const v = ytVideoId(p.episodeUrl); return v && this.thumbState && this.thumbState[v] === "ok" ? "thumbs/" + v + ".jpg" : ""; }
   cardList() { const t = todayISO(); return this.pack.pieces.filter(p => !p.tut && !p.noCard && (!p.unveil || p.unveil <= t)).sort((a, b) => ((a.unveil || "") < (b.unveil || "") ? -1 : (a.unveil || "") > (b.unveil || "") ? 1 : 0)); }
   cardsOwned() { return this.progress.cards || (this.progress.cards = {}); }
   addCard(id, kind) { const o = this.cardsOwned(), c = o[id] || (o[id] = { c: 0, r: 0, f: 0 }); c[kind] = (c[kind] || 0) + 1; this.progress.tally.cards = (this.progress.tally.cards || 0) + 1; this.saveProgress(); }
@@ -5982,7 +5991,9 @@ class Game {
     const inn = mk2("gtc-in", card), top = mk2("gtc-top", inn);
     mk2("gtc-t", top).textContent = kind === "f" ? misspell(p.title, strSeed(p.id)) : p.title;
     mk2("gtc-no", top).textContent = String(no).padStart(2, "0") + "/" + String(L.length).padStart(2, "0");
-    const art = mk2("gtc-art", inn); art.style.backgroundImage = 'url("' + (p.image || this.pieceArt(p).toDataURL()) + '")'; if (!p.image) art.style.imageRendering = "pixelated";
+    const art = mk2("gtc-art", inn), gameArt = p.image || this.pieceArt(p).toDataURL(), thumb = this.cardThumb(p);
+    if (thumb) { art.style.backgroundImage = 'url("' + thumb + '")'; const pip = mk2("gtc-pip", art); pip.style.backgroundImage = 'url("' + gameArt + '")'; if (!p.image) pip.style.imageRendering = "pixelated"; } // the episode's thumbnail, the game in the corner
+    else { art.style.backgroundImage = 'url("' + gameArt + '")'; if (!p.image) art.style.imageRendering = "pixelated"; }
     mk2("gtc-accent", inn); // the category's color, as an accent (no name: Joe 10/11)
     const hint = p.cardBlurb || (p.hint ? p.hint.charAt(0).toUpperCase() + p.hint.slice(1) + (/[.!?]$/.test(p.hint) ? "" : ".") : "");
     mk2("gtc-bl", inn).textContent = hint;
@@ -6021,7 +6032,7 @@ class Game {
     const grid = document.createElement("div"); grid.className = "gt-album-grid gt-binder"; box.appendChild(grid);
     L.forEach((p, i) => {
       const o = own[p.id] || {}, cell = document.createElement("button"); cell.type = "button"; cell.className = "gt-bslot" + (i === this.binderSel ? " on" : "") + (o.r ? " rare" : "") + (has(p) ? "" : " empty");
-      if (has(p) && p.image) cell.style.backgroundImage = 'url("' + p.image + '")'; else cell.textContent = String(i + 1);
+      if (has(p) && (this.cardThumb(p) || p.image)) cell.style.backgroundImage = 'url("' + (this.cardThumb(p) || p.image) + '")'; else cell.textContent = String(i + 1);
       cell.addEventListener("click", e => { e.stopPropagation(); if (this.binderSel === i) this.binderAct(); else { this.binderSel = i; this.renderBinder(); } });
       grid.appendChild(cell);
     });
@@ -9110,7 +9121,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 test 1";
+const VERSION = "2026-11-18 thumbs 1";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
@@ -9118,7 +9129,7 @@ const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k
 const CLAUDE_SHOP = { "goq-tote": "A sturdy canvas tote with the GOQ logo. Holds groceries, games and emotional baggage.", "goq-pin": "A shiny enamel pin with the GOQ logo. Looks great on a lanyard. Hint hint.",
   "goq-mousepad": "An extra-wide mousepad with the GOQ logo. Your desk has never looked this cozy.", "goq-lanyard": "A GOQ lanyard. Now you look like you work here. Do you?" }; // shop descriptions Claude wrote (Joe 10/11)
 const CLAUDE_ACH = { skimmer: { name: "TL;DR", desc: "Read at least one side of every piece in the museum." } }; // achievements Claude wrote (Joe 10/11)
-window.GOQ = { CLAUDE_ACH, CLAUDE_LINES, CLAUDE_SHOP, BLUU_GEAR, PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
+window.GOQ = { ytVideoId, CLAUDE_ACH, CLAUDE_LINES, CLAUDE_SHOP, BLUU_GEAR, PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
   spotRooms: () => Object.keys(ROOMS).filter(id => (ROOMS[id].spots || []).length).map(id => ({ id, name: ROOMS[id].name, n: ROOMS[id].spots.length })),
