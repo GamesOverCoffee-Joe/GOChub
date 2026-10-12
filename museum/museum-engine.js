@@ -2394,7 +2394,7 @@ const TEXT = {
   "cur.missNone":      { g: "Curious visitors", l: "You recommend a piece with no relationship set ({title}; usually each relationship has its own miss lines, in Visitors)", v: [["I don't see any observations here at all."]] },
   "cur.giveUp":        { g: "Curious visitors", l: "After a third piece that isn't what they wanted: they stop following you", v: [["Thanks for your time! I'll keep looking."]] },
   "cur.recall":        { g: "Curious visitors", l: "Question: recommend one from memory (the pieces you've recommended right before come next, by name)", v: [["Which one comes to mind?"]] },
-  "cur.back":          { g: "Curious visitors", l: "Back the next day, in the lobby: hello ({title}: the game you recommended; {hint}: empty now, the pieces' \"the one where...\" hints are gone)", v: [["Hey! Remember me from yesterday? You recommended {title} to me{hint}."]] },
+  "cur.back":          { g: "Curious visitors", l: "Back the next day, in the lobby: hello ({title}: the game you recommended; {hint}: \", the one where...\" from the piece)", v: [["Hey! Remember me from yesterday? You recommended {title} to me{hint}."]] },
   "cur.agree":         { g: "Curious visitors", l: "Next day, picked at random: they see why the curator felt that way ({title})", v: [["I get it. I completely understand why the curator felt the way he felt about {title}"]] },
   "cur.disagree":      { g: "Curious visitors", l: "Next day, picked at random: they think the curator got it wrong ({title})", v: [["I think the curator was absolutely wrong about {title}.", "I didn't get what he said at all."]] },
   "cur.puzzled":       { g: "Curious visitors", l: "Next day, picked at random: they can't see where the curator got that ({title})", v: [["I have absolutely no idea what the curator was talking about with {title}."]] },
@@ -9126,7 +9126,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 8";
+const VERSION = "2026-11-18 cards 9";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
