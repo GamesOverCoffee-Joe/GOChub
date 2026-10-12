@@ -2319,6 +2319,7 @@ const TEXT = {
   "popcorn.got":       { g: "Screening nook", l: "Getting popcorn", by: "claude", v: [["You got a bag of popcorn.", "It's still warm."]] },
   "popcorn.poor":      { g: "Screening nook", l: "Popcorn, without enough tokens", by: "claude", v: [["I don't have enough tokens for popcorn.", "Sad."]] },
   "popcorn.done":      { g: "Screening nook", l: "Finishing your popcorn as the episode ends", by: "claude", v: [["The episode's over and so is the popcorn."], ["Every last kernel. Gone."]] },
+  "bin.tubPopcorn":    { g: "Screening nook", l: "Trying to put a popcorn bag in the café's dish tub", by: "claude", v: [["The dish tub is for mugs. The popcorn bag goes in the trash."]] },
   "popcorn.hands":     { g: "Screening nook", l: "Popcorn, with something already in your hands", by: "claude", v: [["My hands are full already."]] },
   "litter.pick":       { g: "Litter", l: "Picking up litter ({thing}: cup, wrapper or napkin)", by: "claude", v: [["You pick up a {thing}. Gross."], ["A {thing}. People are animals."], ["You pick up the {thing}."]] },
   "litter.noBag":      { g: "Litter", l: "Trying to pick up litter without a trash bag (in the staff room, or the janitor has spares)", by: "claude", v: [["I'm not touching that with my bare hands.", "The janitor must have a spare trash bag."]] },
@@ -2382,6 +2383,7 @@ const TEXT = {
   "drink.refill":      { g: "Café", l: "Refill", v: [["Here you go. Refills are on the house."], ["Oh, another refill? Yeah, sure."], ["Pulling an all nighter?"]] },
   "drink.noRefill":    { g: "Café", l: "Turning down a refill", v: [["The bus tub is at the end of the counter."]] },
   "drink.still":       { g: "Café", l: "Ordering while you still have one", v: [["You've still got your {drink}.", "Find a seat and enjoy it."]] },
+  "bin.tub":           { g: "Café", l: "Empty cup into the bus tub", v: [["You set the cup in the bus tub. Clink."]] },
   "bin.trash":         { g: "Café", l: "Empty cup into a trash can", v: [["You drop the cup in the trash. Thunk."]] },
   "bin.tossFull":      { g: "Café", l: "Bin while your drink isn't finished (a cup): asks first", v: [["Throw away your full {drink}?"]] },
   "bin.pourMug":       { g: "Café", l: "Bin while your travel mug still has a drink in it: asks first (the mug is never thrown away)", v: [["You wanna pour out your {drink}?"]] },
@@ -6312,7 +6314,7 @@ class Game {
     const mug = this.gear("mug"); // own a travel mug: the barista asks every time
     if (mug) this.choose(this.tx("drink.useMug").join(" "), ["Yes, my mug", "No, a cup"], k => serve(k === 0 ? mug : ""), 1); else serve("");
   }
-  /* Empty cups go in a trash can. */
+  /* Empty cups go in the bus tub or a trash can. */
   /* The theater's popcorn stand: a bag for a few tokens (Shop tab). It's eaten like a drink (while you sit), and the
      empty bag goes in a bin. */
   popcornStand() {
@@ -6328,28 +6330,29 @@ class Game {
   }
   npcPopcorn() { return { kind: 0, popcorn: true, sips: 0, empty: false, t: 300 + Math.random() * 600 }; }
   bin(e) {
-    if (e.tub) { this.say(this.tx("bin.lookTub")); return; } // the café's bus tub is just the café's (Joe 10/12: it isn't a trash can)
+    if (e.tub && this.drink && this.drink.popcorn) { this.say(this.tx("bin.tubPopcorn")); return; } // a popcorn bag goes in the trash, not the café's dish tub
     const [bx, by] = [e.x !== undefined ? e.x : this.player.x + DIRS[this.player.dir][0], e.y !== undefined ? e.y : this.player.y + DIRS[this.player.dir][1]];
-    if (this.isJammed(this.room.id, bx, by)) { this.jamTalk(); return; } // a cup wedged in the flap
-    if (this.trashBag != null) { // your trash bag: into an empty can (an unused one goes back on the roll in the staff room)
+    if (!e.tub && this.isJammed(this.room.id, bx, by)) { this.jamTalk(); return; } // a cup wedged in the flap
+    if (this.trashBag != null && !e.tub) { // your trash bag: into an empty can (an unused one goes back on the roll in the staff room)
       const k = this.trashBag;
       if (!k) { if (this.room.id === "staff") { this.trashBag = null; this.say(this.tx("bag.back")); } else this.choose(this.tx("bag.unused").join(" "), ["Toss it", "Keep it"], i => { if (i === 0) { this.trashBag = null; this.say(this.tx("bag.tossed")); } }, 1); return; } // an empty one: toss it if you like (Joe 10/11)
       if (this.binFill(this.room.id, bx, by)) { this.say(this.tx("bag.notEmpty")); return; }
       (this.bins || (this.bins = {}))[this.binKey(this.room.id, bx, by)] = Math.min(this.pack.settings.litter.cap, k); this.trashBag = null;
       for (let i = 0; i < k; i++) this.count("litter"); this.say(this.tx("bag.binned", { n: k })); return;
     }
-    if (this.room.id === "staff" && !this.noJanitor() && !this.drink && !this.carryBox && !this.carryItem) { // the roll of trash bags under the staff room's can (not while the Janitor is switched off: no trash to pick up)
+    if (this.trashBag != null && e.tub) { this.say(this.tx("bag.hands")); return; }
+    if (!e.tub && this.room.id === "staff" && !this.noJanitor() && !this.drink && !this.carryBox && !this.carryItem) { // the roll of trash bags under the staff room's can (not while the Janitor is switched off: no trash to pick up)
       this.choose(this.tx("bag.ask").join(" "), ["Yes", "No"], k => { if (k === 0) { this.trashBag = 0; this.say(this.tx("bag.take")); } }, 1); return;
     }
-    if (this.drink && this.drink.empty && this.binFull(this.room.id, bx, by)) { this.say(this.tx("bin.full")); return; }
-    if (this.drink && this.drink.empty) this.binAdd(this.room.id, bx, by);
-    if (this.drink && this.drink.empty) { this.drink = null; if (this.room.id === "lobby") this.quest("lobbyTrash"); else this.quest("otherBin"); this.say(this.tx("bin.trash")); return; }
+    if (this.drink && this.drink.empty && !e.tub && this.binFull(this.room.id, bx, by)) { this.say(this.tx("bin.full")); return; }
+    if (this.drink && this.drink.empty && !e.tub) this.binAdd(this.room.id, bx, by);
+    if (this.drink && this.drink.empty) { this.drink = null; if (!e.tub && this.room.id === "lobby") this.quest("lobbyTrash"); else this.quest("otherBin"); this.say(this.tx(e.tub ? "bin.tub" : "bin.trash")); return; }
     if (this.drink) { // not finished: ask first. A travel mug is never thrown away, only poured out
       const d = this.drink, n = d.name.toLowerCase();
-      this.choose(this.tx(d.mug ? "bin.pourMug" : "bin.tossFull", { drink: n }).join(" "), ["Yes", "No"], k => { if (k !== 0) return; this.drink = null; this.say(this.tx(d.mug ? "bin.poured" : "bin.trash")); }, 1);
+      this.choose(this.tx(d.mug ? "bin.pourMug" : "bin.tossFull", { drink: n }).join(" "), ["Yes", "No"], k => { if (k !== 0) return; this.drink = null; this.say(this.tx(d.mug ? "bin.poured" : e.tub ? "bin.tub" : "bin.trash")); }, 1);
       return;
     }
-    this.say(this.tx("bin.lookTrash"));
+    this.say(this.tx(e.tub ? "bin.lookTub" : "bin.lookTrash"));
   }
   workbench() {
     const up = this.pack.pieces.filter(p => p.unveil && p.unveil > todayISO());
@@ -6612,7 +6615,7 @@ class Game {
   /* A visitor with an empty cup heads for the nearest bin and drops it in. Returns true while that's what they're doing. */
   binRun(n) {
     if (!n.drink || !n.drink.empty || n.sitting || n.still) return false;
-    const r = this.room, bins = Object.keys(r.events).filter(k => r.events[k].trash && !r.events[k].tub).map(k => k.split(",").map(Number));
+    const r = this.room, bins = Object.keys(r.events).filter(k => r.events[k].trash).map(k => k.split(",").map(Number));
     if (!bins.length) { n.drink = null; return false; }
     const J = this.jam, jam = J && J.on && J.jammed && J.room === r.id ? [J.x, J.y] : null, dist = ([x, y]) => Math.abs(x - n.x) + Math.abs(y - n.y);
     if (jam && (n.jamGo || dist(jam) <= 12)) bins.sort((a, b) => (b[0] === jam[0] && b[1] === jam[1]) - (a[0] === jam[0] && a[1] === jam[1]) || dist(a) - dist(b)); else bins.sort((a, b) => dist(a) - dist(b)); // the nearest; the jammed one if they were headed there
@@ -8497,7 +8500,7 @@ class Game {
     const trash = []; this.jamState(); // (which can's jammed, so his round leaves it till his last quarter)
     for (const id of ["lobby", "museum", "screening", "staff"]) { // in walking order: the theater's off the museum, the staff room off the lobby
       const R = this.rooms[id]; if (!R) continue;
-      for (const k in R.events) if (R.events[k].trash && !R.events[k].tub) { const [x, y] = k.split(",").map(Number), at = this.janBeside(R, x, y); if (at && !this.isJamBin(id, [x, y])) trash.push({ room: id, at, dir: this.janFace(at, x, y), act: "empty", dur: 150, bin: [x, y] }); }
+      for (const k in R.events) if (R.events[k].trash) { const [x, y] = k.split(",").map(Number), at = this.janBeside(R, x, y); if (at && !this.isJamBin(id, [x, y])) trash.push({ room: id, at, dir: this.janFace(at, x, y), act: "empty", dur: 150, bin: [x, y] }); }
     }
     const sweep = () => { // four spots in one part of the museum, or the lobby now and then
       const M = this.rooms.museum, zones = M.zones ? M.zones.filter(z => z.kind === "room" || (z.kind === "hall" && z.id !== "lobbyhall")) : [];
@@ -9325,7 +9328,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 26";
+const VERSION = "2026-11-18 cards 25";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
