@@ -274,3 +274,15 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Janitor | The Janitor at the jammed trash can | Who jams a cup in a trash can? ⏎ Every. Single. Day. / I was on my break. ⏎ I was ON. MY. BREAK. |
 | Janitor | Talking to the Janitor after you unjammed the trash can and cleaned up round it (once) | Somebody pulled a cup out of that jammed can. And picked up the mess. ⏎ ...That was you, wasn't it? ⏎ Thanks. Really. |
 | Chill museum | The curator: the conservator (stopped to talk with him at closing) | And you stopped to talk to the conservator at closing. He doesn't get a lot of that. ⏎ He won't say so, but it made his night. |
+| Field notes | Finding the curator's field notes on the front desk | A notebook, left on the end of the front desk. FIELD NOTES, in the curator's handwriting. ⏎ Inside: a list of everything that keeps going wrong around here. Some of it's crossed out. Most of it isn't. ⏎ A sticky note on the cover: "If you found this, keep it. Maybe you'll have better luck. -the curator" ⏎ (The field notes are in your pause menu now.) |
+| Field notes | The usher | The usher's coffee: Buried in schedules every morning. Never gets a coffee before the tour. |
+| Field notes | The shopkeeper | The shop's stock: Deliveries land in the basement. The shop can't open till its box comes up. |
+| Field notes | The jammed trash can | The jammed can: Somebody jams a cup in a trash can's flap every single day. People just leave their trash beside it. |
+| Field notes | The tour group | The tour group: Without coffee the guide can't answer a thing. And somebody always loses a kid. |
+| Field notes | The barista | The café's supplies: Same basement, same problem. No cups, no lids, and by the rush the line's out the door. |
+| Field notes | The staff on break | The break room: Somebody always walks out with the wrong headphones. Or lunchbox. |
+| Field notes | The Janitor | The mess by the can: If nobody picks it up, the Janitor spends his break sweeping. |
+| Field notes | The conservator | The conservator: Only comes upstairs at closing. Somebody should say hi. |
+| Gift shop | The Sell cards row | The shop buys trading cards back, at half what they cost. Real ones only. |
+| Days of the week | Saturday: Bluu's Sell cards row | Bluu buys cards back. Half price. He doesn't ask where they came from, and you don't ask where they're going. |
+| Gift shop | Selling the only copy of a card | That's your only {title} card. Sell it anyway? |

@@ -2234,6 +2234,15 @@ const TEXT = {
   "jan.home":          { g: "Janitor", l: "The Janitor at closing, done for the day and heading home", by: "claude", v: [["That's me done. Night.", "Don't let the lights hit you on the way out."], ["Clocking out. The floors are spotless. You're welcome."]] },
   "jan.break":         { g: "Janitor", l: "On his break in the staff room", by: "claude", v: [["Break time. I'm not here.", "...", "You can't see me."], ["Shh. Five minutes."]] },
   "jan.early":         { g: "Janitor", l: "On an early break, because the plants were already watered", by: "claude", v: [["Somebody watered all the plants already.", "Whoever you are, I owe you one.", "Early break, baby."]] },
+  "notes.find":        { g: "Field notes", l: "Finding the curator's field notes on the front desk (the last page says where they are now)", by: "claude", v: [["A notebook, left on the end of the front desk. FIELD NOTES, in the curator's handwriting.", "Inside: a list of everything that keeps going wrong around here. Some of it's crossed out. Most of it isn't.", "A sticky note on the cover: \"If you found this, keep it. Maybe you'll have better luck. -the curator\"", "(The field notes are in your pause menu now.)"]] },
+  "notes.usher":       { g: "Field notes", l: "Field notes: the usher (title, then the curator's note)", by: "claude", v: [["The usher's coffee", "Buried in schedules every morning. Never gets a coffee before the tour."]] },
+  "notes.stock":       { g: "Field notes", l: "Field notes: the shopkeeper", by: "claude", v: [["The shop's stock", "Deliveries land in the basement. The shop can't open till its box comes up."]] },
+  "notes.litter":      { g: "Field notes", l: "Field notes: the jammed trash can", by: "claude", v: [["The jammed can", "Somebody jams a cup in a trash can's flap every single day. People just leave their trash beside it."]] },
+  "notes.tour":        { g: "Field notes", l: "Field notes: the tour group", by: "claude", v: [["The tour group", "Without coffee the guide can't answer a thing. And somebody always loses a kid."]] },
+  "notes.line":        { g: "Field notes", l: "Field notes: the barista", by: "claude", v: [["The café's supplies", "Same basement, same problem. No cups, no lids, and by the rush the line's out the door."]] },
+  "notes.item":        { g: "Field notes", l: "Field notes: the staff on break", by: "claude", v: [["The break room", "Somebody always walks out with the wrong headphones. Or lunchbox."]] },
+  "notes.janitor":     { g: "Field notes", l: "Field notes: the Janitor (the pile by the jammed can)", by: "claude", v: [["The mess by the can", "If nobody picks it up, the Janitor spends his break sweeping."]] },
+  "notes.cons":        { g: "Field notes", l: "Field notes: the conservator", by: "claude", v: [["The conservator", "Only comes upstairs at closing. Somebody should say hi."]] },
   "chill.intro":       { g: "Chill museum", l: "The curator, when you've solved every problem in one loop (first time only; the game pauses)", by: "claude", v: [["Hey. Got a second?", "I've been watching the cameras. Not in a creepy way. In a curator way.", "Everything went right today. Like... everything."]] },
   "chill.usher":       { g: "Chill museum", l: "The curator: what you did for the usher", by: "claude", v: [["You got the usher a coffee before the tour. He actually knew what he was talking about for once."]] },
   "chill.tour":        { g: "Chill museum", l: "The curator: what you did for the tour group (a happy tour, the lost kid walked back)", by: "claude", v: [["The tour group left happy. And you walked that kid back before anybody had to panic."]] },
@@ -2326,6 +2335,9 @@ const TEXT = {
   "litter.noBag":      { g: "Litter", l: "Trying to pick up litter without a trash bag (in the staff room, or the janitor has spares)", by: "claude", v: [["I'm not touching that with my bare hands.", "The janitor must have a spare trash bag."]] },
   "bag.ask":           { g: "Litter", l: "The staff room trash can, hands empty: take a trash bag? (one page, Yes/No)", by: "claude", v: [["A roll of trash bags under the can. Tear one off?"]] },
   "jam.look":          { g: "Litter", l: "The jammed trash can, hands free (one page, then Pull it out / Leave it)", by: "claude", v: [["There's a cup wedged in the flap. Nothing else is getting in there. Pull it out?"]] },
+  "sell.shop":         { g: "Gift shop", l: "The gift shop's Sell cards row (what it says beside the list)", by: "claude", v: [["The shop buys trading cards back, at half what they cost. Real ones only."]] },
+  "sell.bluu":         { g: "Days of the week", l: "Saturday: Bluu's Sell cards row", by: "claude", v: [["Bluu buys cards back. Half price. He doesn't ask where they came from, and you don't ask where they're going."]] },
+  "sell.last":         { g: "Gift shop", l: "Selling the only copy of a card you have ({title})", by: "claude", v: [["That's your only {title} card. Sell it anyway?"]] },
   "jam.hands":         { g: "Litter", l: "The jammed trash can, with something in your hands", by: "claude", v: [["The flap won't budge. There's a cup wedged in it.", "You'll need both hands free to work it loose."]] },
   "jam.fixed":         { g: "Litter", l: "Pulling the cup out of the jammed trash can (it's yours to throw away now)", by: "claude", v: [["*squeak* ...*pop*", "Got it. The flap swings free again.", "Now, where to put this cup..."]] },
   "jam.janitor":       { g: "Janitor", l: "The Janitor at the jammed trash can, sweeping up round it (and the notice when he pulls the cup out)", by: "claude", v: [["Who jams a cup in a trash can?", "Every. Single. Day."], ["I was on my break.", "I was ON. MY. BREAK."]] },
@@ -3098,8 +3110,13 @@ function buildRoom(id, pieces, o) {
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const OPP = { up: "down", down: "up", left: "right", right: "left" };
 const MENU_MODES = new Set(["choice", "shop", "cafe", "album", "items", "binder", "list"]); // menus where a held direction repeats
-const KEYMAP = { ArrowUp: "up", KeyW: "up", ArrowDown: "down", KeyS: "down", ArrowLeft: "left", KeyA: "left", ArrowRight: "right", KeyD: "right",
-  KeyZ: "a", Space: "a", KeyJ: "a", KeyX: "b", Escape: "start", Backspace: "bk", KeyK: "b", Enter: "start", KeyP: "start" }; // bk: back in menus, never a photo
+
+/* Keyboard controls you can change (Joe 10/12): two keys per action. Esc (pause, and back out of anything) and Backspace (back
+   in menus) always work and can't be taken, so nobody locks themselves out; picking a key another action has swaps the two. */
+const KEY_ACTIONS = [["up", "Move up"], ["down", "Move down"], ["left", "Move left"], ["right", "Move right"], ["a", "A: look, talk, read"], ["b", "B: photo, back"], ["start", "Pause"], ["hurry", "Hurry (hold)"]];
+const DEFAULT_KEYS = { up: ["ArrowUp", "KeyW"], down: ["ArrowDown", "KeyS"], left: ["ArrowLeft", "KeyA"], right: ["ArrowRight", "KeyD"], a: ["KeyZ", "Space"], b: ["KeyX", "KeyK"], start: ["Enter", "KeyP"], hurry: ["ShiftLeft", "ShiftRight"] };
+const KEY_OK = c => /^(Key[A-Z]|Digit\d|Numpad\w+|Arrow(Up|Down|Left|Right)|Space|Enter|Shift(Left|Right)|Control(Left|Right)|Semicolon|Quote|Comma|Period|Slash|Backslash|BracketLeft|BracketRight|Minus|Equal|Backquote)$/.test(c);
+const keyName = c => ({ ArrowUp: "\u2191", ArrowDown: "\u2193", ArrowLeft: "\u2190", ArrowRight: "\u2192", Space: "Space", Enter: "Enter", ShiftLeft: "Left Shift", ShiftRight: "Right Shift", ControlLeft: "Left Ctrl", ControlRight: "Right Ctrl", Semicolon: ";", Quote: "'", Comma: ",", Period: ".", Slash: "/", Backslash: "\\", BracketLeft: "[", BracketRight: "]", Minus: "-", Equal: "=", Backquote: "`" })[c] || c.replace(/^Key|^Digit/, "").replace(/^Numpad/, "Num ");
 
 class Game {
   constructor(wrap, pack, opts) {
@@ -3263,12 +3280,21 @@ class Game {
   }
 
   /* ----- input ----- */
+  keyBinds() { // yours, or the defaults (anything odd in the save falls back)
+    const k = this.progress && this.progress.keys, out = {};
+    for (const [a] of KEY_ACTIONS) out[a] = k && Array.isArray(k[a]) && k[a].length === 2 && k[a].every(KEY_OK) ? k[a].slice() : DEFAULT_KEYS[a].slice();
+    const all = Object.values(out).flat(); if (new Set(all).size !== all.length) return JSON.parse(JSON.stringify(DEFAULT_KEYS)); // a key twice: start over
+    return out;
+  }
+  keyFor(code) { if (!this.keymap) { const m = { Escape: "start", Backspace: "bk" }, B = this.keyBinds(); for (const a in B) for (const c of B[a]) m[c] = a; this.keymap = m; } return this.keymap[code]; }
   bindInput() {
     const isField = t => t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable);
     window.addEventListener("keydown", e => {
       // Typing on a real keyboard while the note card shows its on-screen one: switch to typing for real.
       if (this.nkb && e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && !isField(e.target)) { e.preventDefault(); this.nkbToNative(e.key); return; }
-      const k = KEYMAP[e.code]; if (!k || isField(e.target) || e.target.tagName === "BUTTON" && (k === "a" || k === "start")) return;
+      if (this.rebind && !isField(e.target)) { e.preventDefault(); this.rebindKey(e.code); return; } // changing a control: the next key
+      const k = this.keyFor(e.code); if (!k || isField(e.target) || e.target.tagName === "BUTTON" && (k === "a" || k === "start")) return;
+      if (k === "hurry") { this.hurryKey = true; e.preventDefault(); return; } // held, not pressed
       if (this.capture === "focus" && document.activeElement !== this.wrap) return;
       e.preventDefault(); if (e.repeat) return;
       this.lastInput = "keyboard";
@@ -3277,8 +3303,7 @@ class Game {
       if (DIRS[k]) { this.held = this.held.filter(d => d !== k); this.held.push(k); }
       this.queue.push(this.swapAB && (k === "a" || k === "b") ? (k === "a" ? "b" : "a") : k); // Settings: Swap A and B
     });
-    window.addEventListener("keyup", e => { const k = KEYMAP[e.code]; if (k && DIRS[k]) this.held = this.held.filter(d => d !== k); if (e.code === "ShiftLeft" || e.code === "ShiftRight") this.hurryKey = false; });
-    window.addEventListener("keydown", e => { if ((e.code === "ShiftLeft" || e.code === "ShiftRight") && !isField(e.target)) this.hurryKey = true; }); // hold Shift to hurry
+    window.addEventListener("keyup", e => { const k = this.keyFor(e.code); if (k && DIRS[k]) this.held = this.held.filter(d => d !== k); if (k === "hurry") this.hurryKey = false; });
     window.addEventListener("blur", () => { this.held = []; this.virt = []; this.hurryKey = false; });
     this.wrap.addEventListener("pointerdown", e => {
       this.wrap.focus({ preventScroll: true });
@@ -3478,7 +3503,7 @@ class Game {
 .gt-shop-head{display:flex;justify-content:space-between;color:#7c5a0c;font-size:calc(7px * var(--s));margin:0 0 calc(3px * var(--s))}
 .gt-shop-list{max-height:calc(80px * var(--s));overflow:auto}
 .gt-split{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:calc(5px * var(--s));min-height:0}
-.gt-split .gt-shop-list{max-height:none;height:100%;overflow:auto}
+.gt-split .gt-shop-list{max-height:none;height:100%;overflow-x:hidden;overflow-y:auto}
 .gt-split .gt-shop-row .nm{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.2;overflow-wrap:anywhere}
 .gt-split .gt-shop-row{align-items:flex-start;padding-top:calc(2px * var(--s));padding-bottom:calc(2px * var(--s))}
 .gt-split .gt-shop-row.on::before{top:calc(4px * var(--s));margin-top:0}
@@ -3487,10 +3512,10 @@ class Game {
 /* Bluu's stall (Saturdays): the gift shop's window, knocked crooked (Joe 10/11) */
 .gt-janky{transform:rotate(-0.7deg);background:#f4ecd8}
 .gt-janky .gt-shop-head .jk{display:inline-block}
-.gt-janky .gt-shop-row:nth-child(odd){transform:rotate(-1.4deg) translateX(calc(2px * var(--s)))}
-.gt-janky .gt-shop-row:nth-child(even){transform:rotate(1.1deg) translateX(calc(-1px * var(--s)))}
+.gt-janky .gt-shop-row.jodd{transform:rotate(-1.4deg) translateX(calc(2px * var(--s)))}
+.gt-janky .gt-shop-row.jeven{transform:rotate(1.1deg) translateX(calc(-1px * var(--s)))}
 .gt-janky .gt-shop-row .pr{background:#f2d24a;color:#3a2a08;padding:0 calc(2px * var(--s));transform:rotate(5deg);box-shadow:calc(1px * var(--s)) calc(1px * var(--s)) 0 #8a6a18}
-.gt-janky .gt-shop-row:nth-child(even) .pr{background:#e88a6a;transform:rotate(-4deg)}
+.gt-janky .gt-shop-row.jeven .pr{background:#e88a6a;transform:rotate(-4deg)}
 .gt-janky .gt-shop-row img{transform:rotate(-8deg)}
 .gt-janky .gt-detail{transform:rotate(1deg);border-left-style:dashed}
 .gt-janky .gt-detail .pic img{transform:rotate(-10deg) scale(1.08)}
@@ -3797,7 +3822,7 @@ class Game {
       pages.forEach(p => { if (p.tone === undefined) p.tone = sec.tone || ""; });
     }
     if (!pages.length) pages.push({ label: "", text: "" });
-    this.rd = { pages, i: 0, done, note: spec.note || null, sel: -1 }; // note: a piece you can leave a note on (its NOTE button); sel: the highlighted button
+    this.rd = { pages, i: 0, done, note: spec.note || null, sel: -1, menu: !!spec.menu }; // note: a piece you can leave a note on (its NOTE button); sel: the highlighted button
     this.renderRead();
   }
   renderRead() {
@@ -3806,7 +3831,7 @@ class Game {
     body.innerHTML = ""; if (pg.label) { const b = document.createElement("b"); b.textContent = pg.label; if (pg.tone) b.className = pg.tone; body.appendChild(b); } body.appendChild(document.createTextNode(pg.text));
     this.el.reader.querySelector(".gt-rd-n").textContent = (r.pages.length > 1 ? (r.i + 1) + " / " + r.pages.length + "   " : "") + (r.sel >= 0 ? "A: open" : r.i < r.pages.length - 1 ? "A: next" : "A: done") + "   B: close" + (this.rdButtons().length ? "   \u2191\u2193: buttons" : "");
   }
-  closeRead() { this.dropClip(); this.el.reader.style.display = "none"; const d = this.rd && this.rd.done; this.readEnded = !!(this.rd && this.rd.end); this.rd = null; this.mode = "walk"; this.inputLock = true; if (d) d(); } // readEnded: got to the last page
+  closeRead(full) { if (full && this.rd && this.rd.menu) this.rd.done = null; this.dropClip(); this.el.reader.style.display = "none"; const d = this.rd && this.rd.done; this.readEnded = !!(this.rd && this.rd.end); this.rd = null; this.mode = "walk"; this.inputLock = true; if (d) d(); } // readEnded: got to the last page
   /* Up and Down highlight the placard's buttons (Watch, Play, Note) in turn; A uses the highlighted one. */
   rdButtons() { return this.rd ? [...this.el.reader.querySelectorAll(".gt-rd-links > *")] : []; }
   rdPick(d) {
@@ -3920,11 +3945,11 @@ class Game {
       got[a.id] = todayISO(); this.showLoc("Achievement: " + a.name);
     }
   }
-  showAchievements() {
+  showAchievements(back) {
     const list = this.pack.settings.achievements, got = this.progress.ach || {}, n = list.filter(a => got[a.id]).length;
     const lines = list.map(a => got[a.id] ? "\u2605 " + a.name.toUpperCase() + ": " + a.desc
       : a.secret ? "\u2606 ???  (a secret)" : "\u2606 " + a.name + ": " + a.desc + " (" + Math.min(this.stat(a.stat), a.target) + "/" + a.target + ")");
-    this.read({ title: "ACHIEVEMENTS", sub: n + " of " + list.length + " unlocked", sections: [{ label: "", text: lines.join("\n") }] });
+    this.read({ title: "ACHIEVEMENTS", sub: n + " of " + list.length + " unlocked", sections: [{ label: "", text: lines.join("\n") }], menu: !!back }, back);
   }
   resetProgress() { this.mugSeed = undefined; try { if (this.saveKey) localStorage.removeItem(this.saveKey); } catch (e) {} this.progress = this.loadProgress(); this.lightsOff.clear(); this.closing = false; this.closed = false; this.closingPaid = false; this.fol = null; this.dayStart = Object.assign({}, this.progress.tally); this.spook = null; this.figure = null; this.hideEnd(); this.restartLoop(); this.updateHud(); this.rebuild(); }
   /* A fresh visit for the living museum: the clock back to minute 0, the Janitor back at the staff door, new deliveries,
@@ -4509,7 +4534,7 @@ class Game {
   testUnveil() { // curator preview: stage the ceremony for the newest piece, as if it were unveiled today
     const m = this.rooms.museum, shown = q => m && (m.cases.some(c => c.piece && c.piece.id === q.id) || (m.hung || []).some(h => h.piece && h.piece.id === q.id));
     const p = this.pack.pieces.filter(q => !q.tut && shown(q)).slice(-1)[0]; if (!p) return false;
-    this.unveilTest = p.id; if (this.progress.unveils) delete this.progress.unveils[p.id]; this.rebuild(); return p.title;
+    this.unveilTest = p.id; if (this.progress.unveils) delete this.progress.unveils[p.id]; if (this.progress.sides) delete this.progress.sides[p.id]; this.rebuild(); return p.title; // unread, like a real unveil day (so its border's blue)
   }
   startCeremony(cer) {
     if (cer.done || this.cine) return; cer.done = true;
@@ -5883,8 +5908,34 @@ class Game {
   closeShop() { this.el.shop.style.display = "none"; this.el.shop.classList.remove("gt-janky"); this.mode = "walk"; this.inputLock = true; if (this.stall) { this.stall = false; this.say(this.tx("sat.bye")); } }
   openStall() { this.stall = true; this.el.shop.classList.add("gt-janky"); this.openShop(); } // Saturday: Bluu's stall, in the gift shop's window
   shopRows() {
-    if (this.stall) return [...this.popupItems().map(it => ({ item: it, popup: true })), { leave: true }]; // Bluu's three things
-    return [...this.shopLineup().map(it => ({ item: it })), { shirt: true }, { collection: true }, { leave: true }]; // featured, two merch, a card, a pack (Joe 10/11)
+    if (this.stall) return [...this.popupItems().map(it => ({ item: it, popup: true })), ...(this.sellRows("bluu").length ? [{ sell: true }] : []), { leave: true }]; // Bluu's three things
+    return [...this.shopLineup().map(it => ({ item: it })), { shirt: true }, { collection: true }, ...(this.sellRows("shop").length ? [{ sell: true }] : []), { leave: true }]; // featured, two merch, a card, a pack (Joe 10/11)
+  }
+  /* Selling cards back (Joe 10/12): to the gift shop or to Bluu, one at a time, for half what a card costs (a common at the
+     single-card price, a rare at the rare price). Bluu takes fakes too (half his cheap card's price); the gift shop doesn't. */
+  sellPrice(kind) { const C = this.pack.settings.cards; return Math.max(1, Math.floor((kind === "r" ? C.rare : kind === "f" ? C.bluuCommon : C.single) / 2)); }
+  sellRows(who) {
+    const o = this.cardsOwned(), out = []; if (!this.pack.settings.cards.on) return out;
+    for (const p of this.cardList()) for (const k of who === "bluu" ? ["c", "r", "f"] : ["c", "r"]) { const n = (o[p.id] || {})[k] || 0; if (n) out.push({ p, k, n }); }
+    return out;
+  }
+  sellCards(who, at) {
+    const rows = this.sellRows(who), back = () => { if (who === "bluu") this.openStall(); else this.openShop(); const i = this.shopRows().findIndex(r => r.sell); this.shopSel = i >= 0 ? i : 0; this.renderShop(); };
+    this.el.shop.style.display = "none";
+    if (!rows.length) { back(); return; }
+    const label = r => r.p.title + (r.k === "r" ? " (rare)" : r.k === "f" ? " (fake)" : "") + (r.n > 1 ? " x" + r.n : "") + "  ·  " + this.sellPrice(r.k) + " T";
+    this.menuRet = back; // B: back to the shop
+    this.openList("SELL CARDS  ·  TOKENS " + (this.progress.tokens || 0), [...rows.map(label), "Back"], i => {
+      if (i >= rows.length) { back(); return; }
+      const r = rows[i], sell = () => {
+        const o = this.cardsOwned()[r.p.id]; o[r.k] = Math.max(0, (o[r.k] || 0) - 1); const n = this.sellPrice(r.k);
+        this.progress.tokens = (this.progress.tokens || 0) + n; this.saveProgress(); this.updateHud(true); this.showLoc("Sold: " + r.p.title + " card (+" + n + " T)");
+        this.sellCards(who, i);
+      };
+      if (r.n === 1) this.choose(this.tx("sell.last", { title: r.p.title }).join(" "), ["Sell it", "Keep it"], k => { if (k === 0) sell(); else this.sellCards(who, i); }, 1); // your only copy: are you sure?
+      else sell();
+    });
+    if (at) this.list.i = Math.min(at, rows.length); this.renderList();
   }
   /* A split menu: the list on the left, the highlighted thing large on the right. Sized to the box, so nothing runs off the bottom. */
   fitSplit(box, split) { const bs = getComputedStyle(box), room = box.getBoundingClientRect().bottom - split.getBoundingClientRect().top - parseFloat(bs.paddingBottom) - parseFloat(bs.borderBottomWidth) - 4 * (this.scale || 1); if (room > 30) split.style.height = Math.floor(room) + "px";
@@ -5915,7 +5966,7 @@ class Game {
     const split = document.createElement("div"); split.className = "gt-split"; box.appendChild(split);
     const list = document.createElement("div"); list.className = "gt-shop-list"; split.appendChild(list);
     rows.forEach((r, i) => {
-      const row = document.createElement("div"); row.className = "gt-shop-row" + (i === this.shopSel ? " on" : "");
+      const row = document.createElement("div"); row.className = "gt-shop-row" + (i % 2 ? " jeven" : " jodd") + (i === this.shopSel ? " on" : ""); // the tilt by row, not by position (the cursor arrow shifted it: Joe 10/12)
       if (r.item) {
         const img = document.createElement("img"); img.src = this.itemIcon(r.item).toDataURL(); img.alt = ""; row.appendChild(img);
         const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = (r.item.gift ? "LIMITED " : r.item.id === this.featuredId() ? "* " : "") + r.item.name; row.appendChild(nm);
@@ -5923,15 +5974,15 @@ class Game {
       } else if (r.shirt) {
         const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = "GOQ shirt"; row.appendChild(nm);
         const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = this.progress.shirt ? "YOURS" : "GONE"; row.appendChild(pr);
-      } else { const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = r.collection ? "Your collection" : "Leave"; row.appendChild(nm); }
+      } else { const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = r.collection ? "Your collection" : r.sell ? "Sell cards" : "Leave"; row.appendChild(nm); }
       row.addEventListener("click", e => { e.stopPropagation(); if (this.shopSel === i) this.shopSelect(); else { this.shopSel = i; this.shopConfirm = null; this.shopMsg = ""; this.renderShop(); } });
       list.appendChild(row);
     });
     const r = rows[this.shopSel], it = r.item;
     split.appendChild(this.detailPane(it ? { img: this.itemIcon(it).toDataURL(), tag: owned.includes(it.id) ? "OWNED" : it.gift ? "LIMITED" : "", title: it.name, price: owned.includes(it.id) ? "Yours" : it.price + " tokens", desc: (it.gift ? this.tx("shop.limited").join(" ") + " " : "") + (it.id === this.featuredId() ? "FEATURED. " : "") + (it.description || ""), msg: this.shopMsg }
-      : { title: r.shirt ? "GOQ shirt" : r.collection ? "Your collection" : "Leave", desc: r.shirt ? this.tx(this.progress.shirt ? "shirt.owned" : "shirt.tease").join(" ") : r.collection ? "See what you've bought." : "Head back out.", msg: this.shopMsg }));
+      : { title: r.shirt ? "GOQ shirt" : r.collection ? "Your collection" : r.sell ? "Sell cards" : "Leave", desc: r.shirt ? this.tx(this.progress.shirt ? "shirt.owned" : "shirt.tease").join(" ") : r.collection ? "See what you've bought." : r.sell ? this.tx("sell.shop").join(" ") : "Head back out.", msg: this.shopMsg }));
     this.fitSplit(box, split); this.fitDetail(split);
-    const sel = list.children[this.shopSel]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: "nearest" });
+    const sel = list.children[this.shopSel]; if (sel && sel.scrollIntoView) { sel.scrollIntoView({ block: "nearest", inline: "nearest" }); (sel.parentNode || {}).scrollLeft = 0; }
   }
   renderStall() { // the same layout as the gift shop, but nothing's quite level (CSS: .gt-janky)
     const box = this.el.shop, rows = this.shopRows(), own = this.progress.popups || (this.progress.popups = []), mine = it => own.some(o => o.id === it.id) || (this.progress.bluuCards || []).includes(it.id);
@@ -5943,24 +5994,25 @@ class Game {
     const split = document.createElement("div"); split.className = "gt-split"; box.appendChild(split);
     const list = document.createElement("div"); list.className = "gt-shop-list"; split.appendChild(list);
     rows.forEach((r, i) => {
-      const row = document.createElement("div"); row.className = "gt-shop-row" + (i === this.shopSel ? " on" : "");
+      const row = document.createElement("div"); row.className = "gt-shop-row" + (i % 2 ? " jeven" : " jodd") + (i === this.shopSel ? " on" : ""); // the tilt by row, not by position (the cursor arrow shifted it: Joe 10/12)
       if (r.item) {
         const img = document.createElement("img"); img.src = this.itemIcon(r.item).toDataURL(); img.alt = ""; row.appendChild(img);
         const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = r.item.name; row.appendChild(nm);
         const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = mine(r.item) ? "SOLD" : r.item.price + " T"; row.appendChild(pr);
-      } else { const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = "Leave"; row.appendChild(nm); }
+      } else { const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = r.sell ? "Sell cards" : "Leave"; row.appendChild(nm); }
       row.addEventListener("click", e => { e.stopPropagation(); if (this.shopSel === i) this.shopSelect(); else { this.shopSel = i; this.shopConfirm = null; this.shopMsg = ""; this.renderShop(); } });
       list.appendChild(row);
     });
-    const it = rows[this.shopSel].item;
+    const r = rows[this.shopSel], it = r.item;
     split.appendChild(this.detailPane(it ? { img: this.itemIcon(it).toDataURL(), tag: mine(it) ? "SOLD" : "RARE", title: it.name, price: mine(it) ? "Yours" : it.price + " tokens", desc: it.description || this.tx("sat.desc").join(" "), msg: this.shopMsg }
-      : { title: "Leave", desc: "Head back to the lobby.", msg: this.shopMsg }));
+      : r.sell ? { title: "Sell cards", desc: this.tx("sell.bluu").join(" "), msg: this.shopMsg } : { title: "Leave", desc: "Head back to the lobby.", msg: this.shopMsg }));
     this.fitSplit(box, split); this.fitDetail(split);
-    const sel = list.children[this.shopSel]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: "nearest" });
+    const sel = list.children[this.shopSel]; if (sel && sel.scrollIntoView) { sel.scrollIntoView({ block: "nearest", inline: "nearest" }); (sel.parentNode || {}).scrollLeft = 0; }
   }
   stallSelect() {
     const r = this.shopRows()[this.shopSel], t = this.progress.tokens || 0, own = this.progress.popups || (this.progress.popups = []);
     if (r.leave) { this.closeShop(); return; }
+    if (r.sell) { this.sellCards("bluu"); return; }
     const it = r.item;
     if (own.some(o => o.id === it.id) || (this.progress.bluuCards || []).includes(it.id)) this.shopMsg = this.tx("sat.owned").join(" ");
     else if (t < it.price) this.shopMsg = this.tx("sat.broke", { n: it.price }).join(" ");
@@ -5976,6 +6028,7 @@ class Game {
     if (this.stall) { this.stallSelect(); return; }
     const r = this.shopRows()[this.shopSel], t = this.progress.tokens || 0;
     if (r.leave) { this.closeShop(); this.say(this.tx("shop.bye")); return; }
+    if (r.sell) { this.sellCards("shop"); return; }
     if (r.shirt) { this.shopMsg = this.tx(this.progress.shirt ? "shirt.owned" : "shirt.tease").join(" "); this.renderShop(); return; }
     if (r.collection) {
       const names = this.ownedItems().filter(it => !it.popup).map(it => it.name);
@@ -6160,7 +6213,7 @@ class Game {
   }
   /* The binder (My Stuff → Cards): a slot for every card, in order. The ones you have show their art; a rare gets a gold edge. */
   openBinder() { if (!this.cardList().length) { this.say(this.tx("card.none")); return; } this.mode = "binder"; this.binderSel = this.binderSel || 0; this.el.album.style.display = "block"; this.renderBinder(); }
-  closeBinder() { this.el.album.style.display = "none"; this.mode = "walk"; this.inputLock = true; }
+  closeBinder(full) { this.el.album.style.display = "none"; this.mode = "walk"; this.inputLock = true; this.menuBack(full); }
   renderBinder() {
     const box = this.el.album, L = this.cardList(), own = this.cardsOwned(), has = p => own[p.id] && (own[p.id].c || own[p.id].r || own[p.id].f);
     this.binderSel = Math.max(0, Math.min(L.length - 1, this.binderSel)); box.innerHTML = "";
@@ -6178,7 +6231,7 @@ class Game {
     const bits = [o.c ? o.c + " common" : "", o.r ? o.r + " rare" : "", o.f ? o.f + " fake" : ""].filter(Boolean);
     det.textContent = "#" + (this.binderSel + 1) + " " + (has(cur) ? cur.title + ": " + bits.join(", ") + ". (A to look.)" : "Not found yet.");
     box.appendChild(det);
-    const sel = grid.children[this.binderSel]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: "nearest" });
+    const sel = grid.children[this.binderSel]; if (sel && sel.scrollIntoView) { sel.scrollIntoView({ block: "nearest", inline: "nearest" }); (sel.parentNode || {}).scrollLeft = 0; }
   }
   binderAct() {
     const p = this.cardList()[this.binderSel], o = this.cardsOwned()[p.id] || {}, list = [];
@@ -6225,7 +6278,7 @@ class Game {
   menuDrinks() { return this.pack.settings.shop.drinks.map((d, i) => Object.assign({}, d, { color: DRINKS[i].color })); }
   /* Souvenirs: everything you own, like the photo album. A puts one in the collection cabinet or takes it out (12 fit). */
   openItems(cabinet) { this.mode = "items"; this.itemSel = 0; this.itemMsg = ""; this.itemsCab = !!cabinet; this.el.album.style.display = "block"; this.renderItems(); }
-  closeItems() { this.el.album.style.display = "none"; this.mode = "walk"; this.inputLock = true; }
+  closeItems(full) { this.el.album.style.display = "none"; this.mode = "walk"; this.inputLock = true; this.menuBack(full); }
   renderItems() {
     const box = this.el.album, own = this.ownedItems(), shown = new Set(this.displayed().map(it => it.id));
     if (!own.length) { this.closeItems(); return; }
@@ -6246,7 +6299,7 @@ class Game {
     const tag = cur.fake ? " " + this.tx("sat.fake", { item: cur.name }, true).join(" ") : cur.popup && cur.real ? " " + this.tx("sat.real", { item: cur.name }, true).join(" ") : "";
     det.textContent = this.itemMsg || (cur.name + (cur.description ? ": " + cur.description : "") + tag + (shown.has(cur.id) ? "  (On display. A to take it out.)" : "  (A to put it on display.)"));
     box.appendChild(det);
-    const sel = grid.children[this.itemSel]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: "nearest" });
+    const sel = grid.children[this.itemSel]; if (sel && sel.scrollIntoView) { sel.scrollIntoView({ block: "nearest", inline: "nearest" }); (sel.parentNode || {}).scrollLeft = 0; }
   }
   itemsAct() {
     const own = this.ownedItems(), cur = own[this.itemSel]; if (!cur) return;
@@ -6355,7 +6408,7 @@ class Game {
       : { title: r.label, desc: r.label === "Just chatting" ? "Talk to the barista instead." : "Head back out.", msg: m.msg }));
     const q = document.createElement("div"); q.style.textAlign = "center"; q.textContent = m.title; box.insertBefore(q, split);
     this.fitSplit(box, split); this.fitDetail(split);
-    const sel = list.children[m.i]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: "nearest" });
+    const sel = list.children[m.i]; if (sel && sel.scrollIntoView) { sel.scrollIntoView({ block: "nearest", inline: "nearest" }); (sel.parentNode || {}).scrollLeft = 0; }
   }
   cafeMove(d) {
     const m = this.cm, n = m.drinks.length + 2;
@@ -6827,40 +6880,75 @@ class Game {
   /* ----- the Start menu: photos, save, save and quit ----- */
   openMenu() {
     this.holdToast();
-    if (this.tut) { // in the tutorial: skip it, or save and quit (it starts over next time)
-      this.choose("PAUSED", ["Skip the tutorial", "Save and quit", "Back"], i => {
+    if (this.tut) { // in the tutorial: skip it, or save (it starts over next time) and maybe quit
+      this.choose("PAUSED", ["Skip the tutorial", "Save", "Back"], i => {
         if (i === 0) this.endTutorial(true);
-        else if (i === 1) { this.cleanTutorial(); this.mode = "busy"; this.trans = { t: 0, dur: 24, switched: false, fn: () => this.showEnd("brb"), hold: true }; }
+        else if (i === 1) this.saveAsk();
       });
       return;
     }
-    const opts = ["My Stuff", "Recent notices", "Controls", "Respawn", "Save", "Save and quit", "Back"];
+    const opts = ["My Stuff", ...(this.progress.fieldNotes ? ["Field notes"] : []), "Settings", "Save", "Back"]; // (Joe 10/12: Recent notices, Controls and Respawn under Settings; Save asks if you're quitting)
     this.choose("PAUSED", opts, k => {
       const o = opts[k];
       if (o === "My Stuff") this.myStuff();
-      else if (o === "Recent notices") this.recentNotices();
-      else if (o === "Controls") this.showControls();
-      else if (o === "Respawn") this.respawn();
-      else if (o === "Save") { this.saveWhere(); this.say(this.tx("menu.saved")); }
-      else if (o === "Save and quit") { this.saveWhere(); this.mode = "busy"; this.trans = { t: 0, dur: 24, switched: false, fn: () => this.showEnd("brb"), hold: true }; }
+      else if (o === "Field notes") this.fieldNotes(() => this.openMenu());
+      else if (o === "Settings") this.settingsMenu();
+      else if (o === "Save") this.saveAsk();
     });
   }
+  settingsMenu() {
+    const opts = ["Recent notices", "Controls", "Respawn", "Back"];
+    this.choose("SETTINGS", opts, k => {
+      const o = opts[k], back = () => this.settingsMenu();
+      if (o === "Recent notices") this.recentNotices(back);
+      else if (o === "Controls") this.controlsMenu(back);
+      else if (o === "Respawn") this.respawn();
+      else this.openMenu();
+    }, opts.length - 1);
+  }
+  saveAsk(resume) { // Save: saved (the tutorial starts over next time), then "Save and quit?" No: back to playing (or the conversation you paused)
+    if (!this.tut) this.saveWhere();
+    const q = (this.tut ? "The tutorial starts over next time." : this.tx("menu.saved").join(" ")) + " Save and quit?";
+    this.choose(q, ["No", "Yes, quit"], i => {
+      if (i !== 1) { if (resume) resume(); return; }
+      if (this.tut) this.cleanTutorial(); this.mode = "busy"; this.trans = { t: 0, dur: 24, switched: false, fn: () => this.showEnd("brb"), hold: true };
+    }, 0);
+  }
+  /* ----- The curator's field notes (Joe 10/12) -----
+     A notebook left on the end of the lobby's front desk: the curator's notes on everything that keeps going wrong. You find it
+     once (the tutorial's done); after that it's in the pause menu, a checklist like the achievements, ticked as you fix things
+     this loop. (Its look is still to come.) */
+  notesHere() { return !this.tut && !this.progress.fieldNotes && !this.needTutorial(); }
+  notesIcon() {
+    const ck = "notesicon"; if (this.cache[ck]) return this.cache[ck];
+    const a = mk(10, 8); rect(a, 0, 0, 10, 8, 1); rect(a, 1, 1, 8, 6, 2); rect(a, 0, 0, 1, 8, 3); rect(a, 2, 2, 5, 1, 4); rect(a, 2, 4, 6, 1, 4); px(a, 7, 6, 5);
+    return (this.cache[ck] = paint([outline(a, 6)], 10, 8, 1, ["#000", "#6a3a22", "#f2e8d0", "#8a5030", "#9a8c78", "#c83a3a", "#2a1810"]));
+  }
+  pickNotes() {
+    this.progress.fieldNotes = todayISO(); this.saveProgress();
+    this.say(this.tx("notes.find"));
+  }
+  fieldNotes(back) {
+    const S = this.solvedNow(), chill = this.chillOn(), done = FIXES.filter(f => S.ids.includes(f.id)).length;
+    const lines = FIXES.map(f => { const t = this.tx("notes." + f.id); return (chill || S.ids.includes(f.id) ? "\u2713 " : "\u2610 ") + t[0] + (t[1] ? ": " + t[1] : ""); });
+    this.read({ title: "FIELD NOTES", sub: chill ? "The chill museum: nothing to fix" : "The curator's handwriting. This loop: " + done + " of " + FIXES.length + " fixed", sections: [{ label: "", text: lines.join("\n") }], menu: true }, back);
+  }
   /* Recent notices (Joe 10/12): the toasts shown this visit, newest first, so a missed one can be read again. */
-  recentNotices() {
+  recentNotices(back) {
     const N = this.notices || [], ago = at => { const m = Math.floor((Date.now() - at) / 60000); return m < 1 ? "just now" : m === 1 ? "1 min ago" : m < 60 ? m + " min ago" : Math.floor(m / 60) + " hr ago"; };
     this.read({ title: "RECENT NOTICES", sub: N.length ? N.length + " this visit, newest first" : "This visit",
       sections: N.length ? Array.from({ length: Math.ceil(N.length / 7) }, (_, i) => ({ label: "", text: N.slice(i * 7, i * 7 + 7).map(n => ago(n.at) + " · " + n.text).join("\n") })) // seven to a page
-        : [{ label: "", text: "Nothing yet. The little notices at the top of the screen (achievements, tokens, where you are) show up here once they've been shown." }] }, () => this.openMenu());
+        : [{ label: "", text: "Nothing yet. The little notices at the top of the screen (achievements, tokens, where you are) show up here once they've been shown." }], menu: true }, back || (() => this.openMenu()));
   }
   /* Paused in the middle of a conversation: skip the tutorial, or save and quit; Back picks the conversation up where it was. */
   pauseText() {
     const tx = this.txt; this.txt = null; this.holdToast();
-    const opts = this.tut ? ["Skip the tutorial", "Save and quit", "Back"] : ["Save and quit", "Back"];
+    const opts = this.tut ? ["Skip the tutorial", "Save", "Back"] : ["Save", "Back"], resume = () => { this.mode = "text"; this.txt = tx; this.el.text.style.display = "block"; this.renderText(); };
     this.choose("PAUSED", opts, i => {
       const o = opts[i];
       if (o === "Skip the tutorial") this.endTutorial(true);
-      else if (o === "Save and quit") { if (this.tut) this.cleanTutorial(); else this.saveWhere(); this.mode = "busy"; this.trans = { t: 0, dur: 24, switched: false, fn: () => this.showEnd("brb"), hold: true }; }
-      else { this.mode = "text"; this.txt = tx; this.el.text.style.display = "block"; this.renderText(); }
+      else if (o === "Save") this.saveAsk(resume);
+      else resume();
     });
   }
   /* My Stuff: photos, souvenirs, achievements, and (once you have the shirt) the wardrobe. Back returns to the pause menu. */
@@ -6871,10 +6959,11 @@ class Game {
     const opts = ["Photos (" + n + ")", "Souvenirs (" + sv + ")", ...(cl.length ? ["Cards (" + co + "/" + cl.length + ")"] : []), "Achievements (" + an + ")", ...(this.progress.shirt || ["shades", "hat", "case"].some(u => this.gear(u)) ? ["Wardrobe"] : []), "Back"];
     this.choose("MY STUFF", opts, k => {
       const o = opts[k];
-      if (o.startsWith("Photos")) { if (!n) this.say(this.tx("photos.none")); else this.openAlbum(); }
-      else if (o.startsWith("Souvenirs")) { if (!sv) this.say(this.tx("cabinet.empty")); else this.openItems(); }
-      else if (o.startsWith("Cards")) { if (!co) this.say(this.tx("card.none")); else this.openBinder(); }
-      else if (o.startsWith("Achievements")) this.showAchievements();
+      const back = () => this.myStuff();
+      if (o.startsWith("Photos")) { if (!n) this.say(this.tx("photos.none"), back); else { this.menuRet = back; this.openAlbum(); } }
+      else if (o.startsWith("Souvenirs")) { if (!sv) this.say(this.tx("cabinet.empty"), back); else { this.menuRet = back; this.openItems(); } }
+      else if (o.startsWith("Cards")) { if (!co) this.say(this.tx("card.none"), back); else { this.menuRet = back; this.openBinder(); } }
+      else if (o.startsWith("Achievements")) this.showAchievements(back);
       else if (o === "Wardrobe") this.wardrobe();
       else this.openMenu();
     }, opts.length - 1);
@@ -6898,15 +6987,43 @@ class Game {
     this.choose("Wardrobe", opts, k => { acts[k](); this.saveProgress(); }, opts.length - 1);
   }
   /* Controls: keyboard, touch and controller, one page each. The one you're using comes first. */
-  showControls() {
-    const sw = this.swapAB, A = sw ? "B" : "A", B = sw ? "A" : "B";
+  /* Settings → Controls: each action and its two keys; pick one to change it. */
+  controlsMenu(back, at) {
+    const B = this.keyBinds(), rows = KEY_ACTIONS.map(([a, label]) => label + ":  " + B[a].map(keyName).join("  /  "));
+    const opts = [...rows, "Reset to defaults", "All the controls", "Back"];
+    this.choose("CONTROLS (keyboard). Esc always pauses and backs out.", opts, i => {
+      if (i < KEY_ACTIONS.length) { const [a, label] = KEY_ACTIONS[i];
+        this.choose("Change which key for " + label + "?", [keyName(B[a][0]), keyName(B[a][1]), "Back"], j => { if (j > 1) { this.controlsMenu(back, i); return; } this.startRebind(a, j, () => this.controlsMenu(back, i)); }, 2); return; }
+      const o = opts[i];
+      if (o === "Reset to defaults") { this.progress.keys = null; this.keymap = null; this.saveProgress(); this.showLoc("Controls back to the defaults"); this.controlsMenu(back, i); }
+      else if (o === "All the controls") this.showControls(() => this.controlsMenu(back, i));
+      else if (back) back();
+    }, opts.length - 1);
+    if (at !== undefined && this.ch) { this.ch.i = Math.min(at, opts.length - 1); this.renderChoice(); }
+  }
+  startRebind(action, slot, done) {
+    const label = KEY_ACTIONS.find(x => x[0] === action)[1];
+    this.choose("Press the new key for " + label + ".  (Esc to cancel)", ["Cancel"], () => { if (this.rebind) { this.rebind = null; done(); } }, 0);
+    this.rebind = { action, slot, done }; this.held = []; this.queue = [];
+  }
+  rebindKey(code) {
+    const R = this.rebind; if (!R) return;
+    if (code === "Escape") { this.rebind = null; this.endChoice(true); R.done(); return; } // cancel
+    if (!KEY_OK(code)) { this.el.textBody.textContent = keyName(code) + " can't be used. Press another key for " + KEY_ACTIONS.find(x => x[0] === R.action)[1] + ".  (Esc to cancel)"; return; }
+    const B = this.keyBinds(), old = B[R.action][R.slot];
+    for (const a in B) for (let s2 = 0; s2 < 2; s2++) if (B[a][s2] === code && !(a === R.action && s2 === R.slot)) { B[a][s2] = old; if (a !== R.action) this.showLoc(keyName(code) + " was on " + KEY_ACTIONS.find(x => x[0] === a)[1] + ": swapped, that's " + keyName(old) + " now"); } // already in use: the two swap
+    B[R.action][R.slot] = code; this.progress.keys = B; this.keymap = null; this.saveProgress();
+    this.rebind = null; this.ch = null; this.el.choice.style.display = "none"; this.el.text.style.display = "none"; this.mode = "walk"; this.inputLock = true; R.done();
+  }
+  showControls(back) {
+    const sw = this.swapAB, A = sw ? "B" : "A", B = sw ? "A" : "B", KB = this.keyBinds(), kn = a => KB[a].map(keyName).join(" or "); // your keys (Settings, Controls)
     const pages = {
-      keyboard: { label: "KEYBOARD", text: "Move: arrow keys or WASD. Hurry: hold Shift. " + A + " (look, talk, read): Z, Space or J. " + B + " (photo, and back in menus): X. Back in menus: K or Backspace. Pause: Enter, Esc or P. In a menu, hold up or down to scroll; Esc closes it." + (sw ? " (A and B are swapped in Settings.)" : "") },
+      keyboard: { label: "KEYBOARD", text: "Move: " + ["up", "down", "left", "right"].map(d => KB[d].map(keyName).join(" or ")).join(", ") + ". Hurry: hold " + kn("hurry") + ". " + A + " (look, talk, read): " + kn("a") + ". " + B + " (photo, and back in menus): " + kn("b") + ". Back in menus: Backspace. Pause: " + kn("start") + " or Esc. In a menu, hold up or down to scroll; Esc closes it. Change the keys in Settings, Controls." + (sw ? " (A and B are swapped in Settings.)" : "") },
       touch: { label: "TOUCH", text: "Move with the on-screen pad. A looks, talks and reads. B takes a photo, and goes back in menus. START pauses. With Tap to walk on (Settings), tap where you want to go, or tap something to walk over and use it." },
       pad: { label: "CONTROLLER", text: "Move: D-pad or left stick. Hurry: hold a shoulder button. " + A + " (look, talk, read): the bottom button. " + B + " (photo, and back in menus): the right button. Pause: Start or Select. Writing a note shows a keyboard: the D-pad picks a key, A types it, B deletes, Start sends." + (sw ? " (A and B are swapped in Settings.)" : "") },
     };
     const first = this.lastInput === "pad" ? "pad" : this.lastInput === "touch" ? "touch" : "keyboard";
-    this.read({ title: "CONTROLS", sections: [first, ...["keyboard", "touch", "pad"].filter(k => k !== first)].map(k => pages[k]) }, () => this.openMenu());
+    this.read({ title: "CONTROLS", sections: [first, ...["keyboard", "touch", "pad"].filter(k => k !== first)].map(k => pages[k]), menu: true }, back || (() => this.openMenu()));
   }
   /* ----- the photo album -----
      A grid of little snapshots, newest first, with the selected photo's description underneath.
@@ -6977,7 +7094,8 @@ class Game {
     return (this.cache[ck] = F);
   }
   openAlbum() { this.mode = "album"; this.albumSel = 0; this.el.album.style.display = "block"; this.renderAlbum(); }
-  closeAlbum() { this.el.album.style.display = "none"; this.mode = "walk"; this.inputLock = true; this.albumPick = null; this.albumTitle = null; }
+  closeAlbum(full) { this.el.album.style.display = "none"; this.mode = "walk"; this.inputLock = true; this.albumPick = null; this.albumTitle = null; this.menuBack(full); }
+  menuBack(full) { const f = !full && this.menuRet; this.menuRet = null; if (f) f(); } // B out of something opened from a menu: back to that menu (Joe 10/12); Start closes them all
   renderAlbum() {
     const box = this.el.album, ph = this.progress.photos || [];
     if (!ph.length) { this.closeAlbum(); return; }
@@ -6997,7 +7115,7 @@ class Game {
     const cur = ph[this.albumSel], det = document.createElement("p"); det.className = "gt-shop-detail";
     det.textContent = cur.desc + (cur.room ? "  (" + cur.room + ")" : "");
     box.appendChild(det);
-    const sel = grid.children[this.albumSel]; if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: "nearest" });
+    const sel = grid.children[this.albumSel]; if (sel && sel.scrollIntoView) { sel.scrollIntoView({ block: "nearest", inline: "nearest" }); (sel.parentNode || {}).scrollLeft = 0; }
   }
   albumAct() {
     const ph = this.progress.photos, cur = ph[this.albumSel];
@@ -7062,7 +7180,7 @@ class Game {
   openList(title, rows, pick, preview) { // preview(i): a piece to show beside the list (its clip, or its art)
     this.mode = "list"; this.list = { title, rows, pick, i: 0, preview, top: 0 }; this.el.album.style.display = "block"; this.renderList();
   }
-  closeList() { this.el.album.style.display = "none"; this.el.album.innerHTML = ""; this.mode = "walk"; this.inputLock = true; this.list = null; } // clearing it stops a preview clip
+  closeList(full) { this.el.album.style.display = "none"; this.el.album.innerHTML = ""; this.mode = "walk"; this.inputLock = true; this.list = null; this.menuBack(full); } // clearing it stops a preview clip
   renderList() {
     const L = this.list, box = this.el.album, old = box.querySelector(".gt-shop-list"); if (old) L.top = old.scrollTop; // keep the scroll where it was
     const keep = L.prev && L.prev.i === L.i ? L.prev.node : null; box.innerHTML = "";
@@ -7092,7 +7210,7 @@ class Game {
     const cap = document.createElement("div"); cap.className = "gt-list-cap"; cap.textContent = "By " + p.developer; box.appendChild(cap);
     return box;
   }
-  listPick() { const L = this.list; this.closeList(); L.pick(L.i); }
+  listPick() { const L = this.list; this.menuRet = null; this.closeList(); L.pick(L.i); }
   /* The microwave runs once per opened museum. It does not go well. */
   microwaveReact() { // everyone in the room jumps and turns to look; one of them says something; they'll bring it up when you talk to them (Joe 10/12)
     const who = this.room.npcs.filter(n => !n.gone && !n.leaving && n !== this.player), m = this.room.props.find(p => p.key === "microwave_counter");
@@ -7426,13 +7544,13 @@ class Game {
       else if ((has("up") || has("down")) && this.rdButtons().length) this.rdPick(has("up") ? -1 : 1);
       else if (has("a") && r.sel >= 0) this.rdUse();
       else if (has("a") || has("right")) { if (r.i < r.pages.length - 1) { r.i++; this.renderRead(); } else this.closeRead(); }
-      else if (has("b") || has("start")) this.closeRead();
+      else if (has("b")) this.closeRead(); else if (has("start")) this.closeRead(true);
       return;
     }
     if (this.mode === "list") {
       const L = this.list, n = L.rows.length;
       if (has("up") || has("down")) { L.i = (L.i + (has("up") ? n - 1 : 1)) % n; this.renderList(); }
-      if (has("a")) this.listPick(); else if (has("b") || has("start")) this.closeList();
+      if (has("a")) this.listPick(); else if (has("b")) this.closeList(); else if (has("start")) this.closeList(true);
       return;
     }
     if (this.mode === "album") {
@@ -7440,7 +7558,7 @@ class Game {
       let i = this.albumSel;
       if (has("left")) i--; if (has("right")) i++; if (has("up")) i -= cols; if (has("down")) i += cols;
       if (i !== this.albumSel) { this.albumSel = Math.max(0, Math.min(n - 1, i)); this.renderAlbum(); }
-      if (has("a")) this.albumAct(); else if (has("b") || has("start")) this.closeAlbum();
+      if (has("a")) this.albumAct(); else if (has("b")) this.closeAlbum(); else if (has("start")) this.closeAlbum(true);
       return;
     }
     if (this.mode === "card") { if (has("a") || has("b") || has("start")) this.cardNext(); return; }
@@ -7449,7 +7567,7 @@ class Game {
       let i = this.binderSel;
       if (has("left")) i--; if (has("right")) i++; if (has("up")) i -= cols; if (has("down")) i += cols;
       if (i !== this.binderSel) { this.binderSel = Math.max(0, Math.min(n - 1, i)); this.renderBinder(); }
-      if (has("a")) this.binderAct(); else if (has("b") || has("start")) this.closeBinder();
+      if (has("a")) this.binderAct(); else if (has("b")) this.closeBinder(); else if (has("start")) this.closeBinder(true);
       return;
     }
     if (this.mode === "items") {
@@ -7457,7 +7575,7 @@ class Game {
       let i = this.itemSel;
       if (has("left")) i--; if (has("right")) i++; if (has("up")) i -= cols; if (has("down")) i += cols;
       if (i !== this.itemSel) { this.itemSel = Math.max(0, Math.min(n - 1, i)); this.itemMsg = ""; this.renderItems(); }
-      if (has("a")) this.itemsAct(); else if (has("b") || has("start")) this.closeItems();
+      if (has("a")) this.itemsAct(); else if (has("b")) this.closeItems(); else if (has("start")) this.closeItems(true);
       return;
     }
     if (this.mode === "cafe") {
@@ -7571,6 +7689,7 @@ class Game {
       if (into) { into.x = fx; into.y = fy; into.moving = false; into.prog = 0; into.route = null; npc = into; }
       else if (out) { out.moving = false; out.prog = 0; out.route = null; npc = out; }
     }
+    if (!npc && this.room.id === "lobby" && this.notesHere() && (() => { const d = this.room.props.find(q => q.key === "front_desk"); return d && fx === d.x + 2 && fy === d.y; })()) { this.pickNotes(); return; } // the field notes on the front desk
     if (npc && this.carryBox && (npc.role === "shopkeeper" || npc.role === "barista")) { this.deliver(npc.role); return; } // a delivery box for them
     if (npc && (npc.consDream || npc.itemPair)) { if (!npc.walkTo && !npc.sitting) this.faceYou(npc, 240); if (this.sideTalk(npc)) return; } // the conservator out in the wings, the break room pair
     if (npc && (npc.tour || npc.tourUsher)) { npc.timer = 180; if (!npc.walkTo) this.faceYou(npc, 240); this.tourTalk(npc); return; } // the tour group
@@ -8980,6 +9099,7 @@ class Game {
     const px0 = p.x * T - cx, py0 = p.y * T - (SLOT[k].h - T) - cy;
     if (k === "bench_side") { this.drawFlip(k, p.sit === "right", px0, py0); return; } // whoever sits on it is drawn over both seats
     this.drawSlot(k, k === "microwave_counter" ? (this.microwaved ? 1 : 0) : k === "office_tv" ? (this.tvOn ? 1 : 0) : this.frame(k), 0, px0, py0);
+    if (k === "front_desk" && this.room.id === "lobby" && this.notesHere()) ctx.drawImage(this.notesIcon(), Math.round(px0 + 2 * T + 3), Math.round(py0 + 2)); // the curator's field notes, left on the end of the desk
     if (k === "microwave_counter" && this.boomT > 0) { const f = Math.floor((30 - this.boomT) / 5); if (f < 4) { this.drawSlot("sparkle", f, 0, px0 + 2, py0 - 8); this.drawSlot("sparkle", (f + 1) % 4, 0, px0 + 10, py0 - 4); } }
     if (p.unit !== undefined && !(this.sup && this.sup.stocking && this.sup.emptyUnit === p.unit)) ctx.drawImage(this.unitLayer(p.unit), Math.round(px0), Math.round(py0)); // the stacks, drawn once and placed on whole pixels (no shimmer as you walk)
     if (p.rack !== undefined) {
@@ -9018,7 +9138,7 @@ class Game {
     const floor = (px, py) => { const x = Math.floor(px / T), y = Math.floor(py / T); return r.tiles[y] && r.tiles[y][x] && !/wall/.test(String(r.tiles[y][x])); };
     const state = p => { // what this piece's border does right now: a color for each point (k: 0 at the back, 1 at the front)
       const sd = this.sidesOf(p), f = sd.front || sd.note, b = sd.back || sd.note, full = !!(f && b);
-      if (!p.tut && p.unveil === today && !full) return k => [BLUE, base * (0.4 + 0.6 * pulse)]; // unveil day: blue until it's read, then the same flare
+      if (!p.tut && (p.unveil === today || p.id === this.unveilTest) && !full) return k => [BLUE, base * (0.4 + 0.6 * pulse)]; // unveil day: blue until it's read, then the same flare
       if (this.mode === "walk") { if (seen[p.id] === false && full) fx[p.id] = this.t; seen[p.id] = full; } // just finished: the flare (seen once you're back to walking)
       if (full) {
         const e = fx[p.id] !== undefined ? this.t - fx[p.id] : FX; if (e >= FX) return null; // done: no border, just the sparkle
@@ -9420,7 +9540,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 33";
+const VERSION = "2026-11-18 cards 34";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
