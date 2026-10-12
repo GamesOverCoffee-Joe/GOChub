@@ -4204,16 +4204,28 @@ class Game {
     if (tokens > 0 || (this.zone && this.zone.id === "cafe")) {
       const c = document.createElement("span"); c.className = "chip tok" + (pulse ? " pulse" : ""); c.textContent = tokens + " T"; c.title = tokens + " gift shop tokens"; h.appendChild(c);
     }
-    const ct = this.clockText(); this.lastClock = ct;
-    if (ct) { const c = document.createElement("span"); c.className = "chip clock"; c.textContent = ct; c.title = "The museum's clock: the visit runs 10 AM to 6 PM"; h.appendChild(c); }
     h.style.display = h.children.length ? "flex" : "none";
   }
-  /* The museum's clock (Joe 10/12): the visit's loop as a day from 10 AM to 6 PM, in ten-minute steps, so you can tell what
-     time it is in the museum (when things happen). Not in the chill museum, the tutorial, or before the rooms are up. */
-  clockText() {
-    if (!this.rooms || !this.rooms.museum || this.tut || this.chillOn() || !this.pack || this.headless) return "";
-    const d = this.director(), m = 600 + (d.over ? 480 : Math.floor(Math.min(1, d.min / d.minutes) * 48) * 10), h = Math.floor(m / 60), mm = m % 60;
-    return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.day] + " " + ((h + 11) % 12 + 1) + ":" + String(mm).padStart(2, "0") + (h < 12 ? " AM" : " PM");
+  /* The day dial (Joe 10/12): how far into the day the museum is, without a clock's numbers (the loop ends and the day doesn't,
+     so nothing that reads like a real time). A little round face in the game's bottom-left corner, away from the tokens and
+     the chore count: four colored quarters (settling in, getting busy, the rush, winding down), the ones gone by bright, a
+     hand sweeping round; once the loop's over, a moon. Not in the chill museum, the tutorial or recording. */
+  drawDayDial() {
+    if (!this.rooms || !this.rooms.museum || this.tut || this.chillOn() || this.recording() || !this.pack || this.headless) return;
+    const ctx = this.ctx, d = this.director(), R = 7, x = 4 + R + 1, y = SH - 4 - R - 1, f = Math.min(1, d.min / d.minutes);
+    ctx.save(); ctx.globalAlpha = 0.92;
+    ctx.fillStyle = "#1a1626"; ctx.beginPath(); ctx.arc(x, y, R + 2, 0, Math.PI * 2); ctx.fill();
+    if (d.over) { // after hours: a moon
+      ctx.fillStyle = "#2a3050"; ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#f0e6b0"; ctx.beginPath(); ctx.arc(x, y, R - 2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#2a3050"; ctx.beginPath(); ctx.arc(x + 3, y - 2, R - 2, 0, Math.PI * 2); ctx.fill();
+    } else {
+      const cols = ["#f2d478", "#f0a24a", "#e2604a", "#9a6ad0"];
+      for (let q = 0; q < 4; q++) { const a0 = -Math.PI / 2 + q * Math.PI / 2, a1 = a0 + Math.PI / 2; ctx.globalAlpha = q < d.beat ? 0.95 : q === d.beat ? 0.95 : 0.3; ctx.fillStyle = cols[q]; ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, R, a0, a1); ctx.closePath(); ctx.fill(); }
+      ctx.globalAlpha = 1; const a = -Math.PI / 2 + f * Math.PI * 2; ctx.strokeStyle = "#fffaf0"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * (R - 1), y + Math.sin(a) * (R - 1)); ctx.stroke();
+      ctx.fillStyle = "#fffaf0"; ctx.fillRect(x - 1, y - 1, 2, 2);
+    }
+    ctx.restore();
   }
   /* Chores on this badge's tally. Kept in the browser, so closing up and reopening never resets it. */
   staffChores() {
@@ -7534,7 +7546,7 @@ class Game {
       const c = this.cine; c.blend += (c.goal > c.blend ? 1 : -1) / 40; c.blend = Math.max(0, Math.min(1, c.blend));
       if (this.mode === "busy" && c.wait > 0 && --c.wait === 0 && c.then) { const fn = c.then; c.then = null; fn(); }
     }
-    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.living("director", () => this.updateDirector()); this.living("litter", () => this.updateLitter()); this.living("supplies", () => this.updateSupplies()); this.living("tour", () => this.updateTour()); this.living("side", () => this.updateSide()); this.living("cons", () => this.updateCons()); this.living("hold", () => this.updateLineHold()); this.living("rush", () => this.updateRush()); this.living("brew", () => this.updateBrew()); this.living("janitor", () => this.updateJanitor()); if (this.t % 30 === 0) this.living("solved", () => this.checkSolved()); if (this.t % 60 === 0 && this.clockText() !== this.lastClock) this.updateHud(); // the clock chip ticks
+    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.living("director", () => this.updateDirector()); this.living("litter", () => this.updateLitter()); this.living("supplies", () => this.updateSupplies()); this.living("tour", () => this.updateTour()); this.living("side", () => this.updateSide()); this.living("cons", () => this.updateCons()); this.living("hold", () => this.updateLineHold()); this.living("rush", () => this.updateRush()); this.living("brew", () => this.updateBrew()); this.living("janitor", () => this.updateJanitor()); if (this.t % 30 === 0) this.living("solved", () => this.checkSolved());
     if (this.petT > 0) this.petT--;
     if (this.t % 20 === 0) this.flushToasts();
     if (this.flickerT > 0) this.flickerT--;
@@ -9493,6 +9505,7 @@ class Game {
     if (full) return;
     this.drawLighting(r, cx, cy, pp);
     this.drawMarquee(r, cx, cy);
+    this.drawDayDial();
     this.syncScreen(r, cx, cy); this.syncTv(r, cx, cy);
     if (this.figure && this.isDark(r, this.figure.x, this.figure.y)) {
       ctx.globalAlpha = 0.55 * this.figure.alpha; this.drawSlot("shadow_figure", 0, 0, this.figure.x * T - cx, this.figure.y * T - cy - 4); ctx.globalAlpha = 1;
@@ -9548,7 +9561,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 35";
+const VERSION = "2026-11-18 cards 36";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
