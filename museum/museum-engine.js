@@ -7689,7 +7689,7 @@ class Game {
     const d = this.director(), key = todayISO() + ":" + d.loop;
     if (this.tour && this.tour.key === key) { if (this.tour.on && this.tour.gen !== this.worldGen) this.tourPlan(this.tour); return this.tour; } // the museum was rebuilt (the pack loading): plan its stops again
     if (this.tour) this.endTour(true);
-    const on = (d.problems.includes("tour") || this.chillOn()) && !!this.rooms.lobby && !!this.rooms.museum; // chill: the tour still comes through, happy, and nobody gets lost
+    const on = !this.noTours() && (d.problems.includes("tour") || this.chillOn()) && !!this.rooms.lobby && !!this.rooms.museum; // chill: the tour still comes through, happy, and nobody gets lost
     let sd = strSeed(todayISO() + ":tour:" + d.loop + ":" + this.daySeed()); const rnd = () => (sd = (Math.imul(sd, 1103515245) + 12345) >>> 0) / 4294967296;
     const school = this.weekday() === 2; // Tuesdays: a school group, a teacher leading four kids (Joe 10/11)
     const T = this.tour = { key, on, school, coffee: school || !d.problems.includes("usher"), asked: false, explained: this.chillOn(), mood: null, kidDone: this.chillOn(), members: [], phase: -1, rnd };
@@ -8294,8 +8294,20 @@ class Game {
      Play without any of the problems: a switch in Settings (there from the start), or the curator offers it the first time you
      solve every problem in one loop. Solved ones are kept for the loop as they happen (some states reset later on). */
   chillOn() { return !!(this.progress && this.progress.chill); }
+  noJanitor() { return this.chillOn() && this.progress.chillJan === false; } // chill, Janitor off: no litter at all, the bins never fill (Joe 10/12)
+  noTours() { return this.chillOn() && this.progress.chillTour === false; } // chill, Tours off: no tour group, no school group
+  setChillPart(part, on) { // the two switches under Chill museum
+    if (part === "jan") { this.progress.chillJan = !!on; this.janOff(); }
+    else if (part === "tour") { this.progress.chillTour = !!on; if (this.tour) this.endTour(true); }
+    this.saveProgress();
+  }
+  janOff() { // the Janitor out of every room and the litter gone, while he's switched off
+    if (!this.noJanitor()) return;
+    const J = this.jan; if (J) for (const id in this.rooms || {}) this.rooms[id].npcs = this.rooms[id].npcs.filter(n => n !== J.npc);
+    this.jan = null; this.litter = {}; this.bins = {}; this.trashBag = null;
+  }
   setChill(on, keep) { // keep: leave this loop as it is (everything's already solved)
-    this.progress.chill = !!on; this.saveProgress();
+    this.progress.chill = !!on; this.saveProgress(); this.janOff();
     if (!keep && !this.forceProblems) { if (this.dirClock) this.dirClock.picks = null; this.sup = null; if (this.tour) this.endTour(true); this.endSide(); }
   }
   solvedNow() { const d = this.director(), key = todayISO() + ":" + d.loop, P = this.progress; if (!P.solved || P.solved.key !== key) P.solved = { key, ids: [], vars: {} }; return P.solved; }
@@ -8333,10 +8345,10 @@ class Game {
      else (Joe 10/11). Each piece of litter belongs to the bin nearest it: the janitor sweeps up round a bin, then empties
      that bin, then moves on (on his trash round, and whenever he spots litter between chores), which slows him down. */
   binKey(room, x, y) { return room + ":" + x + "," + y; }
-  binFill(room, x, y) { return (this.bins && this.bins[this.binKey(room, x, y)]) || 0; }
+  binFill(room, x, y) { if (this.noJanitor()) return 0; return (this.bins && this.bins[this.binKey(room, x, y)]) || 0; }
   binFull(room, x, y) { return this.binFill(room, x, y) >= this.pack.settings.litter.cap; }
   binAdd(room, x, y) { if (this.binFull(room, x, y)) return false; const b = this.bins || (this.bins = {}), k = this.binKey(room, x, y); b[k] = (b[k] || 0) + 1; return true; }
-  dropLitter(room, x, y, kind) { // a piece of litter on a free floor tile near (x, y)
+  dropLitter(room, x, y, kind) { if (this.noJanitor()) return; // a piece of litter on a free floor tile near (x, y) (none while the Janitor is switched off)
     const R = this.rooms[room], L = (this.litter || (this.litter = {}))[room] || (this.litter[room] = []); if (!R || L.length >= 12) return false;
     const c = []; for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const tx = x + dx, ty = y + dy; if (R.solid[ty] && R.solid[ty][tx] === false && !R.events[tx + "," + ty] && !(R.noWander && R.noWander.has(tx + "," + ty)) && !L.some(l => l.x === tx && l.y === ty)) c.push([tx, ty]); }
     if (!c.length) return false;
@@ -8348,7 +8360,7 @@ class Game {
   }
   updateLitter() {
     if (this.headless || this.tut || this.closing || !this.rooms || !this.pack || this.t % 60) return; // once a second
-    const d = this.director(); if (d.paused) return;
+    const d = this.director(); if (d.paused || this.noJanitor()) return;
     const set = this.pack.settings.litter, beat = d.over ? 3 : d.beat, busy = [0.5, 1, 1.3, 0.6][beat] * (d.crowd === "heavy" ? 1.3 : 1) * (this.tod() === "night" ? 0.5 : 1);
     const p = busy * (d.problems.includes("litter") ? 1.8 : 0.7) * set.rate / 100 / 30 * 12 / d.minutes; // about a bin's worth in a busy quarter, however long the loop is
     const watching = this.rooms.screening ? Math.min(1, this.rooms.screening.npcs.filter(n => !n.staff && !n.janitor).length / 2) : 0; // the theater's bins fill while people are watching
@@ -8447,6 +8459,7 @@ class Game {
   }
   updateJanitor() {
     if (this.headless || !this.rooms || !this.rooms.lobby || !this.rooms.museum || !this.progress || this.tut) return; // not during the tutorial (its rooms aren't his)
+    if (this.noJanitor()) { if (this.jan) this.janOff(); return; }
     const d = this.director(), key = todayISO() + ":" + d.loop;
     let J = this.jan;
     if (!J || J.key !== key) { // a new visit (or the loop started over, or a new day)
@@ -9235,7 +9248,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 20";
+const VERSION = "2026-11-18 cards 21";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

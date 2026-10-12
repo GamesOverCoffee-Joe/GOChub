@@ -109,6 +109,7 @@ dialog.settings{border:2px solid var(--line);border-radius:6px;background:var(--
   max-height:calc(100dvh - 24px);overflow:auto}
 dialog.settings::backdrop{background:rgba(10,5,7,.7)}
 .set-in{padding:18px 18px 16px;position:relative}
+.set-row.set-sub{padding-left:18px;border-top:1px dashed var(--line)}
 .set-x{position:absolute;top:8px;right:8px;width:36px;height:36px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-size:18px;line-height:1;cursor:pointer}
 .set-x:hover,.set-x:focus-visible{color:var(--text);background:var(--surface-2)}
 .set-in h2{font-family:var(--pixel);font-weight:400;font-size:12px;color:var(--gold);margin:0 0 14px;line-height:1.6}
@@ -182,8 +183,16 @@ dialog.settings::backdrop{background:rgba(10,5,7,.7)}
     <button class="set-x" type="submit" value="close" aria-label="Close settings" title="Close">&#x2715;&#xFE0E;</button>
     <h2 id="setTitle">SETTINGS</h2>
     <div class="set-row">
-      <div class="txt"><b>Chill museum</b><small>Nothing goes wrong: no problems to solve, just the museum on a good day. The tour still comes through, and it goes well. Turn it off to bring the problems back.</small></div>
+      <div class="txt"><b>Chill museum</b><small>Nothing goes wrong: no problems to solve, just the museum on a good day. The tour still comes through, and it goes well. Turn it off to bring the problems back. While it's on, you can also switch off the Janitor and the tours.</small></div>
       <input type="checkbox" class="switch" id="optChill" aria-label="Chill museum">
+    </div>
+    <div class="set-row set-sub" id="rowChillJan" hidden>
+      <div class="txt"><b>The Janitor</b><small>Off: no Janitor and no trash at all. The bins never fill up.</small></div>
+      <input type="checkbox" class="switch" id="optChillJan" aria-label="The Janitor">
+    </div>
+    <div class="set-row set-sub" id="rowChillTour" hidden>
+      <div class="txt"><b>Tours</b><small>Off: no tour group, and no school group on Tuesdays.</small></div>
+      <input type="checkbox" class="switch" id="optChillTour" aria-label="Tours">
     </div>
     <div class="set-row">
       <div class="txt"><b>Tap to walk</b><small>Tap where you want to go. Tap a piece, a person, a prop or a door to walk over and use it. The D-pad and keys always work too.</small></div>
@@ -225,7 +234,7 @@ dialog.settings::backdrop{background:rgba(10,5,7,.7)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 20";
+window.GOQ_WANT = "2026-11-18 cards 21";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -369,7 +378,15 @@ window.goqStart = function () {
   /* ---------- Settings panel ---------- */
   const dlg = document.getElementById("settings"), optTap = document.getElementById("optTap"), optCtl = document.getElementById("optCtl"), optBuzz = document.getElementById("optBuzz");
   const optChill = document.getElementById("optChill");
-  optChill.addEventListener("change", () => { if (game.setChill) game.setChill(optChill.checked); });
+  const optChillJan = document.getElementById("optChillJan"), optChillTour = document.getElementById("optChillTour");
+  function chillRows() { // the two switches under Chill museum show while it's on
+    const on = optChill.checked, P = game.progress || {};
+    document.getElementById("rowChillJan").hidden = document.getElementById("rowChillTour").hidden = !on;
+    optChillJan.checked = P.chillJan !== false; optChillTour.checked = P.chillTour !== false;
+  }
+  optChill.addEventListener("change", () => { if (game.setChill) game.setChill(optChill.checked); chillRows(); });
+  optChillJan.addEventListener("change", () => { if (game.setChillPart) game.setChillPart("jan", optChillJan.checked); });
+  optChillTour.addEventListener("change", () => { if (game.setChillPart) game.setChillPart("tour", optChillTour.checked); });
   dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close ? dlg.close() : dlg.removeAttribute("open"); }); // a tap outside the panel closes it
   const optSharp = document.getElementById("optSharp"), optSwap = document.getElementById("optSwap"), optVid = document.getElementById("optVid");
   optVid.addEventListener("change", () => { set.screenVideo = optVid.checked; game.screenVideo = optVid.checked; saveSet(); });
@@ -378,7 +395,7 @@ window.goqStart = function () {
   if (navigator.vibrate) document.getElementById("rowBuzz").hidden = false;
   document.getElementById("setBtn").addEventListener("click", () => {
     document.getElementById("rowReplay").hidden = !(testMode || curator || isLocal || (game.isCurator && game.isCurator())); // the curator's own tool
-    optTap.checked = tapWalk(); optCtl.value = set.controls || "auto"; optBuzz.checked = set.haptics !== false; optSharp.checked = sharp(); optSwap.checked = !!set.swapAB; optVid.checked = set.screenVideo !== false; optChill.checked = !!(game.chillOn && game.chillOn());
+    optTap.checked = tapWalk(); optCtl.value = set.controls || "auto"; optBuzz.checked = set.haptics !== false; optSharp.checked = sharp(); optSwap.checked = !!set.swapAB; optVid.checked = set.screenVideo !== false; optChill.checked = !!(game.chillOn && game.chillOn()); chillRows();
     if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
   });
   document.getElementById("replayLoop").addEventListener("click", () => { game.replayLoop(); dlg.close ? dlg.close() : dlg.removeAttribute("open"); });
