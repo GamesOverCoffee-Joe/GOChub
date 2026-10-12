@@ -1656,7 +1656,7 @@ function normalizePack(p) {
   const lit = (p.settings && p.settings.litter) || {}, litter = { cap: Math.max(2, Math.min(20, Math.round(lit.cap === undefined ? 6 : +lit.cap || 6))), rate: Math.max(0, Math.min(400, Math.round(lit.rate === undefined ? 100 : +lit.rate || 0))) };
   // The café line (living museum, Step 4): seconds to serve one order with the barista prepped or not, and the longest line.
   const lnin = (p.settings && p.settings.line) || {}, line = { fast: Math.max(1, Math.min(30, Math.round(lnin.fast === undefined ? 3 : +lnin.fast || 3))), slow: Math.max(1, Math.min(60, Math.round(lnin.slow === undefined ? 9 : +lnin.slow || 9))), max: Math.max(2, Math.min(20, Math.round(lnin.max === undefined ? 10 : +lnin.max || 10))) };
-  const vin = (p.settings && p.settings.visit) || {}, visit = { minutes: Math.max(4, Math.min(60, Math.round(vin.minutes === undefined ? 12 : +vin.minutes || 12))), repeat: !!vin.repeat, dialLabel: vin.dialLabel === "static" ? "static" : "slide" }; // (the label kept too, or "always showing" never stuck, Joe 10/12)
+  const vin = (p.settings && p.settings.visit) || {}, visit = { minutes: Math.max(4, Math.min(60, Math.round(vin.minutes === undefined ? 12 : +vin.minutes || 12))), repeat: !!vin.repeat };
   // Genres: the museum's rooms (Action, Puzzle...). A piece's genre is set by hand.
   const genres = normalizeGenres(p.settings && p.settings.genres), gids = new Set(genres.map(g => g.id));
   pieces.forEach(pc => { if (!gids.has(pc.genre)) pc.genre = ""; if (!gids.has(pc.blend) || pc.blend === pc.genre) pc.blend = ""; });
@@ -4284,8 +4284,9 @@ class Game {
     this.mode = "busy"; this.trans = { t: 0, dur: 14, switched: false, fn: go, after: () => { this.dialK = undefined; if (this.needTutorial()) this.startTutorial(); } };
   }
   outsideNow() { return !!(this.room && this.room.id === "outside"); } // the parking lot out front: no museum time there
+  dialOn() { return !!(this.rooms && this.rooms.museum && !this.tut && !this.chillOn() && !this.recording() && this.pack && !this.headless && !this.outsideNow()); } // the day dial is showing
   drawDayDial() {
-    if (!this.rooms || !this.rooms.museum || this.tut || this.chillOn() || this.recording() || !this.pack || this.headless || this.outsideNow()) return;
+    if (!this.dialOn()) return;
     const ctx = this.ctx, d = this.director(), R = 7, x = 4 + R + 1, y = SH - 4 - R - 1, f = Math.min(1, d.min / d.minutes);
     const cols = ["#f2d478", "#f0a24a", "#e2604a", "#9a6ad0"], k = d.over ? 4 : d.beat, name = d.over ? "After hours" : BEATS[d.beat], col = d.over ? "#3a4270" : cols[d.beat];
     ctx.save();
@@ -4299,11 +4300,12 @@ class Game {
       ctx.globalAlpha = 1; const a = -Math.PI / 2 + f * Math.PI * 2; ctx.strokeStyle = "#fffaf0"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * (R - 1), y + Math.sin(a) * (R - 1)); ctx.stroke();
       ctx.fillStyle = "#fffaf0"; ctx.fillRect(x - 1, y - 1, 2, 2);
     }
-    // Its label beside it: white with a black outline, on a box in the part's color. Curator, Visitors tab: always showing,
-    // or sliding up from the bottom when the part of the day changes (or you come in), for a few seconds.
+    // Its label beside it: white with a black outline, on a box in the part's color. It slides up from the bottom when the part
+    // of the day changes (or you come in, or pick Check time in the pause menu), stays a few seconds and goes.
     if (this.dialK !== k) { this.dialK = k; this.dialShow = this.t; }
-    const mode = (this.pack.settings.visit || {}).dialLabel || "slide", age = this.t - (this.dialShow === undefined ? -9999 : this.dialShow), HOLD = 240, IN = 18;
-    let off = 0; if (mode === "slide") { if (age >= HOLD + IN * 2) { ctx.restore(); return; } off = age < IN ? 1 - age / IN : age > HOLD + IN ? (age - HOLD - IN) / IN : 0; }
+    const age = this.t - (this.dialShow === undefined ? -9999 : this.dialShow), HOLD = 240, IN = 18;
+    if (age >= HOLD + IN * 2) { ctx.restore(); return; }
+    const off = age < IN ? 1 - age / IN : age > HOLD + IN ? (age - HOLD - IN) / IN : 0;
     ctx.globalAlpha = 1; ctx.font = "bold 8px monospace"; ctx.textBaseline = "middle";
     const w = Math.ceil(ctx.measureText(name).width) + 8, bx = x + R + 5, by = y - 6 + Math.round(off * 26);
     ctx.fillStyle = "#1a1626"; ctx.fillRect(bx - 1, by - 1, w + 2, 14); ctx.fillStyle = col; ctx.fillRect(bx, by, w, 12);
@@ -6993,13 +6995,14 @@ class Game {
       });
       return;
     }
-    const opts = ["My Stuff", ...(this.progress.fieldNotes ? ["Field notes"] : []), "Settings", "Save", "Back"]; // (Joe 10/12: Recent notices, Controls and Respawn under Settings; Save asks if you're quitting)
+    const opts = ["My Stuff", ...(this.dialOn() ? ["Check time"] : []), ...(this.progress.fieldNotes ? ["Field notes"] : []), "Settings", "Save", "Back"]; // (Joe 10/12: Recent notices, Controls and Respawn under Settings; Save asks if you're quitting)
     this.choose("PAUSED", opts, k => {
       const o = opts[k];
       if (o === "My Stuff") this.myStuff();
       else if (o === "Field notes") this.fieldNotes(() => this.openMenu());
       else if (o === "Settings") this.settingsMenu();
       else if (o === "Save") this.saveAsk();
+      else if (o === "Check time") this.dialShow = this.t; // the menu closes and the dial's label slides in again (Joe 10/12)
     });
   }
   settingsMenu() {
@@ -9649,7 +9652,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 38";
+const VERSION = "2026-11-18 cards 39";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
