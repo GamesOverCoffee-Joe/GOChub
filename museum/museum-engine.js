@@ -2270,7 +2270,7 @@ const TEXT = {
   "cons.bye":          { g: "Conservator", l: "The conservator after your chat at the case, before he heads home", by: "claude", v: [["...", "Anyway. Nice chatting.", "I'm heading home. Don't tell anyone you saw me up here."]] },
   "cons.leaving":      { g: "Conservator", l: "The conservator on his way out after your chat", by: "claude", v: [["Night, kid."], ["Get some sleep."]] },
   "cons.avoid":        { g: "Conservator", l: "The conservator on his way home once his wing's lights went off (avoidant)", by: "claude", v: [["I wasn't doing anything. I'm going home.", "Goodnight."], ["Nope. Not now."]] },
-  "item.break":        { g: "Break room", l: "Either member on break at 3–6 ({item}: the item on the table)", by: "claude", v: [["Break time is the best time."], ["Don't touch the {item}. It's not mine, but still."], ["Five more minutes. Then back to it."]] },
+  "item.break":        { g: "Break room", l: "Either member on break at 3–6 ({item}: the item on the table)", by: "claude", v: [["Break time is the best time."], ["Careful with the {item}. People get weird about their stuff."], ["Five more minutes. Then back to it."]] },
   "item.lost":         { g: "Break room", l: "The owner at 6–9, missing their item ({item}, {who}: the one who left)", by: "claude", v: [["Has anyone seen my {item}?", "I swear I left it right here."], ["My {item}! It was on the table!", "...wait, where did {who} go?"]] },
   "item.taker":        { g: "Break room", l: "Catching the one who's leaving with it ({item}, {owner})", by: "claude", v: [["Hm? This {item}?", "...", "Oh no. This is {owner}'s.", "Could you take it back to them? I'm already late."]] },
   "item.leaving":      { g: "Break room", l: "The one who's leaving, after handing it over", by: "claude", v: [["Thanks for catching that. Night!"]] },
@@ -2328,6 +2328,7 @@ const TEXT = {
   "jam.hands":         { g: "Litter", l: "The jammed trash can, with something in your hands", by: "claude", v: [["The flap won't budge. There's a cup wedged in it.", "You'll need both hands free to work it loose."]] },
   "jam.fixed":         { g: "Litter", l: "Pulling the cup out of the jammed trash can (it's yours to throw away now)", by: "claude", v: [["*squeak* ...*pop*", "Got it. The flap swings free again.", "Now, where to put this cup..."]] },
   "jam.janitor":       { g: "Janitor", l: "The Janitor at the jammed trash can, sweeping up round it (and the notice when he pulls the cup out)", by: "claude", v: [["Who jams a cup in a trash can?", "Every. Single. Day."], ["I was on my break.", "I was ON. MY. BREAK."]] },
+  "jam.thanks":        { g: "Janitor", l: "Talking to the Janitor after you unjammed the trash can and cleaned up round it (once)", by: "claude", v: [["Somebody pulled a cup out of that jammed can. And picked up the mess.", "...That was you, wasn't it?", "Thanks. Don't make it a habit. I'd be out of a job."]] },
   "bag.take":          { g: "Litter", l: "Taking a trash bag", by: "claude", v: [["*rrrip*", "One trash bag. I'm basically a professional now."]] },
   "bag.back":          { g: "Litter", l: "Putting an unused trash bag back (staff room can)", by: "claude", v: [["You roll the bag back up and tuck it under the can.", "Nobody saw that."]] },
   "bag.unused":        { g: "Litter", l: "Your trash bag's still empty, at a can outside the staff room: toss it? (one page, then Toss it / Keep it)", by: "claude", v: [["It's empty. I haven't even used it yet. Toss it anyway?"]] },
@@ -5662,7 +5663,7 @@ class Game {
       sup: S ? { key: S.key, boxes: S.boxes, shopDone: S.shopDone, cafeDone: S.cafeDone, cafeNeeded: S.cafeNeeded, freeGiven: S.freeGiven, carryBox: this.carryBox || null } : null,
       tour: T ? { key: T.key, kidDone: T.kidDone, asked: T.asked, explained: T.explained, mood: T.mood, coffee: T.coffee, usherBack: !!T.usherBack } : null,
       item: I ? { key: this.side.key, got: I.got, done: I.done, left: I.left, carry: this.carryItem || null } : null,
-      jam: this.jam ? { key: this.jam.key, jammed: this.jam.jammed, fixedBy: this.jam.fixedBy, janSwept: this.jam.janSwept } : null,
+      jam: this.jam ? { key: this.jam.key, jammed: this.jam.jammed, fixedBy: this.jam.fixedBy, janSwept: this.jam.janSwept, thanked: !!this.jam.thanked } : null,
       jan: J ? { key: J.key, i: J.i, phase: J.phase === "plants" && J.cur ? "plants" : J.phase, watered: J.watered, early: !!J.early, swept: J.swept || 0, home: !!(J.brk && J.brk.act === "home") } : null };
     this.saveProgress();
   }
@@ -5935,7 +5936,7 @@ class Game {
     else if (this.shopConfirm !== it.id) { this.shopConfirm = it.id; this.shopMsg = "Buy " + it.name + " for " + it.price + " tokens? Press A again."; }
     else if (it.base === "card") { // a card: into your binder (not Souvenirs), and you see it right away
       this.progress.tokens = t - it.price; (this.progress.bluuCards || (this.progress.bluuCards = [])).push(it.id); this.shopConfirm = null; this.shopMsg = ""; this.updateHud(true);
-      const p = this.pack.pieces.find(q => q.id === it.card); if (p) { this.addCard(p.id, it.cardKind); this.showCards([{ p, kind: it.cardKind }], "shop"); return; }
+      const p = this.pack.pieces.find(q => q.id === it.card); if (p) { this.addCard(p.id, it.cardKind); this.showCards([{ p, kind: it.cardKind, had: this.lastHad }], "shop"); return; }
     }
     else { this.progress.tokens = t - it.price; own.push(it); this.progress.tally.popups = (this.progress.tally.popups || 0) + 1; this.saveProgress(); this.updateHud(true); this.shopConfirm = null; this.shopMsg = this.tx("sat.bought", { item: it.name }).join(" "); }
     this.renderShop();
@@ -6060,7 +6061,7 @@ class Game {
   cardThumb(p) { const v = ytVideoId(p.episodeUrl); return v && this.thumbState && this.thumbState[v] === "ok" ? "thumbs/" + v + ".jpg" : ""; }
   cardList() { const t = todayISO(); return this.pack.pieces.filter(p => !p.tut && !p.noCard && (!p.unveil || p.unveil <= t)).sort((a, b) => ((a.unveil || "") < (b.unveil || "") ? -1 : (a.unveil || "") > (b.unveil || "") ? 1 : 0)); }
   cardsOwned() { return this.progress.cards || (this.progress.cards = {}); }
-  addCard(id, kind) { const o = this.cardsOwned(), c = o[id] || (o[id] = { c: 0, r: 0, f: 0 }); c[kind] = (c[kind] || 0) + 1; this.progress.tally.cards = (this.progress.tally.cards || 0) + 1; this.saveProgress(); }
+  addCard(id, kind) { const o = this.cardsOwned(), had = Object.assign({ c: 0, r: 0, f: 0 }, o[id] || {}), c = o[id] || (o[id] = { c: 0, r: 0, f: 0 }); c[kind] = (c[kind] || 0) + 1; this.lastHad = had; this.progress.tally.cards = (this.progress.tally.cards || 0) + 1; this.saveProgress(); } // lastHad: what you had of that card before (the card view says new or repeat)
   randomCard(rare) { const L = this.cardList(); if (!L.length) return null; return { p: L[(Math.random() * L.length) | 0], kind: Math.random() * 100 < rare ? "r" : "c" }; }
   cardItems() { const C = this.pack.settings.cards; return [{ id: "card-single", name: "Trading card", price: C.single, description: this.tx("card.single").join(" "), cardSlot: "single" }, { id: "card-pack", name: "Card pack (3)", price: C.pack, description: this.tx("card.pack").join(" "), cardSlot: "pack" }]; }
   shopLineup(off) { // the gift shop (Joe 10/11): the featured item, two museum merch (anything else that isn't a card), a single card, a pack
@@ -6068,7 +6069,7 @@ class Game {
     const merch = [...(gift && (!feat || gift.id !== feat.id) ? [gift] : []), ...this.stockToday(off).filter(it => !feat || it.id !== feat.id)].slice(0, 2);
     return [feat, ...merch, ...(this.pack.settings.cards.on && this.cardList().length ? this.cardItems() : [])].filter(Boolean);
   }
-  buyCards(slot) { const out = []; for (let i = 0; i < (slot === "pack" ? 3 : 1); i++) { const c = this.randomCard(slot === "pack" ? this.pack.settings.cards.packRare : 0); if (c) out.push(c); } out.forEach(c => this.addCard(c.p.id, c.kind)); return out; }
+  buyCards(slot) { const out = []; for (let i = 0; i < (slot === "pack" ? 3 : 1); i++) { const c = this.randomCard(slot === "pack" ? this.pack.settings.cards.packRare : 0); if (c) out.push(c); } out.forEach(c => { this.addCard(c.p.id, c.kind); c.had = this.lastHad; }); return out; }
   cardIcon(kind) { // 16×16 for the shop list and the stands: a card (red, or gold for a rare), or a foil pack
     const ck = "cardicon|" + kind; if (this.cache[ck]) return this.cache[ck];
     const a = mk(16, 16);
@@ -6110,7 +6111,8 @@ class Game {
   renderCardView() {
     const v = this.el.cardView, q = this.cardQ, c = q[this.cardI], own = (this.cardsOwned()[c.p.id] || {})[c.kind] || 0; v.innerHTML = "";
     const cap = document.createElement("div"); cap.className = "gt-card-cap" + (c.kind === "r" ? " rare" : "");
-    cap.textContent = c.look ? "" : c.kind === "r" ? "RARE!" : own <= 1 ? "NEW!" : "YOU HAVE " + own; v.appendChild(cap);
+    const had = c.had || { c: 0, r: 0, f: 0 }, any = had.c + had.r + had.f; // before you got this one (Joe 10/12: a repeat says so)
+    cap.textContent = c.look ? "" : had[c.kind] ? "REPEAT · YOU HAVE " + (c.had ? had[c.kind] + 1 : own) : c.kind === "r" ? (any ? "RARE!" : "NEW · RARE!") : any ? "REPEAT · YOU HAVE THE " + (had.r ? "RARE" : "FAKE") : "NEW!"; v.appendChild(cap);
     const hold = document.createElement("div"); hold.style.setProperty("--s", (this.scale || 1) * 0.82); hold.appendChild(this.cardElement(c.p, c.kind)); v.appendChild(hold); // a bit smaller than full size: the caption and hint fit above and below
     const hint = document.createElement("div"); hint.className = "gt-card-hint"; hint.textContent = c.msg || (q.length > 1 ? (this.cardI + 1) + " / " + q.length + "   A: next" : "A: done"); v.appendChild(hint);
   }
@@ -7534,6 +7536,8 @@ class Game {
     if (npc && npc.role === "shopkeeper" && npc.stocking) { this.say(this.tx("shop.stocking")); return; }
     if (npc && npc.role === "barista" && npc.pace) { this.say(this.tx("cafe.rushed")); return; } // why she's running back and forth
     if (npc && npc.role === "barista" && this.sup && this.sup.cafeNeeded && !this.sup.cafeDone && !this.closing && this.director().beat >= 2 && !this.director().over) { this.say(this.tx("cafe.slowChat")); return; } // every order taking forever
+    { const Jm = this.jam; if (npc && npc.janitor && this.trashBag == null && Jm && Jm.on && Jm.fixedBy === "you" && !Jm.janSwept && !Jm.thanked && !this.jamLitter().length) { // you fixed the jammed can and cleaned up round it: he noticed (once)
+      Jm.thanked = true; this.saveLoop(); this.faceYou(npc, 240); this.say(this.tx("jam.thanks")); return; } }
     if (npc && npc.janitor && this.trashBag == null && !this.carryBox && !this.carryItem && !this.drink && Object.values(this.litter || {}).some(L => L.length)) { // litter about: he'll take any help he can get (anyone, on shift or not: Joe 10/11)
       this.faceYou(npc, 240); this.choose(this.tx("jan.offerBag").join(" "), ["Take a bag", "Not right now"], i => { if (i === 0) { this.trashBag = 0; this.say(this.tx("jan.gaveBag")); } else this.say(this.tx("jan.noBag")); }, 1); return;
     }
@@ -8424,7 +8428,7 @@ class Game {
     let J = this.jam;
     if (!J || J.key !== key) {
       J = this.jam = { key, jammed: true, fixedBy: null, janSwept: false, gen: -1 };
-      const L = this.loopSave(); if (L && L.jam && L.jam.key === key) Object.assign(J, { jammed: !!L.jam.jammed, fixedBy: L.jam.fixedBy || null, janSwept: !!L.jam.janSwept }); // earlier today
+      const L = this.loopSave(); if (L && L.jam && L.jam.key === key) Object.assign(J, { jammed: !!L.jam.jammed, fixedBy: L.jam.fixedBy || null, janSwept: !!L.jam.janSwept, thanked: !!L.jam.thanked }); // earlier today
     }
     J.on = picks.includes("litter") && !this.noJanitor() && !this.chillOn();
     if (J.gen !== this.worldGen) { // which can, on the rooms as they're built now
@@ -8769,6 +8773,7 @@ class Game {
     const tod = this.tod(), nd = NIGHT_DIM[r.id] !== undefined ? NIGHT_DIM[r.id] : 0.12, extra = tod === "night" ? nd : tod === "sunset" ? nd / 3 : 0;
     const guards = r.npcs.filter(n => n.patrol || (n.janitor && this.closing && !n.gone)); // the janitor, if he's still at it after the announcement, has a flashlight too
     const lit = Math.min(0.85, L.dim + extra), dim = off ? 0.86 : lit, spots = off ? 0.9 : L.spots, zoned = r.zoneAt && this.lightsOff.size;
+    this.pLight = Math.max(0, Math.min(1, (this.pLight || 0) + (off ? 1 : -1) / 20)); // the little light round you fades in as you walk into the dark, and out as you walk into the light (Joe 10/12)
     if (dim <= 0.01 && !zoned) return;
     if (!this.darkC) { this.darkC = document.createElement("canvas"); this.darkC.width = SW; this.darkC.height = SH; }
     const d = this.darkC.getContext("2d");
@@ -8792,7 +8797,7 @@ class Game {
       const g = d.createRadialGradient(0, 0, 0, 0, 0, rx); g.addColorStop(0, "rgba(0,0,0," + a + ")"); g.addColorStop(0.55, "rgba(0,0,0," + a * 0.7 + ")"); g.addColorStop(1, "rgba(0,0,0,0)");
       d.fillStyle = g; d.fillRect(-rx, -rx, rx * 2, rx * 2); d.restore();
     };
-    if (off) hole(pp.x + 8 - cx, pp.y + 4 - cy, 26, 26, 0.75);
+    if (this.pLight > 0) hole(pp.x + 8 - cx, pp.y + 4 - cy, 26, 26, 0.75 * this.pLight);
     if (spots > 0) for (const c of r.cases) hole(c.x * T + 8 - cx, c.y * T - 4 - cy, 14, 20, spots);
     if (spots > 0) for (const h of r.hung) {
       const x = h.x * T + 16 - cx, y = h.y * T + 14 - cy;
@@ -9363,7 +9368,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 31";
+const VERSION = "2026-11-18 cards 32";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

@@ -37,7 +37,7 @@ Two more, outside Words: a new version in the screening nook guest's lines ("I k
 | Conservator | The conservator after your chat at the case, before he heads home | ... ⏎ Anyway. Nice chatting. ⏎ I'm heading home. Don't tell anyone you saw me up here. |
 | Conservator | The conservator on his way out after your chat | Night, kid. / Get some sleep. |
 | Conservator | The conservator on his way home once his wing's lights went off (avoidant) | I wasn't doing anything. I'm going home. ⏎ Goodnight. / Nope. Not now. |
-| Break room | Either member on break at 3–6 ({item}: the item on the table) | Break time is the best time. / Don't touch the {item}. It's not mine, but still. / Five more minutes. Then back to it. |
+| Break room | Either member on break at 3–6 ({item}: the item on the table) | Break time is the best time. / Careful with the {item}. People get weird about their stuff. / Five more minutes. Then back to it. |
 | Break room | The owner at 6–9, missing their item ({item}, {who}: the one who left) | Has anyone seen my {item}? ⏎ I swear I left it right here. / My {item}! It was on the table! ⏎ ...wait, where did {who} go? |
 | Break room | Catching the one who's leaving with it ({item}, {owner}) | Hm? This {item}? ⏎ ... ⏎ Oh no. This is {owner}'s. ⏎ Could you take it back to them? I'm already late. |
 | Break room | The one who's leaving, after handing it over | Thanks for catching that. Night! |
@@ -272,3 +272,4 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Litter | The jammed trash can, with something in your hands | The flap won't budge. There's a cup wedged in it. ⏎ You'll need both hands free to work it loose. |
 | Litter | Pulling the cup out of the jammed trash can | *squeak* ...*pop* ⏎ Got it. The flap swings free again. ⏎ Now, where to put this cup... |
 | Janitor | The Janitor at the jammed trash can | Who jams a cup in a trash can? ⏎ Every. Single. Day. / I was on my break. ⏎ I was ON. MY. BREAK. |
+| Janitor | Talking to the Janitor after you unjammed the trash can and cleaned up round it (once) | Somebody pulled a cup out of that jammed can. And picked up the mess. ⏎ ...That was you, wasn't it? ⏎ Thanks. Don't make it a habit. I'd be out of a job. |
