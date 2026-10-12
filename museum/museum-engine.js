@@ -50,7 +50,7 @@ const PAL = {
   sconce:  ["#fff0b8", "#f0b850", "#9a6c34", "#3a2414"],
   cat:     [null, "#f0a050", "#c87028", "#2a1810", "#f8f0e0", "#f88898", "#a05018"],
   apron:   [null, "#f0d0b0", "#c86848", "#181820", "#f8f0c0"],
-  janitor: [null, "#d8a880", "#b8ae90", "#181820", "#4a78b8", "#6a4424", "#e8e8e8", "#2a4a7a"], // skin, khaki shirt, outline, cap and suspenders, tool belt, tools and cap badge, cap shade
+  janitor: [null, "#f8e0c0", "#b8ae90", "#181820", "#4a78b8", "#6a4424", "#e8e8e8", "#2a4a7a"], // skin, khaki shirt, outline, cap and suspenders, tool belt, tools and cap badge, cap shade
   popcorn: [null, "#f8f0d0", "#c83838", "#181820", "#e8b24a", "#8a2a2a", "#a8c8d8"], // popcorn, red, outline, gold, dark red, glass
   binfull: ["#e8eef4", "#9fb4c8", "#5a7088", "#1a2230", "#e8b24a", "#f0ece0", "#c84838", "#e8e0c8"], // the trash can's colors, plus paper, a red wrapper, a cup
   litter:  [null, "#f0ece0", "#c84838", "#181820", "#e8b24a", "#7a9ab8"], // paper, red wrapper, outline, gold, blue
@@ -6595,7 +6595,7 @@ class Game {
     const r = this.rooms && this.rooms.staff; if (!r) return;
     r.npcs = r.npcs.filter(n => !n.patron);
     const all = (this.pack.settings.staff.members || []).filter(m => !this.staff || (m.badge ? m.badge !== this.staff.badge : m.name.toLowerCase() !== this.staff.name.toLowerCase()));
-    const seed = strSeed("members" + todayISO()), list = all.map((m, i) => ({ m, k: hash(seed, i) })).sort((a, b) => a.k - b.k).map(x => x.m);
+    const seed = strSeed("members" + todayISO() + ":" + RUN_SEED), list = all.map((m, i) => ({ m, k: hash(seed, i) })).sort((a, b) => a.k - b.k).map(x => x.m);
     list.slice(0, 2 + seed % 2).forEach((m, i) => this.addVisitor("staff", { name: m.name, sheet: ["visitor_a", "visitor_b", "visitor_c"][(seed + i) % 3] }, Object.assign({ patron: true, staff: true }, m.shirts && m.shirts.length ? { shirt: m.shirts[(seed + i) % m.shirts.length] } : {}))); // a member's own shirt colors (Staff tab), a different one day to day
     this.lastStaffKey = this.staff ? this.staff.badge + "|" + this.staff.name : "";
   }
@@ -7913,7 +7913,7 @@ class Game {
     const S = this.side = { key, roster, item: { on: d.problems.includes("item") && !!this.rooms.staff && !!this.rooms.lobby, got: false, done: false, left: false, phase: -1 } };
     const I = S.item; I.kind = (rnd() * 2) | 0; I.item = ["headphones", "lunchbox"][I.kind];
     const all = (this.pack.settings.staff.members || []).filter(m => !this.staff || (m.badge ? m.badge !== this.staff.badge : m.name.toLowerCase() !== this.staff.name.toLowerCase()));
-    const seed = strSeed("members" + todayISO()), shift = all.map((m, i) => ({ m, k: hash(seed, i) })).sort((a, b) => a.k - b.k).map(x => x.m).slice(0, 2 + seed % 2); // who's on shift today (placeMembers)
+    const seed = strSeed("members" + todayISO() + ":" + RUN_SEED), shift = all.map((m, i) => ({ m, k: hash(seed, i) })).sort((a, b) => a.k - b.k).map(x => x.m).slice(0, 2 + seed % 2); // who's on shift today (placeMembers)
     const pick = (shift.length >= 2 ? shift : all).map(m => [rnd(), m]).sort((a, b) => a[0] - b[0]).map(x => x[1]).slice(0, 2);
     if (pick.length < 2) { I.on = false; I.owner = I.taker = { member: "" }; return S; } // only Patreon members, never made-up volunteers (Joe 10/11): fewer than two, no mix-up today
     const person = (m, i, extra) => Object.assign({ sheet: ["visitor_a", "visitor_b", "visitor_c"][(strSeed(m.name) + i) % 3], x: 0, y: 0, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 0, still: true, staff: true, member: m.name, where: "staff", gone: true, lines: [], lineI: -1 }, m.shirts && m.shirts.length ? { shirt: m.shirts[0] } : {}, extra);
@@ -8575,7 +8575,7 @@ class Game {
   drawLighting(r, cx, cy, pp) {
     const ctx = this.ctx, off = this.isDark(r, this.player.x, this.player.y), L = this.pack.settings.lighting[r.id] || ROOMS[r.id].light;
     const tod = this.tod(), nd = NIGHT_DIM[r.id] !== undefined ? NIGHT_DIM[r.id] : 0.12, extra = tod === "night" ? nd : tod === "sunset" ? nd / 3 : 0;
-    const guards = r.npcs.filter(n => n.patrol);
+    const guards = r.npcs.filter(n => n.patrol || (n.janitor && this.closing && !n.gone)); // the janitor, if he's still at it after the announcement, has a flashlight too
     const lit = Math.min(0.85, L.dim + extra), dim = off ? 0.86 : lit, spots = off ? 0.9 : L.spots, zoned = r.zoneAt && this.lightsOff.size;
     if (dim <= 0.01 && !zoned) return;
     if (!this.darkC) { this.darkC = document.createElement("canvas"); this.darkC.width = SW; this.darkC.height = SH; }
@@ -9171,7 +9171,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 17";
+const VERSION = "2026-11-18 cards 18";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
