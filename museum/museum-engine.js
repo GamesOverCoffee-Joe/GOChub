@@ -8500,7 +8500,7 @@ class Game {
     const trash = []; this.jamState(); // (which can's jammed, so his round leaves it till his last quarter)
     for (const id of ["lobby", "museum", "screening", "staff"]) { // in walking order: the theater's off the museum, the staff room off the lobby
       const R = this.rooms[id]; if (!R) continue;
-      for (const k in R.events) if (R.events[k].trash) { const [x, y] = k.split(",").map(Number), at = this.janBeside(R, x, y); if (at && !this.isJamBin(id, [x, y])) trash.push({ room: id, at, dir: this.janFace(at, x, y), act: "empty", dur: 150, bin: [x, y] }); }
+      for (const k in R.events) if (R.events[k].trash && !R.events[k].tub) { const [x, y] = k.split(",").map(Number), at = this.janBeside(R, x, y); if (at && !this.isJamBin(id, [x, y])) trash.push({ room: id, at, dir: this.janFace(at, x, y), act: "empty", dur: 150, bin: [x, y] }); }
     }
     const sweep = () => { // four spots in one part of the museum, or the lobby now and then
       const M = this.rooms.museum, zones = M.zones ? M.zones.filter(z => z.kind === "room" || (z.kind === "hall" && z.id !== "lobbyhall")) : [];
@@ -9328,7 +9328,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 25";
+const VERSION = "2026-11-18 cards 27";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
