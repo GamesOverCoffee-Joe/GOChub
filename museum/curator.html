@@ -430,14 +430,14 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
         </div>
     </div>
     <p class="pv-hint" id="ver" style="font-size:.75rem"></p>
-    <p class="pv-hint" id="pvHint">Click the preview, then walk with the arrow keys or WASD (hold Shift to hurry). Z or Space to look and hang, X to go back or take a photo, Enter for the menu. Hold up or down in a menu to scroll.</p>
+    <p class="pv-hint" id="pvHint">Click the preview, then walk with the arrow keys or WASD. Z or Space to look and hang, X to go back or take a photo, Enter for the menu. Hold up or down in a menu to scroll.</p>
   </aside>
 </div>
 <script>
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 36";
+window.GOQ_WANT = "2026-11-18 cards 37";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -2397,6 +2397,9 @@ function renderVisitors() {
   wrap.appendChild(el("div", { class: "fields", style: "max-width:520px;margin:0 0 14px" }, [
     el("label", {}, [document.createTextNode("Length of a visit (minutes)"), el("small", { text: "4 to 60. 12 is the plan's length." }), vMin]),
     el("label", { style: "flex-direction:row;align-items:center;gap:8px" }, [vRep, document.createTextNode("Start over when it ends")]),
+    (() => { const sel = el("select", {}, [["slide", "Slides up from the bottom when it changes, then goes"], ["static", "Always showing"]].map(([v, t]) => { const o = el("option", { value: v, text: t }); if ((st.visit.dialLabel || "slide") === v) o.selected = true; return o; }));
+      sel.addEventListener("change", () => { st.visit.dialLabel = sel.value; changed(); game.dialShow = game.t; }); // (and show it now, in the preview)
+      return el("label", {}, [document.createTextNode("Day dial label"), el("small", { text: "The part of the day (Settling in, Getting busy, Rush, Winding down) beside the dial in the corner. Not in the chill museum." }), sel]); })(),
   ]));
   // Visitors' shirt colors (a placeholder until the visitor art is replaced): each visitor gets one of these at random.
   if (!Array.isArray(st.life.shirts) || !st.life.shirts.length) st.life.shirts = GOQ.SHIRT_COLORS.slice();

@@ -24,6 +24,14 @@ const PAL = {
   mat:     [null, "#c85848", "#8a3028", "#2a1010", "#e8b24a"],
   cloth:   ["#f4f0e8", "#d8d0c4", "#a89c8c", "#3a3430"],
   staffrm: ["#eef0e4", "#c4ccb4", "#7c8a6c", "#20261c", "#e2e6d4"],
+  lot:     ["#5c5c66", "#52525c", "#6e6e78", "#e8e4d0", "#44444c"], // the parking lot out front: asphalt
+  walk:    ["#c8c4b8", "#b4b0a4", "#dcd8cc", "#8a867c", "#e8e4d8"], // its sidewalk
+  hedge:   ["#3c7a3a", "#2e5e2e", "#5a9a4a", "#1e3a1e", "#7ab05a"],
+  facade:  ["#b05a44", "#8a4434", "#c8705a", "#3a2420", "#e0d6c0", "#8a8a90", "#6a6a70", "#4a3a3a"], // the museum's brick front: brick, mortar, light brick, deep, trim, stone, dark stone, roof
+  glassdr: [null, "#3a3a44", "#8cc4e0", "#d8f0ff", "#f0c040", "#5a8aa8"],
+  stripe:  [null, "#ece8d8", "#c8c4b4"],
+  car:     [null, "#202028", "#d03838", "#8a2020", "#a8d8f0", "#f8e070", "#f28a7a", "#181820", "#e8e8f0"],
+  sign:    [null, "#1c1620", "#3a2c34", "#e8c070"],
   locker:  ["#e8eef4", "#9fb4c8", "#5a7088", "#1a2230", "#e8b24a"],
   medal:   ["#d84040", "#902828", "#f0c840", "#b07818", "#2a1408", "#fff4c0"],
   chalk:   ["#eef2e6", "#2e5a44", "#7a4a28", "#1a120c", "#f0d050", "#c8d8c8"],
@@ -744,6 +752,25 @@ const GEN = {
     if (d < 4) return 0;
     return ((x >> 2) + (y >> 2)) % 2 ? 1 : (Math.abs(x - 24) + Math.abs(y - 16)) % 6 < 2 ? 3 : 2;
   }),
+  // The parking lot out front (Joe 10/12): asphalt, its sidewalk, the hedge round it, the museum's brick front and glass doors.
+  lot_asphalt: () => fillFn(mk(16, 16), (x, y) => { const h = hash(x, y) % 19; return h === 0 ? 2 : h === 1 ? 4 : (hash(x >> 1, y >> 1) % 3 === 0 ? 1 : 0); }),
+  lot_sidewalk: () => fillFn(mk(16, 16), (x, y) => (x === 15 || y === 15 ? 3 : x === 0 || y === 0 ? 4 : hash(x, y) % 23 === 0 ? 1 : hash(x, y) % 29 === 0 ? 2 : 0)),
+  lot_hedge: () => fillFn(mk(16, 16), (x, y) => { const h = hash(x, y) % 7; return h === 0 ? 4 : h === 1 ? 2 : h === 2 ? 1 : (x + y) % 9 === 0 ? 3 : 0; }),
+  lot_stripe: () => fillFn(mk(16, 16), (x, y) => (x === 7 || x === 8 ? (hash(x, y) % 9 === 0 ? 2 : 1) : undefined)),
+  facade_roof: () => fillFn(mk(16, 16), (x, y) => (y >= 13 ? (y === 13 ? 4 : 3) : y % 5 === 0 ? 6 : 7)),
+  facade_upper: () => fillFn(mk(16, 16), (x, y) => { const row = y >> 2, off = row % 2 ? 4 : 0; return y % 4 === 3 || (x + off) % 8 === 7 ? 1 : hash((x + off) >> 3, row) % 5 === 0 ? 2 : 0; }),
+  facade_lower: () => fillFn(mk(16, 16), (x, y) => { if (y >= 11) return y === 11 ? 4 : y === 15 ? 6 : (x % 8 === 7 ? 6 : 5); const row = y >> 2, off = row % 2 ? 4 : 0; return y % 4 === 3 || (x + off) % 8 === 7 ? 1 : hash((x + off) >> 3, row + 3) % 5 === 0 ? 2 : 0; }),
+  glass_door_upper: () => fillFn(mk(16, 16), (x, y) => (x >= 1 && x <= 14 && y >= 2 ? (x <= 1 || x >= 14 || y <= 2 ? 1 : (x - y + 20) % 9 === 0 || (x - y + 20) % 9 === 1 ? 3 : 2) : undefined)),
+  glass_door_lower: () => fillFn(mk(16, 16), (x, y) => (x >= 1 && x <= 14 ? (x <= 1 || x >= 14 || y >= 15 ? 1 : y === 6 && x >= 10 && x <= 12 ? 4 : y >= 12 ? 5 : (x - y + 36) % 9 === 0 ? 3 : 2) : undefined)),
+  parked_car: () => { // a little red car parked facing you, after the ones in Pallet Town's driveways
+    const a = mk(32, 32);
+    rect(a, 3, 22, 6, 8, 1); rect(a, 23, 22, 6, 8, 1); // front tires
+    rect(a, 2, 12, 28, 14, 2); rect(a, 2, 24, 28, 3, 3); rect(a, 6, 2, 20, 11, 2); rect(a, 8, 3, 16, 1, 6); // body, bumper, cabin, roof shine
+    rect(a, 8, 6, 16, 7, 4); px(a, 10, 7, 8); px(a, 11, 7, 8); px(a, 10, 8, 8); // windshield, with a glint
+    rect(a, 4, 17, 5, 3, 5); rect(a, 23, 17, 5, 3, 5); rect(a, 12, 18, 8, 2, 3); rect(a, 13, 22, 6, 2, 8); // headlights, grille, plate
+    rect(a, 2, 12, 28, 1, 6); return outline(a, 7);
+  },
+  museum_sign: () => { const a = mk(64, 32); rect(a, 1, 4, 62, 26, 1); rect(a, 1, 4, 62, 1, 3); rect(a, 1, 29, 62, 1, 3); rect(a, 1, 4, 1, 26, 3); rect(a, 62, 4, 1, 26, 3); rect(a, 6, 30, 2, 2, 2); rect(a, 56, 30, 2, 2, 2); return a; }, // the board; the logo's drawn on it
   planter: () => {
     const a = mk(16, 16);
     [[4, 5, 3], [8, 3, 3.5], [12, 5, 3], [6, 7, 2.5], [10, 7, 2.5]].forEach(([x, y, r]) => circ(a, x, y, r, 4));
@@ -1295,6 +1322,17 @@ const SLOTS = [
   { key: "aisle_light", label: "Hallway floor light", group: "Screening nook", w: 4, h: 3, pal: "aisle", gen: GEN.aisle_light, note: "A little light by the wall along the theater hallway's floor (mirrored on the right). Drawn over the dark, with a soft glow." },
   { key: "theater_screen", label: "Screening nook screen", group: "Screening nook", w: 96, h: 48, frames: 2, pal: "screen", gen: GEN.theater_screen, note: "2 frames (192×48), six tiles wide and three tall (both wall rows and the wall cap above). The picture is the 80×45 window at (8, 2): the episode playing this hour shows there, muted, when it can; otherwise it flickers softly between the frames." },
   { key: "planter_wide", label: "Long planter", group: "Furniture", w: 32, h: 16, pal: "trinket", gen: GEN.planter_wide, note: "Two tiles wide. A leafy planter box with a few flowers, for dividing a room or blocking a spot." },
+  { key: "lot_asphalt", label: "Parking lot asphalt", group: "Out front", w: 16, h: 16, pal: "lot", gen: GEN.lot_asphalt, note: "The parking lot you start in. Tiles seamlessly." },
+  { key: "lot_sidewalk", label: "Sidewalk", group: "Out front", w: 16, h: 16, pal: "walk", gen: GEN.lot_sidewalk, note: "In front of the museum's doors." },
+  { key: "lot_hedge", label: "Hedge", group: "Out front", w: 16, h: 16, pal: "hedge", gen: GEN.lot_hedge, note: "Round the parking lot's edges, seen from above." },
+  { key: "lot_stripe", label: "Parking stripe", group: "Out front", w: 16, h: 16, pal: "stripe", gen: GEN.lot_stripe, note: "Painted over the asphalt. " + OVER_NOTE },
+  { key: "facade_roof", label: "Museum roof edge", group: "Out front", w: 16, h: 16, pal: "facade", gen: GEN.facade_roof },
+  { key: "facade_upper", label: "Museum front, upper row", group: "Out front", w: 16, h: 16, pal: "facade", gen: GEN.facade_upper },
+  { key: "facade_lower", label: "Museum front, lower row", group: "Out front", w: 16, h: 16, pal: "facade", gen: GEN.facade_lower },
+  { key: "glass_door_upper", label: "Glass doors, upper half", group: "Out front", w: 16, h: 16, pal: "glassdr", gen: GEN.glass_door_upper, note: "The museum's front doors from outside (two side by side). " + OVER_NOTE },
+  { key: "glass_door_lower", label: "Glass doors, lower half", group: "Out front", w: 16, h: 16, pal: "glassdr", gen: GEN.glass_door_lower, note: OVER_NOTE },
+  { key: "parked_car", label: "Parked car", group: "Out front", w: 32, h: 32, pal: "car", gen: GEN.parked_car, note: "Two tiles wide, two tall, in the parking lot." },
+  { key: "museum_sign", label: "Museum sign", group: "Out front", w: 64, h: 32, pal: "sign", gen: GEN.museum_sign, note: "Above the glass doors. The GOQ Museum logo is drawn on it." },
   { key: "planter", label: "Planter", group: "Gift shop and café", w: 16, h: 16, pal: "trinket", gen: GEN.planter, note: "A row of these divides the shop from the café." },
   { key: "cat_bed", label: "Cat bed", group: "The cat", w: 16, h: 16, pal: "cat", gen: GEN.cat_bed },
   { key: "cat", label: "The museum cat", group: "The cat", w: 16, h: 16, frames: 3, pal: "cat", gen: GEN.cat, note: "3 frames side by side (48×16): asleep, asleep breathing in, awake for a pet." },
@@ -1680,6 +1718,32 @@ function paintingGrid(p) {
    Map legend: # wall top  ^ upper wall  v lower wall  . floor  = runner
                D/d doorway  S/s staff door  E front doors  B doorway in the bottom wall */
 const ROOMS = {
+  /* Out front (Joe 10/12): a tiny parking lot where every visit starts, before there's any museum time. Calm, and lit by the
+     real time of day. The glass doors take you in, to wherever you'd have started (where you saved, the lobby, the tutorial). */
+  outside: {
+    name: "Out front", art: { top: "lot_hedge", upper: "facade_upper", lower: "facade_lower", floor: "lot_asphalt", roof: "facade_roof", walkway: "lot_sidewalk" },
+    map: [
+      "RRRRRRRRRRRRRRRR",
+      "^^^^^^^^^^^^^^^^",
+      "^^^^^^^GG^^^^^^^",
+      "vvvvvvvggvvvvvvv",
+      ",,,,,,,,,,,,,,,,",
+      "................",
+      "...|...|...|....",
+      "...|...|...|....",
+      "................",
+      "################",
+    ],
+    spawn: [8, 8, "up"], stairs: [], glows: [[7, 3], [8, 3]], // the doors' light, after dark
+    props: [
+      { key: "museum_sign", x: 6, y: 1, say: ["GOQ MUSEUM", "Games, framed."] },
+      { key: "planter", x: 5, y: 4, say: ["A planter by the doors. Somebody waters it. Probably the Janitor."] },
+      { key: "planter", x: 10, y: 4, say: ["A planter. A bee's been at the flowers."] },
+      { key: "parked_car", x: 4, y: 7, tall: true, blockTop: true, say: ["A little red car.", "There's a GOQ sticker on the back window."] },
+    ],
+    events: [{ x: 7, y: 3, enterMuseum: true, bump: true }, { x: 8, y: 3, enterMuseum: true, bump: true }],
+    light: { dim: 0, spots: 0 },
+  },
   lobby: {
     name: "Lobby", art: { top: "lobby_wall_top", upper: "lobby_wall_upper", lower: "lobby_wall_lower", floor: "lobby_floor", runner: "lobby_runner" },
     map: [
@@ -2586,7 +2650,7 @@ const CROWD_LINES = [["What a nice museum."], ["I come here on my lunch break."]
   ["My friend told me about this place."], ["Honestly, I'm mostly here for the café."], ["Is it me, or is it busy today?"], ["I didn't know games could go in museums."],
   ["I've been standing here a while.", "I think I get it now. Maybe."], ["The café smells amazing from here."]];
 /* Extra dimness per room after dark, on top of the room's own lighting. */
-const NIGHT_DIM = { lobby: 0.2, museum: 0.12, staff: 0.08, storage: 0.05 };
+const NIGHT_DIM = { lobby: 0.2, museum: 0.12, staff: 0.08, storage: 0.05, outside: 0.6 }; // out front, the real time of day shows most
 /* ---------- The museum's layout ----------
    A room with a "layout" is drawn from a blueprint instead of by hand:
      rooms: [{ id, name, x, y, w, h, art, light }]   rectangles of floor (x, y is the top-left floor tile). light: false = no switch.
@@ -2764,7 +2828,9 @@ function applyRooms(rooms) {
 }
 const MAP_TILE = { " ": [null], "#": ["top"], "^": ["upper"], "v": ["lower"], ".": ["floor"], "=": ["runner"],
   "D": ["upper", "doorway_upper"], "d": ["lower", "doorway_lower"], "S": ["upper", "staff_door_upper"], "s": ["lower", "staff_door_lower"],
-  "E": ["top", "exit_door"], "B": ["top", "doorway_bottom"], "H": ["top", "doorway_side"] };
+  "E": ["top", "exit_door"], "B": ["top", "doorway_bottom"], "H": ["top", "doorway_side"],
+  "R": ["roof"], "G": ["upper", "glass_door_upper"], "g": ["lower", "glass_door_lower"], ",": ["walkway"], "|": ["floor", "lot_stripe"] }; // (the parking lot out front)
+const WALK_TILES = ".=,|"; // the map characters you can walk on
 
 /* A piece's state in its spot: "wall" (hanging), "covered" (sheet, before its unveil date),
    or "crate" (curator mode, before its unveil date, until the curator hangs it). */
@@ -2949,7 +3015,7 @@ function buildRoom(id, pieces, o) {
     // Colors: a room's floor and wall tints, and a hallway's walls blending from the room at one end to the room at the other.
     const part = m[0] === "floor" ? "floor" : m[0] === "upper" || m[0] === "lower" ? "wall" : null;
     if (part && r.tiles[y][x]) { const t = tintAt(def, lay, z, part, x, y, o.genres); if (t) r.tiles[y][x] += "@" + t; }
-    r.solid[y][x] = ch !== "." && ch !== "=";
+    r.solid[y][x] = !WALK_TILES.includes(ch);
   }
   (def.props || []).forEach(p => {
     r.props.push({ key: p.key, x: p.x, y: p.y, plant: p.plant, mugShelf: p.mugShelf, sit: p.sit, rack: p.rack, unit: p.unit, collection: p.collection, catBed: p.catBed, tall: p.tall });
@@ -3113,8 +3179,8 @@ const MENU_MODES = new Set(["choice", "shop", "cafe", "album", "items", "binder"
 
 /* Keyboard controls you can change (Joe 10/12): two keys per action. Esc (pause, and back out of anything) and Backspace (back
    in menus) always work and can't be taken, so nobody locks themselves out; picking a key another action has swaps the two. */
-const KEY_ACTIONS = [["up", "Move up"], ["down", "Move down"], ["left", "Move left"], ["right", "Move right"], ["a", "A: look, talk, read"], ["b", "B: photo, back"], ["start", "Pause"], ["hurry", "Hurry (hold)"]];
-const DEFAULT_KEYS = { up: ["ArrowUp", "KeyW"], down: ["ArrowDown", "KeyS"], left: ["ArrowLeft", "KeyA"], right: ["ArrowRight", "KeyD"], a: ["KeyZ", "Space"], b: ["KeyX", "KeyK"], start: ["Enter", "KeyP"], hurry: ["ShiftLeft", "ShiftRight"] };
+const KEY_ACTIONS = [["up", "Move up"], ["down", "Move down"], ["left", "Move left"], ["right", "Move right"], ["a", "A: look, talk, read"], ["b", "B: photo, back"], ["start", "Pause"]];
+const DEFAULT_KEYS = { up: ["ArrowUp", "KeyW"], down: ["ArrowDown", "KeyS"], left: ["ArrowLeft", "KeyA"], right: ["ArrowRight", "KeyD"], a: ["KeyZ", "Space"], b: ["KeyX", "KeyK"], start: ["Enter", "KeyP"] };
 const KEY_OK = c => /^(Key[A-Z]|Digit\d|Numpad\w+|Arrow(Up|Down|Left|Right)|Space|Enter|Shift(Left|Right)|Control(Left|Right)|Semicolon|Quote|Comma|Period|Slash|Backslash|BracketLeft|BracketRight|Minus|Equal|Backquote)$/.test(c);
 const keyName = c => ({ ArrowUp: "\u2191", ArrowDown: "\u2193", ArrowLeft: "\u2190", ArrowRight: "\u2192", Space: "Space", Enter: "Enter", ShiftLeft: "Left Shift", ShiftRight: "Right Shift", ControlLeft: "Left Ctrl", ControlRight: "Right Ctrl", Semicolon: ";", Quote: "'", Comma: ",", Period: ".", Slash: "/", Backslash: "\\", BracketLeft: "[", BracketRight: "]", Minus: "-", Equal: "=", Backquote: "`" })[c] || c.replace(/^Key|^Digit/, "").replace(/^Numpad/, "Num ");
 
@@ -3142,12 +3208,15 @@ class Game {
     this.ready = null;
     // Pick up where you saved (Start, then Save), otherwise at the front doors.
     const w = this.saveKey && this.progress.where;
-    if (w && this.rooms[w.room] && this.rooms[w.room].solid[w.y] && this.rooms[w.room].solid[w.y][w.x] === false) this.enterRoom(w.room, w.x, w.y, w.dir, true);
-    else { const sp = ROOMS.lobby.spawn; this.enterRoom("lobby", sp[0], sp[1], sp[2], true); }
-    if (this.staff && this.staff.curator && this.rooms.office && !this.curator) { const sp = ROOMS.office.spawn; this.enterRoom("office", sp[0], sp[1], sp[2], true); } // the curator starts in their office
+    const go = () => {
+      if (w && w.room !== "outside" && this.rooms[w.room] && this.rooms[w.room].solid[w.y] && this.rooms[w.room].solid[w.y][w.x] === false) this.enterRoom(w.room, w.x, w.y, w.dir, true);
+      else { const sp = ROOMS.lobby.spawn; this.enterRoom("lobby", sp[0], sp[1], sp[2], true); }
+      if (this.staff && this.staff.curator && this.rooms.office && !this.curator) { const sp = ROOMS.office.spawn; this.enterRoom("office", sp[0], sp[1], sp[2], true); } // the curator starts in their office
+    };
+    if (this.outsideStart()) { this.entryFn = go; const sp = ROOMS.outside.spawn; this.enterRoom("outside", sp[0], sp[1], sp[2], true); } else go(); // every visit starts out front (Joe 10/12)
     this.applyRecording();
     this.ready = this.setPack(pack); this.updateHud();
-    this.ready.then(() => { this.started = true; if (this.needTutorial()) this.startTutorial(); }); // a new player starts with the tutorial
+    this.ready.then(() => { this.started = true; if (this.needTutorial() && !this.outsideNow()) this.startTutorial(); }); // a new player starts with the tutorial
     this.markDay();
     setTimeout(() => { if (!this.tut && !this.needTutorial()) this.showLoc("GOQ Museum: " + (this.zone ? this.zone.name : this.room.name), "place"); }, 400);
     this.last = performance.now(); this.acc = 0;
@@ -3191,7 +3260,7 @@ class Game {
     if (sig !== this.assetSig) { this.cache = {}; this.assetSig = sig; } else for (const k in this.cache) if (k.includes("|")) delete this.cache[k];
     this.pack = pack; this.overrides = ov; this.pieceImgs = pi;
     this.rebuild(); this.refreshBoard(true); this.refreshNotes(true);
-    if (this.started && !this.tut && this.mode === "walk" && this.needTutorial()) this.startTutorial(); // the site's pack arrived with a newer tutorial than the saved one
+    if (this.started && !this.tut && this.mode === "walk" && this.needTutorial() && !this.outsideNow()) this.startTutorial(); // the site's pack arrived with a newer tutorial than the saved one
     const tb = `url("${this.src("textbox")}")`;
     [this.el.text, this.el.choice, this.el.badgeForm, this.el.noteForm, this.el.shop, this.el.album, this.el.reader].forEach(e => (e.style.borderImageSource = tb));
   }
@@ -3294,7 +3363,6 @@ class Game {
       if (this.nkb && e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && !isField(e.target)) { e.preventDefault(); this.nkbToNative(e.key); return; }
       if (this.rebind && !isField(e.target)) { e.preventDefault(); this.rebindKey(e.code); return; } // changing a control: the next key
       const k = this.keyFor(e.code); if (!k || isField(e.target) || e.target.tagName === "BUTTON" && (k === "a" || k === "start")) return;
-      if (k === "hurry") { this.hurryKey = true; e.preventDefault(); return; } // held, not pressed
       if (this.capture === "focus" && document.activeElement !== this.wrap) return;
       e.preventDefault(); if (e.repeat) return;
       this.lastInput = "keyboard";
@@ -3303,8 +3371,8 @@ class Game {
       if (DIRS[k]) { this.held = this.held.filter(d => d !== k); this.held.push(k); }
       this.queue.push(this.swapAB && (k === "a" || k === "b") ? (k === "a" ? "b" : "a") : k); // Settings: Swap A and B
     });
-    window.addEventListener("keyup", e => { const k = this.keyFor(e.code); if (k && DIRS[k]) this.held = this.held.filter(d => d !== k); if (k === "hurry") this.hurryKey = false; });
-    window.addEventListener("blur", () => { this.held = []; this.virt = []; this.hurryKey = false; });
+    window.addEventListener("keyup", e => { const k = this.keyFor(e.code); if (k && DIRS[k]) this.held = this.held.filter(d => d !== k); });
+    window.addEventListener("blur", () => { this.held = []; this.virt = []; });
     this.wrap.addEventListener("pointerdown", e => {
       this.wrap.focus({ preventScroll: true });
       if (e.target === this.canvas) this.tapStart = { x: e.clientX, y: e.clientY, t: performance.now() };
@@ -3403,12 +3471,10 @@ class Game {
     dirs.filter(d => !was.includes(d)).forEach(d => this.hold(d, true, "pad"));
     this.padDirs = dirs;
     const now = { a: b(this.swapAB ? 1 : 0), b: b(this.swapAB ? 0 : 1), start: b(9) || b(8) }, prev = this.padPrev || {};
-    this.hurryPad = b(4) || b(5) || b(6) || b(7); // a shoulder button or trigger: hurry
     for (const k in now) if (now[k] && !prev[k]) this.press(k, "pad");
     if (!this.padSeen && (dirs.length || now.a || now.b || now.start)) { this.padSeen = true; this.showLoc("Controller connected"); }
     this.padPrev = now;
   }
-  hurrying() { return !!(this.hurryKey || this.hurryPad) && this.mode === "walk" && !this.fol; } // Shift, or a shoulder button: twice the pace (not with someone following you)
   heldDir() { const all = this.held.concat(this.virt); return all.length ? all[all.length - 1] : null; }
 
   /* ----- UI ----- */
@@ -4178,9 +4244,10 @@ class Game {
     this.spook = null; this.figure = null; this.hideEnd(); this.trans = null; this.fade = 0; this.mode = "walk"; this.microwaved = false;
     this.rebuild();
     const w = this.endKind === "brb" && this.progress.where;
-    if (w && this.rooms[w.room]) this.enterRoom(w.room, w.x, w.y, w.dir); else { const sp = ROOMS.lobby.spawn; this.enterRoom("lobby", sp[0], sp[1], sp[2]); }
+    const go = () => { if (w && w.room !== "outside" && this.rooms[w.room]) this.enterRoom(w.room, w.x, w.y, w.dir); else { const sp = ROOMS.lobby.spawn; this.enterRoom("lobby", sp[0], sp[1], sp[2]); } };
+    if (this.outsideStart()) { this.entryFn = go; const sp = ROOMS.outside.spawn; this.enterRoom("outside", sp[0], sp[1], sp[2]); } else go(); // back out front, like any start
     this.wrap.focus({ preventScroll: true });
-    if (this.needTutorial()) this.startTutorial(); // quit in the middle of it: it starts over
+    if (this.needTutorial() && !this.outsideNow()) this.startTutorial(); // quit in the middle of it: it starts over
     this.markDay();
   }
   /* ----- staff -----
@@ -4210,23 +4277,40 @@ class Game {
      so nothing that reads like a real time). A little round face in the game's bottom-left corner, away from the tokens and
      the chore count: four colored quarters (settling in, getting busy, the rush, winding down), the ones gone by bright, a
      hand sweeping round; once the loop's over, a moon. Not in the chill museum, the tutorial or recording. */
+  signImg() { if (!this._sign) { const im = new Image(); im.onload = () => { this._signOk = true; }; im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(this.museumLogo(false)); this._sign = im; } return this._signOk ? this._sign : null; }
+  outsideStart() { return !this.curator && !!this.saveKey && !this.headless && !this.recording() && !!this.rooms.outside; } // every visit starts out front (not the curator's preview)
+  enterMuseum() { // through the glass doors: to wherever you'd have started
+    const go = this.entryFn || (() => { const sp = ROOMS.lobby.spawn; this.enterRoom("lobby", sp[0], sp[1], sp[2]); }); this.entryFn = null;
+    this.mode = "busy"; this.trans = { t: 0, dur: 14, switched: false, fn: go, after: () => { this.dialK = undefined; if (this.needTutorial()) this.startTutorial(); } };
+  }
+  outsideNow() { return !!(this.room && this.room.id === "outside"); } // the parking lot out front: no museum time there
   drawDayDial() {
-    if (!this.rooms || !this.rooms.museum || this.tut || this.chillOn() || this.recording() || !this.pack || this.headless) return;
+    if (!this.rooms || !this.rooms.museum || this.tut || this.chillOn() || this.recording() || !this.pack || this.headless || this.outsideNow()) return;
     const ctx = this.ctx, d = this.director(), R = 7, x = 4 + R + 1, y = SH - 4 - R - 1, f = Math.min(1, d.min / d.minutes);
-    ctx.save(); ctx.globalAlpha = 0.92;
-    ctx.fillStyle = "#1a1626"; ctx.beginPath(); ctx.arc(x, y, R + 2, 0, Math.PI * 2); ctx.fill();
+    const cols = ["#f2d478", "#f0a24a", "#e2604a", "#9a6ad0"], k = d.over ? 4 : d.beat, name = d.over ? "After hours" : BEATS[d.beat], col = d.over ? "#3a4270" : cols[d.beat];
+    ctx.save();
+    ctx.globalAlpha = 0.92; ctx.fillStyle = "#1a1626"; ctx.beginPath(); ctx.arc(x, y, R + 2, 0, Math.PI * 2); ctx.fill();
     if (d.over) { // after hours: a moon
       ctx.fillStyle = "#2a3050"; ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = "#f0e6b0"; ctx.beginPath(); ctx.arc(x, y, R - 2, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = "#2a3050"; ctx.beginPath(); ctx.arc(x + 3, y - 2, R - 2, 0, Math.PI * 2); ctx.fill();
     } else {
-      const cols = ["#f2d478", "#f0a24a", "#e2604a", "#9a6ad0"];
-      for (let q = 0; q < 4; q++) { const a0 = -Math.PI / 2 + q * Math.PI / 2, a1 = a0 + Math.PI / 2; ctx.globalAlpha = q < d.beat ? 0.95 : q === d.beat ? 0.95 : 0.3; ctx.fillStyle = cols[q]; ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, R, a0, a1); ctx.closePath(); ctx.fill(); }
+      for (let q = 0; q < 4; q++) { const a0 = -Math.PI / 2 + q * Math.PI / 2, a1 = a0 + Math.PI / 2; ctx.globalAlpha = q === d.beat ? 1 : 0.16; ctx.fillStyle = cols[q]; ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, R, a0, a1); ctx.closePath(); ctx.fill(); } // only the part of the day it's in, solid (Joe 10/12)
       ctx.globalAlpha = 1; const a = -Math.PI / 2 + f * Math.PI * 2; ctx.strokeStyle = "#fffaf0"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * (R - 1), y + Math.sin(a) * (R - 1)); ctx.stroke();
       ctx.fillStyle = "#fffaf0"; ctx.fillRect(x - 1, y - 1, 2, 2);
     }
+    // Its label beside it: white with a black outline, on a box in the part's color. Curator, Visitors tab: always showing,
+    // or sliding up from the bottom when the part of the day changes (or you come in), for a few seconds.
+    if (this.dialK !== k) { this.dialK = k; this.dialShow = this.t; }
+    const mode = (this.pack.settings.visit || {}).dialLabel || "slide", age = this.t - (this.dialShow === undefined ? -9999 : this.dialShow), HOLD = 240, IN = 18;
+    let off = 0; if (mode === "slide") { if (age >= HOLD + IN * 2) { ctx.restore(); return; } off = age < IN ? 1 - age / IN : age > HOLD + IN ? (age - HOLD - IN) / IN : 0; }
+    ctx.globalAlpha = 1; ctx.font = "bold 8px monospace"; ctx.textBaseline = "middle";
+    const w = Math.ceil(ctx.measureText(name).width) + 8, bx = x + R + 5, by = y - 6 + Math.round(off * 26);
+    ctx.fillStyle = "#1a1626"; ctx.fillRect(bx - 1, by - 1, w + 2, 14); ctx.fillStyle = col; ctx.fillRect(bx, by, w, 12);
+    ctx.lineWidth = 2; ctx.strokeStyle = "#000"; ctx.lineJoin = "round"; ctx.strokeText(name, bx + 4, by + 6.5); ctx.fillStyle = "#fff"; ctx.fillText(name, bx + 4, by + 6.5);
     ctx.restore();
   }
+
   /* Chores on this badge's tally. Kept in the browser, so closing up and reopening never resets it. */
   staffChores() {
     const s = this.staff, t = s && this.progress.staffTally[s.badge]; if (!t) return 0;
@@ -5711,7 +5795,7 @@ class Game {
     const over = !V.repeat && d.t >= LOOP, t = over ? LOOP - 1 : d.t % LOOP, loop = V.repeat ? Math.floor(d.t / LOOP) : 0; // once per visit (Joe 10/9), unless it repeats
     const min = t / 3600, beat = Math.min(3, Math.floor(min / (V.minutes / 4))), day = this.weekday(), today = todayISO();
     const unveiling = !!(this.pack && this.pack.pieces.some(p => p.unveil === today));
-    const running = !over && !d.paused && !this.tut && !this.closing; // the loop keeps going at night (Joe 10/9); it stops for closing and the tutorial
+    const running = !over && !d.paused && !this.tut && !this.closing && !this.outsideNow(); // (none out front) // the loop keeps going at night (Joe 10/9); it stops for closing and the tutorial
     const key = today + ":" + day + ":" + loop;
     // Every problem, every loop (Joe 10/10: like Majora's Mask, the day changes their shape, not whether they happen;
     // the timeline spaces them out so a player can learn the rhythm and prevent them all).
@@ -7039,9 +7123,9 @@ class Game {
   showControls(back) {
     const sw = this.swapAB, A = sw ? "B" : "A", B = sw ? "A" : "B", KB = this.keyBinds(), kn = a => KB[a].map(keyName).join(" or "); // your keys (Settings, Controls)
     const pages = {
-      keyboard: { label: "KEYBOARD", text: "Move: " + ["up", "down", "left", "right"].map(d => KB[d].map(keyName).join(" or ")).join(", ") + ". Hurry: hold " + kn("hurry") + ". " + A + " (look, talk, read): " + kn("a") + ". " + B + " (photo, and back in menus): " + kn("b") + ". Back in menus: Backspace. Pause: " + kn("start") + " or Esc. In a menu, hold up or down to scroll; Esc closes it. Change the keys in Settings, Controls." + (sw ? " (A and B are swapped in Settings.)" : "") },
+      keyboard: { label: "KEYBOARD", text: "Move: " + ["up", "down", "left", "right"].map(d => KB[d].map(keyName).join(" or ")).join(", ") + ". " + A + " (look, talk, read): " + kn("a") + ". " + B + " (photo, and back in menus): " + kn("b") + ". Back in menus: Backspace. Pause: " + kn("start") + " or Esc. In a menu, hold up or down to scroll; Esc closes it. Change the keys in Settings, Controls." + (sw ? " (A and B are swapped in Settings.)" : "") },
       touch: { label: "TOUCH", text: "Move with the on-screen pad. A looks, talks and reads. B takes a photo, and goes back in menus. START pauses. With Tap to walk on (Settings), tap where you want to go, or tap something to walk over and use it." },
-      pad: { label: "CONTROLLER", text: "Move: D-pad or left stick. Hurry: hold a shoulder button. " + A + " (look, talk, read): the bottom button. " + B + " (photo, and back in menus): the right button. Pause: Start or Select. Writing a note shows a keyboard: the D-pad picks a key, A types it, B deletes, Start sends." + (sw ? " (A and B are swapped in Settings.)" : "") },
+      pad: { label: "CONTROLLER", text: "Move: D-pad or left stick. " + A + " (look, talk, read): the bottom button. " + B + " (photo, and back in menus): the right button. Pause: Start or Select. Writing a note shows a keyboard: the D-pad picks a key, A types it, B deletes, Start sends." + (sw ? " (A and B are swapped in Settings.)" : "") },
     };
     const first = this.lastInput === "pad" ? "pad" : this.lastInput === "touch" ? "touch" : "keyboard";
     this.read({ title: "CONTROLS", sections: [first, ...["keyboard", "touch", "pad"].filter(k => k !== first)].map(k => pages[k]), menu: true }, back || (() => this.openMenu()));
@@ -7370,6 +7454,7 @@ class Game {
   runEvent(e) {
     if (ROOMS[this.room.id] && ROOMS[this.room.id].tutorial && this.tutEvent(e)) return;
     if (e.tutorial) { this.choose(this.tx("tut.door").join(" "), ["Yes", "Not now"], i => { if (i === 0) this.startTutorial(true); }, 1); return; }
+    if (e.enterMuseum) { this.enterMuseum(); return; }
     if (e.staffDoor) { this.staffDoor(e); return; }
     if (e.shopDoor) { this.shopDoor(e); return; }
     if (e.warp) this.warp(...e.warp);
@@ -7509,7 +7594,7 @@ class Game {
     if (c.slow && (this.t & 1)) return false; // the night guard strolls at half speed
     if (c !== this.player && !c.slow && !c.follow && !(c.tagging && c.hurry)) { const ps = this.pack.settings.staff.patronSpeed, sp = c.leaving && !c.stroll ? Math.min(1, ps * 1.35) : ps; c.spd = (c.spd || 0) + sp; if (c.spd < 1) return false; c.spd -= 1; } // patrons: slower than you; heading out (the closing announcement) only a little brisker, not a stampede
     const behind = c.follow && c !== this.player && Math.abs(c.x - this.player.x) + Math.abs(c.y - this.player.y) > 1; // a follower who's dropped back catches up (they keep your pace)
-    if ((c.prog += (c === this.player && (this.segway || this.hurrying())) || behind ? 2 : 1) >= T) {
+    if ((c.prog += (c === this.player && this.segway) || behind ? 2 : 1) >= T) {
       c.x += DIRS[c.dir][0]; c.y += DIRS[c.dir][1]; c.prog = 0; c.moving = false;
       if (c === this.player) {
         if (!this.full && this.progress.stats) this.progress.stats.steps++;
@@ -9120,6 +9205,9 @@ class Game {
     const px0 = p.x * T - cx, py0 = p.y * T - (SLOT[k].h - T) - cy;
     if (k === "bench_side") { this.drawFlip(k, p.sit === "right", px0, py0); return; } // whoever sits on it is drawn over both seats
     this.drawSlot(k, k === "microwave_counter" ? (this.microwaved ? 1 : 0) : k === "office_tv" ? (this.tvOn ? 1 : 0) : this.frame(k), 0, px0, py0);
+    if (k === "museum_sign") { const im = this.signImg(), X = Math.round(px0), Y = Math.round(py0); // the GOQ Museum logo, over the doors out front
+      if (im) ctx.drawImage(im, X + 6, Y + 5, 52, 23); ctx.fillStyle = "#1c1620"; ctx.fillRect(X + 3, Y + 21, 58, 8); // (its own MUSEUM is too small to read here: ours, bigger)
+      ctx.font = "bold 7px monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = "#e8505e"; ctx.fillText("M U S E U M", X + 32, Y + 25); ctx.textAlign = "start"; }
     if (k === "front_desk" && this.room.id === "lobby" && this.notesHere()) ctx.drawImage(this.notesIcon(), Math.round(px0 + 2 * T + 3), Math.round(py0 + 2)); // the curator's field notes, left on the end of the desk
     if (k === "microwave_counter" && this.boomT > 0) { const f = Math.floor((30 - this.boomT) / 5); if (f < 4) { this.drawSlot("sparkle", f, 0, px0 + 2, py0 - 8); this.drawSlot("sparkle", (f + 1) % 4, 0, px0 + 10, py0 - 4); } }
     if (p.unit !== undefined && !(this.sup && this.sup.stocking && this.sup.emptyUnit === p.unit)) ctx.drawImage(this.unitLayer(p.unit), Math.round(px0), Math.round(py0)); // the stacks, drawn once and placed on whole pixels (no shimmer as you walk)
@@ -9561,7 +9649,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 36";
+const VERSION = "2026-11-18 cards 37";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

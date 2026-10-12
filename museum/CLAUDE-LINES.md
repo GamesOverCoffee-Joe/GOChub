@@ -286,3 +286,7 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Gift shop | The Sell cards row | The shop buys trading cards back, at half what they cost. Real ones only. |
 | Days of the week | Saturday: Bluu's Sell cards row | Bluu buys cards back. Half price. He doesn't ask where they came from, and you don't ask where they're going. |
 | Gift shop | Selling the only copy of a card | That's your only {title} card. Sell it anyway? |
+| Out front | The museum sign | GOQ MUSEUM / Games, framed. |
+| Out front | Left planter | A planter by the doors. Somebody waters it. Probably the Janitor. |
+| Out front | Right planter | A planter. A bee's been at the flowers. |
+| Out front | The red car | A little red car. / There's a GOQ sticker on the back window. |
