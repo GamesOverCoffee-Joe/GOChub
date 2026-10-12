@@ -3470,29 +3470,29 @@ class Game {
 .gt-card-cap.rare{color:#fff4c8;text-shadow:0 0 calc(4px * var(--s)) #ffd860,0 0 calc(2px * var(--s)) #ff8ab8}
 .gt-card-hint{font-family:var(--pixel, monospace);font-size:calc(4px * var(--s));color:#c8b898;max-width:calc(150px * var(--s));text-align:center;line-height:1.5}
 .gt-card{--g:#e8c070;position:relative;width:calc(104px * var(--s));height:calc(146px * var(--s));box-sizing:border-box;border-radius:calc(5px * var(--s));padding:calc(3px * var(--s));background:#7c2434;box-shadow:0 calc(3px * var(--s)) calc(8px * var(--s)) rgba(0,0,0,.6);flex:none;text-align:left}
-.gt-card .in{position:relative;height:100%;box-sizing:border-box;border-radius:calc(3px * var(--s));background:#141012;border:calc(1px * var(--s)) solid #e8c070;padding:calc(3.5px * var(--s));display:flex;flex-direction:column;overflow:hidden}
-.gt-card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:calc(3px * var(--s))}
-.gt-card .t{font-family:var(--pixel, monospace);font-size:calc(4.5px * var(--s));line-height:1.35;color:#f4dca0;text-shadow:calc(.5px * var(--s)) calc(.5px * var(--s)) 0 #000}
-.gt-card .no{font-family:var(--pixel, monospace);font-size:calc(3px * var(--s));color:#9a8060;white-space:nowrap}
-.gt-card .art{margin-top:calc(3px * var(--s));height:calc(53px * var(--s));flex:none;background:#000 center/cover;border:calc(1px * var(--s)) solid #e8c070;box-shadow:0 0 0 calc(1px * var(--s)) #4a1420;position:relative;overflow:hidden}
-.gt-card .accent{height:calc(1.5px * var(--s));margin-top:calc(3px * var(--s));flex:none;background:var(--g);border-radius:calc(1px * var(--s));box-shadow:0 0 calc(3px * var(--s)) var(--g)}
-.gt-card .bl{flex:1;margin-top:calc(3px * var(--s));font-family:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;font-style:italic;font-size:calc(5.5px * var(--s));line-height:1.3;color:#efe6d2;overflow:hidden}
-.gt-card .ep{margin:0 calc(-3.5px * var(--s));padding:calc(2.5px * var(--s)) calc(4px * var(--s));background:#7c2434;border-top:calc(.5px * var(--s)) solid #e8c070;border-bottom:calc(.5px * var(--s)) solid #e8c070;font-family:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;font-size:calc(4.5px * var(--s));line-height:1.25;color:#f4dca0;display:flex;gap:calc(2.5px * var(--s));align-items:center}
-.gt-card .ep b{color:#fbe7a8;font-size:calc(3.5px * var(--s))}
-.gt-card .foot{display:flex;justify-content:center;padding-top:calc(2.5px * var(--s))}
-.gt-card .foot svg{width:calc(38px * var(--s));height:auto;display:block}
+.gt-card .gtc-in{position:relative;height:100%;box-sizing:border-box;border-radius:calc(3px * var(--s));background:#141012;border:calc(1px * var(--s)) solid #e8c070;padding:calc(3.5px * var(--s));display:flex;flex-direction:column;overflow:hidden}
+.gt-card .gtc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:calc(3px * var(--s))}
+.gt-card .gtc-t{font-family:var(--pixel, monospace);font-size:calc(4.5px * var(--s));line-height:1.35;color:#f4dca0;text-shadow:calc(.5px * var(--s)) calc(.5px * var(--s)) 0 #000}
+.gt-card .gtc-no{font-family:var(--pixel, monospace);font-size:calc(3px * var(--s));color:#9a8060;white-space:nowrap}
+.gt-card .gtc-art{margin-top:calc(3px * var(--s));height:calc(53px * var(--s));flex:none;background:#000 center/cover;border:calc(1px * var(--s)) solid #e8c070;box-shadow:0 0 0 calc(1px * var(--s)) #4a1420;position:relative;overflow:hidden}
+.gt-card .gtc-accent{height:calc(1.5px * var(--s));margin-top:calc(3px * var(--s));flex:none;background:var(--g);border-radius:calc(1px * var(--s));box-shadow:0 0 calc(3px * var(--s)) var(--g)}
+.gt-card .gtc-bl{flex:1;margin-top:calc(3px * var(--s));font-family:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;font-style:italic;font-size:calc(5.5px * var(--s));line-height:1.3;color:#efe6d2;overflow:hidden}
+.gt-card .gtc-ep{margin:0 calc(-3.5px * var(--s));padding:calc(2.5px * var(--s)) calc(4px * var(--s));background:#7c2434;border-top:calc(.5px * var(--s)) solid #e8c070;border-bottom:calc(.5px * var(--s)) solid #e8c070;font-family:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;font-size:calc(4.5px * var(--s));line-height:1.25;color:#f4dca0;display:flex;gap:calc(2.5px * var(--s));align-items:center}
+.gt-card .gtc-ep b{color:#fbe7a8;font-size:calc(3.5px * var(--s))}
+.gt-card .gtc-foot{display:flex;justify-content:center;padding-top:calc(2.5px * var(--s))}
+.gt-card .gtc-foot svg{width:calc(38px * var(--s));height:auto;display:block}
 .gt-card.rare{background:conic-gradient(from var(--ga),#e8c070,#fff4c8,#ff8ab8,#8ad8ff,#c8ffb0,#fff4c8,#e8c070,#a87a30,#e8c070);animation:gtCardSpin 3.2s linear infinite}
-.gt-card.rare .in{border-color:#fff4c8}
-.gt-card.rare .in::after{content:"";position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 42%,rgba(255,250,220,.55) 50%,transparent 58%);transform:translateX(-70%);animation:gtCardSheen 3.2s ease-in-out infinite;pointer-events:none;mix-blend-mode:screen}
-.gt-card.rare .art::after{content:"";position:absolute;inset:0;background:linear-gradient(125deg,rgba(255,120,200,.22),rgba(120,220,255,.22),rgba(255,240,120,.22),rgba(255,120,200,.22));background-size:300% 300%;animation:gtCardHolo 3.2s linear infinite;mix-blend-mode:screen}
-.gt-card .spark{position:absolute;width:calc(4.5px * var(--s));height:calc(4.5px * var(--s));pointer-events:none;animation:gtCardTw 1.6s ease-in-out infinite}
-.gt-card .spark::before,.gt-card .spark::after{content:"";position:absolute;background:#fffbe8;left:calc(2px * var(--s));top:0;width:calc(.5px * var(--s));height:calc(4.5px * var(--s));box-shadow:0 0 calc(1.5px * var(--s)) #fff}
-.gt-card .spark::after{left:0;top:calc(2px * var(--s));width:calc(4.5px * var(--s));height:calc(.5px * var(--s))}
+.gt-card.rare .gtc-in{border-color:#fff4c8}
+.gt-card.rare .gtc-in::after{content:"";position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 42%,rgba(255,250,220,.55) 50%,transparent 58%);transform:translateX(-70%);animation:gtCardSheen 3.2s ease-in-out infinite;pointer-events:none;mix-blend-mode:screen}
+.gt-card.rare .gtc-art::after{content:"";position:absolute;inset:0;background:linear-gradient(125deg,rgba(255,120,200,.22),rgba(120,220,255,.22),rgba(255,240,120,.22),rgba(255,120,200,.22));background-size:300% 300%;animation:gtCardHolo 3.2s linear infinite;mix-blend-mode:screen}
+.gt-card .gtc-spark{position:absolute;width:calc(4.5px * var(--s));height:calc(4.5px * var(--s));pointer-events:none;animation:gtCardTw 1.6s ease-in-out infinite}
+.gt-card .gtc-spark::before,.gt-card .gtc-spark::after{content:"";position:absolute;background:#fffbe8;left:calc(2px * var(--s));top:0;width:calc(.5px * var(--s));height:calc(4.5px * var(--s));box-shadow:0 0 calc(1.5px * var(--s)) #fff}
+.gt-card .gtc-spark::after{left:0;top:calc(2px * var(--s));width:calc(4.5px * var(--s));height:calc(.5px * var(--s))}
 .gt-card.fake{background:#a04858;transform:rotate(-1.2deg)}
-.gt-card.fake .in{border-color:#d8cc48}
-.gt-card.fake .t{color:#e8e070}
-.gt-card.fake .art{filter:saturate(.55) hue-rotate(18deg);border-color:#d8cc48}
-.gt-card.fake .ep{background:#a04858}
+.gt-card.fake .gtc-in{border-color:#d8cc48}
+.gt-card.fake .gtc-t{color:#e8e070}
+.gt-card.fake .gtc-art{filter:saturate(.55) hue-rotate(18deg);border-color:#d8cc48}
+.gt-card.fake .gtc-ep{background:#a04858}
 @keyframes gtCardSpin{to{--ga:360deg}}
 @keyframes gtCardSheen{0%,15%{transform:translateX(-70%)}55%,100%{transform:translateX(70%)}}
 @keyframes gtCardHolo{to{background-position:300% 300%}}
@@ -5905,19 +5905,19 @@ class Game {
   }
   /* One card as a DOM element (the card view, the binder, the curator's Cards tab). kind: c common, r rare, f fake. */
   cardElement(p, kind) {
-    const L = this.cardList(), no = Math.max(1, L.indexOf(p) + 1), mk2 = (cls, parent, tag) => { const e = document.createElement(tag || "div"); if (cls) e.className = cls; if (parent) parent.appendChild(e); return e; };
+    const L = this.cardList(), no = Math.max(1, L.findIndex(q => q.id === p.id) + 1), mk2 = (cls, parent, tag) => { const e = document.createElement(tag || "div"); if (cls) e.className = cls; if (parent) parent.appendChild(e); return e; };
     const genre = (this.pack.settings.genres || []).find(g => g.id === p.genre), card = mk2("gt-card" + (kind === "r" ? " rare" : kind === "f" ? " fake" : ""));
     card.style.setProperty("--g", genre ? genre.color : "#e8c070");
-    const inn = mk2("in", card), top = mk2("top", inn);
-    mk2("t", top).textContent = kind === "f" ? misspell(p.title, strSeed(p.id)) : p.title;
-    mk2("no", top).textContent = String(no).padStart(2, "0") + "/" + String(L.length).padStart(2, "0");
-    const art = mk2("art", inn); art.style.backgroundImage = 'url("' + (p.image || this.pieceArt(p).toDataURL()) + '")'; if (!p.image) art.style.imageRendering = "pixelated";
-    mk2("accent", inn); // the category's color, as an accent (no name: Joe 10/11)
+    const inn = mk2("gtc-in", card), top = mk2("gtc-top", inn);
+    mk2("gtc-t", top).textContent = kind === "f" ? misspell(p.title, strSeed(p.id)) : p.title;
+    mk2("gtc-no", top).textContent = String(no).padStart(2, "0") + "/" + String(L.length).padStart(2, "0");
+    const art = mk2("gtc-art", inn); art.style.backgroundImage = 'url("' + (p.image || this.pieceArt(p).toDataURL()) + '")'; if (!p.image) art.style.imageRendering = "pixelated";
+    mk2("gtc-accent", inn); // the category's color, as an accent (no name: Joe 10/11)
     const hint = p.cardBlurb || (p.hint ? p.hint.charAt(0).toUpperCase() + p.hint.slice(1) + (/[.!?]$/.test(p.hint) ? "" : ".") : "");
-    mk2("bl", inn).textContent = hint;
-    const ep = mk2("ep", inn); mk2("", ep, "b").textContent = "\u25B6"; mk2("", ep, "span").textContent = p.episodeTitle || "Games Over Coffee";
-    mk2("foot", inn).innerHTML = this.museumLogo(kind === "f");
-    if (kind === "r") for (const [x, y, d] of [[-1, -1, 0], [94, 8, 0.5], [90, 132, 1], [2, 114, 0.8], [50, -1, 1.2]]) { const sp = mk2("spark", card, "i"); sp.style.left = "calc(" + x + "px * var(--s))"; sp.style.top = "calc(" + y + "px * var(--s))"; sp.style.animationDelay = d + "s"; }
+    mk2("gtc-bl", inn).textContent = hint;
+    const ep = mk2("gtc-ep", inn); mk2("", ep, "b").textContent = "\u25B6"; mk2("", ep, "span").textContent = p.episodeTitle || "Games Over Coffee";
+    mk2("gtc-foot", inn).innerHTML = this.museumLogo(kind === "f");
+    if (kind === "r") for (const [x, y, d] of [[-1, -1, 0], [94, 8, 0.5], [90, 132, 1], [2, 114, 0.8], [50, -1, 1.2]]) { const sp = mk2("gtc-spark", card, "i"); sp.style.left = "calc(" + x + "px * var(--s))"; sp.style.top = "calc(" + y + "px * var(--s))"; sp.style.animationDelay = d + "s"; }
     return card;
   }
   /* The card view: a card (or a pack's three, one at a time) big in the middle. A or B for the next; back to the shop, the
@@ -5930,7 +5930,7 @@ class Game {
     const v = this.el.cardView, q = this.cardQ, c = q[this.cardI], own = (this.cardsOwned()[c.p.id] || {})[c.kind] || 0; v.innerHTML = "";
     const cap = document.createElement("div"); cap.className = "gt-card-cap" + (c.kind === "r" ? " rare" : "");
     cap.textContent = c.look ? "" : c.kind === "r" ? "RARE!" : own <= 1 ? "NEW!" : "YOU HAVE " + own; v.appendChild(cap);
-    v.appendChild(this.cardElement(c.p, c.kind));
+    const hold = document.createElement("div"); hold.style.setProperty("--s", (this.scale || 1) * 0.82); hold.appendChild(this.cardElement(c.p, c.kind)); v.appendChild(hold); // a bit smaller than full size: the caption and hint fit above and below
     const hint = document.createElement("div"); hint.className = "gt-card-hint"; hint.textContent = c.msg || (q.length > 1 ? (this.cardI + 1) + " / " + q.length + "   A: next" : "A: done"); v.appendChild(hint);
   }
   cardNext() {
@@ -9028,7 +9028,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 1";
+const VERSION = "2026-11-18 cards 2";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
