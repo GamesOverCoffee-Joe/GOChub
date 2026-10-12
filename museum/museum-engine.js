@@ -3497,8 +3497,8 @@ class Game {
 @keyframes gtCardSheen{0%,15%{transform:translateX(-70%)}55%,100%{transform:translateX(70%)}}
 @keyframes gtCardHolo{to{background-position:300% 300%}}
 @keyframes gtCardTw{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1)}}
-.gt-binder{grid-template-columns:repeat(6,1fr) !important}
-.gt-bslot{aspect-ratio:5/7;border:calc(1px * var(--s)) solid #7c2434;background:#241a1c center/cover;color:#7a6a58;font-family:var(--pixel, monospace);font-size:calc(5px * var(--s));cursor:pointer;padding:0;border-radius:calc(1.5px * var(--s))}
+.gt-binder{grid-template-columns:repeat(6,minmax(0,1fr)) !important;overflow-x:hidden !important;overflow-y:auto;max-height:calc(100px * var(--s)) !important}
+.gt-bslot{display:block;width:100%;min-width:0;box-sizing:border-box;margin:0;line-height:1;aspect-ratio:5/7;border:calc(1px * var(--s)) solid #7c2434;background:#241a1c center/cover;color:#7a6a58;font-family:var(--pixel, monospace);font-size:calc(5px * var(--s));cursor:pointer;padding:0;border-radius:calc(1.5px * var(--s))}
 .gt-bslot.empty{background:#2a2226;border-style:dashed}
 .gt-bslot.rare{border-color:#f4dca0;box-shadow:0 0 calc(3px * var(--s)) #ffd860}
 .gt-bslot.on{outline:calc(1.5px * var(--s)) solid #e8c070;outline-offset:calc(1px * var(--s))}
@@ -9028,7 +9028,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 2";
+const VERSION = "2026-11-18 cards 3";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
