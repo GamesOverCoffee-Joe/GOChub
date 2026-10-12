@@ -3435,7 +3435,7 @@ class Game {
     if (!document.getElementById("gt-end-css")) {
       const st = document.createElement("style"); st.id = "gt-end-css";
       st.textContent = `.gt-endwrap{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#000;z-index:8}
-.gt-end{box-sizing:border-box;width:calc(184px * var(--s));border-style:solid;border-width:calc(8px * var(--s));border-image-slice:8 fill;border-image-repeat:stretch;
+.gt-end{box-sizing:border-box;width:calc(208px * var(--s));max-height:calc(152px * var(--s));overflow:hidden;border-style:solid;border-width:calc(8px * var(--s));border-image-slice:8 fill;border-image-repeat:stretch;
   background:#f8f8f0;background-clip:padding-box;color:#181820;text-align:center;padding:calc(4px * var(--s)) calc(4px * var(--s)) calc(2px * var(--s));image-rendering:pixelated;
   animation:gtEndIn .5s steps(5) both}
 .gt-end p{margin:0}
@@ -4079,6 +4079,10 @@ class Game {
     e.querySelector(".gt-end-sum").textContent = sum;
     e.style.borderImageSource = `url("${this.src("textbox")}")`;
     this.el.endWrap.style.display = "flex"; this.mode = "ended";
+    { // a long night (lots done, long stat names) never runs off the screen: the words shrink until the whole card fits (Joe 10/12)
+      const parts = [".gt-end-sign", ".gt-end-line", ".gt-end-sum", ".gt-end-btn", ".gt-end-hint"].map(q => e.querySelector(q)).filter(Boolean); parts.forEach(x => (x.style.fontSize = ""));
+      for (let f = 0.92; f >= 0.55 && e.scrollHeight > e.clientHeight + 1; f -= 0.06) parts.forEach(x => { x.style.fontSize = ""; const base = parseFloat(getComputedStyle(x).fontSize); x.style.fontSize = base * f + "px"; });
+    }
     const b = e.querySelector("button"); setTimeout(() => b.focus({ preventScroll: true }), 50);
   }
   hideEnd() { if (this.el.endWrap) this.el.endWrap.style.display = "none"; }
@@ -9148,7 +9152,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 13";
+const VERSION = "2026-11-18 cards 14";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
