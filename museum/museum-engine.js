@@ -7380,7 +7380,7 @@ class Game {
 
   /* "Could I get by?": step to the nearest open tile that isn't straight ahead of you. Boxed in? They teleport. */
   askToMove(n, named) {
-    if (n.queue) { this.say(named(this.tx("line.inLine"))); return; } // in the café line: they keep their place
+    if (n.queue && n.queue.phase === "in") { this.say(named(this.tx("line.inLine"))); return; } // standing in the café line: they keep their place (on their way to it, they step aside like anyone)
     const p = this.player, r = this.room, W = r.w, [fx, fy] = DIRS[p.dir], ahead = new Set();
     for (let k = 0; k <= 3; k++) ahead.add((p.x + fx * k) + "," + (p.y + fy * k));
     const prev = new Map([[n.y * W + n.x, -1]]), q = [[n.x, n.y, 0]]; let goal = null;
@@ -9029,7 +9029,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 5";
+const VERSION = "2026-11-18 cards 6";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
