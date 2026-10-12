@@ -7933,8 +7933,8 @@ class Game {
   updateSide() {
     if (this.headless || this.tut || !this.rooms || !this.rooms.museum || !this.pack) return;
     const S = this.sideState(), d = this.director(), I = S.item; if (!I.on) return;
-    const beat = this.closing || d.over ? 4 : d.beat, inBeat = (d.min - d.beat * d.minutes / 4) / (d.minutes / 4);
-    const ph = beat === 1 ? 1 : beat === 2 ? (inBeat >= 0.8 ? 3 : 2) : beat === 3 ? 4 : 0, St = this.rooms.staff; // 3: the taker heads out the doors
+    const beat = d.over ? 4 : d.beat, inBeat = (d.min - d.beat * d.minutes / 4) / (d.minutes / 4), carrying = I.got && !I.done;
+    const ph = this.closing && I.phase >= 0 ? I.phase : beat === 1 ? 1 : beat === 2 ? (inBeat >= 0.8 ? 3 : 2) : beat === 3 || (beat === 4 && (carrying || I.phase === 4)) ? 4 : 0, St = this.rooms.staff; // 3: the taker heads out the doors // closing holds it where it is, so reopening picks it back up (and the owner waits for one still in your hands at the loop's end)
     if (ph !== I.phase) { const was = I.phase; I.phase = ph;
       if (ph === 0) { // before the break, or a new go at the loop
         for (const id in this.rooms) this.rooms[id].npcs = this.rooms[id].npcs.filter(n => n !== I.owner && n !== I.taker);
@@ -9166,7 +9166,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 15";
+const VERSION = "2026-11-18 cards 16";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
