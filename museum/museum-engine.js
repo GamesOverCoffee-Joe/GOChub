@@ -2240,7 +2240,7 @@ const TEXT = {
   "supply.wrong":      { g: "Supplies", l: "Bringing the shop's box to the barista, or the café's to the shopkeeper", by: "claude", v: [["Pretty sure this box isn't for them."]] },
   "supply.shopThanks": { g: "Supplies", l: "The shopkeeper, when you bring today's stock (the shop opens)", by: "claude", v: [["Oh thank goodness. Today's stock!", "I've been stuck back here reorganizing the same shelf for an hour.", "Shop's open!"]] },
   "supply.cafeThanks": { g: "Supplies", l: "The barista, when you bring the café's supplies (she's ready for the rush)", by: "claude", v: [["Cups! Lids! Beans! You're a lifesaver.", "Okay. Okay. Bring on the rush."]] },
-  "supply.free":       { g: "Supplies", l: "Winding down: the barista's free drink, if you brought her supplies", by: "claude", v: [["Hey, you helped me out earlier.", "This one's on the house. Don't tell anyone."]] },
+  "supply.free":       { g: "Supplies", l: "The barista's free drink, the next time you talk to her after bringing her supplies", by: "claude", v: [["Hey, you helped me out earlier.", "This one's on the house. Don't tell anyone."]] },
   "shop.chatStock":    { g: "Supplies", l: "Just chatting with the shopkeeper while a shelf is still empty (today's stock never came up)", by: "claude", v: [["Sorry, I can't stop looking at that empty shelf.", "It's like a missing tooth. A missing merch tooth."], ["You know what sells really well? Things that are on the shelf.", "...", "Not that I'd know today."]] },
   "shop.emptyShelf":   { g: "Supplies", l: "Looking at the gift shop's empty shelf (today's stock hasn't come up)", by: "claude", v: [["An empty shelf. Just dust and a price tag for something that isn't here."], ["Nothing on this shelf but a sticky note: \"STOCK COMING. ALLEGEDLY.\""]] },
   "shop.stocking":     { g: "Supplies", l: "The shop counter (or the shopkeeper) while he's still stocking the shelves", by: "claude", v: [["Sorry, still stocking. The shop's not open yet.", "If only someone would bring me the stock box from the basement..."]] },
@@ -5908,7 +5908,7 @@ class Game {
       { id: "unveil", group: "Days", label: "An unveiling (any day)", run: () => { const t = this.testUnveil(); return t ? "Staged " + t + ". Walk into its wing to see the ceremony." : "No piece on display."; } },
       { id: "usher", group: "The loop", beat: 0, label: "0:00 The usher's empty mug", find: () => this.npcAt(n => n.usher && !n.tourUsher) || "He's off with the tour." },
       { id: "boxes", group: "The loop", beat: 0, label: "0:00 The deliveries (basement)", find: () => { const S = this.supState(), b = S.boxes.find(b => b.room === "storage") || S.boxes[0]; return b ? at(b.room, b.x, b.y) : "Both boxes are already up."; } },
-      { id: "stocking", group: "The loop", beat: 0, label: "0:00 The shopkeeper stocking", find: () => this.npcAt(n => n.role === "shopkeeper") },
+      { id: "stocking", group: "The loop", beat: 0, label: "0:00 The shopkeeper stocking", find: () => this.npcAt(n => n.role === "shopkeeper") || (this.onBreak === "shopkeeper" ? "He has the day off (he's Sunday's guest at the café)." : "The shopkeeper's away.") },
       { id: "litter", group: "The loop", beat: 1, label: "3:00 Litter by full bins", run: () => { this.fillBins(); const b = this.litterBins().find(b => b[0] === "museum") || this.litterBins()[0]; return b ? this.goBeside(b[0], b[1], b[2]) : "No bins."; } },
       { id: "tour", group: "The loop", beat: 1, label: "3:00 The tour at its first stop", run: () => this.findTour() },
       { id: "line", group: "The loop", beat: 2, label: "6:00 The café line", run: () => { const c = counter(); if (!c) return "No café counter."; const r = this.goBeside("museum", c[0], c[1]); this.fillLine(6); return r; } },
@@ -5920,12 +5920,13 @@ class Game {
       { id: "mug", group: "Finds", label: "The curator's mug", find: () => { for (const id in this.rooms) if (this.rooms[id].mug) return at(id, this.rooms[id].mug.x, this.rooms[id].mug.y); return "Already found today."; } },
       { id: "cat", group: "Finds", label: "The cat", find: () => { for (const id in this.rooms) if (this.rooms[id].cat) return at(id, this.rooms[id].cat.x, this.rooms[id].cat.y); return "No cat right now."; } },
       { id: "curious", group: "Finds", label: "A curious visitor", find: () => this.npcAt(n => n.cur && !n.follow) || "None waiting right now." },
-      { id: "crooked", group: "Finds", label: "A crooked frame", find: () => this.frameAt(p => this.isCrooked(p)) || "Nothing's crooked this session." },
-      { id: "dusty", group: "Finds", label: "A dusty frame", find: () => this.frameAt(p => this.isDusty(p)) || "Nothing's dusty this session." },
+      { id: "crooked", group: "Finds", label: "A crooked frame", find: () => this.frameAt(p => this.isCrooked(p)) || "Nothing's crooked this session (or there are no frames on the walls)." },
+      { id: "dusty", group: "Finds", label: "A dusty frame or case", find: () => this.frameAt(p => this.isDusty(p)) || "Nothing's dusty this session." },
+      { id: "prints", group: "Finds", label: "Fingerprints on a case", find: () => this.frameAt(p => this.prints(p) > 0) || "No fingerprints this session." },
       { id: "plant", group: "Finds", label: "A thirsty plant", find: () => { for (const id in this.rooms) for (const k in this.rooms[id].events) { const e = this.rooms[id].events[k]; if (e.plant && this.isThirsty(e.plant)) return at(id, ...k.split(",").map(Number)); } return "Every plant's watered today."; } },
       { id: "joe", group: "Finds", label: "Joe", run: () => (this.summonJoe() ? true : "No floor free near you.") },
       { id: "figure", group: "Finds", label: "The figure", run: () => (this.summonFigure() ? "Turn around." : "No room for it here.") },
-      { id: "shop", group: "Shops", label: "The gift shop (cards)", find: () => this.npcAt(n => n.role === "shopkeeper") || "The shopkeeper's away." },
+      { id: "shop", group: "Shops", label: "The gift shop (cards)", find: () => this.npcAt(n => n.role === "shopkeeper") || (this.onBreak === "shopkeeper" ? "He has the day off (he's Sunday's guest at the café)." : "The shopkeeper's away.") },
       { id: "cafe", group: "Shops", label: "The café counter", find: () => { const c = counter(); return c ? at("museum", c[0], c[1]) : "No café counter."; } },
       { id: "staffroom", group: "Shops", label: "The staff room (bags, coffee maker)", find: () => { const r = this.rooms.staff, k = r && Object.keys(r.events).find(k => r.events[k].staffCoffee || r.events[k].trash); return k ? at("staff", ...k.split(",").map(Number)) : "No staff room."; } },
     ];
@@ -5948,7 +5949,7 @@ class Game {
     return "No free floor beside it.";
   }
   npcAt(fn) { for (const id in this.rooms || {}) { const n = this.rooms[id].npcs.find(m => !m.gone && !m.leaving && fn(m)); if (n) return [id, n.x, n.y]; } return null; }
-  frameAt(fn) { for (const id in this.rooms || {}) { const r = this.rooms[id]; for (const k in r.events) { const sp = r.events[k] && r.events[k].spot; if (sp && sp.state === "wall" && sp.piece && fn(sp.piece)) return [id, ...k.split(",").map(Number)]; } } return null; }
+  frameAt(fn) { for (const id in this.rooms || {}) { const r = this.rooms[id]; for (const k in r.events) { const e = r.events[k], sp = e && (e.spot || e.caseAt); if (sp && sp.state === "wall" && sp.piece && fn(sp.piece)) return [id, ...k.split(",").map(Number)]; } } return null; } // a hung frame or a glass case
   /* ----- Trading cards (Joe 10/11) -----
      One card for every piece on display (each unveil adds one), in a common and a rare (very shiny) form. The gift shop sells a
      single (a random common) and a pack of three (each card has settings.cards.packRare percent to be rare). Bluu sells a cheap
@@ -6149,7 +6150,7 @@ class Game {
     if (!menu && !this.tut && this.lineAhead()) { this.say(this.tx("line.wait")); return; } // there's a line: join it at the back
     { const ba = !menu && this.room.npcs.find(n => n.role === "barista" && n.pace && n.home && !(n.x === n.home[0] && n.y === n.home[1]));
       if (ba) { this.mode = "busy"; if (ba.moving) { const [dx, dy] = DIRS[ba.dir]; ba.x += dx; ba.y += dy; ba.moving = false; ba.prog = 0; } ba.dir = OPP[this.player.dir]; ba.pose = { kind: "startled", t0: this.t, dur: 40 }; this.rush = { ba, t: 0 }; return; } } // rushed off her feet: she notices you, dashes to her spot, then takes your order
-    if (!menu && !this.drink && this.sup && this.sup.cafeDone && !this.sup.freeGiven && (this.director().beat >= 3 || this.director().over)) { // winding down: thanks for the help earlier
+    if (!menu && !this.drink && this.sup && this.sup.cafeDone && !this.sup.freeGiven) { // the next time you talk to her after bringing her box: thanks (Joe 10/12)
       this.sup.freeGiven = true; this.drink = { kind: 0, name: this.pack.settings.shop.drinks[0].name, sips: 0, color: "", iced: !!this.pack.settings.shop.drinks[0].iced }; this.sipClock = 240; this.say(this.tx("supply.free")); return;
     }
     if (!menu && !this.tut && this.weekday() === 4 && !this.dayState().thuDone && this.dayState().thuSeat) { // Thursday: the barista points you to the free seat, then takes your order
@@ -6227,7 +6228,7 @@ class Game {
   closeCafe() { this.el.cafe.style.display = "none"; this.cm = null; this.mode = "walk"; this.inputLock = true; }
   cafePick() {
     const m = this.cm, i = m.i, drinks = m.drinks;
-    if (i === drinks.length) { this.closeCafe(); if (this.sup && this.sup.cafeNeeded && !this.sup.cafeDone && !this.closing && !this.director().over) this.say(this.tx(this.director().beat >= 2 ? "cafe.slowChat" : "cafe.rushChat")); else this.staffTalk("barista"); return; } // stressed before the rush, swamped once orders are slow // stressed while her supplies are still in the basement
+    if (i === drinks.length) { this.closeCafe(); if (this.sup && this.sup.cafeDone && !this.sup.freeGiven && !this.drink && this.trashBag == null && !this.carryBox && !this.carryItem) { this.sup.freeGiven = true; this.drink = { kind: 0, name: this.pack.settings.shop.drinks[0].name, sips: 0, color: "", iced: !!this.pack.settings.shop.drinks[0].iced }; this.sipClock = 240; this.say(this.tx("supply.free")); return; } if (this.sup && this.sup.cafeNeeded && !this.sup.cafeDone && !this.closing && !this.director().over) this.say(this.tx(this.director().beat >= 2 ? "cafe.slowChat" : "cafe.rushChat")); else this.staffTalk("barista"); return; } // stressed before the rush, swamped once orders are slow // stressed while her supplies are still in the basement
     if (i > drinks.length) { this.closeCafe(); return; }
     const d = drinks[i], price = m.cost(d);
     if (price && (this.progress.tokens || 0) < price) { m.msg = "That's " + price + " token" + (price > 1 ? "s" : "") + ". Chores earn tokens."; this.renderCafe(); return; }
@@ -7207,7 +7208,7 @@ class Game {
     if (c.bumpT > 0) c.bumpT--;
     if (!c.moving) return false;
     if (c.slow && (this.t & 1)) return false; // the night guard strolls at half speed
-    if (c !== this.player && !c.slow && !c.follow && !c.tagging) { const ps = this.pack.settings.staff.patronSpeed, sp = c.leaving && !c.stroll ? Math.min(1, ps * 1.35) : ps; c.spd = (c.spd || 0) + sp; if (c.spd < 1) return false; c.spd -= 1; } // patrons: slower than you; heading out (the closing announcement) only a little brisker, not a stampede
+    if (c !== this.player && !c.slow && !c.follow && !(c.tagging && c.hurry)) { const ps = this.pack.settings.staff.patronSpeed, sp = c.leaving && !c.stroll ? Math.min(1, ps * 1.35) : ps; c.spd = (c.spd || 0) + sp; if (c.spd < 1) return false; c.spd -= 1; } // patrons: slower than you; heading out (the closing announcement) only a little brisker, not a stampede
     const behind = c.follow && c !== this.player && Math.abs(c.x - this.player.x) + Math.abs(c.y - this.player.y) > 1; // a follower who's dropped back catches up (they keep your pace)
     if ((c.prog += (c === this.player && (this.segway || this.hurrying())) || behind ? 2 : 1) >= T) {
       c.x += DIRS[c.dir][0]; c.y += DIRS[c.dir][1]; c.prog = 0; c.moving = false;
@@ -7402,7 +7403,8 @@ class Game {
   }
   interact() {
     const p = this.player, [dx, dy] = DIRS[p.dir], fx = p.x + dx, fy = p.y + dy;
-    let npc = this.room.npcs.find(n => n.x === fx && n.y === fy && !n.moving);
+    const here = this.room.npcs.filter(n => n.x === fx && n.y === fy && !n.moving);
+    let npc = here.find(n => !n.tourKid && !n.schoolKid && !n.kid) || here[0]; // two on one tile: the grown-up (the guide, not the kid beside him)
     if (!npc) { // someone mid-step: stepping onto the tile you face finishes the step; stepping off it, they stay put
       const into = this.room.npcs.find(n => n.moving && !n.leaving && n.x + DIRS[n.dir][0] === fx && n.y + DIRS[n.dir][1] === fy && !(fx === p.x && fy === p.y));
       const out = this.room.npcs.find(n => n.moving && !n.leaving && n.x === fx && n.y === fy);
@@ -7752,7 +7754,7 @@ class Game {
   }
   kidTag(n, T) { // the kid sticks with one of the grown-ups, the way a follower sticks with you; if they queue for coffee, he waits by them
     const P = T.members.find(m => !m.tourKid && !m.schoolKid && !m.gone && !m.leaving); if (!P) return;
-    n.tagging = true; this.tourStand(n); if (n.where === P.where) n.walkTo = null; // (heading for a door, the walk there carries on). tagging: kids keep up at full speed
+    n.tagging = true; this.tourStand(n); if (n.where === P.where) n.walkTo = null; // (heading for a door, the walk there carries on). tagging: at a grown-up's pace, hurrying when behind
     const R = this.rooms[P.where]; if (!R) return;
     const back = !P.goal && !P.moving && !P.walkTo ? [P.x - DIRS[P.dir][0], P.y - DIRS[P.dir][1]] : null; // standing still at a piece: the tile behind them is where you'd talk to them from
     const ok = (x, y) => this.tileFree(R, x, y, n) && !R.events[x + "," + y] && !(R.queueAt || []).some(([qx, qy]) => qx === x && qy === y) && !(back && back[0] === x && back[1] === y); // not in the café line's spots
@@ -7763,7 +7765,8 @@ class Game {
       const at = near(); if (!at) return; for (const id in this.rooms) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== n);
       n.where = P.where; n.x = at[0]; n.y = at[1]; n.goal = null; n.moving = false; R.npcs.push(n); if (n.where === this.room.id) { n.alpha = 0; n.fadeIn = true; } return;
     }
-    n.goal = null; const d = Math.abs(n.x - P.x) + Math.abs(n.y - P.y);
+    n.goal = null; const d = Math.abs(n.x - P.x) + Math.abs(n.y - P.y); n.hurry = d > 2; // a grown-up's pace; full speed only to catch up (Joe 10/12)
+    if (vis && !n.moving && R.npcs.some(m => m !== n && !m.moving && m.x === n.x && m.y === n.y)) { const at = near(); if (at) { n.x = at[0]; n.y = at[1]; } } // never on someone else's tile
     if (!vis) { if (d > 1) { const at = near(); if (at) { n.x = at[0]; n.y = at[1]; } } return; } // out of sight: just by them
     if (n.moving) return; // mid-step (updateNpcs walks it)
     if (d <= 1 && !(back && back[0] === n.x && back[1] === n.y)) { n.lost = 0; if (!P.moving) n.dir = this.janFace([n.x, n.y], P.x, P.y); return; } // (in the spot behind them? shuffle round to the side)
@@ -9121,7 +9124,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 thumbs 2";
+const VERSION = "2026-11-18 thumbs 3";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
