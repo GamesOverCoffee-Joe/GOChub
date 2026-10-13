@@ -205,7 +205,7 @@ details.more .foot{margin-top:12px}
 .ctxbox{background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 10px}
 .ctxhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .ctxhead b{font-size:.85rem}
-.ctxhead .small{flex:1;min-width:0}
+.ctxhead .small{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ctxview{margin-top:8px;display:flex;justify-content:center;background:#000;border-radius:6px;overflow:hidden}
 .ctxview .small{color:#cbb;padding:12px;text-align:center}
 .btn.small{min-height:36px;padding:.2em .8em;font-size:.85rem}
@@ -624,13 +624,25 @@ function traceDraws(g, key, fn) {
   try { fn(); } finally { proto.drawImage = orig; }
   return hits;
 }
+/* The engine's whole-room drawing stops before its lighting pass, which is where the theater hallway's floor lights,
+   the marquee, the LED sign and the colored glows are drawn. So: the room, dimmed the way that room is in the game,
+   then that pass (drawMarquee) on top, with the camera at the room's corner. (Spotlights on pieces aren't copied.) */
+function fullRoom(g, id) {
+  const c = g.renderRoomFull(id), r = g.rooms[id]; if (!c || !r) return c;
+  const x = c.getContext("2d"), L = (g.pack && g.pack.settings && g.pack.settings.lighting && g.pack.settings.lighting[id]) || (GOQ.ROOMS[id] || {}).light || { dim: 0 };
+  if (L.dim > 0.01) { x.fillStyle = "rgba(0,0,0," + Math.min(0.85, L.dim) + ")"; x.fillRect(0, 0, c.width, c.height); }
+  const save = [g.ctx, g.room, g.full];
+  g.ctx = x; x.imageSmoothingEnabled = false; g.room = r; g.full = { w: c.width, h: c.height, noPeople: false };
+  try { g.drawMarquee(r, 0, 0); } catch (e) {} finally { [g.ctx, g.room, g.full] = save; }
+  return c;
+}
 // Every room the sprite shows up in, with up to two spots per room (the first, and one from the middle for floors and walls).
 async function findSpots(key) {
   if (ctxSpots[key]) return ctxSpots[key];
   const g = await contextGame(), out = [];
   for (const id of Object.keys(g.rooms)) {
     if (/^tut_/.test(id)) continue;
-    let hits = []; try { hits = traceDraws(g, key, () => withYou(g, key, id, () => g.renderRoomFull(id))); } catch (e) { continue; }
+    let hits = []; try { hits = traceDraws(g, key, () => withYou(g, key, id, () => fullRoom(g, id))); } catch (e) { continue; }
     if (!hits.length) continue;
     const pick = hits.length > 2 ? [hits[0], hits[hits.length >> 1]] : hits;
     pick.forEach(h => out.push({ room: id, name: (g.rooms[id].name || (GOQ.ROOMS[id] || {}).name || id), x: h.x, y: h.y, w: h.w, h: h.h, count: hits.length }));
@@ -688,7 +700,7 @@ function renderPaint() {
     const sp = spots[spotI], lx = liveC.getContext("2d");
     lx.clearRect(0, 0, W, H); lx.drawImage(sheetC, 0, 0);
     linked(key).forEach(k => (ctxG.overrides[k] = liveC)); dropDerived(ctxG, key);
-    let room; try { room = withYou(ctxG, key, sp.room, () => ctxG.renderRoomFull(sp.room)); } catch (e) { ctxMsg.textContent = "Couldn't draw " + sp.name + "."; return; }
+    let room; try { room = withYou(ctxG, key, sp.room, () => fullRoom(ctxG, sp.room)); } catch (e) { ctxMsg.textContent = "Couldn't draw " + sp.name + "."; return; }
     if (!room) return;
     // a window around the spot: at least 128×88 game pixels, inside the room
     const vw = Math.min(room.width, Math.max(128, Math.ceil(sp.w) + 64)), vh = Math.min(room.height, Math.max(88, Math.ceil(sp.h) + 48));
@@ -699,7 +711,7 @@ function renderPaint() {
     // a soft marker around the sprite
     x.strokeStyle = "rgba(240,184,64,.9)"; x.lineWidth = 1; x.setLineDash([2, 2]); x.strokeRect(Math.round(sp.x - vx) - 1.5, Math.round(sp.y - vy) - 1.5, Math.ceil(sp.w) + 3, Math.ceil(sp.h) + 3);
     ctxC.style.width = vw * k + "px"; ctxC.style.height = vh * k + "px"; ctxC.hidden = false; ctxMsg.textContent = "";
-    if (moved) { ctxName.textContent = sp.name + (spots.length > 1 ? " · spot " + (spotI + 1) + " of " + spots.length : ""); ctxNext.hidden = spots.length < 2; }
+    if (moved) { ctxName.textContent = sp.name; ctxNext.hidden = spots.length < 2; ctxNext.textContent = "Next " + (spotI + 1) + "/" + spots.length; ctxNext.setAttribute("aria-label", "Next spot (" + (spotI + 1) + " of " + spots.length + ")"); }
   }
   function ctxClose() {
     clearTimeout(ctxT); if (!ctxG) return;
