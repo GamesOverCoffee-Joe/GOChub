@@ -205,6 +205,17 @@ select.search{appearance:auto;margin-top:8px}
 .reorder{display:flex;gap:6px}
 .reorder .btn{text-transform:none;letter-spacing:0}
 .sw.big{cursor:pointer}
+.plan{margin:10px 0}
+.pgroup{border-left:4px solid var(--line);padding:4px 10px;margin:8px 0}
+.pgroup.ok{border-color:var(--ok)}
+.pgroup.clash{border-color:var(--warn)}
+.pgroup.muted{opacity:.85}
+.pgroup b{font-size:.85rem}
+.pgroup ul{margin:4px 0 0;padding-left:18px;font-size:.88rem}
+.pgroup li{margin:2px 0}
+.check.inline{display:inline-flex;margin:0 0 0 8px;font-size:.82rem}
+.check.inline input{width:18px;height:18px}
+.warn{color:var(--warn);font-size:.88rem}
 .tool{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:58px;border:2px solid var(--line);border-radius:8px;background:var(--surface);font-size:.75rem;font-weight:700;cursor:pointer;padding:6px 2px}
 .tool svg{width:24px;height:24px}
 .tool[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
@@ -373,6 +384,7 @@ function render() {
   if (view.name === "find") return renderFind();
   if (view.name === "slot") return SLOT[view.key] ? renderSlot() : go({ name: "home" }, true);
   if (view.name === "paint") return SLOT[view.key] ? renderPaint() : go({ name: "home" }, true);
+  if (view.name === "export") return renderExport();
 }
 
 /* ---------- Picking today's sprite ----------
@@ -445,6 +457,7 @@ function renderHome() {
 
   $app.appendChild(el("div", { class: "foot" }, [
     el("button", { class: "btn wide", type: "button", text: "Find a sprite", onclick: () => go({ name: "find", filter: "all" }) }),
+    el("button", { class: "btn primary wide", type: "button", text: "Put my art in the game (export)", onclick: () => go({ name: "export" }) }),
     el("a", { class: "btn quiet wide", href: "writers-room.html", text: "Writers' Room" }),
     el("a", { class: "btn quiet wide", href: "curator.html", text: "Open the curator" }),
     el("p", { class: "small", text: "Art only: the Paint Room keeps your sprites in its own library in this browser and never changes anything else in the pack." })]));
@@ -516,7 +529,8 @@ function renderSlot() {
   $app.appendChild(el("p", { class: "who", text: s.label }));
   $app.appendChild(el("div", { class: "tagline" }, [el("span", { class: "tag " + st, text: STATUS_TEXT[st] }), el("span", { class: "tag", text: s.w + "×" + s.h }),
     z.frames > 1 ? el("span", { class: "tag", text: s.layout === "char" ? "walk sheet, 12 frames" : z.frames + " frames" }) : null,
-    DB.data.art[key] && DB.data.art[key].origHash !== pixelHash(original(key)) ? el("span", { class: "tag todo", text: "Original updated" }) : null]));
+    DB.data.art[key] && DB.data.art[key].origHash !== pixelHash(original(key)) ? el("span", { class: "tag todo", text: "Original updated" }) : null,
+    DB.data.art[key] && (DB.data.art[key].w !== z.w || DB.data.art[key].h !== z.h) ? el("span", { class: "tag todo", text: "Size changed: open it and save again" }) : null]));
   const differs = st === "painted" || st === "pack", wip = wipCanvas(key);
   $app.appendChild(el("div", { class: "views" + (differs || wip ? "" : " one") }, [
     el("figure", {}, [el("figcaption", { text: "Original" }), animated(original(key), s, 130)]),
@@ -608,6 +622,171 @@ const svg = d => { const w = el("span", { "aria-hidden": "true" }); w.innerHTML 
 const CHAR_ROWS = ["down", "up", "left", "right"], CHAR_COLS = ["standing", "step 1", "step 2"];
 const frameName = (s, f) => s.layout === "char" ? "Facing " + CHAR_ROWS[Math.floor(f / 3)] + ", " + CHAR_COLS[f % 3] : "Frame " + (f + 1);
 
+
+
+/* ---------- Export: art only ----------
+   Every export runs the same check (planArt) against the assets it would change: the folder's pack, a pack you pick,
+   or the curator's draft. Rules (PAINT-ROOM-PLAN.md, Art-only safety):
+   - only slots with art in the library are written; slots this build doesn't have, or whose size changed, are skipped;
+   - art already there that the Paint Room didn't put there is a "clash" and is only replaced if you tick it;
+   - art the Paint Room put there earlier (recognized by DB misc "exported": key → hashes of what it wrote) is replaced, or
+     removed when you've gone back to the original;
+   - nothing but assets (and savedAt) changes. */
+const srcHash = str => { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619); return (h >>> 0).toString(36) + "." + str.length; };
+const exported = () => DB.data.misc.exported || {};
+const isOurs = (key, src) => !!src && (exported()[key] || []).includes(srcHash(src));
+async function noteExported(written, removed) {
+  const e = Object.assign({}, exported());
+  for (const k of written) { const h = srcHash(DB.data.art[k].png), l = (e[k] || []).filter(x => x !== h); l.push(h); e[k] = l.slice(-12); }
+  for (const k of removed) delete e[k];
+  await DB.put("misc", "exported", e).catch(() => {});
+}
+function planArt(assets) {
+  assets = assets || {};
+  const P = { add: [], replace: [], same: [], clash: [], remove: [], skipped: [], notes: [] };
+  for (const k in DB.data.art) {
+    const a = DB.data.art[k], sl = SLOT[k];
+    if (!sl) { P.skipped.push({ key: k, why: "not in this build of the game" }); continue; }
+    const z = sheetSize(sl);
+    if (a.w !== z.w || a.h !== z.h) { P.skipped.push({ key: k, why: "its size changed (yours is " + a.w + "×" + a.h + ", the game wants " + z.w + "×" + z.h + ")" }); continue; }
+    if (a.origHash && a.origHash !== pixelHash(original(k))) P.notes.push({ key: k, why: "the built-in original changed since you painted it" });
+    const cur = assets[k] && assets[k].src;
+    if (!cur) P.add.push(k); else if (cur === a.png) P.same.push(k); else if (isOurs(k, cur)) P.replace.push(k); else P.clash.push(k);
+  }
+  for (const k in exported()) if (!DB.data.art[k] && assets[k] && isOurs(k, assets[k].src)) P.remove.push(k);
+  return P;
+}
+// The assets after the plan: a new object (the input isn't touched). take = the clashes you ticked.
+function applyArt(assets, P, take) {
+  const out = Object.assign({}, assets || {});
+  for (const k of [...P.add, ...P.replace, ...P.clash.filter(k => take.has(k))]) out[k] = { src: DB.data.art[k].png };
+  for (const k of P.remove) delete out[k];
+  return out;
+}
+const nameOf = k => SLOT[k] ? SLOT[k].label : k;
+function planView(P, take) {
+  const box = el("div", { class: "plan" }), list = (title, keys, cls, extra) => keys.length ? box.appendChild(el("div", { class: "pgroup " + (cls || "") }, [el("b", { text: title + " (" + keys.length + ")" }), el("ul", {}, keys.map(k => el("li", {}, [typeof k === "string" ? nameOf(k) : nameOf(k.key) + ": " + k.why, extra ? extra(k) : null])))])) : null;
+  list("Add", P.add, "ok"); list("Replace your earlier version", P.replace, "ok"); list("Remove (you went back to the original)", P.remove, "ok");
+  if (P.clash.length) {
+    box.appendChild(el("p", { class: "small", style: "margin:10px 0 4px", text: "These already have different art that the Paint Room didn't put there. They stay as they are unless you tick them:" }));
+    list("Already has other art", P.clash, "clash", k => { const c = el("input", { type: "checkbox", "aria-label": "Replace " + nameOf(k) + " with yours" }); c.checked = take.has(k); c.addEventListener("change", () => c.checked ? take.add(k) : take.delete(k)); return el("label", { class: "check inline" }, [c, document.createTextNode(" use mine")]); });
+  }
+  list("Skipped", P.skipped, "muted"); list("Worth a look", P.notes, "muted");
+  if (P.same.length) box.appendChild(el("p", { class: "small", text: plural(P.same.length, "sprite") + " already up to date." }));
+  if (!P.add.length && !P.replace.length && !P.remove.length && !P.clash.length) box.appendChild(el("p", { class: "small", text: "Nothing to change." }));
+  return box;
+}
+function download(name, blob) { const a = el("a", { href: URL.createObjectURL(blob), download: name }); document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
+const dataBytes = src => { const b = atob(src.split(",")[1]), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; };
+const slug = t => t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+/* A tiny ZIP writer (stored, no compression: PNGs are already compressed). files: [{ name, bytes: Uint8Array }]. */
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+const crc32 = u => { let c = 0xffffffff; for (let i = 0; i < u.length; i++) c = CRC[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+function zip(files) {
+  const enc = new TextEncoder(), parts = [], central = []; let off = 0;
+  const d = new Date(), dt = ((d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1)) & 0xffff, dd = (((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate()) & 0xffff;
+  for (const f of files) {
+    const name = enc.encode(f.name), crc = crc32(f.bytes), n = f.bytes.length, h = new DataView(new ArrayBuffer(30));
+    [[0, 0x04034b50, 4], [4, 20, 2], [6, 0x0800, 2], [8, 0, 2], [10, dt, 2], [12, dd, 2], [14, crc, 4], [18, n, 4], [22, n, 4], [26, name.length, 2], [28, 0, 2]].forEach(([o, v, z]) => z === 4 ? h.setUint32(o, v, true) : h.setUint16(o, v, true));
+    parts.push(new Uint8Array(h.buffer), name, f.bytes);
+    const c = new DataView(new ArrayBuffer(46));
+    [[0, 0x02014b50, 4], [4, 20, 2], [6, 20, 2], [8, 0x0800, 2], [10, 0, 2], [12, dt, 2], [14, dd, 2], [16, crc, 4], [20, n, 4], [24, n, 4], [28, name.length, 2], [30, 0, 2], [32, 0, 2], [34, 0, 2], [36, 0, 2], [38, 0, 4], [42, off, 4]].forEach(([o, v, z]) => z === 4 ? c.setUint32(o, v, true) : c.setUint16(o, v, true));
+    central.push(new Uint8Array(c.buffer), name); off += 30 + name.length + n;
+  }
+  const size = central.reduce((a, b) => a + b.length, 0), e = new DataView(new ArrayBuffer(22));
+  [[0, 0x06054b50, 4], [4, 0, 2], [6, 0, 2], [8, files.length, 2], [10, files.length, 2], [12, size, 4], [16, off, 4], [20, 0, 2]].forEach(([o, v, z]) => z === 4 ? e.setUint32(o, v, true) : e.setUint16(o, v, true));
+  return new Blob([...parts, ...central, new Uint8Array(e.buffer)], { type: "application/zip" });
+}
+const canvasBytes = c => new Promise(res => c.toBlob(async b => res(new Uint8Array(await b.arrayBuffer())), "image/png"));
+
+function renderExport() {
+  dock(null);
+  $app.appendChild(top("Put my art in the game", true));
+  const painted = Object.keys(DB.data.art).length;
+  $app.appendChild(el("p", { class: "small", text: plural(painted, "sprite") + " in your library. Every export here changes art only: rooms, pieces, words, settings and art made elsewhere are copied exactly as they are." }));
+  const today8 = new Date().toISOString().slice(0, 10);
+
+  // 1. The pack: built on the folder's museum-pack.json, fetched fresh (or one you pick)
+  const packBox = el("div"), packIn = el("input", { type: "file", accept: ".json,application/json", class: "sr" });
+  async function showPack(text, from) {
+    packBox.innerHTML = "";
+    let j; try { j = JSON.parse(text); } catch (e) { packBox.appendChild(el("p", { class: "warn", text: "That file couldn't be read as JSON." })); return; }
+    if (!j || j.format !== GOQ.PACK_FORMAT) { packBox.appendChild(el("p", { class: "warn", text: "That isn't a museum pack." })); return; }
+    const P = planArt(j.assets), take = new Set();
+    packBox.appendChild(el("p", { class: "small", text: "Built on " + from + (j.savedAt ? ", saved " + new Date(j.savedAt).toLocaleString() : "") + "." }));
+    packBox.appendChild(planView(P, take));
+    packBox.appendChild(el("p", { class: "small", style: "font-weight:700", text: "Nothing else in the pack changes." }));
+    packBox.appendChild(el("button", { class: "btn primary wide", type: "button", text: "Download museum-pack.json", onclick: async () => {
+      const out = Object.assign({}, j, { assets: applyArt(j.assets, P, take), savedAt: new Date().toISOString() }); // same keys, same order: only assets and savedAt differ
+      download("museum-pack.json", new Blob([JSON.stringify(out)], { type: "application/json" }));
+      await noteExported([...P.add, ...P.replace, ...P.clash.filter(k => take.has(k)), ...P.same], P.remove);
+      packBox.appendChild(el("div", { class: "banner info", text: "Downloaded. To put it in the game: replace museum/museum-pack.json in the repo with this file and merge it into main. Players get it on their next visit." }));
+    } }));
+  }
+  packIn.addEventListener("change", async () => { const f = packIn.files[0]; packIn.value = ""; if (f) showPack(await f.text(), "the file you picked (" + f.name + ")"); });
+  const checkPack = async () => {
+    packBox.innerHTML = ""; packBox.appendChild(el("p", { class: "small", text: "Getting this folder's museum-pack.json…" }));
+    let text = null;
+    if (/^https?:$/.test(location.protocol)) { try { const r = await fetch(SITE_PACK + "?t=" + Date.now(), { cache: "no-store" }); if (r.ok) text = await r.text(); } catch (e) {} }
+    if (text) return showPack(text, "this folder's newest museum-pack.json");
+    packBox.innerHTML = ""; packBox.appendChild(el("p", { class: "warn", text: "Couldn't get this folder's museum-pack.json (offline, or opened as a file). Pick the newest one from your device instead." }));
+  };
+  $app.appendChild(el("section", { class: "panel" }, [el("h2", { text: "The game's pack" }),
+    el("p", { class: "small", style: "margin-top:0", text: "Makes a museum-pack.json with your art in it, from the newest pack in this folder." }),
+    el("div", { class: "foot" }, [el("button", { class: "btn wide", type: "button", text: "Check what would change", onclick: checkPack }),
+      el("button", { class: "btn quiet wide", type: "button", text: "Use a museum-pack.json from my device…", onclick: () => packIn.click() }), packIn]), packBox]));
+
+  // 2. The curator in this browser: its draft's art only
+  const DRAFT = "goq-curator-draft", curBox = el("div");
+  const readDraft = () => { try { const j = JSON.parse(localStorage.getItem(DRAFT) || "null"); return j && j.format === GOQ.PACK_FORMAT ? j : null; } catch (e) { return null; } };
+  const checkCurator = () => {
+    curBox.innerHTML = ""; const d = readDraft();
+    if (!d) { curBox.appendChild(el("p", { class: "small", text: "There's no curator draft in this browser yet (open the curator here once first)." })); return; }
+    const P = planArt(d.assets), take = new Set();
+    curBox.appendChild(planView(P, take));
+    curBox.appendChild(el("button", { class: "btn wide", type: "button", text: "Send to the curator", onclick: async () => {
+      const now = readDraft(); if (!now) return toast("The curator's draft is gone");
+      const P2 = planArt(now.assets); // re-checked against the draft as it is right now
+      now.assets = applyArt(now.assets, P2, new Set([...take].filter(k => P2.clash.includes(k))));
+      try { localStorage.setItem(DRAFT, JSON.stringify(now)); } catch (e) { return toast("Couldn't save: the browser's storage is full"); }
+      try { const b = JSON.parse(localStorage.getItem("goq-curator-base") || "null"); if (b && !b.edited) { b.edited = true; localStorage.setItem("goq-curator-base", JSON.stringify(b)); } } catch (e) {} // so the curator won't swap it for the site's pack without asking
+      await noteExported([...P2.add, ...P2.replace, ...P2.clash.filter(k => take.has(k)), ...P2.same], P2.remove);
+      curBox.innerHTML = ""; curBox.appendChild(el("div", { class: "banner info", text: "Sent. Open (or reload) the curator in this browser to see it; export the pack from there as usual." }));
+    } }));
+  };
+  $app.appendChild(el("section", { class: "panel" }, [el("h2", { text: "The curator (this browser)" }),
+    el("p", { class: "small", style: "margin-top:0", text: "Puts your art into the curator's draft here, changing nothing else in it. Reload the curator afterwards if it's open." }),
+    el("button", { class: "btn quiet wide", type: "button", text: "Check the curator's draft", onclick: checkCurator }), curBox]));
+
+  // 3. Files: an art-only file for the curator on another device, and the PNGs
+  const withOriginals = el("input", { type: "checkbox" });
+  $app.appendChild(el("section", { class: "panel" }, [el("h2", { text: "Files" }),
+    el("div", { class: "foot" }, [
+      el("button", { class: "btn quiet wide", type: "button", text: "Download museum-art.json (art only)", onclick: async () => {
+        const assets = {}, remove = {}, ours = {}, P = planArt({});
+        for (const k of P.add) { const a = DB.data.art[k]; assets[k] = { src: a.png, w: a.w, h: a.h }; }
+        for (const k in exported()) { ours[k] = exported()[k].slice(); if (!DB.data.art[k]) remove[k] = exported()[k].slice(); }
+        download("museum-art.json", new Blob([JSON.stringify({ format: "goq-art", version: 1, savedAt: new Date().toISOString(), assets, ours, remove })], { type: "application/json" }));
+        await noteExported(P.add, []);
+        toast(P.add.length ? "Downloaded " + plural(P.add.length, "sprite") : "Downloaded (your library is empty)");
+      } }),
+      el("p", { class: "small", style: "margin:-4px 0 6px", text: "For the curator on another device: More → Import art. It adds your art and nothing else." }),
+      el("button", { class: "btn quiet wide", type: "button", text: "Download PNGs (ZIP)", onclick: async () => {
+        const files = [], man = [];
+        for (const sl of SLOTS) {
+          const k = sl.key, z = sheetSize(sl), lib = DB.data.art[k], mine = lib && lib.w === z.w && lib.h === z.h ? lib : null; // a resized slot's old art isn't used
+          if (!mine && !withOriginals.checked) continue;
+          const name = "sprites/" + slug(sl.group) + "/" + k + ".png";
+          files.push({ name, bytes: mine ? dataBytes(mine.png) : await canvasBytes(inUse(k)) });
+          man.push({ key: k, label: sl.label, group: sl.group, file: name, w: sl.w, h: sl.h, sheet: z.w + "x" + z.h, frames: z.frames, layout: sl.layout || "strip", status: status(k), savedAt: mine ? mine.savedAt : null });
+        }
+        if (!files.length) return toast("Nothing painted yet (tick 'include the rest' to get every sprite)");
+        files.push({ name: "sprites/manifest.json", bytes: new TextEncoder().encode(JSON.stringify({ made: new Date().toISOString(), engine: GOQ.VERSION, sprites: man }, null, 1)) });
+        download("paint-room-" + today8 + ".zip", zip(files)); toast("Downloaded " + plural(files.length - 1, "PNG"));
+      } }),
+      el("label", { class: "check" }, [withOriginals, document.createTextNode(" Include the rest (every sprite, as it is in the game now)")]),
+    ])]));
+}
 
 /* ---------- In the game: where a sprite sits, cropped from the real engine ----------
    A hidden, headless copy of the engine (like the curator's room editor) with the folder's pack and your library art.

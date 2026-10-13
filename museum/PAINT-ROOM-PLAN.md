@@ -229,14 +229,14 @@ Check items off as they land, and note the commit.
 - [ ] Group badges: a proper badge shelf, beyond the ★ (totals are done)
 
 ### Phase 6: Export
-- [ ] Art-only pack export: fresh folder pack, only owned `assets` changed
-- [ ] Slot checks: retired, resized, already in the pack, original updated
-- [ ] Summary screen before download
-- [ ] Offline: build on a pack chosen from the device
-- [ ] `museum-art.json` art-only file plus the curator's **Import art** (same rules)
-- [ ] "Send to the curator" (assets only, re-reads the draft first)
-- [ ] ZIP of PNGs plus `manifest.json` (built-in ZIP writer)
-- [ ] Single PNG download
+- [x] Art-only pack export (Home → **Put my art in the game**): fresh folder pack; only owned `assets` change. Verified byte-identical outside `assets` and `savedAt`
+- [x] Slot checks: not in this build, size changed (skipped); already has other art ("clash", unticked by default); original updated (note). Ownership is DB misc `exported`: key → hashes of what the Paint Room wrote, so it can replace or remove its own earlier art
+- [x] Summary screen before download (Add / Replace / Remove / Already has other art / Skipped / Worth a look)
+- [x] Offline or no folder pack: build on a museum-pack.json picked from the device
+- [x] `museum-art.json` art-only file (`{ format: "goq-art", assets, ours, remove }`) plus the curator's **Import art** (More menu), same rules
+- [x] "Send to the curator": re-reads `goq-curator-draft` at that moment, changes only `assets`, marks `goq-curator-base` edited so the curator asks before swapping it for the site's pack
+- [x] ZIP of PNGs plus `manifest.json` (built-in stored ZIP writer), with "include the rest"
+- [x] Single PNG download (painter → More)
 - [ ] (Optional) curator atlas export
 
 ### Phase 7: Scenes
@@ -256,6 +256,8 @@ Check items off as they land, and note the commit.
 - [ ] Handoff notes below are up to date
 
 ### Handoff notes (latest state)
+
+- 2026-10-13, Phase 6 done: `renderExport()` with `planArt()` / `applyArt()` / `planView()`, `noteExported()`, `zip()`. The curator got **Import art** (`#artFile`, art-only merge with the same rules). Version strings bumped to `2026-11-18 paint 41` in all four places (engine, museum.html, curator.html, version.json). `UPDATING.md` has a Paint Room section. Tested end to end in Playwright: first export adds the cat, leaves Joe (clash) and skips a stale wrong-size sprite, with everything else in the pack byte-identical; after "committing" that pack, a repaint is **Replace** and Use original is **Remove**; curator Import art asks before replacing Joe; Send to the curator; the ZIP opens (197 files, valid PNGs). Next: Phase 5's badge shelf, Phase 7 (scene mockups), Phase 8 (polish).
 
 - 2026-10-13, Phase 4 done. In `renderPaint()`: `plot()` paints through the mirror (`mirror` is "", "x", "y" or "xy"); `shape()` draws line, box and oval while dragging (from `stroke.before` each move); selection state `sel` with `lift()` / `restamp()` / `selDo()` / `selCopy()` / `selPaste()` (undo, frame changes, tool changes and Done drop it, see `dropSel()`); `colorSheet(o)` is the color dialog (used by `changeColor()`, the + swatch and `editSwatch()`); `recolor(from, to)`; the trace lives in the module-level `traceBySlot`. Keys: L line, R box, C oval, S select, X mirror, Esc deselect, Delete clears a selection, Ctrl/Cmd+C/V copy a selection when there is one. Tested on the 8×8 heart: box, solid oval, mirrored line, selection move, flip and paste, repaint-all, swatch reorder, PNG import (4× shrink), trace move (no undo step). Next: **Phase 5 polish (group badges) and Phase 6 (export)**.
 
