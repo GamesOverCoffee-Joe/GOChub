@@ -2042,6 +2042,10 @@ const TUT_ROOMS = ["tut_office", "tut_room1", "tut_room2"];
 const NOTE_KEYS = [..."abcdefghijklmnopqrstuvwxyz.,!?"].map((k, i) => ({ k, col: i % 10, span: 1 }))
   .concat([{ k: "CAPS", label: "Caps", col: 0, span: 2 }, { k: "'", col: 2, span: 1 }, { k: " ", label: "Space", col: 3, span: 3 }, { k: "DEL", label: "Del", col: 6, span: 2 }, { k: "DONE", label: "Done", col: 8, span: 2 }]);
 /* The ten starting shirt colors for visitors (Visitors tab). */
+/* Your look (Joe 10/13): anyone who's signed in with a badge (Patreon members, staff, the curator) picks a skin tone and a shirt
+   color in My Stuff, Wardrobe. Swapped into your own sprite only (sheet "<base>~look:<from>-<to>,..."). */
+const SKIN_TONES = [["Lightest", "#fbe8d4"], ["Light", "#f8e0c0"], ["Light medium", "#e8c098"], ["Medium", "#d8a878"], ["Medium tan", "#c89060"], ["Tan", "#a8744c"], ["Deep", "#8a5a3a"], ["Deepest", "#5e3c26"]];
+const LOOK_SHIRTS = [["Red", "#c83838"], ["Orange", "#e07830"], ["Yellow", "#e8c040"], ["Green", "#58a048"], ["Teal", "#3a9a98"], ["Blue", "#3a68c8"], ["Purple", "#8850c0"], ["Pink", "#e070a8"], ["Brown", "#8a5a34"], ["Gray", "#808898"], ["White", "#ece8e0"], ["Black", "#2a2a32"]];
 const SHIRT_COLORS = ["#c83838", "#e07830", "#e8c040", "#58a048", "#3a9a98", "#3a68c8", "#8850c0", "#e070a8", "#8a5a34", "#808898"];
 /* The tutorial's three games, in a row: made-up games, each with a different relationship between the curator's
    observation (front) and the developer's intention (back). The middle one opens the far door once it's read both
@@ -3298,7 +3302,8 @@ class Game {
   }
   /* "goq_hat~bx-hat-purple": the art with one of Bluu's colorways swapped in (exact colors, from BLUU_GEAR). */
   swapped(key) {
-    const [base, id] = key.split("~"), src = this.sheet(base), w = src.naturalWidth || src.width, h = src.naturalHeight || src.height, g = BLUU_GEAR.find(b => b.id === id);
+    const [base, id] = key.split("~"), src = this.sheet(base), w = src.naturalWidth || src.width, h = src.naturalHeight || src.height;
+    const g = /^look:/.test(id) ? { swap: Object.fromEntries(id.slice(5).split(",").map(pr => pr.split("-").map(c => "#" + c))) } : BLUU_GEAR.find(b => b.id === id); // your look, or a Bluu colorway
     if (!w || !h || !g) return src;
     const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(src, 0, 0);
     const d = x.getImageData(0, 0, w, h), px = d.data, rgb = hx => [1, 3, 5].map(i => parseInt(hx.slice(i, i + 2), 16)), map = Object.entries(g.swap).map(([a, b]) => [rgb(a), rgb(b)]);
@@ -4919,7 +4924,15 @@ class Game {
      order; and the keypad only works after closing (announcement made, lights out). One code for everyone (curator, Staff
      tab), so players can trade it. A curator badge always gets in, and starts there. */
   /* What you look like: the curator in person on a curator badge, the staff uniform on shift, the shirt if you wear it. */
-  playerSheet(base) { return this.isCurator() ? "curator" : this.staff ? "player_staff" : this.progress.wearShirt ? "player_goq_shirt" : base || "player"; }
+  playerSheet(base) { const k = this.isCurator() ? "curator" : this.staff ? "player_staff" : this.progress.wearShirt ? "player_goq_shirt" : base || "player"; return k + this.lookSuffix(k); }
+  canLook() { const P = this.progress; return !!(P && ((P.lastBadge && !P.lastBadge.volunteer) || (P.staff && !P.staff.volunteer))); } // signed in with a badge at least once
+  lookSuffix(k) { // your skin tone everywhere; your shirt on your own clothes (the player, the curator), not on a uniform or the GOQ shirt
+    const L = this.progress.look; if (!L || !this.canLook() || !SLOT[k] || this.headless) return "";
+    const pal = PAL[SLOT[k].pal] || [], sw = [];
+    if (L.skin && pal[1] && L.skin !== pal[1]) sw.push(pal[1].slice(1) + "-" + L.skin.slice(1));
+    if (L.shirt && pal[2] && (k === "player" || k === "curator") && L.shirt !== pal[2]) sw.push(pal[2].slice(1) + "-" + L.shirt.slice(1));
+    return sw.length ? "~look:" + sw.join(",") : "";
+  }
   isCurator() { return !!(this.curator || (this.staff && this.staff.curator)); } // a curator badge, or the curator preview's curator view
   /* What people call you to your face: your badge name, or for a curator badge one of the curator's nicknames (Staff tab).
      Official things (the ON SHIFT tag, clocking in, the leaderboard, lockers, Employee of the Month) keep the badge name. */
@@ -7087,7 +7100,7 @@ class Game {
     const n = (this.progress.photos || []).length;
     const an = Object.keys(this.progress.ach || {}).length + "/" + this.pack.settings.achievements.length;
     const sv = this.ownedItems().length, cl = this.cardList(), co = cl.filter(p => { const o = this.cardsOwned()[p.id]; return o && (o.c || o.r || o.f); }).length;
-    const opts = ["Photos (" + n + ")", "Souvenirs (" + sv + ")", ...(cl.length ? ["Cards (" + co + "/" + cl.length + ")"] : []), "Achievements (" + an + ")", ...(this.progress.shirt || ["shades", "hat", "case"].some(u => this.gear(u)) ? ["Wardrobe"] : []), "Back"];
+    const opts = ["Photos (" + n + ")", "Souvenirs (" + sv + ")", ...(cl.length ? ["Cards (" + co + "/" + cl.length + ")"] : []), "Achievements (" + an + ")", ...(this.progress.shirt || this.canLook() || ["shades", "hat", "case"].some(u => this.gear(u)) ? ["Wardrobe"] : []), "Back"];
     this.choose("MY STUFF", opts, k => {
       const o = opts[k];
       const back = () => this.myStuff();
@@ -7114,8 +7127,19 @@ class Game {
       const name = id => id ? BLUU_GEAR.find(g => g.id === id).name : use === "hat" ? "GOQ Hat" : "GOQ Shades", nx = all[(all.indexOf(L.pick) + 1) % all.length];
       add("Switch to the " + name(nx), () => { (p.gearPick = p.gearPick || {})[use] = nx; on[use] = true; this.showLoc(name(nx) + " on."); this.wardrobe(); });
     }
+    if (this.canLook()) { add("Skin tone", () => this.lookMenu("skin")); add("Shirt color", () => this.lookMenu("shirt")); }
     add("Back", () => this.myStuff());
     this.choose("Wardrobe", opts, k => { acts[k](); this.saveProgress(); }, opts.length - 1);
+  }
+  lookMenu(kind, at) { // a skin tone or shirt color: it's on you as soon as you pick it; Back returns to the Wardrobe
+    const L = this.progress.look || (this.progress.look = {}), list = kind === "skin" ? SKIN_TONES : LOOK_SHIRTS, cur = L[kind] || "";
+    const opts = [(cur ? "" : "\u2713 ") + "The usual", ...list.map(([n, hx]) => (cur === hx ? "\u2713 " : "") + n), "Back"];
+    const q = kind === "skin" ? "Skin tone" : "Shirt color" + (this.staff || this.progress.wearShirt ? " (your own clothes: it shows when you're out of uniform)" : "");
+    this.choose(q, opts, i => {
+      if (i === opts.length - 1) { this.wardrobe(); return; }
+      L[kind] = i === 0 ? "" : list[i - 1][1]; this.saveProgress(); this.lookMenu(kind, i);
+    }, opts.length - 1);
+    if (at) { this.ch.i = at; this.renderChoice(); } // stay on the one you just picked
   }
   /* Controls: keyboard, touch and controller, one page each. The one you're using comes first. */
   /* Settings → Controls: each action and its two keys; pick one to change it. */
@@ -9672,7 +9696,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 44";
+const VERSION = "2026-11-18 cards 45";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
