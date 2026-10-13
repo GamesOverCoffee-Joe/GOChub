@@ -276,9 +276,10 @@ nav.jumps a:hover,nav.jumps a:focus-visible{border-color:var(--gold)}
 .pvmore>summary::-webkit-details-marker,.rmore>summary::-webkit-details-marker{display:none}
 .pvmenu,.rmenu{position:absolute;right:0;top:calc(100% + 6px);display:flex;flex-direction:column;gap:6px;padding:8px;border:2px solid var(--line);border-radius:4px;background:var(--surface);z-index:20;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
 .pvmenu{background:#281a1f;border-color:#4b343b;gap:10px;position:static;margin-top:8px;min-width:0;box-shadow:none} /* opens in place, under the buttons */
-.pvmore[open]{flex-basis:100%;width:100%}
+#main .pvmenu{max-width:720px;padding:14px;gap:16px;color:#f3e9d2} /* the dark panel, as it looked under the preview */
+#main .pvmenu .pv-hint{color:#d8c8b8}
+#main .pvgrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
 .preview > *{flex-shrink:0} /* the open menu scrolls the panel instead of squashing the preview */
-.pvmore[open]>summary{margin-left:auto;width:max-content}
 .pvsec{display:flex;flex-direction:column;gap:4px}
 .pvh{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted, #b8a8a0)}
 .seg{display:flex;border:2px solid #4b343b;border-radius:4px;overflow:hidden}
@@ -287,7 +288,22 @@ nav.jumps a:hover,nav.jumps a:focus-visible{border-color:var(--gold)}
 .seg button[aria-pressed="true"]{background:#e8b24a;color:#1a1014}
 .seg button:focus-visible{outline:2px solid #e8b24a;outline-offset:-2px}
 .pvgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+/* The visit clock's board: a fixed set of rows that keep their size as the words change (room for two or three lines each). */
+.cboard{margin-top:8px;border:2px solid #4b343b;border-radius:4px;background:#1e1317;padding:12px 14px;display:grid;grid-template-columns:7.5em 1fr;gap:8px 14px;font-size:1rem;line-height:1.4;color:#f6eedd}
+.cboard .ck{font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#e8b24a;padding-top:.2em}
+.cboard .cv{min-height:2.8em;overflow-wrap:anywhere}
+.cboard .cv.l3{min-height:4.2em}
+.cboard .ctime{grid-column:1 / -1;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;min-height:2.2em}
+.cboard .cbig{font-size:1.9rem;font-weight:800;font-variant-numeric:tabular-nums;min-width:4.6ch;color:#fff}
+.cboard .cbeat{font-size:1.15rem;font-weight:700;color:#e8b24a;min-width:9em}
+.cboard .cstate{font-size:.95rem;color:#d8c8b8}
+.cboard .cbar{grid-column:1 / -1;display:grid;grid-template-columns:repeat(4,1fr);gap:3px;height:22px;position:relative}
+.cboard .cbar span{background:#3a282e;border-radius:2px;font-size:.7rem;line-height:22px;text-align:center;color:#b8a8a0;overflow:hidden;white-space:nowrap}
+.cboard .cbar span.on{background:#5a3f2a;color:#f6eedd}
+.cboard .cbar i{position:absolute;top:-3px;bottom:-3px;width:3px;background:#fff;border-radius:2px;left:0}
 .pvgrid .btn{justify-content:center;font-size:.78rem;padding:.35em .3em;min-height:32px}
+.trig{grid-template-columns:repeat(auto-fill,minmax(170px,1fr)) !important}
+.trig .btn{white-space:normal;line-height:1.25;text-align:left;justify-content:flex-start;height:auto;padding:.45em .6em;overflow-wrap:anywhere}
 .rmenu .btn{justify-content:flex-start}
 .wrow{margin:10px 0 14px}
 .wrow textarea,.wtalk textarea{width:100%;min-height:64px;margin-top:4px}
@@ -331,11 +347,13 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
       <button role="tab" id="tab-staff" aria-selected="false" aria-controls="main">Staff</button>
       <button role="tab" id="tab-visitors" aria-selected="false" aria-controls="main">Visitors</button>
       <button role="tab" id="tab-shop" aria-selected="false" aria-controls="main">Shop</button>
+      <button role="tab" id="tab-cards" aria-selected="false" aria-controls="main">Cards</button>
       <button role="tab" id="tab-tokens" aria-selected="false" aria-controls="main">Tokens</button>
       <button role="tab" id="tab-rooms" aria-selected="false" aria-controls="main">Rooms</button>
       <button role="tab" id="tab-words" aria-selected="false" aria-controls="main">Words</button>
       <button role="tab" id="tab-ach" aria-selected="false" aria-controls="main">Achievements</button>
       <button role="tab" id="tab-notes" aria-selected="false" aria-controls="main">Notes</button>
+      <button role="tab" id="tab-preview" aria-selected="false" aria-controls="main">Preview</button>
     </div>
     <div class="actions">
       <span id="saved" role="status"></span>
@@ -364,50 +382,62 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
       <button class="btn applyb" type="button" id="applyBtn" title="Load your latest changes into the preview">Apply to preview<span class="dot" id="applyDot" hidden></span></button>
       <label class="sr-only" for="goRoom">Go to room</label>
       <select id="goRoom" class="btn" aria-label="Go to room"></select>
-      <details class="pvmore">
-        <summary class="btn">Preview options</summary>
-        <div class="pvmenu">
+      <button class="btn" type="button" id="pvOpts" title="View as, time, day, the visit clock, make things happen">Options</button>
+    </div>
+    <div id="pvHold" hidden>
+        <div class="pvmenu" id="pvMenu">
           <div class="pvsec"><span class="pvh">View as</span>
             <div class="seg" id="segWho" role="group" aria-label="View the preview as"><button type="button" data-v="curator" title="Hang crates, see everything, notes off">Curator</button><button type="button" data-v="visitor" title="What a player sees">Visitor</button></div></div>
           <div class="pvsec"><span class="pvh">Time of day</span>
             <div class="seg" id="segTime" role="group" aria-label="Time of day"><button type="button" data-v="" title="Follow the real clock">Clock</button><button type="button" data-v="day">Day</button><button type="button" data-v="sunset">Sunset</button><button type="button" data-v="night">Night</button></div></div>
           <div class="pvsec"><span class="pvh">Day of the week</span>
-            <div class="seg" id="segDay" role="group" aria-label="Day of the week"><button type="button" data-v="" title="Follow the real calendar">Auto</button><button type="button" data-v="1">Mon</button><button type="button" data-v="2">Tue</button><button type="button" data-v="3">Wed</button><button type="button" data-v="4">Thu</button><button type="button" data-v="5">Fri</button><button type="button" data-v="6">Sat</button><button type="button" data-v="0">Sun</button></div></div>
+            <div class="seg" id="segDay" role="group" aria-label="Day of the week"><button type="button" data-v="" title="Follow the real calendar">Auto</button><button type="button" data-v="1">Mon</button><button type="button" data-v="2">Tue</button><button type="button" data-v="3">Wed</button><button type="button" data-v="4">Thu</button><button type="button" data-v="5">Fri</button><button type="button" data-v="6">Sat</button><button type="button" data-v="0">Sun</button></div>
+            <div style="display:flex;gap:6px;margin-top:4px"><button class="btn" type="button" id="dayBtn" title="The next day: a new loop, curious visitors come back, the museum opens again">Tomorrow</button></div></div>
+          <div class="pvsec"><span class="pvh">Test triggers</span>
+            <p class="note" style="margin:0 0 4px;font-size:.85rem">Every day's event, the loop's problems, closing and the finds. A stop sets the day and the quarter it needs, then puts you beside it. Next and Back hop through them in order; Check everything visits every stop on every day and lists anything that went wrong.</p>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button class="btn" type="button" id="trigPrev" title="The stop before">&#9664; Back</button><button class="btn" type="button" id="trigNext" title="The next stop">Next &#9654;</button><button class="btn" type="button" id="trigAll" title="Visit every stop on every day of the week (about a minute) and list anything that went wrong">Check everything</button></div>
+            <div id="trigMsg" class="note" style="margin:4px 0;min-height:1.4em;font-size:.88rem"></div>
+            <div id="trigReport" class="note" style="font-size:.82rem;max-height:160px;overflow:auto"></div>
+            <div id="trigList"></div>
+            <div id="errBox" class="note" style="margin-top:6px;font-size:.85rem"></div></div>
           <div class="pvsec"><span class="pvh">Spooky moments</span>
             <div class="seg" id="segSpook" role="group" aria-label="Spooky moments"><button type="button" data-v="rare" title="About one closing in five, as players get it">Rare</button><button type="button" data-v="always" title="Every time the lights go out (handy for recording)">Every closing</button></div></div>
           <div class="pvsec"><span class="pvh">Test pieces</span>
             <div class="seg" id="segTest" role="group" aria-label="Test pieces"><button type="button" data-v="off">Off</button><button type="button" data-v="on" title="60 placeholder pieces, so the oldest go to the rooms' touch screens. Never saved to the pack.">60 placeholders</button></div></div>
           <div class="pvsec"><span class="pvh">Make it happen</span>
             <div class="pvgrid">
-              <button class="btn" type="button" id="figureBtn" title="The figure appears right now, beside or behind you, with this room's lights off. Turn and photograph it before it's gone.">The figure</button>
-              <button class="btn" type="button" id="unveilBtn" title="Stages the unveiling ceremony for the newest piece on display, as if it were unveiled today. Walk into its wing to see it.">An unveiling</button>
-              <button class="btn" type="button" id="joeBtn" title="Joe turns up on the floor near you. Talk to him (or photograph him) to see the glitch.">Joe</button>
               <label class="btn" style="display:flex;gap:6px;align-items:center" title="Set how many tokens you have in this preview">Tokens <input id="walletIn" type="number" min="0" max="9999" style="width:70px"></label>
-              <button class="btn" type="button" id="dayBtn" title="The next day: curious visitors come back, dust settles, the museum opens again">Tomorrow</button>
+              <button class="btn" type="button" id="lineBtn" title="Eight people already queued up at the café counter (go to the café first)">A long line</button>
+              <button class="btn" type="button" id="binsBtn" title="Today's jammed trash can jammed again, with a full pile of litter beside it">Jam the can</button>
             </div></div>
-          <div class="pvsec"><span class="pvh">Hear a line</span>
-            <div class="pvgrid" style="grid-template-columns:1fr">
-              <select id="lineSel" aria-label="Which line or conversation"></select>
-              <div style="display:flex;gap:6px"><select id="lineVer" aria-label="Which version" style="flex:1"></select><button class="btn" type="button" id="lineBtn" title="Plays it in the preview now, from your draft (no need to Apply)">Play it</button></div>
-            </div></div>
+          <div class="pvsec"><span class="pvh">Force stock</span>
+            <div class="note" style="font-size:.85rem;margin:0 0 6px">To test: what's on the gift shop's shelves, and on Bluu's table on Saturday (each real or fake). This preview only; Clear goes back to the day's own stock.</div>
+            <div id="forceGift" style="display:grid;gap:4px;margin-bottom:8px"></div>
+            <div id="forceBluu" style="display:grid;gap:4px"></div>
+            <div style="display:flex;gap:6px;margin-top:6px"><button class="btn" type="button" id="forceApply">Stock it</button><button class="btn" type="button" id="forceClear">Clear</button></div></div>
+          <div class="pvsec"><span class="pvh">Visit clock</span>
+            <div class="seg" id="segBeat" role="group" aria-label="Jump to a beat"><button type="button" data-v="0" title="Jump to this quarter of the visit">Settling in</button><button type="button" data-v="1" title="Jump to this quarter of the visit">Getting busy</button><button type="button" data-v="2" title="Jump to this quarter of the visit">Rush</button><button type="button" data-v="3" title="Jump to this quarter of the visit">Winding down</button></div>
+            <div id="probPick" style="display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font-size:.92rem" title="Every problem runs every loop. Untick Auto to turn some off and try others on their own (the preview only)"></div>
+            <div style="display:flex;gap:6px;align-items:center;margin-top:6px"><button class="btn" type="button" id="clockPause" title="Stop or start the visit clock in this preview">Pause</button><button class="btn" type="button" id="clockFwd" title="Skip ahead one minute">+1 min</button><button class="btn" type="button" id="clockReplay" title="The loop starts over at 0:00: fresh deliveries, bins, tour and janitor (chores, tokens and photos stay)">Replay the loop</button></div>
+            <div id="clockBoard" class="cboard" aria-live="off"></div>
+          </div>
           <div class="pvsec"><span class="pvh">Start fresh</span>
             <div class="pvgrid">
               <button class="btn" type="button" id="recrate" title="Pieces with a future unveil date go back in their crates, so you can hang them again">Re-crate upcoming</button>
               <button class="btn" type="button" id="reread" title="Forget which placards you've read, so every border goes back to red">Unread everything</button>
-              <button class="btn" type="button" id="rechore" title="Forget everything done in this preview: chores, tokens, photos, achievements, the office. The lights come back on and visitors return. (The preview never saves; players' saves aren't touched.)">Start the visit over</button>
+              <button class="btn" type="button" id="rechore" title="Forget everything done in this preview: chores, tokens, photos, achievements, the office; the visit clock, the Janitor, deliveries, bins and the café line start over too. The lights come back on and visitors return. (The preview never saves; players' saves aren't touched.)">Start the visit over</button>
             </div></div>
         </div>
-      </details>
     </div>
     <p class="pv-hint" id="ver" style="font-size:.75rem"></p>
-    <p class="pv-hint" id="pvHint">Click the preview, then walk with the arrow keys or WASD. Z or Space to look and hang, X to go back or take a photo, Enter for the menu.</p>
+    <p class="pv-hint" id="pvHint">Click the preview, then walk with the arrow keys or WASD. Z or Space to look and hang, X to go back or take a photo, Enter for the menu. Hold up or down in a menu to scroll.</p>
   </aside>
 </div>
 <script>
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 placeholders";
+window.GOQ_WANT = "2026-11-18 cards 40";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -488,6 +518,7 @@ function packOut() {
     if (p.unveil) o.unveil = p.unveil;
     if (p.drink) { o.drink = p.drink; if (p.drinkColor) o.drinkColor = p.drinkColor; if (p.drinkLine && p.drinkLine.length) o.drinkLine = p.drinkLine; if (p.drinkPrice) o.drinkPrice = p.drinkPrice; if (p.drinkIced) o.drinkIced = true; }
     if (p.pick) o.pick = true;
+    if (p.episodeTitle) o.episodeTitle = p.episodeTitle; if (p.cardBlurb) o.cardBlurb = p.cardBlurb; if (p.noCard) o.noCard = true; // its trading card (Cards tab)
     if (p.image) o.image = p.image; else { o.colors = p.colors; o.style = p.style; }
     return o;
   }) };
@@ -644,21 +675,22 @@ seg("segTest", testPieces ? "on" : "off", async v => { testPieces = v === "on"; 
 $("#recrate").addEventListener("click", () => { game.resetHangs(); stage.focus({ preventScroll: true }); });
 $("#rechore").addEventListener("click", () => { game.resetProgress(); status("The preview's visit starts over"); stage.focus({ preventScroll: true }); });
 $("#reread").addEventListener("click", () => { game.resetRead(); stage.focus({ preventScroll: true }); });
-$("#figureBtn").addEventListener("click", () => {
-  game.closeAll(); if (!game.summonFigure()) status("No room for the figure here. Try a bigger room.", true);
-  stage.focus({ preventScroll: true });
-});
-$("#joeBtn").addEventListener("click", () => {
-  game.closeAll(); if (!game.summonJoe()) status("No floor free near you for Joe. Try somewhere roomier.", true);
-  stage.focus({ preventScroll: true });
-});
-$("#unveilBtn").addEventListener("click", () => {
-  game.closeAll(); const t = game.testUnveil();
-  status(t ? "Staged the unveiling of " + t + ". Walk into its wing (from outside it) to see the ceremony." : "No piece on display to unveil.", !t);
-  stage.focus({ preventScroll: true });
-});
 $("#walletIn").addEventListener("focus", () => { $("#walletIn").value = (game && game.progress && game.progress.tokens) || 0; });
 $("#walletIn").addEventListener("change", () => { if (!game || !game.progress) return; game.progress.tokens = Math.max(0, Math.min(9999, Math.round(+$("#walletIn").value || 0))); game.saveProgress(); game.updateHud(true); status("Test wallet: " + game.progress.tokens + " tokens."); });
+$("#lineBtn").addEventListener("click", () => { const n = game.fillLine(8); status(n ? n + " people in line at the café." : "Go to the café first: the line starts at its counter.", !n); showClock(); stage.focus({ preventScroll: true }); });
+/* Force stock (Joe 10/12): three gift shop slots and three of Bluu's, from what the game can carry. */
+function forceFill() {
+  if (!game.stockChoices) return; const gs = game.stockChoices(), bs = game.bluuChoices(), F = game.forceStock || { gift: [], bluu: [] };
+  const opt = (list, v) => '<option value="">(the day\'s own)</option>' + list.map(c => '<option value="' + c.id + '"' + (c.id === v ? " selected" : "") + ">" + c.name.replace(/</g, "&lt;") + "</option>").join("");
+  $("#forceGift").innerHTML = [0, 1, 2].map(i => '<label style="display:flex;gap:6px;align-items:center;font-size:.9rem">Gift shop ' + (i + 1) + ' <select data-g="' + i + '" style="flex:1;min-width:0">' + opt(gs, (F.gift || [])[i]) + "</select></label>").join("");
+  $("#forceBluu").innerHTML = [0, 1, 2].map(i => { const b = (F.bluu || [])[i] || {}; return '<label style="display:flex;gap:6px;align-items:center;font-size:.9rem">Bluu ' + (i + 1) + ' <select data-b="' + i + '" style="flex:1;min-width:0">' + opt(bs, b.id) + '</select><span style="white-space:nowrap"><input type="checkbox" data-bf="' + i + '"' + (b.fake ? " checked" : "") + "> fake</span></label>"; }).join("");
+}
+$("#forceApply").addEventListener("click", () => {
+  const gift = [0, 1, 2].map(i => $('[data-g="' + i + '"]').value || null), bluu = [0, 1, 2].map(i => ({ id: $('[data-b="' + i + '"]').value || null, fake: $('[data-bf="' + i + '"]').checked }));
+  game.setForceStock({ gift, bluu }); status(game.forceStock ? "Stocked. Visit the gift shop (or Bluu's stall on a Saturday) to see it." : "Nothing picked: the day's own stock."); stage.focus({ preventScroll: true });
+});
+$("#forceClear").addEventListener("click", () => { game.setForceStock(null); forceFill(); status("Back to the day's own stock."); });
+$("#binsBtn").addEventListener("click", () => { game.fillBins(); status("Today's can is jammed, with a pile beside it."); showClock(); stage.focus({ preventScroll: true }); });
 $("#dayBtn").addEventListener("click", () => { game.closeAll(); game.skipDay(); stage.focus({ preventScroll: true }); });
 // "Reset chores" also reopens the museum: visitors come back and the lights come on.
 
@@ -666,7 +698,7 @@ $("#dayBtn").addEventListener("click", () => { game.closeAll(); game.skipDay(); 
 let tab = "art", current = "atlas";
 function setTab(t) {
   tab = t;
-  ["art", "pieces", "staff", "visitors", "shop", "tokens", "rooms", "words", "ach", "notes"].forEach(k => $("#tab-" + k).setAttribute("aria-selected", t === k));
+  ["art", "pieces", "staff", "visitors", "shop", "cards", "tokens", "rooms", "words", "ach", "notes", "preview"].forEach(k => $("#tab-" + k).setAttribute("aria-selected", t === k));
   $("#app").classList.toggle("no-side", t !== "art");
   render();
 }
@@ -675,11 +707,14 @@ $("#tab-pieces").addEventListener("click", () => setTab("pieces"));
 $("#tab-staff").addEventListener("click", () => setTab("staff"));
 $("#tab-visitors").addEventListener("click", () => setTab("visitors"));
 $("#tab-shop").addEventListener("click", () => setTab("shop"));
+$("#tab-cards").addEventListener("click", () => setTab("cards"));
 $("#tab-rooms").addEventListener("click", () => setTab("rooms"));
 $("#tab-words").addEventListener("click", () => setTab("words"));
 $("#tab-ach").addEventListener("click", () => setTab("ach"));
 $("#tab-tokens").addEventListener("click", () => setTab("tokens"));
 $("#tab-notes").addEventListener("click", () => setTab("notes"));
+$("#tab-preview").addEventListener("click", () => setTab("preview"));
+$("#pvOpts").addEventListener("click", () => { setTab("preview"); $("#main").scrollIntoView({ behavior: "smooth", block: "start" }); });
 // Small screens: the preview sits below the editor; this jumps to it.
 $("#pvJump").addEventListener("click", () => document.querySelector(".preview").scrollIntoView({ behavior: "smooth", block: "start" }));
 /* After a tab draws: a long intro under its title folds into "How this works", and a tab with several sections gets links to them. */
@@ -695,8 +730,16 @@ function tidyTab() {
     (main.querySelector("details.howto") || h2).after(nav);
   }
 }
-function render() { renderTab(); tidyTab(); }
-function renderTab() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "visitors") renderVisitors(); else if (tab === "shop") renderShop(); else if (tab === "tokens") renderTokens(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else if (tab === "notes") renderNotes(); else renderPieces(); }
+function render() { $("#pvHold").appendChild($("#pvMenu")); renderTab(); tidyTab(); } // the options panel lives on (with its buttons wired) while another tab shows
+/* The Preview tab: the preview's options (they grew too big for the panel under it, Joe 10/9). */
+function renderPreviewTab() {
+  const main = $("#main"); main.innerHTML = "";
+  const wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
+  wrap.appendChild(el("h2", { class: "title", text: "Preview options" }));
+  wrap.appendChild(el("p", { class: "note", text: "These change only the live preview on the right, never the pack or anyone's save. Each row is a setting (the lit one is on); the buttons make something happen right away." }));
+  wrap.appendChild($("#pvMenu")); showClock(); drawTriggers(); showErrors(); showDaySeg();
+}
+function renderTab() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "visitors") renderVisitors(); else if (tab === "shop") renderShop(); else if (tab === "cards") renderCards(); else if (tab === "tokens") renderTokens(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else if (tab === "notes") renderNotes(); else if (tab === "preview") { renderPreviewTab(); forceFill(); } else renderPieces(); }
 
 /* ---------- Image helpers ---------- */
 function readFile(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error("That file couldn't be read.")); r.readAsDataURL(file); }); }
@@ -948,14 +991,21 @@ function renderStaff() {
   // Patreon members: two or three are on shift in the staff room each day, and they're all listed on the Patron Board.
   st.members = st.members || [];
   const mem = el("textarea", { id: "memText", style: "min-height:140px", placeholder: "Sam, 0002\nPriya, 0003\nAlex" });
-  mem.value = st.members.map(m => m.name + (m.badge ? ", " + m.badge : "")).join("\n");
+  // A member's shirt colors: after the name and badge, color names (or #hex). They only ever wear those.
+  const SHIRT_NAMES = { red: "#c83838", orange: "#e07830", yellow: "#e8c040", green: "#58a048", teal: "#3a9a98", tan: "#cab291", purple: "#8850c0", pink: "#e070a8", brown: "#8a5a34", gray: "#808898", grey: "#808898" };
+  const colorName = h => Object.keys(SHIRT_NAMES).find(k => SHIRT_NAMES[k] === h.toLowerCase()) || h;
+  mem.value = st.members.map(m => m.name + (m.badge ? ", " + m.badge : "") + ((m.shirts || []).length ? ", " + m.shirts.map(colorName).join(" ") : "")).join("\n");
   const memCount = el("p", { class: "note", style: "margin:8px 0 0" });
   const showCount = () => { const n = st.members.length; memCount.textContent = n + " member" + (n === 1 ? "" : "s") + ". Two or three are on shift in the staff room each day, a different group each day. Everyone is always on the Patron Board in the lobby."; };
-  mem.addEventListener("input", () => { st.members = mem.value.split("\n").map(l => l.trim()).filter(Boolean).map(l => { const m = l.match(/^(.*?)(?:\s*,\s*(\d+))?$/); return { name: m[1].trim().slice(0, 32), badge: m[2] || "" }; }).filter(m => m.name); showCount(); changed(); });
+  mem.addEventListener("input", () => { st.members = mem.value.split("\n").map(l => l.trim()).filter(Boolean).map(l => {
+    const parts = l.split(",").map(x => x.trim()), name = parts.shift() || "", badge = parts[0] && /^\d+$/.test(parts[0]) ? parts.shift() : "";
+    const shirts = parts.join(" ").split(/\s+/).map(w => w.toLowerCase()).map(w => SHIRT_NAMES[w] || (/^#[0-9a-f]{6}$/.test(w) ? w : "")).filter(Boolean);
+    return { name: name.slice(0, 32), badge, shirts };
+  }).filter(m => m.name); showCount(); changed(); });
   showCount();
   wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
     el("h3", { text: "Patreon members", style: "margin:0 0 4px" }),
-    el("p", { class: "note", style: "margin:0 0 12px", text: "One per line: their name, then a comma and their badge number if they have one. When a member clocks in with their badge, they're never also in the staff room, since they're the one playing. Names are public on your site, so use the names members are happy to show." }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "One per line: their name, then a comma and their badge number if they have one, then (optional) another comma and the only shirt colors they wear, like \u201cDarla Jane, 0009, orange pink\u201d (red, orange, yellow, green, teal, tan, purple, pink, brown, gray, or #hex). When a member clocks in with their badge, they're never also in the staff room, since they're the one playing. Names are public on your site, so use the names members are happy to show." }),
     el("label", { class: "sr-only", for: "memText", text: "Patreon members" }), mem, memCount,
   ]));
   // The tutorial's edition: raising it sends everyone who finished an older one back through it, once.
@@ -1021,7 +1071,7 @@ function renderStaff() {
   rs.addEventListener("input", () => { st.readStrength = +rs.value / 100; rsOut.textContent = rs.value + "%"; rApply(); changed(); });
   wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
     el("h3", { text: "Pieces you haven't read", style: "margin:0 0 4px" }),
-    el("p", { class: "note", style: "margin:0 0 12px", text: "A thin border on the floor around each case (and a line in front of each painting) shows what's left to read. It pulses red until you read it; reading one side turns that side green, fading to red toward the other side. A side only counts once its placard is read to the last page. Once both sides are read it turns green, flares, and fades away for good, and from then on the piece sparkles now and then (Sparkle on read pieces; 0% turns it off). On a piece's unveil day it pulses blue until it's read, then flares the same way. Strength sets how bright it is. Preview options, Unread everything, resets it." }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "A thin border on the floor around each case (and a line in front of each painting) shows what's left to read. It pulses red until you read it; reading one side turns that side green, fading to red toward the other side. A side only counts once its placard is read to the last page. Once both sides are read it turns green, flares, and fades away for good, and from then on the piece sparkles now and then (Sparkle on read pieces; 0% turns it off). On a piece's unveil day it pulses blue until it's read, then flares the same way. Strength sets how bright it is. The Preview tab's Unread everything resets it." }),
     el("div", { class: "fields", style: "max-width:420px" }, [el("label", {}, [document.createTextNode("Style"), rsty])]),
     el("label", { class: "range" }, [el("span", { text: "Strength" }), rs, rsOut]),
     el("label", { class: "range" }, [el("span", { text: "Sparkle on read pieces" }), sk, skOut]),
@@ -1111,8 +1161,8 @@ const PLACE_GROUPS = [
     { kind: "spot", name: "Painting spot", key: "wall_frame_wood", note: "Community pieces hang here. Tap the wall; it takes two tiles across both wall rows." },
     { kind: "prop", key: "overflow_screen", name: "Touch screen", note: "The room's extra pieces: episodes of its genre that don't fit in its cases. One per room is plenty." },
   ] },
-  { name: "Furniture", items: ["bench", "plant", "planter_wide", "sign_stand", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board"].map(k => ({ kind: "prop", key: k })) },
-  { name: "Shop and café", items: ["shelf_unit", "magazine_rack", "item_rack", "shop_counter", "cafe_counter", "bus_tub", "cafe_table", "cafe_stool", "floor_lamp", "postcard_spinner", "basket", "planter", "cat_bed"].map(k => ({ kind: "prop", key: k }))
+  { name: "Furniture", items: ["bench", "bench_side", "plant", "planter_wide", "sign_stand", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board", "day_board"].map(k => ({ kind: "prop", key: k })) },
+  { name: "Shop and café", items: ["shelf_unit", "magazine_rack", "item_rack", "shop_counter", "cafe_counter", "espresso_machine", "coffee_grinder", "cup_stacks", "bus_tub", "cafe_table", "cafe_stool", "floor_lamp", "postcard_spinner", "basket", "planter", "cat_bed"].map(k => ({ kind: "prop", key: k }))
     .concat([{ kind: "decal", key: "rug" }]) },
   { name: "Storage and floors", items: [{ kind: "stairs", key: "stair_up", name: "Stairs up", note: "Step on it to change floors. Select it to choose where it leads." },
     { kind: "stairs", key: "stair_down", name: "Stairs down", note: "Step on it to change floors. Select it to choose where it leads." }]
@@ -1134,7 +1184,7 @@ const PLACE_GROUPS = [
   ] },
   { name: "People", items: ["visitor_a", "visitor_b", "visitor_c", "shop_staff", "guard"].map(k => ({ kind: "visitor", key: k })) },
 ];
-const SIT_KEYS = { bench: "up", cafe_stool: "right" };
+const SIT_KEYS = { bench: "up", bench_side: "left", cafe_stool: "right" };
 const clone = o => JSON.parse(JSON.stringify(o));
 const R = { id: "lobby", tool: "select", brush: TILE_BRUSHES[0], place: null, sel: null, zoom: 0, panX: 0, panY: 0, undo: [], redo: [], img: null, grid: true, linking: null };
 
@@ -1545,6 +1595,7 @@ function placeAt(t) {
     if (p.key === "microwave_counter") prop.event = { microwave: true };
     if (p.key === "patron_board") { prop.blockTop = true; prop.event = { patronBoard: true }; }
     if (p.key === "shop_counter") prop.event = { shopCounter: true };
+    if (p.key === "day_board") prop.event = { dayBoard: true };
     if (p.key === "cafe_counter") prop.event = { cafe: true };
     if (p.key === "collection_cabinet") prop.collection = true;
     if (p.key === "whiteboard") prop.rules = true;
@@ -2035,7 +2086,7 @@ function renderRoomSettings(box, d) {
   ]));
 }
 function resizeRoom(w, h) {
-  w = Math.max(8, Math.min(40, w | 0)); h = Math.max(8, Math.min(20, h | 0)); snapshot();
+  w = Math.max(8, Math.min(40, w | 0)); h = Math.max(8, Math.min(40, h | 0)); snapshot();
   const d = editable(R.id), ow = W(d), oh = H(d), map = [];
   for (let y = 0; y < h; y++) {
     let row = "";
@@ -2315,6 +2366,37 @@ function renderVisitors() {
     pctIn("drinks", "Visitors with a drink", "Lobby and café only. They sip, finish, and drop the cup in a bin. Nobody carries a drink and a bag at once."),
     pctIn("bags", "Visitors with a shop bag", "Anywhere in the museum. The bag's art is under Art, People."),
     pctIn("photos", "Photos of a piece", "The chance a visitor who stops in front of a piece takes a photo of it. Keep it low."),
+    pctIn("coffee", "Visitors who go for a coffee", "Each time a visitor picks somewhere new to go, the chance it's the café counter: they order, wait facing the barista, and leave with a drink (about half find a stool to drink it on). Not while the barista's away. Some people coming in stop for a coffee first too, more of them while it's busy."),
+    pctIn("sits", "Visitors who sit down", "Each time a visitor picks somewhere new to go, the chance it's a free bench or stool nearby. They sit 20 to 50 seconds, then go on their way."),
+  ]));
+  // The visit clock (living museum): how long a visit's loop is, and what happens when it ends.
+  st.visit = st.visit || { minutes: 12, repeat: false };
+  const vMin = el("input", { type: "number", min: 4, max: 60, value: st.visit.minutes, style: "max-width:120px" });
+  vMin.addEventListener("input", () => { st.visit.minutes = Math.max(4, Math.min(60, Math.round(+vMin.value || 12))); changed(); });
+  const vRep = el("input", { type: "checkbox", checked: !!st.visit.repeat }); vRep.addEventListener("change", () => { st.visit.repeat = vRep.checked; changed(); });
+  st.litter = st.litter || { cap: 6, rate: 100 };
+  const lCap = el("input", { type: "number", min: 2, max: 20, value: st.litter.cap, style: "max-width:120px" }); lCap.addEventListener("input", () => { st.litter.cap = Math.max(2, Math.min(20, Math.round(+lCap.value || 6))); changed(); });
+  const lRate = el("input", { type: "number", min: 0, max: 400, value: st.litter.rate, style: "max-width:120px" }); lRate.addEventListener("input", () => { st.litter.rate = Math.max(0, Math.min(400, Math.round(+lRate.value || 0))); changed(); });
+  wrap.appendChild(el("h3", { text: "Litter", style: "margin:6px 0 4px" }));
+  wrap.appendChild(el("p", { class: "note", style: "margin:0 0 8px", text: "Bins never fill up, so the floor stays clean, except round one trash can a loop (in the lobby or the museum, picked at random each day) that has a cup jammed in its flap. From the busy part of the day, visitors leave their trash beside it, up to a pile. Players pull the cup out (hands free), then bag the pile with a trash bag from the staff room; the Janitor only gets to it in his last quarter (leaving his break for it), sweeping the pile and unjamming it himself." }));
+  wrap.appendChild(el("div", { class: "fields", style: "max-width:520px;margin:0 0 14px" }, [
+    el("label", {}, [document.createTextNode("Biggest pile"), el("small", { text: "Pieces of trash by the jammed can, at most (2 to 20)." }), lCap]),
+    el("label", {}, [document.createTextNode("How fast it piles up (%)"), el("small", { text: "100 is about a piece every 25 seconds while it's busy (on a 12-minute loop). 0: no pile at all." }), lRate]),
+  ]));
+  st.line = st.line || { fast: 3, slow: 9, max: 10 };
+  const lnum = (k, lo, hi, d) => { const i = el("input", { type: "number", min: lo, max: hi, value: st.line[k] === undefined ? d : st.line[k], style: "max-width:120px" }); i.addEventListener("input", () => { st.line[k] = Math.max(lo, Math.min(hi, Math.round(+i.value || d))); changed(); }); return i; };
+  wrap.appendChild(el("h3", { text: "Café line", style: "margin:6px 0 4px" }));
+  wrap.appendChild(el("p", { class: "note", style: "margin:0 0 8px", text: "People wanting a coffee queue up from the counter, out toward the hallway, and step up as each order is served; they won't step aside (they're in line), and you queue like everyone else. On loops with the café-line problem, the barista needs her supplies from the basement: until someone brings them, every order takes the slow time, so the line grows at the rush." }));
+  wrap.appendChild(el("div", { class: "fields", style: "max-width:620px;margin:0 0 14px" }, [
+    el("label", {}, [document.createTextNode("Seconds an order (prepped)"), el("small", { text: "1 to 30." }), lnum("fast", 1, 30, 3)]),
+    el("label", {}, [document.createTextNode("Seconds an order (no supplies)"), el("small", { text: "1 to 60." }), lnum("slow", 1, 60, 9)]),
+    el("label", {}, [document.createTextNode("Longest line"), el("small", { text: "People; anyone else wanting a coffee comes back later." }), lnum("max", 2, 20, 10)]),
+  ]));
+  wrap.appendChild(el("h3", { text: "Visit clock", style: "margin:6px 0 4px" }));
+  wrap.appendChild(el("p", { class: "note", style: "margin:0 0 8px", text: "Each visit runs one loop from when the page opens: Settling in, Getting busy, Rush, Winding down, a quarter of the length each. After it ends the museum stays at its usual crowd for the rest of the visit, unless it starts over. Try it in the Preview tab (Apply to preview first)." }));
+  wrap.appendChild(el("div", { class: "fields", style: "max-width:520px;margin:0 0 14px" }, [
+    el("label", {}, [document.createTextNode("Length of a visit (minutes)"), el("small", { text: "4 to 60. 12 is the plan's length." }), vMin]),
+    el("label", { style: "flex-direction:row;align-items:center;gap:8px" }, [vRep, document.createTextNode("Start over when it ends")]),
   ]));
   // Visitors' shirt colors (a placeholder until the visitor art is replaced): each visitor gets one of these at random.
   if (!Array.isArray(st.life.shirts) || !st.life.shirts.length) st.life.shirts = GOQ.SHIRT_COLORS.slice();
@@ -2398,11 +2480,101 @@ function renderTokens() {
   const k = (key, label, note) => num(() => r[key], v => { r[key] = v; }, label, note);
   const sec = (title, kids) => wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [el("h3", { text: title, style: "margin:0 0 8px" }), el("div", { class: "fields" }, kids)]));
   sec("Recommending", [k("helped", "The right piece for a curious visitor", "Each time you recommend a visitor the piece they were looking for.")]);
-  sec("Chores", [k("dusted", "Dusting a frame"), k("straightened", "Straightening a frame"), k("watered", "Watering a plant"), k("mugs", "Returning the curator's mug"), k("wiped", "Wiping a case"), k("closings", "Closing the museum")]);
+  sec("Chores", [k("dusted", "Dusting a frame"), k("straightened", "Straightening a frame"), k("watered", "Watering a plant"), k("mugs", "Returning the curator's mug"), k("litter", "Picking up litter (each piece, once it's in a bin or the janitor's dustpan)"), k("supplies", "Bringing up a delivery box (the shop's stock or the café's supplies)"), k("tour", "Helping the tour (the usher's coffee, explaining a piece, bringing the lost kid back: each)"), k("item", "Bringing a staff member's item back (the break room mix-up)"), k("conservator", "Catching the conservator dreaming in a wing at closing (once a day)"), k("wiped", "Wiping a case"), k("closings", "Closing the museum")]);
   sec("Days of the week", [k("boxes", "Monday: all five boxes for the conservator"), k("kid", "Tuesday: the lost kid back to his mom"),
     ...["a common photo", "an uncommon photo", "a rare photo", "the rarest photos"].map((t, i) => num(() => r.artist[i], v => { r.artist[i] = v; }, "Wednesday: the artist, for " + t)),
     k("trivia", "Thursday: each right trivia answer"), k("triviaPerfect", "Thursday: bonus for all five")]);
   wrap.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small quiet", text: "Back to the defaults", onclick: () => { draft.settings.rewards = JSON.parse(JSON.stringify(D)); changed({ now: true }); renderTokens(); } })]));
+}
+/* ---------- Cards (Joe 10/11) ----------
+   Every piece on display has a trading card, common and rare. Prices and odds, and each card's episode title (looked up on
+   YouTube from the piece's episode link, like the GOC link grabber), blurb, or no card at all. */
+let cardsFetched = false;
+const ytId = url => { const m = String(url || "").match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/); return m ? m[1] : ""; };
+async function ytTitle(url) { const id = ytId(url); if (!id) return ""; try { const r = await fetch("https://www.youtube.com/oembed?format=json&url=" + encodeURIComponent("https://www.youtube.com/watch?v=" + id)); if (r.ok) return ((await r.json()).title || "").trim(); } catch (e) {} return ""; }
+async function fetchCardTitles(all, note) {
+  const list = draft.pieces.filter(p => !p.tut && ytId(p.episodeUrl) && (all || !p.episodeTitle)); if (!list.length) { if (note) note.textContent = all ? "No episode links to look up." : "Every card with an episode link has its title."; return; }
+  let got = 0;
+  for (let i = 0; i < list.length; i++) { if (note) note.textContent = "Looking up " + (i + 1) + " of " + list.length + "…"; const t = await ytTitle(list[i].episodeUrl); if (t) { list[i].episodeTitle = t; got++; } }
+  if (note) note.textContent = got + " of " + list.length + " title" + (list.length === 1 ? "" : "s") + " found" + (got < list.length ? " (the rest: a private video, or YouTube didn't answer; type those in)" : "") + ".";
+  if (got) { changed({ now: true }); if (tab === "cards") renderCards(true); }
+}
+/* Episode thumbnails (Joe 10/12): fetched from YouTube in this browser, made card-sized (480×270), and handed over as one zip of
+   museum/thumbs/<video id>.jpg to unzip at the top of the repo. The cards use them once they're on the site. */
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function makeZip(files) { // stored (no compression: JPEGs don't shrink anyway)
+  const enc = new TextEncoder(), parts = [], central = []; let off = 0;
+  const u16 = v => [v & 255, (v >>> 8) & 255], u32 = v => [v & 255, (v >>> 8) & 255, (v >>> 16) & 255, (v >>> 24) & 255];
+  for (const f of files) {
+    const name = enc.encode(f.name), crc = crc32(f.data), n = f.data.length;
+    const head = new Uint8Array([...u32(0x04034b50), ...u16(20), ...u16(0), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(n), ...u32(n), ...u16(name.length), ...u16(0)]);
+    parts.push(head, name, f.data);
+    central.push(new Uint8Array([...u32(0x02014b50), ...u16(20), ...u16(20), ...u16(0), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(n), ...u32(n), ...u16(name.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(off)]), name);
+    off += head.length + name.length + n;
+  }
+  const cdSize = central.reduce((a, b) => a + b.length, 0);
+  return new Blob([...parts, ...central, new Uint8Array([...u32(0x06054b50), ...u16(0), ...u16(0), ...u16(files.length), ...u16(files.length), ...u32(cdSize), ...u32(off), ...u16(0)])], { type: "application/zip" });
+}
+async function ytThumb(id) { // the biggest one YouTube has, cropped to 16:9, 480×270 JPEG bytes (or null)
+  for (const q of ["maxresdefault", "sddefault", "hqdefault", "mqdefault"]) {
+    try {
+      const r = await fetch("https://i.ytimg.com/vi/" + id + "/" + q + ".jpg", { mode: "cors" }); if (!r.ok) continue;
+      const bmp = await createImageBitmap(await r.blob()); if (q !== "mqdefault" && bmp.width <= 120) continue; // (YouTube's grey "no thumbnail" stand-in)
+      const W = 480, H = 270, c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
+      const sh = Math.min(bmp.height, bmp.width * 9 / 16), sw = sh * 16 / 9; x.imageSmoothingQuality = "high"; x.drawImage(bmp, (bmp.width - sw) / 2, (bmp.height - sh) / 2, sw, sh, 0, 0, W, H);
+      const blob = await new Promise(res => c.toBlob(res, "image/jpeg", 0.86)); return new Uint8Array(await blob.arrayBuffer());
+    } catch (e) { if (e instanceof TypeError) return "cors"; }
+  }
+  return null;
+}
+async function downloadThumbs(note) {
+  const ids = [...new Set(draft.pieces.filter(p => !p.tut).map(p => GOQ.ytVideoId(p.episodeUrl)).filter(Boolean))]; if (!ids.length) { note.textContent = "No pieces have an episode link."; return; }
+  const files = [], missing = []; let blocked = false;
+  for (let i = 0; i < ids.length; i++) { note.textContent = "Getting thumbnail " + (i + 1) + " of " + ids.length + "…"; const b = await ytThumb(ids[i]); if (b === "cors") { blocked = true; break; } if (b) files.push({ name: "museum/thumbs/" + ids[i] + ".jpg", data: b }); else missing.push(ids[i]); }
+  if (blocked) { note.textContent = "This browser wouldn't let the page copy YouTube's thumbnails. Try another browser (Chrome or Firefox), or save them by hand: https://i.ytimg.com/vi/VIDEO_ID/maxresdefault.jpg, saved as thumbs/VIDEO_ID.jpg."; return; }
+  if (!files.length) { note.textContent = "No thumbnails came back (private videos, or YouTube didn't answer)."; return; }
+  download("thumbs.zip", makeZip(files));
+  note.textContent = "Downloaded thumbs.zip (" + files.length + " thumbnail" + (files.length === 1 ? "" : "s") + (missing.length ? "; " + missing.length + " missing" : "") + "). Unzip it at the top of the GOChub folder (it makes museum/thumbs), then push. The cards use them from then on (new episodes: download again).";
+}
+function renderCards(keepNote) {
+  const main = $("#main"), oldNote = keepNote && main.querySelector("#cardFetchNote") ? main.querySelector("#cardFetchNote").textContent : ""; main.innerHTML = "";
+  const C = draft.settings.cards = Object.assign({ on: true, single: 10, pack: 25, rare: 20, bluuCommon: 3, packRare: 2, bluuRare: 15 }, draft.settings.cards || {});
+  const wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
+  wrap.appendChild(el("h2", { class: "title", text: "Trading cards" }));
+  wrap.appendChild(el("p", { text: "Every piece on display has a card, in a common and a rare (shiny) form; a piece with an unveil date gets its card that day. The gift shop sells a single card (always a common) and a pack of three (each card has a small chance to be rare). Bluu sells a cheap common that might be fake, and on some Saturdays a real rare. Players keep them in My Stuff → Cards. Changes show in the preview after Apply to preview." }));
+  const num = (k, label, hi, note) => { const i = el("input", { type: "number", min: 0, max: hi, value: C[k], style: "max-width:110px", "aria-label": label }); i.addEventListener("input", () => { C[k] = Math.max(0, Math.min(hi, Math.round(+i.value || 0))); changed(); odds(); }); return el("label", {}, [document.createTextNode(label), i, note ? el("small", { class: "note", text: note }) : null]); };
+  const on = el("input", { type: "checkbox", checked: C.on !== false }); on.addEventListener("change", () => { C.on = on.checked; changed({ now: true }); });
+  const oddsNote = el("p", { class: "note", style: "margin:6px 0 0" }), odds = () => { const p = C.packRare / 100, pk = 1 - Math.pow(1 - p, 3); oddsNote.textContent = pk > 0 ? "About 1 pack in " + Math.max(1, Math.round(1 / pk)) + " has a rare, and Bluu has one about 1 Saturday in " + (C.bluuRare > 0 ? Math.max(1, Math.round(100 / C.bluuRare)) : "never") + "." : "Packs never have a rare."; };
+  wrap.appendChild(el("section", { class: "prow", style: "display:block;margin:10px 0 16px" }, [el("h3", { text: "Prices and odds", style: "margin:0 0 8px" }),
+    el("label", { class: "check" }, [on, document.createTextNode(" Sell cards in the gift shop and at Bluu's stall")]),
+    el("div", { class: "fields", style: "margin-top:8px" }, [num("single", "Single card (tokens)", 999), num("pack", "Pack of three (tokens)", 999), num("rare", "Bluu's rare card (tokens)", 999), num("bluuCommon", "Bluu's common card (tokens)", 999),
+      num("packRare", "Chance each card in a pack is rare (%)", 100), num("bluuRare", "Saturdays Bluu has a rare (%)", 100)]), oddsNote]));
+  odds();
+  const note = el("p", { class: "note", id: "cardFetchNote", style: "margin:6px 0 0", text: oldNote });
+  wrap.appendChild(el("section", { class: "prow", style: "display:block;margin:10px 0 16px" }, [el("h3", { text: "Episode titles", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 8px", text: "Each card names the Games Over Coffee episode its piece came from. The titles come from YouTube, from each piece's episode link (the same lookup as the GOC link grabber). New pieces get theirs looked up when you open this tab; you can also type one in." }),
+    el("div", { class: "row" }, [el("button", { type: "button", class: "btn small", text: "Look up missing titles", onclick: () => fetchCardTitles(false, note) }), el("button", { type: "button", class: "btn small quiet", text: "Look them all up again", onclick: () => fetchCardTitles(true, note) })]), note]));
+  const tnote = el("p", { class: "note", style: "margin:6px 0 0" }), have = Object.values(game.thumbState || {}).filter(v => v === "ok").length;
+  wrap.appendChild(el("section", { class: "prow", style: "display:block;margin:10px 0 16px" }, [el("h3", { text: "Episode thumbnails", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 8px", text: "The big picture on each card is its episode's YouTube thumbnail, with the game's art small in the corner. Download them all as one zip, unzip it at the top of the GOChub folder (it fills museum/thumbs) and push. A card without a thumbnail shows the game's art. " + (have ? have + " thumbnail" + (have === 1 ? " is" : "s are") + " in the folder now." : "None are in the folder yet.") }),
+    el("div", { class: "row" }, [el("button", { type: "button", class: "btn small", text: "Download thumbnails (zip)", onclick: () => downloadThumbs(tnote) })]), tnote]));
+  const today = GOQ.todayISO(), list = draft.pieces.filter(p => !p.tut).slice().sort((a, b) => ((a.unveil || "") < (b.unveil || "") ? -1 : (a.unveil || "") > (b.unveil || "") ? 1 : 0));
+  if (!list.length) wrap.appendChild(el("p", { class: "empty", text: "No pieces yet (Pieces tab)." }));
+  list.forEach(p => {
+    const prev = el("div", { style: "--s:1.5;display:flex;gap:10px;flex-wrap:wrap" }), rare = el("input", { type: "checkbox" });
+    const draw = () => { prev.innerHTML = ""; try { prev.appendChild(game.cardElement(p, rare.checked ? "r" : "c")); } catch (e) { prev.textContent = "(preview unavailable)"; } };
+    rare.addEventListener("change", draw);
+    const text = (k, label, ph, max) => { const i = el("input", { type: "text", value: p[k] || "", placeholder: ph || "", maxlength: max || 140 }); i.addEventListener("input", () => { p[k] = i.value; changed(); draw(); }); return el("label", { class: "wide" }, [document.createTextNode(label), i]); };
+    const no = el("input", { type: "checkbox", checked: !!p.noCard }); no.addEventListener("change", () => { p.noCard = no.checked; changed(); });
+    const when = p.unveil && p.unveil > today ? "Its card arrives on its unveil, " + p.unveil + "." : "In the binder now.";
+    wrap.appendChild(el("section", { class: "prow", style: "display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap" }, [prev,
+      el("div", { class: "fields", style: "flex:1;min-width:240px" }, [el("p", { class: "wide", style: "margin:0;font-weight:700", text: p.title }), el("p", { class: "wide note", style: "margin:0", text: when }),
+        text("episodeUrl", "Episode link (from the piece)", "https://youtu.be/…", 300), text("episodeTitle", "Episode title", "Look up, or type it in"), text("cardBlurb", "The curator's quote (signed \u2014 the curator)", "Your connection with the game, in a line or two"),
+        el("label", { class: "check" }, [rare, document.createTextNode(" Show the rare")]), el("label", { class: "check" }, [no, document.createTextNode(" No card for this piece")])])]));
+    draw();
+  });
+  if (!cardsFetched) { cardsFetched = true; if (list.some(p => ytId(p.episodeUrl) && !p.episodeTitle)) fetchCardTitles(false, note); } // new pieces: their titles, without asking
 }
 /* ---------- Shop ---------- */
 async function itemImage(file) {
@@ -2445,6 +2617,12 @@ function renderShop() {
       el("label", { class: "wide" }, [document.createTextNode("The barista's line"), line])]));
   });
   wrap.appendChild(drinks);
+  // Popcorn: the stand in the theater hallway
+  { const pc = el("input", { type: "number", min: 0, max: 99, value: sh.popcorn === undefined ? 3 : sh.popcorn, style: "max-width:120px" });
+    pc.addEventListener("input", () => { sh.popcorn = Math.max(0, Math.min(99, Math.round(+pc.value || 0))); changed(); });
+    wrap.appendChild(el("section", { class: "prow", style: "display:block;margin:10px 0 16px" }, [el("h3", { text: "Popcorn", style: "margin:0 0 4px" }),
+      el("p", { class: "note", style: "margin:0 0 8px", text: "The popcorn stand in the nook in the theater hallway. A bag costs this many tokens. Sit down and watch an episode with it, and it's gone by the end; the empty bag goes in a trash can (not the café's dish tub). Visitors watching an episode often have some too. Its words are in Words, Screening nook." }),
+      el("label", {}, [document.createTextNode("Price (tokens) "), pc])])); }
   // Today's special: the sandwich board by the café (and starred on the menu)
   { const sp = el("select", { "aria-label": "Today's special" }, [el("option", { value: "", text: "Automatic: the drink of the week, or else a different drink each day" }), ...sh.drinks.map(d => el("option", { value: d.id, text: d.name + ", every day" }))]);
     sp.value = sh.special || ""; sp.addEventListener("change", () => { sh.special = sp.value; changed({ now: true }); });
@@ -2458,13 +2636,13 @@ function renderShop() {
     function drawStock() {
       const keep = game.pack.settings.shop; let days = [];
       try { game.pack.settings.shop = GOQ.normalizePack({ settings: { shop: sh } }).settings.shop; game.stockCache = null;
-        days = [0, 1, 2].map(o => { const f = game.featuredId(o); return game.stockToday(o).map(it => it.name + (it.id === f ? " (featured)" : "")).join(", "); }); }
+        days = [0, 1, 2].map(o => { const f = game.featuredId(o); return game.shopLineup(o).map(it => it.name + (it.id === f ? " (featured)" : "")).join(", "); }); }
       finally { game.pack.settings.shop = keep; game.stockCache = null; }
       stock.innerHTML = ""; ["Today", "Tomorrow", "The day after"].forEach((d, i) => stock.appendChild(el("div", {}, [el("b", { text: d + ": " }), document.createTextNode(days[i] || "nothing")])));
     }
     wrap.appendChild(el("section", { class: "prow", style: "display:block;margin:10px 0 16px" }, [el("h3", { text: "Featured item and today's stock", style: "margin:0 0 4px" }),
-      el("p", { class: "note", style: "margin:0 0 8px", text: "The shop carries a different mix of your items each day (the same for every player), one per stand. Picking a featured item keeps it on the shelves and on the pedestal every day, even over an unveil gift. Unveil gifts are extra, marked LIMITED, until the next unveil." }),
-      el("div", { class: "fields" }, [el("label", {}, [document.createTextNode("Featured item"), fsel]), el("label", {}, [document.createTextNode("Items on the shelves each day"), n])]),
+      el("p", { class: "note", style: "margin:0 0 8px", text: "Five spots, one per stand: the featured item, two museum merch (a different pair each day, the same for every player; this week's unveil gift takes one of them, marked LIMITED, until the next unveil), a single trading card and a pack of three (Cards tab). Picking a featured item keeps it in the first spot every day." }),
+      el("div", { class: "fields" }, [el("label", {}, [document.createTextNode("Featured item"), fsel])]),
       el("h4", { text: "On the shelves", style: "margin:10px 0 4px" }), stock]));
     drawStock(); }
   if (!sh.items.length) wrap.appendChild(el("p", { class: "empty", text: "No items yet. Add the first one below." }));
@@ -2727,34 +2905,100 @@ function pieceRow(p, i, place) {
   return row;
 }
 
-/* ---------- Hear a line: play any line or staff chat in the preview, straight from the draft ----------
-   Lines with several versions (picked at random or in turn in the game, like Sunday coffee) can be played one by one. */
-function lineSources() {
-  const st = draft.settings, out = [];
-  for (const k in GOQ.TEXT) { const d = GOQ.TEXT[k]; out.push({ id: "t:" + k, group: d.g, label: d.l, v: (st.text && st.text[k]) || d.v, who: "" }); }
-  for (const role in GOQ.TALK_ROLES) ((st.talk && st.talk[role]) || []).forEach((e, i) => out.push({ id: "c:" + role + ":" + i, group: "Chat: " + GOQ.TALK_ROLES[role], label: GOQ.TALK_ROLES[role] + ", set " + (i + 1) + " (when: " + e.when.map(w => GOQ.TALK_WHEN[w] || w).join(" + ") + ")", v: e.v, who: GOQ.TALK_ROLES[role] }));
-  return out;
+/* ---------- Visit clock: the director's 12-minute loop (living museum). Jump to a beat, pause, skip ahead; see what's active. ---------- */
+document.querySelectorAll("#segBeat button").forEach(b => b.addEventListener("click", () => { game.setVisitClock(+b.dataset.v * game.director().minutes / 4); showClock(); stage.focus({ preventScroll: true }); }));
+$("#clockPause").addEventListener("click", () => { const d = game.director(); game.setVisitClock(null, !d.paused); showClock(); });
+$("#clockFwd").addEventListener("click", () => { const d = game.director(); game.setVisitClock(Math.min(d.minutes - 0.01, d.min + 1)); showClock(); });
+$("#clockReplay").addEventListener("click", () => { game.replayLoop(); showClock(); stage.focus({ preventScroll: true }); });
+function showClock() {
+  const B = $("#clockBoard"); if (!B) return;
+  if (!B.firstChild) { // built once; after this only the words change, so the panel keeps its size
+    const row = (k, id, cls) => [el("div", { class: "ck", text: k }), el("div", { class: "cv" + (cls ? " " + cls : ""), id })];
+    B.append(el("div", { class: "ctime" }, [el("span", { class: "cbig", id: "ckTime" }), el("span", { class: "cbeat", id: "ckBeat" }), el("span", { class: "cstate", id: "ckState" })]),
+      el("div", { class: "cbar", id: "ckBar" }, ["Settling in", "Getting busy", "Rush", "Winding down"].map(t => el("span", { text: t })).concat([el("i", { id: "ckMark" })])),
+      ...row("This room", "ckRoom"), ...row("Janitor", "ckJan"), ...row("Litter", "ckLit", "l3"), ...row("Supplies", "ckSup"), ...row("Tour", "ckTour"), ...row("Conservator", "ckCons"), ...row("Break room", "ckItem"), ...row("Solved", "ckSolved"));
+  }
+  const d = game.director(), m = Math.floor(d.min), sec = Math.floor((d.min - m) * 60), set = (id, t) => { const e = $("#" + id); if (e.textContent !== t) e.textContent = t; };
+  const tail = (s, k) => (s || "").replace(new RegExp("^" + k + ":\\s*"), "") || "—"; // the label's already in the left column
+  set("ckTime", d.over ? "Over" : m + ":" + String(sec).padStart(2, "0"));
+  set("ckBeat", d.over ? "Loop ended" : d.beatName);
+  set("ckState", "of " + d.minutes + " min" + (d.loop ? " · loop " + (d.loop + 1) : "") + (d.over ? " · usual crowd; jump to a quarter to run it again" : d.running ? " · running" : d.paused ? " · paused" : " · stopped (closing or tutorial)"));
+  [...$("#ckBar").children].forEach((c, i) => { if (c.tagName === "SPAN") c.classList.toggle("on", !d.over && i === d.beat); });
+  $("#ckMark").style.left = "calc(" + (Math.min(1, d.min / d.minutes) * 100) + "% - 1px)";
+  set("ckRoom", (d.here ? d.here.now + " strolling, aiming for " + d.here.want + " (" + d.here.base + " at the busiest)." : "No crowd of its own.") + (d.last ? " Last: someone " + (d.last.what === "in" ? "came in" : "headed out") + ", " + d.last.ago + " s ago." : ""));
+  set("ckJan", tail(game.janitorInfo && game.janitorInfo(), "Janitor"));
+  set("ckLit", game.litterInfo ? game.litterInfo() : "—");
+  set("ckSup", tail(game.supplyInfo && game.supplyInfo(), "Supplies"));
+  set("ckTour", game.tourInfo && game.tourInfo() ? tail(game.tourInfo(), "Tour") : d.problems.includes("tour") ? "Not today (the tutorial's on, or no lobby)." : "Off this loop.");
+  set("ckCons", (game.sideInfo && game.sideInfo("cons")) || "In the basement until the closing announcement.");
+  set("ckItem", (game.sideInfo && game.sideInfo("item")) || (d.problems.includes("item") ? "Not today (the tutorial's on)." : "Off this loop."));
+  set("ckSolved", (game.solvedInfo && game.solvedInfo()) || "—");
+  $("#clockPause").textContent = d.paused ? "Resume" : "Pause";
+  document.querySelectorAll("#segBeat button").forEach(b => b.setAttribute("aria-pressed", String(!d.over && +b.dataset.v === d.beat)));
+  probSync();
 }
-function fillLines() {
-  const sel = $("#lineSel"), ver = $("#lineVer"); if (!sel) return;
-  const keep = sel.value, src = lineSources(), groups = {};
-  src.forEach(x => (groups[x.group] = groups[x.group] || []).push(x));
-  sel.innerHTML = ""; Object.keys(groups).sort((a, b) => (a.startsWith("Chat") ? 1 : 0) - (b.startsWith("Chat") ? 1 : 0) || a.localeCompare(b)).forEach(g => sel.appendChild(el("optgroup", { label: g }, groups[g].map(x => el("option", { value: x.id, text: x.label + (x.v.length > 1 ? " · " + x.v.length + " versions" : "") })))));
-  sel.value = keep && src.some(x => x.id === keep) ? keep : "t:sun.curator";
-  const fillVer = () => { const x = src.find(y => y.id === sel.value), k = ver.value; ver.innerHTML = ""; if (!x) return;
-    x.v.forEach((pg, i) => ver.appendChild(el("option", { value: i, text: "Version " + (i + 1) + ": " + (pg[0] || "").slice(0, 40) })));
-    if (x.v.length > 1 && x.group.startsWith("Chat")) ver.appendChild(el("option", { value: "all", text: "All of them, in turn" }));
-    ver.value = k && [...ver.options].some(o => o.value === k) ? k : "0"; };
-  sel.onchange = () => { ver.value = ""; fillVer(); }; fillVer();
+setInterval(() => { if (tab === "preview") showClock(); }, 1000);
+/* Test triggers (Joe 10/12): every event as a stop. Pick one (or hop with Back and Next) and you're set up beside it. */
+let trigI = -1, trigBusy = false;
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const DAYN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+function showDaySeg() { const v = game.dayOverride === null || game.dayOverride === undefined ? "" : String(game.dayOverride); document.querySelectorAll("#segDay button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === v)); }
+async function goTrigger(i, quiet) {
+  const L = game.testTriggers(), t = L[(i + L.length) % L.length]; trigI = L.indexOf(t);
+  let r; try { game.testPrep(t); showDaySeg(); await wait(450); r = game.testGo(t); } catch (e) { r = "It broke: " + e.message; game.crash(e, "test: " + t.label); }
+  if (!quiet) { $("#trigMsg").textContent = (trigI + 1) + "/" + L.length + " · " + t.label + (t.day !== undefined ? " (" + DAYN[t.day] + ")" : "") + ": " + (r === true ? "you're beside it." : r); drawTriggers(); showErrors(); showClock(); stage.focus({ preventScroll: true }); }
+  return r;
 }
-$("#lineBtn").addEventListener("click", () => {
-  const x = lineSources().find(y => y.id === $("#lineSel").value); if (!x) return;
-  const vars = game.baseVars(), pick = $("#lineVer").value, pages = pick === "all" ? x.v.flat() : x.v[+pick || 0] || [];
-  game.closeAll(); game.mode = "walk";
-  game.say(pages.map((p, k) => (x.who && k === 0 ? x.who + ": " : "") + game.fmt(p, vars)));
-  stage.focus({ preventScroll: true });
+function drawTriggers() {
+  const box = $("#trigList"); if (!box) return; box.innerHTML = ""; const L = game.testTriggers(), groups = [...new Set(L.map(t => t.group))];
+  groups.forEach(g => { box.appendChild(el("div", { class: "pvh", style: "margin:6px 0 2px", text: g }));
+    box.appendChild(el("div", { class: "pvgrid trig" }, L.map((t, i) => t.group !== g ? null : el("button", { type: "button", class: "btn" + (i === trigI ? " primary" : ""), text: t.label, title: (t.day !== undefined ? DAYN[t.day] + ". " : "") + (t.beat !== undefined ? "Jumps the clock to " + ["0:00", "3:00", "6:00", "9:00"][t.beat] + ". " : ""), onclick: () => goTrigger(i) })).filter(Boolean))); });
+}
+function showErrors() {
+  const box = $("#errBox"); if (!box) return; const E = game.errors || [], off = Object.keys(game.livingOff || {}); box.innerHTML = "";
+  if (!E.length && !off.length) { box.textContent = "No errors this session."; return; }
+  box.appendChild(el("b", { text: E.length + " error" + (E.length === 1 ? "" : "s") + " this session" + (off.length ? " · stopped: " + off.join(", ") : "") + " " }));
+  box.appendChild(el("button", { type: "button", class: "btn small quiet", text: "Clear", onclick: () => { game.errors = []; game.livingOff = {}; showErrors(); } }));
+  E.slice(-8).forEach(x => box.appendChild(el("div", { text: "[" + x.at + "] " + x.where + (x.room ? " (in " + x.room + ")" : "") + ": " + x.msg + (x.n > 1 ? " ×" + x.n : "") })));
+}
+$("#trigNext").addEventListener("click", () => goTrigger(trigI + 1));
+$("#trigPrev").addEventListener("click", () => goTrigger(trigI < 0 ? -1 : trigI - 1));
+$("#trigAll").addEventListener("click", async () => { // every stop, on every day: anything that throws (now, or in the frames after) is listed
+  if (trigBusy) return; trigBusy = true; const btn = $("#trigAll"), before = (game.errors || []).length, notes = [], misses = []; btn.disabled = true;
+  const L = game.testTriggers(); let n = 0;
+  try {
+    for (const wd of [1, 2, 3, 4, 5, 6, 0]) {
+      game.setDay(wd); showDaySeg(); game.replayLoop(); await wait(300);
+      for (let i = 0; i < L.length; i++) {
+        const t = L[i]; if (t.day !== undefined && t.day !== wd) continue; if (t.id === "figure" || t.id === "unveil") continue; // (the figure and the unveiling stage themselves: try those by hand)
+        $("#trigMsg").textContent = "Checking " + DAYN[wd] + ": " + t.label + "…"; n++;
+        const errs = (game.errors || []).length, r = await goTrigger(i, true); await wait(350);
+        if ((game.errors || []).length > errs) notes.push(DAYN[wd] + " · " + t.label + ": " + game.errors[game.errors.length - 1].msg);
+        else if (r !== true) misses.push(DAYN[wd] + " · " + t.label + ": " + r); // no error, but you couldn't be put beside it
+      }
+      game.closeAll();
+    }
+  } finally {
+    game.setDay(null); showDaySeg(); game.replayLoop(); btn.disabled = false; trigBusy = false; trigI = -1; drawTriggers(); showErrors(); showClock();
+    const found = (game.errors || []).length - before;
+    $("#trigMsg").textContent = "Checked " + n + " stops on all seven days: " + (found ? found + " error" + (found === 1 ? "" : "s") + " (listed below)." : "no errors.") + (misses.length ? " " + misses.length + " stop" + (misses.length === 1 ? "" : "s") + " couldn't put you beside it (often fine: already found, or not there that day):" : "");
+    const rep = $("#trigReport"); rep.innerHTML = ""; [...notes.map(x => "Error: " + x), ...misses].forEach(x => rep.appendChild(el("div", { text: x })));
+  }
 });
-{ const det = $("#lineSel") && $("#lineSel").closest("details"); if (det) det.addEventListener("toggle", () => { if (det.open) fillLines(); }); $("#lineBtn").closest(".pvsec").addEventListener("pointerenter", () => { if (document.activeElement !== $("#lineSel") && document.activeElement !== $("#lineVer")) fillLines(); }); }
+setInterval(() => { if (tab === "preview") showErrors(); }, 3000);
+game.ready.then(() => { drawTriggers(); showErrors(); }); // the list is in the preview's Options panel too
+
+/* This loop's problems: Auto (every one, every loop), or untick some to try others on their own. */
+let probSync = () => {};
+(function problemPicker() {
+  const box = $("#probPick"); if (!box) return;
+  const auto = el("input", { type: "checkbox", checked: true }), boxes = {};
+  const apply = () => { if (auto.checked) game.setProblems(null); else game.setProblems(Object.keys(boxes).filter(id => boxes[id].checked)); Object.values(boxes).forEach(b => (b.disabled = auto.checked)); showClock(); };
+  probSync = () => { if (auto.checked) { const on = game.director().problems; Object.keys(boxes).forEach(id => (boxes[id].checked = on.includes(id))); } }; // on Auto the ticks show what's on
+  box.appendChild(el("label", { style: "display:flex;gap:4px;align-items:center;font-weight:700" }, [auto, document.createTextNode("Auto")]));
+  GOQ.PROBLEMS.forEach(pr => { const c = el("input", { type: "checkbox", disabled: true }); boxes[pr.id] = c; c.addEventListener("change", apply); box.appendChild(el("label", { style: "display:flex;gap:4px;align-items:center" }, [c, document.createTextNode(pr.who + ": " + pr.label + (pr.built ? "" : " (not built)"))])); });
+  auto.addEventListener("change", () => { if (!auto.checked) { const now = game.director().problems; Object.keys(boxes).forEach(id => (boxes[id].checked = now.includes(id))); } apply(); });
+})();
 
 /* ---------- Import and export ---------- */
 $("#exportBtn").addEventListener("click", async () => {
@@ -2839,7 +3083,7 @@ function askPack(f, b, raw) {
   useDraft(raw); if (moved) { changed({ now: true, keepBase: true }); status("Switched your draft to the one-building layout"); }
   await game.setPack(packOut());
   fillRoomPicker(); // the pack's own room names
-  render(); fillLines();
+  render();
 } finally { if (window.goqReady) window.goqReady(); } })();
 };
 </script>

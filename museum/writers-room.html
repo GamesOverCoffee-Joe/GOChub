@@ -119,6 +119,8 @@ button,input,textarea{font:inherit;color:inherit}
 .tag{font-size:.74rem;font-weight:700;padding:2px 8px;border-radius:999px;border:2px solid var(--line);color:var(--muted)}
 .tag.todo{border-color:var(--todo);color:var(--todo)}
 .tag.fin{border-color:var(--gold);color:var(--gold)}
+.tag.claude{border-color:#c88a5a;color:#c88a5a}
+.row .claude{flex:none;align-self:center;font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:999px;border:2px solid #c88a5a;color:#c88a5a}
 .brief{background:var(--surface-2);border-left:4px solid var(--gold);border-radius:6px;padding:10px 12px;margin:0 0 14px;font-size:.92rem}
 .brief b{display:block;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
 .field{margin:0 0 16px}
@@ -149,6 +151,13 @@ input.one:focus{border-color:var(--gold);outline:none}
 .gbox .gb{white-space:pre-wrap;overflow:hidden;height:100%;overflow-wrap:anywhere}
 .gbox .pg{position:absolute;right:calc(3px * var(--s));bottom:calc(1px * var(--s));font-size:calc(5px * var(--s));line-height:1;color:#808090}
 .gmeasure{position:absolute;left:-9999px;top:0;visibility:hidden}
+.relbox{border:2px solid var(--line, #d8c8b8);border-left:6px solid #c8a868;border-radius:6px;padding:8px 12px;margin:0 0 12px;background:rgba(200,168,104,.08)}
+.relbox b{display:block;margin-bottom:2px}
+.relbox p{margin:2px 0;font-size:.92rem}
+.relbox .for{color:#7a5a20;font-style:italic}
+.cardq{background:#141012;border:2px solid #e8c070;box-shadow:0 0 0 4px #7c2434;border-radius:4px;padding:12px 14px;max-width:300px;margin:6px 4px}
+.cardq .q{font-style:italic;color:#efe6d2;font-size:1.05rem;line-height:1.35}
+.cardq .sig{text-align:right;color:#c8a868;font-size:.85rem;margin-top:4px}
 .led{background:#0c0a0c;border:3px solid #2a2228;border-radius:4px;padding:8px 10px;font-family:var(--pixel);font-size:11px;line-height:1.4;color:#ff4a3a;text-shadow:0 0 6px #ff3020;white-space:nowrap;overflow-x:auto;max-width:100%}
 .listprev{display:flex;flex-wrap:wrap;gap:6px}
 .listprev span{background:#f8f8f0;color:#181820;font-family:var(--pixel);font-size:9px;line-height:1.5;padding:4px 8px;border-radius:3px}
@@ -291,9 +300,31 @@ function buildCards() {
     fields.push({ kind: "line", label: "How a visitor would describe it (\"I tried " + (p.title || "it") + ", the one where…\")", get: () => P().hint || "", set: v => { P().hint = v; } });
     cards.push({ id: "p:" + p.id, cat: "placards", area: "Placards", title: p.title || "Untitled", sub: p.developer || "", where: "Pieces", preview: "placard", fields });
   });
+  // The curator's quote on each piece's trading card (Joe 10/12)
+  raw.pieces.forEach((p, i) => {
+    const P = () => raw.pieces[i];
+    cards.push({ id: "q:" + p.id, cat: "lines", area: "Trading cards", title: p.title || "Untitled", sub: "card quote", where: "Cards", preview: "quote", rel: () => P().rel || "",
+      fields: [{ kind: "para", label: "The curator's quote, on its trading card (signed \u2014 the curator)", get: () => P().cardBlurb || "", set: v => { P().cardBlurb = v; } }] });
+  });
   return cards;
 }
 
+/* What each connection means for a card quote (Claude's guidance; the meanings themselves are the curator's Visitors tab). */
+const REL_QUOTE = {
+  same: "you felt exactly what the developer was going for. Show it landing, fully.",
+  halfway: "part of it landed and part didn't. Name both halves.",
+  student: "it wasn't for you at first. Say what made it click.",
+  accident: "the best part was something the developer never planned. Name what you found.",
+  different: "it made you feel something other than what was intended. Say what you felt instead.",
+  message: "there was a deeper meaning that didn't come through. Say what you got, and that the rest passed you by.",
+  notforme: "it does what it set out to do; you're just not its audience. Respect, without love.",
+};
+/* Claude's lines (Joe 10/11): a card is tagged "claude" while it still holds a version Claude wrote. */
+const isClaude = c => { if (c.id.startsWith("a:")) { const d = GOQ.CLAUDE_ACH && GOQ.CLAUDE_ACH[c.id.slice(2)]; return !!d && c.fields[0].get() === d.name && c.fields[1].get() === d.desc; } // an achievement Claude wrote
+  if (c.id.startsWith("q:")) { const d = GOQ.CLAUDE_QUOTES && GOQ.CLAUDE_QUOTES[c.id.slice(2)]; return !!d && c.fields[0].get() === d; } // a card quote
+  if (c.id.startsWith("s:")) { const d = GOQ.CLAUDE_SHOP && GOQ.CLAUDE_SHOP[c.id.slice(2)]; return !!d && c.fields[1].get() === d; } // a shop item's description
+  const k = c.id.startsWith("t:") ? c.id.slice(2) : null, mine = k && GOQ.CLAUDE_LINES && GOQ.CLAUDE_LINES[k]; if (!mine) return false;
+  const cur = versionsOf("pages", c.fields[0].get()); return mine.some(v => cur.includes(v)); };
 let CARDS = [];
 const byId = id => CARDS.find(c => c.id === id);
 function status(c) {
@@ -429,6 +460,7 @@ function renderHome() {
   // Footer
   $app.appendChild(el("div", { class: "foot" }, [
     el("button", { class: "btn wide", type: "button", text: "Browse every line", onclick: () => go({ name: "archive", cat: "lines", filter: "all" }) }),
+    CARDS.some(isClaude) ? el("button", { class: "btn wide", type: "button", text: "Claude's lines (" + CARDS.filter(isClaude).length + ")", onclick: () => go({ name: "archive", cat: "lines", filter: "claude" }) }) : null,
     el("button", { class: "btn quiet wide", type: "button", text: "Export pack", onclick: exportPack }),
     el("a", { class: "btn quiet wide", href: "curator.html", text: "Open the curator" }),
     el("p", { class: "small", text: "Everything you write saves to the curator's draft in this browser. Export the pack (here or in the curator) to put it on the site." })]));
@@ -452,7 +484,7 @@ function punchCard() {
 function rowFor(c, deck) {
   const st = status(c), first = c.fields.map(f => flat(f.kind, f.get())).join(" · ").replace(/\s+/g, " ");
   return el("button", { class: "row", type: "button", onclick: () => go({ name: "card", id: c.id, deck }) }, [
-    el("span", { class: "dot " + st, title: STATUS_TEXT[st] }), el("span", { class: "txt" }, [el("b", { text: c.title }), el("span", { text: (c.sub ? c.sub + " · " : "") + (first || "(empty)") })])]);
+    el("span", { class: "dot " + st, title: STATUS_TEXT[st] }), el("span", { class: "txt" }, [el("b", { text: c.title }), el("span", { text: (c.sub ? c.sub + " · " : "") + (first || "(empty)") })]), isClaude(c) ? el("span", { class: "claude", text: "claude" }) : null]);
 }
 function legend() { return el("div", { class: "legend" }, [["todo", "To write"], ["default", "Not reviewed"], ["mine", "Done"]].map(([k, t]) => el("span", {}, [el("i", { class: "dot " + k }), t]))); }
 function renderArea() {
@@ -478,10 +510,10 @@ function renderArchive() {
     chip(cats, "Lines", view.cat === "lines", () => { view.cat = "lines"; history.replaceState({ v: view }, ""); draw(); });
     chip(cats, "Placards", view.cat === "placards", () => { view.cat = "placards"; history.replaceState({ v: view }, ""); draw(); });
     const pool = CARDS.filter(c => c.cat === view.cat), n = s => pool.filter(c => s === "done" ? isDone(status(c)) : status(c) === s).length;
-    [["all", "All " + pool.length], ["todo", "To write " + n("todo")], ["default", "Not reviewed " + n("default")], ["done", "Done " + n("done")]].forEach(([k, label]) =>
+    [["all", "All " + pool.length], ["todo", "To write " + n("todo")], ["default", "Not reviewed " + n("default")], ["done", "Done " + n("done")], ["claude", "claude " + pool.filter(isClaude).length]].forEach(([k, label]) =>
       chip(filt, label, view.filter === k, () => { view.filter = k; history.replaceState({ v: view }, ""); draw(); }));
     const qq = (view.q || "").trim().toLowerCase();
-    const list = pool.filter(c => { const s = status(c); if (view.filter === "todo" && s !== "todo") return false; if (view.filter === "default" && s !== "default") return false; if (view.filter === "done" && !isDone(s)) return false;
+    const list = pool.filter(c => { const s = status(c); if (view.filter === "todo" && s !== "todo") return false; if (view.filter === "default" && s !== "default") return false; if (view.filter === "done" && !isDone(s)) return false; if (view.filter === "claude" && !isClaude(c)) return false;
       return !qq || [c.area, c.title, c.sub || "", ...c.fields.map(f => flat(f.kind, f.get()))].join(" ").toLowerCase().includes(qq); });
     const deck = list.map(c => c.id); let area = "";
     list.forEach(c => { if (c.area !== area && view.cat === "lines") { area = c.area; rows.appendChild(el("p", { class: "small", style: "margin:10px 0 0;font-weight:700", text: area })); } rows.appendChild(rowFor(c, deck)); });
@@ -530,13 +562,18 @@ function renderCard() {
   const deck = view.deck, pos = deck ? deck.indexOf(c.id) + 1 : 0;
   $app.appendChild(top(c.area + (pos ? " · " + pos + " of " + deck.length : ""), true));
   $app.appendChild(el("p", { class: "who", text: c.title + (c.sub ? " · " + c.sub : "") }));
-  $app.appendChild(el("div", { class: "tagline" }, [el("span", { class: "tag" + (st0 === "todo" ? " todo" : isDone(st0) ? " fin" : ""), text: STATUS_TEXT[st0] }), el("span", { class: "tag", text: c.where })]));
+  $app.appendChild(el("div", { class: "tagline" }, [el("span", { class: "tag" + (st0 === "todo" ? " todo" : isDone(st0) ? " fin" : ""), text: STATUS_TEXT[st0] }), el("span", { class: "tag", text: c.where }), isClaude(c) ? el("span", { class: "tag claude", text: "claude", title: "Written by Claude in your style. Change it and the tag goes away." }) : null]));
 
   // What it's for: the bracketed brief, when there is one
   const fresh = c.fields.map(f => { const v = f.get(), d = f.def && f.def(); return hasBr(flat(f.kind, v)) && (!d || JSON.stringify(v) === JSON.stringify(d)); });
   const briefs = c.fields.map(f => flat(f.kind, f.get())).join("\n").match(/\[[^\]\n]*\]/g);
   if (briefs && fresh.some(Boolean)) $app.appendChild(el("div", { class: "brief" }, [el("b", { text: "What it's for" }), [...new Set(briefs)].slice(0, 4).map(s => s.slice(1, -1)).join(" · ")]));
   if (c.note) $app.appendChild(el("p", { class: "small", style: "margin:-6px 0 12px", text: c.note }));
+  if (c.rel) { // a card quote: the curator's connection with the game, what it means, and what the quote should carry (Joe 10/12)
+    const rid = c.rel(), R = (N.settings.relations || []).find(r => r.id === rid);
+    $app.appendChild(R ? el("div", { class: "relbox" }, [el("b", { text: "Connection: " + R.name }), el("p", { text: R.about }), REL_QUOTE[rid] ? el("p", { class: "for", text: "For the quote: " + REL_QUOTE[rid] }) : null])
+      : el("div", { class: "relbox" }, [el("b", { text: "No connection set" }), el("p", { text: "Pick one for this piece in the curator (Pieces tab): it's what the curious visitors ask about, and what the quote should carry." })]));
+  }
 
   // Placeholder chips: tap to drop {name} and friends where the cursor is
   const vars = varsIn(c.title, ...c.fields.map(f => flat(f.kind, f.def ? f.def() : "")), ...c.fields.map(f => flat(f.kind, f.get())), c.note || "").filter(v => !/^\{(room|ROOM):/.test(v) || true);
@@ -594,6 +631,11 @@ function renderCard() {
     if (c.preview === "placard") {
       label = "On the placard";
       state.forEach((s, i) => { const t = (s.vers[0] || s.ph[0] || "").trim(); if (!t) return; const f = c.fields[i]; stage.appendChild(el("div", { class: "placard" }, [el("b", { class: /Intention/.test(f.label) ? "red" : "", text: f.label.replace(/ \(.*$/, "").toUpperCase() }), fillVars(t)])); });
+    } else if (c.preview === "quote") { // as it sits on the card: in quotes, signed
+      label = "On the card";
+      const q = txt.trim().replace(/^["\u201C]+|["\u201D]+$/g, "");
+      stage.appendChild(el("div", { class: "cardq" }, [el("div", { class: "q", text: q ? "\u201C" + q + "\u201D" : "" }), el("div", { class: "sig", text: "\u2014 the curator" })]));
+      if (q.length > 95) stage.appendChild(el("p", { class: "warn", style: "color:#f08a6a", text: "Long for a card: it may not all fit (about 95 letters does)." }));
     } else if (c.preview === "led") {
       const line = txt.replace(/\n/g, " ").toUpperCase();
       stage.appendChild(el("div", { class: "led", text: line + " ACROBATIC CAR" }));
