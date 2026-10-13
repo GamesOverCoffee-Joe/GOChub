@@ -259,9 +259,11 @@ Check items off as they land, and note the commit.
 - [x] The curator shows art from the Paint Room (Send to the curator, and Import art from museum-art.json)
 - [x] `UPDATING.md`: Paint Room section
 - [x] Handoff notes below are up to date
-- [ ] Try it on Joe's real phone (touch, pinch, the system file pickers)
+- [ ] Try it on Joe's real phone (touch, pinch, the system file pickers). In progress: first round of feedback done (Scenes collapsible, Peek window)
 
 ### Handoff notes (latest state)
+
+- 2026-10-13, Joe testing on his phone: **Scenes** is collapsible and starts hidden (`meta.scenesOpen`). New **Peek** window (`pip`, `pipDraw()`, `setPip()` in `renderPaint()`): a live copy of the In the game crop floating in a corner of the grid, so painting doesn't mean scrolling back and forth. Sprites that never stand in a room show their scene mockup there. Tap to move it corner to corner (`meta.pipCorner`), × to hide, **Peek** by the zoom buttons to bring it back (`meta.pip`). The In the game engine now loads when either the In the game box or Peek is on. CSS gotcha: the grid's canvas rule is `.stage > canvas`, so it doesn't stretch the canvas inside the peek.
 
 - 2026-10-13: Photoshop atlas added to the export screen (`atlasLayout`, `ATLAS_FONT`, `makeAtlas`, `makeGuide`, `importAtlas`, module level). **If the curator's atlas layout ever changes, change both** (`ATLAS_W`, `CELL_MIN`, `BAND`, `GAP`, slot order). Tests: identical atlas and guide to the curator's; unedited import finds no changes; a red block drawn in the cat's box imports as the cat painted, shows up as Add in the export check, and the Paint Room's atlas updates 1 slot in the curator.
 

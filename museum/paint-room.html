@@ -177,11 +177,16 @@ select.search{appearance:auto;margin-top:8px}
 .pv{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px}
 .pv .chk{border:2px solid var(--line);padding:6px;min-width:44px;min-height:44px}
 .stage{position:relative;width:100%;height:min(calc(100vw - 32px),52vh,528px);height:min(calc(100vw - 32px),52svh,528px);border:2px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface-2);touch-action:none;user-select:none;-webkit-user-select:none}
-.stage canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.stage > canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
 .zoom{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin:8px 0 0}
 .framelabel{margin:8px 0 0;line-height:1.3}
 .zoom button{min-width:44px;min-height:44px;border-radius:8px;border:2px solid var(--line);background:var(--surface);font-weight:700;cursor:pointer;padding:0 8px}
 .zoom button[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
+.pip{position:absolute;z-index:3;border:2px solid var(--gold);border-radius:8px;background:#000;box-shadow:0 2px 10px rgba(0,0,0,.45);overflow:hidden;cursor:pointer;touch-action:manipulation;transition:top .15s,left .15s,right .15s,bottom .15s}
+.pip canvas{display:block;width:100%;height:auto;image-rendering:pixelated}
+.pip.tr{top:6px;right:6px}.pip.br{bottom:6px;right:6px}.pip.bl{bottom:6px;left:6px}.pip.tl{top:6px;left:6px}
+.pip .x{position:absolute;top:2px;right:2px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-weight:700;font-size:1rem;line-height:1;cursor:pointer;padding:0}
+.pip .lbl{position:absolute;left:5px;bottom:2px;font-size:.62rem;font-weight:700;color:#fff;text-shadow:0 0 3px #000,0 0 2px #000;pointer-events:none}
 .frames{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;scrollbar-width:thin}
 .frames button{flex:none;display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:4px;border:2px solid var(--line);border-radius:6px;background:var(--surface);cursor:pointer}
 .frames button[aria-current="true"]{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
@@ -1121,7 +1126,13 @@ function renderPaint() {
   let scene = (meta.scenes && meta.scenes[key]) || sceneDefault, tod = meta.sceneTod || "day";
   if (!sceneList.includes(scene)) scene = sceneList[0];
   const scC = el("canvas", { class: "px", "aria-label": "Scene preview" }), scChips = el("div", { class: "chips scchips", role: "group", "aria-label": "Scene" }), todChips = el("div", { class: "chips scchips", role: "group", "aria-label": "Time of day" });
-  const scBox = el("section", { class: "ctxbox", "aria-label": "Scenes" }, [el("div", { class: "ctxhead" }, [el("b", { text: "Scenes" }), el("span", { class: "small", text: "Mockups from the game's art" })]), scChips, el("div", { class: "ctxview scview" }, [scC]), todChips]);
+  // Closed unless you open it (remembered): most of the time it isn't needed.
+  let scOpen = meta.scenesOpen === true;
+  const scBody = el("div", {}, [scChips, el("div", { class: "ctxview scview" }, [scC]), todChips]);
+  const scToggle = el("button", { class: "btn quiet small", type: "button", onclick: () => { scOpen = !scOpen; meta.scenesOpen = scOpen; saveMeta(); paintScOpen(); if (scOpen) drawScene(); } });
+  const paintScOpen = () => { scBody.hidden = !scOpen; scToggle.textContent = scOpen ? "Hide" : "Show"; scToggle.setAttribute("aria-expanded", scOpen); };
+  const scBox = el("section", { class: "ctxbox", "aria-label": "Scenes" }, [el("div", { class: "ctxhead" }, [el("b", { text: "Scenes" }), el("span", { class: "small", text: "Mockups from the game's art" }), scToggle]), scBody]);
+  paintScOpen();
   $app.appendChild(scBox);
   const sheets = {}; // other sprites' art for the scenes (yours if painted), fetched once
   const artOf = k => k === key ? sheetC : (sheets[k] || (sheets[k] = inUse(k)));
@@ -1131,7 +1142,7 @@ function renderPaint() {
     todChips.innerHTML = ""; [["day", "Day"], ["sunset", "Sunset"], ["night", "Night"]].forEach(([k, t]) => todChips.appendChild(el("button", { class: "chip", type: "button", "aria-pressed": tod === k ? "true" : "false", text: t, onclick: () => { tod = k; meta.sceneTod = k; saveMeta(); paintChips(); drawScene(); } })));
   }
   function drawScene() {
-    if (!sheetC) return;
+    if (!sheetC || !(scOpen || (pipOn && !(ctxG && spots.length)))) return;
     const f = frame, floorK = SLOT.lobby_floor ? "lobby_floor" : null, T = 16;
     let W2, H2, draw;
     const floorFill = (x, w, h, k) => { k = k || floorK; if (!k || !SLOT[k]) { x.fillStyle = "#6b5040"; x.fillRect(0, 0, w, h); return; } for (let y = 0; y < h; y += T) for (let xx = 0; xx < w; xx += T) blit(x, k, 0, xx, y); };
@@ -1162,21 +1173,47 @@ function renderPaint() {
     if (tod !== "day") { x.globalCompositeOperation = "source-atop"; x.fillStyle = tod === "night" ? "rgba(12,18,52,.55)" : "rgba(255,120,50,.2)"; x.fillRect(0, 0, W2, H2); x.globalCompositeOperation = "source-over"; }
     const box = Math.min(528, $app.clientWidth - 32 - 28), k = Math.max(1, Math.min(6, Math.floor(Math.min(box / W2, 260 / H2))));
     scC.style.width = W2 * k + "px"; scC.style.height = H2 * k + "px";
+    if (!(ctxG && spots.length)) pipDraw();
   }
   const liveC = canvasOf(W, H)[0];
+
+  /* Peek: a small live copy of the In the game view floating in a corner of the grid, so you don't scroll back and forth.
+     Sprites that never stand in a room show their scene mockup instead. Tap it to move it to the next corner; × hides it
+     (the Peek button by the zoom buttons brings it back). Both choices are remembered. */
+  let pipOn = meta.pip !== false, ctxLoading = false;
+  const CORNERS = ["tr", "br", "bl", "tl"];
+  const pipC = el("canvas", { class: "px", "aria-hidden": "true" }), pipLbl = el("span", { class: "lbl" });
+  const pip = el("div", { class: "pip " + (meta.pipCorner || "tr"), role: "button", tabindex: "0", "aria-label": "In the game preview: tap to move it to another corner", hidden: true }, [pipC, pipLbl,
+    el("button", { class: "x", type: "button", "aria-label": "Hide the peek window", text: "×", onclick: e => { e.stopPropagation(); setPip(false); } })]);
+  const movePip = () => { const c = CORNERS[(CORNERS.indexOf(meta.pipCorner || "tr") + 1) % 4]; meta.pipCorner = c; saveMeta(); pip.className = "pip " + c; };
+  pip.addEventListener("click", movePip); pip.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); movePip(); } });
+  pip.addEventListener("pointerdown", e => e.stopPropagation());
+  function setPip(on) { pipOn = on; meta.pip = on; saveMeta(); peekB.setAttribute("aria-pressed", on); if (on) { ctxSetup(); if (!(ctxG && spots.length)) drawScene(); } pipDraw(); }
+  function pipDraw() {
+    if (!pipOn) { pip.hidden = true; return; }
+    const game = !!(ctxG && spots.length), src = game ? ctxC : sceneList.length ? scC : null;
+    if (!src || !src.width || (game && ctxC.hidden)) { pip.hidden = true; return; }
+    if (pipC.width !== src.width || pipC.height !== src.height) { pipC.width = src.width; pipC.height = src.height; }
+    const x = pipC.getContext("2d"); x.imageSmoothingEnabled = false; x.clearRect(0, 0, pipC.width, pipC.height); x.drawImage(src, 0, 0);
+    pipLbl.textContent = game ? spots[spotI].name : SCENES[scene];
+    pip.style.width = Math.min(240, Math.round(stage.clientWidth * 0.42)) + "px"; pip.hidden = false;
+  }
+
   async function ctxSetup() {
     ctxOn = meta.context !== false; ctxToggle.textContent = ctxOn ? "Hide" : "Show"; ctxToggle.setAttribute("aria-expanded", ctxOn); ctxBody.hidden = !ctxOn;
-    if (!ctxOn) { ctxNext.hidden = true; ctxName.textContent = ""; return; }
+    if (!ctxOn) { ctxNext.hidden = true; ctxName.textContent = ""; }
+    if (!ctxOn && !pipOn) return pipDraw();
     if (ctxG) return ctxDraw(true);
+    if (ctxLoading) return; ctxLoading = true;
     ctxMsg.textContent = "Looking for it in the museum…"; ctxC.hidden = true;
-    try { ctxG = await contextGame(); spots = await findSpots(key); } catch (e) { ctxMsg.textContent = "Couldn't open the museum here."; return; }
+    try { ctxG = await contextGame(); spots = await findSpots(key); } catch (e) { ctxMsg.textContent = "Couldn't open the museum here."; return; } finally { ctxLoading = false; }
     if (!editor || editor.key !== key) return; // left the painter while it loaded
-    if (!spots.length) { ctxMsg.textContent = "It isn't standing in any room right now (it may be held, worn, on a screen, or only out at certain times). Scenes will cover those later."; return; }
+    if (!spots.length) { ctxMsg.textContent = "It isn't standing in any room right now (it may be held, worn, on a screen, or only out at certain times). Open Scenes below for mockups."; drawScene(); return; }
     ctxDraw(true);
   }
-  function ctxQueue() { if (ctxOn && ctxG && spots.length && !ctxT) ctxT = setTimeout(() => { ctxT = 0; ctxDraw(); }, 250); }
+  function ctxQueue() { if ((ctxOn || pipOn) && ctxG && spots.length && !ctxT) ctxT = setTimeout(() => { ctxT = 0; ctxDraw(); }, 250); }
   function ctxDraw(moved) {
-    if (!ctxG || !spots.length || !ctxOn) return;
+    if (!ctxG || !spots.length || !(ctxOn || pipOn)) return;
     const sp = spots[spotI], lx = liveC.getContext("2d");
     lx.clearRect(0, 0, W, H); lx.drawImage(sheetC, 0, 0);
     linked(key).forEach(k => (ctxG.overrides[k] = liveC)); dropDerived(ctxG, key);
@@ -1191,7 +1228,8 @@ function renderPaint() {
     // a soft marker around the sprite
     x.strokeStyle = "rgba(240,184,64,.9)"; x.lineWidth = 1; x.setLineDash([2, 2]); x.strokeRect(Math.round(sp.x - vx) - 1.5, Math.round(sp.y - vy) - 1.5, Math.ceil(sp.w) + 3, Math.ceil(sp.h) + 3);
     ctxC.style.width = vw * k + "px"; ctxC.style.height = vh * k + "px"; ctxC.hidden = false; ctxMsg.textContent = "";
-    if (moved) { ctxName.textContent = sp.name; ctxNext.hidden = spots.length < 2; ctxNext.textContent = "Next " + (spotI + 1) + "/" + spots.length; ctxNext.setAttribute("aria-label", "Next spot (" + (spotI + 1) + " of " + spots.length + ")"); }
+    pipDraw();
+    if (moved && ctxOn) { ctxName.textContent = sp.name; ctxNext.hidden = spots.length < 2; ctxNext.textContent = "Next " + (spotI + 1) + "/" + spots.length; ctxNext.setAttribute("aria-label", "Next spot (" + (spotI + 1) + " of " + spots.length + ")"); }
   }
   function ctxClose() {
     clearTimeout(ctxT); if (!ctxG) return;
@@ -1209,7 +1247,9 @@ function renderPaint() {
   const frameLabel = el("p", { class: "small framelabel" });
   $app.appendChild(stage);
   if (s.w > s.h * 2 && s.w > 48) $app.appendChild(el("p", { class: "small", style: "margin:6px 0 0", text: "It's long: drag with Move (or two fingers) to get along it." }));
-  $app.appendChild(el("div", { class: "zoom" }, [gridB, zoomBtn("−", "Zoom out", () => zoomBy(1 / 1.5)), zoomBtn("Fit", "Fit to screen", () => { fit(); draw(); }), zoomBtn("+", "Zoom in", () => zoomBy(1.5))]));
+  const peekB = el("button", { type: "button", "aria-pressed": pipOn ? "true" : "false", "aria-label": "Peek: show the in-game preview over the grid", text: "Peek", onclick: () => setPip(!pipOn) });
+  stage.appendChild(pip);
+  $app.appendChild(el("div", { class: "zoom" }, [peekB, gridB, zoomBtn("−", "Zoom out", () => zoomBy(1 / 1.5)), zoomBtn("Fit", "Fit to screen", () => { fit(); draw(); }), zoomBtn("+", "Zoom in", () => zoomBy(1.5))]));
 
   // How the frames are used (not for walk sheets): animation or separate pictures; for an animation, the preview's play order and speed.
   const fsPanel = el("section", { class: "fset", "aria-label": "How these frames are used" });
@@ -1676,7 +1716,7 @@ function renderPaint() {
   };
   /* When the grid's box changes size (rotating the phone; older browsers also resize it as the address bar slides away
      while you scroll), keep your zoom and keep the same spot in the middle. Only the first layout fits the sprite. */
-  const onResize = () => { const w0 = cw, h0 = ch; size(); if (!w0 || !h0) fit(); else { ox += (cw - w0) / 2; oy += (ch - h0) / 2; } draw(); };
+  const onResize = () => { const w0 = cw, h0 = ch; size(); if (!w0 || !h0) fit(); else { ox += (cw - w0) / 2; oy += (ch - h0) / 2; } draw(); pipDraw(); };
   const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => { const r = stage.getBoundingClientRect(); if (Math.abs(r.width - cw) > 0.5 || Math.abs(r.height - ch) > 0.5) onResize(); }) : null;
   document.addEventListener("keydown", onKey); if (ro) ro.observe(stage); else window.addEventListener("resize", onResize);
   editor = { key, close() { if (wipT) { clearTimeout(wipT); saveWip(); } clearTimeout(animT); ctxClose(); document.removeEventListener("keydown", onKey); if (ro) ro.disconnect(); else window.removeEventListener("resize", onResize); } };
