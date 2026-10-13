@@ -107,6 +107,19 @@ From top to bottom on a phone:
 - **Single PNG**: from the editor, download the current slot as `<slot_key>.png`.
 - (Optional) **Curator atlas**: the same 352-wide atlas the curator imports.
 
+### 5. Shop items (the weekly gift)
+
+Added 2026-10-13 (Joe). Each week's unveil gift is a **new shop item**, never a repaint of an old one (players keep old gifts).
+
+- **Home** has a "The weekly gift" panel → **Shop items** (`renderItems()`): **New weekly gift**, the items made here (with "Not sent yet", "Sent <date>" or "Changed since you sent it"), the items already in the shop (read only, from the curator's draft in this browser or else the folder pack), and the **style reference** for the claude.ai Project (copy or download `item-style-reference.txt`: every 16×16 item picture as GOQ ART text).
+- **One item** (`renderItem()`): the picture (1×, 2×, 4×), then name (60), price (0 to 999), description (240), **Gift for** (the exhibit, from the draft's or pack's pieces) and **Unveil date** (filled from the exhibit; changing it changes the exhibit's date when sent). Fields save as you type.
+- **Paint it** opens the normal painter with key `item:<id>` (a 16×16, one-frame virtual slot from `itemSlot()`; `slotOf(key)` looks up real or item slots). For items: no In the game box (they never stand in a room), the Scenes default to On a table, Load the original reads **Start from blank**, and Save writes the picture to the item's record and goes back to its page.
+- **Send to the curator** (`sendItem()`): re-reads `goq-curator-draft`. If there's no draft, it starts one from the folder's fresh `museum-pack.json` and records it in `goq-curator-base` (same fingerprint as the curator, `curatorFingerprint()`). Then it adds or updates that one item in `settings.shop.items`: id, name, price, description, image, and `gift` set to the exhibit's id. It also sets the exhibit's `unveil` if you changed it. It asks first if another item is already that exhibit's gift (that one becomes a regular item, like the curator does) or if the exhibit already has a different date. It refuses at 40 items, the most a pack keeps. Nothing else in the draft changes.
+
+### Art as text (GOQ ART)
+
+For a claude.ai chat, which can't hand over images directly. One picture: `GOQ ART <name> 16x16`, `. transparent`, one `X #rrggbb` line per color, then one row of characters per pixel row. Several pictures can follow each other. `parseArtText(text, w, h)` is forgiving: it skips code fences, quotes, commas, brackets and chat, and reports the first problem it finds (a letter that isn't a listed color, too few rows). `artToText(px, w, h, name)` writes it, with letters by how often each color is used (no O, o or l). In the painter's More menu: **Paste art from Claude…** (into the current frame, any slot, with a choice when there are several pictures) and **Copy as text**. The claude.ai side is in `museum/claude-project/` (see ITEM-ART.md).
+
 ---
 
 ## Data and saving
@@ -117,6 +130,7 @@ From top to bottom on a phone:
 | Keep original | Same store, `kept[key]` | Not in the pack. The game already uses the original. |
 | Work in progress (unsaved pixels, per slot) and my swatches | Same store | Kept out of localStorage so it doesn't crowd the curator's draft (the pack alone is about 1.7 MB; localStorage holds about 5 MB). |
 | Daily stamps, totals, badges, last group | `localStorage["goq-paint-room"]` | Same shape as the Writers' Room (`days`, `total`, ...). |
+| Shop items made here | IndexedDB `misc["items"]` | `id → { id, name, price, description, piece, unveil, png, made, savedAt, sentAt, sent }`. Not in `art`, so no sprite export (pack, curator, museum-art.json, ZIP, atlas) ever sees them. Unsaved pixels are in `wip["item:<id>"]`. |
 
 - **Save** writes the PNG into the art library, marks the slot **Painted**, stamps today and clears that slot's work in progress. It doesn't touch any pack.
 - **Use the original again** removes the slot from the library and marks it **To do**. The next art-only export then removes that slot's `assets` entry, but only if the entry is the one the Paint Room put there.
@@ -143,6 +157,7 @@ You update the game often. A newer build may drop sprites, add new ones, resize 
 4. **The summary screen before download** lists what will be added, replaced, removed and skipped, and says "Nothing else in the pack changes." Nothing downloads without it.
 5. **Offline or opened as a file** (no folder pack to fetch): no pack export. You can choose your own `museum-pack.json` from your device to build on instead, with the same rules, or download the ZIP / an art-only file.
 6. **Art-only file**: `museum-art.json` (`{ format: "goq-art", savedAt, assets: {...} }`) holds only your sprites. Phase 6 adds a matching **Import art** button to the curator that merges it into its draft by the same rules, so art can reach the curator without anything else coming along.
+8. **Shop items are the one exception, and they're narrow.** Send to the curator on a shop item changes only that item (found by its id) in `settings.shop.items`, the `gift` of an item that was that exhibit's gift before (after asking), and that exhibit's `unveil` (after asking if it had another date). The sprite exports never include items.
 7. **The curator's draft is optional and art-only too.** A "Send to the curator" button re-reads `goq-curator-draft` from storage at that moment, changes only `assets[key]` for owned slots (with the same checks), and writes it back. It never rewrites rooms or settings, and it's never needed to get art into the game.
 
 ---
@@ -175,6 +190,9 @@ You update the game often. A newer build may drop sprites, add new ones, resize 
 - 2026-10-13: Context preview is a live crop from the real engine instead of a hand-kept slot-to-room map, so it follows new builds and rooms by itself. (Joe asked; Claude chose the method)
 - 2026-10-13: Multi-frame slots can be previewed as an animation or as separate pictures, with a custom play order; this is preview-only because the engine decides frame timing. (Joe asked; Claude chose the defaults from the engine notes)
 - 2026-10-13: Work in progress and swatches go in IndexedDB, not localStorage, because of storage limits. (Claude)
+- 2026-10-13: **Shop items** for the weekly gift: the Paint Room makes a whole new item (name, price, description, exhibit, unveil date) and sends it to the curator. A new item each week, never a repaint of an old gift. (Joe)
+- 2026-10-13: Item pictures live in their own record, not the sprite library, so the art-only rule still holds for every sprite export; Send to the curator touches only that item and its exhibit's date. (Claude)
+- 2026-10-13: Claude's art travels as text (GOQ ART) through a claude.ai Project, since a chat can't hand over files to the Paint Room. A free Project holds the instructions, the rules and a style reference the Paint Room can regenerate. (Joe asked; Claude chose the format)
 
 ---
 
@@ -261,7 +279,16 @@ Check items off as they land, and note the commit.
 - [x] Handoff notes below are up to date
 - [ ] Try it on Joe's real phone (touch, pinch, the system file pickers). In progress: first round of feedback done (Scenes collapsible, Peek window)
 
+### Shop items (2026-10-13)
+- [x] Merged into experiments-1 (version settled as cards 43)
+- [x] Shop items list, New weekly gift, the item page, Send to the curator (starts a draft from the folder pack when there's none)
+- [x] The painter on `item:<id>` (blank start, no In the game box, Save to the item)
+- [x] GOQ ART: Paste art from Claude, Copy as text, the style reference
+- [x] claude-project/ kit (instructions, rules, starting style reference) and ITEM-ART.md
+
 ### Handoff notes (latest state)
+
+- 2026-10-13, Shop items: `itemsStore()`, `putItem()`, `itemSlot()`, `slotOf()`, `readDraftPack()` near the top; `artToText()`, `parseArtText()`, `copyText()`, `styleReference()`, `renderItems()`, `renderItem()`, `sendItem()`, `curatorFingerprint()` before the badges. In `renderPaint()`: `itemRec`, the paste box (`pasteBox`, `usePaste()`, `framePx()`) and the item branch at the top of `save()`. Tested at 400×860 in Playwright: a fresh browser makes a gift, pastes Claude-style text (with code fences and quoted rows), saves and sends. The draft gets the item and the exhibit's date, it survives `normalizePack`, the curator's Shop tab shows it, and the sprite export check says "Nothing to change". A second gift for the same exhibit asks, then the first becomes a regular item. Resend says Updated. A typo'd color letter and a short picture give clear messages. Pasting ITEM-ART's rules file finds its example; the style reference finds both tanks. Ordinary sprite painting still saves to the library.
 
 - 2026-10-13, Joe's phone feedback (voice notes): the painter now reads grid → zoom row → **tools → selection bar → colors**, then frames, frame tools, frame settings, trace and More (`zoomRow.after(tools, selBar, palPanel)` near the end of `renderPaint()`). Frame settings ("Plays as", play order, speed) fold into one line (`details.fset`, summary like "Frames: animation · order 1 2 · 260 ms") and stay open while you change them.
 

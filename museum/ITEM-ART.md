@@ -1,73 +1,71 @@
 # Weekly item art (the featured gift)
 
-Each week a new game gets an exhibit, unveiled on the show. Its gift goes on sale in the gift shop at the same moment. You only know what the item is after you've played the game, so this is the quick path: ask Claude for the art, touch it up in your paint program, upload it in the curator, then push the update just before the show.
+Each week a new game gets an exhibit, unveiled on the show, and its gift goes on sale in the gift shop at the same moment. You only know what the item is after you've played the game. So the art comes from a claude.ai Project, you tidy it up in the Paint Room, and the Paint Room puts the new item into the curator for you.
 
-## The steps each week
+Each week's gift is a new shop item. Don't repaint an old one: players who already have it would see their item change. Older gifts drop out of the gift shop when the next one is unveiled, and stay in players' collections and at Bluu's Saturday table.
 
-1. Play the game and decide on the item: what it is, its colors, and anything about it that has to read at a glance.
-2. Open a new chat on claude.ai and paste the prompt below, filled in. You'll get a page that shows the art large and at real size, with a download button for each version.
-3. Ask for changes in plain words until it's close, for example "move the brain one pixel left" or "make the treads darker".
-4. Download the PNG and tidy it up in your paint program. Keep it exactly 16 by 16, and keep the background see-through.
-5. In the curator, open the Shop tab and add an item. Fill in its name, price and description, then use Choose image to add the PNG. Set Unveil gift for to the new exhibit.
-6. Check it in the Preview tab, using Force stock if you need it on the shelf. Then save the pack and push it before the show goes live.
+## Setting up the Project (once)
 
-## The rules the art has to follow
+The files are in museum/claude-project.
+
+1. On claude.ai, make a new Project, for example "GOQ weekly items".
+2. Open museum/claude-project/PROJECT-INSTRUCTIONS.md and paste all of it into the Project's instructions.
+3. Add item-art-rules.md and item-style-reference.txt to the Project's files (knowledge).
+
+On the free plan Projects have a size cap. These files are small text files, so they fit easily. If you ever lose them, re-upload them from the repo.
+
+## Each week
+
+1. In the Project, start a new chat and say what to draw, for example: "This week: Cognitanks. A toy tank with half a brain on top of the turret, in the center, attached to it. Make a plain version too."
+2. Claude answers with a preview page (with a download button) and the art as text in a code block. Ask for small changes until it's close, for example "move the brain one pixel left".
+3. Copy the code block (claude.ai has a copy button on it).
+4. In the Paint Room, open Shop items, then New weekly gift. Fill in the name, price and description, choose the exhibit, and check the unveil date.
+5. Press Paint it, open More, choose Paste art from Claude, paste, and press Use it. If you pasted more than one version, pick one. Touch it up with the Paint Room's tools, then Save.
+6. Press Send to the curator. It adds the item to the curator's draft in that browser as the exhibit's gift, and sets the exhibit's unveil date. Nothing else changes.
+7. Open the curator in the same browser, check it in the Preview tab, export the pack and push it before the show goes live.
+
+To ask Claude for a change after you've edited it yourself, use More, then Copy as text in the Paint Room, and paste that into the chat.
+
+Every few weeks, refresh the Project's style reference: in Shop items, press Download item-style-reference.txt, then replace the file in the Project. Claude then matches everything that's in the shop.
+
+## If something's off
+
+| What you see | What to do |
+|---|---|
+| Paste says a row uses a letter that isn't one of the colors | Claude made a typo. Ask it to check that picture against the rules and send it again. |
+| Paste says it found the wrong number of rows | The picture isn't 16 by 16. Ask Claude to redo it at exactly 16 by 16. |
+| Send says there's already a gift for that exhibit | Say OK to make yours the gift; the old one stays in the shop as a regular item. |
+| Send says the shop has 40 items | That's the most a pack keeps. Remove an old regular item in the curator, then send again. |
+| The curator doesn't show the item | Use the curator in the same browser as the Paint Room, and reload it after sending. |
+
+## The rules the art follows
+
+These are the same rules as in item-art-rules.md, the file Claude reads.
 
 | What | Rule |
 |---|---|
-| Size | Exactly 16 by 16 pixels. The game shows every shop item as a 16 by 16 icon. A bigger image gets shrunk and goes blurry, so draw at 16. |
-| File | PNG with a transparent background. No white or colored box behind the item. |
+| Size | Exactly 16 by 16 pixels. The game shows every shop item as a 16 by 16 icon; a bigger image gets shrunk and goes blurry. |
+| File | Transparent background. No white or colored box behind the item. |
 | Edges | Hard pixels only: no anti-aliasing, no soft shadows, no gradients. |
 | Outline | A 1-pixel outline all the way round, in the game's near-black, #181820. |
-| Colors | 4 to 7 colors in all, counting the outline. Each part of the item gets 2 or 3 shades of its color: light, mid and dark. |
-| Highlight | Highlights in the game's off-white, #f8f4ec, not pure white. One or two pixels is plenty. |
-| Light | Light comes from the top left: lighter on top and left, darker on the bottom and right. |
+| Colors | 4 to 7 colors in all, counting the outline. Each part gets 2 or 3 shades of its color: light, mid and dark. |
+| Highlight | The game's off-white, #f8f4ec, not pure white. One or two pixels is plenty. |
+| Light | From the top left: lighter on top and left, darker on the bottom and right. |
 | View | A slight three-quarter view, a little from above and from the side, the way Pokémon Red and Blue draw items and furniture. |
-| Fit | Fill most of the square but leave a pixel or so of room at the edges, centered. Wide things such as a tank sit lower; tall things are centered. |
-| Readability | It has to be recognizable at real size in a menu. Exaggerate the one thing that makes it this item (the brain, the logo, the shape) and leave out small detail. |
+| Fit | Fill most of the square but leave a pixel or so of room at the edges, centered. |
+| Readability | Recognizable at real size. Exaggerate the one thing that makes it this item and leave out small detail. |
 
-These shades were used for the Cognitanks pair, so you can reuse or match them:
+## The art as text
 
-| Use | Color |
-|---|---|
-| Outline | #181820 |
-| Highlight | #f8f4ec |
-| Toy green (light, mid, dark) | #9cc46a, #5f8f3e, #3a5a2a |
-| Treads and wheels | #4a4a58, #a8aeb8 |
-| Brain pink (light, mid, dark) | #f6b8c4, #e07a92, #a84a66 |
-
-## The prompt to paste into claude.ai
-
-Copy everything from "I'm making pixel art" down to the end of this section. Replace the parts in square brackets.
-
-I'm making pixel art for a shop item in my game, the GOQ Museum: a cozy, top-down pixel game in the style of Pokémon Red and Blue, with a modern palette. Please draw the item and give it to me as an HTML artifact.
-
-The item: [WHAT IT IS, e.g. a toy tank]. It's the gift for the exhibit of the game [GAME NAME]. Details that matter: [COLORS, PARTS, ANYTHING IT MUST SHOW]. Please make [NUMBER] versions: [DESCRIBE EACH VERSION, e.g. 1) a plain toy tank, 2) the same tank with half a brain on top of the turret, in the center, attached to it].
-
-The rules:
-- Exactly 16 by 16 pixels, on a transparent background.
-- Hard pixels only: no anti-aliasing, gradients or soft shadows.
-- A 1-pixel outline all the way round in #181820.
-- 4 to 7 colors in all, counting the outline, with 2 or 3 shades per part (light, mid, dark). Highlights in #f8f4ec, never pure white.
-- Light from the top left.
-- A slight three-quarter view, a little from above and from the side, like items and furniture in Pokémon Red and Blue.
-- Centered, with about a pixel of room at the edges. It must still be recognizable at real size, so exaggerate the defining feature and skip fine detail.
-
-How to build it:
-- Write each version as a grid of 16 strings of 16 characters, one character per pixel, with "." for transparent and a letter for each color, plus a small table of letters to hex colors. Keep the grids in the page's code so I can ask you to change single pixels.
-- Show each version three ways: large (each pixel a 20-pixel square, on a light checkerboard so the transparent parts show), on a dark background, and at real size (16 by 16, and again at 2x).
-- Give each version a "Download PNG" button that saves exactly 16 by 16 pixels with a transparent background, named after the item (for example toy-tank.png).
-- Under each version, list the colors it uses.
-
-After that I'll ask for small fixes, such as "move this one pixel" or "darken the treads". Change only what I ask, keep the same grid and colors otherwise, and update the page.
+The Paint Room and the Project share a simple text format called GOQ ART. A picture is a header line (GOQ ART, the name and 16x16), a line ". transparent", one line per color (a letter, a space and #rrggbb), then 16 rows of 16 characters, one per pixel. item-art-rules.md has the full description and an example. The Paint Room's paste is forgiving: it skips code fences, quotes, commas and any chat around the picture.
 
 ## This week: Cognitanks
 
-Both versions are already drawn by Claude, in museum/item-art. They follow the rules above, and both were checked in the gift shop at real size.
+Both versions are drawn already, in museum/item-art, and they're the first two pictures in the style reference.
 
 | File | What it is |
 |---|---|
 | museum/item-art/toy-tank.png | A plain green toy tank |
 | museum/item-art/cognitank.png | The same tank with half a brain on top of the turret, in the center |
 
-To use one, download it from GitHub (or take it from the folder in your copy of the repo), tweak it if you like, then add it in the curator's Shop tab as in step 5.
+To use one: copy its picture from museum/claude-project/item-style-reference.txt (from its GOQ ART line down to the last row) and paste it into a new weekly gift in the Paint Room. Or use Import a PNG as pixels with the PNG file.

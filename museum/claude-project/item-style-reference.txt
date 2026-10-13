@@ -1,0 +1,58 @@
+GOQ Museum: shop item style reference
+
+Every picture below is a shop item from the game, 16 by 16 pixels. Each lists its colors, then 16 rows of 16 characters, one per pixel ("." is see-through). New items should match this look: the outline, how many colors, the shading and the light from the top left.
+
+GOQ ART Toy tank 16x16
+. transparent
+A #181820
+B #4a4a58
+C #9cc46a
+D #5f8f3e
+E #a8aeb8
+F #3a5a2a
+G #f8f4ec
+................
+................
+................
+......AAAA......
+.....AGCCDA.....
+....ACCCDDDAAAAA
+....ADDDDFFCCCFA
+..AAAAAAAAAAAAAA
+.ACCGCCCCCCCCCA.
+.ADDDDDDDDDDDFA.
+ABBBBBBBBBBBBBBA
+ABEBEBEBEBEBEBEA
+.ABBBBBBBBBBBBA.
+..AAAAAAAAAAAA..
+................
+................
+
+GOQ ART Cognitank 16x16
+. transparent
+A #181820
+B #4a4a58
+C #9cc46a
+D #5f8f3e
+E #f6b8c4
+F #a8aeb8
+G #e07a92
+H #3a5a2a
+I #f8f4ec
+J #a84a66
+.....AA.AA......
+....AEEAEEA.....
+...AEIGEEGEA....
+...AEGEEGGEA....
+...AEEGEEJJA....
+....AAAAAAA.....
+.....AICCDA.....
+....ACCCDDDAAAAA
+....ADDDDHHCCCHA
+..AAAAAAAAAAAAAA
+.ACCICCCCCCCCCA.
+.ADDDDDDDDDDDHA.
+ABBBBBBBBBBBBBBA
+ABFBFBFBFBFBFBFA
+.ABBBBBBBBBBBBA.
+..AAAAAAAAAAAA..
