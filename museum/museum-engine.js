@@ -3354,6 +3354,11 @@ class Game {
   }
   keyFor(code) { if (!this.keymap) { const m = { Escape: "start", Backspace: "bk" }, B = this.keyBinds(); for (const a in B) for (const c of B[a]) m[c] = a; this.keymap = m; } return this.keymap[code]; }
   bindInput() {
+    // A tab left open overnight (or a phone that only put the page to sleep) comes back on yesterday: once the date has
+    // moved on, coming back to the page starts a proper new visit, as if it had just been opened (Joe 10/13).
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") this.newDayCheck(); });
+    window.addEventListener("pageshow", e => { if (e.persisted) this.newDayCheck(); });
+    window.addEventListener("focus", () => this.newDayCheck());
     const isField = t => t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable);
     window.addEventListener("keydown", e => {
       // Typing on a real keyboard while the note card shows its on-screen one: switch to typing for real.
@@ -7340,6 +7345,14 @@ class Game {
     this.mode = "busy"; this.trans = { t: 0, dur: 10, switched: false, fn: () => { if (free) this.enterRoom(this.room.id, x, y, d, true); else { const s = ROOMS.lobby.spawn; this.enterRoom("lobby", s[0], s[1], s[2], true); } },
       after: () => this.say(this.tx("respawn.quip", null, true)) };
   }
+  newDayCheck() { // the calendar day changed since this page started its visit: save where you are and load it fresh
+    if (this.curator || this.headless || !this.saveKey || DAY_SHIFT || this.reloading) return;
+    const iso = t => { const d = new Date(t); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); };
+    if (iso(Date.now()) === iso(SESSION_DAY)) return;
+    this.reloading = true;
+    try { if (this.progress && this.room && !this.tut && this.mode !== "ended") { this.saveLoop(); this.saveWhere(); } else if (this.progress) this.saveProgress(); } catch (e) {}
+    location.reload();
+  }
   saveWhere() { const p = this.player; this.progress.where = { room: this.room.id, x: p.x, y: p.y, dir: p.dir }; this.saveProgress(); }
   /* The usher talks to visitors like visitors and to staff like coworkers. */
   usherTalk() { const u = this.room.npcs.find(n => n.usher); if (u && this.tour && this.tour.on && !this.tour.school) { this.usherTour(u); return; } this.staffTalk("usher"); } // Tuesdays the school brings its own guide // a tour today: about that
@@ -9638,7 +9651,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 41";
+const VERSION = "2026-11-18 cards 42";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
