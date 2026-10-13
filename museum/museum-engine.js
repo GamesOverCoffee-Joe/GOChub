@@ -1674,8 +1674,9 @@ function normalizePack(p) {
 /* The curator's "Skip to tomorrow" moves every daily system forward together. */
 let DAY_SHIFT = 0;
 /* "Today" is the day you opened the game: playing past midnight doesn't roll the stock, the drink of the week or anything
-   else daily over mid-visit (Joe 10/11). The next time you open it, it's the new day. */
-const SESSION_DAY = Date.now();
+   else daily over mid-visit (Joe 10/11). The next time you open it, it's the new day: a reload, or coming back in from the
+   BE RIGHT BACK or CLOSED screen in the same tab (reopen, Joe 10/13). */
+let SESSION_DAY = Date.now();
 const RUN_SEED = (Math.random() * 1e9) | 0; // new every time the game starts: the things you find (the cat, crooked and dusty frames, fingerprints, the conservator's case) are somewhere new every session (Joe 10/11)
 function todayISO() { const d = new Date(SESSION_DAY + DAY_SHIFT * 864e5); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
 function daysBetween(a, b) { const t = s => { const [y, m, d] = s.split("-").map(Number); return Date.UTC(y, m - 1, d); }; return Math.round((t(b) - t(a)) / 864e5); }
@@ -4233,6 +4234,7 @@ class Game {
   hideEnd() { if (this.el.endWrap) this.el.endWrap.style.display = "none"; }
   /* Open again without reloading: visitors return, lights come on, you start at the front doors. */
   reopen() {
+    { const was = todayISO(); SESSION_DAY = Date.now(); if (todayISO() !== was) { this.stockCache = null; this.popupCache = null; } } // a new visit: today's date again (quit yesterday, back in today: thirsty plants, new stock)
     this.lightsOff.clear(); this.closing = false; this.closed = false; this.closingPaid = false; this.dayStart = Object.assign({}, this.progress.tally);
     { const J = this.jan; if (J && (J.phase === "gone" || (J.brk && J.brk.act === "home"))) { // he'd gone home for the night: back he comes, on with what he hadn't finished (Joe 10/12)
       const n = J.npc; J.phase = J.i < J.stops.length ? "chores" : "plants"; J.brk = null; J.cur = null; J.lit = null; J.can = null; J.door = null; J.mode = "go"; J.eta = -1; J.tk = null;
@@ -9636,7 +9638,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 40";
+const VERSION = "2026-11-18 cards 41";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
