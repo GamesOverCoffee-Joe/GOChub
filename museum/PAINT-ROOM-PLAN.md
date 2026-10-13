@@ -172,6 +172,7 @@ You update the game often. A newer build may drop sprites, add new ones, resize 
 - 2026-10-13: Extra tools: line, rectangle and circle; select with move, flip and rotate; trace a photo or PNG. (Joe)
 - 2026-10-13: Slots that already have custom art in the folder pack (made elsewhere, like Joe) show as **In the pack** and count as done. They have no "Keep original" button. Painting one is allowed, but export won't replace the pack's art unless it's ticked. (Claude)
 - 2026-10-13: Added a **Move** tool (one-finger or mouse pan), so desktop and one-handed use can get around long sprites like the murals. (Claude)
+- 2026-10-13: Context preview is a live crop from the real engine instead of a hand-kept slot-to-room map, so it follows new builds and rooms by itself. (Joe asked; Claude chose the method)
 - 2026-10-13: Work in progress and swatches go in IndexedDB, not localStorage, because of storage limits. (Claude)
 
 ---
@@ -212,7 +213,8 @@ Check items off as they land, and note the commit.
 - [x] Animation playback in the preview (characters walk in the direction of the current frame)
 
 ### Phase 4: Palette and tools
-- [ ] Named swatches: add, rename, recolor, reorder, delete
+- [x] Named swatches ("My swatches"): add (the + or "Save color"), rename and delete in Edit mode, kept across every sprite (done early, Joe asked 10/13)
+- [ ] Swatches: recolor and reorder
 - [ ] Color picker (hue/saturation/value plus hex)
 - [ ] Recolor-all option
 - [ ] Line, rectangle and circle (outline and filled)
@@ -245,7 +247,8 @@ Check items off as they land, and note the commit.
 - [ ] In-hand mockup
 - [ ] Walk cycle and loop
 - [ ] Day, sunset and night tint
-- [ ] "See it in the museum" (real engine plus slot-to-room map)
+- [x] **In the game** window in the painter (done early, Joe asked 10/13): a hidden headless engine draws each room whole, finds where the sprite lands, and shows a live crop around it while you paint. "Next" steps through spots. Hide/Show is remembered. Replaces the hand-kept slot-to-room map.
+- [ ] Bigger "See it in the museum" (walk around with your art), if still wanted after the window
 
 ### Phase 8: Polish and test
 - [ ] Phone-size test (Playwright 390×844), light and dark
@@ -254,6 +257,12 @@ Check items off as they land, and note the commit.
 - [ ] Handoff notes below are up to date
 
 ### Handoff notes (latest state)
+
+- 2026-10-13, after Phase 2 (Joe's asks): **My swatches** and the **In the game** window.
+  - Swatches live in `DB.data.misc.swatches` (`[{ id, name, color }]`, color is packed RGBA). Code: `addSwatch()`, `paintPalette()` in `renderPaint()`.
+  - In the game: `contextGame()` (one hidden `GOQ.Game`, headless, the folder pack plus library art), `findSpots(key)` (wraps `CanvasRenderingContext2D.prototype.drawImage` only while `renderRoomFull()` runs, and records where the sprite's art, or a tinted copy of it, is drawn), and `ctxDraw()` (puts the live canvas in as the sprite's override and redraws the room). `STAND_INS` covers sprites the engine swaps on the same spot (plant ↔ thirsty plant, trash can ↔ full can). `YOU` sprites (player outfits) are drawn on a stand-in of you in the lobby, since whole-room renders leave the player out. Not found (held items, emotes, UI, night-only, Tuesday-only): a message instead. `ctxClose()` puts the real art back.
+  - Reloading (which phones do to background tabs) now reopens the same screen; a fresh visit starts at Home.
+  - Tested: the cat (Staff Room), the front desk and plant (Lobby, 5 spots), the player (Lobby); the crop updates as you paint; swatch add, rename, delete and reload.
 
 - 2026-10-13, Phase 2 done: the painter (`renderPaint()`, view `{ name: "paint", key, frame }`). The whole sheet is one RGBA array `px`; tools write into the current frame via `getPx` / `setPx` (frame-relative coordinates). Strokes push a copy of `px` onto `undo`. `editor.close()` (called from `render()`) flushes work in progress. Tested in Playwright (390×844): paint a stroke, fill, switch frames, undo, leave and resume, save → the tile shows the painted art. A synthetic two-finger pinch zooms without painting. The mural (256×16) and the 4×3 aisle light both open usable. Desktop keys: B/P pencil, E eraser, F/G fill, I pick, H/M move. Next: **Phase 3 (onion skin, copy and paste a frame)**, then Phase 4.
 

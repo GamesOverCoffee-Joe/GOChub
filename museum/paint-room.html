@@ -202,6 +202,22 @@ select.search{appearance:auto;margin-top:8px}
 details.more summary{cursor:pointer;font-weight:700;min-height:28px}
 details.more .foot{margin-top:12px}
 .iconbtn[disabled]{opacity:.35;pointer-events:none}
+.ctxbox{background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 10px}
+.ctxhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ctxhead b{font-size:.85rem}
+.ctxhead .small{flex:1;min-width:0}
+.ctxview{margin-top:8px;display:flex;justify-content:center;background:#000;border-radius:6px;overflow:hidden}
+.ctxview .small{color:#cbb;padding:12px;text-align:center}
+.btn.small{min-height:36px;padding:.2em .8em;font-size:.85rem}
+.palhead{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:12px 0 6px}
+.palhead.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.palhead.row .btn{text-transform:none;letter-spacing:0}
+.pal.mine{gap:8px}
+.swcell{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;width:52px}
+.swname{font-size:.66rem;line-height:1.2;color:var(--muted);max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.swdel{position:absolute;top:-8px;right:-4px;width:26px;height:26px;border-radius:50%;border:2px solid var(--surface);background:var(--warn);color:#fff;font-weight:700;line-height:1;cursor:pointer;padding:0}
+.mine.editing .sw{animation:wob .9s ease-in-out infinite alternate}
+@keyframes wob{from{transform:rotate(-3deg)}to{transform:rotate(3deg)}}
 @media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
 </style>
 </head>
@@ -320,7 +336,9 @@ function animated(sheet, s, box) {
 }
 
 /* ---------- Navigation ---------- */
-let view = { name: "home" }; const skipped = new Set();
+// A reload (phones do this to tabs left in the background) reopens where you were; a fresh visit starts at home.
+const navType = ((performance.getEntriesByType && performance.getEntriesByType("navigation")[0]) || {}).type;
+let view = (navType === "reload" || navType === "back_forward") && history.state && history.state.v || { name: "home" }; const skipped = new Set();
 function go(v, replace) { view = v; if (replace) history.replaceState({ v }, ""); else history.pushState({ v }, ""); render(); scrollTo(0, 0); }
 window.addEventListener("popstate", e => { view = (e.state && e.state.v) || { name: "home" }; render(); });
 history.replaceState({ v: view }, "");
@@ -560,6 +578,66 @@ const svg = d => { const w = el("span", { "aria-hidden": "true" }); w.innerHTML 
 const CHAR_ROWS = ["down", "up", "left", "right"], CHAR_COLS = ["standing", "step 1", "step 2"];
 const frameName = (s, f) => s.layout === "char" ? "Facing " + CHAR_ROWS[Math.floor(f / 3)] + ", " + CHAR_COLS[f % 3] : "Frame " + (f + 1);
 
+
+/* ---------- In the game: where a sprite sits, cropped from the real engine ----------
+   A hidden, headless copy of the engine (like the curator's room editor) with the folder's pack and your library art.
+   To find a sprite we draw each room whole and note where the sprite's art lands (drawImage is watched only while a
+   room draws). While you paint, the sprite's art in that engine is your live canvas, and the room is redrawn and cropped. */
+let ctxReady = null; const ctxSpots = {};
+// Sprites the engine swaps in on the same spot depending on the day (the hidden copy's plants are never watered, say):
+// in the preview, your art stands in for them too.
+const STAND_INS = { plant: ["plant_thirsty"], trash_can: ["trash_full"] };
+const linked = key => [key, ...(STAND_INS[key] || [])];
+// Whole-room drawings leave you (the player) out, so outfits you wear are shown on a stand-in of you in the lobby.
+const YOU = { player: 1, player_staff: 1, player_goq_shirt: 1 };
+function withYou(g, key, id, fn) {
+  const r = g.rooms[id]; if (!YOU[key] || id !== "lobby" || !r) return fn();
+  const sp = GOQ.ROOMS.lobby.spawn, me = Object.assign({}, g.player, { sheet: key, x: sp[0], y: sp[1] - 2, dir: "down", moving: false, prog: 0, bumpT: 0, alpha: undefined });
+  r.npcs.push(me); try { return fn(); } finally { r.npcs.splice(r.npcs.indexOf(me), 1); }
+}
+function contextGame() {
+  if (ctxReady) return ctxReady;
+  ctxReady = (async () => {
+    const wrap = el("div", { style: "position:absolute;left:-9999px;top:0;width:10px;height:10px;overflow:hidden", "aria-hidden": "true" }); document.body.appendChild(wrap);
+    const g = new GOQ.Game(wrap, undefined, { curator: true, capture: "focus", saveKey: null, headless: true });
+    if (pack) await g.setPack(pack); else await g.ready;
+    libraryInto(g); return g;
+  })();
+  return ctxReady;
+}
+// Your library art over the pack's (setPack replaces the engine's overrides, so this runs after it).
+function libraryInto(g, only) { for (const k in DB.data.art) { if (only && k !== only) continue; const img = imgCache[DB.data.art[k].png]; if (img) g.overrides[k] = img; } }
+// Tinted and recolored copies the engine made from a sprite ("visitor_a@#c83838", "goq_hat~bx-hat-purple") go stale when it changes.
+function dropDerived(g, key) { const ks = linked(key); for (const k in g.cache) { const b = k.split(/[@~]/)[0]; if (k !== b && ks.includes(b)) delete g.cache[k]; } }
+function traceDraws(g, key, fn) {
+  const proto = CanvasRenderingContext2D.prototype, orig = proto.drawImage, hits = [];
+  const ks = linked(key), mine = img => ks.some(k => img === g.overrides[k] || img === g.cache[k]) || Object.keys(g.cache).some(k => g.cache[k] === img && ks.includes(k.split(/[@~]/)[0]));
+  proto.drawImage = function (img, ...a) {
+    if (mine(img)) {
+      let dx, dy, dw, dh;
+      if (a.length >= 8) [, , , , dx, dy, dw, dh] = a; else if (a.length >= 4) [dx, dy, dw, dh] = a; else { [dx, dy] = a; dw = img.width; dh = img.height; }
+      const m = this.getTransform(); let x = m.a * dx + m.c * dy + m.e; const y = m.b * dx + m.d * dy + m.f, w = Math.abs(dw * m.a) || dw, h = Math.abs(dh * m.d) || dh;
+      if (m.a < 0) x -= w; hits.push({ x, y, w, h });
+    }
+    return orig.apply(this, [img, ...a]);
+  };
+  try { fn(); } finally { proto.drawImage = orig; }
+  return hits;
+}
+// Every room the sprite shows up in, with up to two spots per room (the first, and one from the middle for floors and walls).
+async function findSpots(key) {
+  if (ctxSpots[key]) return ctxSpots[key];
+  const g = await contextGame(), out = [];
+  for (const id of Object.keys(g.rooms)) {
+    if (/^tut_/.test(id)) continue;
+    let hits = []; try { hits = traceDraws(g, key, () => withYou(g, key, id, () => g.renderRoomFull(id))); } catch (e) { continue; }
+    if (!hits.length) continue;
+    const pick = hits.length > 2 ? [hits[0], hits[hits.length >> 1]] : hits;
+    pick.forEach(h => out.push({ room: id, name: (g.rooms[id].name || (GOQ.ROOMS[id] || {}).name || id), x: h.x, y: h.y, w: h.w, h: h.h, count: hits.length }));
+  }
+  return (ctxSpots[key] = out);
+}
+
 function renderPaint() {
   const s = SLOT[view.key], key = s.key, Z = sheetSize(s), W = Z.w, H = Z.h;
   const orig = pixelsOf(original(key)), start = new Uint8ClampedArray(pixelsOf(inUse(key)));
@@ -585,6 +663,50 @@ function renderPaint() {
   let animC = null;
   if (Z.frames > 1) { const [c] = canvasOf(s.w, s.h), k = Math.max(1, Math.min(4, Math.floor(64 / Math.max(s.w, s.h)))); c.className = "px"; c.style.width = s.w * k + "px"; c.style.height = s.h * k + "px"; animC = c; pv.appendChild(el("div", { class: "chk", title: "Animation" }, [c])); }
   $app.appendChild(pv);
+
+  // In the game: a cropped view of where this sprite sits, redrawn as you paint (optional; the switch is remembered)
+  const ctxC = el("canvas", { class: "px" }), ctxName = el("span", { class: "small" }), ctxMsg = el("p", { class: "small", style: "margin:0" });
+  const ctxNext = el("button", { class: "btn quiet small", type: "button", text: "Next", hidden: true, onclick: () => { spotI = (spotI + 1) % spots.length; ctxDraw(true); } });
+  const ctxBody = el("div", { class: "ctxview" }, [ctxC, ctxMsg]);
+  const ctxToggle = el("button", { class: "btn quiet small", type: "button", "aria-expanded": meta.context !== false ? "true" : "false", onclick: () => { meta.context = meta.context === false; saveMeta(); ctxSetup(); } });
+  $app.appendChild(el("section", { class: "ctxbox", "aria-label": "Where it goes in the game" }, [el("div", { class: "ctxhead" }, [el("b", { text: "In the game" }), ctxName, ctxNext, ctxToggle]), ctxBody]));
+  let spots = [], spotI = 0, ctxG = null, ctxT = 0, ctxOn = false;
+  const liveC = canvasOf(W, H)[0];
+  async function ctxSetup() {
+    ctxOn = meta.context !== false; ctxToggle.textContent = ctxOn ? "Hide" : "Show"; ctxToggle.setAttribute("aria-expanded", ctxOn); ctxBody.hidden = !ctxOn;
+    if (!ctxOn) { ctxNext.hidden = true; ctxName.textContent = ""; return; }
+    if (ctxG) return ctxDraw(true);
+    ctxMsg.textContent = "Looking for it in the museum…"; ctxC.hidden = true;
+    try { ctxG = await contextGame(); spots = await findSpots(key); } catch (e) { ctxMsg.textContent = "Couldn't open the museum here."; return; }
+    if (!editor || editor.key !== key) return; // left the painter while it loaded
+    if (!spots.length) { ctxMsg.textContent = "It isn't standing in any room right now (it may be held, worn, on a screen, or only out at certain times). Scenes will cover those later."; return; }
+    ctxDraw(true);
+  }
+  function ctxQueue() { if (ctxOn && ctxG && spots.length && !ctxT) ctxT = setTimeout(() => { ctxT = 0; ctxDraw(); }, 250); }
+  function ctxDraw(moved) {
+    if (!ctxG || !spots.length || !ctxOn) return;
+    const sp = spots[spotI], lx = liveC.getContext("2d");
+    lx.clearRect(0, 0, W, H); lx.drawImage(sheetC, 0, 0);
+    linked(key).forEach(k => (ctxG.overrides[k] = liveC)); dropDerived(ctxG, key);
+    let room; try { room = withYou(ctxG, key, sp.room, () => ctxG.renderRoomFull(sp.room)); } catch (e) { ctxMsg.textContent = "Couldn't draw " + sp.name + "."; return; }
+    if (!room) return;
+    // a window around the spot: at least 128×88 game pixels, inside the room
+    const vw = Math.min(room.width, Math.max(128, Math.ceil(sp.w) + 64)), vh = Math.min(room.height, Math.max(88, Math.ceil(sp.h) + 48));
+    const vx = Math.max(0, Math.min(room.width - vw, Math.round(sp.x + sp.w / 2 - vw / 2))), vy = Math.max(0, Math.min(room.height - vh, Math.round(sp.y + sp.h / 2 - vh / 2)));
+    const box = Math.min(528, $app.clientWidth - 32 - 4), k = Math.max(1, Math.floor(box / vw));
+    if (ctxC.width !== vw || ctxC.height !== vh) { ctxC.width = vw; ctxC.height = vh; }
+    const x = ctxC.getContext("2d"); x.imageSmoothingEnabled = false; x.clearRect(0, 0, vw, vh); x.drawImage(room, vx, vy, vw, vh, 0, 0, vw, vh);
+    // a soft marker around the sprite
+    x.strokeStyle = "rgba(240,184,64,.9)"; x.lineWidth = 1; x.setLineDash([2, 2]); x.strokeRect(Math.round(sp.x - vx) - 1.5, Math.round(sp.y - vy) - 1.5, Math.ceil(sp.w) + 3, Math.ceil(sp.h) + 3);
+    ctxC.style.width = vw * k + "px"; ctxC.style.height = vh * k + "px"; ctxC.hidden = false; ctxMsg.textContent = "";
+    if (moved) { ctxName.textContent = sp.name + (spots.length > 1 ? " · spot " + (spotI + 1) + " of " + spots.length : ""); ctxNext.hidden = spots.length < 2; }
+  }
+  function ctxClose() {
+    clearTimeout(ctxT); if (!ctxG) return;
+    // put back the art that's really in use (your saved version, the pack's, or the built-in), never the unsaved canvas
+    for (const k of linked(key)) if (ctxG.overrides[k] === liveC) { delete ctxG.overrides[k]; if (pack && pack.assets && pack.assets[k]) { const img = imgCache[pack.assets[k].src]; if (img) ctxG.overrides[k] = img; } libraryInto(ctxG, k); }
+    dropDerived(ctxG, key);
+  }
 
   // The grid
   const cv = el("canvas", { "aria-label": "Sprite grid. One finger paints, two fingers zoom and move." }), ctx = cv.getContext("2d");
@@ -614,12 +736,20 @@ function renderPaint() {
   });
   $app.appendChild(tools);
 
-  // Palette: the original's colors, then any others in the art (new ones appear as you paint with them)
-  const curSw = el("span", { class: "sw big" }, [el("i")]), curText = el("span", { class: "small" });
-  const pal = el("div", { class: "pal", role: "group", "aria-label": "Colors" });
+  // Palette: the original's colors, any others already in the art, and your own saved swatches (named, kept across every sprite)
+  const curSw = el("span", { class: "sw big" }, [el("i")]), curText = el("span", { class: "small", style: "flex:1" });
+  const keepB = el("button", { class: "btn quiet small", type: "button", text: "Save color", onclick: () => addSwatch(color) });
+  const pal = el("div", { class: "pal", role: "group", "aria-label": "Sprite colors" }), palArt = el("div", { class: "pal", role: "group", "aria-label": "Other colors in this art" });
+  const artHead = el("p", { class: "palhead", text: "Also in this art" });
+  const mine = el("div", { class: "pal mine", role: "group", "aria-label": "My swatches" }), editB = el("button", { class: "btn quiet small", type: "button", onclick: () => { editing = !editing; paintPalette(); } });
   const picker = el("input", { type: "color", class: "sr", "aria-label": "Pick any color", tabindex: "-1" });
-  picker.addEventListener("input", () => { const h = picker.value; setColor(packRGBA(parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16), 255)); });
-  $app.appendChild(el("section", { class: "panel", style: "margin-top:4px" }, [el("div", { class: "cur" }, [curSw, curText]), pal, picker]));
+  const hexRGBA = h => packRGBA(parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16), 255);
+  picker.addEventListener("input", () => setColor(hexRGBA(picker.value)));
+  picker.addEventListener("change", () => { setColor(hexRGBA(picker.value)); if (picker.dataset.add) addSwatch(color); picker.dataset.add = ""; });
+  let editing = false;
+  $app.appendChild(el("section", { class: "panel", style: "margin-top:4px" }, [el("div", { class: "cur" }, [curSw, curText, keepB]),
+    el("p", { class: "palhead", text: "Sprite colors" }), pal, artHead, palArt,
+    el("div", { class: "palhead row" }, [el("span", { text: "My swatches" }), editB]), mine, picker]));
 
   // More
   const more = el("details", { class: "more panel" }, [el("summary", { text: "More" }), el("div", { class: "foot" }, [
@@ -669,6 +799,7 @@ function renderPaint() {
       try { await DB.put("art", key, { png, w: W, h: H, cols: Z.cols, rows: Z.rows, savedAt: new Date().toISOString(), origHash: pixelHash(original(key)) }); }
       catch (e) { toast("Couldn't save: storage is full"); return; }
       await DB.del("wip", key); await DB.del("kept", key);
+      if (ctxG) { libraryInto(ctxG, key); dropDerived(ctxG, key); }
     }
     const first = stamp(); celebrate(s, first);
   }
@@ -676,19 +807,39 @@ function renderPaint() {
   /* Colors and tools */
   function setTool(k) { tool = k; for (const t in toolBtns) toolBtns[t].setAttribute("aria-pressed", t === k); }
   function setColor(k) { color = k; if (tool === "eraser" || tool === "pick") setTool("pencil"); paintPalette(); }
-  function swatch(k) {
-    const b = el("button", { class: "sw", type: "button", "aria-label": "Color " + hexOf(k) + ((k & 255) < 255 ? ", see-through" : ""), "aria-pressed": k === color ? "true" : "false", onclick: () => setColor(k) }, [el("i", { style: "background:" + cssOf(k) })]);
-    return b;
+  function swatch(k, label) {
+    return el("button", { class: "sw", type: "button", "aria-label": (label ? label + ", " : "Color ") + hexOf(k) + ((k & 255) < 255 ? ", see-through" : ""), title: label || hexOf(k), "aria-pressed": k === color && tool !== "eraser" ? "true" : "false", onclick: () => setColor(k) }, [el("i", { style: "background:" + cssOf(k) })]);
+  }
+  /* My swatches: DB "misc" → "swatches", a list of { id, name, color }. Edit mode deletes (×) and renames (tap). */
+  const swList = () => DB.data.misc.swatches || [];
+  const swSave = list => DB.put("misc", "swatches", list).catch(() => toast("Couldn't save swatches: storage is full"));
+  function addSwatch(k) {
+    const list = swList().slice();
+    if (list.some(w => w.color === k)) { toast("That color is already in My swatches"); return; }
+    list.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: "Color " + (list.length + 1), color: k });
+    swSave(list); toast("Saved to My swatches"); paintPalette();
   }
   function paintPalette() {
     curSw.firstChild.style.background = tool === "eraser" ? "transparent" : cssOf(color);
     curText.textContent = tool === "eraser" ? "Eraser (see-through)" : hexOf(color).toUpperCase() + ((color & 255) < 255 ? " · " + Math.round((color & 255) / 2.55) + "% opaque" : "");
-    pal.innerHTML = "";
+    const list = swList();
+    keepB.hidden = tool === "eraser" || list.some(w => w.color === color);
+    pal.innerHTML = ""; baseColors.forEach(k => pal.appendChild(swatch(k)));
     const extra = colorsIn(px).filter(k => !baseColors.includes(k));
-    baseColors.forEach(k => pal.appendChild(swatch(k)));
-    if (extra.length) { pal.appendChild(el("span", { class: "palsep", "aria-hidden": "true" })); extra.forEach(k => pal.appendChild(swatch(k))); }
-    if (!baseColors.includes(color) && !extra.includes(color)) pal.appendChild(swatch(color));
-    pal.appendChild(el("button", { class: "sw add", type: "button", "aria-label": "Pick a new color", text: "+", onclick: () => { picker.value = hexOf(color); picker.click(); } }));
+    palArt.innerHTML = ""; extra.forEach(k => palArt.appendChild(swatch(k)));
+    if (!baseColors.includes(color) && !extra.includes(color) && !list.some(w => w.color === color) && tool !== "eraser") palArt.appendChild(swatch(color, "Current color (not saved)"));
+    artHead.hidden = palArt.hidden = !palArt.children.length;
+    editB.textContent = editing ? "Done" : "Edit"; editB.hidden = !list.length && !editing; if (!list.length) editing = false;
+    mine.innerHTML = ""; mine.classList.toggle("editing", editing);
+    list.forEach(w => {
+      const cell = el("div", { class: "swcell" }, [editing
+        ? el("button", { class: "sw", type: "button", "aria-label": "Rename " + w.name, title: "Rename", onclick: () => { const n = prompt("Name this swatch", w.name); if (n == null) return; const l = swList().map(x => x.id === w.id ? Object.assign({}, x, { name: n.trim().slice(0, 40) || x.name }) : x); swSave(l); paintPalette(); } }, [el("i", { style: "background:" + cssOf(w.color) })])
+        : swatch(w.color, w.name),
+        el("span", { class: "swname", text: w.name })]);
+      if (editing) cell.appendChild(el("button", { class: "swdel", type: "button", "aria-label": "Delete " + w.name, text: "×", onclick: () => { swSave(swList().filter(x => x.id !== w.id)); toast("Deleted " + w.name); paintPalette(); } }));
+      mine.appendChild(cell);
+    });
+    if (!editing) mine.appendChild(el("div", { class: "swcell" }, [el("button", { class: "sw add", type: "button", "aria-label": "Add a new color to My swatches", text: "+", onclick: () => { picker.value = hexOf(color); picker.dataset.add = "1"; picker.click(); } }), el("span", { class: "swname", text: "New" })]));
   }
 
   /* View: the frame on a checkerboard, zoomed and panned */
@@ -731,6 +882,7 @@ function renderPaint() {
     frameBtns.forEach((btn, f) => { btn.setAttribute("aria-current", f === frame ? "true" : "false"); const c = btn.firstChild, x = c.getContext("2d"); x.clearRect(0, 0, s.w, s.h); x.drawImage(sheetC, (f % Z.cols) * s.w, Math.floor(f / Z.cols) * s.h, s.w, s.h, 0, 0, s.w, s.h); });
     frameLabel.textContent = Z.frames > 1 ? frameName(s, frame) + " (" + (frame + 1) + "/" + Z.frames + ")" : "";
     undoB.disabled = !undo.length; redoB.disabled = !redo.length;
+    ctxQueue();
   }
   // The animation preview ticks on its own (characters walk facing the way the current frame faces).
   let animF = 0;
@@ -784,9 +936,9 @@ function renderPaint() {
   };
   const onResize = () => { size(); fit(); draw(); };
   document.addEventListener("keydown", onKey); window.addEventListener("resize", onResize);
-  editor = { close() { if (wipT) { clearTimeout(wipT); saveWip(); } clearInterval(animT); document.removeEventListener("keydown", onKey); window.removeEventListener("resize", onResize); } };
+  editor = { key, close() { if (wipT) { clearTimeout(wipT); saveWip(); } clearInterval(animT); ctxClose(); document.removeEventListener("keydown", onKey); window.removeEventListener("resize", onResize); } };
 
-  setTool("pencil"); paintPalette(); size(); fit(); paint();
+  setTool("pencil"); paintPalette(); size(); fit(); paint(); ctxSetup();
 }
 
 await document.fonts.ready.catch(() => {});
