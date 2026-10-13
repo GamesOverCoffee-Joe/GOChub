@@ -6908,10 +6908,14 @@ class Game {
   /* Patreon members on shift: two or three of them are in the staff room each day, never the one clocked in on this browser. */
   placeMembers() {
     const r = this.rooms && this.rooms.staff; if (!r) return;
-    r.npcs = r.npcs.filter(n => !n.patron);
-    const all = (this.pack.settings.staff.members || []).filter(m => !this.staff || (m.badge ? m.badge !== this.staff.badge : m.name.toLowerCase() !== this.staff.name.toLowerCase()));
-    const seed = strSeed("members" + todayISO()), list = all.map((m, i) => ({ m, k: hash(seed, i) })).sort((a, b) => a.k - b.k).map(x => x.m);
-    list.slice(0, 2 + seed % 2).forEach((m, i) => this.addVisitor("staff", { name: m.name, sheet: ["visitor_a", "visitor_b", "visitor_c"][(seed + i) % 3] }, Object.assign({ patron: true, staff: true }, m.shirts && m.shirts.length ? { shirt: m.shirts[(seed + i) % m.shirts.length] } : {}))); // a member's own shirt colors (Staff tab), a different one day to day
+    // Today's members on shift are picked from everyone (so you clocking in or out never swaps someone else in), then you're left out
+    // if you're one of them. Whoever's already standing in the room stays where they are (Joe 10/13: they shuffled at the time clock).
+    const me = m => this.staff && (m.badge ? m.badge === this.staff.badge : m.name.toLowerCase() === this.staff.name.toLowerCase());
+    const all = this.pack.settings.staff.members || [], seed = strSeed("members" + todayISO());
+    const today = all.map((m, i) => ({ m, k: hash(seed, i) })).sort((a, b) => a.k - b.k).map(x => x.m).slice(0, 2 + seed % 2);
+    const want = today.filter(m => !me(m)), names = new Set(want.map(m => m.name));
+    r.npcs = r.npcs.filter(n => !n.patron || names.has(n.member));
+    today.forEach((m, i) => { if (me(m) || r.npcs.some(n => n.patron && n.member === m.name)) return; this.addVisitor("staff", { name: m.name, sheet: ["visitor_a", "visitor_b", "visitor_c"][(seed + i) % 3] }, Object.assign({ patron: true, staff: true }, m.shirts && m.shirts.length ? { shirt: m.shirts[(seed + i) % m.shirts.length] } : {})); }); // a member's own shirt colors (Staff tab), a different one day to day
     this.lastStaffKey = this.staff ? this.staff.badge + "|" + this.staff.name : "";
   }
   /* The Patron Board: every member, always, and who's on shift in the staff room today. */
@@ -9696,7 +9700,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 45";
+const VERSION = "2026-11-18 cards 46";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
