@@ -441,7 +441,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 46";
+window.GOQ_WANT = "2026-11-18 cards 47";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -522,6 +522,7 @@ function packOut() {
     if (p.unveil) o.unveil = p.unveil;
     if (p.drink) { o.drink = p.drink; if (p.drinkColor) o.drinkColor = p.drinkColor; if (p.drinkLine && p.drinkLine.length) o.drinkLine = p.drinkLine; if (p.drinkPrice) o.drinkPrice = p.drinkPrice; if (p.drinkIced) o.drinkIced = true; }
     if (p.pick) o.pick = true;
+    if (p.answers && p.answers.length) o.answers = p.answers.filter(x => x.a).map(x => ({ q: x.q || "", a: x.a }));
     if (p.episodeTitle) o.episodeTitle = p.episodeTitle; if (p.cardBlurb) o.cardBlurb = p.cardBlurb; if (p.noCard) o.noCard = true; if (p.cardsFrom !== "on") o.cardsFrom = p.cardsFrom || ""; // its trading card (Cards tab); cardsFrom: missing = always (older packs), "" = not yet
     if (p.image) o.image = p.image; else { o.colors = p.colors; o.style = p.style; }
     return o;
@@ -2336,6 +2337,27 @@ function renderGenres(wrap) {
 /* Which room an episode is shown in: pick a genre by hand. */
 /* The museum room (wing) that shows a genre, by its current name. */
 function wingOf(gid) { const lay = GOQ.layoutOf(roomDef("museum")), z = lay && lay.zones.find(q => q.rect && q.rect.genre === gid); return z ? z.name : ""; }
+/* The developer's answers to your questions (answer cards, Joe 10/13): playing as the curator, the pause menu's Developer answers
+   shows them one at a time over scrolling stripes, for the recording. The question is for you; only the answer is shown. */
+function answersBox(p) {
+  p.answers = Array.isArray(p.answers) ? p.answers : [];
+  const box = el("div", { class: "fieldset wide" }, [el("span", { class: "flabel", text: "Developer answers" }), el("small", { text: "Their answers to your questions, shown as cards when you play as the curator (pause menu, Developer answers; A for the next one, B to put them away). The question is just for you." })]);
+  const list = el("div"); box.appendChild(list);
+  const draw = () => {
+    list.innerHTML = "";
+    p.answers.forEach((x, i) => {
+      const q = el("input", { type: "text", maxlength: 200, value: x.q || "", placeholder: "Your question (only you see this)", "aria-label": "Question " + (i + 1) });
+      const a = el("textarea", { maxlength: 700, rows: 3, placeholder: "Their answer, as it'll show on the card", "aria-label": "Answer " + (i + 1) }); a.value = x.a || "";
+      q.addEventListener("input", () => { x.q = q.value; changed(); }); a.addEventListener("input", () => { x.a = a.value; changed(); });
+      list.appendChild(el("div", { style: "border-top:2px solid var(--line);padding:8px 0;margin-top:6px;display:flex;flex-direction:column;gap:6px" }, [el("b", { text: "Card " + (i + 1), style: "font-size:.85rem" }), q, a,
+        el("div", { class: "row" }, [el("button", { class: "btn small quiet", type: "button", text: "Show it in the preview", onclick: async () => { await refreshPreview(); if (!game.showAnswers(GOQ.normalizePiece(p, 0), i)) status("Write the answer first.", true); else status("Showing card " + (i + 1) + " in the preview: A for the next, B to close"); } }),
+          i > 0 ? el("button", { class: "btn small quiet", type: "button", text: "Move up", onclick: () => { [p.answers[i - 1], p.answers[i]] = [p.answers[i], p.answers[i - 1]]; changed(); draw(); } }) : null,
+          el("button", { class: "btn small quiet", type: "button", text: "Remove", onclick: () => { if ((x.a || x.q) && !confirm("Remove card " + (i + 1) + "?")) return; p.answers.splice(i, 1); changed({ now: true }); draw(); } })])]));
+    });
+    if (p.answers.length < 12) list.appendChild(el("button", { class: "btn small", type: "button", style: "margin-top:6px", text: "Add an answer", onclick: () => { p.answers.push({ q: "", a: "" }); changed(); draw(); const t = list.querySelectorAll("input"); if (t.length) t[t.length - 1].focus(); } }));
+  };
+  draw(); return box;
+}
 let pieceRedraw = null; // set by pieceRow: how a piece's own fields redraw the page they're on (the Pieces tab, or Episode day)
 function genreBox(p) {
   const genres = draft.settings.genres || GOQ.SAMPLE_GENRES;
@@ -3047,6 +3069,7 @@ function pieceRow(p, i, place, opts) {
     el("div", { class: "fieldset wide" }, [el("span", { class: "flabel", text: "Curator's pick" }), el("small", { text: "Pins a medal to the piece and tags its placard." }), el("div", { class: "unveil" }, [el("label", { class: "check" }, [pickBox, document.createTextNode("This is one of my picks")])])]),
     ...placard,
     f("How a visitor would describe it", text("hint", "the one where the clock never ran out but I still rushed"), true, "Visitors say this when they come back to tell you how it went: \"I tried Lantern Keeper, the one where...\" Keep it to one line, in their words."),
+    p.kind === "episode" ? answersBox(p) : null,
     p.kind === "episode" ? relBox(p) : null,
     p.kind === "episode" ? genreBox(p) : null,
     p.kind === "episode" ? blendBox(p) : null,

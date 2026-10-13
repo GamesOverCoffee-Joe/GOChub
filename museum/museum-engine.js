@@ -1569,6 +1569,7 @@ function normalizePiece(p, i) {
     drinkColor: isHex(p.drinkColor) ? p.drinkColor : "", drinkLine: Array.isArray(p.drinkLine) ? p.drinkLine.map(x => str(x, 200)).filter(Boolean).slice(0, 6) : [], // its cup color, and what the barista says
     gift: p.gift && str(p.gift.name, 50) ? { name: str(p.gift.name, 50), description: str(p.gift.description, 160), price: Math.max(1, Math.min(99, Math.round(+p.gift.price || 5))) } : null, // and its gift
     episodeTitle: str(p.episodeTitle, 140), cardBlurb: str(p.cardBlurb, 140), noCard: !!p.noCard, cardsFrom: p.cardsFrom === undefined ? "on" : p.cardsFrom === "on" || /^\d{4}-\d{2}-\d{2}$/.test(p.cardsFrom || "") ? p.cardsFrom : "", // its trading card: the episode's title (Cards tab fetches it), a blurb (else the hint), or no card at all
+    answers: Array.isArray(p.answers) ? p.answers.map(x => ({ q: str(x && x.q, 200), a: str(x && x.a, 700) })).filter(x => x.a).slice(0, 12) : [], // the developer's answers to the curator's questions (answer cards, Joe 10/13)
     hint: str(p.hint, 160), pick: !!p.pick, rel: str(p.rel, 30), genre: str(p.genre, 30), blend: str(p.blend, 30), // blend: a second category it also belongs to
     colors: colors.length >= 2 ? colors : ["#f0ecf8", "#a898d0", "#584a88", "#1a1430"],
     style: STYLES.includes(p.style) ? p.style : STYLES[strSeed(str(p.title, 80) || String(i)) % STYLES.length],
@@ -3285,7 +3286,7 @@ class Game {
     const sp = b ? [b.x + (b.w >> 1), b.y + (b.h >> 1), "down"] : ROOMS[room].spawn;
     this.closeAll(); this.warp(room, sp[0], sp[1], sp[2]);
   }
-  closeAll() { this.el.text.style.display = "none"; this.el.cu.style.display = "none"; this.txt = null; this.mode = "walk"; }
+  closeAll() { this.el.text.style.display = "none"; this.el.cu.style.display = "none"; this.txt = null; this.mode = "walk"; if (this.el.ans) this.el.ans.style.display = "none"; this.ans = null; }
   sheet(key) {
     if (key.endsWith("@rainbow")) return this.cache[key] || this.rainbow(key);
     if (key.includes("~")) return this.cache[key] || this.swapped(key);
@@ -3549,6 +3550,9 @@ class Game {
     // The screening nook's video: the episode plays over the game; B, Start or the button closes it.
     el.tv = h("gt-tv"); el.tv.innerHTML = '<div class="gt-tv-bar"><span class="gt-tv-t"></span><a class="gt-tv-yt" target="_blank" rel="noopener">YouTube \u2197</a><button type="button" class="gt-tv-x">Close (B)</button></div><div class="gt-tv-box"></div>';
     el.tv.querySelector(".gt-tv-x").addEventListener("click", e => { e.stopPropagation(); this.closeTv(); });
+    // Answer cards (the curator, for recording): the developer's answer in a dark box over gray stripes that scroll by.
+    el.ans = h("gt-ans"); el.ans.innerHTML = '<div class="gt-ans-box"><p class="gt-ans-t"></p></div>';
+    el.ans.addEventListener("click", e => { e.stopPropagation(); this.answerStep(1); });
     el.endWrap = h("gt-endwrap");
     el.end = h("gt-end", el.endWrap);
     el.end.innerHTML = '<p class="gt-end-sign">CLOSED</p><p class="gt-end-line">The museum is closed for the night.</p><p class="gt-end-sum"></p>' +
@@ -3556,7 +3560,15 @@ class Game {
     el.end.querySelector("button").addEventListener("click", () => this.reopen());
     if (!document.getElementById("gt-end-css")) {
       const st = document.createElement("style"); st.id = "gt-end-css";
-      st.textContent = `.gt-endwrap{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#000;z-index:8}
+      st.textContent = `.gt-ans{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:9;overflow:hidden;background:#2e2e30;cursor:pointer}
+.gt-ans::before{content:"";position:absolute;left:-75%;top:-75%;width:250%;height:250%;background:repeating-linear-gradient(0deg,#2b2b2d 0 calc(6px * var(--s)),#38383b calc(6px * var(--s)) calc(12px * var(--s)));animation:gt-ans-roll 2.6s linear infinite}
+.gt-ans::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 35%,rgba(0,0,0,.6) 100%);pointer-events:none}
+@keyframes gt-ans-roll{from{transform:rotate(45deg) translateY(0)}to{transform:rotate(45deg) translateY(calc(12px * var(--s)))}}
+.gt-ans-box{position:relative;z-index:1;box-sizing:border-box;max-width:calc(224px * var(--s));max-height:calc(150px * var(--s));overflow:hidden;background:#1c1c1e;border-radius:calc(2px * var(--s));padding:calc(7px * var(--s)) calc(9px * var(--s));box-shadow:0 0 0 calc(1px * var(--s)) #141416;animation:gt-ans-in .25s ease-out}
+.gt-ans-t{margin:0;color:#aac6ce;font-family:var(--pixel, monospace);font-size:calc(6px * var(--s));line-height:1.65;text-align:center;overflow-wrap:break-word}
+@keyframes gt-ans-in{from{opacity:0;transform:translateY(calc(4px * var(--s)))}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){.gt-ans::before,.gt-ans-box{animation:none}}
+.gt-endwrap{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#000;z-index:8}
 .gt-end{box-sizing:border-box;width:calc(208px * var(--s));max-height:calc(152px * var(--s));overflow:hidden;border-style:solid;border-width:calc(8px * var(--s));border-image-slice:8 fill;border-image-repeat:stretch;
   background:#f8f8f0;background-clip:padding-box;color:#181820;text-align:center;padding:calc(4px * var(--s)) calc(4px * var(--s)) calc(2px * var(--s));image-rendering:pixelated;
   animation:gtEndIn .5s steps(5) both}
@@ -7035,16 +7047,41 @@ class Game {
       });
       return;
     }
-    const opts = ["My Stuff", ...(this.dialOn() ? ["Check time"] : []), ...(this.progress.fieldNotes ? ["Field notes"] : []), "Settings", "Save", "Back"]; // (Joe 10/12: Recent notices, Controls and Respawn under Settings; Save asks if you're quitting)
+    const opts = ["My Stuff", ...(this.dialOn() ? ["Check time"] : []), ...(this.isCurator() && this.answerPieces().length ? ["Developer answers"] : []), ...(this.progress.fieldNotes ? ["Field notes"] : []), "Settings", "Save", "Back"]; // (Joe 10/12: Recent notices, Controls and Respawn under Settings; Save asks if you're quitting)
     this.choose("PAUSED", opts, k => {
       const o = opts[k];
       if (o === "My Stuff") this.myStuff();
       else if (o === "Field notes") this.fieldNotes(() => this.openMenu());
       else if (o === "Settings") this.settingsMenu();
       else if (o === "Save") this.saveAsk();
+      else if (o === "Developer answers") this.answersMenu();
       else if (o === "Check time") this.dialShow = this.t; // the menu closes and the dial's label slides in again (Joe 10/12)
     });
   }
+  /* ----- Answer cards (Joe 10/13): the curator brings up a developer's answers to his questions, one card at a time, for the
+     recording. Edited on each piece in the curator (Pieces, "Developer answers"). */
+  answerPieces() { return this.pack.pieces.filter(p => !p.tut && p.answers && p.answers.length).slice().reverse(); } // newest first
+  answersMenu() {
+    const ps = this.answerPieces(), opts = [...ps.map(p => p.title + " (" + p.answers.length + ")"), "Back"];
+    this.choose("Developer answers", opts, i => {
+      const p = ps[i]; if (!p) { this.openMenu(); return; }
+      if (p.answers.length === 1) { this.showAnswers(p, 0); return; }
+      const cs = [...p.answers.map((x, k) => (k + 1) + ". " + (x.q || x.a).slice(0, 40) + ((x.q || x.a).length > 40 ? "\u2026" : "")), "Back"];
+      this.choose(p.title, cs, k => { if (k < p.answers.length) this.showAnswers(p, k); else this.answersMenu(); }, cs.length - 1);
+    }, opts.length - 1);
+  }
+  showAnswers(p, i) { // also called by the curator page's "Show in the preview"
+    if (!p || !p.answers || !p.answers[i]) return false;
+    this.closeAll(); this.ans = { p, i }; this.mode = "answer"; this.renderAnswer(); this.el.ans.style.display = "flex"; return true;
+  }
+  renderAnswer() {
+    const A = this.ans, t = this.el.ans.querySelector(".gt-ans-t"), box = this.el.ans.querySelector(".gt-ans-box");
+    t.textContent = A.p.answers[A.i].a; t.style.fontSize = "";
+    box.style.animation = "none"; void box.offsetWidth; box.style.animation = ""; // each card fades in
+    for (let f = 0.92; f >= 0.5 && box.scrollHeight > box.clientHeight + 1; f -= 0.06) { t.style.fontSize = ""; t.style.fontSize = parseFloat(getComputedStyle(t).fontSize) * f + "px"; } // a long answer: smaller words, never cut off
+  }
+  answerStep(d) { const A = this.ans; if (!A) return; const j = A.i + d; if (j < 0) return; if (j >= A.p.answers.length) { this.closeAnswers(); return; } A.i = j; this.renderAnswer(); }
+  closeAnswers() { if (this.el.ans) this.el.ans.style.display = "none"; this.ans = null; if (this.mode === "answer") this.mode = "walk"; }
   settingsMenu() {
     const opts = ["Recent notices", "Controls", "Respawn", "Back"];
     this.choose("SETTINGS", opts, k => {
@@ -7705,6 +7742,10 @@ class Game {
     if (this.t % 600 === 0 && this.mode === "walk") {
       const t = this.tod(); if (this.lastTod && t !== this.lastTod) this.rebuild(); this.lastTod = t;
       const b = this.catBucket(); if (this.lastCat !== undefined && b !== this.lastCat) this.moveCat(); this.lastCat = b;
+    }
+    if (this.mode === "answer") { // an answer card: A (or right) the next one, left the one before, B or Start puts them away
+      if (has("a") || has("right")) this.answerStep(1); else if (has("left")) this.answerStep(-1); else if (has("b") || has("start")) this.closeAnswers();
+      return;
     }
     if (this.mode === "read") {
       const r = this.rd;
@@ -9700,7 +9741,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 46";
+const VERSION = "2026-11-18 cards 47";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
