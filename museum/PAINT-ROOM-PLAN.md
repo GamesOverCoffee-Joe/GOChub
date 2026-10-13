@@ -14,7 +14,7 @@ This is both the spec and the handoff. If a session gets cut off, a new one shou
 - For each slot you either **paint a replacement** or **keep the original**. The goal is every slot done one way or the other.
 - It's a daily journal. Saving a sprite (painted or kept) stamps the day on a monthly punch card, groups light up as they fill, and finishing a group earns a badge.
 - The editor is simple, like Animal Crossing's pattern maker: a grid, a palette, a few tools and a live preview.
-- Finished art goes into the game the same way the Writers' Room's lines do (the shared curator draft, then **Export pack**). There's also a ZIP of PNGs as a backup and for use outside the game.
+- **Art only, never anything else.** The Paint Room keeps its own library of your sprites. When it makes a pack, it starts from the **newest `museum-pack.json` in the folder** and changes only the `assets` entries for sprites you painted here. Rooms, pieces, settings, text and other people's art are copied through untouched. See **Art-only safety** below. There's also a ZIP of PNGs as a backup and for use outside the game.
 - Previews: quick mockups inside the editor, plus a "See it in the museum" button that runs the real engine with your art.
 
 ### Out of scope
@@ -93,11 +93,11 @@ From top to bottom on a phone:
 - **Walk cycle**: character sheets walking in all four directions; animated slots looping.
 - **Day / sunset / night** tint, so you can see it under the game's lighting.
 
-**See it in the museum** opens the real engine (`new GOQ.Game(..., { curator: true, saveKey: null })`, like the curator's preview) with the draft plus your unsaved sprite applied. It teleports to the room where that slot appears, from a slot-to-room map we keep in the page (falling back to the lobby). It's heavier, so it only loads when asked.
+**See it in the museum** opens the real engine (`new GOQ.Game(..., { curator: true, saveKey: null })`, like the curator's preview) on the folder's current pack, with your library art and the unsaved sprite layered on in memory only (nothing is saved). It teleports to the room where that slot appears, from a slot-to-room map we keep in the page (falling back to the lobby). It's heavier, so it only loads when asked.
 
 ### 4. Export
 
-- **Export pack**: downloads `museum-pack.json` from the draft, the same as the Writers' Room. This is how art reaches players: replace `museum/museum-pack.json` in the repo and merge to main.
+- **Export pack (art only)**: fetches the folder's current `museum-pack.json` fresh (no cache), adds your art into `assets`, and downloads it. A summary screen comes first (see **Art-only safety**). This is how art reaches players: replace `museum/museum-pack.json` in the repo and merge to main.
 - **Download PNGs (ZIP)**: `paint-room-<date>.zip` containing
   ```
   sprites/<group-slug>/<slot_key>.png   one full sheet per slot you've painted
@@ -113,26 +113,48 @@ From top to bottom on a phone:
 
 | What | Where | Notes |
 |---|---|---|
-| Saved sprite art | Shared draft `goq-curator-draft` → `assets[key].src` | Exactly what the curator writes. It shows in the curator and the game preview right away. |
-| Keep original | Paint Room's own record (`kept[key]`) | Not in the pack. The game already uses the original. |
+| **Your art library** (the source of truth) | IndexedDB `goq-paint-room` → `art[key]` | `{ png, w, h, frames, layout, savedAt, origHash }`. Lives only in the Paint Room, so a pack refresh can't wipe it. |
+| Keep original | Same store, `kept[key]` | Not in the pack. The game already uses the original. |
+| Work in progress (unsaved pixels, per slot) and my swatches | Same store | Kept out of localStorage so it doesn't crowd the curator's draft (the pack alone is about 1.7 MB; localStorage holds about 5 MB). |
 | Daily stamps, totals, badges, last group | `localStorage["goq-paint-room"]` | Same shape as the Writers' Room (`days`, `total`, ...). |
-| Work in progress (unsaved pixels, per slot) and my swatches | IndexedDB `goq-paint-room` | Kept out of localStorage so it doesn't crowd the draft. The pack alone is about 1.7 MB and localStorage holds about 5 MB. |
 
-- **Save** writes the PNG into the draft, marks the slot **Painted**, stamps today and clears that slot's work in progress.
-- **Use the original again** deletes `assets[key]` and marks the slot **To do**.
-- The **draft freshness** check is the same as the Writers' Room's: if the folder's `museum-pack.json` is newer than this browser's draft, offer **Update my draft** before saving or exporting. It keeps the sprites saved here and takes everything else from the folder.
+- **Save** writes the PNG into the art library, marks the slot **Painted**, stamps today and clears that slot's work in progress. It doesn't touch any pack.
+- **Use the original again** removes the slot from the library and marks it **To do**. The next art-only export then removes that slot's `assets` entry, but only if the entry is the one the Paint Room put there.
 - A sprite that's identical to the original after editing is treated as **Keep original**, not as custom art, so the pack stays small.
+
+## Art-only safety
+
+You update the game often. A newer build may drop sprites, add new ones, resize them or change rooms. The Paint Room must never overwrite anything but the art you painted in it.
+
+**Rules**
+
+1. **The Paint Room never exports the browser draft.** Every pack it makes is built on the folder's current `museum-pack.json`, fetched fresh at that moment. Every key except `assets` (and `savedAt`, set to now so the curator treats it as newer) is copied byte for byte.
+2. **It only writes `assets` entries for slots it owns**: slots with art in its library. Assets it didn't make (Joe, the GOQ shades and hat today, or anything added in the curator) are left exactly as they are.
+3. **The slot list comes from the engine the folder serves now** (`GOQ.SLOTS`), never from a saved copy. Each library sprite is checked against it at export:
+
+| Check | What happens |
+|---|---|
+| Slot still exists, same size and frames | Written into `assets`. |
+| Slot no longer exists in this build | **Skipped.** Kept in the library under "Not in this build", in case it comes back. |
+| Slot exists but its size or frame count changed | **Skipped.** Flagged "Size changed: redo or resize". The editor offers to place the old art on the new grid as a starting point. |
+| The pack already has different art for that slot (from the curator or elsewhere) | **Not overwritten** unless you tick it on the summary screen. The default keeps the pack's. |
+| The original built-in art changed since you painted it (`origHash` differs) | Still exported, but flagged "Original updated" on Find so you can look again. |
+
+4. **The summary screen before download** lists what will be added, replaced, removed and skipped, and says "Nothing else in the pack changes." Nothing downloads without it.
+5. **Offline or opened as a file** (no folder pack to fetch): no pack export. You can choose your own `museum-pack.json` from your device to build on instead, with the same rules, or download the ZIP / an art-only file.
+6. **Art-only file**: `museum-art.json` (`{ format: "goq-art", savedAt, assets: {...} }`) holds only your sprites. Phase 6 adds a matching **Import art** button to the curator that merges it into its draft by the same rules, so art can reach the curator without anything else coming along.
+7. **The curator's draft is optional and art-only too.** A "Send to the curator" button re-reads `goq-curator-draft` from storage at that moment, changes only `assets[key]` for owned slots (with the same checks), and writes it back. It never rewrites rooms or settings, and it's never needed to get art into the game.
 
 ---
 
 ## Build order (phases)
 
-1. **Skeleton**: `paint-room.html`, engine loading via `version.json`, draft load and save plus the freshness check (ported from the Writers' Room), the Home and Find screens with real slot data and thumbnails, a link from the curator's menu next to the Writers' Room.
-2. **Core editor**: the grid with zoom and pan, pencil, eraser, fill, eyedropper, undo and redo, the live preview, sprite colors pulled from the original, Save into the draft, Keep original.
+1. **Skeleton**: `paint-room.html`, engine loading via `version.json`, the art library (IndexedDB), the Home and Find screens with real slot data and thumbnails, a link from the curator's menu next to the Writers' Room.
+2. **Core editor**: the grid with zoom and pan, pencil, eraser, fill, eyedropper, undo and redo, the live preview, sprite colors pulled from the original, Save to the library, Keep original.
 3. **Frames**: the frame strip, onion skin, copy and paste a frame, animation playback, character-sheet labels.
 4. **Palette and tools**: named swatches (IndexedDB), the color picker, recolor-all, line, rectangle, circle, select (move, flip, rotate), mirror, the trace layer.
 5. **Journal**: punch card, Today's sprite, wings lighting up, badges, totals.
-6. **Export**: Export pack, the ZIP of PNGs plus manifest, single PNG, (optional) atlas.
+6. **Export**: the art-only pack export (fresh folder pack, slot checks, summary screen), the art-only file plus the curator's **Import art** button, Send to the curator, the ZIP of PNGs plus manifest, single PNG, (optional) atlas.
 7. **Scenes**: quick mockups, then "See it in the museum" with the slot-to-room map.
 8. **Polish and test**: test on a phone-sized screen (Playwright at 390×844), dark mode, check the curator sees saved art, update `UPDATING.md` with a Paint Room section.
 
@@ -141,7 +163,8 @@ From top to bottom on a phone:
 ## Decisions log
 
 - 2026-10-13: Name **Paint Room** (`paint-room.html`). (Joe)
-- 2026-10-13: Saving goes both ways: the shared draft plus Export pack is the game's route, and a ZIP of PNGs is the backup. (Joe)
+- 2026-10-13: Saving goes both ways: a pack export is the game's route, and a ZIP of PNGs is the backup. (Joe)
+- 2026-10-13: **Art only.** The pack changes often between builds, so the Paint Room keeps its own art library, builds every export on the folder's fresh `museum-pack.json`, and changes only `assets` entries it owns. Retired or resized slots are skipped, not forced in, and there's a summary before every download. This replaces "save into the shared draft". (Joe)
 - 2026-10-13: Palette starts with the original's colors; named, growable swatches can take any color at any time. (Joe)
 - 2026-10-13: Scenes include both quick mockups and the real engine. (Joe)
 - 2026-10-13: Multi-frame slots use a frame strip with onion skin. (Joe)
@@ -163,7 +186,7 @@ Check items off as they land, and note the commit.
 
 ### Phase 1: Skeleton
 - [ ] `paint-room.html` loads the engine via `version.json`
-- [ ] Draft load, save and freshness check (ported from the Writers' Room)
+- [ ] Art library in IndexedDB (art, kept, work in progress, swatches)
 - [ ] Home screen layout
 - [ ] Find screen: search, filters, thumbnails, status
 - [ ] Link from the curator's menu
@@ -174,7 +197,7 @@ Check items off as they land, and note the commit.
 - [ ] Undo and redo
 - [ ] Live preview (1×, 2×, 4×, checkerboard)
 - [ ] Sprite colors from the original
-- [ ] Save into the draft; Keep original; Use the original again
+- [ ] Save to the library; Keep original; Use the original again
 - [ ] Work-in-progress autosave (IndexedDB)
 
 ### Phase 3: Frames
@@ -200,7 +223,12 @@ Check items off as they land, and note the commit.
 - [ ] Group badges, totals
 
 ### Phase 6: Export
-- [ ] Export pack
+- [ ] Art-only pack export: fresh folder pack, only owned `assets` changed
+- [ ] Slot checks: retired, resized, already in the pack, original updated
+- [ ] Summary screen before download
+- [ ] Offline: build on a pack chosen from the device
+- [ ] `museum-art.json` art-only file plus the curator's **Import art** (same rules)
+- [ ] "Send to the curator" (assets only, re-reads the draft first)
 - [ ] ZIP of PNGs plus `manifest.json` (built-in ZIP writer)
 - [ ] Single PNG download
 - [ ] (Optional) curator atlas export
@@ -222,4 +250,4 @@ Check items off as they land, and note the commit.
 
 ### Handoff notes (latest state)
 
-- 2026-10-13: Only the plan exists. Next step: Phase 1. To test locally, serve the folder (`python3 -m http.server` in `museum/`) and open `paint-room.html`. The engine can also load headlessly in Node with a stubbed `window` and `document`, which is handy for checking slot data.
+- 2026-10-13: Only the plan exists (now with the art-only safety rules). Next step: Phase 1. To test locally, serve the folder (`python3 -m http.server` in `museum/`) and open `paint-room.html`. The engine can also load headlessly in Node with a stubbed `window` and `document`, which is handy for checking slot data.
