@@ -239,6 +239,8 @@ select.search{appearance:auto;margin-top:8px}
 .check.inline{display:inline-flex;margin:0 0 0 8px;font-size:.82rem}
 .check.inline input{width:18px;height:18px}
 .warn{color:var(--warn);font-size:.88rem}
+.steps{padding-left:20px;margin:8px 0 12px}
+.steps li{margin:4px 0}
 .tool{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:58px;border:2px solid var(--line);border-radius:8px;background:var(--surface);font-size:.75rem;font-weight:700;cursor:pointer;padding:6px 2px}
 .tool svg{width:24px;height:24px}
 .tool[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
@@ -901,6 +903,97 @@ function renderExport() {
       } }),
       el("label", { class: "check" }, [withOriginals, document.createTextNode(" Include the rest (every sprite, as it is in the game now)")]),
     ])]));
+
+  // 4. The Photoshop atlas: every sprite on one sheet, the same layout as the curator's (so either can read the other's)
+  const atlasIn = el("input", { type: "file", accept: "image/png", class: "sr" }), atlasMsg = el("p", { class: "small", role: "status" });
+  atlasIn.addEventListener("change", async () => {
+    const f = atlasIn.files[0]; atlasIn.value = ""; if (!f) return;
+    try { const r = await importAtlas(f); atlasMsg.className = "small"; atlasMsg.textContent = r; }
+    catch (e) { atlasMsg.className = "warn"; atlasMsg.textContent = e.message; }
+  });
+  const L = atlasLayout();
+  $app.appendChild(el("section", { class: "panel" }, [el("h2", { text: "Photoshop atlas" }),
+    el("p", { class: "small", style: "margin-top:0", text: "Every sprite on one " + L.w + "×" + L.h + " sheet, with your art where you've painted it. Same layout as the curator's atlas." }),
+    el("ol", { class: "steps small" }, [
+      "Download the atlas and the guide.",
+      "Open the atlas in Photoshop. Add the guide as the top layer (File, then Place Embedded) and line it up at the top-left corner. Pink boxes mark each sprite; blue lines split animation frames.",
+      "Draw inside the pink boxes only. Leave pixels see-through where the game should show through.",
+      "Hide the guide, then save as PNG with transparency (File, then Export, then Export As). Don't crop or resize the canvas.",
+      "Import the edited atlas here: sprites you changed go into your library as painted (sprites put back to the original go back to the original). Then export as usual.",
+    ].map(t => el("li", { text: t }))),
+    el("div", { class: "foot" }, [
+      el("button", { class: "btn quiet wide", type: "button", text: "Download atlas", onclick: () => makeAtlas().toBlob(b => download("museum-atlas.png", b)) }),
+      el("button", { class: "btn quiet wide", type: "button", text: "Download guide", onclick: () => makeGuide().toBlob(b => download("museum-atlas-guide.png", b)) }),
+      el("button", { class: "btn quiet wide", type: "button", text: "Import edited atlas…", onclick: () => atlasIn.click() }), atlasIn, atlasMsg])]));
+}
+
+/* ---------- The Photoshop atlas ----------
+   The curator's layout exactly (curator.html, atlasLayout): every slot in GOQ.SLOTS order, retired ones too so older atlases
+   line up, in rows 352 wide, each with a 9 px label band above it. Keep the two in step if either changes. */
+const ATLAS_W = 352, CELL_MIN = 84, BAND = 9, GAP = 6;
+function atlasLayout() {
+  const pos = {}; let x = GAP, y = GAP, rowH = 0;
+  for (const sl of GOQ.SLOTS) {
+    const g = GOQ.sheetGrid(sl), w = sl.w * g.cols, h = sl.h * g.rows, cw = Math.max(CELL_MIN, w);
+    if (x + cw > ATLAS_W - GAP) { x = GAP; y += rowH + GAP; rowH = 0; }
+    pos[sl.key] = { x, y: y + BAND, w, h };
+    x += cw + GAP; rowH = Math.max(rowH, BAND + h);
+  }
+  return { pos, w: ATLAS_W, h: y + rowH + GAP };
+}
+const ATLAS_FONT = {
+  A: ["010","101","111","101","101"], B: ["110","101","110","101","110"], C: ["011","100","100","100","011"], D: ["110","101","101","101","110"],
+  E: ["111","100","110","100","111"], F: ["111","100","110","100","100"], G: ["011","100","101","101","011"], H: ["101","101","111","101","101"],
+  I: ["111","010","010","010","111"], J: ["001","001","001","101","010"], K: ["101","101","110","101","101"], L: ["100","100","100","100","111"],
+  M: ["101","111","111","101","101"], N: ["110","101","101","101","101"], O: ["111","101","101","101","111"], P: ["110","101","110","100","100"],
+  Q: ["010","101","101","110","011"], R: ["110","101","110","101","101"], S: ["011","100","010","001","110"], T: ["111","010","010","010","010"],
+  U: ["101","101","101","101","111"], V: ["101","101","101","101","010"], W: ["101","101","111","111","101"], X: ["101","101","010","101","101"],
+  Y: ["101","101","010","010","010"], Z: ["111","001","010","100","111"],
+};
+function pixText(x, str, px, py) { for (const ch of str) { const g = ATLAS_FONT[ch]; if (g) g.forEach((row, j) => { for (let i = 0; i < 3; i++) if (row[i] === "1") x.fillRect(px + i, py + j, 1, 1); }); px += 4; } }
+// A slot's art at exactly its sheet size: yours, then the pack's, then the built-in (retired slots: the built-in).
+function atlasArt(key) { if (SLOT[key]) return inUse(key); return GOQ.placeholder(key); }
+function makeAtlas() {
+  const L = atlasLayout(), [c, x] = canvasOf(L.w, L.h);
+  for (const sl of GOQ.SLOTS) { const p = L.pos[sl.key]; x.drawImage(atlasArt(sl.key), 0, 0, p.w, p.h, p.x, p.y, p.w, p.h); }
+  return c;
+}
+function makeGuide() {
+  const L = atlasLayout(), [c, x] = canvasOf(L.w, L.h);
+  for (const sl of GOQ.SLOTS) {
+    const p = L.pos[sl.key], g = GOQ.sheetGrid(sl);
+    x.fillStyle = "rgba(0,200,255,.55)";
+    for (let i = 1; i < g.cols; i++) x.fillRect(p.x + i * sl.w, p.y, 1, p.h);
+    for (let j = 1; j < g.rows; j++) x.fillRect(p.x, p.y + j * sl.h, p.w, 1);
+    x.fillStyle = "#ff00c8";
+    x.fillRect(p.x - 1, p.y - 1, p.w + 2, 1); x.fillRect(p.x - 1, p.y + p.h, p.w + 2, 1);
+    x.fillRect(p.x - 1, p.y - 1, 1, p.h + 2); x.fillRect(p.x + p.w, p.y - 1, 1, p.h + 2);
+    pixText(x, sl.key.toUpperCase().replace(/_/g, " "), p.x, p.y - BAND + 1);
+  }
+  return c;
+}
+/* An edited atlas back into the library. Each sprite that differs from what it shows now becomes painted; one put back to
+   exactly the original goes back to the original. Untouched sprites, retired slots, and slots an older (shorter) atlas
+   doesn't reach are left alone. It doesn't stamp the day (that's for painting in the Paint Room). */
+async function importAtlas(file) {
+  const img = await loadImg(URL.createObjectURL(file)), L = atlasLayout();
+  if (img.width !== L.w) throw new Error("This atlas is " + img.width + " pixels wide; it should be " + L.w + ". Make sure the canvas wasn't resized or cropped.");
+  const [full, fx] = canvasOf(img.width, img.height); fx.drawImage(img, 0, 0);
+  const near = (a, b) => { for (let i = 0; i < a.length; i += 4) { if (a[i + 3] < 8 && b[i + 3] < 8) continue; for (let k = 0; k < 4; k++) if (Math.abs(a[i + k] - b[i + k]) > 3) return false; } return true; };
+  let painted = 0, reset = 0, skipped = 0;
+  for (const sl of SLOTS) {
+    const p = L.pos[sl.key]; if (!p) continue;
+    if (p.y + p.h > img.height) { skipped++; continue; }
+    const [c, x] = canvasOf(p.w, p.h); x.drawImage(full, p.x, p.y, p.w, p.h, 0, 0, p.w, p.h);
+    const px = x.getImageData(0, 0, p.w, p.h).data;
+    if (near(px, pixelsOf(inUse(sl.key)))) continue;
+    if (near(px, pixelsOf(original(sl.key)))) { if (DB.data.art[sl.key]) { await DB.del("art", sl.key); reset++; } continue; }
+    const z = sheetSize(sl), png = c.toDataURL("image/png"); await warm(png);
+    await DB.put("art", sl.key, { png, w: z.w, h: z.h, cols: z.cols, rows: z.rows, savedAt: new Date().toISOString(), origHash: pixelHash(original(sl.key)), from: "atlas" });
+    await DB.del("wip", sl.key); await DB.del("kept", sl.key); painted++;
+  }
+  if (!painted && !reset) return "No changes found in that atlas." + (skipped ? " (" + plural(skipped, "newer sprite") + " weren't in it.)" : "");
+  return "Imported: " + plural(painted, "sprite") + " now painted" + (reset ? ", " + reset + " back to the original" : "") + (skipped ? ". " + plural(skipped, "newer sprite") + " weren't in this atlas and stayed as they were" : "") + ". Export as usual to put them in the game.";
 }
 
 /* ---------- In the game: where a sprite sits, cropped from the real engine ----------

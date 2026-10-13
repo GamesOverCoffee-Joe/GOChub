@@ -54,6 +54,7 @@ The Paint Room (`paint-room.html`) keeps your painted sprites in its own library
 - **Put my art in the game → Check what would change** builds on this folder's newest `museum-pack.json` (fetched fresh) and shows what it will add, replace or remove before you download. Rooms, pieces, words, settings and art made elsewhere are copied exactly. Replace `museum/museum-pack.json` in the repo with the download and merge it into main.
 - Art the Paint Room didn't put there (like Joe, made in the curator) is left alone unless you tick it. Sprites the current build doesn't have, or whose size changed, are skipped.
 - **Send to the curator** puts the art into the curator's draft in the same browser (art only). **museum-art.json** does the same for the curator on another device: curator → More → **Import art**.
+- **Photoshop atlas**: the same atlas and guide as the curator's (they're interchangeable). Edit it, then **Import edited atlas** in the Paint Room puts your changes in its library, ready to export.
 - **Download PNGs (ZIP)** is a backup: `sprites/<group>/<slot>.png` plus `manifest.json`. The game doesn't read loose PNGs.
 
 ## Text from the Writers' Room

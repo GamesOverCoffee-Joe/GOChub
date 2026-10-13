@@ -239,7 +239,7 @@ Check items off as they land, and note the commit.
 - [x] "Send to the curator": re-reads `goq-curator-draft` at that moment, changes only `assets`, marks `goq-curator-base` edited so the curator asks before swapping it for the site's pack
 - [x] ZIP of PNGs plus `manifest.json` (built-in stored ZIP writer), with "include the rest"
 - [x] Single PNG download (painter → More)
-- [ ] (Optional) curator atlas export
+- [x] **Photoshop atlas** (Joe asked 10/13): Download atlas and guide (the curator's exact layout: `atlasLayout()` is copied from curator.html and must stay in step), and **Import edited atlas** into the library (changed sprites become painted, sprites put back to the original go back, no day stamp). Verified pixel-identical to the curator's atlas and guide; an edited atlas round-trips into the Paint Room and the Paint Room's atlas imports into the curator
 
 ### Phase 7: Scenes
 - [x] **Scenes** panel in the painter, drawn from the game's own art (and your library), redrawn as you paint; the choice is remembered per sprite
@@ -262,6 +262,8 @@ Check items off as they land, and note the commit.
 - [ ] Try it on Joe's real phone (touch, pinch, the system file pickers)
 
 ### Handoff notes (latest state)
+
+- 2026-10-13: Photoshop atlas added to the export screen (`atlasLayout`, `ATLAS_FONT`, `makeAtlas`, `makeGuide`, `importAtlas`, module level). **If the curator's atlas layout ever changes, change both** (`ATLAS_W`, `CELL_MIN`, `BAND`, `GAP`, slot order). Tests: identical atlas and guide to the curator's; unedited import finds no changes; a red block drawn in the cat's box imports as the cat painted, shows up as Add in the export check, and the Paint Room's atlas updates 1 slot in the curator.
 
 - 2026-10-13, Phases 5, 7 and 8 done. Badges: `badgeList()`, `checkBadges()`, `badgeShelf()`, `badgeFace()` (module level). Scenes: inside `renderPaint()` (`SCENES`, `sceneList`, `sceneDefault`, `drawScene()`, called from `paint()`). Test scripts live only in the session scratchpad (not in the repo); they cover the frame tools, frame modes, the In the game window, Phase 4 tools, the export rules (`e6.js`: byte-identical pack apart from assets, Replace/Remove/clash, curator Import art, ZIP), scenes and badges. All pass. Open items: the optional curator atlas export, a bigger walk-around preview, and a real-phone check.
 
