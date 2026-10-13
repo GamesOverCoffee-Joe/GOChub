@@ -1569,7 +1569,7 @@ function normalizePiece(p, i) {
     drinkColor: isHex(p.drinkColor) ? p.drinkColor : "", drinkLine: Array.isArray(p.drinkLine) ? p.drinkLine.map(x => str(x, 200)).filter(Boolean).slice(0, 6) : [], // its cup color, and what the barista says
     gift: p.gift && str(p.gift.name, 50) ? { name: str(p.gift.name, 50), description: str(p.gift.description, 160), price: Math.max(1, Math.min(99, Math.round(+p.gift.price || 5))) } : null, // and its gift
     episodeTitle: str(p.episodeTitle, 140), cardBlurb: str(p.cardBlurb, 140), noCard: !!p.noCard, cardsFrom: p.cardsFrom === undefined ? "on" : p.cardsFrom === "on" || /^\d{4}-\d{2}-\d{2}$/.test(p.cardsFrom || "") ? p.cardsFrom : "", // its trading card: the episode's title (Cards tab fetches it), a blurb (else the hint), or no card at all
-    answers: Array.isArray(p.answers) ? p.answers.map(x => ({ q: str(x && x.q, 200), a: str(x && x.a, 700) })).filter(x => x.a).slice(0, 12) : [], // the developer's answers to the curator's questions (answer cards, Joe 10/13)
+    answers: Array.isArray(p.answers) ? [0, 1, 2].map(i => { const x = p.answers[i]; return str(x && typeof x === "object" ? x.a : x, 6000); }) : ["", "", ""], // the developer's answers to the three questions (ANSWER_QS), for the answer cards (Joe 10/13)
     hint: str(p.hint, 160), pick: !!p.pick, rel: str(p.rel, 30), genre: str(p.genre, 30), blend: str(p.blend, 30), // blend: a second category it also belongs to
     colors: colors.length >= 2 ? colors : ["#f0ecf8", "#a898d0", "#584a88", "#1a1430"],
     style: STYLES.includes(p.style) ? p.style : STYLES[strSeed(str(p.title, 80) || String(i)) % STYLES.length],
@@ -2047,6 +2047,8 @@ const NOTE_KEYS = [..."abcdefghijklmnopqrstuvwxyz.,!?"].map((k, i) => ({ k, col:
    color in My Stuff, Wardrobe. Swapped into your own sprite only (sheet "<base>~look:<from>-<to>,..."). */
 const SKIN_TONES = [["Lightest", "#fbe8d4"], ["Light", "#f8e0c0"], ["Light medium", "#e8c098"], ["Medium", "#d8a878"], ["Medium tan", "#c89060"], ["Tan", "#a8744c"], ["Deep", "#8a5a3a"], ["Deepest", "#5e3c26"]];
 const LOOK_SHIRTS = [["Red", "#c83838"], ["Orange", "#e07830"], ["Yellow", "#e8c040"], ["Green", "#58a048"], ["Teal", "#3a9a98"], ["Blue", "#3a68c8"], ["Purple", "#8850c0"], ["Pink", "#e070a8"], ["Brown", "#8a5a34"], ["Gray", "#808898"], ["White", "#ece8e0"], ["Black", "#2a2a32"]];
+/* The three questions every developer answers when they submit a game (answer cards, Joe 10/13). */
+const ANSWER_QS = ["What were you hoping the player would feel while playing your game?", "Why did you choose this experience?", "Were there specific moments, mechanics, or ideas you built around that emotional goal?"];
 const SHIRT_COLORS = ["#c83838", "#e07830", "#e8c040", "#58a048", "#3a9a98", "#3a68c8", "#8850c0", "#e070a8", "#8a5a34", "#808898"];
 /* The tutorial's three games, in a row: made-up games, each with a different relationship between the curator's
    observation (front) and the developer's intention (back). The middle one opens the far door once it's read both
@@ -3551,7 +3553,7 @@ class Game {
     el.tv = h("gt-tv"); el.tv.innerHTML = '<div class="gt-tv-bar"><span class="gt-tv-t"></span><a class="gt-tv-yt" target="_blank" rel="noopener">YouTube \u2197</a><button type="button" class="gt-tv-x">Close (B)</button></div><div class="gt-tv-box"></div>';
     el.tv.querySelector(".gt-tv-x").addEventListener("click", e => { e.stopPropagation(); this.closeTv(); });
     // Answer cards (the curator, for recording): the developer's answer in a dark box over gray stripes that scroll by.
-    el.ans = h("gt-ans"); el.ans.innerHTML = '<div class="gt-ans-box"><p class="gt-ans-t"></p></div>';
+    el.ans = h("gt-ans"); el.ans.innerHTML = '<canvas class="gt-ans-bg" aria-hidden="true"></canvas><div class="gt-ans-box"><p class="gt-ans-h">GAMES OVER QUALIA</p><p class="gt-ans-t"></p></div>';
     el.ans.addEventListener("click", e => { e.stopPropagation(); this.answerStep(1); });
     el.endWrap = h("gt-endwrap");
     el.end = h("gt-end", el.endWrap);
@@ -3561,13 +3563,13 @@ class Game {
     if (!document.getElementById("gt-end-css")) {
       const st = document.createElement("style"); st.id = "gt-end-css";
       st.textContent = `.gt-ans{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:9;overflow:hidden;background:#2e2e30;cursor:pointer}
-.gt-ans::before{content:"";position:absolute;left:-75%;top:-75%;width:250%;height:250%;background:repeating-linear-gradient(0deg,#2b2b2d 0 calc(6px * var(--s)),#38383b calc(6px * var(--s)) calc(12px * var(--s)));animation:gt-ans-roll 2.6s linear infinite}
-.gt-ans::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 35%,rgba(0,0,0,.6) 100%);pointer-events:none}
-@keyframes gt-ans-roll{from{transform:rotate(45deg) translateY(0)}to{transform:rotate(45deg) translateY(calc(12px * var(--s)))}}
-.gt-ans-box{position:relative;z-index:1;box-sizing:border-box;max-width:calc(224px * var(--s));max-height:calc(150px * var(--s));overflow:hidden;background:#1c1c1e;border-radius:calc(2px * var(--s));padding:calc(7px * var(--s)) calc(9px * var(--s));box-shadow:0 0 0 calc(1px * var(--s)) #141416;animation:gt-ans-in .25s ease-out}
-.gt-ans-t{margin:0;color:#aac6ce;font-family:var(--pixel, monospace);font-size:calc(6px * var(--s));line-height:1.65;text-align:center;overflow-wrap:break-word}
-@keyframes gt-ans-in{from{opacity:0;transform:translateY(calc(4px * var(--s)))}to{opacity:1;transform:none}}
-@media (prefers-reduced-motion: reduce){.gt-ans::before,.gt-ans-box{animation:none}}
+.gt-ans-bg{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+.gt-ans-box{position:relative;z-index:1;box-sizing:border-box;width:calc(212px * var(--s));max-height:calc(132px * var(--s));overflow:hidden;background:#1c1c1e;padding:calc(8px * var(--s)) calc(10px * var(--s));box-shadow:0 0 0 calc(1px * var(--s)) #111113,calc(2px * var(--s)) calc(2px * var(--s)) 0 calc(1px * var(--s)) rgba(0,0,0,.45);animation:gt-ans-in .25s steps(3)}
+.gt-ans-h{margin:0 0 calc(7px * var(--s));color:#ead9ca;font-family:var(--pixel, monospace);font-size:calc(5px * var(--s));letter-spacing:calc(1px * var(--s));text-align:center;opacity:.8}
+.gt-ans-t{margin:0;color:#aac6ce;font-family:var(--pixel, monospace);font-size:calc(6px * var(--s));line-height:1.75;text-align:center;overflow-wrap:anywhere;white-space:pre-line}
+.gt-ans.q .gt-ans-t{color:#ead9ca}
+@keyframes gt-ans-in{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion: reduce){.gt-ans-box{animation:none}}
 .gt-endwrap{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#000;z-index:8}
 .gt-end{box-sizing:border-box;width:calc(208px * var(--s));max-height:calc(152px * var(--s));overflow:hidden;border-style:solid;border-width:calc(8px * var(--s));border-image-slice:8 fill;border-image-repeat:stretch;
   background:#f8f8f0;background-clip:padding-box;color:#181820;text-align:center;padding:calc(4px * var(--s)) calc(4px * var(--s)) calc(2px * var(--s));image-rendering:pixelated;
@@ -7058,29 +7060,54 @@ class Game {
       else if (o === "Check time") this.dialShow = this.t; // the menu closes and the dial's label slides in again (Joe 10/12)
     });
   }
-  /* ----- Answer cards (Joe 10/13): the curator brings up a developer's answers to his questions, one card at a time, for the
-     recording. Edited on each piece in the curator (Pieces, "Developer answers"). */
-  answerPieces() { return this.pack.pieces.filter(p => !p.tut && p.answers && p.answers.length).slice().reverse(); } // newest first
+  /* ----- Answer cards (Joe 10/13): the curator brings up a developer's answers to the three questions (ANSWER_QS), for the
+     recording. Each question gets a card ("GAMES OVER QUALIA" and the question), then its answer, split into as many cards as it
+     takes at one comfortable size (never shrunk, never cut off). Edited on each piece in the curator (Developer answers). */
+  answerPieces() { return this.pack.pieces.filter(p => !p.tut && p.answers && p.answers.some(Boolean)).slice().reverse(); } // newest first
   answersMenu() {
-    const ps = this.answerPieces(), opts = [...ps.map(p => p.title + " (" + p.answers.length + ")"), "Back"];
+    const ps = this.answerPieces(), opts = [...ps.map(p => p.title), "Back"];
     this.choose("Developer answers", opts, i => {
       const p = ps[i]; if (!p) { this.openMenu(); return; }
-      if (p.answers.length === 1) { this.showAnswers(p, 0); return; }
-      const cs = [...p.answers.map((x, k) => (k + 1) + ". " + (x.q || x.a).slice(0, 40) + ((x.q || x.a).length > 40 ? "\u2026" : "")), "Back"];
-      this.choose(p.title, cs, k => { if (k < p.answers.length) this.showAnswers(p, k); else this.answersMenu(); }, cs.length - 1);
+      const qs = [0, 1, 2].filter(k => p.answers[k]), cs = [...qs.map(k => (k + 1) + ". " + ANSWER_QS[k].slice(0, 34) + "…"), "Back"];
+      this.choose(p.title + ": start from", cs, k => { if (k < qs.length) this.showAnswers(p, qs[k]); else this.answersMenu(); }, cs.length - 1);
     }, opts.length - 1);
   }
-  showAnswers(p, i) { // also called by the curator page's "Show in the preview"
-    if (!p || !p.answers || !p.answers[i]) return false;
-    this.closeAll(); this.ans = { p, i }; this.mode = "answer"; this.renderAnswer(); this.el.ans.style.display = "flex"; return true;
+  showAnswers(p, q) { // from question q (0 to 2) on; also called by the curator page's "Show it in the preview"
+    const qs = p && p.answers ? [0, 1, 2].filter(k => p.answers[k] && k >= (q || 0)) : []; if (!qs.length) return false;
+    this.closeAll(); this.mode = "answer"; this.el.ans.style.display = "flex"; this.ansOff = -1; this.drawAnsBg();
+    const cards = []; for (const k of qs) { cards.push({ q: true, text: ANSWER_QS[k] }); this.answerPages(p.answers[k]).forEach(t => cards.push({ q: false, text: t })); }
+    this.ans = { p, cards, i: 0 }; this.renderAnswer(); return true;
+  }
+  answerPages(text) { // the answer split into cards that fit the box at its normal size, at word breaks (a sentence end when one's close)
+    const box = this.el.ans.querySelector(".gt-ans-box"), t = this.el.ans.querySelector(".gt-ans-t"); this.el.ans.classList.remove("q"); box.querySelector(".gt-ans-h").style.display = "none";
+    const fits = n => { t.textContent = words.slice(i, n).join(" "); return box.scrollHeight <= box.clientHeight + 1; };
+    const words = String(text).trim().split(/[ \t]+/).filter(Boolean), out = []; let i = 0;
+    while (i < words.length) {
+      let lo = i + 1, hi = words.length, best = i + 1;
+      while (lo <= hi) { const mid = (lo + hi) >> 1; if (fits(mid)) { best = mid; lo = mid + 1; } else hi = mid - 1; }
+      if (best < words.length) { for (let j = best; j > i + Math.ceil((best - i) * 0.6); j--) if (/[.!?…]["')\]]*$/.test(words[j - 1])) { best = j; break; } } // end the card on a sentence when one's near
+      out.push(words.slice(i, best).join(" ")); i = best;
+    }
+    return out;
   }
   renderAnswer() {
-    const A = this.ans, t = this.el.ans.querySelector(".gt-ans-t"), box = this.el.ans.querySelector(".gt-ans-box");
-    t.textContent = A.p.answers[A.i].a; t.style.fontSize = "";
+    const A = this.ans, c = A.cards[A.i], box = this.el.ans.querySelector(".gt-ans-box");
+    this.el.ans.classList.toggle("q", c.q); box.querySelector(".gt-ans-h").style.display = c.q ? "" : "none";
+    this.el.ans.querySelector(".gt-ans-t").textContent = c.text;
     box.style.animation = "none"; void box.offsetWidth; box.style.animation = ""; // each card fades in
-    for (let f = 0.92; f >= 0.5 && box.scrollHeight > box.clientHeight + 1; f -= 0.06) { t.style.fontSize = ""; t.style.fontSize = parseFloat(getComputedStyle(t).fontSize) * f + "px"; } // a long answer: smaller words, never cut off
   }
-  answerStep(d) { const A = this.ans; if (!A) return; const j = A.i + d; if (j < 0) return; if (j >= A.p.answers.length) { this.closeAnswers(); return; } A.i = j; this.renderAnswer(); }
+  drawAnsBg() { // the stripes at the game's own resolution (pixelated like everything else), scrolling about 4.6 px a second
+    const cv = this.el.ans.querySelector(".gt-ans-bg"), off = Math.floor(this.t * 16 / 156) % 16; if (off === this.ansOff) return; this.ansOff = off;
+    if (cv.width !== SW) { cv.width = SW; cv.height = SH; }
+    const x = cv.getContext("2d"), img = this.ansImg || (this.ansImg = x.createImageData(SW, SH)), d = img.data;
+    for (let y = 0; y < SH; y++) for (let X = 0; X < SW; X++) {
+      const band = ((X + y + off) & 15) < 8, dx = (X - SW / 2) / (SW / 2), dy = (y - SH / 2) / (SH / 2), r = Math.sqrt(dx * dx + dy * dy) / Math.SQRT2;
+      const v = Math.round(Math.max(0, Math.min(1, (r - 0.3) / 0.7)) * 4) / 4, k = 1 - 0.55 * v, base = band ? 43 : 56, i = (y * SW + X) * 4; // the vignette in four steps
+      d[i] = d[i + 1] = Math.round(base * k); d[i + 2] = Math.round((base + 2) * k); d[i + 3] = 255;
+    }
+    x.putImageData(img, 0, 0);
+  }
+  answerStep(d) { const A = this.ans; if (!A) return; const j = A.i + d; if (j < 0) return; if (j >= A.cards.length) { this.closeAnswers(); return; } A.i = j; this.renderAnswer(); }
   closeAnswers() { if (this.el.ans) this.el.ans.style.display = "none"; this.ans = null; if (this.mode === "answer") this.mode = "walk"; }
   settingsMenu() {
     const opts = ["Recent notices", "Controls", "Respawn", "Back"];
@@ -7744,6 +7771,7 @@ class Game {
       const b = this.catBucket(); if (this.lastCat !== undefined && b !== this.lastCat) this.moveCat(); this.lastCat = b;
     }
     if (this.mode === "answer") { // an answer card: A (or right) the next one, left the one before, B or Start puts them away
+      if (this.ans) this.drawAnsBg(); // the stripes keep scrolling
       if (has("a") || has("right")) this.answerStep(1); else if (has("left")) this.answerStep(-1); else if (has("b") || has("start")) this.closeAnswers();
       return;
     }
@@ -9741,7 +9769,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 47";
+const VERSION = "2026-11-18 cards 48";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
@@ -9750,7 +9778,7 @@ const CLAUDE_SHOP = { "goq-tote": "A sturdy canvas tote with the GOQ logo. Holds
   "goq-mousepad": "An extra-wide mousepad with the GOQ logo. Your desk has never looked this cozy.", "goq-lanyard": "A GOQ lanyard. Now you look like you work here. Do you?" }; // shop descriptions Claude wrote (Joe 10/11)
 const CLAUDE_QUOTES = {"piece-g3at9r2": "No yellow paint, no hand-holding. Just me, a dragon and the whole sky. I got it completely.", "piece-45lxgqh": "Deep, clever, and built for someone who isn't me. I respect it from a safe distance.", "piece-8ybe96c": "A glowing dot gave me cosmic dread. What it was really about, I never felt.", "piece-rn49jj6": "I had a blast pushing drunks around. The warning about drinking went right past me.", "piece-wr2s44o": "It kept me at arm's length, until the wizard I'd built started to feel like mine.", "piece-e6304vj": "It wouldn't tell me a thing. Then termites ate my bow, and I was hooked.", "piece-3qn8otm": "It wanted me sweating in the shadows. I just memorized the guards like homework.", "piece-iewg971": "Touch everything, for no reason at all. The first game I ever found myself in.", "piece-110bezd": "Make the thing you fear the thing you control. I felt every bit of that turn.", "piece-34ub7ui": "Built to unsettle me. Instead it became my favorite place to sit and fish.", "piece-ngafqv9": "I felt the shadow on my heels. What it was saying about anxiety, I missed.", "piece-okfuqok": "It wanted pinball fever. I found my calm in the snake mode instead.", "piece-wd37bxb": "An unfinished game, finished by its own jokes. I was in on every one.", "piece-qql6aew": "A hard story in a world that never asked me to care. I kept looking for the stakes.", "piece-wn546o7": "Made for the obsessed flash-game kid. I never got the chance to become him.", "piece-6akkzg9": "The synergies sang. Why I was buying beach balls on credit, I'll never know.", "piece-wpusqmb": "It reached for grief and despair. I kept laughing, and I'm still not sure why.", "piece-p0gsjux": "I played it like Tetris and lost. Once I chased the gems, it finally clicked.", "piece-v4zp9gn": "The maze vanishes when you move. I never quite needed to remember it.", "piece-dpq1d5y": "It wanted me to feel cool finding its secrets. I just kept looking for the exit.", "piece-vx7436f": "A tiny root in a giant world. I loved the root. The world felt smaller than promised.", "piece-uw8z1nn": "I fought the game instead of learning it. It's fair. It just isn't for me.", "piece-ct78svp": "Big numbers, big dopamine. I chased the categories and forgot the totals.", "piece-0x8bbhf": "Beautiful dream puzzles. I warmed the whole world without noticing I had.", "piece-xc2ez00": "No grind, just tinkering. Every level felt like my own little invention.", "piece-50vrtaq": "A whole galaxy on a lunch break. Fun rhythm, but I'm a long-campaign kind of person.", "piece-7oesrvl": "Two halves of one screen, aching to meet. I felt every reunion.", "piece-4wnzood": "It wanted me to feel persuaded. I just felt quizzed, hunting for the right answer.", "piece-8e4ay05": "Stop defending, start hunting. That's when it became my game.", "piece-fv1px6m": "Meant to spark wonder. I wandered a ship where everything mattered the same.", "piece-um9vhkk": "It taught me everything without a word. The darkness in its caves only flickered.", "piece-hvr5h0t": "Every shot shoves you backward. Pure joy, until I couldn't tell which way to grow.", "piece-sp4cec4t": "Cats, missions, meteors. The game I loved was the plain deal underneath."}; // the curator's quotes on the trading cards Claude wrote (by piece id), for the Writers' Room's claude tag
 const CLAUDE_ACH = { skimmer: { name: "TL;DR", desc: "Read at least one side of every piece in the museum." } }; // achievements Claude wrote (Joe 10/11)
-window.GOQ = { ytVideoId, CLAUDE_QUOTES, CLAUDE_ACH, CLAUDE_LINES, CLAUDE_SHOP, BLUU_GEAR, PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
+window.GOQ = { ANSWER_QS, ytVideoId, CLAUDE_QUOTES, CLAUDE_ACH, CLAUDE_LINES, CLAUDE_SHOP, BLUU_GEAR, PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
   spotRooms: () => Object.keys(ROOMS).filter(id => (ROOMS[id].spots || []).length).map(id => ({ id, name: ROOMS[id].name, n: ROOMS[id].spots.length })),
