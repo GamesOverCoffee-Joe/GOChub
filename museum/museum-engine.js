@@ -1568,7 +1568,7 @@ function normalizePiece(p, i) {
     drinkPrice: Math.max(0, Math.min(99, Math.round(+p.drinkPrice || 0))), drinkIced: !!p.drinkIced, // the drink of the week's price, and whether it's served iced
     drinkColor: isHex(p.drinkColor) ? p.drinkColor : "", drinkLine: Array.isArray(p.drinkLine) ? p.drinkLine.map(x => str(x, 200)).filter(Boolean).slice(0, 6) : [], // its cup color, and what the barista says
     gift: p.gift && str(p.gift.name, 50) ? { name: str(p.gift.name, 50), description: str(p.gift.description, 160), price: Math.max(1, Math.min(99, Math.round(+p.gift.price || 5))) } : null, // and its gift
-    episodeTitle: str(p.episodeTitle, 140), cardBlurb: str(p.cardBlurb, 140), noCard: !!p.noCard, // its trading card: the episode's title (Cards tab fetches it), a blurb (else the hint), or no card at all
+    episodeTitle: str(p.episodeTitle, 140), cardBlurb: str(p.cardBlurb, 140), noCard: !!p.noCard, cardsFrom: p.cardsFrom === undefined ? "on" : p.cardsFrom === "on" || /^\d{4}-\d{2}-\d{2}$/.test(p.cardsFrom || "") ? p.cardsFrom : "", // its trading card: the episode's title (Cards tab fetches it), a blurb (else the hint), or no card at all
     hint: str(p.hint, 160), pick: !!p.pick, rel: str(p.rel, 30), genre: str(p.genre, 30), blend: str(p.blend, 30), // blend: a second category it also belongs to
     colors: colors.length >= 2 ? colors : ["#f0ecf8", "#a898d0", "#584a88", "#1a1430"],
     style: STYLES.includes(p.style) ? p.style : STYLES[strSeed(str(p.title, 80) || String(i)) % STYLES.length],
@@ -2066,6 +2066,10 @@ const TEXT = {
   "unveil.theater":    { g: "Unveiling", l: "After the unveil, if the piece has an episode: watch it in the screening nook ({title})", v: [["and see the episode in the theater!"]] },
   "unveil.drink":      { g: "Unveiling", l: "After the unveil, if the piece brings a drink: the drink of the week ({drink})", v: [["To celebrate, we're offering a new drink called {drink} in the café!"]] },
   "unveil.gift":       { g: "Unveiling", l: "After the unveil, if the piece brings a gift: everyone here gets one free ({item})", v: [["And everyone here today will receive the featured item: {item} for free!"]] },
+  "unveil.waitCurator": { g: "Unveiling", l: "Talking to the curator by the covered piece, before the ceremony ({title})", by: "claude", v: [["Today's the day.", "{title} is under that cloth, and it comes off any minute. Stick around."], ["You made it! I've been waiting all week to show everybody {title}."]] },
+  "unveil.waitUsher":  { g: "Unveiling", l: "Talking to the usher by the covered piece, before the ceremony", by: "claude", v: [["Find a good spot. The curator's about to do the honors."]] },
+  "unveil.waitYou":    { g: "Unveiling", l: "Playing as the curator: the usher by the covered piece, waiting on you ({title})", by: "claude", v: [["Everyone's here, Curator.", "Pull the cloth off {title} whenever you're ready."]] },
+  "unveil.ask":        { g: "Unveiling", l: "Playing as the curator: facing the covered piece ({title})", by: "claude", v: [["Pull the cloth off {title}?"]] },
   "unveil.got":        { g: "Unveiling", l: "The note when you get the unveil gift ({item})", v: [["You got the {item}"]] },
   "case.covered":      { g: "Pieces", l: "Case under a cloth (unveiling soon)", v: [["Something is under a cloth in this case.", "The card says it will be unveiled on {date}."]] },
   "painting.covered":  { g: "Pieces", l: "Painting under a sheet (unveiling soon)", v: [["Something is hanging under a sheet.", "The card says it will be unveiled on {date}."]] },
@@ -3211,6 +3215,7 @@ class Game {
       if (this.staff && this.staff.curator && this.rooms.office && !this.curator) { const sp = ROOMS.office.spawn; this.enterRoom("office", sp[0], sp[1], sp[2], true); } // the curator starts in their office
     };
     if (this.outsideStart()) { this.entryFn = go; const sp = ROOMS.outside.spawn; this.enterRoom("outside", sp[0], sp[1], sp[2], true); } else go(); // every visit starts out front (Joe 10/12)
+    if (this.curatorPlay() && !this.progress.recording) this.progress.recording = { tod: this.tod() }; // on a curator badge, recording mode starts by itself (the office PC turns it off, Joe 10/13)
     this.applyRecording();
     this.ready = this.setPack(pack); this.updateHud();
     this.ready.then(() => { this.started = true; if (this.needTutorial() && !this.outsideNow()) this.startTutorial(); }); // a new player starts with the tutorial
@@ -3944,7 +3949,7 @@ class Game {
      walk around to the back (facing down) for the developer's intention. From the ends, you're told to walk around. */
   useCase(c) {
     if (c.state === "empty") { this.say(this.tx("case.empty")); return; }
-    if (c.state === "covered") { this.say(this.tx("case.covered", { date: niceDate(c.piece.unveil), title: c.piece.title })); return; }
+    if (c.state === "covered") { if (this.askUnveil(c)) return; this.say(this.tx("case.covered", { date: niceDate(c.piece.unveil), title: c.piece.title })); return; }
     if (c.state === "crate") { this.hang(c); return; }
     if (c.state === "wall" && this.offerRecommend(c.piece, () => this.useCaseNow(c))) return;
     this.useCaseNow(c);
@@ -4247,7 +4252,7 @@ class Game {
     this.spook = null; this.figure = null; this.hideEnd(); this.trans = null; this.fade = 0; this.mode = "walk"; this.microwaved = false;
     this.rebuild();
     const w = this.endKind === "brb" && this.progress.where;
-    const go = () => { if (w && w.room !== "outside" && this.rooms[w.room]) this.enterRoom(w.room, w.x, w.y, w.dir); else { const sp = ROOMS.lobby.spawn; this.enterRoom("lobby", sp[0], sp[1], sp[2]); } };
+    const go = () => { if (this.curatorPlay() && this.rooms.office) { const sp = ROOMS.office.spawn; this.enterRoom("office", sp[0], sp[1], sp[2]); } else if (w && w.room !== "outside" && this.rooms[w.room]) this.enterRoom(w.room, w.x, w.y, w.dir); else { const sp = ROOMS.lobby.spawn; this.enterRoom("lobby", sp[0], sp[1], sp[2]); } };
     if (this.outsideStart()) { this.entryFn = go; const sp = ROOMS.outside.spawn; this.enterRoom("outside", sp[0], sp[1], sp[2]); } else go(); // back out front, like any start
     this.wrap.focus({ preventScroll: true });
     if (this.needTutorial() && !this.outsideNow()) this.startTutorial(); // quit in the middle of it: it starts over
@@ -4281,7 +4286,7 @@ class Game {
      the chore count: four colored quarters (settling in, getting busy, the rush, winding down), the ones gone by bright, a
      hand sweeping round; once the loop's over, a moon. Not in the chill museum, the tutorial or recording. */
   signImg() { if (!this._sign) { const im = new Image(); im.onload = () => { this._signOk = true; }; im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(this.museumLogo(false)); this._sign = im; } return this._signOk ? this._sign : null; }
-  outsideStart() { return !this.curator && !!this.saveKey && !this.headless && !this.recording() && !!this.rooms.outside; } // every visit starts out front (not the curator's preview)
+  outsideStart() { return !this.curator && !!this.saveKey && !this.headless && !this.recording() && !this.curatorPlay() && !!this.rooms.outside; } // every visit starts out front (not the curator's preview)
   enterMuseum() { // through the glass doors: to wherever you'd have started
     const go = this.entryFn || (() => { const sp = ROOMS.lobby.spawn; this.enterRoom("lobby", sp[0], sp[1], sp[2]); }); this.entryFn = null;
     this.mode = "busy"; this.trans = { t: 0, dur: 14, switched: false, fn: go, after: () => { this.dialK = undefined; if (this.needTutorial()) this.startTutorial(); } };
@@ -4640,6 +4645,17 @@ class Game {
       }
       cer.pieces.push(p); const obj = c || sp; cer.covered.push([obj, obj.state]); obj.state = "covered"; // under the cloth until the curator pulls it off
     }
+    for (const cer of this.ceremonies) { // what the hosts say if you talk to them first (Joe 10/13: the curator only said "...")
+      const vars = { title: cer.pieces.map(p => p.title).join(" and ") };
+      if (cer.curator) cer.curator.lines = [this.tx("unveil.waitCurator", vars)];
+      if (cer.usher) cer.usher.lines = [this.tx(this.isCurator() ? "unveil.waitYou" : "unveil.waitUsher", vars)];
+    }
+  }
+  ceremonyAt(obj) { return (this.ceremonies || []).find(c => !c.done && c.covered.some(([o]) => o === obj)) || null; } // the ceremony waiting on this covered piece
+  askUnveil(obj) { // the curator (you) at the covered piece: start the ceremony when you're ready (Joe 10/13)
+    const cer = this.ceremonyAt(obj); if (!cer || !this.isCurator() || this.room.id !== "museum") return false;
+    this.ask(this.tx("unveil.ask", { title: cer.pieces.map(p => p.title).join(" and ") }).join(" "), ["Unveil it", "Not yet"], i => { if (i === 0) this.startCeremony(cer); }, 1);
+    return true;
   }
   testUnveil() { // curator preview: stage the ceremony for the newest piece, as if it were unveiled today
     const m = this.rooms.museum, shown = q => m && (m.cases.some(c => c.piece && c.piece.id === q.id) || (m.hung || []).some(h => h.piece && h.piece.id === q.id));
@@ -4660,8 +4676,9 @@ class Game {
         this.say(this.tx("unveil.curator", vars), () => after(16, () => {
           cer.covered.forEach(([obj, st]) => { obj.state = st === "covered" ? "wall" : st; }); this.flash = 8; // the cloth comes off
           face(cer.curator, "down");
-          cer.crowd.forEach((n, i) => { n.pose = { kind: i % 2 ? "heart" : "startled", t0: this.t, dur: 110 }; });
-          after(80, () => {
+          const snap = cer.crowd.slice().sort(() => Math.random() - 0.5).slice(0, Math.min(cer.crowd.length, 2 + ((Math.random() * 3) | 0))); // two to four of them take a photo, one after another (Joe 10/13)
+          cer.crowd.forEach((n, i) => { if (snap.includes(n)) { n.pose = null; n.snapAt = this.t + 14 + snap.indexOf(n) * (18 + ((Math.random() * 10) | 0)); } else n.pose = { kind: i % 2 ? "heart" : "startled", t0: this.t, dur: 110 }; });
+          after(Math.max(80, 14 + snap.length * 28 + 30), () => {
             const p = cer.pieces[0], week = this.weekDrink(), gift = cer.pieces.map(q => this.giftOf(q)).find(Boolean), pages = [...this.tx("unveil.read", vars)];
             if (cer.pieces.some(q => q.gameUrl) && this.rooms.museum.props.some(q => q.key === "arcade_cabinet")) pages.push(...this.tx("unveil.arcade", vars));
             if (cer.pieces.some(q => q.episodeUrl)) pages.push(...this.tx("unveil.theater", vars));
@@ -4959,7 +4976,7 @@ class Game {
   }
   recording() { return !!(this.progress && this.progress.recording && this.staff && this.staff.curator); }
   setRecording(on) { this.progress.recording = on ? { tod: this.tod() } : null; this.saveProgress(); this.applyRecording(); this.updateHud(); }
-  applyRecording() { // recording mode: holds the time of day; museum.html hides the touch controls (goq-rec on <html>)
+  applyRecording() { // recording mode: holds the time of day; goq-rec on <html> (the touch controls stay, Joe 10/13)
     const rec = this.recording();
     if (rec) this.timeOverride = this.progress.recording.tod; else if (this.recTod) this.timeOverride = null;
     this.recTod = rec;
@@ -5633,6 +5650,7 @@ class Game {
     this.progress.lastBadge = who; this.progress.tally.shifts = (this.progress.tally.shifts || 0) + 1; this.saveProgress();
     if (this.tut && this.tut.onBadge) { const f = this.tut.onBadge; this.tut.onBadge = null; this.closeBadge(); this.updateHud(); f(true); return; } // signing in with the usher
     this.closeBadge(); this.updateHud(); this.showLoc("Clocked in: " + who.name);
+    if (this.curatorPlay()) { this.janOff(); if (this.dirClock) this.dirClock.picks = null; this.sup = null; if (this.tour) this.endTour(true); this.endSide(); if (!this.recording()) this.setRecording(true); } // a curator badge: chill, no tours or Janitor, recording on
     const to = this.staffTo || ["staff", 7, 8, "up"];
     if (this.room.id !== to[0]) this.warp(...to);
   }
@@ -6254,7 +6272,8 @@ class Game {
     for (const p of (pack || this.pack).pieces) { const v = ytVideoId(p.episodeUrl); if (!v || st[v]) continue; st[v] = "loading"; const im = new Image(); im.onload = () => { st[v] = "ok"; }; im.onerror = () => { st[v] = "no"; }; im.src = "thumbs/" + v + ".jpg"; }
   }
   cardThumb(p) { const v = ytVideoId(p.episodeUrl); return v && this.thumbState && this.thumbState[v] === "ok" ? "thumbs/" + v + ".jpg" : ""; }
-  cardList() { const t = todayISO(); return this.pack.pieces.filter(p => !p.tut && !p.noCard && (!p.unveil || p.unveil <= t)).sort((a, b) => ((a.unveil || "") < (b.unveil || "") ? -1 : (a.unveil || "") > (b.unveil || "") ? 1 : 0)); }
+  cardsOn(p, t) { t = t || todayISO(); return p.cardsFrom === "on" || (!!p.cardsFrom && p.cardsFrom <= t); } // a piece's cards are on sale from cardsFrom ("on": always; "": not yet, Joe 10/13)
+  cardList() { const t = todayISO(); return this.pack.pieces.filter(p => !p.tut && !p.noCard && (!p.unveil || p.unveil <= t) && this.cardsOn(p, t)).sort((a, b) => ((a.unveil || "") < (b.unveil || "") ? -1 : (a.unveil || "") > (b.unveil || "") ? 1 : 0)); }
   cardsOwned() { return this.progress.cards || (this.progress.cards = {}); }
   addCard(id, kind) { const o = this.cardsOwned(), had = Object.assign({ c: 0, r: 0, f: 0 }, o[id] || {}), c = o[id] || (o[id] = { c: 0, r: 0, f: 0 }); c[kind] = (c[kind] || 0) + 1; this.lastHad = had; this.progress.tally.cards = (this.progress.tally.cards || 0) + 1; this.saveProgress(); } // lastHad: what you had of that card before (the card view says new or repeat)
   randomCard(rare) { const L = this.cardList(); if (!L.length) return null; return { p: L[(Math.random() * L.length) | 0], kind: Math.random() * 100 < rare ? "r" : "c" }; }
@@ -6838,6 +6857,7 @@ class Game {
     const d = n.drink;
     if (n.sipT > 0) n.sipT--;
     if (n.snapT > 0) n.snapT--;
+    if (n.snapAt && this.t >= n.snapAt) { n.snapAt = 0; n.snapT = 34; } // a photo at the unveiling: the phone comes up and flashes
     if (!d || this.mode !== "walk") return;
     if (!d.empty && --d.t <= 0) { n.sipT = 40; d.t = 500 + Math.random() * 700; if (++d.sips >= 4) d.empty = true; }
     else if (d.empty && (n.sitting || n.still) && --d.t <= 0) n.drink = null; // set it down somewhere
@@ -7458,7 +7478,7 @@ class Game {
     else { if (z.id === "strategy" && was && was.id === "upper" && this.upperWalk) this.quest("upperHall"); this.upperWalk = false; }
     if (z.kind !== "room") return;
     const cer = (this.ceremonies || []).find(q => q.zone === z && !q.done);
-    if (cer && this.room.id === "museum") { if (this.mode === "walk" && !this.trans) this.startCeremony(cer); else { const a = this.afterTrans; this.afterTrans = () => { if (a) a(); this.startCeremony(cer); }; } }
+    if (cer && this.room.id === "museum" && !this.isCurator()) { if (this.mode === "walk" && !this.trans) this.startCeremony(cer); else { const a = this.afterTrans; this.afterTrans = () => { if (a) a(); this.startCeremony(cer); }; } }
     this.visit(this.room.id + ":" + z.id);
     if (!quiet) this.showLoc(z.name, "place");
   }
@@ -7475,7 +7495,7 @@ class Game {
     else if (e.caseAt) this.useCase(e.caseAt);
     else if (e.spot) {
       const s = e.spot;
-      if (s.state === "covered") this.say(this.tx("painting.covered", { date: niceDate(s.piece.unveil), title: s.piece.title }));
+      if (s.state === "covered") { if (!this.askUnveil(s)) this.say(this.tx("painting.covered", { date: niceDate(s.piece.unveil), title: s.piece.title })); }
       else if (s.state === "crate") this.hang(s);
       else if (!(s.state === "wall" && this.offerRecommend(s.piece, () => { if (!this.tidy(s)) this.viewPiece(s.piece, undefined, true); })) && !this.tidy(s)) this.viewPiece(s.piece, undefined, true); // a painting has one side: one read stamps it
     }
@@ -8633,9 +8653,10 @@ class Game {
   /* ----- The chill museum (Joe 10/12) -----
      Play without any of the problems: a switch in Settings (there from the start), or the curator offers it the first time you
      solve every problem in one loop. Solved ones are kept for the loop as they happen (some states reset later on). */
-  chillOn() { return !!(this.progress && this.progress.chill); }
-  noJanitor() { return this.chillOn() && this.progress.chillJan === false; } // chill, Janitor off: no litter at all, the bins never fill (Joe 10/12)
-  noTours() { return this.chillOn() && this.progress.chillTour === false; } // chill, Tours off: no tour group, no school group
+  curatorPlay() { return !!(this.progress && this.staff && this.staff.curator && !this.curator && !this.headless); } // playing on a curator badge (not the curator page's preview)
+  chillOn() { return this.curatorPlay() || !!(this.progress && this.progress.chill); } // a curator badge always plays chill, without changing your own setting (Joe 10/13)
+  noJanitor() { return this.curatorPlay() || (this.chillOn() && this.progress.chillJan === false); } // chill, Janitor off: no litter at all, the bins never fill (Joe 10/12)
+  noTours() { return this.curatorPlay() || (this.chillOn() && this.progress.chillTour === false); } // chill, Tours off: no tour group, no school group
   setChillPart(part, on) { // the two switches under Chill museum
     if (part === "jan") { this.progress.chillJan = !!on; this.janOff(); }
     else if (part === "tour") { this.progress.chillTour = !!on; if (this.tour) this.endTour(true); }

@@ -521,7 +521,7 @@ function packOut() {
     if (p.unveil) o.unveil = p.unveil;
     if (p.drink) { o.drink = p.drink; if (p.drinkColor) o.drinkColor = p.drinkColor; if (p.drinkLine && p.drinkLine.length) o.drinkLine = p.drinkLine; if (p.drinkPrice) o.drinkPrice = p.drinkPrice; if (p.drinkIced) o.drinkIced = true; }
     if (p.pick) o.pick = true;
-    if (p.episodeTitle) o.episodeTitle = p.episodeTitle; if (p.cardBlurb) o.cardBlurb = p.cardBlurb; if (p.noCard) o.noCard = true; // its trading card (Cards tab)
+    if (p.episodeTitle) o.episodeTitle = p.episodeTitle; if (p.cardBlurb) o.cardBlurb = p.cardBlurb; if (p.noCard) o.noCard = true; if (p.cardsFrom !== "on") o.cardsFrom = p.cardsFrom || ""; // its trading card (Cards tab); cardsFrom: missing = always (older packs), "" = not yet
     if (p.image) o.image = p.image; else { o.colors = p.colors; o.style = p.style; }
     return o;
   }) };
@@ -2569,11 +2569,15 @@ function renderCards(keepNote) {
     const draw = () => { prev.innerHTML = ""; try { prev.appendChild(game.cardElement(p, rare.checked ? "r" : "c")); } catch (e) { prev.textContent = "(preview unavailable)"; } };
     rare.addEventListener("change", draw);
     const text = (k, label, ph, max) => { const i = el("input", { type: "text", value: p[k] || "", placeholder: ph || "", maxlength: max || 140 }); i.addEventListener("input", () => { p[k] = i.value; changed(); draw(); }); return el("label", { class: "wide" }, [document.createTextNode(label), i]); };
-    const no = el("input", { type: "checkbox", checked: !!p.noCard }); no.addEventListener("change", () => { p.noCard = no.checked; changed(); });
-    const when = p.unveil && p.unveil > today ? "Its card arrives on its unveil, " + p.unveil + "." : "In the binder now.";
+    const no = el("input", { type: "checkbox", checked: !!p.noCard }); no.addEventListener("change", () => { p.noCard = no.checked; changed(); when(); });
+    const from = el("input", { type: "date", value: p.cardsFrom && p.cardsFrom !== "on" ? p.cardsFrom : "" }), whenP = el("p", { class: "wide note", style: "margin:0" });
+    const when = () => { const on = p.cardsFrom === "on" || (p.cardsFrom && p.cardsFrom <= today); whenP.textContent = p.noCard ? "No card." : !p.cardsFrom ? "Not on sale yet: set a date when the thumbnail's settled." : p.unveil && p.unveil > today ? "Its cards go on sale on its unveil, " + p.unveil + (p.cardsFrom !== "on" && p.cardsFrom > p.unveil ? ", or " + p.cardsFrom + " if that's later" : "") + "." : on ? "On sale now." : "On sale from " + p.cardsFrom + "."; };
+    from.addEventListener("change", () => { p.cardsFrom = from.value || ""; changed(); when(); }); when();
+    const always = el("button", { type: "button", class: "btn small quiet", text: "On sale now", onclick: () => { p.cardsFrom = "on"; from.value = ""; changed(); when(); } });
     wrap.appendChild(el("section", { class: "prow", style: "display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap" }, [prev,
-      el("div", { class: "fields", style: "flex:1;min-width:240px" }, [el("p", { class: "wide", style: "margin:0;font-weight:700", text: p.title }), el("p", { class: "wide note", style: "margin:0", text: when }),
+      el("div", { class: "fields", style: "flex:1;min-width:240px" }, [el("p", { class: "wide", style: "margin:0;font-weight:700", text: p.title }), whenP,
         text("episodeUrl", "Episode link (from the piece)", "https://youtu.be/…", 300), text("episodeTitle", "Episode title", "Look up, or type it in"), text("cardBlurb", "The curator's quote (signed \u2014 the curator)", "Your connection with the game, in a line or two"),
+        el("label", {}, [document.createTextNode("Cards from"), el("small", { text: "The common and the rare go on sale this day (not before its unveil). Empty: not yet." }), from]), el("div", { class: "row" }, [always]),
         el("label", { class: "check" }, [rare, document.createTextNode(" Show the rare")]), el("label", { class: "check" }, [no, document.createTextNode(" No card for this piece")])])]));
     draw();
   });
@@ -2784,7 +2788,7 @@ function renderPieces() {
   });
   if (pieceFilter.trim()) find.dispatchEvent(new Event("input"));
   wrap.appendChild(el("div", { class: "row" }, [el("button", { class: "btn primary", type: "button", text: "Add a piece", onclick: () => {
-    const np = GOQ.normalizePiece({ id: uid(), title: "New piece", developer: "" }, draft.pieces.length); draft.pieces.push(np); openPieces.add(np.id); savePieceState(); changed({ now: true }); renderPieces();
+    const np = GOQ.normalizePiece({ id: uid(), title: "New piece", developer: "", cardsFrom: "" }, draft.pieces.length); draft.pieces.push(np); openPieces.add(np.id); savePieceState(); changed({ now: true }); renderPieces();
     const rows = document.querySelectorAll(".prow"); const last = rows[rows.length - 1]; if (last) { last.scrollIntoView({ block: "nearest" }); last.querySelector("input").focus(); }
   } })]));
   /* Guestbook: entries the front desk reads out, newest last. */

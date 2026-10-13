@@ -67,7 +67,6 @@ body.touch #ver.warn{display:block;position:fixed;left:8px;right:8px;bottom:8px;
 /* On-screen controls, sized from --pad and --btn */
 .gt-controls{display:none;justify-content:space-between;align-items:center;gap:24px;touch-action:none;user-select:none;-webkit-user-select:none;color:var(--text)}
 body.touch .gt-controls{display:flex}
-html.goq-rec .gt-controls{display:none!important} /* recording mode (the curator's office computer): no touch controls */
 .gt-pad{position:relative;width:var(--pad);height:var(--pad);touch-action:none;flex:none}
 .gt-pad span,.gt-pad i{position:absolute;background:var(--surface-2);border:2px solid var(--muted)}
 .gt-pad .u,.gt-pad .d{left:33.3%;width:33.4%;height:34.8%}
@@ -380,6 +379,8 @@ window.goqStart = function () {
   const optChill = document.getElementById("optChill");
   const optChillJan = document.getElementById("optChillJan"), optChillTour = document.getElementById("optChillTour");
   function chillRows() { // the two switches under Chill museum show while it's on
+    const cur = !!(game.curatorPlay && game.curatorPlay()); optChill.disabled = optChillJan.disabled = optChillTour.disabled = cur; // a curator badge always plays chill, with no tours or Janitor
+    if (cur) { optChill.checked = true; optChillJan.checked = optChillTour.checked = false; document.getElementById("rowChillJan").hidden = document.getElementById("rowChillTour").hidden = false; return; }
     const on = optChill.checked, P = game.progress || {};
     document.getElementById("rowChillJan").hidden = document.getElementById("rowChillTour").hidden = !on;
     optChillJan.checked = P.chillJan !== false; optChillTour.checked = P.chillTour !== false;
