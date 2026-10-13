@@ -188,6 +188,23 @@ select.search{appearance:auto;margin-top:8px}
 .framebar{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0}
 .framebar .btn[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
 .tools{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:10px 0}
+.tool span{line-height:1.15;text-align:center}
+.selbar{align-items:center;margin:0 0 10px}
+.trace .range,.colors .range{display:grid;grid-template-columns:84px 1fr;align-items:center;gap:10px;margin:8px 0;font-size:.85rem;font-weight:700}
+.trace input[type=range],.colors input[type=range]{width:100%;accent-color:var(--gold)}
+.colors input[type=range]{-webkit-appearance:none;appearance:none;height:22px;border-radius:999px;border:2px solid var(--line)}
+.colors input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid #222;box-shadow:0 0 0 1px #fff}
+.colors input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid #222}
+.colors input.hue{background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
+.done .sheet.colors{text-align:left}
+.cmprow{display:flex;gap:10px;align-items:center;margin:8px 0}
+.sw.cmp{width:72px;height:44px;cursor:default;display:flex}
+.sw.cmp i{position:static;flex:1}
+.check{display:flex;gap:8px;align-items:center;font-size:.9rem;margin:10px 0}
+.check input{width:22px;height:22px;accent-color:var(--gold)}
+.reorder{display:flex;gap:6px}
+.reorder .btn{text-transform:none;letter-spacing:0}
+.sw.big{cursor:pointer}
 .tool{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:58px;border:2px solid var(--line);border-radius:8px;background:var(--surface);font-size:.75rem;font-weight:700;cursor:pointer;padding:6px 2px}
 .tool svg{width:24px;height:24px}
 .tool[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
@@ -568,6 +585,9 @@ const packRGBA = (r, g, b, a) => ((r << 24) | (g << 16) | (b << 8) | a) >>> 0;
 const unpackRGBA = k => [k >>> 24, (k >>> 16) & 255, (k >>> 8) & 255, k & 255];
 const cssOf = k => { const [r, g, b, a] = unpackRGBA(k); return "rgba(" + r + "," + g + "," + b + "," + (a / 255).toFixed(3) + ")"; };
 const hexOf = k => "#" + unpackRGBA(k).slice(0, 3).map(v => v.toString(16).padStart(2, "0")).join("");
+const hsvToRgb = (h, s, v) => { const f = n => { const k = (n + h / 60) % 6; return Math.round(255 * (v - v * s * Math.max(0, Math.min(k, 4 - k, 1)))); }; return [f(5), f(3), f(1)]; };
+const rgbToHsv = (r, g, b) => { r /= 255; g /= 255; b /= 255; const mx = Math.max(r, g, b), d = mx - Math.min(r, g, b); let h = 0; if (d) h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return [(h * 60 + 360) % 360, mx ? d / mx : 0, mx]; };
+const traceBySlot = {}; // a picture to trace over, per sprite, while the page is open (never saved)
 // The sprite's own colors, most used first: the original's, then any others already in the art.
 function colorsIn(px) { const n = new Map(); for (let i = 0; i < px.length; i += 4) { if (px[i + 3] === 0) continue; const k = packRGBA(px[i], px[i + 1], px[i + 2], px[i + 3]); n.set(k, (n.get(k) || 0) + 1); } return [...n.entries()].sort((a, b) => b[1] - a[1]).map(e => e[0]); }
 const ICON = {
@@ -575,6 +595,13 @@ const ICON = {
   eraser: '<path d="M4 15l9-9 6 6-7 7H8z M9 10l6 6 M8 19h12"/>',
   fill: '<path d="M5 11l6-6 7 7-6 6z M5 11h13 M19 15c0 2 1.6 3 1.6 4.4a1.6 1.6 0 0 1-3.2 0C17.4 18 19 17 19 15z"/>',
   pick: '<path d="M14 4.5l5.5 5.5 M16.5 7.5L7 17l-3 1 1-3 9.5-9.5 M13 3l8 8"/>',
+  line: '<path d="M5 19L19 5"/><circle cx="5" cy="19" r="1.6" fill="currentColor"/><circle cx="19" cy="5" r="1.6" fill="currentColor"/>',
+  rect: '<rect x="4" y="6" width="16" height="12"/>',
+  rectf: '<rect x="4" y="6" width="16" height="12" fill="currentColor"/>',
+  oval: '<ellipse cx="12" cy="12" rx="8.5" ry="6.5"/>',
+  ovalf: '<ellipse cx="12" cy="12" rx="8.5" ry="6.5" fill="currentColor"/>',
+  select: '<rect x="4" y="5" width="16" height="14" stroke-dasharray="3 2.5"/>',
+  mirror: '<path d="M12 3v18" stroke-dasharray="2 2.5"/><path d="M9 7L4 12l5 5z M15 7l5 5-5 5z"/>',
   move: '<path d="M12 3v18 M3 12h18 M12 3l-3 3 M12 3l3 3 M12 21l-3-3 M12 21l3-3 M3 12l3-3 M3 12l3 3 M21 12l-3-3 M21 12l-3 3"/>',
 };
 const svg = d => { const w = el("span", { "aria-hidden": "true" }); w.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">' + d + "</svg>"; return w.firstChild; };
@@ -736,7 +763,7 @@ function renderPaint() {
 
   // Frames: tap one to paint it (the zoom stays put, so frames line up); the bar copies, pastes, flips and clears them
   let frameBtns = [], ghost = meta.ghost !== false;
-  const goFrame = f => { frame = (f + Z.frames) % Z.frames; view.frame = frame; history.replaceState({ v: view }, ""); draw(); };
+  const goFrame = f => { dropSel(); frame = (f + Z.frames) % Z.frames; view.frame = frame; history.replaceState({ v: view }, ""); draw(); };
   const ghostB = el("button", { class: "btn quiet small", type: "button", "aria-pressed": ghost ? "true" : "false", text: "Ghost", title: "Show a faint copy of the frame before (to line things up)", onclick: () => { ghost = !ghost; meta.ghost = ghost; saveMeta(); ghostB.setAttribute("aria-pressed", ghost); draw(); } });
   const pasteB = el("button", { class: "btn quiet small", type: "button", text: "Paste", onclick: () => pasteFrame() });
   if (Z.frames > 1) {
@@ -764,31 +791,85 @@ function renderPaint() {
   function paintFrameBar() { const ok = frameClip && frameClip.w === s.w && frameClip.h === s.h; pasteB.disabled = !ok; pasteB.title = ok ? "Paste " + frameClip.from : "Copy a frame first"; }
   paintFrameBar();
 
-  // Tools
+  // Tools, in two rows. Tapping Box or Oval again switches it between outline and solid.
+  // Mirror isn't a tool: it makes the others paint both sides (off, left-right, top-bottom, all four corners).
   const tools = el("div", { class: "tools", role: "group", "aria-label": "Tools" });
-  const toolBtns = {};
-  [["pencil", "Pencil"], ["eraser", "Eraser"], ["fill", "Fill"], ["pick", "Pick"], ["move", "Move"]].forEach(([k, label]) => {
+  const toolBtns = {}, filled = { rect: false, oval: false }; let mirror = "";
+  [["pencil", "Pencil"], ["eraser", "Eraser"], ["fill", "Fill"], ["pick", "Pick"], ["move", "Move"], ["line", "Line"], ["rect", "Box"], ["oval", "Oval"], ["select", "Select"]].forEach(([k, label]) => {
     toolBtns[k] = el("button", { class: "tool", type: "button", "aria-pressed": "false", onclick: () => setTool(k) }, [svg(ICON[k]), el("span", { text: label })]); tools.appendChild(toolBtns[k]);
   });
+  const MIRROR_TEXT = { "": "Mirror", x: "Mirror ↔", y: "Mirror ↕", xy: "Mirror ✣" };
+  const mirrorB = el("button", { class: "tool", type: "button", "aria-pressed": "false", title: "Paint both sides at once (tap to change: left-right, top-bottom, all four, off)", onclick: () => { mirror = { "": "x", x: "y", y: "xy", xy: "" }[mirror]; paintTools(); draw(); } }, [svg(ICON.mirror), el("span", { text: "Mirror" })]);
+  tools.appendChild(mirrorB);
   $app.appendChild(tools);
 
+  // Selection: drag a box with Select, then drag inside it to move what's in it. The bar flips, turns, copies, pastes and deletes.
+  const sbtn = (text, fn, title) => el("button", { class: "btn quiet small", type: "button", text, title, onclick: fn });
+  const selBar = el("div", { class: "framebar selbar", role: "group", "aria-label": "Selection", hidden: true }, [
+    el("span", { class: "small", text: "Selection:" }),
+    sbtn("Flip ↔", () => selDo(f => flipF(f, true))), sbtn("Flip ↕", () => selDo(f => flipF(f, false))), sbtn("Turn ↻", () => selDo(turnF)),
+    sbtn("Copy", () => selCopy()), sbtn("Delete", () => selDo(f => ({ w: f.w, h: f.h, px: new Uint8ClampedArray(f.px.length) }))), sbtn("Done", () => { dropSel(); draw(); })]);
+  const pasteSelB = sbtn("Paste selection", () => selPaste(), "Paste what you copied with Select, where it was");
+  $app.appendChild(selBar);
+
+  // Trace: a picture under (or over) the grid to paint over. It's never part of the sprite, and it's forgotten when the page closes.
+  let trace = traceBySlot[key] || null;
+  const trOp = el("input", { type: "range", min: 5, max: 100, value: 50, "aria-label": "Picture strength" }), trSize = el("input", { type: "range", min: 10, max: 400, value: 100, "aria-label": "Picture size" });
+  const trMove = sbtn("Move picture", () => { trace.moving = !trace.moving; paintTrace(); }), trTop = sbtn("On top", () => { trace.over = !trace.over; paintTrace(); draw(); });
+  const tracePanel = el("section", { class: "panel trace", hidden: true, "aria-label": "Picture to trace" }, [
+    el("div", { class: "palhead row" }, [el("span", { text: "Tracing a picture" }), sbtn("Remove", () => { trace = null; delete traceBySlot[key]; paintTrace(); draw(); })]),
+    el("label", { class: "range" }, [el("span", { text: "Strength" }), trOp]), el("label", { class: "range" }, [el("span", { text: "Size" }), trSize]),
+    el("div", { class: "framebar" }, [trMove, trTop])]);
+  trOp.addEventListener("input", () => { trace.alpha = trOp.value / 100; draw(); });
+  trSize.addEventListener("input", () => { const cx = trace.x + trace.img.width * trace.k / 2, cy = trace.y + trace.img.height * trace.k / 2; trace.k = trace.fitK * trSize.value / 100; trace.x = cx - trace.img.width * trace.k / 2; trace.y = cy - trace.img.height * trace.k / 2; draw(); });
+  function paintTrace() {
+    tracePanel.hidden = !trace; if (!trace) return;
+    trOp.value = Math.round(trace.alpha * 100); trSize.value = Math.round(trace.k / trace.fitK * 100);
+    trMove.setAttribute("aria-pressed", !!trace.moving); trTop.setAttribute("aria-pressed", !!trace.over);
+  }
+  $app.appendChild(tracePanel);
+  const traceIn = el("input", { type: "file", accept: "image/*", class: "sr" });
+  traceIn.addEventListener("change", async () => {
+    const f = traceIn.files[0]; traceIn.value = ""; if (!f) return;
+    try {
+      const img = await loadImg(URL.createObjectURL(f)), fitK = Math.max(s.w / img.width, s.h / img.height);
+      trace = traceBySlot[key] = { img, alpha: 0.5, k: fitK, fitK, x: (s.w - img.width * fitK) / 2, y: (s.h - img.height * fitK) / 2, over: false, moving: false };
+      paintTrace(); draw(); tracePanel.scrollIntoView({ behavior: "smooth", block: "nearest" }); toast("Tracing: use Move picture and Size to line it up");
+    } catch (e) { toast("That picture couldn't be opened"); }
+  });
+  // Import a PNG as pixels: the whole sheet or one frame, at its size or a clean 2×, 3×, 4× (or more) upscale.
+  const importIn = el("input", { type: "file", accept: "image/png,image/gif,image/webp", class: "sr" });
+  importIn.addEventListener("change", async () => {
+    const f = importIn.files[0]; importIn.value = ""; if (!f) return;
+    let img; try { img = await loadImg(URL.createObjectURL(f)); } catch (e) { return toast("That file couldn't be opened"); }
+    const [c, x] = canvasOf(img.width, img.height); x.drawImage(img, 0, 0); const d = x.getImageData(0, 0, img.width, img.height).data;
+    const fits = Z.frames > 1 ? [[W, H, "sheet"], [s.w, s.h, "frame"]] : [[W, H, "sheet"]];
+    for (const [w, h, where] of fits) for (let k = 1; k <= 16; k++) {
+      if (img.width !== w * k || img.height !== h * k) continue;
+      const out = new Uint8ClampedArray(w * h * 4), o = k >> 1;
+      for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) { const si = ((yy * k + o) * img.width + xx * k + o) * 4, di = (yy * w + xx) * 4; out[di] = d[si]; out[di + 1] = d[si + 1]; out[di + 2] = d[si + 2]; out[di + 3] = d[si + 3]; if (!out[di + 3]) out[di] = out[di + 1] = out[di + 2] = 0; }
+      const b = px.slice(); dropSel(); if (where === "sheet") px = out; else writeFrame(out); commitStroke(b);
+      return toast("Imported " + (where === "sheet" ? "the whole sprite" : "into this frame") + (k > 1 ? " (shrunk from " + k + "×)" : ""));
+    }
+    toast("It needs to be " + W + "×" + H + (Z.frames > 1 ? " (the whole sheet) or " + s.w + "×" + s.h + " (one frame)" : "") + ", or a clean 2×, 3× or 4× of that. Yours is " + img.width + "×" + img.height + ".");
+  });
+
   // Palette: the original's colors, any others already in the art, and your own saved swatches (named, kept across every sprite)
-  const curSw = el("span", { class: "sw big" }, [el("i")]), curText = el("span", { class: "small", style: "flex:1" });
+  const curSw = el("button", { class: "sw big", type: "button", "aria-label": "Change this color", title: "Change this color", onclick: () => changeColor() }, [el("i")]), curText = el("span", { class: "small", style: "flex:1" });
   const keepB = el("button", { class: "btn quiet small", type: "button", text: "Save color", onclick: () => addSwatch(color) });
   const pal = el("div", { class: "pal", role: "group", "aria-label": "Sprite colors" }), palArt = el("div", { class: "pal", role: "group", "aria-label": "Other colors in this art" });
   const artHead = el("p", { class: "palhead", text: "Also in this art" });
   const mine = el("div", { class: "pal mine", role: "group", "aria-label": "My swatches" }), editB = el("button", { class: "btn quiet small", type: "button", onclick: () => { editing = !editing; paintPalette(); } });
-  const picker = el("input", { type: "color", class: "sr", "aria-label": "Pick any color", tabindex: "-1" });
-  const hexRGBA = h => packRGBA(parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16), 255);
-  picker.addEventListener("input", () => setColor(hexRGBA(picker.value)));
-  picker.addEventListener("change", () => { setColor(hexRGBA(picker.value)); if (picker.dataset.add) addSwatch(color); picker.dataset.add = ""; });
   let editing = false;
   $app.appendChild(el("section", { class: "panel", style: "margin-top:4px" }, [el("div", { class: "cur" }, [curSw, curText, keepB]),
+    el("p", { class: "small", style: "margin:-4px 0 0", text: "Tap the big swatch to change a color (and repaint it everywhere in the sprite, if you like)." }),
     el("p", { class: "palhead", text: "Sprite colors" }), pal, artHead, palArt,
-    el("div", { class: "palhead row" }, [el("span", { text: "My swatches" }), editB]), mine, picker]));
+    el("div", { class: "palhead row" }, [el("span", { text: "My swatches" }), editB]), mine]));
 
   // More
   const more = el("details", { class: "more panel" }, [el("summary", { text: "More" }), el("div", { class: "foot" }, [
+    el("button", { class: "btn quiet wide", type: "button", text: "Trace a picture…", onclick: () => traceIn.click() }), traceIn,
+    el("button", { class: "btn quiet wide", type: "button", text: "Import a PNG as pixels…", onclick: () => importIn.click() }), importIn,
     el("button", { class: "btn quiet wide", type: "button", text: "Load the original", onclick: () => load(orig, "Loaded the original. Undo brings yours back.") }),
     status(key) === "painted" || status(key) === "pack" ? el("button", { class: "btn quiet wide", type: "button", text: status(key) === "painted" ? "Load your saved version" : "Load the pack's version", onclick: () => load(start, "Loaded. Undo goes back.") }) : null,
     Z.frames === 1 ? el("button", { class: "btn quiet wide", type: "button", text: "Copy the sprite", onclick: () => copyFrame() }) : null,
@@ -804,7 +885,70 @@ function renderPaint() {
   const idx = (x, y) => ((fy0() + y) * W + fx0() + x) * 4;
   const getPx = (x, y) => { const i = idx(x, y); return packRGBA(px[i], px[i + 1], px[i + 2], px[i + 3]); };
   const setPx = (x, y, k) => { if (x < 0 || y < 0 || x >= s.w || y >= s.h) return; const i = idx(x, y), [r, g, b, a] = unpackRGBA(k); px[i] = a ? r : 0; px[i + 1] = a ? g : 0; px[i + 2] = a ? b : 0; px[i + 3] = a; };
-  function line(x0, y0, x1, y1, k) { const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1; let e = dx + dy; for (;;) { setPx(x0, y0, k); if (x0 === x1 && y0 === y1) break; const e2 = 2 * e; if (e2 >= dy) { e += dy; x0 += sx; } if (e2 <= dx) { e += dx; y0 += sy; } } }
+  // Painting through the mirror: the pixel, plus its reflections.
+  const plot = (x, y, k) => { setPx(x, y, k); if (mirror.includes("x")) setPx(s.w - 1 - x, y, k); if (mirror.includes("y")) setPx(x, s.h - 1 - y, k); if (mirror === "xy") setPx(s.w - 1 - x, s.h - 1 - y, k); };
+  const mirrorPts = (x, y) => [[x, y], ...(mirror.includes("x") ? [[s.w - 1 - x, y]] : []), ...(mirror.includes("y") ? [[x, s.h - 1 - y]] : []), ...(mirror === "xy" ? [[s.w - 1 - x, s.h - 1 - y]] : [])];
+  // Line, box and oval from a to b (the box's corners; the oval fits inside that box).
+  function shape(a, b, k) {
+    if (tool === "line") return line(a.x, a.y, b.x, b.y, k);
+    const x0 = Math.min(a.x, b.x), x1 = Math.max(a.x, b.x), y0 = Math.min(a.y, b.y), y1 = Math.max(a.y, b.y);
+    if (tool === "rect") {
+      if (filled.rect) { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) plot(x, y, k); }
+      else { line(x0, y0, x1, y0, k); line(x0, y1, x1, y1, k); line(x0, y0, x0, y1, k); line(x1, y0, x1, y1, k); }
+      return;
+    }
+    const w = x1 - x0 + 1, h = y1 - y0 + 1, cx = x0 + w / 2, cy = y0 + h / 2;
+    const half = (c, r, p, R) => { const d = (p + 0.5 - c) / r; return Math.abs(d) > 1 ? null : R * Math.sqrt(1 - d * d); };
+    for (let y = y0; y <= y1; y++) { const e = half(cy, h / 2, y, w / 2); if (e == null) continue; const l = Math.round(cx - e), r = Math.round(cx + e) - 1; if (filled.oval) for (let x = l; x <= r; x++) plot(x, y, k); else { plot(l, y, k); plot(r, y, k); } }
+    if (!filled.oval) for (let x = x0; x <= x1; x++) { const e = half(cx, w / 2, x, h / 2); if (e == null) continue; plot(x, Math.round(cy - e), k); plot(x, Math.round(cy + e) - 1, k); }
+  }
+  // Every pixel of one color (in every frame) becomes another: like changing a color in a pattern's palette.
+  function recolor(from, to) { const [r, g, b, a] = unpackRGBA(to); for (let i = 0; i < px.length; i += 4) if (px[i + 3] && packRGBA(px[i], px[i + 1], px[i + 2], px[i + 3]) === from) { px[i] = a ? r : 0; px[i + 1] = a ? g : 0; px[i + 2] = a ? b : 0; px[i + 3] = a; } }
+
+  /* Selection. sel = { x, y, w, h } in frame pixels; once moved or changed it's "lifted": float holds its pixels and base holds the
+     frame without them, and each change redraws px as base plus float. Undo, switching frames or tools, and Done drop it. */
+  let sel = null, selClip = null;
+  function dropSel() { sel = null; selBar.hidden = true; }
+  function lift() {
+    if (sel.float) return;
+    const f = { w: sel.w, h: sel.h, px: new Uint8ClampedArray(sel.w * sel.h * 4) }, base = px.slice();
+    for (let y = 0; y < sel.h; y++) for (let x = 0; x < sel.w; x++) { const i = idx(sel.x + x, sel.y + y); f.px.set(px.subarray(i, i + 4), (y * sel.w + x) * 4); base.fill(0, i, i + 4); }
+    sel.float = f; sel.base = base;
+  }
+  function restamp() {
+    px = sel.base.slice(); const f = sel.float;
+    for (let y = 0; y < f.h; y++) for (let x = 0; x < f.w; x++) { const j = (y * f.w + x) * 4, X = sel.x + x, Y = sel.y + y; if (!f.px[j + 3] || X < 0 || Y < 0 || X >= s.w || Y >= s.h) continue; const i = idx(X, Y); px.set(f.px.subarray(j, j + 4), i); }
+  }
+  const flipF = (f, horiz) => { const o = new Uint8ClampedArray(f.px.length); for (let y = 0; y < f.h; y++) for (let x = 0; x < f.w; x++) { const j = horiz ? (y * f.w + f.w - 1 - x) * 4 : ((f.h - 1 - y) * f.w + x) * 4; o.set(f.px.subarray(j, j + 4), (y * f.w + x) * 4); } return { w: f.w, h: f.h, px: o }; };
+  const turnF = f => { const o = new Uint8ClampedArray(f.px.length), w = f.h, h = f.w; for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const j = ((f.h - 1 - x) * f.w + y) * 4; o.set(f.px.subarray(j, j + 4), (y * w + x) * 4); } return { w, h, px: o }; };
+  function selDo(fn) {
+    if (!sel) return; const b = px.slice(); lift();
+    const nf = fn(sel.float); if (nf.w !== sel.w) { sel.x += Math.floor((sel.w - nf.w) / 2); sel.y += Math.floor((sel.h - nf.h) / 2); }
+    sel.float = nf; sel.w = nf.w; sel.h = nf.h; restamp(); commitStroke(b);
+  }
+  function selCopy() {
+    if (!sel) return; const f = sel.float || { w: sel.w, h: sel.h, px: new Uint8ClampedArray(sel.w * sel.h * 4) };
+    if (!sel.float) for (let y = 0; y < sel.h; y++) for (let x = 0; x < sel.w; x++) { const i = idx(sel.x + x, sel.y + y); f.px.set(px.subarray(i, i + 4), (y * sel.w + x) * 4); }
+    selClip = { x: sel.x, y: sel.y, w: f.w, h: f.h, px: f.px.slice() }; toast("Copied the selection"); paintTools();
+  }
+  function selPaste() {
+    if (!selClip) return toast("Copy a selection first");
+    const b = px.slice(); setTool("select");
+    sel = { x: Math.min(selClip.x, Math.max(0, s.w - selClip.w)), y: Math.min(selClip.y, Math.max(0, s.h - selClip.h)), w: selClip.w, h: selClip.h, base: px.slice(), float: { w: selClip.w, h: selClip.h, px: selClip.px.slice() } };
+    restamp(); selBar.hidden = false; commitStroke(b); toast("Pasted: drag it into place");
+  }
+  function selPointer(c, first) {
+    const inside = sel && c.x >= sel.x && c.x < sel.x + sel.w && c.y >= sel.y && c.y < sel.y + sel.h;
+    if (first) {
+      if (inside) { lift(); stroke.drag = { x: c.x, y: c.y, sx: sel.x, sy: sel.y }; }
+      else if (c.x < 0 || c.y < 0 || c.x >= s.w || c.y >= s.h) { dropSel(); }
+      else { stroke.selA = { x: c.x, y: c.y }; sel = { x: c.x, y: c.y, w: 1, h: 1 }; }
+    } else if (stroke.drag) { sel.x = stroke.drag.sx + c.x - stroke.drag.x; sel.y = stroke.drag.sy + c.y - stroke.drag.y; restamp(); }
+    else if (stroke.selA) { const a = stroke.selA, x = Math.max(0, Math.min(s.w - 1, c.x)), y = Math.max(0, Math.min(s.h - 1, c.y)); sel = { x: Math.min(a.x, x), y: Math.min(a.y, y), w: Math.abs(x - a.x) + 1, h: Math.abs(y - a.y) + 1 }; }
+    selBar.hidden = !sel; draw();
+  }
+
+  function line(x0, y0, x1, y1, k) { const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1; let e = dx + dy; for (;;) { plot(x0, y0, k); if (x0 === x1 && y0 === y1) break; const e2 = 2 * e; if (e2 >= dy) { e += dy; x0 += sx; } if (e2 <= dx) { e += dx; y0 += sy; } } }
   function flood(x, y, k) {
     if (x < 0 || y < 0 || x >= s.w || y >= s.h) return; const from = getPx(x, y); if (from === k || (from & 255) === 0 && (k & 255) === 0) return;
     const st = [[x, y]], seen = new Uint8Array(s.w * s.h);
@@ -814,7 +958,7 @@ function renderPaint() {
   /* History and saving work in progress */
   let wipT = 0;
   function commitStroke(before) { if (before.every((v, i) => v === px[i])) return draw(); undo.push(before); if (undo.length > 150) undo.shift(); redo.length = 0; changed(); }
-  function step(from, to) { if (!from.length) return; to.push(px); px = from.pop(); changed(); }
+  function step(from, to) { if (!from.length) return; dropSel(); to.push(px); px = from.pop(); changed(); }
   function load(src, msg) { const b = px.slice(); px = new Uint8ClampedArray(src); commitStroke(b); toast(msg); }
   function changed() { draw(); paintPalette(); clearTimeout(wipT); wipT = setTimeout(saveWip, 600); }
   function saveWip() {
@@ -843,7 +987,55 @@ function renderPaint() {
   }
 
   /* Colors and tools */
-  function setTool(k) { tool = k; for (const t in toolBtns) toolBtns[t].setAttribute("aria-pressed", t === k); }
+  function setTool(k) { if (k === tool && k in filled) filled[k] = !filled[k]; if (tool === "select" && k !== "select") dropSel(); tool = k; paintTools(); }
+  function paintTools() {
+    for (const t in toolBtns) toolBtns[t].setAttribute("aria-pressed", t === tool);
+    for (const k in filled) { const b = toolBtns[k]; b.replaceChild(svg(ICON[k + (filled[k] ? "f" : "")]), b.firstChild); b.lastChild.textContent = (filled[k] ? "Solid " : "") + (k === "rect" ? (filled[k] ? "box" : "Box") : (filled[k] ? "oval" : "Oval")); }
+    mirrorB.setAttribute("aria-pressed", !!mirror); mirrorB.lastChild.textContent = MIRROR_TEXT[mirror];
+    if (selClip && !pasteSelB.isConnected) selBar.insertBefore(pasteSelB, selBar.lastChild);
+    if (selClip && tool === "select") selBar.hidden = false; else if (!sel) selBar.hidden = true;
+  }
+  /* The color sheet: hue, saturation, brightness and see-through sliders, plus a hex box. Used for new swatches,
+     editing a swatch (name, color, order), and changing the current color (optionally repainting it everywhere). */
+  function colorSheet(o) {
+    let [r0, g0, b0, a0] = unpackRGBA(o.value), [h, sat, val] = rgbToHsv(r0, g0, b0), alpha = a0 / 255;
+    if (!a0) { alpha = 1; val = val || 0; }
+    const now = () => { const [r, g, b] = hsvToRgb(h, sat, val); return packRGBA(r, g, b, Math.round(alpha * 255)); };
+    const sw = el("div", { class: "sw cmp" }, [el("i", { class: "old", style: "background:" + cssOf(o.value) }), el("i", { class: "new" })]);
+    const hex = el("input", { class: "search", type: "text", inputmode: "text", autocomplete: "off", spellcheck: "false", "aria-label": "Hex color", style: "min-height:40px;font-family:ui-monospace,monospace" });
+    const mk = (label, max, get, set) => { const r = el("input", { type: "range", min: 0, max, step: 1, value: Math.round(get()), "aria-label": label }); r.addEventListener("input", () => { set(+r.value); sync(r); }); return { r, row: el("label", { class: "range" }, [el("span", { text: label }), r]) }; };
+    const H = mk("Hue", 360, () => h, v => (h = v)), S = mk("Saturation", 100, () => sat * 100, v => (sat = v / 100)), V = mk("Brightness", 100, () => val * 100, v => (val = v / 100)), A = mk("See-through", 100, () => (1 - alpha) * 100, v => (alpha = 1 - v / 100));
+    function sync(from) {
+      const k = now(), [r, g, b] = unpackRGBA(k);
+      sw.lastChild.style.background = cssOf(k);
+      if (from !== hex) hex.value = hexOf(k).toUpperCase() + (alpha < 1 ? Math.round(alpha * 255).toString(16).padStart(2, "0").toUpperCase() : "");
+      if (from !== H.r) H.r.value = Math.round(h); if (from !== S.r) S.r.value = Math.round(sat * 100); if (from !== V.r) V.r.value = Math.round(val * 100); if (from !== A.r) A.r.value = Math.round((1 - alpha) * 100);
+      const hs = n => hsvToRgb(h, n, val).join(","), hv = n => hsvToRgb(h, sat, n).join(",");
+      S.r.style.background = "linear-gradient(90deg,rgb(" + hs(0) + "),rgb(" + hs(1) + "))"; V.r.style.background = "linear-gradient(90deg,#000,rgb(" + hv(1) + "))";
+      A.r.style.background = "linear-gradient(90deg,rgb(" + r + "," + g + "," + b + "),rgba(" + r + "," + g + "," + b + ",0))";
+    }
+    hex.addEventListener("input", () => { const m = hex.value.trim().replace(/^#/, ""); if (!/^([0-9a-f]{6}|[0-9a-f]{8})$/i.test(m)) return; const n = parseInt(m.slice(0, 6), 16); [h, sat, val] = rgbToHsv(n >> 16, (n >> 8) & 255, n & 255); alpha = m.length === 8 ? parseInt(m.slice(6), 16) / 255 : 1; sync(hex); });
+    H.r.classList.add("hue");
+    const name = o.name != null ? el("input", { class: "search", type: "text", value: o.name, maxlength: 40, "aria-label": "Swatch name", style: "min-height:40px" }) : null;
+    const extra = o.extra ? el("input", { type: "checkbox", checked: o.extra.checked }) : null;
+    const close = () => wrap.remove();
+    const sheet = el("div", { class: "sheet colors", role: "dialog", "aria-modal": "true", "aria-label": o.title }, [
+      el("div", { class: "palhead row", style: "margin-top:0" }, [el("span", { text: o.title }), o.reorder ? el("span", { class: "reorder" }, [sbtn("‹ Earlier", o.reorder.earlier), sbtn("Later ›", o.reorder.later)]) : null]),
+      name ? el("label", { class: "range" }, [el("span", { text: "Name" }), name]) : null,
+      el("div", { class: "cmprow" }, [sw, hex]), H.row, S.row, V.row, A.row,
+      extra ? el("label", { class: "check" }, [extra, document.createTextNode(" " + o.extra.label)]) : null,
+      el("div", { class: "acts" }, [el("button", { class: "btn quiet", type: "button", text: "Cancel", onclick: close }),
+        el("button", { class: "btn primary", type: "button", text: o.ok || "Use it", onclick: () => { close(); o.onUse(now(), name ? name.value.trim().slice(0, 40) : null, extra ? extra.checked : false); } })])]);
+    const wrap = el("div", { class: "done" }, [sheet]);
+    wrap.addEventListener("click", e => { if (e.target === wrap) close(); });
+    document.body.appendChild(wrap); sync(); (name || hex).focus({ preventScroll: true });
+  }
+  function changeColor() {
+    if (tool === "eraser") return toast("Pick a color first: the eraser is see-through");
+    const used = colorsIn(px).includes(color), from = color;
+    colorSheet({ title: "Change this color", value: from, ok: "Change it", extra: used ? { label: "Also repaint every pixel of this color, in every frame", checked: true } : null,
+      onUse: (k, _, all) => { if (all && k !== from) { const b = px.slice(); recolor(from, k); commitStroke(b); } setColor(k); } });
+  }
   function setColor(k) { color = k; if (tool === "eraser" || tool === "pick") setTool("pencil"); paintPalette(); }
   function swatch(k, label) {
     return el("button", { class: "sw", type: "button", "aria-label": (label ? label + ", " : "Color ") + hexOf(k) + ((k & 255) < 255 ? ", see-through" : ""), title: label || hexOf(k), "aria-pressed": k === color && tool !== "eraser" ? "true" : "false", onclick: () => setColor(k) }, [el("i", { style: "background:" + cssOf(k) })]);
@@ -851,10 +1043,10 @@ function renderPaint() {
   /* My swatches: DB "misc" → "swatches", a list of { id, name, color }. Edit mode deletes (×) and renames (tap). */
   const swList = () => DB.data.misc.swatches || [];
   const swSave = list => DB.put("misc", "swatches", list).catch(() => toast("Couldn't save swatches: storage is full"));
-  function addSwatch(k) {
+  function addSwatch(k, name) {
     const list = swList().slice();
     if (list.some(w => w.color === k)) { toast("That color is already in My swatches"); return; }
-    list.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: "Color " + (list.length + 1), color: k });
+    list.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: name || "Color " + (list.length + 1), color: k });
     swSave(list); toast("Saved to My swatches"); paintPalette();
   }
   function paintPalette() {
@@ -871,13 +1063,20 @@ function renderPaint() {
     mine.innerHTML = ""; mine.classList.toggle("editing", editing);
     list.forEach(w => {
       const cell = el("div", { class: "swcell" }, [editing
-        ? el("button", { class: "sw", type: "button", "aria-label": "Rename " + w.name, title: "Rename", onclick: () => { const n = prompt("Name this swatch", w.name); if (n == null) return; const l = swList().map(x => x.id === w.id ? Object.assign({}, x, { name: n.trim().slice(0, 40) || x.name }) : x); swSave(l); paintPalette(); } }, [el("i", { style: "background:" + cssOf(w.color) })])
+        ? el("button", { class: "sw", type: "button", "aria-label": "Edit " + w.name, title: "Rename, recolor or move", onclick: () => editSwatch(w.id) }, [el("i", { style: "background:" + cssOf(w.color) })])
         : swatch(w.color, w.name),
         el("span", { class: "swname", text: w.name })]);
       if (editing) cell.appendChild(el("button", { class: "swdel", type: "button", "aria-label": "Delete " + w.name, text: "×", onclick: () => { swSave(swList().filter(x => x.id !== w.id)); toast("Deleted " + w.name); paintPalette(); } }));
       mine.appendChild(cell);
     });
-    if (!editing) mine.appendChild(el("div", { class: "swcell" }, [el("button", { class: "sw add", type: "button", "aria-label": "Add a new color to My swatches", text: "+", onclick: () => { picker.value = hexOf(color); picker.dataset.add = "1"; picker.click(); } }), el("span", { class: "swname", text: "New" })]));
+    if (!editing) mine.appendChild(el("div", { class: "swcell" }, [el("button", { class: "sw add", type: "button", "aria-label": "Add a new color to My swatches", text: "+", onclick: () => colorSheet({ title: "New swatch", value: tool === "eraser" ? packRGBA(255, 255, 255, 255) : color, name: "Color " + (swList().length + 1), ok: "Add it", onUse: (k, n) => { addSwatch(k, n); setColor(k); } }) }), el("span", { class: "swname", text: "New" })]));
+  }
+  // Editing a saved swatch: rename, recolor, or move it earlier or later in the list (moves happen right away).
+  function editSwatch(id) {
+    const w = swList().find(x => x.id === id); if (!w) return;
+    const move = d => { const l = swList().slice(), i = l.findIndex(x => x.id === id), j = i + d; if (j < 0 || j >= l.length) return; [l[i], l[j]] = [l[j], l[i]]; swSave(l); paintPalette(); };
+    colorSheet({ title: "Edit swatch", value: w.color, name: w.name, ok: "Save", reorder: { earlier: () => move(-1), later: () => move(1) },
+      onUse: (k, n) => { swSave(swList().map(x => x.id === id ? Object.assign({}, x, { color: k, name: n || x.name }) : x)); paintPalette(); } });
   }
 
   /* View: the frame on a checkerboard, zoomed and panned */
@@ -904,9 +1103,12 @@ function renderPaint() {
     ctx.save(); ctx.beginPath(); ctx.rect(ox, oy, s.w * z, s.h * z); ctx.clip();
     ctx.fillStyle = b; ctx.fillRect(ox, oy, s.w * z, s.h * z); ctx.fillStyle = a;
     for (let y = 0; y * cs < s.h * z; y++) for (let x = (y & 1); x * cs < s.w * z; x += 2) ctx.fillRect(ox + x * cs, oy + y * cs, cs, cs);
+    const drawTrace = () => { if (!trace) return; ctx.globalAlpha = trace.alpha; ctx.imageSmoothingEnabled = true; ctx.drawImage(trace.img, ox + trace.x * z, oy + trace.y * z, trace.img.width * trace.k * z, trace.img.height * trace.k * z); ctx.imageSmoothingEnabled = false; ctx.globalAlpha = 1; };
+    if (trace && !trace.over) drawTrace();
     const gf = ghost ? ghostOf(frame) : null;
     if (gf != null && gf !== frame) { ctx.globalAlpha = 0.32; ctx.drawImage(sheetC, (gf % Z.cols) * s.w, Math.floor(gf / Z.cols) * s.h, s.w, s.h, ox, oy, s.w * z, s.h * z); ctx.globalAlpha = 1; }
     ctx.drawImage(sheetC, fx, fy, s.w, s.h, ox, oy, s.w * z, s.h * z);
+    if (trace && trace.over) drawTrace();
     if (showGrid && z >= 5) {
       ctx.fillStyle = "rgba(128,128,128,.28)";
       for (let x = 1; x < s.w; x++) ctx.fillRect(ox + x * z, oy, 1 / dpr, s.h * z);
@@ -917,6 +1119,12 @@ function renderPaint() {
     }
     ctx.restore();
     ctx.strokeStyle = col("--line"); ctx.lineWidth = 1; ctx.strokeRect(ox - .5, oy - .5, s.w * z + 1, s.h * z + 1);
+    if (mirror) { ctx.save(); ctx.strokeStyle = "rgba(240,184,64,.9)"; ctx.lineWidth = 2; ctx.setLineDash([6, 4]); ctx.beginPath();
+      if (mirror.includes("x")) { ctx.moveTo(ox + s.w * z / 2, oy); ctx.lineTo(ox + s.w * z / 2, oy + s.h * z); }
+      if (mirror.includes("y")) { ctx.moveTo(ox, oy + s.h * z / 2); ctx.lineTo(ox + s.w * z, oy + s.h * z / 2); }
+      ctx.stroke(); ctx.restore(); }
+    if (sel) { const X = ox + sel.x * z, Y = oy + sel.y * z, Wd = sel.w * z, Hd = sel.h * z; ctx.save(); ctx.lineWidth = 2; ctx.setLineDash([5, 4]);
+      ctx.strokeStyle = "#fff"; ctx.strokeRect(X, Y, Wd, Hd); ctx.strokeStyle = "#111"; ctx.lineDashOffset = 4.5; ctx.strokeRect(X, Y, Wd, Hd); ctx.restore(); }
     // previews and frame thumbnails
     pvC.forEach(c => { const x = c.getContext("2d"); x.clearRect(0, 0, s.w, s.h); x.drawImage(sheetC, fx, fy, s.w, s.h, 0, 0, s.w, s.h); });
     frameBtns.forEach((btn, f) => { btn.setAttribute("aria-current", f === frame ? "true" : "false"); const c = btn.firstChild, x = c.getContext("2d"); x.clearRect(0, 0, s.w, s.h); x.drawImage(sheetC, (f % Z.cols) * s.w, Math.floor(f / Z.cols) * s.h, s.w, s.h, 0, 0, s.w, s.h); });
@@ -937,9 +1145,12 @@ function renderPaint() {
   const at = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
   const cell = p => ({ x: Math.floor((p.x - ox) / z), y: Math.floor((p.y - oy) / z) });
   function apply(c, first, p) {
+    if (trace && trace.moving) { if (first) stroke.tr = { x: p.x, y: p.y, tx: trace.x, ty: trace.y }; else { trace.x = stroke.tr.tx + (p.x - stroke.tr.x) / z; trace.y = stroke.tr.ty + (p.y - stroke.tr.y) / z; draw(); } return; }
     if (tool === "move") { if (first) stroke.pan = { x: p.x, y: p.y, ox, oy }; else { ox = stroke.pan.ox + p.x - stroke.pan.x; oy = stroke.pan.oy + p.y - stroke.pan.y; draw(); } return; }
     if (tool === "pick") { if (c.x < 0 || c.y < 0 || c.x >= s.w || c.y >= s.h) return; const k = getPx(c.x, c.y); if ((k & 255) === 0) { setTool("eraser"); paintPalette(); } else { color = k; paintPalette(); } return; }
-    if (tool === "fill") { if (first) flood(c.x, c.y, color); return draw(); }
+    if (tool === "fill") { if (first) mirrorPts(c.x, c.y).forEach(([x, y]) => flood(x, y, color)); return draw(); }
+    if (tool === "line" || tool === "rect" || tool === "oval") { if (first) stroke.anchor = c; px = stroke.before.slice(); shape(stroke.anchor, c, color); return draw(); }
+    if (tool === "select") return selPointer(c, first);
     const k = tool === "eraser" ? 0 : color;
     if (stroke.last) line(stroke.last.x, stroke.last.y, c.x, c.y, k); else setPx(c.x, c.y, k);
     stroke.last = c; draw();
@@ -948,7 +1159,7 @@ function renderPaint() {
     e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (err) {} pts.set(e.pointerId, at(e));
     if (pts.size === 1 && !pinch) { stroke = { before: px.slice(), last: null }; apply(cell(at(e)), true, at(e)); }
     else if (pts.size === 2) {
-      if (stroke) { px = stroke.before; stroke = null; draw(); } // a second finger: this was a zoom, not a stroke
+      if (stroke) { px = stroke.before; if (stroke.drag && sel) { sel.x = stroke.drag.sx; sel.y = stroke.drag.sy; } stroke = null; draw(); } // a second finger: this was a zoom, not a stroke
       const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, z, ox, oy };
     }
   });
@@ -958,11 +1169,11 @@ function renderPaint() {
       const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
       const nz = Math.max(0.5, Math.min(64, pinch.z * d / pinch.d));
       ox = mx - (pinch.mx - pinch.ox) * nz / pinch.z; oy = my - (pinch.my - pinch.oy) * nz / pinch.z; z = nz; draw();
-    } else if (stroke && tool !== "fill") apply(cell(at(e)), false, at(e));
+    } else if (stroke && (tool !== "fill" || (trace && trace.moving))) apply(cell(at(e)), false, at(e));
   });
   const end = e => {
     if (!pts.has(e.pointerId)) return; pts.delete(e.pointerId);
-    if (stroke && !pts.size) { const b = stroke.before; stroke = null; if (tool === "pick") { setTool("pencil"); paintPalette(); } else if (tool !== "move") commitStroke(b); }
+    if (stroke && !pts.size) { const b = stroke.before, tr = stroke.tr; stroke = null; if (tr) draw(); else if (tool === "pick") { setTool("pencil"); paintPalette(); } else if (tool !== "move") commitStroke(b); }
     if (!pts.size) pinch = null;
   };
   cv.addEventListener("pointerup", end); cv.addEventListener("pointercancel", end);
@@ -972,8 +1183,12 @@ function renderPaint() {
     const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
     if (mod && k === "z") { e.preventDefault(); e.shiftKey ? step(redo, undo) : step(undo, redo); }
     else if (mod && k === "y") { e.preventDefault(); step(redo, undo); }
-    else if (mod && k === "c" && !String(getSelection())) { e.preventDefault(); copyFrame(); }
-    else if (mod && k === "v") { e.preventDefault(); pasteFrame(); }
+    else if (mod && k === "c" && !String(getSelection())) { e.preventDefault(); sel ? selCopy() : copyFrame(); }
+    else if (mod && k === "v") { e.preventDefault(); selClip && (sel || tool === "select") ? selPaste() : pasteFrame(); }
+    else if (k === "escape" && sel) { dropSel(); draw(); }
+    else if ((k === "delete" || k === "backspace") && sel) { e.preventDefault(); selDo(f => ({ w: f.w, h: f.h, px: new Uint8ClampedArray(f.px.length) })); }
+    else if (!mod && { l: 1, r: 1, c: 1, s: 1 }[k]) setTool({ l: "line", r: "rect", c: "oval", s: "select" }[k]);
+    else if (!mod && k === "x") mirrorB.click();
     else if (!mod && Z.frames > 1 && (k === "," || k === "<" || k === "[")) goFrame(frame - 1);
     else if (!mod && Z.frames > 1 && (k === "." || k === ">" || k === "]")) goFrame(frame + 1);
     else if (!mod && k === "o" && Z.frames > 1) ghostB.click();
@@ -986,7 +1201,7 @@ function renderPaint() {
   document.addEventListener("keydown", onKey); if (ro) ro.observe(stage); else window.addEventListener("resize", onResize);
   editor = { key, close() { if (wipT) { clearTimeout(wipT); saveWip(); } clearInterval(animT); ctxClose(); document.removeEventListener("keydown", onKey); if (ro) ro.disconnect(); else window.removeEventListener("resize", onResize); } };
 
-  setTool("pencil"); paintPalette(); size(); fit(); paint(); ctxSetup();
+  setTool("pencil"); paintPalette(); paintTrace(); size(); fit(); paint(); ctxSetup();
 }
 
 await document.fonts.ready.catch(() => {});

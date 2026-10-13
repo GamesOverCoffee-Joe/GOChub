@@ -213,15 +213,14 @@ Check items off as they land, and note the commit.
 - [x] Animation playback in the preview (characters walk in the direction of the current frame)
 
 ### Phase 4: Palette and tools
-- [x] Named swatches ("My swatches"): add (the + or "Save color"), rename and delete in Edit mode, kept across every sprite (done early, Joe asked 10/13)
-- [ ] Swatches: recolor and reorder
-- [ ] Color picker (hue/saturation/value plus hex)
-- [ ] Recolor-all option
-- [ ] Line, rectangle and circle (outline and filled)
-- [ ] Select: move, flip, rotate
-- [ ] Mirror painting
-- [ ] Trace layer (opacity, scale, offset)
-- [ ] Import a PNG as pixels (size check plus clean-upscale shrink)
+- [x] Named swatches ("My swatches"): add, rename, delete, **recolor and reorder** (Edit → tap a swatch: name, color, ‹ Earlier / Later ›)
+- [x] Color sheet instead of the system picker: hue, saturation, brightness, **see-through** sliders plus a hex box (`#RRGGBB` or `#RRGGBBAA`)
+- [x] Recolor-all: tap the big current swatch → "Also repaint every pixel of this color, in every frame" (on by default when the color is used)
+- [x] Line, Box and Oval; tap Box or Oval again for **Solid**
+- [x] Select: drag a box, drag inside it to move; Flip ↔ / ↕, Turn ↻, Copy, Paste selection (where it was copied, so it carries between frames), Delete, Done
+- [x] Mirror painting: tap to cycle ↔, ↕, ✣ (all four), off; gold guide lines; works for pencil, eraser, shapes and fill
+- [x] Trace layer (More → Trace a picture…): strength, size, Move picture, On top, Remove. Never saved; kept per sprite while the page is open
+- [x] Import a PNG as pixels (More): the whole sheet or one frame, at size or any clean whole-number upscale
 
 ### Phase 5: Journal
 - [x] Punch card (done early, in Phase 1)
@@ -257,6 +256,8 @@ Check items off as they land, and note the commit.
 - [ ] Handoff notes below are up to date
 
 ### Handoff notes (latest state)
+
+- 2026-10-13, Phase 4 done. In `renderPaint()`: `plot()` paints through the mirror (`mirror` is "", "x", "y" or "xy"); `shape()` draws line, box and oval while dragging (from `stroke.before` each move); selection state `sel` with `lift()` / `restamp()` / `selDo()` / `selCopy()` / `selPaste()` (undo, frame changes, tool changes and Done drop it, see `dropSel()`); `colorSheet(o)` is the color dialog (used by `changeColor()`, the + swatch and `editSwatch()`); `recolor(from, to)`; the trace lives in the module-level `traceBySlot`. Keys: L line, R box, C oval, S select, X mirror, Esc deselect, Delete clears a selection, Ctrl/Cmd+C/V copy a selection when there is one. Tested on the 8×8 heart: box, solid oval, mirrored line, selection move, flip and paste, repaint-all, swatch reorder, PNG import (4× shrink), trace move (no undo step). Next: **Phase 5 polish (group badges) and Phase 6 (export)**.
 
 - 2026-10-13: Fixed the zoom snapping back when scrolling on a phone (Joe). The address bar sliding in and out resized the window, and the resize handler re-fit the grid. Now the grid is sized with `svh` (which ignores the address bar), a `ResizeObserver` on the grid box replaces the window resize listener, and a resize keeps the zoom and the centered spot. Only the first layout and the Fit button fit the sprite.
 
