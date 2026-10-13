@@ -186,6 +186,19 @@ select.search{appearance:auto;margin-top:8px}
 .frames button{flex:none;display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:4px;border:2px solid var(--line);border-radius:6px;background:var(--surface);cursor:pointer}
 .frames button[aria-current="true"]{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
 .framebar{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0}
+.frames button{flex-direction:column;gap:2px}
+.fcap{font-size:.6rem;line-height:1.1;color:var(--muted);max-width:64px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fset{border:2px dashed var(--line);border-radius:10px;padding:8px 10px;margin:10px 0 0}
+.fsrow{display:flex;align-items:center;gap:6px;margin:4px 0}
+.fsrow.wrap{flex-wrap:wrap}
+.fsrow > span.small:first-child{min-width:70px}
+.fset .chip{min-height:34px;padding:4px 12px}
+.order{display:flex;flex-wrap:wrap;gap:4px}
+.ochip{min-width:26px;height:26px;border-radius:6px;background:var(--surface-2);border:2px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem}
+.fset .range{display:grid;grid-template-columns:70px 1fr auto;align-items:center;gap:8px;font-size:.85rem}
+.fset input[type=range]{accent-color:var(--gold)}
+.chk.setrow{gap:6px;padding:6px;flex-wrap:wrap}
+.setrow canvas.on{outline:2px solid var(--gold);outline-offset:1px}
 .framebar .btn[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
 .tools{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:10px 0}
 .tool span{line-height:1.15;text-align:center}
@@ -355,12 +368,52 @@ function frameCanvas(sheet, s, frame, box) {
   return c;
 }
 // An animated preview: cycles through the frames (characters walk facing down: stand, step, stand, step).
+/* ---------- How a slot's frames are used ----------
+   "anim": the frames play as an animation (you can change the preview's play order and speed).
+   "set": separate pictures the game shows one at a time: a set to pick from (reactions, cups, carpet pieces) or states it
+   switches between (TV off/on, keypad colors). Defaults follow how the engine uses each slot; any slot can be switched.
+   This only changes how the Paint Room shows and previews them: the game itself decides which frame shows when. */
+const FRAME_SETS = ["cups", "trinkets", "carpet_h", "carpet_v", "held_items", "break_items", "supply_box", "emote", "bubble", "litter",
+  "cup_iced", "office_tv", "office_keypad", "fingerprints", "popcorn_bag", "microwave_counter", "theater_screen"];
+const ORDER_DEFAULTS = { cat: [0, 1] }; // the cat breathes asleep (1, 2); frame 3 is when you pet it
+const FRAME_NAMES = {
+  cups: ["coffee", "tea", "cocoa", "drink of the week"], cup_iced: ["full", "empty"], steam: ["low", "rising", "high"],
+  carpet_h: ["left end", "middle", "right end"], carpet_v: ["top end", "middle", "bottom end"], office_tv: ["off", "on"], joe: ["antenna off", "antenna lit"],
+  held_items: ["headphones", "lunchbox"], break_items: ["headphones", "lunchbox"], supply_box: ["shop stock", "café supplies"],
+  cat: ["asleep", "breathing in", "awake"], office_keypad: ["dark", "red", "green"], fingerprints: ["a few", "more", "lots"],
+  emote: ["startled !", "heart", "peace sign", "star", "busy …", "wave", "shy", "annoyed"], bubble: ["?", "!"], litter: ["cup", "wrapper", "napkin"],
+  popcorn_bag: ["full", "empty"], microwave_counter: ["clean", "after the incident"], marquee_lights: ["bulbs A", "bulbs B"],
+};
+function frameSettings(s) {
+  const m = (DB.data.misc.frameModes || {})[s.key] || {}, n = framesOf(s);
+  if (s.layout === "char" || n < 2) return { mode: "anim", order: null, ms: 220, fixed: true };
+  const order = (m.order || ORDER_DEFAULTS[s.key] || []).filter(f => f >= 0 && f < n);
+  return { mode: m.mode || (FRAME_SETS.includes(s.key) ? "set" : "anim"), order: order.length ? order : [...Array(n).keys()], ms: m.ms || 260, custom: !!m.order };
+}
+async function setFrameSettings(key, patch) {
+  const all = Object.assign({}, DB.data.misc.frameModes || {}), cur = Object.assign({}, all[key] || {}, patch);
+  for (const k in cur) if (cur[k] == null) delete cur[k];
+  if (Object.keys(cur).length) all[key] = cur; else delete all[key];
+  await DB.put("misc", "frameModes", all).catch(() => {});
+}
+// One frame's name: walk-sheet poses, the names the game gives a set, or just its number.
+const CHAR_ROWS = ["down", "up", "left", "right"], CHAR_COLS = ["standing", "step 1", "step 2"];
+const frameName = (s, f) => s.layout === "char" ? "Facing " + CHAR_ROWS[Math.floor(f / 3)] + ", " + CHAR_COLS[f % 3]
+  : FRAME_NAMES[s.key] && FRAME_NAMES[s.key][f] ? (f + 1) + ": " + FRAME_NAMES[s.key][f] : "Frame " + (f + 1);
+
+// A sprite for the page: an animation plays (in its play order); a set shows all its pictures side by side.
 function animated(sheet, s, box) {
-  const n = framesOf(s), host = el("div", { class: "chk" });
+  const n = framesOf(s), host = el("div", { class: "chk" }), fs = frameSettings(s);
+  if (n > 1 && fs.mode === "set") {
+    host.classList.add("setrow"); const each = Math.max(12, Math.min(box, Math.floor((box * 2.2) / n)));
+    for (let f = 0; f < n; f++) { const c = frameCanvas(sheet, s, f, each); c.title = frameName(s, f); host.appendChild(c); }
+    return host;
+  }
   let cv = frameCanvas(sheet, s, 0, box); host.appendChild(cv);
   if (n > 1) {
-    const seq = s.layout === "char" ? [0, 1, 0, 2] : [...Array(n).keys()]; let i = 0;
-    const t = setInterval(() => { if (!host.isConnected) return clearInterval(t); i = (i + 1) % seq.length; const nc = frameCanvas(sheet, s, seq[i], box); host.replaceChild(nc, cv); cv = nc; }, s.layout === "char" ? 220 : 260);
+    const seq = s.layout === "char" ? [0, 1, 0, 2] : fs.order; let i = 0;
+    cv.remove(); cv = frameCanvas(sheet, s, seq[0], box); host.appendChild(cv);
+    const t = setInterval(() => { if (!host.isConnected) return clearInterval(t); i = (i + 1) % seq.length; const nc = frameCanvas(sheet, s, seq[i], box); host.replaceChild(nc, cv); cv = nc; }, fs.ms);
   }
   return host;
 }
@@ -619,8 +672,6 @@ const ICON = {
   move: '<path d="M12 3v18 M3 12h18 M12 3l-3 3 M12 3l3 3 M12 21l-3-3 M12 21l3-3 M3 12l3-3 M3 12l3 3 M21 12l-3-3 M21 12l-3 3"/>',
 };
 const svg = d => { const w = el("span", { "aria-hidden": "true" }); w.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">' + d + "</svg>"; return w.firstChild; };
-const CHAR_ROWS = ["down", "up", "left", "right"], CHAR_COLS = ["standing", "step 1", "step 2"];
-const frameName = (s, f) => s.layout === "char" ? "Facing " + CHAR_ROWS[Math.floor(f / 3)] + ", " + CHAR_COLS[f % 3] : "Frame " + (f + 1);
 
 
 
@@ -881,8 +932,15 @@ function renderPaint() {
   // Live preview: the frame at 1×, 2× and 4×, plus the whole animation when there's more than one frame
   const pv = el("div", { class: "pv", "aria-label": "Live preview" });
   const pvC = [1, 2, 4].filter(k => k === 1 || s.w * k <= 300).map(k => { const [c] = canvasOf(s.w, s.h); c.className = "px"; c.style.width = s.w * k + "px"; c.style.height = s.h * k + "px"; pv.appendChild(el("div", { class: "chk", title: k + "×" }, [c])); return c; });
-  let animC = null;
-  if (Z.frames > 1) { const [c] = canvasOf(s.w, s.h), k = Math.max(1, Math.min(4, Math.floor(64 / Math.max(s.w, s.h)))); c.className = "px"; c.style.width = s.w * k + "px"; c.style.height = s.h * k + "px"; animC = c; pv.appendChild(el("div", { class: "chk", title: "Animation" }, [c])); }
+  let animC = null, animBox = null, setRow = null, setC = [], fset = frameSettings(s);
+  if (Z.frames > 1) {
+    const [c] = canvasOf(s.w, s.h), k = Math.max(1, Math.min(4, Math.floor(64 / Math.max(s.w, s.h)))); c.className = "px"; c.style.width = s.w * k + "px"; c.style.height = s.h * k + "px"; animC = c;
+    animBox = el("div", { class: "chk", title: "Animation" }, [c]); pv.appendChild(animBox);
+    // a set: every picture side by side, small, instead of the animation
+    const k2 = Math.max(1, Math.min(3, Math.floor(36 / Math.max(s.w, s.h))));
+    setC = [...Array(Z.frames).keys()].map(f => { const [fc] = canvasOf(s.w, s.h); fc.className = "px"; fc.style.width = s.w * k2 + "px"; fc.style.height = s.h * k2 + "px"; fc.title = frameName(s, f); return fc; });
+    setRow = el("div", { class: "chk setrow", title: "All the pictures" }, setC); pv.appendChild(setRow);
+  }
   $app.appendChild(pv);
 
   // In the game: a cropped view of where this sprite sits, redrawn as you paint (optional; the switch is remembered)
@@ -940,6 +998,31 @@ function renderPaint() {
   if (s.w > s.h * 2 && s.w > 48) $app.appendChild(el("p", { class: "small", style: "margin:6px 0 0", text: "It's long: drag with Move (or two fingers) to get along it." }));
   $app.appendChild(el("div", { class: "zoom" }, [gridB, zoomBtn("−", "Zoom out", () => zoomBy(1 / 1.5)), zoomBtn("Fit", "Fit to screen", () => { fit(); draw(); }), zoomBtn("+", "Zoom in", () => zoomBy(1.5))]));
 
+  // How the frames are used (not for walk sheets): animation or separate pictures; for an animation, the preview's play order and speed.
+  const fsPanel = el("section", { class: "fset", "aria-label": "How these frames are used" });
+  function paintFs() {
+    fset = frameSettings(s); fsPanel.innerHTML = "";
+    const seg = (v, label) => el("button", { type: "button", class: "chip", "aria-pressed": fset.mode === v ? "true" : "false", text: label, onclick: async () => { await setFrameSettings(key, { mode: v }); paintFs(); draw(); } });
+    fsPanel.appendChild(el("div", { class: "fsrow" }, [el("span", { class: "small", text: "Plays as" }), seg("anim", "Animation"), seg("set", "Separate pictures")]));
+    if (fset.mode === "set") fsPanel.appendChild(el("p", { class: "small", style: "margin:4px 0 0", text: "Separate pictures: the game shows one at a time (a set to pick from, or states it switches between). The preview shows them side by side." }));
+    else {
+      const ord = el("div", { class: "order", "aria-label": "Play order" }, fset.order.map(f => el("span", { class: "ochip", title: frameName(s, f), text: f + 1 })));
+      const add = [...Array(Z.frames).keys()].map(f => el("button", { type: "button", class: "btn quiet small", "aria-label": "Add frame " + (f + 1) + " to the play order", text: "+" + (f + 1), onclick: async () => { await setFrameSettings(key, { order: (fset.custom ? fset.order : []).concat(f) }); paintFs(); } }));
+      const speed = el("input", { type: "range", min: 80, max: 900, step: 20, value: fset.ms, "aria-label": "Time per frame" });
+      const ms = el("span", { class: "small", text: fset.ms + " ms" });
+      speed.addEventListener("input", () => { fset.ms = +speed.value; ms.textContent = speed.value + " ms"; });
+      speed.addEventListener("change", () => setFrameSettings(key, { ms: +speed.value }));
+      fsPanel.appendChild(el("div", { class: "fsrow" }, [el("span", { class: "small", text: "Play order" }), ord]));
+      fsPanel.appendChild(el("div", { class: "fsrow wrap" }, [...add,
+        el("button", { type: "button", class: "btn quiet small", text: "⌫", "aria-label": "Remove the last frame from the play order", onclick: async () => { const o = fset.order.slice(0, -1); await setFrameSettings(key, { order: o.length ? o : null }); paintFs(); } }),
+        el("button", { type: "button", class: "btn quiet small", text: "Reset", onclick: async () => { await setFrameSettings(key, { order: null, ms: null }); paintFs(); } })]));
+      fsPanel.appendChild(el("label", { class: "range" }, [el("span", { text: "Speed" }), speed, ms]));
+      if (!fset.custom) fsPanel.appendChild(el("p", { class: "small", style: "margin:4px 0 0", text: "Tap +1, +2… to build your own order (like 1, 2, 1, 3)." }));
+    }
+    fsPanel.appendChild(el("p", { class: "small", style: "margin:6px 0 0;opacity:.85", text: "This changes the Paint Room's preview only; the game decides when each frame shows." }));
+    if (animBox) { animBox.hidden = fset.mode === "set"; setRow.hidden = fset.mode !== "set"; }
+  }
+
   // Frames: tap one to paint it (the zoom stays put, so frames line up); the bar copies, pastes, flips and clears them
   let frameBtns = [], ghost = meta.ghost !== false;
   const goFrame = f => { dropSel(); frame = (f + Z.frames) % Z.frames; view.frame = frame; history.replaceState({ v: view }, ""); draw(); };
@@ -949,7 +1032,8 @@ function renderPaint() {
     $app.appendChild(frameLabel);
     const fr = el("div", { class: "frames", role: "group", "aria-label": "Frames" });
     frameBtns = [...Array(Z.frames).keys()].map(f => { const [c] = canvasOf(s.w, s.h), k = Math.max(1, Math.min(3, Math.floor(40 / Math.max(s.w, s.h)))); c.className = "px"; c.style.width = s.w * k + "px"; c.style.height = s.h * k + "px";
-      const b = el("button", { type: "button", "aria-label": frameName(s, f), title: frameName(s, f), onclick: () => goFrame(f) }, [c]); fr.appendChild(b); return b; });
+      const nm = s.layout !== "char" && FRAME_NAMES[s.key] && FRAME_NAMES[s.key][f];
+      const b = el("button", { type: "button", "aria-label": frameName(s, f), title: frameName(s, f), onclick: () => goFrame(f) }, [c, nm ? el("span", { class: "fcap", text: nm }) : null]); fr.appendChild(b); return b; });
     $app.appendChild(fr);
     $app.appendChild(el("div", { class: "framebar", role: "group", "aria-label": "Frame tools" }, [
       ghostB,
@@ -959,6 +1043,7 @@ function renderPaint() {
       el("button", { class: "btn quiet small", type: "button", text: "Flip ↔", title: "Mirror this frame left to right (facing left from facing right)", onclick: () => { const b = px.slice(), cur = readFrame(), out = new Uint8ClampedArray(cur.length); for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) { const i = (y * s.w + x) * 4, j = (y * s.w + (s.w - 1 - x)) * 4; out.set(cur.subarray(j, j + 4), i); } writeFrame(out); commitStroke(b); } }),
       el("button", { class: "btn quiet small", type: "button", text: "Clear", onclick: () => { const b = px.slice(); writeFrame(new Uint8ClampedArray(s.w * s.h * 4)); commitStroke(b); } }),
     ]));
+    if (!fset.fixed) $app.appendChild(fsPanel);
   }
   // The ghost: for a walk sheet, a step shows its standing pose and a standing pose shows facing down; otherwise the frame before (the first shows the last, for loops).
   const ghostOf = f => s.layout === "char" ? (f % 3 ? f - f % 3 : f ? 0 : null) : Z.frames > 1 ? (f ? f - 1 : Z.frames - 1) : null;
@@ -1306,18 +1391,21 @@ function renderPaint() {
       ctx.strokeStyle = "#fff"; ctx.strokeRect(X, Y, Wd, Hd); ctx.strokeStyle = "#111"; ctx.lineDashOffset = 4.5; ctx.strokeRect(X, Y, Wd, Hd); ctx.restore(); }
     // previews and frame thumbnails
     pvC.forEach(c => { const x = c.getContext("2d"); x.clearRect(0, 0, s.w, s.h); x.drawImage(sheetC, fx, fy, s.w, s.h, 0, 0, s.w, s.h); });
+    setC.forEach((c, f) => { const x = c.getContext("2d"); x.clearRect(0, 0, s.w, s.h); x.drawImage(sheetC, (f % Z.cols) * s.w, Math.floor(f / Z.cols) * s.h, s.w, s.h, 0, 0, s.w, s.h); c.classList.toggle("on", f === frame); });
     frameBtns.forEach((btn, f) => { btn.setAttribute("aria-current", f === frame ? "true" : "false"); const c = btn.firstChild, x = c.getContext("2d"); x.clearRect(0, 0, s.w, s.h); x.drawImage(sheetC, (f % Z.cols) * s.w, Math.floor(f / Z.cols) * s.h, s.w, s.h, 0, 0, s.w, s.h); });
     frameLabel.textContent = Z.frames > 1 ? frameName(s, frame) + " (" + (frame + 1) + "/" + Z.frames + ")" + (gf != null && gf !== frame ? " · ghost: " + frameName(s, gf).toLowerCase() : "") : "";
     undoB.disabled = !undo.length; redoB.disabled = !redo.length;
     ctxQueue();
   }
   // The animation preview ticks on its own (characters walk facing the way the current frame faces).
-  let animF = 0;
-  const animT = animC ? setInterval(() => {
-    const seq = s.layout === "char" ? [0, 1, 0, 2].map(c => Math.floor(frame / 3) * 3 + c) : [...Array(Z.frames).keys()];
+  let animF = 0, animT = 0;
+  const tick = () => {
+    const seq = s.layout === "char" ? [0, 1, 0, 2].map(c => Math.floor(frame / 3) * 3 + c) : fset.order;
     animF = (animF + 1) % seq.length; const f = seq[animF], x = animC.getContext("2d");
     x.clearRect(0, 0, s.w, s.h); x.drawImage(sheetC, (f % Z.cols) * s.w, Math.floor(f / Z.cols) * s.h, s.w, s.h, 0, 0, s.w, s.h);
-  }, s.layout === "char" ? 220 : 260) : 0;
+    animT = setTimeout(tick, s.layout === "char" ? 220 : fset.ms);
+  };
+  if (animC) animT = setTimeout(tick, 260);
 
   /* Input: one pointer paints; a second finger cancels the stroke and pinches to zoom and pan. */
   const pts = new Map(); let stroke = null, pinch = null;
@@ -1378,9 +1466,9 @@ function renderPaint() {
   const onResize = () => { const w0 = cw, h0 = ch; size(); if (!w0 || !h0) fit(); else { ox += (cw - w0) / 2; oy += (ch - h0) / 2; } draw(); };
   const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => { const r = stage.getBoundingClientRect(); if (Math.abs(r.width - cw) > 0.5 || Math.abs(r.height - ch) > 0.5) onResize(); }) : null;
   document.addEventListener("keydown", onKey); if (ro) ro.observe(stage); else window.addEventListener("resize", onResize);
-  editor = { key, close() { if (wipT) { clearTimeout(wipT); saveWip(); } clearInterval(animT); ctxClose(); document.removeEventListener("keydown", onKey); if (ro) ro.disconnect(); else window.removeEventListener("resize", onResize); } };
+  editor = { key, close() { if (wipT) { clearTimeout(wipT); saveWip(); } clearTimeout(animT); ctxClose(); document.removeEventListener("keydown", onKey); if (ro) ro.disconnect(); else window.removeEventListener("resize", onResize); } };
 
-  setTool("pencil"); paintPalette(); paintTrace(); size(); fit(); paint(); ctxSetup();
+  setTool("pencil"); paintPalette(); paintTrace(); if (!fset.fixed) paintFs(); size(); fit(); paint(); ctxSetup();
 }
 
 await document.fonts.ready.catch(() => {});

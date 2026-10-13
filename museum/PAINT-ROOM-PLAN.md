@@ -173,6 +173,7 @@ You update the game often. A newer build may drop sprites, add new ones, resize 
 - 2026-10-13: Slots that already have custom art in the folder pack (made elsewhere, like Joe) show as **In the pack** and count as done. They have no "Keep original" button. Painting one is allowed, but export won't replace the pack's art unless it's ticked. (Claude)
 - 2026-10-13: Added a **Move** tool (one-finger or mouse pan), so desktop and one-handed use can get around long sprites like the murals. (Claude)
 - 2026-10-13: Context preview is a live crop from the real engine instead of a hand-kept slot-to-room map, so it follows new builds and rooms by itself. (Joe asked; Claude chose the method)
+- 2026-10-13: Multi-frame slots can be previewed as an animation or as separate pictures, with a custom play order; this is preview-only because the engine decides frame timing. (Joe asked; Claude chose the defaults from the engine notes)
 - 2026-10-13: Work in progress and swatches go in IndexedDB, not localStorage, because of storage limits. (Claude)
 
 ---
@@ -211,6 +212,7 @@ Check items off as they land, and note the commit.
 - [x] Onion skin (**Ghost**, remembered): a walk-sheet step ghosts its standing pose, a standing pose ghosts facing down; strips ghost the frame before (the first ghosts the last, for loops). Drawn at about a third strength behind the frame.
 - [x] Copy, paste, **Copy to next**, **Flip ↔** and clear a frame. The copied frame stays while the page is open, so it can be pasted into another sprite of the same size. Single-frame sprites get Copy and Paste under More.
 - [x] Animation playback in the preview (characters walk in the direction of the current frame)
+- [x] **Plays as** (Joe 10/13): any multi-frame slot can be an **Animation** or **Separate pictures** (a set the game picks one from, like the reactions, cups, litter and carpet pieces, or states it switches between, like TV off/on and the keypad). Defaults follow the engine (`FRAME_SETS`). Separate pictures preview side by side; animations get a custom **play order** (+1, +2, ⌫, Reset) and **speed**. Saved per slot in DB misc `frameModes`. Frame names where the game gives them (`FRAME_NAMES`). Preview only: the game decides which frame shows when.
 
 ### Phase 4: Palette and tools
 - [x] Named swatches ("My swatches"): add, rename, delete, **recolor and reorder** (Edit → tap a swatch: name, color, ‹ Earlier / Later ›)
@@ -256,6 +258,8 @@ Check items off as they land, and note the commit.
 - [ ] Handoff notes below are up to date
 
 ### Handoff notes (latest state)
+
+- 2026-10-13: Frame modes added (see Phase 3). `frameSettings(s)` / `setFrameSettings(key, patch)` are module-level; `animated()` (slot page, Today) and the painter's preview (`paintFs()`, the `tick` timeout chain, the `setC` row) follow them. Walk sheets (`layout: "char"`) are fixed and get no panel. Tested: reactions default to separate pictures with names; switching to Animation with order 1,2,1,3 survives a reload; the cat defaults to 1,2.
 
 - 2026-10-13, Phase 6 done: `renderExport()` with `planArt()` / `applyArt()` / `planView()`, `noteExported()`, `zip()`. The curator got **Import art** (`#artFile`, art-only merge with the same rules). Version strings bumped to `2026-11-18 paint 41` in all four places (engine, museum.html, curator.html, version.json). `UPDATING.md` has a Paint Room section. Tested end to end in Playwright: first export adds the cat, leaves Joe (clash) and skips a stale wrong-size sprite, with everything else in the pack byte-identical; after "committing" that pack, a repaint is **Replace** and Use original is **Remove**; curator Import art asks before replacing Joe; Send to the curator; the ZIP opens (197 files, valid PNGs). Next: Phase 5's badge shelf, Phase 7 (scene mockups), Phase 8 (polish).
 
