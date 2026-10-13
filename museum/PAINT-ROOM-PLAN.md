@@ -10,7 +10,7 @@ This is both the spec and the handoff. If a session gets cut off, a new one shou
 
 `museum/paint-room.html`: a phone-first pixel painter for every replaceable sprite in the museum game. It's a sibling of `writers-room.html`. The Writers' Room has you write the museum's lines one a day; the Paint Room has you repaint its sprites one a day.
 
-- Every sprite slot the game can replace is listed, searchable and grouped. There are **199 slots in 25 groups** today, read live from `GOQ.SLOTS`, so new slots show up on their own.
+- Every sprite slot the game can replace is listed, searchable and grouped. There are **197 slots in 24 groups** today, read live from `GOQ.SLOTS`, so new slots show up on their own.
 - For each slot you either **paint a replacement** or **keep the original**. The goal is every slot done one way or the other.
 - It's a daily journal. Saving a sprite (painted or kept) stamps the day on a monthly punch card, groups light up as they fill, and finishing a group earns a badge.
 - The editor is simple, like Animal Crossing's pattern maker: a grid, a palette, a few tools and a live preview.
@@ -170,6 +170,7 @@ You update the game often. A newer build may drop sprites, add new ones, resize 
 - 2026-10-13: Multi-frame slots use a frame strip with onion skin. (Joe)
 - 2026-10-13: Rewards work like the Writers' Room: painted or kept stamps the day, groups light up, and finishing a group earns a badge. The punch card is separate from the Writers' Room's. (Joe)
 - 2026-10-13: Extra tools: line, rectangle and circle; select with move, flip and rotate; trace a photo or PNG. (Joe)
+- 2026-10-13: Slots that already have custom art in the folder pack (made elsewhere, like Joe) show as **In the pack** and count as done. They have no "Keep original" button. Painting one is allowed, but export won't replace the pack's art unless it's ticked. (Claude)
 - 2026-10-13: Work in progress and swatches go in IndexedDB, not localStorage, because of storage limits. (Claude)
 
 ---
@@ -185,11 +186,12 @@ Check items off as they land, and note the commit.
 - [x] This plan written
 
 ### Phase 1: Skeleton
-- [ ] `paint-room.html` loads the engine via `version.json`
-- [ ] Art library in IndexedDB (art, kept, work in progress, swatches)
-- [ ] Home screen layout
-- [ ] Find screen: search, filters, thumbnails, status
-- [ ] Link from the curator's menu
+- [x] `paint-room.html` loads the engine via `version.json`
+- [x] Art library in IndexedDB (stores: art, kept, wip, misc), with a memory fallback and a warning
+- [x] Home screen layout
+- [x] Find screen: search (plus `is:` words), group picker, status and size chips, thumbnails, status dots
+- [x] Slot page: original vs in use (animated), notes, facts, Keep original / Undo keep
+- [x] Link from the curator's menu (More, next to Writers' Room)
 
 ### Phase 2: Core editor
 - [ ] Grid render, zoom and pan (pinch and two-finger)
@@ -217,10 +219,10 @@ Check items off as they land, and note the commit.
 - [ ] Import a PNG as pixels (size check plus clean-upscale shrink)
 
 ### Phase 5: Journal
-- [ ] Punch card
-- [ ] Today's sprite suggestion
-- [ ] Wings light up per group
-- [ ] Group badges, totals
+- [x] Punch card (done early, in Phase 1)
+- [x] Today's sprite suggestion (in progress first, then your last group, small before big; "Another" skips)
+- [x] Wings light up per group, with a ★ when a group is full
+- [ ] Group badges: a proper badge shelf, beyond the ★ (totals are done)
 
 ### Phase 6: Export
 - [ ] Art-only pack export: fresh folder pack, only owned `assets` changed
@@ -249,5 +251,8 @@ Check items off as they land, and note the commit.
 - [ ] Handoff notes below are up to date
 
 ### Handoff notes (latest state)
+
+- 2026-10-13, Phase 1 done: `paint-room.html` is up, linked from the curator. Tested in Playwright at 390×844, light and dark, with no page errors: Home, Find, search, the slot page, Keep original → stamp → reload keeps it. "Paint it" is a disabled button until Phase 2. Next: **Phase 2, the core editor**. The editor should open from `renderSlot()`'s "Paint it" as a new view (`{ name: "paint", key }`), start from `inUse(key)`, and save into `DB.put("art", key, { png, w, h, cols, rows, savedAt, origHash: pixelHash(original(key)) })`.
+- Code map (`paint-room.html`): `DB` (IndexedDB wrapper; `DB.data` is the in-memory copy), `pack` / `packAssets` (the folder pack, read only), `original(key)` (built-in art), `inUse(key)` (library, then pack, then built-in), `status(key)`, `nextSlot()`, `renderHome` / `renderFind` / `renderSlot`, `celebrate()`.
 
 - 2026-10-13: Only the plan exists (now with the art-only safety rules). Next step: Phase 1. To test locally, serve the folder (`python3 -m http.server` in `museum/`) and open `paint-room.html`. The engine can also load headlessly in Node with a stubbed `window` and `document`, which is handy for checking slot data.
