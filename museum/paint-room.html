@@ -179,12 +179,14 @@ select.search{appearance:auto;margin-top:8px}
 .stage{position:relative;width:100%;height:min(calc(100vw - 32px),52vh,528px);border:2px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface-2);touch-action:none;user-select:none;-webkit-user-select:none}
 .stage canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
 .zoom{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin:8px 0 0}
-.zoom .small{flex:1;min-width:0;line-height:1.25}
+.framelabel{margin:8px 0 0;line-height:1.3}
 .zoom button{min-width:44px;min-height:44px;border-radius:8px;border:2px solid var(--line);background:var(--surface);font-weight:700;cursor:pointer;padding:0 8px}
 .zoom button[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
 .frames{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;scrollbar-width:thin}
 .frames button{flex:none;display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:4px;border:2px solid var(--line);border-radius:6px;background:var(--surface);cursor:pointer}
 .frames button[aria-current="true"]{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
+.framebar{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0}
+.framebar .btn[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
 .tools{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:10px 0}
 .tool{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:58px;border:2px solid var(--line);border-radius:8px;background:var(--surface);font-size:.75rem;font-weight:700;cursor:pointer;padding:6px 2px}
 .tool svg{width:24px;height:24px}
@@ -551,6 +553,7 @@ function celebrate(s, first) {
 /* ---------- The painter ----------
    The whole sheet lives in one RGBA array (px). The grid shows one frame of it; tools write straight into px.
    Unsaved work is kept in the library's "wip" store (a moment after each change), so leaving the page loses nothing. */
+let frameClip = null; // a copied frame ({ w, h, px, from }), kept while the page is open so it can go to another sprite
 let editor = null; // the open painter, so leaving the page can save its unsaved work first
 const pixelsOf = c => c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
 function samePx(a, b) {
@@ -726,19 +729,40 @@ function renderPaint() {
   const gridB = el("button", { type: "button", "aria-pressed": "true", "aria-label": "Grid lines", text: "#", onclick: () => { showGrid = !showGrid; gridB.setAttribute("aria-pressed", showGrid); draw(); } });
   const stage = el("div", { class: "stage" }, [cv]);
   if (s.w >= s.h * 3) stage.style.height = "clamp(160px, " + (s.h * 14 + 24) + "px, 52vh)"; // a long strip: a shorter grid
-  const frameLabel = el("span", { class: "small" });
+  const frameLabel = el("p", { class: "small framelabel" });
   $app.appendChild(stage);
   if (s.w > s.h * 2 && s.w > 48) $app.appendChild(el("p", { class: "small", style: "margin:6px 0 0", text: "It's long: drag with Move (or two fingers) to get along it." }));
-  $app.appendChild(el("div", { class: "zoom" }, [frameLabel, gridB, zoomBtn("−", "Zoom out", () => zoomBy(1 / 1.5)), zoomBtn("Fit", "Fit to screen", () => { fit(); draw(); }), zoomBtn("+", "Zoom in", () => zoomBy(1.5))]));
+  $app.appendChild(el("div", { class: "zoom" }, [gridB, zoomBtn("−", "Zoom out", () => zoomBy(1 / 1.5)), zoomBtn("Fit", "Fit to screen", () => { fit(); draw(); }), zoomBtn("+", "Zoom in", () => zoomBy(1.5))]));
 
-  // Frames
-  let frameBtns = [];
+  // Frames: tap one to paint it (the zoom stays put, so frames line up); the bar copies, pastes, flips and clears them
+  let frameBtns = [], ghost = meta.ghost !== false;
+  const goFrame = f => { frame = (f + Z.frames) % Z.frames; view.frame = frame; history.replaceState({ v: view }, ""); draw(); };
+  const ghostB = el("button", { class: "btn quiet small", type: "button", "aria-pressed": ghost ? "true" : "false", text: "Ghost", title: "Show a faint copy of the frame before (to line things up)", onclick: () => { ghost = !ghost; meta.ghost = ghost; saveMeta(); ghostB.setAttribute("aria-pressed", ghost); draw(); } });
+  const pasteB = el("button", { class: "btn quiet small", type: "button", text: "Paste", onclick: () => pasteFrame() });
   if (Z.frames > 1) {
+    $app.appendChild(frameLabel);
     const fr = el("div", { class: "frames", role: "group", "aria-label": "Frames" });
     frameBtns = [...Array(Z.frames).keys()].map(f => { const [c] = canvasOf(s.w, s.h), k = Math.max(1, Math.min(3, Math.floor(40 / Math.max(s.w, s.h)))); c.className = "px"; c.style.width = s.w * k + "px"; c.style.height = s.h * k + "px";
-      const b = el("button", { type: "button", "aria-label": frameName(s, f), title: frameName(s, f), onclick: () => { frame = f; view.frame = f; history.replaceState({ v: view }, ""); fit(); draw(); } }, [c]); fr.appendChild(b); return b; });
+      const b = el("button", { type: "button", "aria-label": frameName(s, f), title: frameName(s, f), onclick: () => goFrame(f) }, [c]); fr.appendChild(b); return b; });
     $app.appendChild(fr);
+    $app.appendChild(el("div", { class: "framebar", role: "group", "aria-label": "Frame tools" }, [
+      ghostB,
+      el("button", { class: "btn quiet small", type: "button", text: "Copy", onclick: () => copyFrame() }),
+      pasteB,
+      el("button", { class: "btn quiet small", type: "button", text: "Copy to next", title: "Copy this frame into the next one and go there", onclick: () => { copyFrame(true); const b = px.slice(), from = frameClip; goFrame(frame + 1); writeFrame(from.px); commitStroke(b); toast("Copied to " + frameName(s, frame).toLowerCase()); } }),
+      el("button", { class: "btn quiet small", type: "button", text: "Flip ↔", title: "Mirror this frame left to right (facing left from facing right)", onclick: () => { const b = px.slice(), cur = readFrame(), out = new Uint8ClampedArray(cur.length); for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) { const i = (y * s.w + x) * 4, j = (y * s.w + (s.w - 1 - x)) * 4; out.set(cur.subarray(j, j + 4), i); } writeFrame(out); commitStroke(b); } }),
+      el("button", { class: "btn quiet small", type: "button", text: "Clear", onclick: () => { const b = px.slice(); writeFrame(new Uint8ClampedArray(s.w * s.h * 4)); commitStroke(b); } }),
+    ]));
   }
+  // The ghost: for a walk sheet, a step shows its standing pose and a standing pose shows facing down; otherwise the frame before (the first shows the last, for loops).
+  const ghostOf = f => s.layout === "char" ? (f % 3 ? f - f % 3 : f ? 0 : null) : Z.frames > 1 ? (f ? f - 1 : Z.frames - 1) : null;
+  // One frame's pixels in and out of the sheet (copy, paste, flip). The clipboard outlives this sprite, for any frame the same size.
+  function readFrame(f) { f = f == null ? frame : f; const out = new Uint8ClampedArray(s.w * s.h * 4), x0 = (f % Z.cols) * s.w, y0 = Math.floor(f / Z.cols) * s.h; for (let y = 0; y < s.h; y++) out.set(px.subarray(((y0 + y) * W + x0) * 4, ((y0 + y) * W + x0 + s.w) * 4), y * s.w * 4); return out; }
+  function writeFrame(src) { const x0 = fx0(), y0 = fy0(); for (let y = 0; y < s.h; y++) px.set(src.subarray(y * s.w * 4, (y + 1) * s.w * 4), ((y0 + y) * W + x0) * 4); }
+  function copyFrame(quiet) { frameClip = { w: s.w, h: s.h, px: readFrame(), from: s.label + ", " + frameName(s, frame).toLowerCase() }; paintFrameBar(); if (!quiet) toast("Copied " + frameName(s, frame).toLowerCase()); }
+  function pasteFrame() { if (!frameClip || frameClip.w !== s.w || frameClip.h !== s.h) return; const b = px.slice(); writeFrame(frameClip.px); commitStroke(b); toast("Pasted " + frameClip.from); }
+  function paintFrameBar() { const ok = frameClip && frameClip.w === s.w && frameClip.h === s.h; pasteB.disabled = !ok; pasteB.title = ok ? "Paste " + frameClip.from : "Copy a frame first"; }
+  paintFrameBar();
 
   // Tools
   const tools = el("div", { class: "tools", role: "group", "aria-label": "Tools" });
@@ -767,6 +791,8 @@ function renderPaint() {
   const more = el("details", { class: "more panel" }, [el("summary", { text: "More" }), el("div", { class: "foot" }, [
     el("button", { class: "btn quiet wide", type: "button", text: "Load the original", onclick: () => load(orig, "Loaded the original. Undo brings yours back.") }),
     status(key) === "painted" || status(key) === "pack" ? el("button", { class: "btn quiet wide", type: "button", text: status(key) === "painted" ? "Load your saved version" : "Load the pack's version", onclick: () => load(start, "Loaded. Undo goes back.") }) : null,
+    Z.frames === 1 ? el("button", { class: "btn quiet wide", type: "button", text: "Copy the sprite", onclick: () => copyFrame() }) : null,
+    Z.frames === 1 ? el("button", { class: "btn quiet wide", type: "button", text: "Paste a copied sprite (same size)", onclick: () => { if (!frameClip || frameClip.w !== s.w || frameClip.h !== s.h) return toast("Copy one the same size (" + s.w + "×" + s.h + ") first"); pasteFrame(); } }) : null,
     el("button", { class: "btn quiet wide", type: "button", text: "Clear this frame", onclick: () => { const b = px.slice(); for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) setPx(x, y, 0); commitStroke(b); } }),
     el("button", { class: "btn quiet wide", type: "button", text: "Download PNG", onclick: () => canvasFromPx(px, W, H).toBlob(b => { const a = el("a", { href: URL.createObjectURL(b), download: key + ".png" }); document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); }) }),
     resumed || DB.data.wip[key] ? el("button", { class: "btn quiet wide", type: "button", text: "Start over (forget unsaved work)", onclick: async () => { if (!confirm("Forget your unsaved changes to " + s.label + "?")) return; clearTimeout(wipT); await DB.del("wip", key); render(); } }) : null,
@@ -878,6 +904,8 @@ function renderPaint() {
     ctx.save(); ctx.beginPath(); ctx.rect(ox, oy, s.w * z, s.h * z); ctx.clip();
     ctx.fillStyle = b; ctx.fillRect(ox, oy, s.w * z, s.h * z); ctx.fillStyle = a;
     for (let y = 0; y * cs < s.h * z; y++) for (let x = (y & 1); x * cs < s.w * z; x += 2) ctx.fillRect(ox + x * cs, oy + y * cs, cs, cs);
+    const gf = ghost ? ghostOf(frame) : null;
+    if (gf != null && gf !== frame) { ctx.globalAlpha = 0.32; ctx.drawImage(sheetC, (gf % Z.cols) * s.w, Math.floor(gf / Z.cols) * s.h, s.w, s.h, ox, oy, s.w * z, s.h * z); ctx.globalAlpha = 1; }
     ctx.drawImage(sheetC, fx, fy, s.w, s.h, ox, oy, s.w * z, s.h * z);
     if (showGrid && z >= 5) {
       ctx.fillStyle = "rgba(128,128,128,.28)";
@@ -892,7 +920,7 @@ function renderPaint() {
     // previews and frame thumbnails
     pvC.forEach(c => { const x = c.getContext("2d"); x.clearRect(0, 0, s.w, s.h); x.drawImage(sheetC, fx, fy, s.w, s.h, 0, 0, s.w, s.h); });
     frameBtns.forEach((btn, f) => { btn.setAttribute("aria-current", f === frame ? "true" : "false"); const c = btn.firstChild, x = c.getContext("2d"); x.clearRect(0, 0, s.w, s.h); x.drawImage(sheetC, (f % Z.cols) * s.w, Math.floor(f / Z.cols) * s.h, s.w, s.h, 0, 0, s.w, s.h); });
-    frameLabel.textContent = Z.frames > 1 ? frameName(s, frame) + " (" + (frame + 1) + "/" + Z.frames + ")" : "";
+    frameLabel.textContent = Z.frames > 1 ? frameName(s, frame) + " (" + (frame + 1) + "/" + Z.frames + ")" + (gf != null && gf !== frame ? " · ghost: " + frameName(s, gf).toLowerCase() : "") : "";
     undoB.disabled = !undo.length; redoB.disabled = !redo.length;
     ctxQueue();
   }
@@ -944,6 +972,11 @@ function renderPaint() {
     const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
     if (mod && k === "z") { e.preventDefault(); e.shiftKey ? step(redo, undo) : step(undo, redo); }
     else if (mod && k === "y") { e.preventDefault(); step(redo, undo); }
+    else if (mod && k === "c" && !String(getSelection())) { e.preventDefault(); copyFrame(); }
+    else if (mod && k === "v") { e.preventDefault(); pasteFrame(); }
+    else if (!mod && Z.frames > 1 && (k === "," || k === "<" || k === "[")) goFrame(frame - 1);
+    else if (!mod && Z.frames > 1 && (k === "." || k === ">" || k === "]")) goFrame(frame + 1);
+    else if (!mod && k === "o" && Z.frames > 1) ghostB.click();
     else if (!mod && { b: 1, p: 1, e: 1, f: 1, g: 1, i: 1, h: 1, m: 1 }[k]) setTool({ b: "pencil", p: "pencil", e: "eraser", f: "fill", g: "fill", i: "pick", h: "move", m: "move" }[k]);
   };
   const onResize = () => { size(); fit(); draw(); };

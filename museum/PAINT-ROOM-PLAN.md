@@ -208,8 +208,8 @@ Check items off as they land, and note the commit.
 
 ### Phase 3: Frames
 - [x] Frame strip (character labels for `char` slots), done early in Phase 2 because the editor needs it to reach other frames
-- [ ] Onion skin
-- [ ] Copy, paste and clear a frame
+- [x] Onion skin (**Ghost**, remembered): a walk-sheet step ghosts its standing pose, a standing pose ghosts facing down; strips ghost the frame before (the first ghosts the last, for loops). Drawn at about a third strength behind the frame.
+- [x] Copy, paste, **Copy to next**, **Flip ↔** and clear a frame. The copied frame stays while the page is open, so it can be pasted into another sprite of the same size. Single-frame sprites get Copy and Paste under More.
 - [x] Animation playback in the preview (characters walk in the direction of the current frame)
 
 ### Phase 4: Palette and tools
@@ -257,6 +257,8 @@ Check items off as they land, and note the commit.
 - [ ] Handoff notes below are up to date
 
 ### Handoff notes (latest state)
+
+- 2026-10-13, Phase 3 done. In `renderPaint()`: `goFrame()` (switching frames keeps the zoom, so frames line up), `ghostOf(f)`, `readFrame()` / `writeFrame()` (one frame's pixels in and out of `px`), `copyFrame()` / `pasteFrame()` with the page-wide `frameClip`. Keys: `,` `.` (or `[` `]`) change frames, `o` toggles the ghost, Ctrl/Cmd+C and V copy and paste a frame. Tested on the player: copying facing right onto facing left and flipping gives back the original left frame exactly; Copy to next and three undos restore it. Next: **Phase 4** (shape tools, select with move, flip and rotate, mirror painting, trace layer, import a PNG, recolor and reorder swatches).
 
 - 2026-10-13, after Phase 2 (Joe's asks): **My swatches** and the **In the game** window.
   - Swatches live in `DB.data.misc.swatches` (`[{ id, name, color }]`, color is packed RGBA). Code: `addSwatch()`, `paintPalette()` in `renderPaint()`.
