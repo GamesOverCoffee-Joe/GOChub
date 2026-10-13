@@ -19,10 +19,11 @@ On the free plan Projects have a size cap. These files are small text files, so 
 1. In the Project, start a new chat and say what to draw, for example: "This week: Cognitanks. A toy tank with half a brain on top of the turret, in the center, attached to it. Make a plain version too."
 2. Claude answers with a preview page (with a download button) and the art as text in a code block. Ask for small changes until it's close, for example "move the brain one pixel left".
 3. Copy the code block (claude.ai has a copy button on it).
-4. In the Paint Room, open Shop items, then New weekly gift. Fill in the name, price and description, choose the exhibit, and check the unveil date.
-5. Press Paint it, open More, choose Paste art from Claude, paste, and press Use it. If you pasted more than one version, pick one. Touch it up with the Paint Room's tools, then Save.
-6. Press Send to the curator. It adds the item to the curator's draft in that browser as the exhibit's gift, and sets the exhibit's unveil date. Nothing else changes.
-7. Open the curator in the same browser, check it in the Preview tab, export the pack and push it before the show goes live.
+4. The quickest way: in the curator, open Episode day and start the episode. Paste Claude's code block into the gift's "Paste art from Claude" box and press Use it; fill in the piece, the gift's name and price, and add it all to the museum at once (steps 5 to 7 are the Paint Room way, for when you want to touch the art up first).
+5. Or, in the Paint Room, open Shop items, then New weekly gift. Fill in the name, price and description, choose the exhibit, and check the unveil date.
+6. Press Paint it, open More, choose Paste art from Claude, paste, and press Use it. If you pasted more than one version, pick one. Touch it up with the Paint Room's tools, then Save.
+7. Press Send to the curator. (Or skip Send: Episode day's gift has a "From the Paint Room" list that takes the item straight in.) It adds the item to the curator's draft in that browser as the exhibit's gift, and sets the exhibit's unveil date. Nothing else changes.
+8. Open the curator in the same browser, check it in the Preview tab, export the pack and push it before the show goes live.
 
 To ask Claude for a change after you've edited it yourself, use More, then Copy as text in the Paint Room, and paste that into the chat.
 

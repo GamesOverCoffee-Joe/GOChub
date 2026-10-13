@@ -4657,9 +4657,9 @@ class Game {
     this.ask(this.tx("unveil.ask", { title: cer.pieces.map(p => p.title).join(" and ") }).join(" "), ["Unveil it", "Not yet"], i => { if (i === 0) this.startCeremony(cer); }, 1);
     return true;
   }
-  testUnveil() { // curator preview: stage the ceremony for the newest piece, as if it were unveiled today
+  testUnveil(id) { // curator preview: stage the ceremony for a piece (id) or the newest one, as if it were unveiled today
     const m = this.rooms.museum, shown = q => m && (m.cases.some(c => c.piece && c.piece.id === q.id) || (m.hung || []).some(h => h.piece && h.piece.id === q.id));
-    const p = this.pack.pieces.filter(q => !q.tut && shown(q)).slice(-1)[0]; if (!p) return false;
+    const p = this.pack.pieces.filter(q => !q.tut && shown(q) && (!id || q.id === id)).slice(-1)[0]; if (!p) return false;
     this.unveilTest = p.id; if (this.progress.unveils) delete this.progress.unveils[p.id]; if (this.progress.sides) delete this.progress.sides[p.id]; this.rebuild(); return p.title; // unread, like a real unveil day (so its border's blue)
   }
   startCeremony(cer) {
@@ -6217,7 +6217,7 @@ class Game {
       { id: "fri-seat", group: "Days", day: 5, label: "Fri: the feature's free seat", find: () => { const r = this.rooms.screening, k = r && r.keepFree && [...r.keepFree][0]; return k ? at("screening", ...k.split(",").map(Number)) : "No screening nook."; } },
       { id: "sat-bluu", group: "Days", day: 6, label: "Sat: Bluu's stall", find: () => this.npcAt(n => n.vendor) || "No room for his stall." },
       { id: "sun-guest", group: "Days", day: 0, label: "Sun: staff at a café table", find: () => { const s = this.dayState().sunSeat; return s ? at("museum", s.x, s.y) : "Already chatted today, or no café table."; } },
-      { id: "unveil", group: "Days", label: "An unveiling (any day)", run: () => { const t = this.testUnveil(); return t ? "Staged " + t + ". Walk into its wing to see the ceremony." : "No piece on display."; } },
+      { id: "unveil", group: "Days", label: "An unveiling (any day)", run: () => { const t = this.testUnveil(); return t ? "Staged " + t + ". " + (this.isCurator() ? "Walk up to it and press the action button to unveil it." : "Walk into its wing to see the ceremony.") : "No piece on display."; } },
       { id: "usher", group: "The loop", beat: 0, label: "0:00 The usher's empty mug", find: () => this.npcAt(n => n.usher && !n.tourUsher) || "He's off with the tour." },
       { id: "boxes", group: "The loop", beat: 0, label: "0:00 The deliveries (basement)", find: () => { const S = this.supState(), b = S.boxes.find(b => b.room === "storage") || S.boxes[0]; return b ? at(b.room, b.x, b.y) : "Both boxes are already up."; } },
       { id: "stocking", group: "The loop", beat: 0, label: "0:00 The shopkeeper stocking", find: () => this.npcAt(n => n.role === "shopkeeper") || (this.onBreak === "shopkeeper" ? "He has the day off (he's Sunday's guest at the café)." : "The shopkeeper's away.") },
@@ -9672,7 +9672,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 43";
+const VERSION = "2026-11-18 cards 44";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
