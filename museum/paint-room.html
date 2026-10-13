@@ -1,0 +1,1741 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d1317">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Paint Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+/* The paint room: repaint the museum's sprites one at a time, a little every day. Phone first.
+   Art only: it keeps its own art library (IndexedDB) and never writes the curator's draft or anything else in the pack.
+   The plan and handoff live in PAINT-ROOM-PLAN.md. */
+:root{
+  --bg:#f1e4df;--surface:#fffaf7;--surface-2:#f6ebe6;--line:#d9c0b8;--text:#2a171c;--muted:#6d5157;
+  --gold:#8f5a0a;--on-gold:#fff8ec;--warn:#a33a22;--ok:#3f7a2a;--shadow:#d9c0b8;--todo:#c0532e;--lit:#f0b840;--dark-room:#3a2a30;
+  --wip:#5a7ac0;--pack:#7a5ab0;--check-a:#e8dcd6;--check-b:#f8f0ec;
+  --pixel:'Press Start 2P',ui-monospace,monospace;--body:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1d1317;--surface:#281a1f;--surface-2:#34232a;--line:#4b343b;--text:#f3e5d0;--muted:#b59e8c;
+  --gold:#e8b24a;--on-gold:#2a1a10;--warn:#f08a6a;--ok:#9fcf7a;--shadow:#0e080a;--todo:#f08a6a;--lit:#f0c050;--dark-room:#120b0e;
+  --wip:#8aa8f0;--pack:#b89ae8;--check-a:#2e2025;--check-b:#3a2a30;color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#1d1317;--surface:#281a1f;--surface-2:#34232a;--line:#4b343b;--text:#f3e5d0;--muted:#b59e8c;
+  --gold:#e8b24a;--on-gold:#2a1a10;--warn:#f08a6a;--ok:#9fcf7a;--shadow:#0e080a;--todo:#f08a6a;--lit:#f0c050;--dark-room:#120b0e;
+  --wip:#8aa8f0;--pack:#b89ae8;--check-a:#2e2025;--check-b:#3a2a30;color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100vh;min-height:100dvh;background:var(--bg);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+[hidden]{display:none !important}
+canvas.px{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+.app{max-width:560px;margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px calc(env(safe-area-inset-bottom,0px) + 112px)}
+.app.nobar{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 32px)}
+
+/* Top bar */
+.top{display:flex;align-items:center;gap:10px;min-height:44px;margin-bottom:12px}
+.top h1{font-family:var(--pixel);font-weight:400;font-size:13px;line-height:1.5;color:var(--gold);margin:0;flex:1;min-width:0}
+.top .crumb{font-size:.85rem;color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border:2px solid var(--line);border-radius:6px;background:var(--surface);cursor:pointer;font-weight:700;padding:0 10px}
+.iconbtn:active{transform:translateY(1px)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4em;min-height:48px;padding:.5em 1.1em;border:2px solid var(--text);background:var(--surface);
+  border-radius:6px;box-shadow:3px 3px 0 var(--shadow);cursor:pointer;font-weight:700;font-size:1rem;text-decoration:none;color:var(--text)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow)}
+.btn.primary{background:var(--gold);color:var(--on-gold);border-color:var(--gold)}
+.btn.quiet{border-color:var(--line);box-shadow:none;font-weight:600}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btn.wide{width:100%}
+.small{font-size:.85rem;color:var(--muted)}
+
+/* Cards */
+.panel{background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:16px;margin:0 0 14px}
+.panel h2{font-family:var(--pixel);font-weight:400;font-size:11px;line-height:1.6;margin:0 0 10px;color:var(--text)}
+.today{border-color:var(--gold);box-shadow:4px 4px 0 var(--shadow)}
+.today .pick{display:flex;gap:14px;align-items:center;margin:0 0 14px}
+.today .what{font-weight:700;font-size:1.05rem;line-height:1.35;margin:0 0 2px}
+.today .where{font-size:.85rem;color:var(--muted);margin:0}
+.today .acts{display:flex;gap:10px}
+.today .acts .btn{flex:1}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px}
+.tile{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;min-height:76px;padding:12px;border:2px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer}
+.tile b{font-size:.98rem;line-height:1.25}
+.tile span{font-size:.82rem;color:var(--muted)}
+.tile:active{transform:translateY(1px)}
+
+/* A sprite on a checkerboard */
+.chk{background-color:var(--check-b);background-image:linear-gradient(45deg,var(--check-a) 25%,transparent 25%,transparent 75%,var(--check-a) 75%),linear-gradient(45deg,var(--check-a) 25%,transparent 25%,transparent 75%,var(--check-a) 75%);
+  background-size:12px 12px;background-position:0 0,6px 6px;border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.today .chk{flex:none;width:84px;height:84px;border:2px solid var(--line)}
+
+/* Punch card */
+.punch-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px}
+.punch-head h2{margin:0}
+.punch{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.punch .dow{font-size:.7rem;color:var(--muted);text-align:center}
+.punch .d{aspect-ratio:1;border:2px dashed var(--line);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;color:var(--muted);position:relative}
+.punch .d.blank{border:0}
+.punch .d.today{border-style:solid;border-color:var(--gold);color:var(--text);font-weight:700}
+.punch .d.hit{border:0;background:var(--gold);color:var(--on-gold);font-weight:700}
+.punch .d.hit::after{content:"";position:absolute;inset:3px;border:2px solid var(--on-gold);border-radius:50%;opacity:.55}
+.punch .d.future{opacity:.4}
+.punch-foot{margin:10px 0 0;font-size:.85rem;color:var(--muted)}
+.stamp-in{animation:stampin .55s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes stampin{0%{transform:scale(2.4) rotate(-18deg);opacity:0}60%{opacity:1}100%{transform:scale(1) rotate(0)}}
+
+/* Gallery wings: one per group, lighting up as its sprites get done */
+.rooms{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.room{position:relative;display:flex;flex-direction:column;gap:6px;text-align:left;padding:10px;border:2px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;min-height:96px}
+.room .win{height:30px;border-radius:4px;background:var(--dark-room);position:relative;overflow:hidden;border:2px solid var(--line)}
+.room .win i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--lit),#ffe08a);box-shadow:0 0 14px var(--lit);transition:width .6s}
+.room .win.full{box-shadow:0 0 12px var(--lit)}
+.room b{font-size:.86rem;line-height:1.25}
+.room span{font-size:.76rem;color:var(--muted)}
+.room .badge{position:absolute;top:-8px;right:-6px;background:var(--gold);color:var(--on-gold);font-size:.72rem;font-weight:700;border-radius:999px;padding:1px 8px}
+.room:active{transform:translateY(1px)}
+.bar{height:10px;border-radius:999px;background:var(--surface-2);border:2px solid var(--line);overflow:hidden;margin:6px 0 4px}
+.bar i{display:block;height:100%;background:var(--lit)}
+
+/* Find */
+.search{width:100%;min-height:48px;border:2px solid var(--line);border-radius:8px;background:var(--surface);padding:10px 12px;font-size:16px}
+.search:focus{border-color:var(--gold);outline:none}
+select.search{appearance:auto;margin-top:8px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:10px 16px 4px;margin:0 -16px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:38px;padding:6px 14px;border:2px solid var(--line);border-radius:999px;background:var(--surface);font-weight:700;font-size:.85rem;cursor:pointer;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
+.count{margin:10px 0 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-top:8px}
+.sp{position:relative;display:flex;flex-direction:column;gap:6px;padding:8px;border:2px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;text-align:left;min-width:0}
+.sp:active{transform:translateY(1px)}
+.sp .chk{height:72px}
+.sp b{font-size:.78rem;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.5em}
+.sp .dot{position:absolute;top:6px;right:6px}
+.ghead{grid-column:1/-1;margin:10px 0 0;font-weight:700;font-size:.85rem}
+.dot{flex:none;width:12px;height:12px;border-radius:50%;border:2px solid var(--muted);background:var(--surface);display:inline-block}
+.dot.todo{background:var(--todo);border-color:var(--todo)}
+.dot.wip{background:var(--wip);border-color:var(--wip)}
+.dot.painted{background:var(--lit);border-color:var(--gold)}
+.dot.kept{background:var(--surface);border-color:var(--gold)}
+.dot.pack{background:var(--pack);border-color:var(--pack)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend .dot{width:10px;height:10px}
+
+/* One sprite */
+.who{font-weight:700;font-size:1.1rem;line-height:1.35;margin:0 0 4px}
+.tagline{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+.tag{font-size:.74rem;font-weight:700;padding:2px 8px;border-radius:999px;border:2px solid var(--line);color:var(--muted)}
+.tag.todo{border-color:var(--todo);color:var(--todo)}
+.tag.painted,.tag.kept{border-color:var(--gold);color:var(--gold)}
+.tag.wip{border-color:var(--wip);color:var(--wip)}
+.tag.pack{border-color:var(--pack);color:var(--pack)}
+.views{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px}
+.views figure{margin:0}
+.views figcaption{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 4px}
+.views .chk{height:150px;border:2px solid var(--line)}
+.views.one{grid-template-columns:1fr}
+.brief{background:var(--surface-2);border-left:4px solid var(--gold);border-radius:6px;padding:10px 12px;margin:0 0 14px;font-size:.92rem}
+.brief b{display:block;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:.88rem;margin:0 0 14px}
+.facts dt{color:var(--muted)}
+.facts dd{margin:0;font-weight:700}
+
+/* The bottom bar */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--bg);border-top:2px solid var(--line);padding:10px 16px calc(env(safe-area-inset-bottom,0px) + 10px)}
+.dock .in{max-width:560px;margin:0 auto;display:flex;gap:10px}
+.dock .btn{flex:1}
+
+/* After a save */
+.done{position:fixed;inset:0;z-index:20;background:rgba(20,10,14,.62);display:flex;align-items:flex-end;justify-content:center;animation:fade .2s both}
+.done .sheet{width:100%;max-width:560px;background:var(--surface);border-radius:16px 16px 0 0;padding:22px 16px calc(env(safe-area-inset-bottom,0px) + 16px);text-align:center;animation:rise .28s cubic-bezier(.2,1.2,.4,1) both}
+.done .big{font-family:var(--pixel);font-size:18px;line-height:1.5;color:var(--gold);margin:6px 0 6px;display:inline-block}
+.done p{margin:0 0 16px;color:var(--muted)}
+.done .acts{display:flex;gap:10px}
+.done .acts .btn{flex:1}
+.seal{width:84px;height:84px;margin:0 auto 6px;border-radius:50%;background:var(--gold);color:var(--on-gold);display:flex;align-items:center;justify-content:center;font-family:var(--pixel);font-size:10px;line-height:1.3;position:relative}
+.seal::after{content:"";position:absolute;inset:6px;border:3px solid var(--on-gold);border-radius:50%;opacity:.6}
+@keyframes fade{from{opacity:0}}
+@keyframes rise{from{transform:translateY(40px);opacity:0}}
+.banner{background:var(--surface-2);border:2px solid var(--warn);border-radius:8px;padding:10px 12px;font-size:.86rem;margin:0 0 14px}
+.banner.info{border-color:var(--gold)}
+.foot{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.foot .small{text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 14px;border-radius:999px;font-weight:700;font-size:.85rem;z-index:30;animation:fade .2s both}
+.empty{color:var(--muted);text-align:center;padding:24px 8px}
+/* The painter */
+.pv{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px}
+.pv .chk{border:2px solid var(--line);padding:6px;min-width:44px;min-height:44px}
+.stage{position:relative;width:100%;height:min(calc(100vw - 32px),52vh,528px);height:min(calc(100vw - 32px),52svh,528px);border:2px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface-2);touch-action:none;user-select:none;-webkit-user-select:none}
+.stage > canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.zoom{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin:8px 0 0}
+.framelabel{margin:8px 0 0;line-height:1.3}
+.zoom button{min-width:44px;min-height:44px;border-radius:8px;border:2px solid var(--line);background:var(--surface);font-weight:700;cursor:pointer;padding:0 8px}
+.zoom button[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
+.pip{position:absolute;z-index:3;border:2px solid var(--gold);border-radius:8px;background:#000;box-shadow:0 2px 10px rgba(0,0,0,.45);overflow:hidden;cursor:pointer;touch-action:manipulation;transition:top .15s,left .15s,right .15s,bottom .15s}
+.pip canvas{display:block;width:100%;height:auto;image-rendering:pixelated}
+.pip.tr{top:6px;right:6px}.pip.br{bottom:6px;right:6px}.pip.bl{bottom:6px;left:6px}.pip.tl{top:6px;left:6px}
+.pip .x{position:absolute;top:2px;right:2px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-weight:700;font-size:1rem;line-height:1;cursor:pointer;padding:0}
+.pip .lbl{position:absolute;left:5px;bottom:2px;font-size:.62rem;font-weight:700;color:#fff;text-shadow:0 0 3px #000,0 0 2px #000;pointer-events:none}
+.frames{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;scrollbar-width:thin}
+.frames button{flex:none;display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:4px;border:2px solid var(--line);border-radius:6px;background:var(--surface);cursor:pointer}
+.frames button[aria-current="true"]{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
+.framebar{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0}
+.frames button{flex-direction:column;gap:2px}
+.fcap{font-size:.6rem;line-height:1.1;color:var(--muted);max-width:64px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fset{border:2px dashed var(--line);border-radius:10px;padding:8px 10px;margin:10px 0 0}
+.fset summary{cursor:pointer;font-size:.85rem;font-weight:700;color:var(--muted);min-height:28px;display:list-item}
+.fset[open] summary{margin-bottom:4px}
+.fsrow{display:flex;align-items:center;gap:6px;margin:4px 0}
+.fsrow.wrap{flex-wrap:wrap}
+.fsrow > span.small:first-child{min-width:70px}
+.fset .chip{min-height:34px;padding:4px 12px}
+.order{display:flex;flex-wrap:wrap;gap:4px}
+.ochip{min-width:26px;height:26px;border-radius:6px;background:var(--surface-2);border:2px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem}
+.fset .range{display:grid;grid-template-columns:70px 1fr auto;align-items:center;gap:8px;font-size:.85rem}
+.fset input[type=range]{accent-color:var(--gold)}
+.chk.setrow{gap:6px;padding:6px;flex-wrap:wrap}
+.setrow canvas.on{outline:2px solid var(--gold);outline-offset:1px}
+.framebar .btn[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
+.tools{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:10px 0}
+.tool span{line-height:1.15;text-align:center}
+.selbar{align-items:center;margin:0 0 10px}
+.trace .range,.colors .range{display:grid;grid-template-columns:84px 1fr;align-items:center;gap:10px;margin:8px 0;font-size:.85rem;font-weight:700}
+.trace input[type=range],.colors input[type=range]{width:100%;accent-color:var(--gold)}
+.colors input[type=range]{-webkit-appearance:none;appearance:none;height:22px;border-radius:999px;border:2px solid var(--line)}
+.colors input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid #222;box-shadow:0 0 0 1px #fff}
+.colors input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid #222}
+.colors input.hue{background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
+.done .sheet.colors{text-align:left}
+.cmprow{display:flex;gap:10px;align-items:center;margin:8px 0}
+.sw.cmp{width:72px;height:44px;cursor:default;display:flex}
+.sw.cmp i{position:static;flex:1}
+.check{display:flex;gap:8px;align-items:center;font-size:.9rem;margin:10px 0}
+.check input{width:22px;height:22px;accent-color:var(--gold)}
+.reorder{display:flex;gap:6px}
+.reorder .btn{text-transform:none;letter-spacing:0}
+.sw.big{cursor:pointer}
+.scchips{padding-top:8px;padding-bottom:0}
+.scview{margin-top:8px;padding:6px}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px}
+.badge{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px}
+.badge b{font-size:.76rem;line-height:1.2}
+.badge span{font-size:.7rem;color:var(--muted)}
+.badge-tok{width:var(--b);height:var(--b);border-radius:50%;overflow:hidden;border:2px dashed var(--line);display:flex;align-items:center;justify-content:center;opacity:.55;filter:grayscale(1);background:var(--surface-2)}
+.badge-tok.got{border:3px solid var(--gold);opacity:1;filter:none;background:radial-gradient(circle,var(--surface) 55%,var(--lit) 56%,var(--lit) 70%,var(--surface) 71%);box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--gold)}
+.badge-tok .glyph{font-family:var(--pixel);font-size:12px;color:var(--gold)}
+.newbadges{display:flex;justify-content:center;gap:16px;margin:0 0 14px;flex-wrap:wrap}
+.plan{margin:10px 0}
+.pgroup{border-left:4px solid var(--line);padding:4px 10px;margin:8px 0}
+.pgroup.ok{border-color:var(--ok)}
+.pgroup.clash{border-color:var(--warn)}
+.pgroup.muted{opacity:.85}
+.pgroup b{font-size:.85rem}
+.pgroup ul{margin:4px 0 0;padding-left:18px;font-size:.88rem}
+.pgroup li{margin:2px 0}
+.check.inline{display:inline-flex;margin:0 0 0 8px;font-size:.82rem}
+.check.inline input{width:18px;height:18px}
+.warn{color:var(--warn);font-size:.88rem}
+.steps{padding-left:20px;margin:8px 0 12px}
+.steps li{margin:4px 0}
+.tool{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:58px;border:2px solid var(--line);border-radius:8px;background:var(--surface);font-size:.75rem;font-weight:700;cursor:pointer;padding:6px 2px}
+.tool svg{width:24px;height:24px}
+.tool[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
+.cur{display:flex;align-items:center;gap:10px;margin:0 0 10px}
+.pal{display:flex;flex-wrap:wrap;gap:6px}
+.palsep{flex-basis:100%;height:0}
+.sw{position:relative;width:40px;height:40px;border-radius:6px;border:2px solid var(--line);padding:0;cursor:pointer;overflow:hidden;flex:none;
+  background-color:var(--check-b);background-image:linear-gradient(45deg,var(--check-a) 25%,transparent 25%,transparent 75%,var(--check-a) 75%),linear-gradient(45deg,var(--check-a) 25%,transparent 25%,transparent 75%,var(--check-a) 75%);background-size:10px 10px;background-position:0 0,5px 5px}
+.sw i{position:absolute;inset:0}
+.sw.big{width:48px;height:48px;cursor:default}
+.sw[aria-pressed="true"]{outline:3px solid var(--gold);outline-offset:2px}
+.sw.add{background:var(--surface);border-style:dashed;font-weight:700;font-size:1.3rem;color:var(--muted)}
+.sr{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+details.more summary{cursor:pointer;font-weight:700;min-height:28px}
+details.more .foot{margin-top:12px}
+.iconbtn[disabled]{opacity:.35;pointer-events:none}
+.ctxbox{background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 10px}
+.ctxhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ctxhead b{font-size:.85rem}
+.ctxhead .small{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ctxview{margin-top:8px;display:flex;justify-content:center;background:#000;border-radius:6px;overflow:hidden}
+.ctxview .small{color:#cbb;padding:12px;text-align:center}
+.btn.small{min-height:36px;padding:.2em .8em;font-size:.85rem}
+.palhead{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:12px 0 6px}
+.palhead.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.palhead.row .btn{text-transform:none;letter-spacing:0}
+.pal.mine{gap:8px}
+.swcell{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;width:52px}
+.swname{font-size:.66rem;line-height:1.2;color:var(--muted);max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.swdel{position:absolute;top:-8px;right:-4px;width:26px;height:26px;border-radius:50%;border:2px solid var(--surface);background:var(--warn);color:#fff;font-weight:700;line-height:1;cursor:pointer;padding:0}
+.mine.editing .sw{animation:wob .9s ease-in-out infinite alternate}
+@keyframes wob{from{transform:rotate(-3deg)}to{transform:rotate(3deg)}}
+@media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
+</style>
+</head>
+<body>
+<main class="app" id="app"><p class="empty">Opening the paint room…</p></main>
+<div class="dock" id="dock" hidden><div class="in" id="dockIn"></div></div>
+
+<script>
+/* Load the engine for its sprite slots and built-in art (version from version.json, so this page never needs a version bump). */
+(function () {
+  const go = v => { const s = document.createElement("script"); s.src = "museum-engine.js" + (v ? "?v=" + encodeURIComponent(v) : ""); s.onload = () => window.prStart(); s.onerror = () => { document.getElementById("app").innerHTML = '<p class="empty">Couldn\'t load museum-engine.js. Open this page from the museum folder.</p>'; }; document.head.appendChild(s); };
+  if (/^https?:$/.test(location.protocol)) fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => (r.ok ? r.json() : {})).then(j => go(j.version), () => go(""));
+  else go("");
+})();
+</script>
+<script>
+window.prStart = async function () {
+"use strict";
+const META_KEY = "goq-paint-room", SITE_PACK = "museum-pack.json";
+const $app = document.getElementById("app"), $dock = document.getElementById("dock"), $dockIn = document.getElementById("dockIn");
+const el = (tag, attrs, kids) => { const e = document.createElement(tag); for (const k in attrs || {}) { const v = attrs[k]; if (v == null || v === false) continue; if (k === "text") e.textContent = v; else if (k === "class") e.className = v; else if (k.startsWith("on")) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v === true ? "" : v); } (kids || []).forEach(c => c != null && e.appendChild(typeof c === "string" ? document.createTextNode(c) : c)); return e; };
+const today = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+function toast(t) { const x = el("div", { class: "toast", role: "status", text: t }); document.body.appendChild(x); setTimeout(() => x.remove(), 1800); }
+const plural = (n, one, many) => n + " " + (n === 1 ? one : many || one + "s");
+
+/* ---------- The art library (IndexedDB) ----------
+   Stores: art (key → { png, w, h, cols, rows, savedAt, origHash }), kept (key → { at, origHash }),
+   wip (key → unsaved pixels, Phase 2), misc (swatches and the like). Falls back to memory (with a warning) if IndexedDB is unavailable. */
+const DB = await (async () => {
+  const mem = { art: {}, kept: {}, wip: {}, misc: {} };
+  const open = () => new Promise((res, rej) => {
+    const r = indexedDB.open("goq-paint-room", 1);
+    r.onupgradeneeded = () => { const d = r.result; for (const s in mem) if (!d.objectStoreNames.contains(s)) d.createObjectStore(s); };
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); r.onblocked = () => rej(new Error("blocked"));
+  });
+  let db = null;
+  try { db = await open(); } catch (e) { db = null; }
+  const req = (store, mode, fn) => new Promise((res, rej) => { const t = db.transaction(store, mode), q = fn(t.objectStore(store)); t.oncomplete = () => res(q && q.result); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error); });
+  const all = store => new Promise((res, rej) => { const out = {}, t = db.transaction(store), c = t.objectStore(store).openCursor(); c.onsuccess = () => { const cur = c.result; if (cur) { out[cur.key] = cur.value; cur.continue(); } }; t.oncomplete = () => res(out); t.onerror = () => rej(t.error); });
+  if (db) for (const s in mem) { try { mem[s] = await all(s); } catch (e) {} }
+  return {
+    ok: !!db, data: mem,
+    async put(store, key, val) { mem[store][key] = val; if (db) await req(store, "readwrite", s => s.put(val, key)); },
+    async del(store, key) { delete mem[store][key]; if (db) await req(store, "readwrite", s => s.delete(key)); },
+  };
+})();
+let meta = { days: {}, total: 0, lastGroup: "", allWings: false };
+try { meta = Object.assign(meta, JSON.parse(localStorage.getItem(META_KEY) || "{}")); } catch (e) {}
+const saveMeta = () => { try { localStorage.setItem(META_KEY, JSON.stringify(meta)); } catch (e) {} };
+
+/* ---------- The folder's pack (read only: just to see which slots already have custom art) ---------- */
+let pack = null;
+if (/^https?:$/.test(location.protocol)) {
+  try { const r = await fetch(SITE_PACK + "?t=" + Date.now(), { cache: "no-store" }); if (r.ok) { const j = await r.json(); if (j && j.format === GOQ.PACK_FORMAT) pack = j; } } catch (e) {}
+}
+const packAssets = (pack && pack.assets) || {};
+
+/* ---------- Slots and their art ---------- */
+const SLOTS = GOQ.SLOTS.filter(s => !s.retired);
+const SLOT = Object.fromEntries(SLOTS.map(s => [s.key, s]));
+const GROUPS = [...new Set(SLOTS.map(s => s.group))];
+const gridOf = s => GOQ.sheetGrid(s);
+const sheetSize = s => { const g = gridOf(s); return { w: s.w * g.cols, h: s.h * g.rows, cols: g.cols, rows: g.rows, frames: g.cols * g.rows }; };
+const canvasOf = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d"); x.imageSmoothingEnabled = false; return [c, x]; };
+const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error("bad image")); i.src = src; });
+// A short fingerprint of a canvas's pixels, so we can tell later if the built-in art changed under a painted sprite.
+function pixelHash(c) { const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data; let h = 0x811c9dc5; for (let i = 0; i < d.length; i++) h = Math.imul(h ^ d[i], 16777619); return (h >>> 0).toString(36) + "." + c.width + "x" + c.height; }
+
+const origCache = {};
+const original = key => origCache[key] || (origCache[key] = GOQ.placeholder(key));
+// Images for art that isn't built in (the library's and the folder pack's), decoded once.
+const imgCache = {};
+async function warm(src) { if (src && !imgCache[src]) { try { imgCache[src] = await loadImg(src); } catch (e) { imgCache[src] = null; } } return imgCache[src]; }
+await Promise.all([...Object.values(DB.data.art).map(a => warm(a.png)), ...Object.keys(packAssets).filter(k => SLOT[k]).map(k => warm(packAssets[k].src))]);
+/* The art the game would show: yours (painted here) first, then the pack's custom art, then the built-in. */
+function inUse(key) {
+  const s = SLOT[key], { w, h } = sheetSize(s), a = DB.data.art[key], src = a ? a.png : packAssets[key] && packAssets[key].src, img = src && imgCache[src];
+  if (!img) return original(key);
+  const [c, x] = canvasOf(w, h); x.drawImage(img, 0, 0, w, h, 0, 0, w, h); return c;
+}
+
+/* ---------- Status ---------- */
+// painted: art in the library. kept: keep the original. pack: custom art already in the pack (made elsewhere). wip: unsaved work. todo: nothing yet.
+function status(key) {
+  if (DB.data.art[key]) return "painted";
+  if (DB.data.kept[key]) return "kept";
+  if (packAssets[key]) return "pack";
+  if (DB.data.wip[key]) return "wip";
+  return "todo";
+}
+const isDone = st => st === "painted" || st === "kept" || st === "pack";
+const STATUS_TEXT = { todo: "To do", wip: "In progress", painted: "Painted", kept: "Kept original", pack: "Custom art in the pack" };
+const sizeOf = s => Math.max(s.w, s.h) <= 8 ? "tiny" : Math.max(s.w, s.h) <= 16 ? "small" : Math.max(s.w, s.h) <= 32 ? "medium" : "large";
+const SIZE_TEXT = { tiny: "Tiny (8 px)", small: "Small (16 px)", medium: "Medium (32 px)", large: "Large" };
+const framesOf = s => sheetSize(s).frames;
+function stamp() { const first = !(meta.days[today()] > 0); meta.days[today()] = (meta.days[today()] || 0) + 1; meta.total = (meta.total || 0) + 1; saveMeta(); return first; }
+
+/* ---------- Drawing sprites for the page ---------- */
+// One frame of a sheet (frame 0 is the standing, facing-down pose for characters), scaled to fit a box, crisp.
+function frameCanvas(sheet, s, frame, box) {
+  const g = gridOf(s), f = frame || 0, fx = (f % g.cols) * s.w, fy = Math.floor(f / g.cols) * s.h;
+  const [c, x] = canvasOf(s.w, s.h); x.drawImage(sheet, fx, fy, s.w, s.h, 0, 0, s.w, s.h);
+  const k = Math.min(box / s.w, box / s.h, 8), k2 = k >= 1 ? Math.floor(k) : k;
+  c.className = "px"; c.style.width = Math.max(1, s.w * k2) + "px"; c.style.height = Math.max(1, s.h * k2) + "px";
+  return c;
+}
+// An animated preview: cycles through the frames (characters walk facing down: stand, step, stand, step).
+/* ---------- How a slot's frames are used ----------
+   "anim": the frames play as an animation (you can change the preview's play order and speed).
+   "set": separate pictures the game shows one at a time: a set to pick from (reactions, cups, carpet pieces) or states it
+   switches between (TV off/on, keypad colors). Defaults follow how the engine uses each slot; any slot can be switched.
+   This only changes how the Paint Room shows and previews them: the game itself decides which frame shows when. */
+const FRAME_SETS = ["cups", "trinkets", "carpet_h", "carpet_v", "held_items", "break_items", "supply_box", "emote", "bubble", "litter",
+  "cup_iced", "office_tv", "office_keypad", "fingerprints", "popcorn_bag", "microwave_counter", "theater_screen"];
+const ORDER_DEFAULTS = { cat: [0, 1] }; // the cat breathes asleep (1, 2); frame 3 is when you pet it
+const FRAME_NAMES = {
+  cups: ["coffee", "tea", "cocoa", "drink of the week"], cup_iced: ["full", "empty"], steam: ["low", "rising", "high"],
+  carpet_h: ["left end", "middle", "right end"], carpet_v: ["top end", "middle", "bottom end"], office_tv: ["off", "on"], joe: ["antenna off", "antenna lit"],
+  held_items: ["headphones", "lunchbox"], break_items: ["headphones", "lunchbox"], supply_box: ["shop stock", "café supplies"],
+  cat: ["asleep", "breathing in", "awake"], office_keypad: ["dark", "red", "green"], fingerprints: ["a few", "more", "lots"],
+  emote: ["startled !", "heart", "peace sign", "star", "busy …", "wave", "shy", "annoyed"], bubble: ["?", "!"], litter: ["cup", "wrapper", "napkin"],
+  popcorn_bag: ["full", "empty"], microwave_counter: ["clean", "after the incident"], marquee_lights: ["bulbs A", "bulbs B"],
+};
+function frameSettings(s) {
+  const m = (DB.data.misc.frameModes || {})[s.key] || {}, n = framesOf(s);
+  if (s.layout === "char" || n < 2) return { mode: "anim", order: null, ms: 220, fixed: true };
+  const order = (m.order || ORDER_DEFAULTS[s.key] || []).filter(f => f >= 0 && f < n);
+  return { mode: m.mode || (FRAME_SETS.includes(s.key) ? "set" : "anim"), order: order.length ? order : [...Array(n).keys()], ms: m.ms || 260, custom: !!m.order };
+}
+async function setFrameSettings(key, patch) {
+  const all = Object.assign({}, DB.data.misc.frameModes || {}), cur = Object.assign({}, all[key] || {}, patch);
+  for (const k in cur) if (cur[k] == null) delete cur[k];
+  if (Object.keys(cur).length) all[key] = cur; else delete all[key];
+  await DB.put("misc", "frameModes", all).catch(() => {});
+}
+// One frame's name: walk-sheet poses, the names the game gives a set, or just its number.
+const CHAR_ROWS = ["down", "up", "left", "right"], CHAR_COLS = ["standing", "step 1", "step 2"];
+const frameName = (s, f) => s.layout === "char" ? "Facing " + CHAR_ROWS[Math.floor(f / 3)] + ", " + CHAR_COLS[f % 3]
+  : FRAME_NAMES[s.key] && FRAME_NAMES[s.key][f] ? (f + 1) + ": " + FRAME_NAMES[s.key][f] : "Frame " + (f + 1);
+
+// A sprite for the page: an animation plays (in its play order); a set shows all its pictures side by side.
+function animated(sheet, s, box) {
+  const n = framesOf(s), host = el("div", { class: "chk" }), fs = frameSettings(s);
+  if (n > 1 && fs.mode === "set") {
+    host.classList.add("setrow"); const each = Math.max(12, Math.min(box, Math.floor((box * 2.2) / n)));
+    for (let f = 0; f < n; f++) { const c = frameCanvas(sheet, s, f, each); c.title = frameName(s, f); host.appendChild(c); }
+    return host;
+  }
+  let cv = frameCanvas(sheet, s, 0, box); host.appendChild(cv);
+  if (n > 1) {
+    const seq = s.layout === "char" ? [0, 1, 0, 2] : fs.order; let i = 0;
+    cv.remove(); cv = frameCanvas(sheet, s, seq[0], box); host.appendChild(cv);
+    const t = setInterval(() => { if (!host.isConnected) return clearInterval(t); i = (i + 1) % seq.length; const nc = frameCanvas(sheet, s, seq[i], box); host.replaceChild(nc, cv); cv = nc; }, fs.ms);
+  }
+  return host;
+}
+
+/* ---------- Navigation ---------- */
+// A reload (phones do this to tabs left in the background) reopens where you were; a fresh visit starts at home.
+const navType = ((performance.getEntriesByType && performance.getEntriesByType("navigation")[0]) || {}).type;
+let view = (navType === "reload" || navType === "back_forward") && history.state && history.state.v || { name: "home" }; const skipped = new Set();
+function go(v, replace) { view = v; if (replace) history.replaceState({ v }, ""); else history.pushState({ v }, ""); render(); scrollTo(0, 0); }
+window.addEventListener("popstate", e => { view = (e.state && e.state.v) || { name: "home" }; render(); });
+history.replaceState({ v: view }, "");
+function dock(buttons) { $dockIn.innerHTML = ""; if (!buttons) { $dock.hidden = true; $app.classList.add("nobar"); return; } buttons.forEach(b => b && $dockIn.appendChild(b)); $dock.hidden = false; $app.classList.remove("nobar"); }
+function top(title, back) {
+  return el("header", { class: "top" }, [back ? el("button", { class: "iconbtn", type: "button", "aria-label": "Back", text: "←", onclick: () => history.length > 1 ? history.back() : go({ name: "home" }) }) : null,
+    back ? el("div", { class: "crumb", text: title }) : el("h1", { text: title })]);
+}
+function render() {
+  if (editor) { editor.close(); editor = null; }
+  $app.innerHTML = "";
+  if (view.name === "home") return renderHome();
+  if (view.name === "find") return renderFind();
+  if (view.name === "slot") return SLOT[view.key] ? renderSlot() : go({ name: "home" }, true);
+  if (view.name === "paint") return SLOT[view.key] ? renderPaint() : go({ name: "home" }, true);
+  if (view.name === "export") return renderExport();
+}
+
+/* ---------- Picking today's sprite ----------
+   In-progress ones first, then to-dos in the group you worked in last, then the rest; smaller sprites before big ones. */
+function nextSlot(after) {
+  const area = s => s.w * s.h * framesOf(s);
+  const pool = SLOTS.filter(s => s.key !== after && !skipped.has(s.key));
+  const rank = s => (status(s.key) === "wip" ? 0 : 2) + (meta.lastGroup && s.group === meta.lastGroup ? 0 : 1);
+  const list = pool.filter(s => status(s.key) === "wip" || status(s.key) === "todo").sort((a, b) => rank(a) - rank(b) || area(a) - area(b));
+  if (list.length) return list[0];
+  if (skipped.size) { skipped.clear(); return nextSlot(after); }
+  return null;
+}
+
+/* ---------- Home ---------- */
+function renderHome() {
+  dock(null);
+  $app.appendChild(top("Paint Room"));
+  if (!DB.ok) $app.appendChild(el("div", { class: "banner", text: "This browser won't let the Paint Room keep a library (private browsing?), so anything you do here is lost when you close the page." }));
+  if (!pack && /^https?:$/.test(location.protocol)) $app.appendChild(el("div", { class: "banner info", text: "Couldn't read this folder's museum-pack.json, so art made elsewhere doesn't show here. Your own library is fine." }));
+
+  // Today
+  const stampedToday = (meta.days[today()] || 0) > 0, next = nextSlot();
+  const t = el("section", { class: "panel today", "aria-labelledby": "h-today" });
+  t.appendChild(el("h2", { id: "h-today", text: stampedToday ? "Stamped for today" : "Today's sprite" }));
+  if (next) {
+    const st = status(next.key), z = sheetSize(next);
+    t.appendChild(el("div", { class: "pick" }, [animated(inUse(next.key), next, 72),
+      el("div", {}, [el("p", { class: "what", text: next.label }), el("p", { class: "where", text: next.group + " · " + next.w + "×" + next.h + (z.frames > 1 ? ", " + z.frames + " frames" : "") + (st === "wip" ? " · in progress" : "") })])]));
+    t.appendChild(el("div", { class: "acts" }, [
+      el("button", { class: "btn quiet", type: "button", text: "Another", onclick: () => { skipped.add(next.key); render(); } }),
+      el("button", { class: "btn primary", type: "button", text: stampedToday ? "One more" : "Open it", onclick: () => go({ name: "slot", key: next.key }) })]));
+  } else t.appendChild(el("p", { class: "where", text: "Every sprite is painted or kept. The whole museum is yours." }));
+  $app.appendChild(t);
+
+  $app.appendChild(punchCard());
+
+  // Quick tiles
+  const n = st => SLOTS.filter(s => status(s.key) === st).length;
+  $app.appendChild(el("div", { class: "pair" }, [
+    el("button", { class: "tile", type: "button", onclick: () => go({ name: "find", filter: n("wip") ? "wip" : "todo" }) }, [el("b", { text: n("wip") ? "In progress" : "To do" }), el("span", { text: n("wip") ? plural(n("wip"), "sprite") + " started" : plural(n("todo"), "sprite") + " left" })]),
+    el("button", { class: "tile", type: "button", onclick: () => go({ name: "find", filter: "painted" }) }, [el("b", { text: "Painted" }), el("span", { text: plural(n("painted"), "sprite") + " yours" })]),
+  ]));
+
+  // The wings light up
+  const done = SLOTS.filter(s => isDone(status(s.key))).length;
+  const m = el("section", { class: "panel", "aria-labelledby": "h-wings" }, [el("h2", { id: "h-wings", text: "The wings" })]);
+  m.appendChild(el("p", { class: "small", style: "margin:-4px 0 6px", text: done + " of " + SLOTS.length + " sprites painted or kept. Each wing lights up as its sprites get done." }));
+  m.appendChild(el("div", { class: "bar", style: "margin-bottom:12px" }, [el("i", { style: "width:" + Math.round(done / SLOTS.length * 100) + "%" })]));
+  const grid = el("div", { class: "rooms" }), more = el("div", { class: "rooms", style: "margin-top:10px" });
+  const wings = GROUPS.map(g => { const list = SLOTS.filter(s => s.group === g); return { g, list, d: list.filter(s => isDone(status(s.key))).length, w: list.filter(s => status(s.key) === "wip").length }; });
+  const rank = a => a.w ? 0 : a.d && a.d < a.list.length ? 1 : a.d < a.list.length ? 2 : 3; // started, half-lit, dark, then fully lit
+  wings.sort((a, b) => rank(a) - rank(b));
+  const shown = Math.max(6, wings.filter(a => rank(a) < 2).length);
+  wings.forEach(({ g, list, d }, i) => {
+    const pct = Math.round(d / list.length * 100);
+    (i < shown ? grid : more).appendChild(el("button", { class: "room", type: "button", "aria-label": g + ": " + d + " of " + list.length + " done", onclick: () => go({ name: "find", group: g, filter: "all" }) }, [
+      pct === 100 ? el("span", { class: "badge", text: "★" }) : null,
+      el("div", { class: "win" + (pct === 100 ? " full" : "") }, [el("i", { style: "width:" + pct + "%" })]),
+      el("b", { text: g }), el("span", { text: d + " / " + list.length })]));
+  });
+  m.appendChild(grid);
+  if (more.children.length) {
+    more.hidden = !meta.allWings;
+    const label = () => meta.allWings ? "Show fewer wings" : "Show all " + wings.length + " wings";
+    const b = el("button", { class: "btn quiet wide", type: "button", style: "margin-top:12px", "aria-expanded": meta.allWings ? "true" : "false", text: label(), onclick: () => { meta.allWings = !meta.allWings; saveMeta(); more.hidden = !meta.allWings; b.setAttribute("aria-expanded", meta.allWings ? "true" : "false"); b.textContent = label(); } });
+    m.appendChild(more); m.appendChild(b);
+  }
+  $app.appendChild(m);
+  $app.appendChild(badgeShelf());
+
+  $app.appendChild(el("div", { class: "foot" }, [
+    el("button", { class: "btn wide", type: "button", text: "Find a sprite", onclick: () => go({ name: "find", filter: "all" }) }),
+    el("button", { class: "btn primary wide", type: "button", text: "Put my art in the game (export)", onclick: () => go({ name: "export" }) }),
+    el("a", { class: "btn quiet wide", href: "writers-room.html", text: "Writers' Room" }),
+    el("a", { class: "btn quiet wide", href: "curator.html", text: "Open the curator" }),
+    el("p", { class: "small", text: "Art only: the Paint Room keeps your sprites in its own library in this browser and never changes anything else in the pack." })]));
+}
+function punchCard() {
+  const now = new Date(), y = now.getFullYear(), mo = now.getMonth(), first = new Date(y, mo, 1).getDay(), days = new Date(y, mo + 1, 0).getDate(), td = now.getDate();
+  const key = d => y + "-" + String(mo + 1).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+  let hits = 0; for (let d = 1; d <= days; d++) if (meta.days[key(d)]) hits++;
+  const s = el("section", { class: "panel", "aria-labelledby": "h-punch" });
+  s.appendChild(el("div", { class: "punch-head" }, [el("h2", { id: "h-punch", text: now.toLocaleString([], { month: "long" }) }), el("span", { class: "small", text: plural(hits, "day") + " this month" })]));
+  const g = el("div", { class: "punch", role: "img", "aria-label": plural(hits, "day") + " stamped this month" });
+  "SMTWTFS".split("").forEach(c => g.appendChild(el("span", { class: "dow", "aria-hidden": "true", text: c })));
+  for (let i = 0; i < first; i++) g.appendChild(el("span", { class: "d blank" }));
+  for (let d = 1; d <= days; d++) g.appendChild(el("span", { class: "d" + (meta.days[key(d)] ? " hit" : "") + (d === td ? " today" : "") + (d > td ? " future" : ""), text: d }));
+  s.appendChild(g);
+  s.appendChild(el("p", { class: "punch-foot", text: (meta.total || 0) + " saved so far. One a day gets a stamp; more is extra credit." }));
+  return s;
+}
+
+/* ---------- Find ----------
+   Search matches name, key, group and note. Words like is:todo, is:painted, is:kept, is:pack, is:wip, is:animated narrow it further. */
+function legend() { return el("div", { class: "legend" }, ["todo", "wip", "painted", "kept", "pack"].map(k => el("span", {}, [el("i", { class: "dot " + k }), STATUS_TEXT[k]]))); }
+function renderFind() {
+  dock(null);
+  $app.appendChild(top("Find a sprite", true));
+  const save = () => history.replaceState({ v: view }, "");
+  const q = el("input", { class: "search", type: "search", placeholder: "Search: cup, door, cat, is:animated…", "aria-label": "Search sprites", value: view.q || "" });
+  const gs = el("select", { class: "search", "aria-label": "Group" }, [el("option", { value: "", text: "All groups" }), ...GROUPS.map(g => el("option", { value: g, text: g }))]); gs.value = view.group || "";
+  const filt = el("div", { class: "chips", role: "group", "aria-label": "Status" }), sizes = el("div", { class: "chips", role: "group", "aria-label": "Size", style: "padding-top:2px" });
+  const count = el("p", { class: "small count" }), grid = el("div", { class: "grid" });
+  const chip = (wrap, label, on, fn) => wrap.appendChild(el("button", { class: "chip", type: "button", "aria-pressed": on ? "true" : "false", text: label, onclick: fn }));
+  const draw = () => {
+    filt.innerHTML = ""; sizes.innerHTML = ""; grid.innerHTML = "";
+    const pool = SLOTS.filter(s => !view.group || s.group === view.group), n = k => pool.filter(s => k === "done" ? isDone(status(s.key)) : status(s.key) === k).length;
+    [["all", "All " + pool.length], ["todo", "To do " + n("todo")], ["wip", "In progress " + n("wip")], ["done", "Done " + n("done")], ["painted", "Painted " + n("painted")], ["kept", "Kept " + n("kept")], ["pack", "In the pack " + n("pack")]]
+      .forEach(([k, label]) => chip(filt, label, (view.filter || "all") === k, () => { view.filter = k; save(); draw(); }));
+    [["", "Any size"], ["tiny", SIZE_TEXT.tiny], ["small", SIZE_TEXT.small], ["medium", SIZE_TEXT.medium], ["large", SIZE_TEXT.large]]
+      .forEach(([k, label]) => chip(sizes, label, (view.size || "") === k, () => { view.size = k; save(); draw(); }));
+    const words = (view.q || "").toLowerCase().split(/\s+/).filter(Boolean), is = words.filter(w => w.startsWith("is:")).map(w => w.slice(3)), plain = words.filter(w => !w.startsWith("is:"));
+    const f = view.filter || "all";
+    const list = pool.filter(s => {
+      const st = status(s.key);
+      if (f === "done" ? !isDone(st) : f !== "all" && st !== f) return false;
+      if (view.size && sizeOf(s) !== view.size) return false;
+      for (const w of is) { if (w === "animated" ? framesOf(s) < 2 : w === "progress" ? st !== "wip" : w === "done" ? !isDone(st) : st !== w) return false; }
+      const hay = (s.label + " " + s.key + " " + s.key.replace(/_/g, " ") + " " + s.group + " " + (s.note || "")).toLowerCase();
+      return plain.every(w => hay.includes(w));
+    });
+    count.textContent = plural(list.length, "sprite");
+    let g = "";
+    for (const s of list) {
+      if (!view.group && s.group !== g) { g = s.group; grid.appendChild(el("p", { class: "ghead", text: g })); }
+      const st = status(s.key), box = el("div", { class: "chk" }, [frameCanvas(inUse(s.key), s, 0, 60)]);
+      grid.appendChild(el("button", { class: "sp", type: "button", "aria-label": s.label + ", " + STATUS_TEXT[st], onclick: () => go({ name: "slot", key: s.key }) }, [
+        box, el("i", { class: "dot " + st, title: STATUS_TEXT[st] }), el("b", { text: s.label })]));
+    }
+    if (!list.length) grid.appendChild(el("p", { class: "empty", style: "grid-column:1/-1", text: words.length ? "Nothing matches that." : "Nothing here." }));
+  };
+  q.addEventListener("input", () => { view.q = q.value; save(); draw(); });
+  gs.addEventListener("change", () => { view.group = gs.value; save(); draw(); });
+  [q, gs, filt, sizes, legend(), count, grid].forEach(n => $app.appendChild(n));
+  draw();
+}
+
+/* ---------- One sprite ---------- */
+function renderSlot() {
+  const s = SLOT[view.key], key = s.key, st = status(key), z = sheetSize(s);
+  $app.appendChild(top(s.group, true));
+  $app.appendChild(el("p", { class: "who", text: s.label }));
+  $app.appendChild(el("div", { class: "tagline" }, [el("span", { class: "tag " + st, text: STATUS_TEXT[st] }), el("span", { class: "tag", text: s.w + "×" + s.h }),
+    z.frames > 1 ? el("span", { class: "tag", text: s.layout === "char" ? "walk sheet, 12 frames" : z.frames + " frames" }) : null,
+    DB.data.art[key] && DB.data.art[key].origHash !== pixelHash(original(key)) ? el("span", { class: "tag todo", text: "Original updated" }) : null,
+    DB.data.art[key] && (DB.data.art[key].w !== z.w || DB.data.art[key].h !== z.h) ? el("span", { class: "tag todo", text: "Size changed: open it and save again" }) : null]));
+  const differs = st === "painted" || st === "pack", wip = wipCanvas(key);
+  $app.appendChild(el("div", { class: "views" + (differs || wip ? "" : " one") }, [
+    el("figure", {}, [el("figcaption", { text: "Original" }), animated(original(key), s, 130)]),
+    wip ? el("figure", {}, [el("figcaption", { text: "Unsaved" }), animated(wip, s, 130)])
+      : differs ? el("figure", {}, [el("figcaption", { text: st === "painted" ? "Yours" : "In the pack" }), animated(inUse(key), s, 130)]) : null]));
+  if (s.note) $app.appendChild(el("div", { class: "brief" }, [el("b", { text: "Notes" }), s.note]));
+  $app.appendChild(el("dl", { class: "facts" }, [
+    el("dt", { text: "Slot" }), el("dd", { text: key }),
+    el("dt", { text: "Sheet" }), el("dd", { text: z.w + "×" + z.h + " px" + (z.frames > 1 ? " (" + z.cols + " × " + z.rows + " frames)" : "") }),
+    el("dt", { text: "Group" }), el("dd", { text: s.group })]));
+  if (st === "pack") $app.appendChild(el("div", { class: "banner info", text: "This slot already has custom art in the pack, made outside the Paint Room. Painting it here won't replace that art unless you tick it when you export." }));
+  if (wip && st !== "wip") $app.appendChild(el("div", { class: "banner info", text: "You have unsaved changes on this one. Open the painter to finish them, or start over from there." }));
+
+  const keep = async () => {
+    await DB.del("wip", key);
+    await DB.put("kept", key, { at: new Date().toISOString(), origHash: pixelHash(original(key)) });
+    meta.lastGroup = s.group; const first = stamp(); celebrate(s, first);
+  };
+  const unkeep = async () => { await DB.del("kept", key); toast("Back on the to-do pile"); render(); };
+  const unpaint = async () => {
+    if (!confirm("Go back to the original art for " + s.label + "? Your painting is removed from the library.")) return;
+    await DB.del("art", key); toast("Back to the original"); render();
+  };
+  dock([
+    st === "kept" ? el("button", { class: "btn quiet", type: "button", text: "Undo keep", onclick: unkeep })
+      : st === "painted" ? el("button", { class: "btn quiet", type: "button", text: "Use original", onclick: unpaint })
+      : st === "pack" ? null : el("button", { class: "btn quiet", type: "button", text: "Keep original", onclick: keep }),
+    el("button", { class: "btn primary", type: "button", text: wip ? "Keep painting" : st === "painted" ? "Edit yours" : "Paint it", onclick: () => go({ name: "paint", key }) }),
+  ]);
+}
+/* ---------- Badges ----------
+   One for each wing (every sprite in a group painted or kept), plus a few for painting and for days in a row.
+   The day each was earned is kept in meta.badges, so a badge stays once earned. */
+const isoDay = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+function streak() { const d = new Date(); if (!meta.days[isoDay(d)]) d.setDate(d.getDate() - 1); let n = 0; while (meta.days[isoDay(d)]) { n++; d.setDate(d.getDate() - 1); } return n; }
+function badgeList() {
+  const done = SLOTS.filter(x => isDone(status(x.key))).length, painted = Object.keys(DB.data.art).filter(k => SLOT[k]).length, best = Math.max(meta.bestStreak || 0, streak());
+  const wings = GROUPS.map(g => { const list = SLOTS.filter(x => x.group === g), d = list.filter(x => isDone(status(x.key))).length, show = list.find(x => DB.data.art[x.key]) || SLOT[badgeFace(g)];
+    return { id: "wing:" + g, name: g, desc: "Every sprite in " + g + " painted or kept", got: d === list.length, prog: d + " / " + list.length, sprite: show.key }; });
+  const goal = (id, name, desc, n, of, glyph) => ({ id, name, desc, got: n >= of, prog: Math.min(n, of) + " / " + of, glyph });
+  return [
+    goal("paint:1", "First stroke", "Paint your first sprite", painted, 1, "1"), goal("paint:10", "Ten coats", "Paint 10 sprites", painted, 10, "10"),
+    goal("paint:50", "Fifty", "Paint 50 sprites", painted, 50, "50"), goal("streak:3", "Three days", "Paint or keep one 3 days in a row", best, 3, "3d"),
+    goal("streak:7", "A whole week", "7 days in a row", best, 7, "7d"), goal("streak:30", "A month of mornings", "30 days in a row", best, 30, "30d"),
+    goal("done:all", "The whole museum", "Every sprite painted or kept", done, SLOTS.length, "★"),
+    ...wings];
+}
+// A wing's badge picture until you paint something in it: its most detailed small sprite (most filled pixels in its first frame).
+const faces = {};
+function badgeFace(g) {
+  if (faces[g]) return faces[g];
+  let best = null, most = -1;
+  for (const x of SLOTS) { if (x.group !== g || x.w > 32 || x.h > 32) continue; const c = frameCanvas(original(x.key), x, 0, 16), d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; if (n > most) { most = n; best = x.key; } }
+  return (faces[g] = best || SLOTS.find(x => x.group === g).key);
+}
+// Record any badge earned since the last look; returns the new ones (for the celebration).
+function checkBadges() {
+  meta.badges = meta.badges || {}; meta.bestStreak = Math.max(meta.bestStreak || 0, streak());
+  const fresh = badgeList().filter(b => b.got && !meta.badges[b.id]); fresh.forEach(b => (meta.badges[b.id] = today()));
+  saveMeta(); return fresh;
+}
+function badgeToken(b, size) {
+  const t = el("div", { class: "badge-tok" + (meta.badges && meta.badges[b.id] ? " got" : ""), style: "--b:" + size + "px", title: b.name + ": " + b.desc + (meta.badges && meta.badges[b.id] ? " (earned " + meta.badges[b.id] + ")" : " (" + b.prog + ")") });
+  if (b.sprite) { const sl = SLOT[b.sprite], c = frameCanvas(inUse(b.sprite), sl, 0, Math.round(size * 0.62)), k = Math.max(2, Math.floor(size * 0.62 / Math.max(sl.w, sl.h))); c.style.width = sl.w * k + "px"; c.style.height = sl.h * k + "px"; c.style.maxWidth = Math.round(size * 0.7) + "px"; c.style.maxHeight = Math.round(size * 0.7) + "px"; c.style.objectFit = "contain"; t.appendChild(c); } else t.appendChild(el("span", { class: "glyph", text: b.glyph }));
+  return t;
+}
+function badgeShelf() {
+  checkBadges();
+  const all = badgeList(), got = all.filter(b => meta.badges[b.id]);
+  const s = el("section", { class: "panel", "aria-labelledby": "h-badges" }, [el("h2", { id: "h-badges", text: "Badges" }),
+    el("p", { class: "small", style: "margin:-4px 0 10px", text: got.length + " of " + all.length + " earned · " + plural(streak(), "day") + " in a row" + (meta.bestStreak > streak() ? " (best " + meta.bestStreak + ")" : "") })]);
+  const grid = el("div", { class: "badges" }), extra = [];
+  // earned first (newest first), then the ones closest to done
+  const pct = b => { const [a, c] = b.prog.split(" / ").map(Number); return a / c; };
+  const order = [...got.sort((a, b) => (meta.badges[b.id] > meta.badges[a.id] ? 1 : -1)), ...all.filter(b => !meta.badges[b.id]).sort((a, b) => pct(b) - pct(a))];
+  order.forEach((b, i) => { const d = el("div", { class: "badge", hidden: i >= 8 }, [badgeToken(b, 56), el("b", { text: b.name }), el("span", { text: meta.badges[b.id] ? "Earned " + new Date(meta.badges[b.id] + "T12:00").toLocaleDateString([], { month: "short", day: "numeric" }) : b.prog })]); grid.appendChild(d); if (i >= 8) extra.push(d); });
+  s.appendChild(grid);
+  let open = false; const tg = el("button", { class: "btn quiet wide", type: "button", style: "margin-top:12px", text: "Show all " + all.length + " badges", onclick: () => { open = !open; extra.forEach(d => (d.hidden = !open)); tg.textContent = open ? "Show fewer" : "Show all " + all.length + " badges"; } });
+  s.appendChild(tg);
+  return s;
+}
+
+function celebrate(s, first) {
+  const left = SLOTS.filter(x => x.group === s.group && !isDone(status(x.key))).length, fresh = checkBadges();
+  const sheet = el("div", { class: "sheet", role: "dialog", "aria-modal": "true", "aria-label": "Saved" });
+  if (first) {
+    sheet.appendChild(el("div", { class: "seal stamp-in", text: "DAY " + new Date().getDate() }));
+    sheet.appendChild(el("div", { class: "big", text: "Stamped." }));
+    sheet.appendChild(el("p", { text: "That's today's sprite. Anything else is extra credit." }));
+  } else {
+    sheet.appendChild(el("div", { class: "big", text: "Done." }));
+    sheet.appendChild(el("p", { text: left ? plural(left, "sprite") + " left in " + s.group + "." : s.group + " is fully lit. ★" }));
+  }
+  if (fresh.length) sheet.appendChild(el("div", { class: "newbadges" }, fresh.map(b => el("div", { class: "badge" }, [badgeToken(b, 56), el("b", { text: "Badge: " + b.name })]))));
+  const close = () => wrap.remove();
+  sheet.appendChild(el("div", { class: "acts" }, [
+    el("button", { class: "btn quiet", type: "button", text: "Clock out", onclick: () => { close(); go({ name: "home" }); } }),
+    el("button", { class: "btn primary", type: "button", text: "One more", onclick: () => { close(); const n = nextSlot(s.key); if (n) go({ name: "slot", key: n.key }, true); else { toast("That's every sprite"); go({ name: "home" }); } } })]));
+  const wrap = el("div", { class: "done" }, [sheet]);
+  wrap.addEventListener("click", e => { if (e.target === wrap) { close(); go({ name: "home" }); } });
+  document.body.appendChild(wrap); sheet.querySelector(".btn.primary").focus();
+}
+
+/* ---------- The painter ----------
+   The whole sheet lives in one RGBA array (px). The grid shows one frame of it; tools write straight into px.
+   Unsaved work is kept in the library's "wip" store (a moment after each change), so leaving the page loses nothing. */
+let frameClip = null; // a copied frame ({ w, h, px, from }), kept while the page is open so it can go to another sprite
+let editor = null; // the open painter, so leaving the page can save its unsaved work first
+const pixelsOf = c => c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+function samePx(a, b) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i += 4) { if (a[i + 3] === 0 && b[i + 3] === 0) continue; if (a[i] !== b[i] || a[i + 1] !== b[i + 1] || a[i + 2] !== b[i + 2] || a[i + 3] !== b[i + 3]) return false; }
+  return true;
+}
+function canvasFromPx(px, w, h) { const [c, x] = canvasOf(w, h); x.putImageData(new ImageData(new Uint8ClampedArray(px), w, h), 0, 0); return c; }
+function wipCanvas(key) { const w = DB.data.wip[key], z = sheetSize(SLOT[key]); return w && w.w === z.w && w.h === z.h ? canvasFromPx(w.px, w.w, w.h) : null; }
+// Colors are kept as 32-bit numbers (r, g, b, a) so they compare quickly.
+const packRGBA = (r, g, b, a) => ((r << 24) | (g << 16) | (b << 8) | a) >>> 0;
+const unpackRGBA = k => [k >>> 24, (k >>> 16) & 255, (k >>> 8) & 255, k & 255];
+const cssOf = k => { const [r, g, b, a] = unpackRGBA(k); return "rgba(" + r + "," + g + "," + b + "," + (a / 255).toFixed(3) + ")"; };
+const hexOf = k => "#" + unpackRGBA(k).slice(0, 3).map(v => v.toString(16).padStart(2, "0")).join("");
+const hsvToRgb = (h, s, v) => { const f = n => { const k = (n + h / 60) % 6; return Math.round(255 * (v - v * s * Math.max(0, Math.min(k, 4 - k, 1)))); }; return [f(5), f(3), f(1)]; };
+const rgbToHsv = (r, g, b) => { r /= 255; g /= 255; b /= 255; const mx = Math.max(r, g, b), d = mx - Math.min(r, g, b); let h = 0; if (d) h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return [(h * 60 + 360) % 360, mx ? d / mx : 0, mx]; };
+const traceBySlot = {}; // a picture to trace over, per sprite, while the page is open (never saved)
+// The sprite's own colors, most used first: the original's, then any others already in the art.
+function colorsIn(px) { const n = new Map(); for (let i = 0; i < px.length; i += 4) { if (px[i + 3] === 0) continue; const k = packRGBA(px[i], px[i + 1], px[i + 2], px[i + 3]); n.set(k, (n.get(k) || 0) + 1); } return [...n.entries()].sort((a, b) => b[1] - a[1]).map(e => e[0]); }
+const ICON = {
+  pencil: '<path d="M4 20l1-4L16 5l3 3L8 19z M14 7l3 3"/>',
+  eraser: '<path d="M4 15l9-9 6 6-7 7H8z M9 10l6 6 M8 19h12"/>',
+  fill: '<path d="M5 11l6-6 7 7-6 6z M5 11h13 M19 15c0 2 1.6 3 1.6 4.4a1.6 1.6 0 0 1-3.2 0C17.4 18 19 17 19 15z"/>',
+  pick: '<path d="M14 4.5l5.5 5.5 M16.5 7.5L7 17l-3 1 1-3 9.5-9.5 M13 3l8 8"/>',
+  line: '<path d="M5 19L19 5"/><circle cx="5" cy="19" r="1.6" fill="currentColor"/><circle cx="19" cy="5" r="1.6" fill="currentColor"/>',
+  rect: '<rect x="4" y="6" width="16" height="12"/>',
+  rectf: '<rect x="4" y="6" width="16" height="12" fill="currentColor"/>',
+  oval: '<ellipse cx="12" cy="12" rx="8.5" ry="6.5"/>',
+  ovalf: '<ellipse cx="12" cy="12" rx="8.5" ry="6.5" fill="currentColor"/>',
+  select: '<rect x="4" y="5" width="16" height="14" stroke-dasharray="3 2.5"/>',
+  mirror: '<path d="M12 3v18" stroke-dasharray="2 2.5"/><path d="M9 7L4 12l5 5z M15 7l5 5-5 5z"/>',
+  move: '<path d="M12 3v18 M3 12h18 M12 3l-3 3 M12 3l3 3 M12 21l-3-3 M12 21l3-3 M3 12l3-3 M3 12l3 3 M21 12l-3-3 M21 12l-3 3"/>',
+};
+const svg = d => { const w = el("span", { "aria-hidden": "true" }); w.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">' + d + "</svg>"; return w.firstChild; };
+
+
+
+/* ---------- Export: art only ----------
+   Every export runs the same check (planArt) against the assets it would change: the folder's pack, a pack you pick,
+   or the curator's draft. Rules (PAINT-ROOM-PLAN.md, Art-only safety):
+   - only slots with art in the library are written; slots this build doesn't have, or whose size changed, are skipped;
+   - art already there that the Paint Room didn't put there is a "clash" and is only replaced if you tick it;
+   - art the Paint Room put there earlier (recognized by DB misc "exported": key → hashes of what it wrote) is replaced, or
+     removed when you've gone back to the original;
+   - nothing but assets (and savedAt) changes. */
+const srcHash = str => { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619); return (h >>> 0).toString(36) + "." + str.length; };
+const exported = () => DB.data.misc.exported || {};
+const isOurs = (key, src) => !!src && (exported()[key] || []).includes(srcHash(src));
+async function noteExported(written, removed) {
+  const e = Object.assign({}, exported());
+  for (const k of written) { const h = srcHash(DB.data.art[k].png), l = (e[k] || []).filter(x => x !== h); l.push(h); e[k] = l.slice(-12); }
+  for (const k of removed) delete e[k];
+  await DB.put("misc", "exported", e).catch(() => {});
+}
+function planArt(assets) {
+  assets = assets || {};
+  const P = { add: [], replace: [], same: [], clash: [], remove: [], skipped: [], notes: [] };
+  for (const k in DB.data.art) {
+    const a = DB.data.art[k], sl = SLOT[k];
+    if (!sl) { P.skipped.push({ key: k, why: "not in this build of the game" }); continue; }
+    const z = sheetSize(sl);
+    if (a.w !== z.w || a.h !== z.h) { P.skipped.push({ key: k, why: "its size changed (yours is " + a.w + "×" + a.h + ", the game wants " + z.w + "×" + z.h + ")" }); continue; }
+    if (a.origHash && a.origHash !== pixelHash(original(k))) P.notes.push({ key: k, why: "the built-in original changed since you painted it" });
+    const cur = assets[k] && assets[k].src;
+    if (!cur) P.add.push(k); else if (cur === a.png) P.same.push(k); else if (isOurs(k, cur)) P.replace.push(k); else P.clash.push(k);
+  }
+  for (const k in exported()) if (!DB.data.art[k] && assets[k] && isOurs(k, assets[k].src)) P.remove.push(k);
+  return P;
+}
+// The assets after the plan: a new object (the input isn't touched). take = the clashes you ticked.
+function applyArt(assets, P, take) {
+  const out = Object.assign({}, assets || {});
+  for (const k of [...P.add, ...P.replace, ...P.clash.filter(k => take.has(k))]) out[k] = { src: DB.data.art[k].png };
+  for (const k of P.remove) delete out[k];
+  return out;
+}
+const nameOf = k => SLOT[k] ? SLOT[k].label : k;
+function planView(P, take) {
+  const box = el("div", { class: "plan" }), list = (title, keys, cls, extra) => keys.length ? box.appendChild(el("div", { class: "pgroup " + (cls || "") }, [el("b", { text: title + " (" + keys.length + ")" }), el("ul", {}, keys.map(k => el("li", {}, [typeof k === "string" ? nameOf(k) : nameOf(k.key) + ": " + k.why, extra ? extra(k) : null])))])) : null;
+  list("Add", P.add, "ok"); list("Replace your earlier version", P.replace, "ok"); list("Remove (you went back to the original)", P.remove, "ok");
+  if (P.clash.length) {
+    box.appendChild(el("p", { class: "small", style: "margin:10px 0 4px", text: "These already have different art that the Paint Room didn't put there. They stay as they are unless you tick them:" }));
+    list("Already has other art", P.clash, "clash", k => { const c = el("input", { type: "checkbox", "aria-label": "Replace " + nameOf(k) + " with yours" }); c.checked = take.has(k); c.addEventListener("change", () => c.checked ? take.add(k) : take.delete(k)); return el("label", { class: "check inline" }, [c, document.createTextNode(" use mine")]); });
+  }
+  list("Skipped", P.skipped, "muted"); list("Worth a look", P.notes, "muted");
+  if (P.same.length) box.appendChild(el("p", { class: "small", text: plural(P.same.length, "sprite") + " already up to date." }));
+  if (!P.add.length && !P.replace.length && !P.remove.length && !P.clash.length) box.appendChild(el("p", { class: "small", text: "Nothing to change." }));
+  return box;
+}
+function download(name, blob) { const a = el("a", { href: URL.createObjectURL(blob), download: name }); document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
+const dataBytes = src => { const b = atob(src.split(",")[1]), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; };
+const slug = t => t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+/* A tiny ZIP writer (stored, no compression: PNGs are already compressed). files: [{ name, bytes: Uint8Array }]. */
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+const crc32 = u => { let c = 0xffffffff; for (let i = 0; i < u.length; i++) c = CRC[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+function zip(files) {
+  const enc = new TextEncoder(), parts = [], central = []; let off = 0;
+  const d = new Date(), dt = ((d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1)) & 0xffff, dd = (((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate()) & 0xffff;
+  for (const f of files) {
+    const name = enc.encode(f.name), crc = crc32(f.bytes), n = f.bytes.length, h = new DataView(new ArrayBuffer(30));
+    [[0, 0x04034b50, 4], [4, 20, 2], [6, 0x0800, 2], [8, 0, 2], [10, dt, 2], [12, dd, 2], [14, crc, 4], [18, n, 4], [22, n, 4], [26, name.length, 2], [28, 0, 2]].forEach(([o, v, z]) => z === 4 ? h.setUint32(o, v, true) : h.setUint16(o, v, true));
+    parts.push(new Uint8Array(h.buffer), name, f.bytes);
+    const c = new DataView(new ArrayBuffer(46));
+    [[0, 0x02014b50, 4], [4, 20, 2], [6, 20, 2], [8, 0x0800, 2], [10, 0, 2], [12, dt, 2], [14, dd, 2], [16, crc, 4], [20, n, 4], [24, n, 4], [28, name.length, 2], [30, 0, 2], [32, 0, 2], [34, 0, 2], [36, 0, 2], [38, 0, 4], [42, off, 4]].forEach(([o, v, z]) => z === 4 ? c.setUint32(o, v, true) : c.setUint16(o, v, true));
+    central.push(new Uint8Array(c.buffer), name); off += 30 + name.length + n;
+  }
+  const size = central.reduce((a, b) => a + b.length, 0), e = new DataView(new ArrayBuffer(22));
+  [[0, 0x06054b50, 4], [4, 0, 2], [6, 0, 2], [8, files.length, 2], [10, files.length, 2], [12, size, 4], [16, off, 4], [20, 0, 2]].forEach(([o, v, z]) => z === 4 ? e.setUint32(o, v, true) : e.setUint16(o, v, true));
+  return new Blob([...parts, ...central, new Uint8Array(e.buffer)], { type: "application/zip" });
+}
+const canvasBytes = c => new Promise(res => c.toBlob(async b => res(new Uint8Array(await b.arrayBuffer())), "image/png"));
+
+function renderExport() {
+  dock(null);
+  $app.appendChild(top("Put my art in the game", true));
+  const painted = Object.keys(DB.data.art).length;
+  $app.appendChild(el("p", { class: "small", text: plural(painted, "sprite") + " in your library. Every export here changes art only: rooms, pieces, words, settings and art made elsewhere are copied exactly as they are." }));
+  const today8 = new Date().toISOString().slice(0, 10);
+
+  // 1. The pack: built on the folder's museum-pack.json, fetched fresh (or one you pick)
+  const packBox = el("div"), packIn = el("input", { type: "file", accept: ".json,application/json", class: "sr" });
+  async function showPack(text, from) {
+    packBox.innerHTML = "";
+    let j; try { j = JSON.parse(text); } catch (e) { packBox.appendChild(el("p", { class: "warn", text: "That file couldn't be read as JSON." })); return; }
+    if (!j || j.format !== GOQ.PACK_FORMAT) { packBox.appendChild(el("p", { class: "warn", text: "That isn't a museum pack." })); return; }
+    const P = planArt(j.assets), take = new Set();
+    packBox.appendChild(el("p", { class: "small", text: "Built on " + from + (j.savedAt ? ", saved " + new Date(j.savedAt).toLocaleString() : "") + "." }));
+    packBox.appendChild(planView(P, take));
+    packBox.appendChild(el("p", { class: "small", style: "font-weight:700", text: "Nothing else in the pack changes." }));
+    packBox.appendChild(el("button", { class: "btn primary wide", type: "button", text: "Download museum-pack.json", onclick: async () => {
+      const out = Object.assign({}, j, { assets: applyArt(j.assets, P, take), savedAt: new Date().toISOString() }); // same keys, same order: only assets and savedAt differ
+      download("museum-pack.json", new Blob([JSON.stringify(out)], { type: "application/json" }));
+      await noteExported([...P.add, ...P.replace, ...P.clash.filter(k => take.has(k)), ...P.same], P.remove);
+      packBox.appendChild(el("div", { class: "banner info", text: "Downloaded. To put it in the game: replace museum/museum-pack.json in the repo with this file and merge it into main. Players get it on their next visit." }));
+    } }));
+  }
+  packIn.addEventListener("change", async () => { const f = packIn.files[0]; packIn.value = ""; if (f) showPack(await f.text(), "the file you picked (" + f.name + ")"); });
+  const checkPack = async () => {
+    packBox.innerHTML = ""; packBox.appendChild(el("p", { class: "small", text: "Getting this folder's museum-pack.json…" }));
+    let text = null;
+    if (/^https?:$/.test(location.protocol)) { try { const r = await fetch(SITE_PACK + "?t=" + Date.now(), { cache: "no-store" }); if (r.ok) text = await r.text(); } catch (e) {} }
+    if (text) return showPack(text, "this folder's newest museum-pack.json");
+    packBox.innerHTML = ""; packBox.appendChild(el("p", { class: "warn", text: "Couldn't get this folder's museum-pack.json (offline, or opened as a file). Pick the newest one from your device instead." }));
+  };
+  $app.appendChild(el("section", { class: "panel" }, [el("h2", { text: "The game's pack" }),
+    el("p", { class: "small", style: "margin-top:0", text: "Makes a museum-pack.json with your art in it, from the newest pack in this folder." }),
+    el("div", { class: "foot" }, [el("button", { class: "btn wide", type: "button", text: "Check what would change", onclick: checkPack }),
+      el("button", { class: "btn quiet wide", type: "button", text: "Use a museum-pack.json from my device…", onclick: () => packIn.click() }), packIn]), packBox]));
+
+  // 2. The curator in this browser: its draft's art only
+  const DRAFT = "goq-curator-draft", curBox = el("div");
+  const readDraft = () => { try { const j = JSON.parse(localStorage.getItem(DRAFT) || "null"); return j && j.format === GOQ.PACK_FORMAT ? j : null; } catch (e) { return null; } };
+  const checkCurator = () => {
+    curBox.innerHTML = ""; const d = readDraft();
+    if (!d) { curBox.appendChild(el("p", { class: "small", text: "There's no curator draft in this browser yet (open the curator here once first)." })); return; }
+    const P = planArt(d.assets), take = new Set();
+    curBox.appendChild(planView(P, take));
+    curBox.appendChild(el("button", { class: "btn wide", type: "button", text: "Send to the curator", onclick: async () => {
+      const now = readDraft(); if (!now) return toast("The curator's draft is gone");
+      const P2 = planArt(now.assets); // re-checked against the draft as it is right now
+      now.assets = applyArt(now.assets, P2, new Set([...take].filter(k => P2.clash.includes(k))));
+      try { localStorage.setItem(DRAFT, JSON.stringify(now)); } catch (e) { return toast("Couldn't save: the browser's storage is full"); }
+      try { const b = JSON.parse(localStorage.getItem("goq-curator-base") || "null"); if (b && !b.edited) { b.edited = true; localStorage.setItem("goq-curator-base", JSON.stringify(b)); } } catch (e) {} // so the curator won't swap it for the site's pack without asking
+      await noteExported([...P2.add, ...P2.replace, ...P2.clash.filter(k => take.has(k)), ...P2.same], P2.remove);
+      curBox.innerHTML = ""; curBox.appendChild(el("div", { class: "banner info", text: "Sent. Open (or reload) the curator in this browser to see it; export the pack from there as usual." }));
+    } }));
+  };
+  $app.appendChild(el("section", { class: "panel" }, [el("h2", { text: "The curator (this browser)" }),
+    el("p", { class: "small", style: "margin-top:0", text: "Puts your art into the curator's draft here, changing nothing else in it. Reload the curator afterwards if it's open." }),
+    el("button", { class: "btn quiet wide", type: "button", text: "Check the curator's draft", onclick: checkCurator }), curBox]));
+
+  // 3. Files: an art-only file for the curator on another device, and the PNGs
+  const withOriginals = el("input", { type: "checkbox" });
+  $app.appendChild(el("section", { class: "panel" }, [el("h2", { text: "Files" }),
+    el("div", { class: "foot" }, [
+      el("button", { class: "btn quiet wide", type: "button", text: "Download museum-art.json (art only)", onclick: async () => {
+        const assets = {}, remove = {}, ours = {}, P = planArt({});
+        for (const k of P.add) { const a = DB.data.art[k]; assets[k] = { src: a.png, w: a.w, h: a.h }; }
+        for (const k in exported()) { ours[k] = exported()[k].slice(); if (!DB.data.art[k]) remove[k] = exported()[k].slice(); }
+        download("museum-art.json", new Blob([JSON.stringify({ format: "goq-art", version: 1, savedAt: new Date().toISOString(), assets, ours, remove })], { type: "application/json" }));
+        await noteExported(P.add, []);
+        toast(P.add.length ? "Downloaded " + plural(P.add.length, "sprite") : "Downloaded (your library is empty)");
+      } }),
+      el("p", { class: "small", style: "margin:-4px 0 6px", text: "For the curator on another device: More → Import art. It adds your art and nothing else." }),
+      el("button", { class: "btn quiet wide", type: "button", text: "Download PNGs (ZIP)", onclick: async () => {
+        const files = [], man = [];
+        for (const sl of SLOTS) {
+          const k = sl.key, z = sheetSize(sl), lib = DB.data.art[k], mine = lib && lib.w === z.w && lib.h === z.h ? lib : null; // a resized slot's old art isn't used
+          if (!mine && !withOriginals.checked) continue;
+          const name = "sprites/" + slug(sl.group) + "/" + k + ".png";
+          files.push({ name, bytes: mine ? dataBytes(mine.png) : await canvasBytes(inUse(k)) });
+          man.push({ key: k, label: sl.label, group: sl.group, file: name, w: sl.w, h: sl.h, sheet: z.w + "x" + z.h, frames: z.frames, layout: sl.layout || "strip", status: status(k), savedAt: mine ? mine.savedAt : null });
+        }
+        if (!files.length) return toast("Nothing painted yet (tick 'include the rest' to get every sprite)");
+        files.push({ name: "sprites/manifest.json", bytes: new TextEncoder().encode(JSON.stringify({ made: new Date().toISOString(), engine: GOQ.VERSION, sprites: man }, null, 1)) });
+        download("paint-room-" + today8 + ".zip", zip(files)); toast("Downloaded " + plural(files.length - 1, "PNG"));
+      } }),
+      el("label", { class: "check" }, [withOriginals, document.createTextNode(" Include the rest (every sprite, as it is in the game now)")]),
+    ])]));
+
+  // 4. The Photoshop atlas: every sprite on one sheet, the same layout as the curator's (so either can read the other's)
+  const atlasIn = el("input", { type: "file", accept: "image/png", class: "sr" }), atlasMsg = el("p", { class: "small", role: "status" });
+  atlasIn.addEventListener("change", async () => {
+    const f = atlasIn.files[0]; atlasIn.value = ""; if (!f) return;
+    try { const r = await importAtlas(f); atlasMsg.className = "small"; atlasMsg.textContent = r; }
+    catch (e) { atlasMsg.className = "warn"; atlasMsg.textContent = e.message; }
+  });
+  const L = atlasLayout();
+  $app.appendChild(el("section", { class: "panel" }, [el("h2", { text: "Photoshop atlas" }),
+    el("p", { class: "small", style: "margin-top:0", text: "Every sprite on one " + L.w + "×" + L.h + " sheet, with your art where you've painted it. Same layout as the curator's atlas." }),
+    el("ol", { class: "steps small" }, [
+      "Download the atlas and the guide.",
+      "Open the atlas in Photoshop. Add the guide as the top layer (File, then Place Embedded) and line it up at the top-left corner. Pink boxes mark each sprite; blue lines split animation frames.",
+      "Draw inside the pink boxes only. Leave pixels see-through where the game should show through.",
+      "Hide the guide, then save as PNG with transparency (File, then Export, then Export As). Don't crop or resize the canvas.",
+      "Import the edited atlas here: sprites you changed go into your library as painted (sprites put back to the original go back to the original). Then export as usual.",
+    ].map(t => el("li", { text: t }))),
+    el("div", { class: "foot" }, [
+      el("button", { class: "btn quiet wide", type: "button", text: "Download atlas", onclick: () => makeAtlas().toBlob(b => download("museum-atlas.png", b)) }),
+      el("button", { class: "btn quiet wide", type: "button", text: "Download guide", onclick: () => makeGuide().toBlob(b => download("museum-atlas-guide.png", b)) }),
+      el("button", { class: "btn quiet wide", type: "button", text: "Import edited atlas…", onclick: () => atlasIn.click() }), atlasIn, atlasMsg])]));
+}
+
+/* ---------- The Photoshop atlas ----------
+   The curator's layout exactly (curator.html, atlasLayout): every slot in GOQ.SLOTS order, retired ones too so older atlases
+   line up, in rows 352 wide, each with a 9 px label band above it. Keep the two in step if either changes. */
+const ATLAS_W = 352, CELL_MIN = 84, BAND = 9, GAP = 6;
+function atlasLayout() {
+  const pos = {}; let x = GAP, y = GAP, rowH = 0;
+  for (const sl of GOQ.SLOTS) {
+    const g = GOQ.sheetGrid(sl), w = sl.w * g.cols, h = sl.h * g.rows, cw = Math.max(CELL_MIN, w);
+    if (x + cw > ATLAS_W - GAP) { x = GAP; y += rowH + GAP; rowH = 0; }
+    pos[sl.key] = { x, y: y + BAND, w, h };
+    x += cw + GAP; rowH = Math.max(rowH, BAND + h);
+  }
+  return { pos, w: ATLAS_W, h: y + rowH + GAP };
+}
+const ATLAS_FONT = {
+  A: ["010","101","111","101","101"], B: ["110","101","110","101","110"], C: ["011","100","100","100","011"], D: ["110","101","101","101","110"],
+  E: ["111","100","110","100","111"], F: ["111","100","110","100","100"], G: ["011","100","101","101","011"], H: ["101","101","111","101","101"],
+  I: ["111","010","010","010","111"], J: ["001","001","001","101","010"], K: ["101","101","110","101","101"], L: ["100","100","100","100","111"],
+  M: ["101","111","111","101","101"], N: ["110","101","101","101","101"], O: ["111","101","101","101","111"], P: ["110","101","110","100","100"],
+  Q: ["010","101","101","110","011"], R: ["110","101","110","101","101"], S: ["011","100","010","001","110"], T: ["111","010","010","010","010"],
+  U: ["101","101","101","101","111"], V: ["101","101","101","101","010"], W: ["101","101","111","111","101"], X: ["101","101","010","101","101"],
+  Y: ["101","101","010","010","010"], Z: ["111","001","010","100","111"],
+};
+function pixText(x, str, px, py) { for (const ch of str) { const g = ATLAS_FONT[ch]; if (g) g.forEach((row, j) => { for (let i = 0; i < 3; i++) if (row[i] === "1") x.fillRect(px + i, py + j, 1, 1); }); px += 4; } }
+// A slot's art at exactly its sheet size: yours, then the pack's, then the built-in (retired slots: the built-in).
+function atlasArt(key) { if (SLOT[key]) return inUse(key); return GOQ.placeholder(key); }
+function makeAtlas() {
+  const L = atlasLayout(), [c, x] = canvasOf(L.w, L.h);
+  for (const sl of GOQ.SLOTS) { const p = L.pos[sl.key]; x.drawImage(atlasArt(sl.key), 0, 0, p.w, p.h, p.x, p.y, p.w, p.h); }
+  return c;
+}
+function makeGuide() {
+  const L = atlasLayout(), [c, x] = canvasOf(L.w, L.h);
+  for (const sl of GOQ.SLOTS) {
+    const p = L.pos[sl.key], g = GOQ.sheetGrid(sl);
+    x.fillStyle = "rgba(0,200,255,.55)";
+    for (let i = 1; i < g.cols; i++) x.fillRect(p.x + i * sl.w, p.y, 1, p.h);
+    for (let j = 1; j < g.rows; j++) x.fillRect(p.x, p.y + j * sl.h, p.w, 1);
+    x.fillStyle = "#ff00c8";
+    x.fillRect(p.x - 1, p.y - 1, p.w + 2, 1); x.fillRect(p.x - 1, p.y + p.h, p.w + 2, 1);
+    x.fillRect(p.x - 1, p.y - 1, 1, p.h + 2); x.fillRect(p.x + p.w, p.y - 1, 1, p.h + 2);
+    pixText(x, sl.key.toUpperCase().replace(/_/g, " "), p.x, p.y - BAND + 1);
+  }
+  return c;
+}
+/* An edited atlas back into the library. Each sprite that differs from what it shows now becomes painted; one put back to
+   exactly the original goes back to the original. Untouched sprites, retired slots, and slots an older (shorter) atlas
+   doesn't reach are left alone. It doesn't stamp the day (that's for painting in the Paint Room). */
+async function importAtlas(file) {
+  const img = await loadImg(URL.createObjectURL(file)), L = atlasLayout();
+  if (img.width !== L.w) throw new Error("This atlas is " + img.width + " pixels wide; it should be " + L.w + ". Make sure the canvas wasn't resized or cropped.");
+  const [full, fx] = canvasOf(img.width, img.height); fx.drawImage(img, 0, 0);
+  const near = (a, b) => { for (let i = 0; i < a.length; i += 4) { if (a[i + 3] < 8 && b[i + 3] < 8) continue; for (let k = 0; k < 4; k++) if (Math.abs(a[i + k] - b[i + k]) > 3) return false; } return true; };
+  let painted = 0, reset = 0, skipped = 0;
+  for (const sl of SLOTS) {
+    const p = L.pos[sl.key]; if (!p) continue;
+    if (p.y + p.h > img.height) { skipped++; continue; }
+    const [c, x] = canvasOf(p.w, p.h); x.drawImage(full, p.x, p.y, p.w, p.h, 0, 0, p.w, p.h);
+    const px = x.getImageData(0, 0, p.w, p.h).data;
+    if (near(px, pixelsOf(inUse(sl.key)))) continue;
+    if (near(px, pixelsOf(original(sl.key)))) { if (DB.data.art[sl.key]) { await DB.del("art", sl.key); reset++; } continue; }
+    const z = sheetSize(sl), png = c.toDataURL("image/png"); await warm(png);
+    await DB.put("art", sl.key, { png, w: z.w, h: z.h, cols: z.cols, rows: z.rows, savedAt: new Date().toISOString(), origHash: pixelHash(original(sl.key)), from: "atlas" });
+    await DB.del("wip", sl.key); await DB.del("kept", sl.key); painted++;
+  }
+  if (!painted && !reset) return "No changes found in that atlas." + (skipped ? " (" + plural(skipped, "newer sprite") + " weren't in it.)" : "");
+  return "Imported: " + plural(painted, "sprite") + " now painted" + (reset ? ", " + reset + " back to the original" : "") + (skipped ? ". " + plural(skipped, "newer sprite") + " weren't in this atlas and stayed as they were" : "") + ". Export as usual to put them in the game.";
+}
+
+/* ---------- In the game: where a sprite sits, cropped from the real engine ----------
+   A hidden, headless copy of the engine (like the curator's room editor) with the folder's pack and your library art.
+   To find a sprite we draw each room whole and note where the sprite's art lands (drawImage is watched only while a
+   room draws). While you paint, the sprite's art in that engine is your live canvas, and the room is redrawn and cropped. */
+let ctxReady = null; const ctxSpots = {};
+// Sprites the engine swaps in on the same spot depending on the day (the hidden copy's plants are never watered, say):
+// in the preview, your art stands in for them too.
+const STAND_INS = { plant: ["plant_thirsty"], trash_can: ["trash_full"] };
+const linked = key => [key, ...(STAND_INS[key] || [])];
+// Whole-room drawings leave you (the player) out, so outfits you wear are shown on a stand-in of you in the lobby.
+const YOU = { player: 1, player_staff: 1, player_goq_shirt: 1 };
+function withYou(g, key, id, fn) {
+  const r = g.rooms[id]; if (!YOU[key] || id !== "lobby" || !r) return fn();
+  const sp = GOQ.ROOMS.lobby.spawn, me = Object.assign({}, g.player, { sheet: key, x: sp[0], y: sp[1] - 2, dir: "down", moving: false, prog: 0, bumpT: 0, alpha: undefined });
+  r.npcs.push(me); try { return fn(); } finally { r.npcs.splice(r.npcs.indexOf(me), 1); }
+}
+function contextGame() {
+  if (ctxReady) return ctxReady;
+  ctxReady = (async () => {
+    const wrap = el("div", { style: "position:absolute;left:-9999px;top:0;width:10px;height:10px;overflow:hidden", "aria-hidden": "true" }); document.body.appendChild(wrap);
+    const g = new GOQ.Game(wrap, undefined, { curator: true, capture: "focus", saveKey: null, headless: true });
+    if (pack) await g.setPack(pack); else await g.ready;
+    libraryInto(g); return g;
+  })();
+  return ctxReady;
+}
+// Your library art over the pack's (setPack replaces the engine's overrides, so this runs after it).
+function libraryInto(g, only) { for (const k in DB.data.art) { if (only && k !== only) continue; const img = imgCache[DB.data.art[k].png]; if (img) g.overrides[k] = img; } }
+// Tinted and recolored copies the engine made from a sprite ("visitor_a@#c83838", "goq_hat~bx-hat-purple") go stale when it changes.
+function dropDerived(g, key) { const ks = linked(key); for (const k in g.cache) { const b = k.split(/[@~]/)[0]; if (k !== b && ks.includes(b)) delete g.cache[k]; } }
+function traceDraws(g, key, fn) {
+  const proto = CanvasRenderingContext2D.prototype, orig = proto.drawImage, hits = [];
+  const ks = linked(key), mine = img => ks.some(k => img === g.overrides[k] || img === g.cache[k]) || Object.keys(g.cache).some(k => g.cache[k] === img && ks.includes(k.split(/[@~]/)[0]));
+  proto.drawImage = function (img, ...a) {
+    if (mine(img)) {
+      let dx, dy, dw, dh;
+      if (a.length >= 8) [, , , , dx, dy, dw, dh] = a; else if (a.length >= 4) [dx, dy, dw, dh] = a; else { [dx, dy] = a; dw = img.width; dh = img.height; }
+      const m = this.getTransform(); let x = m.a * dx + m.c * dy + m.e; const y = m.b * dx + m.d * dy + m.f, w = Math.abs(dw * m.a) || dw, h = Math.abs(dh * m.d) || dh;
+      if (m.a < 0) x -= w; hits.push({ x, y, w, h });
+    }
+    return orig.apply(this, [img, ...a]);
+  };
+  try { fn(); } finally { proto.drawImage = orig; }
+  return hits;
+}
+/* The engine's whole-room drawing stops before its lighting pass, which is where the theater hallway's floor lights,
+   the marquee, the LED sign and the colored glows are drawn. So: the room, dimmed the way that room is in the game,
+   then that pass (drawMarquee) on top, with the camera at the room's corner. (Spotlights on pieces aren't copied.) */
+function fullRoom(g, id) {
+  const c = g.renderRoomFull(id), r = g.rooms[id]; if (!c || !r) return c;
+  const x = c.getContext("2d"), L = (g.pack && g.pack.settings && g.pack.settings.lighting && g.pack.settings.lighting[id]) || (GOQ.ROOMS[id] || {}).light || { dim: 0 };
+  if (L.dim > 0.01) { x.fillStyle = "rgba(0,0,0," + Math.min(0.85, L.dim) + ")"; x.fillRect(0, 0, c.width, c.height); }
+  const save = [g.ctx, g.room, g.full];
+  g.ctx = x; x.imageSmoothingEnabled = false; g.room = r; g.full = { w: c.width, h: c.height, noPeople: false };
+  try { g.drawMarquee(r, 0, 0); } catch (e) {} finally { [g.ctx, g.room, g.full] = save; }
+  return c;
+}
+// Every room the sprite shows up in, with up to two spots per room (the first, and one from the middle for floors and walls).
+async function findSpots(key) {
+  if (ctxSpots[key]) return ctxSpots[key];
+  const g = await contextGame(), out = [];
+  for (const id of Object.keys(g.rooms)) {
+    if (/^tut_/.test(id)) continue;
+    let hits = []; try { hits = traceDraws(g, key, () => withYou(g, key, id, () => fullRoom(g, id))); } catch (e) { continue; }
+    if (!hits.length) continue;
+    const pick = hits.length > 2 ? [hits[0], hits[hits.length >> 1]] : hits;
+    pick.forEach(h => out.push({ room: id, name: (g.rooms[id].name || (GOQ.ROOMS[id] || {}).name || id), x: h.x, y: h.y, w: h.w, h: h.h, count: hits.length }));
+  }
+  return (ctxSpots[key] = out);
+}
+
+function renderPaint() {
+  const s = SLOT[view.key], key = s.key, Z = sheetSize(s), W = Z.w, H = Z.h;
+  const orig = pixelsOf(original(key)), start = new Uint8ClampedArray(pixelsOf(inUse(key)));
+  const saved = DB.data.wip[key], resumed = !!(saved && saved.w === W && saved.h === H);
+  let px = resumed ? new Uint8ClampedArray(saved.px) : new Uint8ClampedArray(start);
+  let frame = Math.min(view.frame || 0, Z.frames - 1), tool = "pencil", showGrid = true;
+  const baseColors = colorsIn(orig);
+  let color = baseColors[0] || packRGBA(0, 0, 0, 255);
+  const undo = [], redo = [];
+  const fx0 = () => (frame % Z.cols) * s.w, fy0 = () => Math.floor(frame / Z.cols) * s.h;
+
+  /* Layout */
+  const undoB = el("button", { class: "iconbtn", type: "button", "aria-label": "Undo", text: "↶", onclick: () => step(undo, redo) });
+  const redoB = el("button", { class: "iconbtn", type: "button", "aria-label": "Redo", text: "↷", onclick: () => step(redo, undo) });
+  $app.appendChild(el("header", { class: "top" }, [
+    el("button", { class: "iconbtn", type: "button", "aria-label": "Back", text: "←", onclick: () => history.length > 1 ? history.back() : go({ name: "slot", key }) }),
+    el("div", { class: "crumb", text: s.label }), undoB, redoB]));
+  if (resumed) $app.appendChild(el("div", { class: "banner info", text: "Picked up your unsaved work. Start over is under More." }));
+
+  // Live preview: the frame at 1×, 2× and 4×, plus the whole animation when there's more than one frame
+  const pv = el("div", { class: "pv", "aria-label": "Live preview" });
+  const pvC = [1, 2, 4].filter(k => k === 1 || s.w * k <= 300).map(k => { const [c] = canvasOf(s.w, s.h); c.className = "px"; c.style.width = s.w * k + "px"; c.style.height = s.h * k + "px"; pv.appendChild(el("div", { class: "chk", title: k + "×" }, [c])); return c; });
+  let animC = null, animBox = null, setRow = null, setC = [], fset = frameSettings(s);
+  if (Z.frames > 1) {
+    const [c] = canvasOf(s.w, s.h), k = Math.max(1, Math.min(4, Math.floor(64 / Math.max(s.w, s.h)))); c.className = "px"; c.style.width = s.w * k + "px"; c.style.height = s.h * k + "px"; animC = c;
+    animBox = el("div", { class: "chk", title: "Animation" }, [c]); pv.appendChild(animBox);
+    // a set: every picture side by side, small, instead of the animation
+    const k2 = Math.max(1, Math.min(3, Math.floor(36 / Math.max(s.w, s.h))));
+    setC = [...Array(Z.frames).keys()].map(f => { const [fc] = canvasOf(s.w, s.h); fc.className = "px"; fc.style.width = s.w * k2 + "px"; fc.style.height = s.h * k2 + "px"; fc.title = frameName(s, f); return fc; });
+    setRow = el("div", { class: "chk setrow", title: "All the pictures" }, setC); pv.appendChild(setRow);
+  }
+  $app.appendChild(pv);
+
+  // In the game: a cropped view of where this sprite sits, redrawn as you paint (optional; the switch is remembered)
+  const ctxC = el("canvas", { class: "px" }), ctxName = el("span", { class: "small" }), ctxMsg = el("p", { class: "small", style: "margin:0" });
+  const ctxNext = el("button", { class: "btn quiet small", type: "button", text: "Next", hidden: true, onclick: () => { spotI = (spotI + 1) % spots.length; ctxDraw(true); } });
+  const ctxBody = el("div", { class: "ctxview" }, [ctxC, ctxMsg]);
+  const ctxToggle = el("button", { class: "btn quiet small", type: "button", "aria-expanded": meta.context !== false ? "true" : "false", onclick: () => { meta.context = meta.context === false; saveMeta(); ctxSetup(); } });
+  $app.appendChild(el("section", { class: "ctxbox", "aria-label": "Where it goes in the game" }, [el("div", { class: "ctxhead" }, [el("b", { text: "In the game" }), ctxName, ctxNext, ctxToggle]), ctxBody]));
+  let spots = [], spotI = 0, ctxG = null, ctxT = 0, ctxOn = false;
+
+  /* Scenes: quick mockups built from the game's own art (and your library), redrawn as you paint. For sprites that never
+     stand in a room (held, worn, over someone's head) and for checking tiles repeat cleanly. Positions match the engine's
+     (a person is drawn 4 px above their tile; a held item at +9,+9; a bag at +1,+9; a phone at +4,+4; a reaction at +4,-10). */
+  const SCENES = { tile: "Tiled", floor: "In a room", table: "On a table", hand: "In a hand", head: "Over someone", worn: "Worn" };
+  const WORN = { goq_hat: "player", goq_shades: "player", visitor_shirt: "visitor_a" };
+  const small = s.w <= 16 && s.h <= 16 && s.layout !== "char";
+  const sceneList = [s.layout === "char" ? null : "tile", "floor", small ? "table" : null, small ? "hand" : null, small ? "head" : null, WORN[key] ? "worn" : null].filter(Boolean);
+  const sceneDefault = WORN[key] ? "worn" : /floor|wall|carpet|runner|^lot_|facade|stripe|asphalt|sidewalk|hedge|mural/.test(key) ? "tile"
+    : /^(emote|bubble|heart|sparkle)$/.test(key) ? "head" : /^(held_items|phone|phone_case|shop_bag|cups|cup_|travel_mug|popcorn_bag|trash_bag|jan_dustpan)/.test(key) ? "hand"
+    : /^(trinkets|mug|usher_mug|mate_can|iced_coffees|steam)/.test(key) ? "table" : "floor";
+  let scene = (meta.scenes && meta.scenes[key]) || sceneDefault, tod = meta.sceneTod || "day";
+  if (!sceneList.includes(scene)) scene = sceneList[0];
+  const scC = el("canvas", { class: "px", "aria-label": "Scene preview" }), scChips = el("div", { class: "chips scchips", role: "group", "aria-label": "Scene" }), todChips = el("div", { class: "chips scchips", role: "group", "aria-label": "Time of day" });
+  // Closed unless you open it (remembered): most of the time it isn't needed.
+  let scOpen = meta.scenesOpen === true;
+  const scBody = el("div", {}, [scChips, el("div", { class: "ctxview scview" }, [scC]), todChips]);
+  const scToggle = el("button", { class: "btn quiet small", type: "button", onclick: () => { scOpen = !scOpen; meta.scenesOpen = scOpen; saveMeta(); paintScOpen(); if (scOpen) drawScene(); } });
+  const paintScOpen = () => { scBody.hidden = !scOpen; scToggle.textContent = scOpen ? "Hide" : "Show"; scToggle.setAttribute("aria-expanded", scOpen); };
+  const scBox = el("section", { class: "ctxbox", "aria-label": "Scenes" }, [el("div", { class: "ctxhead" }, [el("b", { text: "Scenes" }), el("span", { class: "small", text: "Mockups from the game's art" }), scToggle]), scBody]);
+  paintScOpen();
+  $app.appendChild(scBox);
+  const sheets = {}; // other sprites' art for the scenes (yours if painted), fetched once
+  const artOf = k => k === key ? sheetC : (sheets[k] || (sheets[k] = inUse(k)));
+  function blit(x, k, f, dx, dy) { const sl = SLOT[k], g = gridOf(sl); x.drawImage(artOf(k), (f % g.cols) * sl.w, Math.floor(f / g.cols) * sl.h, sl.w, sl.h, Math.round(dx), Math.round(dy), sl.w, sl.h); }
+  function paintChips() {
+    scChips.innerHTML = ""; sceneList.forEach(k => scChips.appendChild(el("button", { class: "chip", type: "button", "aria-pressed": scene === k ? "true" : "false", text: SCENES[k], onclick: () => { scene = k; meta.scenes = Object.assign({}, meta.scenes, { [key]: k }); saveMeta(); paintChips(); drawScene(); } })));
+    todChips.innerHTML = ""; [["day", "Day"], ["sunset", "Sunset"], ["night", "Night"]].forEach(([k, t]) => todChips.appendChild(el("button", { class: "chip", type: "button", "aria-pressed": tod === k ? "true" : "false", text: t, onclick: () => { tod = k; meta.sceneTod = k; saveMeta(); paintChips(); drawScene(); } })));
+  }
+  function drawScene() {
+    if (!sheetC || !(scOpen || (pipOn && !(ctxG && spots.length)))) return;
+    const f = frame, floorK = SLOT.lobby_floor ? "lobby_floor" : null, T = 16;
+    let W2, H2, draw;
+    const floorFill = (x, w, h, k) => { k = k || floorK; if (!k || !SLOT[k]) { x.fillStyle = "#6b5040"; x.fillRect(0, 0, w, h); return; } for (let y = 0; y < h; y += T) for (let xx = 0; xx < w; xx += T) blit(x, k, 0, xx, y); };
+    if (scene === "tile") {
+      if (key === "carpet_h") { W2 = s.w * 5; H2 = s.h * 2; draw = x => { for (let r = 0; r < 2; r++) [0, 1, 1, 1, 2].forEach((ff, i) => blit(x, key, ff, i * s.w, r * s.h)); }; }
+      else if (key === "carpet_v") { W2 = s.w * 2; H2 = s.h * 5; draw = x => { for (let c = 0; c < 2; c++) [0, 1, 1, 1, 2].forEach((ff, i) => blit(x, key, ff, c * s.w, i * s.h)); }; }
+      else { const nx = s.w >= 128 ? 1 : s.w > 32 ? 2 : 3, ny = s.h > 32 ? 2 : 3; W2 = s.w * nx; H2 = s.h * ny; draw = x => { for (let r = 0; r < ny; r++) for (let c = 0; c < nx; c++) blit(x, key, f, c * s.w, r * s.h); }; }
+    } else if (scene === "floor") {
+      W2 = Math.max(96, Math.ceil((s.w + 32) / T) * T); H2 = Math.max(80, Math.ceil((s.h + 48) / T) * T);
+      draw = x => { floorFill(x, W2, H2); for (let xx = 0; xx < W2; xx += T) { if (SLOT.lobby_wall_upper) blit(x, "lobby_wall_upper", 0, xx, 0); if (SLOT.lobby_wall_lower) blit(x, "lobby_wall_lower", 0, xx, T); }
+        blit(x, key, f, (W2 - s.w) / 2, Math.min(H2 - s.h - 8, Math.max(2 * T, H2 - 20 - s.h + (s.h > 24 ? 12 : 0)))); };
+    } else if (scene === "table") {
+      const tk = SLOT.break_table ? "break_table" : "cafe_counter", tb = SLOT[tk]; W2 = 80; H2 = 56;
+      draw = x => { floorFill(x, W2, H2, SLOT.staff_floor ? "staff_floor" : null); const tx = (W2 - tb.w) / 2, ty = 24; blit(x, tk, 0, tx, ty); blit(x, key, f, tx + (tb.w - s.w) / 2, ty - s.h + 7); };
+    } else if (scene === "hand" || scene === "head") {
+      W2 = 64; H2 = 56; const who = scene === "hand" ? "player" : "visitor_a", sx = (W2 - 16) / 2, sy = 24 - 4;
+      draw = x => { floorFill(x, W2, H2);
+        if (scene === "hand") { blit(x, who, 0, sx, sy); const at = key === "shop_bag" ? [sx + 1, sy + 9] : /^phone/.test(key) ? [sx + 4, sy + 4] : [sx + 9, sy + 9]; blit(x, key, f, at[0], at[1]); }
+        else { blit(x, who, 0, sx, sy); blit(x, key, f, s.w <= 8 ? sx + 4 : sx + 8 - s.w / 2, s.w <= 8 ? sy - 10 : sy - s.h - 1); } };
+    } else if (scene === "worn") {
+      W2 = 64; H2 = 56; const sx = (W2 - 16) / 2, sy = 24 - 4;
+      draw = x => { floorFill(x, W2, H2); blit(x, WORN[key], f, sx, sy); blit(x, key, f, sx, sy); };
+    }
+    if (!draw) return;
+    if (scC.width !== W2 || scC.height !== H2) { scC.width = W2; scC.height = H2; }
+    const x = scC.getContext("2d"); x.imageSmoothingEnabled = false; x.clearRect(0, 0, W2, H2);
+    try { draw(x); } catch (e) {}
+    if (tod !== "day") { x.globalCompositeOperation = "source-atop"; x.fillStyle = tod === "night" ? "rgba(12,18,52,.55)" : "rgba(255,120,50,.2)"; x.fillRect(0, 0, W2, H2); x.globalCompositeOperation = "source-over"; }
+    const box = Math.min(528, $app.clientWidth - 32 - 28), k = Math.max(1, Math.min(6, Math.floor(Math.min(box / W2, 260 / H2))));
+    scC.style.width = W2 * k + "px"; scC.style.height = H2 * k + "px";
+    if (!(ctxG && spots.length)) pipDraw();
+  }
+  const liveC = canvasOf(W, H)[0];
+
+  /* Peek: a small live copy of the In the game view floating in a corner of the grid, so you don't scroll back and forth.
+     Sprites that never stand in a room show their scene mockup instead. Tap it to move it to the next corner; × hides it
+     (the Peek button by the zoom buttons brings it back). Both choices are remembered. */
+  let pipOn = meta.pip !== false, ctxLoading = false;
+  const CORNERS = ["tr", "br", "bl", "tl"];
+  const pipC = el("canvas", { class: "px", "aria-hidden": "true" }), pipLbl = el("span", { class: "lbl" });
+  const pip = el("div", { class: "pip " + (meta.pipCorner || "tr"), role: "button", tabindex: "0", "aria-label": "In the game preview: tap to move it to another corner", hidden: true }, [pipC, pipLbl,
+    el("button", { class: "x", type: "button", "aria-label": "Hide the peek window", text: "×", onclick: e => { e.stopPropagation(); setPip(false); } })]);
+  const movePip = () => { const c = CORNERS[(CORNERS.indexOf(meta.pipCorner || "tr") + 1) % 4]; meta.pipCorner = c; saveMeta(); pip.className = "pip " + c; };
+  pip.addEventListener("click", movePip); pip.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); movePip(); } });
+  pip.addEventListener("pointerdown", e => e.stopPropagation());
+  function setPip(on) { pipOn = on; meta.pip = on; saveMeta(); peekB.setAttribute("aria-pressed", on); if (on) { ctxSetup(); if (!(ctxG && spots.length)) drawScene(); } pipDraw(); }
+  function pipDraw() {
+    if (!pipOn) { pip.hidden = true; return; }
+    const game = !!(ctxG && spots.length), src = game ? ctxC : sceneList.length ? scC : null;
+    if (!src || !src.width || (game && ctxC.hidden)) { pip.hidden = true; return; }
+    if (pipC.width !== src.width || pipC.height !== src.height) { pipC.width = src.width; pipC.height = src.height; }
+    const x = pipC.getContext("2d"); x.imageSmoothingEnabled = false; x.clearRect(0, 0, pipC.width, pipC.height); x.drawImage(src, 0, 0);
+    pipLbl.textContent = game ? spots[spotI].name : SCENES[scene];
+    pip.style.width = Math.min(240, Math.round(stage.clientWidth * 0.42)) + "px"; pip.hidden = false;
+  }
+
+  async function ctxSetup() {
+    ctxOn = meta.context !== false; ctxToggle.textContent = ctxOn ? "Hide" : "Show"; ctxToggle.setAttribute("aria-expanded", ctxOn); ctxBody.hidden = !ctxOn;
+    if (!ctxOn) { ctxNext.hidden = true; ctxName.textContent = ""; }
+    if (!ctxOn && !pipOn) return pipDraw();
+    if (ctxG) return ctxDraw(true);
+    if (ctxLoading) return; ctxLoading = true;
+    ctxMsg.textContent = "Looking for it in the museum…"; ctxC.hidden = true;
+    try { ctxG = await contextGame(); spots = await findSpots(key); } catch (e) { ctxMsg.textContent = "Couldn't open the museum here."; return; } finally { ctxLoading = false; }
+    if (!editor || editor.key !== key) return; // left the painter while it loaded
+    if (!spots.length) { ctxMsg.textContent = "It isn't standing in any room right now (it may be held, worn, on a screen, or only out at certain times). Open Scenes below for mockups."; drawScene(); return; }
+    ctxDraw(true);
+  }
+  function ctxQueue() { if ((ctxOn || pipOn) && ctxG && spots.length && !ctxT) ctxT = setTimeout(() => { ctxT = 0; ctxDraw(); }, 250); }
+  function ctxDraw(moved) {
+    if (!ctxG || !spots.length || !(ctxOn || pipOn)) return;
+    const sp = spots[spotI], lx = liveC.getContext("2d");
+    lx.clearRect(0, 0, W, H); lx.drawImage(sheetC, 0, 0);
+    linked(key).forEach(k => (ctxG.overrides[k] = liveC)); dropDerived(ctxG, key);
+    let room; try { room = withYou(ctxG, key, sp.room, () => fullRoom(ctxG, sp.room)); } catch (e) { ctxMsg.textContent = "Couldn't draw " + sp.name + "."; return; }
+    if (!room) return;
+    // a window around the spot: at least 128×88 game pixels, inside the room
+    const vw = Math.min(room.width, Math.max(128, Math.ceil(sp.w) + 64)), vh = Math.min(room.height, Math.max(88, Math.ceil(sp.h) + 48));
+    const vx = Math.max(0, Math.min(room.width - vw, Math.round(sp.x + sp.w / 2 - vw / 2))), vy = Math.max(0, Math.min(room.height - vh, Math.round(sp.y + sp.h / 2 - vh / 2)));
+    const box = Math.min(528, $app.clientWidth - 32 - 4), k = Math.max(1, Math.floor(box / vw));
+    if (ctxC.width !== vw || ctxC.height !== vh) { ctxC.width = vw; ctxC.height = vh; }
+    const x = ctxC.getContext("2d"); x.imageSmoothingEnabled = false; x.clearRect(0, 0, vw, vh); x.drawImage(room, vx, vy, vw, vh, 0, 0, vw, vh);
+    // a soft marker around the sprite
+    x.strokeStyle = "rgba(240,184,64,.9)"; x.lineWidth = 1; x.setLineDash([2, 2]); x.strokeRect(Math.round(sp.x - vx) - 1.5, Math.round(sp.y - vy) - 1.5, Math.ceil(sp.w) + 3, Math.ceil(sp.h) + 3);
+    ctxC.style.width = vw * k + "px"; ctxC.style.height = vh * k + "px"; ctxC.hidden = false; ctxMsg.textContent = "";
+    pipDraw();
+    if (moved && ctxOn) { ctxName.textContent = sp.name; ctxNext.hidden = spots.length < 2; ctxNext.textContent = "Next " + (spotI + 1) + "/" + spots.length; ctxNext.setAttribute("aria-label", "Next spot (" + (spotI + 1) + " of " + spots.length + ")"); }
+  }
+  function ctxClose() {
+    clearTimeout(ctxT); if (!ctxG) return;
+    // put back the art that's really in use (your saved version, the pack's, or the built-in), never the unsaved canvas
+    for (const k of linked(key)) if (ctxG.overrides[k] === liveC) { delete ctxG.overrides[k]; if (pack && pack.assets && pack.assets[k]) { const img = imgCache[pack.assets[k].src]; if (img) ctxG.overrides[k] = img; } libraryInto(ctxG, k); }
+    dropDerived(ctxG, key);
+  }
+
+  // The grid
+  const cv = el("canvas", { "aria-label": "Sprite grid. One finger paints, two fingers zoom and move." }), ctx = cv.getContext("2d");
+  const zoomBtn = (label, aria, fn) => el("button", { type: "button", "aria-label": aria, text: label, onclick: fn });
+  const gridB = el("button", { type: "button", "aria-pressed": "true", "aria-label": "Grid lines", text: "#", onclick: () => { showGrid = !showGrid; gridB.setAttribute("aria-pressed", showGrid); draw(); } });
+  const stage = el("div", { class: "stage" }, [cv]);
+  if (s.w >= s.h * 3) stage.style.height = "clamp(160px, " + (s.h * 14 + 24) + "px, " + (CSS.supports("height", "1svh") ? "52svh" : "52vh") + ")"; // a long strip: a shorter grid
+  const frameLabel = el("p", { class: "small framelabel" });
+  $app.appendChild(stage);
+  if (s.w > s.h * 2 && s.w > 48) $app.appendChild(el("p", { class: "small", style: "margin:6px 0 0", text: "It's long: drag with Move (or two fingers) to get along it." }));
+  const peekB = el("button", { type: "button", "aria-pressed": pipOn ? "true" : "false", "aria-label": "Peek: show the in-game preview over the grid", text: "Peek", onclick: () => setPip(!pipOn) });
+  stage.appendChild(pip);
+  const zoomRow = el("div", { class: "zoom" }, [peekB, gridB, zoomBtn("−", "Zoom out", () => zoomBy(1 / 1.5)), zoomBtn("Fit", "Fit to screen", () => { fit(); draw(); }), zoomBtn("+", "Zoom in", () => zoomBy(1.5))]);
+  $app.appendChild(zoomRow);
+
+  // How the frames are used (not for walk sheets): animation or separate pictures; for an animation, the preview's play order and speed.
+  const fsPanel = el("details", { class: "fset", "aria-label": "How these frames are used" }); // folded to one line; tap to change
+  function paintFs() {
+    fset = frameSettings(s); const wasOpen = fsPanel.open; fsPanel.innerHTML = "";
+    fsPanel.appendChild(el("summary", { text: fset.mode === "set" ? "Frames: separate pictures" : "Frames: animation · order " + fset.order.map(f => f + 1).join(" ") + " · " + fset.ms + " ms" }));
+    fsPanel.open = wasOpen;
+    const seg = (v, label) => el("button", { type: "button", class: "chip", "aria-pressed": fset.mode === v ? "true" : "false", text: label, onclick: async () => { await setFrameSettings(key, { mode: v }); paintFs(); draw(); } });
+    fsPanel.appendChild(el("div", { class: "fsrow" }, [el("span", { class: "small", text: "Plays as" }), seg("anim", "Animation"), seg("set", "Separate pictures")]));
+    if (fset.mode === "set") fsPanel.appendChild(el("p", { class: "small", style: "margin:4px 0 0", text: "Separate pictures: the game shows one at a time (a set to pick from, or states it switches between). The preview shows them side by side." }));
+    else {
+      const ord = el("div", { class: "order", "aria-label": "Play order" }, fset.order.map(f => el("span", { class: "ochip", title: frameName(s, f), text: f + 1 })));
+      const add = [...Array(Z.frames).keys()].map(f => el("button", { type: "button", class: "btn quiet small", "aria-label": "Add frame " + (f + 1) + " to the play order", text: "+" + (f + 1), onclick: async () => { await setFrameSettings(key, { order: (fset.custom ? fset.order : []).concat(f) }); paintFs(); } }));
+      const speed = el("input", { type: "range", min: 80, max: 900, step: 20, value: fset.ms, "aria-label": "Time per frame" });
+      const ms = el("span", { class: "small", text: fset.ms + " ms" });
+      speed.addEventListener("input", () => { fset.ms = +speed.value; ms.textContent = speed.value + " ms"; });
+      speed.addEventListener("change", () => setFrameSettings(key, { ms: +speed.value }));
+      fsPanel.appendChild(el("div", { class: "fsrow" }, [el("span", { class: "small", text: "Play order" }), ord]));
+      fsPanel.appendChild(el("div", { class: "fsrow wrap" }, [...add,
+        el("button", { type: "button", class: "btn quiet small", text: "⌫", "aria-label": "Remove the last frame from the play order", onclick: async () => { const o = fset.order.slice(0, -1); await setFrameSettings(key, { order: o.length ? o : null }); paintFs(); } }),
+        el("button", { type: "button", class: "btn quiet small", text: "Reset", onclick: async () => { await setFrameSettings(key, { order: null, ms: null }); paintFs(); } })]));
+      fsPanel.appendChild(el("label", { class: "range" }, [el("span", { text: "Speed" }), speed, ms]));
+      if (!fset.custom) fsPanel.appendChild(el("p", { class: "small", style: "margin:4px 0 0", text: "Tap +1, +2… to build your own order (like 1, 2, 1, 3)." }));
+    }
+    fsPanel.appendChild(el("p", { class: "small", style: "margin:6px 0 0;opacity:.85", text: "This changes the Paint Room's preview only; the game decides when each frame shows." }));
+    if (animBox) { animBox.hidden = fset.mode === "set"; setRow.hidden = fset.mode !== "set"; }
+  }
+
+  // Frames: tap one to paint it (the zoom stays put, so frames line up); the bar copies, pastes, flips and clears them
+  let frameBtns = [], ghost = meta.ghost !== false;
+  const goFrame = f => { dropSel(); frame = (f + Z.frames) % Z.frames; view.frame = frame; history.replaceState({ v: view }, ""); draw(); };
+  const ghostB = el("button", { class: "btn quiet small", type: "button", "aria-pressed": ghost ? "true" : "false", text: "Ghost", title: "Show a faint copy of the frame before (to line things up)", onclick: () => { ghost = !ghost; meta.ghost = ghost; saveMeta(); ghostB.setAttribute("aria-pressed", ghost); draw(); } });
+  const pasteB = el("button", { class: "btn quiet small", type: "button", text: "Paste", onclick: () => pasteFrame() });
+  if (Z.frames > 1) {
+    $app.appendChild(frameLabel);
+    const fr = el("div", { class: "frames", role: "group", "aria-label": "Frames" });
+    frameBtns = [...Array(Z.frames).keys()].map(f => { const [c] = canvasOf(s.w, s.h), k = Math.max(1, Math.min(3, Math.floor(40 / Math.max(s.w, s.h)))); c.className = "px"; c.style.width = s.w * k + "px"; c.style.height = s.h * k + "px";
+      const nm = s.layout !== "char" && FRAME_NAMES[s.key] && FRAME_NAMES[s.key][f];
+      const b = el("button", { type: "button", "aria-label": frameName(s, f), title: frameName(s, f), onclick: () => goFrame(f) }, [c, nm ? el("span", { class: "fcap", text: nm }) : null]); fr.appendChild(b); return b; });
+    $app.appendChild(fr);
+    $app.appendChild(el("div", { class: "framebar", role: "group", "aria-label": "Frame tools" }, [
+      ghostB,
+      el("button", { class: "btn quiet small", type: "button", text: "Copy", onclick: () => copyFrame() }),
+      pasteB,
+      el("button", { class: "btn quiet small", type: "button", text: "Copy to next", title: "Copy this frame into the next one and go there", onclick: () => { copyFrame(true); const b = px.slice(), from = frameClip; goFrame(frame + 1); writeFrame(from.px); commitStroke(b); toast("Copied to " + frameName(s, frame).toLowerCase()); } }),
+      el("button", { class: "btn quiet small", type: "button", text: "Flip ↔", title: "Mirror this frame left to right (facing left from facing right)", onclick: () => { const b = px.slice(), cur = readFrame(), out = new Uint8ClampedArray(cur.length); for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) { const i = (y * s.w + x) * 4, j = (y * s.w + (s.w - 1 - x)) * 4; out.set(cur.subarray(j, j + 4), i); } writeFrame(out); commitStroke(b); } }),
+      el("button", { class: "btn quiet small", type: "button", text: "Clear", onclick: () => { const b = px.slice(); writeFrame(new Uint8ClampedArray(s.w * s.h * 4)); commitStroke(b); } }),
+    ]));
+    if (!fset.fixed) $app.appendChild(fsPanel);
+  }
+  // The ghost: for a walk sheet, a step shows its standing pose and a standing pose shows facing down; otherwise the frame before (the first shows the last, for loops).
+  const ghostOf = f => s.layout === "char" ? (f % 3 ? f - f % 3 : f ? 0 : null) : Z.frames > 1 ? (f ? f - 1 : Z.frames - 1) : null;
+  // One frame's pixels in and out of the sheet (copy, paste, flip). The clipboard outlives this sprite, for any frame the same size.
+  function readFrame(f) { f = f == null ? frame : f; const out = new Uint8ClampedArray(s.w * s.h * 4), x0 = (f % Z.cols) * s.w, y0 = Math.floor(f / Z.cols) * s.h; for (let y = 0; y < s.h; y++) out.set(px.subarray(((y0 + y) * W + x0) * 4, ((y0 + y) * W + x0 + s.w) * 4), y * s.w * 4); return out; }
+  function writeFrame(src) { const x0 = fx0(), y0 = fy0(); for (let y = 0; y < s.h; y++) px.set(src.subarray(y * s.w * 4, (y + 1) * s.w * 4), ((y0 + y) * W + x0) * 4); }
+  function copyFrame(quiet) { frameClip = { w: s.w, h: s.h, px: readFrame(), from: s.label + ", " + frameName(s, frame).toLowerCase() }; paintFrameBar(); if (!quiet) toast("Copied " + frameName(s, frame).toLowerCase()); }
+  function pasteFrame() { if (!frameClip || frameClip.w !== s.w || frameClip.h !== s.h) return; const b = px.slice(); writeFrame(frameClip.px); commitStroke(b); toast("Pasted " + frameClip.from); }
+  function paintFrameBar() { const ok = frameClip && frameClip.w === s.w && frameClip.h === s.h; pasteB.disabled = !ok; pasteB.title = ok ? "Paste " + frameClip.from : "Copy a frame first"; }
+  paintFrameBar();
+
+  // Tools, in two rows. Tapping Box or Oval again switches it between outline and solid.
+  // Mirror isn't a tool: it makes the others paint both sides (off, left-right, top-bottom, all four corners).
+  const tools = el("div", { class: "tools", role: "group", "aria-label": "Tools" });
+  const toolBtns = {}, filled = { rect: false, oval: false }; let mirror = "";
+  [["pencil", "Pencil"], ["eraser", "Eraser"], ["fill", "Fill"], ["pick", "Pick"], ["move", "Move"], ["line", "Line"], ["rect", "Box"], ["oval", "Oval"], ["select", "Select"]].forEach(([k, label]) => {
+    toolBtns[k] = el("button", { class: "tool", type: "button", "aria-pressed": "false", onclick: () => setTool(k) }, [svg(ICON[k]), el("span", { text: label })]); tools.appendChild(toolBtns[k]);
+  });
+  const MIRROR_TEXT = { "": "Mirror", x: "Mirror ↔", y: "Mirror ↕", xy: "Mirror ✣" };
+  const mirrorB = el("button", { class: "tool", type: "button", "aria-pressed": "false", title: "Paint both sides at once (tap to change: left-right, top-bottom, all four, off)", onclick: () => { mirror = { "": "x", x: "y", y: "xy", xy: "" }[mirror]; paintTools(); draw(); } }, [svg(ICON.mirror), el("span", { text: "Mirror" })]);
+  tools.appendChild(mirrorB);
+  $app.appendChild(tools);
+
+  // Selection: drag a box with Select, then drag inside it to move what's in it. The bar flips, turns, copies, pastes and deletes.
+  const sbtn = (text, fn, title) => el("button", { class: "btn quiet small", type: "button", text, title, onclick: fn });
+  const selBar = el("div", { class: "framebar selbar", role: "group", "aria-label": "Selection", hidden: true }, [
+    el("span", { class: "small", text: "Selection:" }),
+    sbtn("Flip ↔", () => selDo(f => flipF(f, true))), sbtn("Flip ↕", () => selDo(f => flipF(f, false))), sbtn("Turn ↻", () => selDo(turnF)),
+    sbtn("Copy", () => selCopy()), sbtn("Delete", () => selDo(f => ({ w: f.w, h: f.h, px: new Uint8ClampedArray(f.px.length) }))), sbtn("Done", () => { dropSel(); draw(); })]);
+  const pasteSelB = sbtn("Paste selection", () => selPaste(), "Paste what you copied with Select, where it was");
+  $app.appendChild(selBar);
+
+  // Trace: a picture under (or over) the grid to paint over. It's never part of the sprite, and it's forgotten when the page closes.
+  let trace = traceBySlot[key] || null;
+  const trOp = el("input", { type: "range", min: 5, max: 100, value: 50, "aria-label": "Picture strength" }), trSize = el("input", { type: "range", min: 10, max: 400, value: 100, "aria-label": "Picture size" });
+  const trMove = sbtn("Move picture", () => { trace.moving = !trace.moving; paintTrace(); }), trTop = sbtn("On top", () => { trace.over = !trace.over; paintTrace(); draw(); });
+  const tracePanel = el("section", { class: "panel trace", hidden: true, "aria-label": "Picture to trace" }, [
+    el("div", { class: "palhead row" }, [el("span", { text: "Tracing a picture" }), sbtn("Remove", () => { trace = null; delete traceBySlot[key]; paintTrace(); draw(); })]),
+    el("label", { class: "range" }, [el("span", { text: "Strength" }), trOp]), el("label", { class: "range" }, [el("span", { text: "Size" }), trSize]),
+    el("div", { class: "framebar" }, [trMove, trTop])]);
+  trOp.addEventListener("input", () => { trace.alpha = trOp.value / 100; draw(); });
+  trSize.addEventListener("input", () => { const cx = trace.x + trace.img.width * trace.k / 2, cy = trace.y + trace.img.height * trace.k / 2; trace.k = trace.fitK * trSize.value / 100; trace.x = cx - trace.img.width * trace.k / 2; trace.y = cy - trace.img.height * trace.k / 2; draw(); });
+  function paintTrace() {
+    tracePanel.hidden = !trace; if (!trace) return;
+    trOp.value = Math.round(trace.alpha * 100); trSize.value = Math.round(trace.k / trace.fitK * 100);
+    trMove.setAttribute("aria-pressed", !!trace.moving); trTop.setAttribute("aria-pressed", !!trace.over);
+  }
+  $app.appendChild(tracePanel);
+  const traceIn = el("input", { type: "file", accept: "image/*", class: "sr" });
+  traceIn.addEventListener("change", async () => {
+    const f = traceIn.files[0]; traceIn.value = ""; if (!f) return;
+    try {
+      const img = await loadImg(URL.createObjectURL(f)), fitK = Math.max(s.w / img.width, s.h / img.height);
+      trace = traceBySlot[key] = { img, alpha: 0.5, k: fitK, fitK, x: (s.w - img.width * fitK) / 2, y: (s.h - img.height * fitK) / 2, over: false, moving: false };
+      paintTrace(); draw(); tracePanel.scrollIntoView({ behavior: "smooth", block: "nearest" }); toast("Tracing: use Move picture and Size to line it up");
+    } catch (e) { toast("That picture couldn't be opened"); }
+  });
+  // Import a PNG as pixels: the whole sheet or one frame, at its size or a clean 2×, 3×, 4× (or more) upscale.
+  const importIn = el("input", { type: "file", accept: "image/png,image/gif,image/webp", class: "sr" });
+  importIn.addEventListener("change", async () => {
+    const f = importIn.files[0]; importIn.value = ""; if (!f) return;
+    let img; try { img = await loadImg(URL.createObjectURL(f)); } catch (e) { return toast("That file couldn't be opened"); }
+    const [c, x] = canvasOf(img.width, img.height); x.drawImage(img, 0, 0); const d = x.getImageData(0, 0, img.width, img.height).data;
+    const fits = Z.frames > 1 ? [[W, H, "sheet"], [s.w, s.h, "frame"]] : [[W, H, "sheet"]];
+    for (const [w, h, where] of fits) for (let k = 1; k <= 16; k++) {
+      if (img.width !== w * k || img.height !== h * k) continue;
+      const out = new Uint8ClampedArray(w * h * 4), o = k >> 1;
+      for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) { const si = ((yy * k + o) * img.width + xx * k + o) * 4, di = (yy * w + xx) * 4; out[di] = d[si]; out[di + 1] = d[si + 1]; out[di + 2] = d[si + 2]; out[di + 3] = d[si + 3]; if (!out[di + 3]) out[di] = out[di + 1] = out[di + 2] = 0; }
+      const b = px.slice(); dropSel(); if (where === "sheet") px = out; else writeFrame(out); commitStroke(b);
+      return toast("Imported " + (where === "sheet" ? "the whole sprite" : "into this frame") + (k > 1 ? " (shrunk from " + k + "×)" : ""));
+    }
+    toast("It needs to be " + W + "×" + H + (Z.frames > 1 ? " (the whole sheet) or " + s.w + "×" + s.h + " (one frame)" : "") + ", or a clean 2×, 3× or 4× of that. Yours is " + img.width + "×" + img.height + ".");
+  });
+
+  // Palette: the original's colors, any others already in the art, and your own saved swatches (named, kept across every sprite)
+  const curSw = el("button", { class: "sw big", type: "button", "aria-label": "Change this color", title: "Change this color", onclick: () => changeColor() }, [el("i")]), curText = el("span", { class: "small", style: "flex:1" });
+  const keepB = el("button", { class: "btn quiet small", type: "button", text: "Save color", onclick: () => addSwatch(color) });
+  const pal = el("div", { class: "pal", role: "group", "aria-label": "Sprite colors" }), palArt = el("div", { class: "pal", role: "group", "aria-label": "Other colors in this art" });
+  const artHead = el("p", { class: "palhead", text: "Also in this art" });
+  const mine = el("div", { class: "pal mine", role: "group", "aria-label": "My swatches" }), editB = el("button", { class: "btn quiet small", type: "button", onclick: () => { editing = !editing; paintPalette(); } });
+  let editing = false;
+  const palPanel = el("section", { class: "panel", style: "margin-top:4px" }, [el("div", { class: "cur" }, [curSw, curText, keepB]),
+    el("p", { class: "small", style: "margin:-4px 0 0", text: "Tap the big swatch to change or repaint a color." }),
+    el("p", { class: "palhead", text: "Sprite colors" }), pal, artHead, palArt,
+    el("div", { class: "palhead row" }, [el("span", { text: "My swatches" }), editB]), mine]);
+  $app.appendChild(palPanel);
+
+  // More
+  const more = el("details", { class: "more panel" }, [el("summary", { text: "More" }), el("div", { class: "foot" }, [
+    el("button", { class: "btn quiet wide", type: "button", text: "Trace a picture…", onclick: () => traceIn.click() }), traceIn,
+    el("button", { class: "btn quiet wide", type: "button", text: "Import a PNG as pixels…", onclick: () => importIn.click() }), importIn,
+    el("button", { class: "btn quiet wide", type: "button", text: "Load the original", onclick: () => load(orig, "Loaded the original. Undo brings yours back.") }),
+    status(key) === "painted" || status(key) === "pack" ? el("button", { class: "btn quiet wide", type: "button", text: status(key) === "painted" ? "Load your saved version" : "Load the pack's version", onclick: () => load(start, "Loaded. Undo goes back.") }) : null,
+    Z.frames === 1 ? el("button", { class: "btn quiet wide", type: "button", text: "Copy the sprite", onclick: () => copyFrame() }) : null,
+    Z.frames === 1 ? el("button", { class: "btn quiet wide", type: "button", text: "Paste a copied sprite (same size)", onclick: () => { if (!frameClip || frameClip.w !== s.w || frameClip.h !== s.h) return toast("Copy one the same size (" + s.w + "×" + s.h + ") first"); pasteFrame(); } }) : null,
+    el("button", { class: "btn quiet wide", type: "button", text: "Clear this frame", onclick: () => { const b = px.slice(); for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) setPx(x, y, 0); commitStroke(b); } }),
+    el("button", { class: "btn quiet wide", type: "button", text: "Download PNG", onclick: () => canvasFromPx(px, W, H).toBlob(b => { const a = el("a", { href: URL.createObjectURL(b), download: key + ".png" }); document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); }) }),
+    resumed || DB.data.wip[key] ? el("button", { class: "btn quiet wide", type: "button", text: "Start over (forget unsaved work)", onclick: async () => { if (!confirm("Forget your unsaved changes to " + s.label + "?")) return; clearTimeout(wipT); await DB.del("wip", key); render(); } }) : null,
+  ])]);
+  $app.appendChild(more);
+  dock([el("button", { class: "btn primary", type: "button", text: "Save", onclick: () => save() })]);
+
+  /* Pixels */
+  const idx = (x, y) => ((fy0() + y) * W + fx0() + x) * 4;
+  const getPx = (x, y) => { const i = idx(x, y); return packRGBA(px[i], px[i + 1], px[i + 2], px[i + 3]); };
+  const setPx = (x, y, k) => { if (x < 0 || y < 0 || x >= s.w || y >= s.h) return; const i = idx(x, y), [r, g, b, a] = unpackRGBA(k); px[i] = a ? r : 0; px[i + 1] = a ? g : 0; px[i + 2] = a ? b : 0; px[i + 3] = a; };
+  // Painting through the mirror: the pixel, plus its reflections.
+  const plot = (x, y, k) => { setPx(x, y, k); if (mirror.includes("x")) setPx(s.w - 1 - x, y, k); if (mirror.includes("y")) setPx(x, s.h - 1 - y, k); if (mirror === "xy") setPx(s.w - 1 - x, s.h - 1 - y, k); };
+  const mirrorPts = (x, y) => [[x, y], ...(mirror.includes("x") ? [[s.w - 1 - x, y]] : []), ...(mirror.includes("y") ? [[x, s.h - 1 - y]] : []), ...(mirror === "xy" ? [[s.w - 1 - x, s.h - 1 - y]] : [])];
+  // Line, box and oval from a to b (the box's corners; the oval fits inside that box).
+  function shape(a, b, k) {
+    if (tool === "line") return line(a.x, a.y, b.x, b.y, k);
+    const x0 = Math.min(a.x, b.x), x1 = Math.max(a.x, b.x), y0 = Math.min(a.y, b.y), y1 = Math.max(a.y, b.y);
+    if (tool === "rect") {
+      if (filled.rect) { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) plot(x, y, k); }
+      else { line(x0, y0, x1, y0, k); line(x0, y1, x1, y1, k); line(x0, y0, x0, y1, k); line(x1, y0, x1, y1, k); }
+      return;
+    }
+    const w = x1 - x0 + 1, h = y1 - y0 + 1, cx = x0 + w / 2, cy = y0 + h / 2;
+    const half = (c, r, p, R) => { const d = (p + 0.5 - c) / r; return Math.abs(d) > 1 ? null : R * Math.sqrt(1 - d * d); };
+    for (let y = y0; y <= y1; y++) { const e = half(cy, h / 2, y, w / 2); if (e == null) continue; const l = Math.round(cx - e), r = Math.round(cx + e) - 1; if (filled.oval) for (let x = l; x <= r; x++) plot(x, y, k); else { plot(l, y, k); plot(r, y, k); } }
+    if (!filled.oval) for (let x = x0; x <= x1; x++) { const e = half(cx, w / 2, x, h / 2); if (e == null) continue; plot(x, Math.round(cy - e), k); plot(x, Math.round(cy + e) - 1, k); }
+  }
+  // Every pixel of one color (in every frame) becomes another: like changing a color in a pattern's palette.
+  function recolor(from, to) { const [r, g, b, a] = unpackRGBA(to); for (let i = 0; i < px.length; i += 4) if (px[i + 3] && packRGBA(px[i], px[i + 1], px[i + 2], px[i + 3]) === from) { px[i] = a ? r : 0; px[i + 1] = a ? g : 0; px[i + 2] = a ? b : 0; px[i + 3] = a; } }
+
+  /* Selection. sel = { x, y, w, h } in frame pixels; once moved or changed it's "lifted": float holds its pixels and base holds the
+     frame without them, and each change redraws px as base plus float. Undo, switching frames or tools, and Done drop it. */
+  let sel = null, selClip = null;
+  function dropSel() { sel = null; selBar.hidden = true; }
+  function lift() {
+    if (sel.float) return;
+    const f = { w: sel.w, h: sel.h, px: new Uint8ClampedArray(sel.w * sel.h * 4) }, base = px.slice();
+    for (let y = 0; y < sel.h; y++) for (let x = 0; x < sel.w; x++) { const i = idx(sel.x + x, sel.y + y); f.px.set(px.subarray(i, i + 4), (y * sel.w + x) * 4); base.fill(0, i, i + 4); }
+    sel.float = f; sel.base = base;
+  }
+  function restamp() {
+    px = sel.base.slice(); const f = sel.float;
+    for (let y = 0; y < f.h; y++) for (let x = 0; x < f.w; x++) { const j = (y * f.w + x) * 4, X = sel.x + x, Y = sel.y + y; if (!f.px[j + 3] || X < 0 || Y < 0 || X >= s.w || Y >= s.h) continue; const i = idx(X, Y); px.set(f.px.subarray(j, j + 4), i); }
+  }
+  const flipF = (f, horiz) => { const o = new Uint8ClampedArray(f.px.length); for (let y = 0; y < f.h; y++) for (let x = 0; x < f.w; x++) { const j = horiz ? (y * f.w + f.w - 1 - x) * 4 : ((f.h - 1 - y) * f.w + x) * 4; o.set(f.px.subarray(j, j + 4), (y * f.w + x) * 4); } return { w: f.w, h: f.h, px: o }; };
+  const turnF = f => { const o = new Uint8ClampedArray(f.px.length), w = f.h, h = f.w; for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const j = ((f.h - 1 - x) * f.w + y) * 4; o.set(f.px.subarray(j, j + 4), (y * w + x) * 4); } return { w, h, px: o }; };
+  function selDo(fn) {
+    if (!sel) return; const b = px.slice(); lift();
+    const nf = fn(sel.float); if (nf.w !== sel.w) { sel.x += Math.floor((sel.w - nf.w) / 2); sel.y += Math.floor((sel.h - nf.h) / 2); }
+    sel.float = nf; sel.w = nf.w; sel.h = nf.h; restamp(); commitStroke(b);
+  }
+  function selCopy() {
+    if (!sel) return; const f = sel.float || { w: sel.w, h: sel.h, px: new Uint8ClampedArray(sel.w * sel.h * 4) };
+    if (!sel.float) for (let y = 0; y < sel.h; y++) for (let x = 0; x < sel.w; x++) { const i = idx(sel.x + x, sel.y + y); f.px.set(px.subarray(i, i + 4), (y * sel.w + x) * 4); }
+    selClip = { x: sel.x, y: sel.y, w: f.w, h: f.h, px: f.px.slice() }; toast("Copied the selection"); paintTools();
+  }
+  function selPaste() {
+    if (!selClip) return toast("Copy a selection first");
+    const b = px.slice(); setTool("select");
+    sel = { x: Math.min(selClip.x, Math.max(0, s.w - selClip.w)), y: Math.min(selClip.y, Math.max(0, s.h - selClip.h)), w: selClip.w, h: selClip.h, base: px.slice(), float: { w: selClip.w, h: selClip.h, px: selClip.px.slice() } };
+    restamp(); selBar.hidden = false; commitStroke(b); toast("Pasted: drag it into place");
+  }
+  function selPointer(c, first) {
+    const inside = sel && c.x >= sel.x && c.x < sel.x + sel.w && c.y >= sel.y && c.y < sel.y + sel.h;
+    if (first) {
+      if (inside) { lift(); stroke.drag = { x: c.x, y: c.y, sx: sel.x, sy: sel.y }; }
+      else if (c.x < 0 || c.y < 0 || c.x >= s.w || c.y >= s.h) { dropSel(); }
+      else { stroke.selA = { x: c.x, y: c.y }; sel = { x: c.x, y: c.y, w: 1, h: 1 }; }
+    } else if (stroke.drag) { sel.x = stroke.drag.sx + c.x - stroke.drag.x; sel.y = stroke.drag.sy + c.y - stroke.drag.y; restamp(); }
+    else if (stroke.selA) { const a = stroke.selA, x = Math.max(0, Math.min(s.w - 1, c.x)), y = Math.max(0, Math.min(s.h - 1, c.y)); sel = { x: Math.min(a.x, x), y: Math.min(a.y, y), w: Math.abs(x - a.x) + 1, h: Math.abs(y - a.y) + 1 }; }
+    selBar.hidden = !sel; draw();
+  }
+
+  function line(x0, y0, x1, y1, k) { const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1; let e = dx + dy; for (;;) { plot(x0, y0, k); if (x0 === x1 && y0 === y1) break; const e2 = 2 * e; if (e2 >= dy) { e += dy; x0 += sx; } if (e2 <= dx) { e += dx; y0 += sy; } } }
+  function flood(x, y, k) {
+    if (x < 0 || y < 0 || x >= s.w || y >= s.h) return; const from = getPx(x, y); if (from === k || (from & 255) === 0 && (k & 255) === 0) return;
+    const st = [[x, y]], seen = new Uint8Array(s.w * s.h);
+    while (st.length) { const [a, b] = st.pop(); if (a < 0 || b < 0 || a >= s.w || b >= s.h || seen[b * s.w + a]) continue; seen[b * s.w + a] = 1; const c = getPx(a, b); if (c !== from && !((c & 255) === 0 && (from & 255) === 0)) continue; setPx(a, b, k); st.push([a + 1, b], [a - 1, b], [a, b + 1], [a, b - 1]); }
+  }
+
+  /* History and saving work in progress */
+  let wipT = 0;
+  function commitStroke(before) { if (before.every((v, i) => v === px[i])) return draw(); undo.push(before); if (undo.length > 150) undo.shift(); redo.length = 0; changed(); }
+  function step(from, to) { if (!from.length) return; dropSel(); to.push(px); px = from.pop(); changed(); }
+  function load(src, msg) { const b = px.slice(); px = new Uint8ClampedArray(src); commitStroke(b); toast(msg); }
+  function changed() { draw(); paintPalette(); clearTimeout(wipT); wipT = setTimeout(saveWip, 600); }
+  function saveWip() {
+    wipT = 0;
+    if (samePx(px, start)) { if (DB.data.wip[key]) DB.del("wip", key).catch(() => {}); return; }
+    DB.put("wip", key, { w: W, h: H, px: px.slice(), at: new Date().toISOString() }).catch(() => toast("Couldn't keep unsaved work: storage is full"));
+  }
+  async function save() {
+    clearTimeout(wipT); wipT = 0;
+    const st = status(key);
+    if ((st === "painted" || st === "pack") && samePx(px, start)) { await DB.del("wip", key); toast("No changes to save"); return; }
+    meta.lastGroup = s.group;
+    if (samePx(px, orig)) {
+      // Painted back to exactly the original: that's keeping it, not new art.
+      await DB.del("art", key); await DB.del("wip", key);
+      await DB.put("kept", key, { at: new Date().toISOString(), origHash: pixelHash(original(key)) });
+      toast("Same as the original, so it's marked kept");
+    } else {
+      const png = canvasFromPx(px, W, H).toDataURL("image/png"); await warm(png);
+      try { await DB.put("art", key, { png, w: W, h: H, cols: Z.cols, rows: Z.rows, savedAt: new Date().toISOString(), origHash: pixelHash(original(key)) }); }
+      catch (e) { toast("Couldn't save: storage is full"); return; }
+      await DB.del("wip", key); await DB.del("kept", key);
+      if (ctxG) { libraryInto(ctxG, key); dropDerived(ctxG, key); }
+    }
+    const first = stamp(); celebrate(s, first);
+  }
+
+  /* Colors and tools */
+  function setTool(k) { if (k === tool && k in filled) filled[k] = !filled[k]; if (tool === "select" && k !== "select") dropSel(); tool = k; paintTools(); }
+  function paintTools() {
+    for (const t in toolBtns) toolBtns[t].setAttribute("aria-pressed", t === tool);
+    for (const k in filled) { const b = toolBtns[k]; b.replaceChild(svg(ICON[k + (filled[k] ? "f" : "")]), b.firstChild); b.lastChild.textContent = (filled[k] ? "Solid " : "") + (k === "rect" ? (filled[k] ? "box" : "Box") : (filled[k] ? "oval" : "Oval")); }
+    mirrorB.setAttribute("aria-pressed", !!mirror); mirrorB.lastChild.textContent = MIRROR_TEXT[mirror];
+    if (selClip && !pasteSelB.isConnected) selBar.insertBefore(pasteSelB, selBar.lastChild);
+    if (selClip && tool === "select") selBar.hidden = false; else if (!sel) selBar.hidden = true;
+  }
+  /* The color sheet: hue, saturation, brightness and see-through sliders, plus a hex box. Used for new swatches,
+     editing a swatch (name, color, order), and changing the current color (optionally repainting it everywhere). */
+  function colorSheet(o) {
+    let [r0, g0, b0, a0] = unpackRGBA(o.value), [h, sat, val] = rgbToHsv(r0, g0, b0), alpha = a0 / 255;
+    if (!a0) { alpha = 1; val = val || 0; }
+    const now = () => { const [r, g, b] = hsvToRgb(h, sat, val); return packRGBA(r, g, b, Math.round(alpha * 255)); };
+    const sw = el("div", { class: "sw cmp" }, [el("i", { class: "old", style: "background:" + cssOf(o.value) }), el("i", { class: "new" })]);
+    const hex = el("input", { class: "search", type: "text", inputmode: "text", autocomplete: "off", spellcheck: "false", "aria-label": "Hex color", style: "min-height:40px;font-family:ui-monospace,monospace" });
+    const mk = (label, max, get, set) => { const r = el("input", { type: "range", min: 0, max, step: 1, value: Math.round(get()), "aria-label": label }); r.addEventListener("input", () => { set(+r.value); sync(r); }); return { r, row: el("label", { class: "range" }, [el("span", { text: label }), r]) }; };
+    const H = mk("Hue", 360, () => h, v => (h = v)), S = mk("Saturation", 100, () => sat * 100, v => (sat = v / 100)), V = mk("Brightness", 100, () => val * 100, v => (val = v / 100)), A = mk("See-through", 100, () => (1 - alpha) * 100, v => (alpha = 1 - v / 100));
+    function sync(from) {
+      const k = now(), [r, g, b] = unpackRGBA(k);
+      sw.lastChild.style.background = cssOf(k);
+      if (from !== hex) hex.value = hexOf(k).toUpperCase() + (alpha < 1 ? Math.round(alpha * 255).toString(16).padStart(2, "0").toUpperCase() : "");
+      if (from !== H.r) H.r.value = Math.round(h); if (from !== S.r) S.r.value = Math.round(sat * 100); if (from !== V.r) V.r.value = Math.round(val * 100); if (from !== A.r) A.r.value = Math.round((1 - alpha) * 100);
+      const hs = n => hsvToRgb(h, n, val).join(","), hv = n => hsvToRgb(h, sat, n).join(",");
+      S.r.style.background = "linear-gradient(90deg,rgb(" + hs(0) + "),rgb(" + hs(1) + "))"; V.r.style.background = "linear-gradient(90deg,#000,rgb(" + hv(1) + "))";
+      A.r.style.background = "linear-gradient(90deg,rgb(" + r + "," + g + "," + b + "),rgba(" + r + "," + g + "," + b + ",0))";
+    }
+    hex.addEventListener("input", () => { const m = hex.value.trim().replace(/^#/, ""); if (!/^([0-9a-f]{6}|[0-9a-f]{8})$/i.test(m)) return; const n = parseInt(m.slice(0, 6), 16); [h, sat, val] = rgbToHsv(n >> 16, (n >> 8) & 255, n & 255); alpha = m.length === 8 ? parseInt(m.slice(6), 16) / 255 : 1; sync(hex); });
+    H.r.classList.add("hue");
+    const name = o.name != null ? el("input", { class: "search", type: "text", value: o.name, maxlength: 40, "aria-label": "Swatch name", style: "min-height:40px" }) : null;
+    const extra = o.extra ? el("input", { type: "checkbox", checked: o.extra.checked }) : null;
+    const close = () => wrap.remove();
+    const sheet = el("div", { class: "sheet colors", role: "dialog", "aria-modal": "true", "aria-label": o.title }, [
+      el("div", { class: "palhead row", style: "margin-top:0" }, [el("span", { text: o.title }), o.reorder ? el("span", { class: "reorder" }, [sbtn("‹ Earlier", o.reorder.earlier), sbtn("Later ›", o.reorder.later)]) : null]),
+      name ? el("label", { class: "range" }, [el("span", { text: "Name" }), name]) : null,
+      el("div", { class: "cmprow" }, [sw, hex]), H.row, S.row, V.row, A.row,
+      extra ? el("label", { class: "check" }, [extra, document.createTextNode(" " + o.extra.label)]) : null,
+      el("div", { class: "acts" }, [el("button", { class: "btn quiet", type: "button", text: "Cancel", onclick: close }),
+        el("button", { class: "btn primary", type: "button", text: o.ok || "Use it", onclick: () => { close(); o.onUse(now(), name ? name.value.trim().slice(0, 40) : null, extra ? extra.checked : false); } })])]);
+    const wrap = el("div", { class: "done" }, [sheet]);
+    wrap.addEventListener("click", e => { if (e.target === wrap) close(); });
+    document.body.appendChild(wrap); sync(); (name || hex).focus({ preventScroll: true });
+  }
+  function changeColor() {
+    if (tool === "eraser") return toast("Pick a color first: the eraser is see-through");
+    const used = colorsIn(px).includes(color), from = color;
+    colorSheet({ title: "Change this color", value: from, ok: "Change it", extra: used ? { label: "Also repaint every pixel of this color, in every frame", checked: true } : null,
+      onUse: (k, _, all) => { if (all && k !== from) { const b = px.slice(); recolor(from, k); commitStroke(b); } setColor(k); } });
+  }
+  function setColor(k) { color = k; if (tool === "eraser" || tool === "pick") setTool("pencil"); paintPalette(); }
+  function swatch(k, label) {
+    return el("button", { class: "sw", type: "button", "aria-label": (label ? label + ", " : "Color ") + hexOf(k) + ((k & 255) < 255 ? ", see-through" : ""), title: label || hexOf(k), "aria-pressed": k === color && tool !== "eraser" ? "true" : "false", onclick: () => setColor(k) }, [el("i", { style: "background:" + cssOf(k) })]);
+  }
+  /* My swatches: DB "misc" → "swatches", a list of { id, name, color }. Edit mode deletes (×) and renames (tap). */
+  const swList = () => DB.data.misc.swatches || [];
+  const swSave = list => DB.put("misc", "swatches", list).catch(() => toast("Couldn't save swatches: storage is full"));
+  function addSwatch(k, name) {
+    const list = swList().slice();
+    if (list.some(w => w.color === k)) { toast("That color is already in My swatches"); return; }
+    list.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: name || "Color " + (list.length + 1), color: k });
+    swSave(list); toast("Saved to My swatches"); paintPalette();
+  }
+  function paintPalette() {
+    curSw.firstChild.style.background = tool === "eraser" ? "transparent" : cssOf(color);
+    curText.textContent = tool === "eraser" ? "Eraser (see-through)" : hexOf(color).toUpperCase() + ((color & 255) < 255 ? " · " + Math.round((color & 255) / 2.55) + "% opaque" : "");
+    const list = swList();
+    keepB.hidden = tool === "eraser" || list.some(w => w.color === color);
+    pal.innerHTML = ""; baseColors.forEach(k => pal.appendChild(swatch(k)));
+    const extra = colorsIn(px).filter(k => !baseColors.includes(k));
+    palArt.innerHTML = ""; extra.forEach(k => palArt.appendChild(swatch(k)));
+    if (!baseColors.includes(color) && !extra.includes(color) && !list.some(w => w.color === color) && tool !== "eraser") palArt.appendChild(swatch(color, "Current color (not saved)"));
+    artHead.hidden = palArt.hidden = !palArt.children.length;
+    editB.textContent = editing ? "Done" : "Edit"; editB.hidden = !list.length && !editing; if (!list.length) editing = false;
+    mine.innerHTML = ""; mine.classList.toggle("editing", editing);
+    list.forEach(w => {
+      const cell = el("div", { class: "swcell" }, [editing
+        ? el("button", { class: "sw", type: "button", "aria-label": "Edit " + w.name, title: "Rename, recolor or move", onclick: () => editSwatch(w.id) }, [el("i", { style: "background:" + cssOf(w.color) })])
+        : swatch(w.color, w.name),
+        el("span", { class: "swname", text: w.name })]);
+      if (editing) cell.appendChild(el("button", { class: "swdel", type: "button", "aria-label": "Delete " + w.name, text: "×", onclick: () => { swSave(swList().filter(x => x.id !== w.id)); toast("Deleted " + w.name); paintPalette(); } }));
+      mine.appendChild(cell);
+    });
+    if (!editing) mine.appendChild(el("div", { class: "swcell" }, [el("button", { class: "sw add", type: "button", "aria-label": "Add a new color to My swatches", text: "+", onclick: () => colorSheet({ title: "New swatch", value: tool === "eraser" ? packRGBA(255, 255, 255, 255) : color, name: "Color " + (swList().length + 1), ok: "Add it", onUse: (k, n) => { addSwatch(k, n); setColor(k); } }) }), el("span", { class: "swname", text: "New" })]));
+  }
+  // Editing a saved swatch: rename, recolor, or move it earlier or later in the list (moves happen right away).
+  function editSwatch(id) {
+    const w = swList().find(x => x.id === id); if (!w) return;
+    const move = d => { const l = swList().slice(), i = l.findIndex(x => x.id === id), j = i + d; if (j < 0 || j >= l.length) return; [l[i], l[j]] = [l[j], l[i]]; swSave(l); paintPalette(); };
+    colorSheet({ title: "Edit swatch", value: w.color, name: w.name, ok: "Save", reorder: { earlier: () => move(-1), later: () => move(1) },
+      onUse: (k, n) => { swSave(swList().map(x => x.id === id ? Object.assign({}, x, { color: k, name: n || x.name }) : x)); paintPalette(); } });
+  }
+
+  /* View: the frame on a checkerboard, zoomed and panned */
+  let z = 8, ox = 0, oy = 0, dpr = 1, cw = 0, ch = 0;
+  const css = getComputedStyle(document.documentElement), col = n => css.getPropertyValue(n).trim();
+  const [sheetC, sheetX] = canvasOf(W, H);
+  function size() { const r = stage.getBoundingClientRect(); dpr = window.devicePixelRatio || 1; cw = r.width; ch = r.height; cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr); }
+  function fit() {
+    const k = Math.min((cw - 16) / s.w, (ch - 16) / s.h, 64); z = k >= 1 ? Math.floor(k) : k;
+    if (z < 8 && s.w > s.h * 2) z = Math.max(8, Math.min(24, Math.floor((ch - 16) / s.h))); // too wide to paint whole: zoom in on the left end
+    ox = s.w * z <= cw ? Math.round((cw - s.w * z) / 2) : 8; oy = Math.round((ch - s.h * z) / 2);
+  }
+  function zoomBy(f, cx, cy) { cx = cx == null ? cw / 2 : cx; cy = cy == null ? ch / 2 : cy; const nz = Math.max(0.5, Math.min(64, z * f)); ox = cx - (cx - ox) * nz / z; oy = cy - (cy - oy) * nz / z; z = nz; draw(); }
+  let raf = 0;
+  function draw() { if (!raf) raf = requestAnimationFrame(paint); }
+  function paint() {
+    raf = 0;
+    sheetX.putImageData(new ImageData(new Uint8ClampedArray(px), W, H), 0, 0);
+    const fx = fx0(), fy = fy0();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.imageSmoothingEnabled = false;
+    ctx.fillStyle = col("--surface-2"); ctx.fillRect(0, 0, cw, ch);
+    // checkerboard behind the sprite (one square per pixel when zoomed in)
+    const cs = z >= 8 ? z : 8, a = col("--check-a"), b = col("--check-b");
+    ctx.save(); ctx.beginPath(); ctx.rect(ox, oy, s.w * z, s.h * z); ctx.clip();
+    ctx.fillStyle = b; ctx.fillRect(ox, oy, s.w * z, s.h * z); ctx.fillStyle = a;
+    for (let y = 0; y * cs < s.h * z; y++) for (let x = (y & 1); x * cs < s.w * z; x += 2) ctx.fillRect(ox + x * cs, oy + y * cs, cs, cs);
+    const drawTrace = () => { if (!trace) return; ctx.globalAlpha = trace.alpha; ctx.imageSmoothingEnabled = true; ctx.drawImage(trace.img, ox + trace.x * z, oy + trace.y * z, trace.img.width * trace.k * z, trace.img.height * trace.k * z); ctx.imageSmoothingEnabled = false; ctx.globalAlpha = 1; };
+    if (trace && !trace.over) drawTrace();
+    const gf = ghost ? ghostOf(frame) : null;
+    if (gf != null && gf !== frame) { ctx.globalAlpha = 0.32; ctx.drawImage(sheetC, (gf % Z.cols) * s.w, Math.floor(gf / Z.cols) * s.h, s.w, s.h, ox, oy, s.w * z, s.h * z); ctx.globalAlpha = 1; }
+    ctx.drawImage(sheetC, fx, fy, s.w, s.h, ox, oy, s.w * z, s.h * z);
+    if (trace && trace.over) drawTrace();
+    if (showGrid && z >= 5) {
+      ctx.fillStyle = "rgba(128,128,128,.28)";
+      for (let x = 1; x < s.w; x++) ctx.fillRect(ox + x * z, oy, 1 / dpr, s.h * z);
+      for (let y = 1; y < s.h; y++) ctx.fillRect(ox, oy + y * z, s.w * z, 1 / dpr);
+      ctx.fillStyle = "rgba(128,128,128,.55)";
+      for (let x = 8; x < s.w; x += 8) ctx.fillRect(ox + x * z, oy, 1 / dpr, s.h * z);
+      for (let y = 8; y < s.h; y += 8) ctx.fillRect(ox, oy + y * z, s.w * z, 1 / dpr);
+    }
+    ctx.restore();
+    ctx.strokeStyle = col("--line"); ctx.lineWidth = 1; ctx.strokeRect(ox - .5, oy - .5, s.w * z + 1, s.h * z + 1);
+    if (mirror) { ctx.save(); ctx.strokeStyle = "rgba(240,184,64,.9)"; ctx.lineWidth = 2; ctx.setLineDash([6, 4]); ctx.beginPath();
+      if (mirror.includes("x")) { ctx.moveTo(ox + s.w * z / 2, oy); ctx.lineTo(ox + s.w * z / 2, oy + s.h * z); }
+      if (mirror.includes("y")) { ctx.moveTo(ox, oy + s.h * z / 2); ctx.lineTo(ox + s.w * z, oy + s.h * z / 2); }
+      ctx.stroke(); ctx.restore(); }
+    if (sel) { const X = ox + sel.x * z, Y = oy + sel.y * z, Wd = sel.w * z, Hd = sel.h * z; ctx.save(); ctx.lineWidth = 2; ctx.setLineDash([5, 4]);
+      ctx.strokeStyle = "#fff"; ctx.strokeRect(X, Y, Wd, Hd); ctx.strokeStyle = "#111"; ctx.lineDashOffset = 4.5; ctx.strokeRect(X, Y, Wd, Hd); ctx.restore(); }
+    // previews and frame thumbnails
+    pvC.forEach(c => { const x = c.getContext("2d"); x.clearRect(0, 0, s.w, s.h); x.drawImage(sheetC, fx, fy, s.w, s.h, 0, 0, s.w, s.h); });
+    setC.forEach((c, f) => { const x = c.getContext("2d"); x.clearRect(0, 0, s.w, s.h); x.drawImage(sheetC, (f % Z.cols) * s.w, Math.floor(f / Z.cols) * s.h, s.w, s.h, 0, 0, s.w, s.h); c.classList.toggle("on", f === frame); });
+    frameBtns.forEach((btn, f) => { btn.setAttribute("aria-current", f === frame ? "true" : "false"); const c = btn.firstChild, x = c.getContext("2d"); x.clearRect(0, 0, s.w, s.h); x.drawImage(sheetC, (f % Z.cols) * s.w, Math.floor(f / Z.cols) * s.h, s.w, s.h, 0, 0, s.w, s.h); });
+    frameLabel.textContent = Z.frames > 1 ? frameName(s, frame) + " (" + (frame + 1) + "/" + Z.frames + ")" + (gf != null && gf !== frame ? " · ghost: " + frameName(s, gf).toLowerCase() : "") : "";
+    undoB.disabled = !undo.length; redoB.disabled = !redo.length;
+    drawScene(); ctxQueue();
+  }
+  // The animation preview ticks on its own (characters walk facing the way the current frame faces).
+  let animF = 0, animT = 0;
+  const tick = () => {
+    const seq = s.layout === "char" ? [0, 1, 0, 2].map(c => Math.floor(frame / 3) * 3 + c) : fset.order;
+    animF = (animF + 1) % seq.length; const f = seq[animF], x = animC.getContext("2d");
+    x.clearRect(0, 0, s.w, s.h); x.drawImage(sheetC, (f % Z.cols) * s.w, Math.floor(f / Z.cols) * s.h, s.w, s.h, 0, 0, s.w, s.h);
+    animT = setTimeout(tick, s.layout === "char" ? 220 : fset.ms);
+  };
+  if (animC) animT = setTimeout(tick, 260);
+
+  /* Input: one pointer paints; a second finger cancels the stroke and pinches to zoom and pan. */
+  const pts = new Map(); let stroke = null, pinch = null;
+  const at = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+  const cell = p => ({ x: Math.floor((p.x - ox) / z), y: Math.floor((p.y - oy) / z) });
+  function apply(c, first, p) {
+    if (trace && trace.moving) { if (first) stroke.tr = { x: p.x, y: p.y, tx: trace.x, ty: trace.y }; else { trace.x = stroke.tr.tx + (p.x - stroke.tr.x) / z; trace.y = stroke.tr.ty + (p.y - stroke.tr.y) / z; draw(); } return; }
+    if (tool === "move") { if (first) stroke.pan = { x: p.x, y: p.y, ox, oy }; else { ox = stroke.pan.ox + p.x - stroke.pan.x; oy = stroke.pan.oy + p.y - stroke.pan.y; draw(); } return; }
+    if (tool === "pick") { if (c.x < 0 || c.y < 0 || c.x >= s.w || c.y >= s.h) return; const k = getPx(c.x, c.y); if ((k & 255) === 0) { setTool("eraser"); paintPalette(); } else { color = k; paintPalette(); } return; }
+    if (tool === "fill") { if (first) mirrorPts(c.x, c.y).forEach(([x, y]) => flood(x, y, color)); return draw(); }
+    if (tool === "line" || tool === "rect" || tool === "oval") { if (first) stroke.anchor = c; px = stroke.before.slice(); shape(stroke.anchor, c, color); return draw(); }
+    if (tool === "select") return selPointer(c, first);
+    const k = tool === "eraser" ? 0 : color;
+    if (stroke.last) line(stroke.last.x, stroke.last.y, c.x, c.y, k); else setPx(c.x, c.y, k);
+    stroke.last = c; draw();
+  }
+  cv.addEventListener("pointerdown", e => {
+    e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (err) {} pts.set(e.pointerId, at(e));
+    if (pts.size === 1 && !pinch) { stroke = { before: px.slice(), last: null }; apply(cell(at(e)), true, at(e)); }
+    else if (pts.size === 2) {
+      if (stroke) { px = stroke.before; if (stroke.drag && sel) { sel.x = stroke.drag.sx; sel.y = stroke.drag.sy; } stroke = null; draw(); } // a second finger: this was a zoom, not a stroke
+      const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, z, ox, oy };
+    }
+  });
+  cv.addEventListener("pointermove", e => {
+    if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, at(e));
+    if (pinch && pts.size >= 2) {
+      const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      const nz = Math.max(0.5, Math.min(64, pinch.z * d / pinch.d));
+      ox = mx - (pinch.mx - pinch.ox) * nz / pinch.z; oy = my - (pinch.my - pinch.oy) * nz / pinch.z; z = nz; draw();
+    } else if (stroke && (tool !== "fill" || (trace && trace.moving))) apply(cell(at(e)), false, at(e));
+  });
+  const end = e => {
+    if (!pts.has(e.pointerId)) return; pts.delete(e.pointerId);
+    if (stroke && !pts.size) { const b = stroke.before, tr = stroke.tr; stroke = null; if (tr) draw(); else if (tool === "pick") { setTool("pencil"); paintPalette(); } else if (tool !== "move") commitStroke(b); }
+    if (!pts.size) pinch = null;
+  };
+  cv.addEventListener("pointerup", end); cv.addEventListener("pointercancel", end);
+  cv.addEventListener("wheel", e => { e.preventDefault(); const p = at(e); zoomBy(e.deltaY < 0 ? 1.25 : 0.8, p.x, p.y); }, { passive: false });
+  const onKey = e => {
+    if (e.target.closest && e.target.closest("input,textarea,select")) return;
+    const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
+    if (mod && k === "z") { e.preventDefault(); e.shiftKey ? step(redo, undo) : step(undo, redo); }
+    else if (mod && k === "y") { e.preventDefault(); step(redo, undo); }
+    else if (mod && k === "c" && !String(getSelection())) { e.preventDefault(); sel ? selCopy() : copyFrame(); }
+    else if (mod && k === "v") { e.preventDefault(); selClip && (sel || tool === "select") ? selPaste() : pasteFrame(); }
+    else if (k === "escape" && sel) { dropSel(); draw(); }
+    else if ((k === "delete" || k === "backspace") && sel) { e.preventDefault(); selDo(f => ({ w: f.w, h: f.h, px: new Uint8ClampedArray(f.px.length) })); }
+    else if (!mod && { l: 1, r: 1, c: 1, s: 1 }[k]) setTool({ l: "line", r: "rect", c: "oval", s: "select" }[k]);
+    else if (!mod && k === "x") mirrorB.click();
+    else if (!mod && Z.frames > 1 && (k === "," || k === "<" || k === "[")) goFrame(frame - 1);
+    else if (!mod && Z.frames > 1 && (k === "." || k === ">" || k === "]")) goFrame(frame + 1);
+    else if (!mod && k === "o" && Z.frames > 1) ghostB.click();
+    else if (!mod && { b: 1, p: 1, e: 1, f: 1, g: 1, i: 1, h: 1, m: 1 }[k]) setTool({ b: "pencil", p: "pencil", e: "eraser", f: "fill", g: "fill", i: "pick", h: "move", m: "move" }[k]);
+  };
+  /* When the grid's box changes size (rotating the phone; older browsers also resize it as the address bar slides away
+     while you scroll), keep your zoom and keep the same spot in the middle. Only the first layout fits the sprite. */
+  const onResize = () => { const w0 = cw, h0 = ch; size(); if (!w0 || !h0) fit(); else { ox += (cw - w0) / 2; oy += (ch - h0) / 2; } draw(); pipDraw(); };
+  const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => { const r = stage.getBoundingClientRect(); if (Math.abs(r.width - cw) > 0.5 || Math.abs(r.height - ch) > 0.5) onResize(); }) : null;
+  document.addEventListener("keydown", onKey); if (ro) ro.observe(stage); else window.addEventListener("resize", onResize);
+  editor = { key, close() { if (wipT) { clearTimeout(wipT); saveWip(); } clearTimeout(animT); ctxClose(); document.removeEventListener("keydown", onKey); if (ro) ro.disconnect(); else window.removeEventListener("resize", onResize); } };
+
+  // Painting order on a phone: the grid, then the zoom row, tools, selection bar and colors right under it;
+  // frames, frame settings, the trace and More follow.
+  zoomRow.after(tools, selBar, palPanel);
+  setTool("pencil"); paintChips(); paintPalette(); paintTrace(); if (!fset.fixed) paintFs(); size(); fit(); paint(); ctxSetup();
+}
+
+await document.fonts.ready.catch(() => {});
+render();
+};
+</script>
+</body>
+</html>

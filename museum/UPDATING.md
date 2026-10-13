@@ -47,6 +47,16 @@ So the routine is: **open or refresh the curator, and do what it says, if it say
 
 **For Claude:** when changing `museum-pack.json` by hand, keep its `savedAt` (or set it to now), never earlier, so drafts treat it as the newer file.
 
+## Art from the Paint Room
+
+The Paint Room (`paint-room.html`) keeps your painted sprites in its own library in that browser, never in the pack, until you export. Its exports change **art only**:
+
+- **Put my art in the game → Check what would change** builds on this folder's newest `museum-pack.json` (fetched fresh) and shows what it will add, replace or remove before you download. Rooms, pieces, words, settings and art made elsewhere are copied exactly. Replace `museum/museum-pack.json` in the repo with the download and merge it into main.
+- Art the Paint Room didn't put there (like Joe, made in the curator) is left alone unless you tick it. Sprites the current build doesn't have, or whose size changed, are skipped.
+- **Send to the curator** puts the art into the curator's draft in the same browser (art only). **museum-art.json** does the same for the curator on another device: curator → More → **Import art**.
+- **Photoshop atlas**: the same atlas and guide as the curator's (they're interchangeable). Edit it, then **Import edited atlas** in the Paint Room puts your changes in its library, ready to export.
+- **Download PNGs (ZIP)** is a backup: `sprites/<group>/<slot>.png` plus `manifest.json`. The game doesn't read loose PNGs.
+
 ## Text from the Writers' Room
 
 The Writers' Room (`writers-room.html`) writes into the same curator draft in that browser. There's no separate update step: open or refresh the curator **in the same browser** and your lines are there. The same rule applies to getting them out: players see your lines only after you **Export pack** (from the Writers' Room or the curator) and the exported `museum-pack.json` is in the repo on main. The draft lives in one browser on one device. If you write on your phone, export from your phone.

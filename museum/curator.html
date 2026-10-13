@@ -362,12 +362,15 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
         <div class="rmenu">
           <button class="btn quiet" id="verBtn" type="button" title="Is this the latest engine, and is your draft the museum-pack.json in this folder?">Check version</button>
           <label class="btn quiet" for="importFile">Import pack</label>
+          <label class="btn quiet" for="artFile" title="Add art from the Paint Room (museum-art.json). Changes art only.">Import art</label>
           <a class="btn quiet" id="batchBtn" href="batch-fill.html" title="Add many pieces at once from YouTube and image files, and crop them to fit">Batch fill</a>
           <a class="btn quiet" href="writers-room.html" title="Write the museum's lines one at a time, a little every day (same draft as this page)">Writers' Room</a>
+          <a class="btn quiet" href="paint-room.html" title="Repaint the museum's sprites one at a time, a little every day (art only)">Paint Room</a>
           <a class="btn quiet" href="goc-links.html" target="_blank" rel="noopener" title="Copy your YouTube videos as lines for Friday features">GOC link grabber</a>
         </div>
       </details>
       <input id="importFile" class="sr-only" type="file" accept=".json,application/json">
+      <input id="artFile" class="sr-only" type="file" accept=".json,application/json">
       <button class="btn primary" id="exportBtn" type="button">Export pack</button>
       <button class="btn quiet" id="pvJump" type="button">Preview</button>
     </div>
@@ -437,7 +440,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 42";
+window.GOQ_WANT = "2026-11-18 cards 43";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -3015,6 +3018,39 @@ $("#importFile").addEventListener("change", async e => {
     if (!j || j.format !== GOQ.PACK_FORMAT) throw new Error("That file isn't a museum pack.");
     if ((Object.keys(draft.assets).length || draft.pieces.length) && !confirm("Replace everything here with this pack? Export first if you want to keep the current one.")) return;
     migrateFloors(j); useDraft(j); changed({ now: true, keepBase: true }); setBase(text, "import", j.savedAt); await game.setPack(packOut()); fillRoomPicker(); render(); status("Imported " + f.name);
+  } catch (err) { status(err instanceof SyntaxError ? "That file couldn't be read as JSON." : err.message, true); }
+});
+
+/* Art from the Paint Room (museum-art.json): changes art only, by the same rules as the Paint Room's own export.
+   Slots this build doesn't have, or whose size changed, are skipped. Art the Paint Room wrote before ("ours": hashes of what
+   it wrote) is replaced, or removed if you went back to the original; other art already here is only replaced if you say so. */
+const artHash = str => { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619); return (h >>> 0).toString(36) + "." + str.length; };
+$("#artFile").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try {
+    const j = JSON.parse(await f.text());
+    if (!j || j.format !== "goq-art") throw new Error("That file isn't art from the Paint Room (museum-art.json).");
+    const ours = j.ours || {}, mine = (k, src) => !!src && (ours[k] || []).includes(artHash(src));
+    const add = [], rep = [], clash = [], skip = [], del = [];
+    for (const k in j.assets || {}) {
+      const sl = GOQ.SLOT[k], src = j.assets[k] && j.assets[k].src;
+      if (!sl || !src) { skip.push(k + " (not in this build)"); continue; }
+      const g = GOQ.sheetGrid(sl), img = await loadImg(src).catch(() => null);
+      if (!img || img.width !== sl.w * g.cols || img.height !== sl.h * g.rows) { skip.push(sl.label + " (size changed)"); continue; }
+      const cur = draft.assets[k] && draft.assets[k].src;
+      if (cur === src) continue;
+      (!cur ? add : mine(k, cur) ? rep : clash).push(k);
+    }
+    for (const k in j.remove || {}) { const cur = draft.assets[k] && draft.assets[k].src; if (cur && (j.remove[k] || []).includes(artHash(cur))) del.push(k); }
+    const name = k => (GOQ.SLOT[k] || {}).label || k;
+    if (!add.length && !rep.length && !clash.length && !del.length) { status("Nothing to import: the draft already has that art" + (skip.length ? " (skipped: " + skip.join(", ") + ")" : "") + "."); return; }
+    const sum = [add.length && "add " + add.length, rep.length && "update " + rep.length, del.length && "go back to the original for " + del.length].filter(Boolean).join(", ");
+    if ((add.length || rep.length || del.length) && !confirm("Import art from the Paint Room: " + (sum || "nothing new") + "." + (skip.length ? "\n\nSkipped: " + skip.join(", ") + "." : "") + "\n\nNothing but art changes.")) return;
+    const take = clash.length && confirm(clash.length + " slot" + (clash.length === 1 ? " already has" : "s already have") + " other art: " + clash.map(name).join(", ") + ".\n\nReplace with the Paint Room's? (Cancel keeps what's there.)") ? clash : [];
+    for (const k of [...add, ...rep, ...take]) draft.assets[k] = { src: j.assets[k].src };
+    for (const k of del) delete draft.assets[k];
+    changed({ now: true }); await game.setPack(packOut()); render();
+    status("Imported art: " + [add.length && add.length + " added", rep.length && rep.length + " updated", take.length && take.length + " replaced", del.length && del.length + " back to the original"].filter(Boolean).join(", ") + ". Export the pack to put it on the site.");
   } catch (err) { status(err instanceof SyntaxError ? "That file couldn't be read as JSON." : err.message, true); }
 });
 
