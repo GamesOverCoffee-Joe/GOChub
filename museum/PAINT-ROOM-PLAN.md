@@ -157,8 +157,8 @@ You update the game often. A newer build may drop sprites, add new ones, resize 
 4. **The summary screen before download** lists what will be added, replaced, removed and skipped, and says "Nothing else in the pack changes." Nothing downloads without it.
 5. **Offline or opened as a file** (no folder pack to fetch): no pack export. You can choose your own `museum-pack.json` from your device to build on instead, with the same rules, or download the ZIP / an art-only file.
 6. **Art-only file**: `museum-art.json` (`{ format: "goq-art", savedAt, assets: {...} }`) holds only your sprites. Phase 6 adds a matching **Import art** button to the curator that merges it into its draft by the same rules, so art can reach the curator without anything else coming along.
-8. **Shop items are the one exception, and they're narrow.** Send to the curator on a shop item changes only that item (found by its id) in `settings.shop.items`, the `gift` of an item that was that exhibit's gift before (after asking), and that exhibit's `unveil` (after asking if it had another date). The sprite exports never include items.
 7. **The curator's draft is optional and art-only too.** A "Send to the curator" button re-reads `goq-curator-draft` from storage at that moment, changes only `assets[key]` for owned slots (with the same checks), and writes it back. It never rewrites rooms or settings, and it's never needed to get art into the game.
+8. **Shop items are the one exception, and they're narrow.** Send to the curator on a shop item changes only that item (found by its id) in `settings.shop.items`, the `gift` of an item that was that exhibit's gift before (after asking), and that exhibit's `unveil` (after asking if it had another date). The sprite exports never include items.
 
 ---
 
