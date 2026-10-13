@@ -171,6 +171,7 @@ You update the game often. A newer build may drop sprites, add new ones, resize 
 - 2026-10-13: Rewards work like the Writers' Room: painted or kept stamps the day, groups light up, and finishing a group earns a badge. The punch card is separate from the Writers' Room's. (Joe)
 - 2026-10-13: Extra tools: line, rectangle and circle; select with move, flip and rotate; trace a photo or PNG. (Joe)
 - 2026-10-13: Slots that already have custom art in the folder pack (made elsewhere, like Joe) show as **In the pack** and count as done. They have no "Keep original" button. Painting one is allowed, but export won't replace the pack's art unless it's ticked. (Claude)
+- 2026-10-13: Added a **Move** tool (one-finger or mouse pan), so desktop and one-handed use can get around long sprites like the murals. (Claude)
 - 2026-10-13: Work in progress and swatches go in IndexedDB, not localStorage, because of storage limits. (Claude)
 
 ---
@@ -194,19 +195,21 @@ Check items off as they land, and note the commit.
 - [x] Link from the curator's menu (More, next to Writers' Room)
 
 ### Phase 2: Core editor
-- [ ] Grid render, zoom and pan (pinch and two-finger)
-- [ ] Pencil, eraser, fill, eyedropper
-- [ ] Undo and redo
-- [ ] Live preview (1×, 2×, 4×, checkerboard)
-- [ ] Sprite colors from the original
-- [ ] Save to the library; Keep original; Use the original again
-- [ ] Work-in-progress autosave (IndexedDB)
+- [x] Grid render, zoom and pan (pinch, two fingers, mouse wheel, −/Fit/+ buttons, grid lines with a stronger line every 8)
+- [x] Pencil (with lines between touch points), eraser, fill (within the frame), eyedropper ("Pick")
+- [x] **Move** tool (pan with one finger or a mouse) and wide-sprite fit (murals open zoomed in on the left end)
+- [x] Undo and redo (buttons; Ctrl/Cmd+Z, Ctrl+Y, Shift+Ctrl+Z; up to 150 steps)
+- [x] Live preview (1×, 2×, 4× where they fit, plus a playing animation for multi-frame slots)
+- [x] Sprite colors from the original (most used first), then any other colors in the art; "+" opens the system color picker
+- [x] Save to the library; painting back to the exact original counts as Keep original; Use original (slot page) removes the painting
+- [x] Work-in-progress autosave (IndexedDB, 0.6 s after each change and when leaving), resumed on reopen, "Start over" under More
+- [x] More: load the original, load your saved or the pack's version, clear this frame, download PNG
 
 ### Phase 3: Frames
-- [ ] Frame strip (character labels for `char` slots)
+- [x] Frame strip (character labels for `char` slots), done early in Phase 2 because the editor needs it to reach other frames
 - [ ] Onion skin
 - [ ] Copy, paste and clear a frame
-- [ ] Animation playback in the preview
+- [x] Animation playback in the preview (characters walk in the direction of the current frame)
 
 ### Phase 4: Palette and tools
 - [ ] Named swatches: add, rename, recolor, reorder, delete
@@ -251,6 +254,8 @@ Check items off as they land, and note the commit.
 - [ ] Handoff notes below are up to date
 
 ### Handoff notes (latest state)
+
+- 2026-10-13, Phase 2 done: the painter (`renderPaint()`, view `{ name: "paint", key, frame }`). The whole sheet is one RGBA array `px`; tools write into the current frame via `getPx` / `setPx` (frame-relative coordinates). Strokes push a copy of `px` onto `undo`. `editor.close()` (called from `render()`) flushes work in progress. Tested in Playwright (390×844): paint a stroke, fill, switch frames, undo, leave and resume, save → the tile shows the painted art. A synthetic two-finger pinch zooms without painting. The mural (256×16) and the 4×3 aisle light both open usable. Desktop keys: B/P pencil, E eraser, F/G fill, I pick, H/M move. Next: **Phase 3 (onion skin, copy and paste a frame)**, then Phase 4.
 
 - 2026-10-13, Phase 1 done: `paint-room.html` is up, linked from the curator. Tested in Playwright at 390×844, light and dark, with no page errors: Home, Find, search, the slot page, Keep original → stamp → reload keeps it. "Paint it" is a disabled button until Phase 2. Next: **Phase 2, the core editor**. The editor should open from `renderSlot()`'s "Paint it" as a new view (`{ name: "paint", key }`), start from `inUse(key)`, and save into `DB.put("art", key, { png, w, h, cols, rows, savedAt, origHash: pixelHash(original(key)) })`.
 - Code map (`paint-room.html`): `DB` (IndexedDB wrapper; `DB.data` is the in-memory copy), `pack` / `packAssets` (the folder pack, read only), `original(key)` (built-in art), `inUse(key)` (library, then pack, then built-in), `status(key)`, `nextSlot()`, `renderHome` / `renderFind` / `renderSlot`, `celebrate()`.

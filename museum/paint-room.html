@@ -173,6 +173,35 @@ select.search{appearance:auto;margin-top:8px}
 .foot .small{text-align:center}
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 14px;border-radius:999px;font-weight:700;font-size:.85rem;z-index:30;animation:fade .2s both}
 .empty{color:var(--muted);text-align:center;padding:24px 8px}
+/* The painter */
+.pv{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px}
+.pv .chk{border:2px solid var(--line);padding:6px;min-width:44px;min-height:44px}
+.stage{position:relative;width:100%;height:min(calc(100vw - 32px),52vh,528px);border:2px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface-2);touch-action:none;user-select:none;-webkit-user-select:none}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.zoom{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin:8px 0 0}
+.zoom .small{flex:1;min-width:0;line-height:1.25}
+.zoom button{min-width:44px;min-height:44px;border-radius:8px;border:2px solid var(--line);background:var(--surface);font-weight:700;cursor:pointer;padding:0 8px}
+.zoom button[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
+.frames{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;scrollbar-width:thin}
+.frames button{flex:none;display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:4px;border:2px solid var(--line);border-radius:6px;background:var(--surface);cursor:pointer}
+.frames button[aria-current="true"]{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
+.tools{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:10px 0}
+.tool{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:58px;border:2px solid var(--line);border-radius:8px;background:var(--surface);font-size:.75rem;font-weight:700;cursor:pointer;padding:6px 2px}
+.tool svg{width:24px;height:24px}
+.tool[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
+.cur{display:flex;align-items:center;gap:10px;margin:0 0 10px}
+.pal{display:flex;flex-wrap:wrap;gap:6px}
+.palsep{flex-basis:100%;height:0}
+.sw{position:relative;width:40px;height:40px;border-radius:6px;border:2px solid var(--line);padding:0;cursor:pointer;overflow:hidden;flex:none;
+  background-color:var(--check-b);background-image:linear-gradient(45deg,var(--check-a) 25%,transparent 25%,transparent 75%,var(--check-a) 75%),linear-gradient(45deg,var(--check-a) 25%,transparent 25%,transparent 75%,var(--check-a) 75%);background-size:10px 10px;background-position:0 0,5px 5px}
+.sw i{position:absolute;inset:0}
+.sw.big{width:48px;height:48px;cursor:default}
+.sw[aria-pressed="true"]{outline:3px solid var(--gold);outline-offset:2px}
+.sw.add{background:var(--surface);border-style:dashed;font-weight:700;font-size:1.3rem;color:var(--muted)}
+.sr{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+details.more summary{cursor:pointer;font-weight:700;min-height:28px}
+details.more .foot{margin-top:12px}
+.iconbtn[disabled]{opacity:.35;pointer-events:none}
 @media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
 </style>
 </head>
@@ -301,10 +330,12 @@ function top(title, back) {
     back ? el("div", { class: "crumb", text: title }) : el("h1", { text: title })]);
 }
 function render() {
+  if (editor) { editor.close(); editor = null; }
   $app.innerHTML = "";
   if (view.name === "home") return renderHome();
   if (view.name === "find") return renderFind();
   if (view.name === "slot") return SLOT[view.key] ? renderSlot() : go({ name: "home" }, true);
+  if (view.name === "paint") return SLOT[view.key] ? renderPaint() : go({ name: "home" }, true);
 }
 
 /* ---------- Picking today's sprite ----------
@@ -449,27 +480,34 @@ function renderSlot() {
   $app.appendChild(el("div", { class: "tagline" }, [el("span", { class: "tag " + st, text: STATUS_TEXT[st] }), el("span", { class: "tag", text: s.w + "×" + s.h }),
     z.frames > 1 ? el("span", { class: "tag", text: s.layout === "char" ? "walk sheet, 12 frames" : z.frames + " frames" }) : null,
     DB.data.art[key] && DB.data.art[key].origHash !== pixelHash(original(key)) ? el("span", { class: "tag todo", text: "Original updated" }) : null]));
-  const differs = st === "painted" || st === "pack";
-  $app.appendChild(el("div", { class: "views" + (differs ? "" : " one") }, [
+  const differs = st === "painted" || st === "pack", wip = wipCanvas(key);
+  $app.appendChild(el("div", { class: "views" + (differs || wip ? "" : " one") }, [
     el("figure", {}, [el("figcaption", { text: "Original" }), animated(original(key), s, 130)]),
-    differs ? el("figure", {}, [el("figcaption", { text: st === "painted" ? "Yours" : "In the pack" }), animated(inUse(key), s, 130)]) : null]));
+    wip ? el("figure", {}, [el("figcaption", { text: "Unsaved" }), animated(wip, s, 130)])
+      : differs ? el("figure", {}, [el("figcaption", { text: st === "painted" ? "Yours" : "In the pack" }), animated(inUse(key), s, 130)]) : null]));
   if (s.note) $app.appendChild(el("div", { class: "brief" }, [el("b", { text: "Notes" }), s.note]));
   $app.appendChild(el("dl", { class: "facts" }, [
     el("dt", { text: "Slot" }), el("dd", { text: key }),
     el("dt", { text: "Sheet" }), el("dd", { text: z.w + "×" + z.h + " px" + (z.frames > 1 ? " (" + z.cols + " × " + z.rows + " frames)" : "") }),
     el("dt", { text: "Group" }), el("dd", { text: s.group })]));
   if (st === "pack") $app.appendChild(el("div", { class: "banner info", text: "This slot already has custom art in the pack, made outside the Paint Room. Painting it here won't replace that art unless you tick it when you export." }));
-  $app.appendChild(el("p", { class: "small", text: "The painter comes next (Phase 2). For now you can keep the original, which stamps the day." }));
+  if (wip && st !== "wip") $app.appendChild(el("div", { class: "banner info", text: "You have unsaved changes on this one. Open the painter to finish them, or start over from there." }));
 
   const keep = async () => {
+    await DB.del("wip", key);
     await DB.put("kept", key, { at: new Date().toISOString(), origHash: pixelHash(original(key)) });
     meta.lastGroup = s.group; const first = stamp(); celebrate(s, first);
   };
   const unkeep = async () => { await DB.del("kept", key); toast("Back on the to-do pile"); render(); };
+  const unpaint = async () => {
+    if (!confirm("Go back to the original art for " + s.label + "? Your painting is removed from the library.")) return;
+    await DB.del("art", key); toast("Back to the original"); render();
+  };
   dock([
     st === "kept" ? el("button", { class: "btn quiet", type: "button", text: "Undo keep", onclick: unkeep })
-      : st === "painted" || st === "pack" ? null : el("button", { class: "btn quiet", type: "button", text: "Keep original", onclick: keep }),
-    el("button", { class: "btn primary", type: "button", text: "Paint it", disabled: true, title: "Coming in Phase 2" }),
+      : st === "painted" ? el("button", { class: "btn quiet", type: "button", text: "Use original", onclick: unpaint })
+      : st === "pack" ? null : el("button", { class: "btn quiet", type: "button", text: "Keep original", onclick: keep }),
+    el("button", { class: "btn primary", type: "button", text: wip ? "Keep painting" : st === "painted" ? "Edit yours" : "Paint it", onclick: () => go({ name: "paint", key }) }),
   ]);
 }
 function celebrate(s, first) {
@@ -490,6 +528,265 @@ function celebrate(s, first) {
   const wrap = el("div", { class: "done" }, [sheet]);
   wrap.addEventListener("click", e => { if (e.target === wrap) { close(); go({ name: "home" }); } });
   document.body.appendChild(wrap); sheet.querySelector(".btn.primary").focus();
+}
+
+/* ---------- The painter ----------
+   The whole sheet lives in one RGBA array (px). The grid shows one frame of it; tools write straight into px.
+   Unsaved work is kept in the library's "wip" store (a moment after each change), so leaving the page loses nothing. */
+let editor = null; // the open painter, so leaving the page can save its unsaved work first
+const pixelsOf = c => c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+function samePx(a, b) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i += 4) { if (a[i + 3] === 0 && b[i + 3] === 0) continue; if (a[i] !== b[i] || a[i + 1] !== b[i + 1] || a[i + 2] !== b[i + 2] || a[i + 3] !== b[i + 3]) return false; }
+  return true;
+}
+function canvasFromPx(px, w, h) { const [c, x] = canvasOf(w, h); x.putImageData(new ImageData(new Uint8ClampedArray(px), w, h), 0, 0); return c; }
+function wipCanvas(key) { const w = DB.data.wip[key], z = sheetSize(SLOT[key]); return w && w.w === z.w && w.h === z.h ? canvasFromPx(w.px, w.w, w.h) : null; }
+// Colors are kept as 32-bit numbers (r, g, b, a) so they compare quickly.
+const packRGBA = (r, g, b, a) => ((r << 24) | (g << 16) | (b << 8) | a) >>> 0;
+const unpackRGBA = k => [k >>> 24, (k >>> 16) & 255, (k >>> 8) & 255, k & 255];
+const cssOf = k => { const [r, g, b, a] = unpackRGBA(k); return "rgba(" + r + "," + g + "," + b + "," + (a / 255).toFixed(3) + ")"; };
+const hexOf = k => "#" + unpackRGBA(k).slice(0, 3).map(v => v.toString(16).padStart(2, "0")).join("");
+// The sprite's own colors, most used first: the original's, then any others already in the art.
+function colorsIn(px) { const n = new Map(); for (let i = 0; i < px.length; i += 4) { if (px[i + 3] === 0) continue; const k = packRGBA(px[i], px[i + 1], px[i + 2], px[i + 3]); n.set(k, (n.get(k) || 0) + 1); } return [...n.entries()].sort((a, b) => b[1] - a[1]).map(e => e[0]); }
+const ICON = {
+  pencil: '<path d="M4 20l1-4L16 5l3 3L8 19z M14 7l3 3"/>',
+  eraser: '<path d="M4 15l9-9 6 6-7 7H8z M9 10l6 6 M8 19h12"/>',
+  fill: '<path d="M5 11l6-6 7 7-6 6z M5 11h13 M19 15c0 2 1.6 3 1.6 4.4a1.6 1.6 0 0 1-3.2 0C17.4 18 19 17 19 15z"/>',
+  pick: '<path d="M14 4.5l5.5 5.5 M16.5 7.5L7 17l-3 1 1-3 9.5-9.5 M13 3l8 8"/>',
+  move: '<path d="M12 3v18 M3 12h18 M12 3l-3 3 M12 3l3 3 M12 21l-3-3 M12 21l3-3 M3 12l3-3 M3 12l3 3 M21 12l-3-3 M21 12l-3 3"/>',
+};
+const svg = d => { const w = el("span", { "aria-hidden": "true" }); w.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">' + d + "</svg>"; return w.firstChild; };
+const CHAR_ROWS = ["down", "up", "left", "right"], CHAR_COLS = ["standing", "step 1", "step 2"];
+const frameName = (s, f) => s.layout === "char" ? "Facing " + CHAR_ROWS[Math.floor(f / 3)] + ", " + CHAR_COLS[f % 3] : "Frame " + (f + 1);
+
+function renderPaint() {
+  const s = SLOT[view.key], key = s.key, Z = sheetSize(s), W = Z.w, H = Z.h;
+  const orig = pixelsOf(original(key)), start = new Uint8ClampedArray(pixelsOf(inUse(key)));
+  const saved = DB.data.wip[key], resumed = !!(saved && saved.w === W && saved.h === H);
+  let px = resumed ? new Uint8ClampedArray(saved.px) : new Uint8ClampedArray(start);
+  let frame = Math.min(view.frame || 0, Z.frames - 1), tool = "pencil", showGrid = true;
+  const baseColors = colorsIn(orig);
+  let color = baseColors[0] || packRGBA(0, 0, 0, 255);
+  const undo = [], redo = [];
+  const fx0 = () => (frame % Z.cols) * s.w, fy0 = () => Math.floor(frame / Z.cols) * s.h;
+
+  /* Layout */
+  const undoB = el("button", { class: "iconbtn", type: "button", "aria-label": "Undo", text: "↶", onclick: () => step(undo, redo) });
+  const redoB = el("button", { class: "iconbtn", type: "button", "aria-label": "Redo", text: "↷", onclick: () => step(redo, undo) });
+  $app.appendChild(el("header", { class: "top" }, [
+    el("button", { class: "iconbtn", type: "button", "aria-label": "Back", text: "←", onclick: () => history.length > 1 ? history.back() : go({ name: "slot", key }) }),
+    el("div", { class: "crumb", text: s.label }), undoB, redoB]));
+  if (resumed) $app.appendChild(el("div", { class: "banner info", text: "Picked up your unsaved work. Start over is under More." }));
+
+  // Live preview: the frame at 1×, 2× and 4×, plus the whole animation when there's more than one frame
+  const pv = el("div", { class: "pv", "aria-label": "Live preview" });
+  const pvC = [1, 2, 4].filter(k => k === 1 || s.w * k <= 300).map(k => { const [c] = canvasOf(s.w, s.h); c.className = "px"; c.style.width = s.w * k + "px"; c.style.height = s.h * k + "px"; pv.appendChild(el("div", { class: "chk", title: k + "×" }, [c])); return c; });
+  let animC = null;
+  if (Z.frames > 1) { const [c] = canvasOf(s.w, s.h), k = Math.max(1, Math.min(4, Math.floor(64 / Math.max(s.w, s.h)))); c.className = "px"; c.style.width = s.w * k + "px"; c.style.height = s.h * k + "px"; animC = c; pv.appendChild(el("div", { class: "chk", title: "Animation" }, [c])); }
+  $app.appendChild(pv);
+
+  // The grid
+  const cv = el("canvas", { "aria-label": "Sprite grid. One finger paints, two fingers zoom and move." }), ctx = cv.getContext("2d");
+  const zoomBtn = (label, aria, fn) => el("button", { type: "button", "aria-label": aria, text: label, onclick: fn });
+  const gridB = el("button", { type: "button", "aria-pressed": "true", "aria-label": "Grid lines", text: "#", onclick: () => { showGrid = !showGrid; gridB.setAttribute("aria-pressed", showGrid); draw(); } });
+  const stage = el("div", { class: "stage" }, [cv]);
+  if (s.w >= s.h * 3) stage.style.height = "clamp(160px, " + (s.h * 14 + 24) + "px, 52vh)"; // a long strip: a shorter grid
+  const frameLabel = el("span", { class: "small" });
+  $app.appendChild(stage);
+  if (s.w > s.h * 2 && s.w > 48) $app.appendChild(el("p", { class: "small", style: "margin:6px 0 0", text: "It's long: drag with Move (or two fingers) to get along it." }));
+  $app.appendChild(el("div", { class: "zoom" }, [frameLabel, gridB, zoomBtn("−", "Zoom out", () => zoomBy(1 / 1.5)), zoomBtn("Fit", "Fit to screen", () => { fit(); draw(); }), zoomBtn("+", "Zoom in", () => zoomBy(1.5))]));
+
+  // Frames
+  let frameBtns = [];
+  if (Z.frames > 1) {
+    const fr = el("div", { class: "frames", role: "group", "aria-label": "Frames" });
+    frameBtns = [...Array(Z.frames).keys()].map(f => { const [c] = canvasOf(s.w, s.h), k = Math.max(1, Math.min(3, Math.floor(40 / Math.max(s.w, s.h)))); c.className = "px"; c.style.width = s.w * k + "px"; c.style.height = s.h * k + "px";
+      const b = el("button", { type: "button", "aria-label": frameName(s, f), title: frameName(s, f), onclick: () => { frame = f; view.frame = f; history.replaceState({ v: view }, ""); fit(); draw(); } }, [c]); fr.appendChild(b); return b; });
+    $app.appendChild(fr);
+  }
+
+  // Tools
+  const tools = el("div", { class: "tools", role: "group", "aria-label": "Tools" });
+  const toolBtns = {};
+  [["pencil", "Pencil"], ["eraser", "Eraser"], ["fill", "Fill"], ["pick", "Pick"], ["move", "Move"]].forEach(([k, label]) => {
+    toolBtns[k] = el("button", { class: "tool", type: "button", "aria-pressed": "false", onclick: () => setTool(k) }, [svg(ICON[k]), el("span", { text: label })]); tools.appendChild(toolBtns[k]);
+  });
+  $app.appendChild(tools);
+
+  // Palette: the original's colors, then any others in the art (new ones appear as you paint with them)
+  const curSw = el("span", { class: "sw big" }, [el("i")]), curText = el("span", { class: "small" });
+  const pal = el("div", { class: "pal", role: "group", "aria-label": "Colors" });
+  const picker = el("input", { type: "color", class: "sr", "aria-label": "Pick any color", tabindex: "-1" });
+  picker.addEventListener("input", () => { const h = picker.value; setColor(packRGBA(parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16), 255)); });
+  $app.appendChild(el("section", { class: "panel", style: "margin-top:4px" }, [el("div", { class: "cur" }, [curSw, curText]), pal, picker]));
+
+  // More
+  const more = el("details", { class: "more panel" }, [el("summary", { text: "More" }), el("div", { class: "foot" }, [
+    el("button", { class: "btn quiet wide", type: "button", text: "Load the original", onclick: () => load(orig, "Loaded the original. Undo brings yours back.") }),
+    status(key) === "painted" || status(key) === "pack" ? el("button", { class: "btn quiet wide", type: "button", text: status(key) === "painted" ? "Load your saved version" : "Load the pack's version", onclick: () => load(start, "Loaded. Undo goes back.") }) : null,
+    el("button", { class: "btn quiet wide", type: "button", text: "Clear this frame", onclick: () => { const b = px.slice(); for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) setPx(x, y, 0); commitStroke(b); } }),
+    el("button", { class: "btn quiet wide", type: "button", text: "Download PNG", onclick: () => canvasFromPx(px, W, H).toBlob(b => { const a = el("a", { href: URL.createObjectURL(b), download: key + ".png" }); document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); }) }),
+    resumed || DB.data.wip[key] ? el("button", { class: "btn quiet wide", type: "button", text: "Start over (forget unsaved work)", onclick: async () => { if (!confirm("Forget your unsaved changes to " + s.label + "?")) return; clearTimeout(wipT); await DB.del("wip", key); render(); } }) : null,
+  ])]);
+  $app.appendChild(more);
+  dock([el("button", { class: "btn primary", type: "button", text: "Save", onclick: () => save() })]);
+
+  /* Pixels */
+  const idx = (x, y) => ((fy0() + y) * W + fx0() + x) * 4;
+  const getPx = (x, y) => { const i = idx(x, y); return packRGBA(px[i], px[i + 1], px[i + 2], px[i + 3]); };
+  const setPx = (x, y, k) => { if (x < 0 || y < 0 || x >= s.w || y >= s.h) return; const i = idx(x, y), [r, g, b, a] = unpackRGBA(k); px[i] = a ? r : 0; px[i + 1] = a ? g : 0; px[i + 2] = a ? b : 0; px[i + 3] = a; };
+  function line(x0, y0, x1, y1, k) { const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1; let e = dx + dy; for (;;) { setPx(x0, y0, k); if (x0 === x1 && y0 === y1) break; const e2 = 2 * e; if (e2 >= dy) { e += dy; x0 += sx; } if (e2 <= dx) { e += dx; y0 += sy; } } }
+  function flood(x, y, k) {
+    if (x < 0 || y < 0 || x >= s.w || y >= s.h) return; const from = getPx(x, y); if (from === k || (from & 255) === 0 && (k & 255) === 0) return;
+    const st = [[x, y]], seen = new Uint8Array(s.w * s.h);
+    while (st.length) { const [a, b] = st.pop(); if (a < 0 || b < 0 || a >= s.w || b >= s.h || seen[b * s.w + a]) continue; seen[b * s.w + a] = 1; const c = getPx(a, b); if (c !== from && !((c & 255) === 0 && (from & 255) === 0)) continue; setPx(a, b, k); st.push([a + 1, b], [a - 1, b], [a, b + 1], [a, b - 1]); }
+  }
+
+  /* History and saving work in progress */
+  let wipT = 0;
+  function commitStroke(before) { if (before.every((v, i) => v === px[i])) return draw(); undo.push(before); if (undo.length > 150) undo.shift(); redo.length = 0; changed(); }
+  function step(from, to) { if (!from.length) return; to.push(px); px = from.pop(); changed(); }
+  function load(src, msg) { const b = px.slice(); px = new Uint8ClampedArray(src); commitStroke(b); toast(msg); }
+  function changed() { draw(); paintPalette(); clearTimeout(wipT); wipT = setTimeout(saveWip, 600); }
+  function saveWip() {
+    wipT = 0;
+    if (samePx(px, start)) { if (DB.data.wip[key]) DB.del("wip", key).catch(() => {}); return; }
+    DB.put("wip", key, { w: W, h: H, px: px.slice(), at: new Date().toISOString() }).catch(() => toast("Couldn't keep unsaved work: storage is full"));
+  }
+  async function save() {
+    clearTimeout(wipT); wipT = 0;
+    const st = status(key);
+    if ((st === "painted" || st === "pack") && samePx(px, start)) { await DB.del("wip", key); toast("No changes to save"); return; }
+    meta.lastGroup = s.group;
+    if (samePx(px, orig)) {
+      // Painted back to exactly the original: that's keeping it, not new art.
+      await DB.del("art", key); await DB.del("wip", key);
+      await DB.put("kept", key, { at: new Date().toISOString(), origHash: pixelHash(original(key)) });
+      toast("Same as the original, so it's marked kept");
+    } else {
+      const png = canvasFromPx(px, W, H).toDataURL("image/png"); await warm(png);
+      try { await DB.put("art", key, { png, w: W, h: H, cols: Z.cols, rows: Z.rows, savedAt: new Date().toISOString(), origHash: pixelHash(original(key)) }); }
+      catch (e) { toast("Couldn't save: storage is full"); return; }
+      await DB.del("wip", key); await DB.del("kept", key);
+    }
+    const first = stamp(); celebrate(s, first);
+  }
+
+  /* Colors and tools */
+  function setTool(k) { tool = k; for (const t in toolBtns) toolBtns[t].setAttribute("aria-pressed", t === k); }
+  function setColor(k) { color = k; if (tool === "eraser" || tool === "pick") setTool("pencil"); paintPalette(); }
+  function swatch(k) {
+    const b = el("button", { class: "sw", type: "button", "aria-label": "Color " + hexOf(k) + ((k & 255) < 255 ? ", see-through" : ""), "aria-pressed": k === color ? "true" : "false", onclick: () => setColor(k) }, [el("i", { style: "background:" + cssOf(k) })]);
+    return b;
+  }
+  function paintPalette() {
+    curSw.firstChild.style.background = tool === "eraser" ? "transparent" : cssOf(color);
+    curText.textContent = tool === "eraser" ? "Eraser (see-through)" : hexOf(color).toUpperCase() + ((color & 255) < 255 ? " · " + Math.round((color & 255) / 2.55) + "% opaque" : "");
+    pal.innerHTML = "";
+    const extra = colorsIn(px).filter(k => !baseColors.includes(k));
+    baseColors.forEach(k => pal.appendChild(swatch(k)));
+    if (extra.length) { pal.appendChild(el("span", { class: "palsep", "aria-hidden": "true" })); extra.forEach(k => pal.appendChild(swatch(k))); }
+    if (!baseColors.includes(color) && !extra.includes(color)) pal.appendChild(swatch(color));
+    pal.appendChild(el("button", { class: "sw add", type: "button", "aria-label": "Pick a new color", text: "+", onclick: () => { picker.value = hexOf(color); picker.click(); } }));
+  }
+
+  /* View: the frame on a checkerboard, zoomed and panned */
+  let z = 8, ox = 0, oy = 0, dpr = 1, cw = 0, ch = 0;
+  const css = getComputedStyle(document.documentElement), col = n => css.getPropertyValue(n).trim();
+  const [sheetC, sheetX] = canvasOf(W, H);
+  function size() { const r = stage.getBoundingClientRect(); dpr = window.devicePixelRatio || 1; cw = r.width; ch = r.height; cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr); }
+  function fit() {
+    const k = Math.min((cw - 16) / s.w, (ch - 16) / s.h, 64); z = k >= 1 ? Math.floor(k) : k;
+    if (z < 8 && s.w > s.h * 2) z = Math.max(8, Math.min(24, Math.floor((ch - 16) / s.h))); // too wide to paint whole: zoom in on the left end
+    ox = s.w * z <= cw ? Math.round((cw - s.w * z) / 2) : 8; oy = Math.round((ch - s.h * z) / 2);
+  }
+  function zoomBy(f, cx, cy) { cx = cx == null ? cw / 2 : cx; cy = cy == null ? ch / 2 : cy; const nz = Math.max(0.5, Math.min(64, z * f)); ox = cx - (cx - ox) * nz / z; oy = cy - (cy - oy) * nz / z; z = nz; draw(); }
+  let raf = 0;
+  function draw() { if (!raf) raf = requestAnimationFrame(paint); }
+  function paint() {
+    raf = 0;
+    sheetX.putImageData(new ImageData(new Uint8ClampedArray(px), W, H), 0, 0);
+    const fx = fx0(), fy = fy0();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.imageSmoothingEnabled = false;
+    ctx.fillStyle = col("--surface-2"); ctx.fillRect(0, 0, cw, ch);
+    // checkerboard behind the sprite (one square per pixel when zoomed in)
+    const cs = z >= 8 ? z : 8, a = col("--check-a"), b = col("--check-b");
+    ctx.save(); ctx.beginPath(); ctx.rect(ox, oy, s.w * z, s.h * z); ctx.clip();
+    ctx.fillStyle = b; ctx.fillRect(ox, oy, s.w * z, s.h * z); ctx.fillStyle = a;
+    for (let y = 0; y * cs < s.h * z; y++) for (let x = (y & 1); x * cs < s.w * z; x += 2) ctx.fillRect(ox + x * cs, oy + y * cs, cs, cs);
+    ctx.drawImage(sheetC, fx, fy, s.w, s.h, ox, oy, s.w * z, s.h * z);
+    if (showGrid && z >= 5) {
+      ctx.fillStyle = "rgba(128,128,128,.28)";
+      for (let x = 1; x < s.w; x++) ctx.fillRect(ox + x * z, oy, 1 / dpr, s.h * z);
+      for (let y = 1; y < s.h; y++) ctx.fillRect(ox, oy + y * z, s.w * z, 1 / dpr);
+      ctx.fillStyle = "rgba(128,128,128,.55)";
+      for (let x = 8; x < s.w; x += 8) ctx.fillRect(ox + x * z, oy, 1 / dpr, s.h * z);
+      for (let y = 8; y < s.h; y += 8) ctx.fillRect(ox, oy + y * z, s.w * z, 1 / dpr);
+    }
+    ctx.restore();
+    ctx.strokeStyle = col("--line"); ctx.lineWidth = 1; ctx.strokeRect(ox - .5, oy - .5, s.w * z + 1, s.h * z + 1);
+    // previews and frame thumbnails
+    pvC.forEach(c => { const x = c.getContext("2d"); x.clearRect(0, 0, s.w, s.h); x.drawImage(sheetC, fx, fy, s.w, s.h, 0, 0, s.w, s.h); });
+    frameBtns.forEach((btn, f) => { btn.setAttribute("aria-current", f === frame ? "true" : "false"); const c = btn.firstChild, x = c.getContext("2d"); x.clearRect(0, 0, s.w, s.h); x.drawImage(sheetC, (f % Z.cols) * s.w, Math.floor(f / Z.cols) * s.h, s.w, s.h, 0, 0, s.w, s.h); });
+    frameLabel.textContent = Z.frames > 1 ? frameName(s, frame) + " (" + (frame + 1) + "/" + Z.frames + ")" : "";
+    undoB.disabled = !undo.length; redoB.disabled = !redo.length;
+  }
+  // The animation preview ticks on its own (characters walk facing the way the current frame faces).
+  let animF = 0;
+  const animT = animC ? setInterval(() => {
+    const seq = s.layout === "char" ? [0, 1, 0, 2].map(c => Math.floor(frame / 3) * 3 + c) : [...Array(Z.frames).keys()];
+    animF = (animF + 1) % seq.length; const f = seq[animF], x = animC.getContext("2d");
+    x.clearRect(0, 0, s.w, s.h); x.drawImage(sheetC, (f % Z.cols) * s.w, Math.floor(f / Z.cols) * s.h, s.w, s.h, 0, 0, s.w, s.h);
+  }, s.layout === "char" ? 220 : 260) : 0;
+
+  /* Input: one pointer paints; a second finger cancels the stroke and pinches to zoom and pan. */
+  const pts = new Map(); let stroke = null, pinch = null;
+  const at = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+  const cell = p => ({ x: Math.floor((p.x - ox) / z), y: Math.floor((p.y - oy) / z) });
+  function apply(c, first, p) {
+    if (tool === "move") { if (first) stroke.pan = { x: p.x, y: p.y, ox, oy }; else { ox = stroke.pan.ox + p.x - stroke.pan.x; oy = stroke.pan.oy + p.y - stroke.pan.y; draw(); } return; }
+    if (tool === "pick") { if (c.x < 0 || c.y < 0 || c.x >= s.w || c.y >= s.h) return; const k = getPx(c.x, c.y); if ((k & 255) === 0) { setTool("eraser"); paintPalette(); } else { color = k; paintPalette(); } return; }
+    if (tool === "fill") { if (first) flood(c.x, c.y, color); return draw(); }
+    const k = tool === "eraser" ? 0 : color;
+    if (stroke.last) line(stroke.last.x, stroke.last.y, c.x, c.y, k); else setPx(c.x, c.y, k);
+    stroke.last = c; draw();
+  }
+  cv.addEventListener("pointerdown", e => {
+    e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (err) {} pts.set(e.pointerId, at(e));
+    if (pts.size === 1 && !pinch) { stroke = { before: px.slice(), last: null }; apply(cell(at(e)), true, at(e)); }
+    else if (pts.size === 2) {
+      if (stroke) { px = stroke.before; stroke = null; draw(); } // a second finger: this was a zoom, not a stroke
+      const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, z, ox, oy };
+    }
+  });
+  cv.addEventListener("pointermove", e => {
+    if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, at(e));
+    if (pinch && pts.size >= 2) {
+      const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      const nz = Math.max(0.5, Math.min(64, pinch.z * d / pinch.d));
+      ox = mx - (pinch.mx - pinch.ox) * nz / pinch.z; oy = my - (pinch.my - pinch.oy) * nz / pinch.z; z = nz; draw();
+    } else if (stroke && tool !== "fill") apply(cell(at(e)), false, at(e));
+  });
+  const end = e => {
+    if (!pts.has(e.pointerId)) return; pts.delete(e.pointerId);
+    if (stroke && !pts.size) { const b = stroke.before; stroke = null; if (tool === "pick") { setTool("pencil"); paintPalette(); } else if (tool !== "move") commitStroke(b); }
+    if (!pts.size) pinch = null;
+  };
+  cv.addEventListener("pointerup", end); cv.addEventListener("pointercancel", end);
+  cv.addEventListener("wheel", e => { e.preventDefault(); const p = at(e); zoomBy(e.deltaY < 0 ? 1.25 : 0.8, p.x, p.y); }, { passive: false });
+  const onKey = e => {
+    if (e.target.closest && e.target.closest("input,textarea,select")) return;
+    const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
+    if (mod && k === "z") { e.preventDefault(); e.shiftKey ? step(redo, undo) : step(undo, redo); }
+    else if (mod && k === "y") { e.preventDefault(); step(redo, undo); }
+    else if (!mod && { b: 1, p: 1, e: 1, f: 1, g: 1, i: 1, h: 1, m: 1 }[k]) setTool({ b: "pencil", p: "pencil", e: "eraser", f: "fill", g: "fill", i: "pick", h: "move", m: "move" }[k]);
+  };
+  const onResize = () => { size(); fit(); draw(); };
+  document.addEventListener("keydown", onKey); window.addEventListener("resize", onResize);
+  editor = { close() { if (wipT) { clearTimeout(wipT); saveWip(); } clearInterval(animT); document.removeEventListener("keydown", onKey); window.removeEventListener("resize", onResize); } };
+
+  setTool("pencil"); paintPalette(); size(); fit(); paint();
 }
 
 await document.fonts.ready.catch(() => {});
