@@ -228,7 +228,7 @@ Check items off as they land, and note the commit.
 - [x] Punch card (done early, in Phase 1)
 - [x] Today's sprite suggestion (in progress first, then your last group, small before big; "Another" skips)
 - [x] Wings light up per group, with a ★ when a group is full
-- [ ] Group badges: a proper badge shelf, beyond the ★ (totals are done)
+- [x] Badge shelf on Home: one badge per wing (pictured with your art, or the wing's most detailed sprite), plus First stroke / Ten coats / Fifty, 3 / 7 / 30 days in a row, and The whole museum. Earned dates kept in `meta.badges`; new badges show in the celebration after a save
 
 ### Phase 6: Export
 - [x] Art-only pack export (Home → **Put my art in the game**): fresh folder pack; only owned `assets` change. Verified byte-identical outside `assets` and `savedAt`
@@ -242,22 +242,28 @@ Check items off as they land, and note the commit.
 - [ ] (Optional) curator atlas export
 
 ### Phase 7: Scenes
-- [ ] Tile mockup
-- [ ] Room floor and wall mockup
-- [ ] Shelf, table and counter mockup
-- [ ] In-hand mockup
-- [ ] Walk cycle and loop
-- [ ] Day, sunset and night tint
-- [x] **In the game** window in the painter (done early, Joe asked 10/13): a hidden headless engine draws each room whole, finds where the sprite lands, and shows a live crop around it while you paint. "Next" steps through spots. Hide/Show is remembered. Replaces the hand-kept slot-to-room map.
-- [ ] Bigger "See it in the museum" (walk around with your art), if still wanted after the window
+- [x] **Scenes** panel in the painter, drawn from the game's own art (and your library), redrawn as you paint; the choice is remembered per sprite
+- [x] Tiled (3×3; carpets as end, middle, middle, middle, end; murals as strips)
+- [x] In a room (lobby wall and floor)
+- [x] On a table (the staff break table)
+- [x] In a hand (the player, at the engine's held-item, bag or phone spot)
+- [x] Over someone (a visitor, at the engine's reaction spot)
+- [x] Worn (GOQ hat and shades on the player, the visitor shirt on a visitor, frame by frame)
+- [x] Walk cycle and loop (the live preview)
+- [x] Day, sunset and night tint (approximate)
+- [x] **In the game** window (real engine crop, see Phase 2 notes)
+- [ ] Bigger "See it in the museum" (walk around with your art): parked; the In the game window covers most of it. Ask Joe before building
 
 ### Phase 8: Polish and test
-- [ ] Phone-size test (Playwright 390×844), light and dark
-- [ ] The curator shows art saved in the Paint Room
-- [ ] `UPDATING.md`: Paint Room section
-- [ ] Handoff notes below are up to date
+- [x] Phone-size test (Playwright 390×844), light and dark: Home, Find, slot page, painter, export, badges, scenes
+- [x] The curator shows art from the Paint Room (Send to the curator, and Import art from museum-art.json)
+- [x] `UPDATING.md`: Paint Room section
+- [x] Handoff notes below are up to date
+- [ ] Try it on Joe's real phone (touch, pinch, the system file pickers)
 
 ### Handoff notes (latest state)
+
+- 2026-10-13, Phases 5, 7 and 8 done. Badges: `badgeList()`, `checkBadges()`, `badgeShelf()`, `badgeFace()` (module level). Scenes: inside `renderPaint()` (`SCENES`, `sceneList`, `sceneDefault`, `drawScene()`, called from `paint()`). Test scripts live only in the session scratchpad (not in the repo); they cover the frame tools, frame modes, the In the game window, Phase 4 tools, the export rules (`e6.js`: byte-identical pack apart from assets, Replace/Remove/clash, curator Import art, ZIP), scenes and badges. All pass. Open items: the optional curator atlas export, a bigger walk-around preview, and a real-phone check.
 
 - 2026-10-13: Frame modes added (see Phase 3). `frameSettings(s)` / `setFrameSettings(key, patch)` are module-level; `animated()` (slot page, Today) and the painter's preview (`paintFs()`, the `tick` timeout chain, the `setC` row) follow them. Walk sheets (`layout: "char"`) are fixed and get no panel. Tested: reactions default to separate pictures with names; switching to Animation with order 1,2,1,3 survives a reload; the cat defaults to 1,2.
 
