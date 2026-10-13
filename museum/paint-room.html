@@ -194,6 +194,8 @@ select.search{appearance:auto;margin-top:8px}
 .frames button{flex-direction:column;gap:2px}
 .fcap{font-size:.6rem;line-height:1.1;color:var(--muted);max-width:64px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fset{border:2px dashed var(--line);border-radius:10px;padding:8px 10px;margin:10px 0 0}
+.fset summary{cursor:pointer;font-size:.85rem;font-weight:700;color:var(--muted);min-height:28px;display:list-item}
+.fset[open] summary{margin-bottom:4px}
 .fsrow{display:flex;align-items:center;gap:6px;margin:4px 0}
 .fsrow.wrap{flex-wrap:wrap}
 .fsrow > span.small:first-child{min-width:70px}
@@ -1249,12 +1251,15 @@ function renderPaint() {
   if (s.w > s.h * 2 && s.w > 48) $app.appendChild(el("p", { class: "small", style: "margin:6px 0 0", text: "It's long: drag with Move (or two fingers) to get along it." }));
   const peekB = el("button", { type: "button", "aria-pressed": pipOn ? "true" : "false", "aria-label": "Peek: show the in-game preview over the grid", text: "Peek", onclick: () => setPip(!pipOn) });
   stage.appendChild(pip);
-  $app.appendChild(el("div", { class: "zoom" }, [peekB, gridB, zoomBtn("−", "Zoom out", () => zoomBy(1 / 1.5)), zoomBtn("Fit", "Fit to screen", () => { fit(); draw(); }), zoomBtn("+", "Zoom in", () => zoomBy(1.5))]));
+  const zoomRow = el("div", { class: "zoom" }, [peekB, gridB, zoomBtn("−", "Zoom out", () => zoomBy(1 / 1.5)), zoomBtn("Fit", "Fit to screen", () => { fit(); draw(); }), zoomBtn("+", "Zoom in", () => zoomBy(1.5))]);
+  $app.appendChild(zoomRow);
 
   // How the frames are used (not for walk sheets): animation or separate pictures; for an animation, the preview's play order and speed.
-  const fsPanel = el("section", { class: "fset", "aria-label": "How these frames are used" });
+  const fsPanel = el("details", { class: "fset", "aria-label": "How these frames are used" }); // folded to one line; tap to change
   function paintFs() {
-    fset = frameSettings(s); fsPanel.innerHTML = "";
+    fset = frameSettings(s); const wasOpen = fsPanel.open; fsPanel.innerHTML = "";
+    fsPanel.appendChild(el("summary", { text: fset.mode === "set" ? "Frames: separate pictures" : "Frames: animation · order " + fset.order.map(f => f + 1).join(" ") + " · " + fset.ms + " ms" }));
+    fsPanel.open = wasOpen;
     const seg = (v, label) => el("button", { type: "button", class: "chip", "aria-pressed": fset.mode === v ? "true" : "false", text: label, onclick: async () => { await setFrameSettings(key, { mode: v }); paintFs(); draw(); } });
     fsPanel.appendChild(el("div", { class: "fsrow" }, [el("span", { class: "small", text: "Plays as" }), seg("anim", "Animation"), seg("set", "Separate pictures")]));
     if (fset.mode === "set") fsPanel.appendChild(el("p", { class: "small", style: "margin:4px 0 0", text: "Separate pictures: the game shows one at a time (a set to pick from, or states it switches between). The preview shows them side by side." }));
@@ -1378,10 +1383,11 @@ function renderPaint() {
   const artHead = el("p", { class: "palhead", text: "Also in this art" });
   const mine = el("div", { class: "pal mine", role: "group", "aria-label": "My swatches" }), editB = el("button", { class: "btn quiet small", type: "button", onclick: () => { editing = !editing; paintPalette(); } });
   let editing = false;
-  $app.appendChild(el("section", { class: "panel", style: "margin-top:4px" }, [el("div", { class: "cur" }, [curSw, curText, keepB]),
-    el("p", { class: "small", style: "margin:-4px 0 0", text: "Tap the big swatch to change a color (and repaint it everywhere in the sprite, if you like)." }),
+  const palPanel = el("section", { class: "panel", style: "margin-top:4px" }, [el("div", { class: "cur" }, [curSw, curText, keepB]),
+    el("p", { class: "small", style: "margin:-4px 0 0", text: "Tap the big swatch to change or repaint a color." }),
     el("p", { class: "palhead", text: "Sprite colors" }), pal, artHead, palArt,
-    el("div", { class: "palhead row" }, [el("span", { text: "My swatches" }), editB]), mine]));
+    el("div", { class: "palhead row" }, [el("span", { text: "My swatches" }), editB]), mine]);
+  $app.appendChild(palPanel);
 
   // More
   const more = el("details", { class: "more panel" }, [el("summary", { text: "More" }), el("div", { class: "foot" }, [
@@ -1721,6 +1727,9 @@ function renderPaint() {
   document.addEventListener("keydown", onKey); if (ro) ro.observe(stage); else window.addEventListener("resize", onResize);
   editor = { key, close() { if (wipT) { clearTimeout(wipT); saveWip(); } clearTimeout(animT); ctxClose(); document.removeEventListener("keydown", onKey); if (ro) ro.disconnect(); else window.removeEventListener("resize", onResize); } };
 
+  // Painting order on a phone: the grid, then the zoom row, tools, selection bar and colors right under it;
+  // frames, frame settings, the trace and More follow.
+  zoomRow.after(tools, selBar, palPanel);
   setTool("pencil"); paintChips(); paintPalette(); paintTrace(); if (!fset.fixed) paintFs(); size(); fit(); paint(); ctxSetup();
 }
 
