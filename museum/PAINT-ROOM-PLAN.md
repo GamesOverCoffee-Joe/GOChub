@@ -258,6 +258,8 @@ Check items off as they land, and note the commit.
 
 ### Handoff notes (latest state)
 
+- 2026-10-13: Fixed the zoom snapping back when scrolling on a phone (Joe). The address bar sliding in and out resized the window, and the resize handler re-fit the grid. Now the grid is sized with `svh` (which ignores the address bar), a `ResizeObserver` on the grid box replaces the window resize listener, and a resize keeps the zoom and the centered spot. Only the first layout and the Fit button fit the sprite.
+
 - 2026-10-13, Phase 3 done. In `renderPaint()`: `goFrame()` (switching frames keeps the zoom, so frames line up), `ghostOf(f)`, `readFrame()` / `writeFrame()` (one frame's pixels in and out of `px`), `copyFrame()` / `pasteFrame()` with the page-wide `frameClip`. Keys: `,` `.` (or `[` `]`) change frames, `o` toggles the ghost, Ctrl/Cmd+C and V copy and paste a frame. Tested on the player: copying facing right onto facing left and flipping gives back the original left frame exactly; Copy to next and three undos restore it. Next: **Phase 4** (shape tools, select with move, flip and rotate, mirror painting, trace layer, import a PNG, recolor and reorder swatches).
 
 - 2026-10-13, after Phase 2 (Joe's asks): **My swatches** and the **In the game** window.

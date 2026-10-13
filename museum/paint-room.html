@@ -176,7 +176,7 @@ select.search{appearance:auto;margin-top:8px}
 /* The painter */
 .pv{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px}
 .pv .chk{border:2px solid var(--line);padding:6px;min-width:44px;min-height:44px}
-.stage{position:relative;width:100%;height:min(calc(100vw - 32px),52vh,528px);border:2px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface-2);touch-action:none;user-select:none;-webkit-user-select:none}
+.stage{position:relative;width:100%;height:min(calc(100vw - 32px),52vh,528px);height:min(calc(100vw - 32px),52svh,528px);border:2px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface-2);touch-action:none;user-select:none;-webkit-user-select:none}
 .stage canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
 .zoom{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin:8px 0 0}
 .framelabel{margin:8px 0 0;line-height:1.3}
@@ -728,7 +728,7 @@ function renderPaint() {
   const zoomBtn = (label, aria, fn) => el("button", { type: "button", "aria-label": aria, text: label, onclick: fn });
   const gridB = el("button", { type: "button", "aria-pressed": "true", "aria-label": "Grid lines", text: "#", onclick: () => { showGrid = !showGrid; gridB.setAttribute("aria-pressed", showGrid); draw(); } });
   const stage = el("div", { class: "stage" }, [cv]);
-  if (s.w >= s.h * 3) stage.style.height = "clamp(160px, " + (s.h * 14 + 24) + "px, 52vh)"; // a long strip: a shorter grid
+  if (s.w >= s.h * 3) stage.style.height = "clamp(160px, " + (s.h * 14 + 24) + "px, " + (CSS.supports("height", "1svh") ? "52svh" : "52vh") + ")"; // a long strip: a shorter grid
   const frameLabel = el("p", { class: "small framelabel" });
   $app.appendChild(stage);
   if (s.w > s.h * 2 && s.w > 48) $app.appendChild(el("p", { class: "small", style: "margin:6px 0 0", text: "It's long: drag with Move (or two fingers) to get along it." }));
@@ -979,9 +979,12 @@ function renderPaint() {
     else if (!mod && k === "o" && Z.frames > 1) ghostB.click();
     else if (!mod && { b: 1, p: 1, e: 1, f: 1, g: 1, i: 1, h: 1, m: 1 }[k]) setTool({ b: "pencil", p: "pencil", e: "eraser", f: "fill", g: "fill", i: "pick", h: "move", m: "move" }[k]);
   };
-  const onResize = () => { size(); fit(); draw(); };
-  document.addEventListener("keydown", onKey); window.addEventListener("resize", onResize);
-  editor = { key, close() { if (wipT) { clearTimeout(wipT); saveWip(); } clearInterval(animT); ctxClose(); document.removeEventListener("keydown", onKey); window.removeEventListener("resize", onResize); } };
+  /* When the grid's box changes size (rotating the phone; older browsers also resize it as the address bar slides away
+     while you scroll), keep your zoom and keep the same spot in the middle. Only the first layout fits the sprite. */
+  const onResize = () => { const w0 = cw, h0 = ch; size(); if (!w0 || !h0) fit(); else { ox += (cw - w0) / 2; oy += (ch - h0) / 2; } draw(); };
+  const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => { const r = stage.getBoundingClientRect(); if (Math.abs(r.width - cw) > 0.5 || Math.abs(r.height - ch) > 0.5) onResize(); }) : null;
+  document.addEventListener("keydown", onKey); if (ro) ro.observe(stage); else window.addEventListener("resize", onResize);
+  editor = { key, close() { if (wipT) { clearTimeout(wipT); saveWip(); } clearInterval(animT); ctxClose(); document.removeEventListener("keydown", onKey); if (ro) ro.disconnect(); else window.removeEventListener("resize", onResize); } };
 
   setTool("pencil"); paintPalette(); size(); fit(); paint(); ctxSetup();
 }
