@@ -441,7 +441,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 57";
+window.GOQ_WANT = "2026-11-18 cards 58";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -2099,7 +2099,7 @@ function renderRoomSettings(box, d) {
     const s = el("select", {}, [el("option", { value: "", text: "None (the walls above)" }), ...papers.map(x => el("option", { value: x.key, text: x.label.replace(/^Wallpaper: /, "") }))]);
     s.value = d.wallpaper || "";
     const pv = el("canvas", { width: 64, height: 32, style: "image-rendering:pixelated;width:128px;height:64px;border:1px solid var(--line);border-radius:4px;display:" + (d.wallpaper ? "block" : "none") });
-    const show = k => { pv.style.display = k ? "block" : "none"; if (!k) return; const x = pv.getContext("2d"), img = edGame.sheet(k); x.clearRect(0, 0, 64, 32); if (img) for (let i = 0; i < 4; i++) x.drawImage(img, i * 16, 0); };
+    const show = k => { pv.style.display = k ? "block" : "none"; if (!k) return; const x = pv.getContext("2d"), img = edGame.sheet(k); x.clearRect(0, 0, 64, 32); if (img) { if ((img.naturalWidth || img.width) > 16) x.drawImage(img, 0, 0); else for (let i = 0; i < 4; i++) x.drawImage(img, i * 16, 0); } }; // (a wide one: its first 64 pixels)
     if (d.wallpaper) show(d.wallpaper);
     s.addEventListener("change", () => { snapshot(); const dd = editable(R.id); if (s.value) dd.wallpaper = s.value; else delete dd.wallpaper; show(s.value); roomChanged(true); });
     box.appendChild(el("label", { class: "rfield" }, [el("span", { text: "Wallpaper" }), el("small", { text: "Covers every wall in this room. Pictures, windows, signs and murals go on top. Repaint the patterns in Art, Wallpaper." }), s, pv]));
