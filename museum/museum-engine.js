@@ -8339,9 +8339,9 @@ class Game {
   }
   /* ----- The tour moves on in a dip to black (Joe 10/14) -----
      Walking the group from stop to stop (as a crowd, then single file) kept jamming, parking people in odd spots and boxing you
-     in, so now it doesn't walk at all. Each leg, if you can see any of them, the screen dips to black and they're at the next
-     stop when it comes back; if you were with them (close to any of them), you come along and stand beside them.
-     Out of sight, they're just there. The dip waits while you're talking or in a menu (they stand still till then). */
+     in, so now it doesn't walk at all. Each leg, if any of them (or the stop they're going to) is on screen, the screen dips to
+     black and they're at the next stop when it comes back; you stay where you are. Off screen, they're just there, no dip
+     (Joe 10/14). The dip waits while you're talking or in a menu (they stand still till then). */
   tourLineStart(T, leader, followers, dest, arrive, fresh, also) {
     this.tourLineEnd(T);
     const people = [leader, ...followers].filter(n => n && !n.gone && !n.leaving), extra = (also || []).filter(o => o && o.n && !o.n.gone && !o.n.leaving); if (!people.length && !extra.length) return;
@@ -8351,20 +8351,16 @@ class Game {
     T.line = L; // the dip (tourDip, from updateTour)
   }
   tourLineEnd(T) { if (T && T.line) { const L = T.line; [...L.people, ...L.also.map(o => o.n)].forEach(n => { n.inLine = false; }); T.line = null; } }
-  tourSeen(L) { return !!this.room && [...L.people, ...L.also.map(o => o.n)].some(n => n.where === this.room.id); }
+  tourSeen(L) { // on screen: any of them, or the stop they're going to
+    if (!this.room) return false;
+    const on = (room, x, y) => room === this.room.id && (x + 1) * T > this.camX && x * T < this.camX + SW && (y + 1) * T > this.camY && y * T < this.camY + SH;
+    return [...L.people, ...L.also.map(o => o.n)].some(n => on(n.where, n.x, n.y)) || on(L.dest.room, L.dest.at[0], L.dest.at[1]) || (L.arrive() || []).some(o => o && o.at && on(o.room, o.at[0], o.at[1]));
+  }
   tourDip(T) { // the group's ready to move on: dip to black, and there they are
     const L = T.line; if (L.dipping || this.trans || this.mode !== "walk") return;
     if (!this.tourSeen(L)) { this.tourLineDone(T, L); return; }
-    const p = this.player, bring = L.people.some(n => n.where === this.room.id && Math.abs(n.x - p.x) + Math.abs(n.y - p.y) <= 8); // with them (anyone in the group close by): you come along
     L.dipping = true; this.mode = "busy";
-    this.trans = { t: 0, dur: 16, switched: false, fn: () => { this.tourLineDone(T, L, true); if (bring) this.tourBring(L); } };
-  }
-  tourBring(L) { // you, beside the group at the stop
-    const d = L.dest, R = this.rooms[d.room]; if (!R) return;
-    const at = this.tourAround(R, d.at, 24).find(([x, y]) => this.tileFree(R, x, y) && !R.events[x + "," + y]); if (!at) return;
-    const dir = this.janFace(at, d.at[0], d.at[1]);
-    if (d.room !== this.room.id) this.enterRoom(d.room, at[0], at[1], dir);
-    else { const p = this.player; p.x = at[0]; p.y = at[1]; p.dir = dir; p.moving = false; p.prog = 0; p.sitting = false; this.path = null; this.pathAct = null; }
+    this.trans = { t: 0, dur: 16, switched: false, fn: () => this.tourLineDone(T, L, true) };
   }
   lineJump(n, room, x, y) { // straight to a tile (in another room too), fading in if you can see it
     const R = this.rooms[room]; if (!R) return; const was = n.where;
@@ -9882,7 +9878,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 55";
+const VERSION = "2026-11-18 cards 56";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
