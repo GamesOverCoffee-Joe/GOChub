@@ -343,6 +343,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
     <div class="brand"><b>Curator</b><span>GOQ Museum: art, pieces, and the museum pack</span></div>
     <div class="tabs" role="tablist" aria-label="Sections">
       <button role="tab" id="tab-art" aria-selected="true" aria-controls="main">Art</button>
+      <button role="tab" id="tab-episode" aria-selected="false" aria-controls="main">Episode day</button>
       <button role="tab" id="tab-pieces" aria-selected="false" aria-controls="main">Pieces</button>
       <button role="tab" id="tab-staff" aria-selected="false" aria-controls="main">Staff</button>
       <button role="tab" id="tab-visitors" aria-selected="false" aria-controls="main">Visitors</button>
@@ -362,12 +363,15 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
         <div class="rmenu">
           <button class="btn quiet" id="verBtn" type="button" title="Is this the latest engine, and is your draft the museum-pack.json in this folder?">Check version</button>
           <label class="btn quiet" for="importFile">Import pack</label>
+          <label class="btn quiet" for="artFile" title="Add art from the Paint Room (museum-art.json). Changes art only.">Import art</label>
           <a class="btn quiet" id="batchBtn" href="batch-fill.html" title="Add many pieces at once from YouTube and image files, and crop them to fit">Batch fill</a>
           <a class="btn quiet" href="writers-room.html" title="Write the museum's lines one at a time, a little every day (same draft as this page)">Writers' Room</a>
+          <a class="btn quiet" href="paint-room.html" title="Repaint the museum's sprites one at a time, a little every day (art only)">Paint Room</a>
           <a class="btn quiet" href="goc-links.html" target="_blank" rel="noopener" title="Copy your YouTube videos as lines for Friday features">GOC link grabber</a>
         </div>
       </details>
       <input id="importFile" class="sr-only" type="file" accept=".json,application/json">
+      <input id="artFile" class="sr-only" type="file" accept=".json,application/json">
       <button class="btn primary" id="exportBtn" type="button">Export pack</button>
       <button class="btn quiet" id="pvJump" type="button">Preview</button>
     </div>
@@ -437,7 +441,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 42";
+window.GOQ_WANT = "2026-11-18 cards 59";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -518,7 +522,8 @@ function packOut() {
     if (p.unveil) o.unveil = p.unveil;
     if (p.drink) { o.drink = p.drink; if (p.drinkColor) o.drinkColor = p.drinkColor; if (p.drinkLine && p.drinkLine.length) o.drinkLine = p.drinkLine; if (p.drinkPrice) o.drinkPrice = p.drinkPrice; if (p.drinkIced) o.drinkIced = true; }
     if (p.pick) o.pick = true;
-    if (p.episodeTitle) o.episodeTitle = p.episodeTitle; if (p.cardBlurb) o.cardBlurb = p.cardBlurb; if (p.noCard) o.noCard = true; // its trading card (Cards tab)
+    if (p.answers && p.answers.some(x => x && String(x.a !== undefined ? x.a : x).trim())) o.answers = [0, 1, 2].map(i => { const x = p.answers[i]; return String((x && typeof x === "object" ? x.a : x) || ""); }); // the developer's answers to the three questions
+    if (p.episodeTitle) o.episodeTitle = p.episodeTitle; if (p.cardBlurb) o.cardBlurb = p.cardBlurb; if (p.noCard) o.noCard = true; if (p.cardsFrom !== "on") o.cardsFrom = p.cardsFrom || ""; // its trading card (Cards tab); cardsFrom: missing = always (older packs), "" = not yet
     if (p.image) o.image = p.image; else { o.colors = p.colors; o.style = p.style; }
     return o;
   }) };
@@ -698,12 +703,13 @@ $("#dayBtn").addEventListener("click", () => { game.closeAll(); game.skipDay(); 
 let tab = "art", current = "atlas";
 function setTab(t) {
   tab = t;
-  ["art", "pieces", "staff", "visitors", "shop", "cards", "tokens", "rooms", "words", "ach", "notes", "preview"].forEach(k => $("#tab-" + k).setAttribute("aria-selected", t === k));
+  ["art", "episode", "pieces", "staff", "visitors", "shop", "cards", "tokens", "rooms", "words", "ach", "notes", "preview"].forEach(k => $("#tab-" + k).setAttribute("aria-selected", t === k));
   $("#app").classList.toggle("no-side", t !== "art");
   render();
 }
 $("#tab-art").addEventListener("click", () => setTab("art"));
 $("#tab-pieces").addEventListener("click", () => setTab("pieces"));
+$("#tab-episode").addEventListener("click", () => setTab("episode"));
 $("#tab-staff").addEventListener("click", () => setTab("staff"));
 $("#tab-visitors").addEventListener("click", () => setTab("visitors"));
 $("#tab-shop").addEventListener("click", () => setTab("shop"));
@@ -739,7 +745,7 @@ function renderPreviewTab() {
   wrap.appendChild(el("p", { class: "note", text: "These change only the live preview on the right, never the pack or anyone's save. Each row is a setting (the lit one is on); the buttons make something happen right away." }));
   wrap.appendChild($("#pvMenu")); showClock(); drawTriggers(); showErrors(); showDaySeg();
 }
-function renderTab() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "visitors") renderVisitors(); else if (tab === "shop") renderShop(); else if (tab === "cards") renderCards(); else if (tab === "tokens") renderTokens(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else if (tab === "notes") renderNotes(); else if (tab === "preview") { renderPreviewTab(); forceFill(); } else renderPieces(); }
+function renderTab() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "visitors") renderVisitors(); else if (tab === "shop") renderShop(); else if (tab === "cards") renderCards(); else if (tab === "tokens") renderTokens(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else if (tab === "notes") renderNotes(); else if (tab === "episode") renderEpisode(); else if (tab === "preview") { renderPreviewTab(); forceFill(); } else renderPieces(); }
 
 /* ---------- Image helpers ---------- */
 function readFile(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error("That file couldn't be read.")); r.readAsDataURL(file); }); }
@@ -1161,11 +1167,12 @@ const PLACE_GROUPS = [
     { kind: "spot", name: "Painting spot", key: "wall_frame_wood", note: "Community pieces hang here. Tap the wall; it takes two tiles across both wall rows." },
     { kind: "prop", key: "overflow_screen", name: "Touch screen", note: "The room's extra pieces: episodes of its genre that don't fit in its cases. One per room is plenty." },
   ] },
-  { name: "Furniture", items: ["bench", "bench_side", "plant", "planter_wide", "sign_stand", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board", "day_board"].map(k => ({ kind: "prop", key: k })) },
+  { name: "Furniture", items: ["bench", "bench_side", "plant", "planter_wide", "sign_stand", "sign_down", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board", "day_board"].map(k => ({ kind: "prop", key: k })) },
   { name: "Shop and café", items: ["shelf_unit", "magazine_rack", "item_rack", "shop_counter", "cafe_counter", "espresso_machine", "coffee_grinder", "cup_stacks", "bus_tub", "cafe_table", "cafe_stool", "floor_lamp", "postcard_spinner", "basket", "planter", "cat_bed"].map(k => ({ kind: "prop", key: k }))
     .concat([{ kind: "decal", key: "rug" }]) },
   { name: "Storage and floors", items: [{ kind: "stairs", key: "stair_up", name: "Stairs up", note: "Step on it to change floors. Select it to choose where it leads." },
-    { kind: "stairs", key: "stair_down", name: "Stairs down", note: "Step on it to change floors. Select it to choose where it leads." }]
+    { kind: "stairs", key: "stair_down", name: "Stairs down", note: "Step on it to change floors. Select it to choose where it leads." },
+    { kind: "mat", name: "Doormat", key: "doormat", note: "A mat on the floor. Until you place, move or remove one, a room has a mat inside every doorway; after that it has just the ones you put down." }]
     .concat(["railing", "storage_shelves", "box_stack", "workbench"].map(k => ({ kind: "prop", key: k }))) },
   { name: "Hallways", items: [
     { kind: "lamp", key: "wall_sconce", name: "Accent light", note: "A small wall light. Tap a wall (the back wall of a room or hallway)." },
@@ -1233,12 +1240,20 @@ function roomItems(d) {
   (d.lockers || []).forEach((x, i) => out.push({ type: "locker", i, x, y: 1, w: 1, h: 2, label: "Locker" }));
   (d.spots || []).forEach((s, i) => out.push({ type: "spot", i, x: Array.isArray(s) ? s[0] : s, y: Array.isArray(s) ? s[1] : 1, w: 2, h: 2, label: "Painting spot " + (i + 1) }));
   (d.wallArt || []).forEach((a, i) => out.push({ type: "wallArt", i, x: a.x, y: a.y || 1, w: sw(a.key), h: 2, label: (GOQ.SLOT[a.key] || {}).label || a.key }));
-  (d.murals || []).forEach((m, i) => out.push({ type: "mural", i, x: m.x, y: m.y, w: m.w || 1, h: 1, label: "Mural" }));
+  (d.murals || []).forEach((m, i) => out.push({ type: "mural", i, x: m.x, y: m.y, w: m.w || 1, h: (GOQ.SLOT[m.key] || {}).h > 16 ? 2 : 1, label: "Mural" }));
   (d.lamps || []).forEach((a, i) => out.push({ type: "lamp", i, x: a[0], y: a[1], w: 1, h: 1, label: "Accent light" }));
+  roomMats(d).forEach((a, i) => out.push({ type: "mat", i, x: a[0], y: a[1], w: 1, h: 1, label: Array.isArray(d.mats) ? "Doormat" : "Doormat (automatic)" }));
   (d.arrows || []).forEach((a, i) => out.push({ type: "arrow", i, x: a.x, y: a.y || 1, w: a.w || 4, h: 2, label: "Arrow sign" }));
   (d.decals || []).forEach((a, i) => out.push({ type: "decal", i, x: a.x, y: a.y, w: a.w || sw(a.key), h: a.w ? a.h || 1 : sh(a.key), label: (GOQ.SLOT[a.key] || {}).label || a.key }));
   return out;
 }
+/* A room's doormats: the ones placed here, or (none placed yet) the automatic one inside each doorway, as the game works them out. */
+function roomMats(d) {
+  if (Array.isArray(d.mats)) return d.mats;
+  const r = d === roomDef(R.id) && edGame.rooms && edGame.rooms[R.id]; if (!r) return [];
+  return (r.matList ? [] : edGame.doorMats(r)).map(a => a.slice());
+}
+function ownMats(d) { if (!Array.isArray(d.mats)) d.mats = roomMats(d); return d.mats; } // the first change: the automatic mats become placed ones you can edit
 function itemAt(d, x, y) { return roomItems(d).find(it => x >= it.x && x < it.x + it.w && y >= it.y && y < it.y + it.h) || null; }
 const DOOR_CH = "DdSsBEH";
 function doorTileAt(d, x, y) {
@@ -1570,6 +1585,7 @@ function placeAt(t) {
   else if (p.kind === "decal") (d.decals = d.decals || []).push(p.key === "rug" ? Object.assign({ key: "rug", x: t.x, y: t.y, w: 3, h: 2, pattern: "band", motif: "diamond" }, GOQ.RUG_PRESETS["Deep red"]) : { key: p.key, x: t.x, y: t.y });
   else if (p.kind === "spawn") d.spawn = [t.x, t.y, (d.spawn && d.spawn[2]) || "down"];
   else if (p.kind === "catSpot") (d.catSpots = d.catSpots || []).push([t.x, t.y]);
+  else if (p.kind === "mat") ownMats(d).push([t.x, t.y]);
   else if (p.kind === "mugSpot") (d.mugSpots = d.mugSpots || []).push([t.x, t.y]);
   else if (p.kind === "lightSwitch") d.lightSwitch = [t.x, t.y];
   else if (p.kind === "intercom") d.intercom = [t.x, t.y];
@@ -1608,7 +1624,8 @@ function placeAt(t) {
 }
 function removeItem(d, it) {
   const arr = { mural: "murals", lamp: "lamps", arrow: "arrows", glow: "glows", visitor: "visitors", catSpot: "catSpots", mugSpot: "mugSpots", case: "cases", prop: "props", spot: "spots", wallArt: "wallArt", decal: "decals", stairs: "stairs" }[it.type];
-  if (arr) d[arr].splice(it.i, 1);
+  if (it.type === "mat") ownMats(d).splice(it.i, 1);
+  else if (arr) d[arr].splice(it.i, 1);
   else if (it.type === "fixed") delete d[it.key];
 }
 /* Wall things sit on a back wall's upper row. In the museum they can move to another wall: dy, if that's a wall too, else 0. */
@@ -1632,6 +1649,7 @@ function moveItem(d, it, dx, dy) {
   else if (it.type === "case") { d.cases[it.i][0] += dx; d.cases[it.i][1] += dy; }
   else if (it.type === "stairs") { d.stairs[it.i].x += dx; d.stairs[it.i].y += dy; }
   else if (it.type === "catSpot") { d.catSpots[it.i][0] += dx; d.catSpots[it.i][1] += dy; }
+  else if (it.type === "mat") { const a = ownMats(d)[it.i]; a[0] += dx; a[1] += dy; }
   else if (it.type === "mugSpot") { d.mugSpots[it.i][0] += dx; d.mugSpots[it.i][1] += dy; }
   else if (it.type === "glow") { d.glows[it.i][0] += dx; d.glows[it.i][1] += dy; }
   else if (it.type === "spawn") { d.spawn[0] += dx; d.spawn[1] += dy; }
@@ -1785,13 +1803,13 @@ function layMove(t) {
   d.layout = L; recarve(d); roomChanged();
 }
 /* The things placed in a room, so a drag can move them from where they started. */
-const ITEM_KEYS = ["props", "cases", "spots", "wallArt", "decals", "glows", "catSpots", "mugSpots", "visitors", "featuredAt", "runners", "lamps", "arrows", "murals"];
+const ITEM_KEYS = ["props", "cases", "spots", "wallArt", "decals", "glows", "catSpots", "mugSpots", "visitors", "featuredAt", "runners", "lamps", "mats", "arrows", "murals"];
 function itemsOf(d) { const o = {}; ITEM_KEYS.forEach(k => { if (d[k] !== undefined) o[k] = clone(d[k]); }); return o; }
 function shiftItems(items, box, dx, dy) {
   const out = clone(items); if (!box || (!dx && !dy)) return out;
   const inside = (x, y) => x >= box.x && y >= box.y && x < box.x + box.w && y < box.y + box.h;
   ["props", "decals", "visitors", "wallArt", "arrows", "murals"].forEach(k => (out[k] || []).forEach(o => { if (inside(o.x, o.y === undefined ? 1 : o.y)) { o.x += dx; if (o.y !== undefined) o.y += dy; } }));
-  ["cases", "glows", "catSpots", "mugSpots", "runners", "lamps"].forEach(k => (out[k] || []).forEach(p => { if (inside(p[0], p[1])) { p[0] += dx; p[1] += dy; } }));
+  ["cases", "glows", "catSpots", "mugSpots", "runners", "lamps", "mats"].forEach(k => (out[k] || []).forEach(p => { if (inside(p[0], p[1])) { p[0] += dx; p[1] += dy; } }));
   (out.spots || []).forEach((p, i) => { if (Array.isArray(p) && inside(p[0], p[1])) { p[0] += dx; p[1] += dy; } });
   if (out.featuredAt && inside(out.featuredAt[0], out.featuredAt[1])) { out.featuredAt[0] += dx; out.featuredAt[1] += dy; }
   return out;
@@ -1862,6 +1880,12 @@ function renderLayoutPanel(box, d) {
       colorField("Floor color", "Tints the floor art. Clear for the art's own color.", () => (r.tint || {}).floor, (q, v) => { q.tint = Object.assign({}, q.tint, { floor: v }); }),
       colorField("Wall color", "Tints the walls, under any murals. Clear for the art's own color.", () => (r.tint || {}).wall, (q, v) => { q.tint = Object.assign({}, q.tint, { wall: v }); }),
     ]));
+    { // this wing's wallpaper (Joe 10/14): the wing patterns come out in soft shades of the theme color
+      const papers = GOQ.SLOTS.filter(x => x.group === "Wallpaper" && !x.retired);
+      const ws = el("select", {}, [el("option", { value: "", text: "None (the walls above)" }), ...papers.map(x => el("option", { value: x.key, text: x.label.replace(/^(Wing )?[Ww]allpaper: /, "") + (x.wing ? " (in this wing's colors)" : "") }))]);
+      ws.value = r.wallpaper || ""; ws.addEventListener("change", () => layEdit(L2 => { const q = layRoom(L2, r.id); if (ws.value) q.wallpaper = ws.value; else delete q.wallpaper; }));
+      box.appendChild(field("Wallpaper", ws, "Covers this room's walls. The wing patterns (Drift, Wave, Ribbon, Haze, Scatter) are drawn in soft shades of the theme color, so they follow it if you change it."));
+    }
     const lt = el("input", { type: "checkbox", checked: r.light !== false }); lt.addEventListener("change", () => layEdit(L2 => { layRoom(L2, r.id).light = lt.checked; }));
     box.appendChild(el("label", { class: "check" }, [lt, document.createTextNode("Has a light switch (it must be off to close the museum)")]));
     box.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small quiet", text: "Delete this room", onclick: () => {
@@ -1946,13 +1970,15 @@ function renderInspector() {
   }
   if (it.type === "mural") {
     const m = d.murals[it.i], ed = fn => { snapshot(); fn(editable(R.id).murals[it.i]); roomChanged(true); renderInspector(); };
-    const ks = el("select", {}, GOQ.SLOTS.filter(sl => sl.group === "Murals").map(sl => el("option", { value: sl.key, text: sl.label.replace(/^Mural: /, "") })));
+    const ks = el("select", {}, GOQ.SLOTS.filter(sl => sl.group === "Murals").map(sl => el("option", { value: sl.key, text: sl.label.replace(/^Mural: /, "") + (sl.h > 16 ? " (both wall rows)" : "") })));
     ks.value = m.key; ks.addEventListener("change", () => ed(q => { q.key = ks.value; }));
     const wd = el("input", { type: "number", min: 1, max: 40, value: m.w || 1 }); wd.addEventListener("change", () => ed(q => { q.w = Math.max(1, Math.min(40, +wd.value || 1)); }));
     const sl = GOQ.SLOT[m.key] || { w: 256 }, room = Math.max(0, sl.w - (m.w || 1) * 16);
     const at = el("input", { type: "range", min: 0, max: room, step: 4, value: m.at >= 0 ? Math.min(room, m.at) : room / 2, disabled: !room }); at.addEventListener("change", () => ed(q => { q.at = +at.value; }));
     box.appendChild(el("div", { class: "rrow" }, [field("Art", ks, "Replace it in Art, Murals."), field("Length (tiles)", wd)]));
     box.appendChild(field("Which part of the art shows", at, room ? "Slide to pick the stretch of the landscape on this wall." : "The wall is as long as the art, so all of it shows."));
+    const tr = el("input", { type: "checkbox", checked: !!m.trim }); tr.addEventListener("change", () => ed(q => { if (tr.checked) q.trim = true; else delete q.trim; }));
+    box.appendChild(el("label", { class: "check" }, [tr, document.createTextNode("Keep the wall's trim (" + (sl.h > 16 ? "the molding along the top and the baseboard" : "the molding along the top") + " show over the mural)")]));
   }
   if (it.type === "arrow") {
     const a = d.arrows[it.i], genres = draft.settings.genres || GOQ.SAMPLE_GENRES, ed = fn => { snapshot(); fn(editable(R.id).arrows[it.i]); roomChanged(true); renderInspector(); };
@@ -2015,7 +2041,8 @@ function renderInspector() {
   const notes = { mural: "Painted along the top row of the wall; the wall's own color shows below it. Drag it along the wall, or onto another wall.", lamp: "A small accent light on the wall. Drag it along the wall, or onto another wall.", arrow: "Drag it along the wall, or onto another wall.", glow: "A warm pool of light, shown even when the room's lights are on. Drag it to move it.", case: "Holds the next episode in Pieces order. The front placard is read from below it, the back from above.", spot: "A painting spot for the next community piece, across both wall rows.",
     spawn: "Where you appear when jumping to this room.", catSpot: "One of the places the cat might nap today.", mugSpot: "One of the places the curator's mug might turn up.", fixed: "A built-in feature. Drag it to move it.", locker: "Lockers are part of the staff room." };
   if (notes[it.type]) box.appendChild(el("p", { class: "note", text: notes[it.type] }));
-  if (it.type !== "spawn" && it.type !== "locker") box.appendChild(el("div", { class: "row" }, [delBtn()]));
+  if (it.type === "mat") box.appendChild(el("p", { class: "note", text: Array.isArray(d.mats) ? "This room has just the mats you've put down." : "Automatic: one inside every doorway. Place, move or remove one and this room keeps just the mats you choose." }));
+  if (it.type !== "spawn" && it.type !== "locker") box.appendChild(el("div", { class: "row" }, [delBtn(), it.type === "mat" && Array.isArray(d.mats) ? el("button", { type: "button", class: "btn small quiet", text: "Back to automatic doormats", onclick: () => { snapshot(); delete editable(R.id).mats; R.sel = null; roomChanged(true); } }) : null]));
 }
 function renderDoor(box, d, it) {
   const ev = doorEvent(d, it.x, it.y), ch = getCh(d, it.x, it.y);
@@ -2073,6 +2100,16 @@ function renderRoomSettings(box, d) {
     return el("label", { class: "rfield" }, [el("span", { text: part === "floor" ? "Floor color" : "Wall color" }), el("small", { text: "Tints the art. Clear for its own color." }),
       el("div", { class: "row", style: "gap:8px;align-items:center" }, [inp, el("button", { type: "button", class: "btn small quiet", text: "Clear", disabled: !v, onclick: () => set("") })])]);
   })));
+  { // wallpaper: every wall in the room papered with one pattern, under everything hung on it (Joe 10/14)
+    const papers = GOQ.SLOTS.filter(x => x.group === "Wallpaper" && !x.retired);
+    const s = el("select", {}, [el("option", { value: "", text: "None (the walls above)" }), ...papers.map(x => el("option", { value: x.key, text: x.label.replace(/^(Wing )?[Ww]allpaper: /, "") + (x.wing ? " (pastel)" : "") }))]);
+    s.value = d.wallpaper || "";
+    const pv = el("canvas", { width: 64, height: 32, style: "image-rendering:pixelated;width:128px;height:64px;border:1px solid var(--line);border-radius:4px;display:" + (d.wallpaper ? "block" : "none") });
+    const show = k => { pv.style.display = k ? "block" : "none"; if (!k) return; const x = pv.getContext("2d"), img = edGame.sheet(k); x.clearRect(0, 0, 64, 32); if (img) { if ((img.naturalWidth || img.width) > 16) x.drawImage(img, 0, 0); else for (let i = 0; i < 4; i++) x.drawImage(img, i * 16, 0); } }; // (a wide one: its first 64 pixels)
+    if (d.wallpaper) show(d.wallpaper);
+    s.addEventListener("change", () => { snapshot(); const dd = editable(R.id); if (s.value) dd.wallpaper = s.value; else delete dd.wallpaper; show(s.value); roomChanged(true); });
+    box.appendChild(el("label", { class: "rfield" }, [el("span", { text: "Wallpaper" }), el("small", { text: "Covers every wall in this room. Pictures, windows, signs and murals go on top. Repaint the patterns in Art, Wallpaper." }), s, pv]));
+  }
   const bunt = el("input", { type: "checkbox", checked: !!d.bunting }); bunt.addEventListener("change", () => { snapshot(); editable(R.id).bunting = bunt.checked; roomChanged(true); });
   box.appendChild(el("label", { class: "check" }, [bunt, document.createTextNode("Bunting along the walls")]));
   const crowd = el("input", { type: "checkbox", checked: !!d.crowd }); crowd.addEventListener("change", () => { snapshot(); editable(R.id).crowd = crowd.checked; roomChanged(true); });
@@ -2331,10 +2368,24 @@ function renderGenres(wrap) {
 /* Which room an episode is shown in: pick a genre by hand. */
 /* The museum room (wing) that shows a genre, by its current name. */
 function wingOf(gid) { const lay = GOQ.layoutOf(roomDef("museum")), z = lay && lay.zones.find(q => q.rect && q.rect.genre === gid); return z ? z.name : ""; }
+/* The developer's answers to the three questions (answer cards, Joe 10/13): playing as the curator, the pause menu's Developer
+   answers shows each question on a card, then its answer, split into as many cards as it takes, for the recording. */
+function answersBox(p) {
+  p.answers = [0, 1, 2].map(i => { const x = (p.answers || [])[i]; return x && typeof x === "object" ? x.a || "" : x || ""; });
+  const box = el("div", { class: "fieldset wide" }, [el("span", { class: "flabel", text: "Developer answers" }), el("small", { text: "Their answers to your three questions. Playing as the curator: pause menu, Developer answers. Each question gets a card, then its answer, split into as many cards as it needs (A for the next, B to put them away). Leave one empty to skip it." })]);
+  GOQ.ANSWER_QS.forEach((q, i) => {
+    const a = el("textarea", { rows: 4, maxlength: 6000, placeholder: "Their answer", "aria-label": "Answer to: " + q }); a.value = p.answers[i];
+    a.addEventListener("input", () => { p.answers[i] = a.value; changed(); });
+    box.appendChild(el("div", { style: "border-top:2px solid var(--line);padding:8px 0 4px;margin-top:6px;display:flex;flex-direction:column;gap:6px" }, [el("b", { text: (i + 1) + ". " + q, style: "font-size:.88rem" }), a,
+      el("div", { class: "row" }, [el("button", { class: "btn small quiet", type: "button", text: "Show it in the preview", onclick: async () => { if (!p.answers[i].trim()) { status("Write the answer first.", true); return; } await refreshPreview(); game.showAnswers(GOQ.normalizePiece(p, 0), i); status("Showing question " + (i + 1) + " in the preview: A for the next card, B to close"); } })])]));
+  });
+  return box;
+}
+let pieceRedraw = null; // set by pieceRow: how a piece's own fields redraw the page they're on (the Pieces tab, or Episode day)
 function genreBox(p) {
   const genres = draft.settings.genres || GOQ.SAMPLE_GENRES;
   const s = el("select", {}, [el("option", { value: "", text: "No genre (rooms without one)" })].concat(genres.map(g => el("option", { value: g.id, text: g.name }))));
-  s.value = p.genre || ""; s.addEventListener("change", () => { p.genre = s.value; changed({ now: true }); renderPieces(); });
+  s.value = p.genre || ""; s.addEventListener("change", () => { p.genre = s.value; changed({ now: true }); (pieceRedraw || renderPieces)(); });
   return el("label", { class: "wide" }, [document.createTextNode("Exhibited in"), el("small", { text: "The room whose cases it goes in, and only that room. If its cases are full, the oldest of that genre wait on the room's touch screen until you add a case there." }), s]);
 }
 /* A second category it also belongs to (a blend). For the record; it's shown in the room it's exhibited in. */
@@ -2566,11 +2617,15 @@ function renderCards(keepNote) {
     const draw = () => { prev.innerHTML = ""; try { prev.appendChild(game.cardElement(p, rare.checked ? "r" : "c")); } catch (e) { prev.textContent = "(preview unavailable)"; } };
     rare.addEventListener("change", draw);
     const text = (k, label, ph, max) => { const i = el("input", { type: "text", value: p[k] || "", placeholder: ph || "", maxlength: max || 140 }); i.addEventListener("input", () => { p[k] = i.value; changed(); draw(); }); return el("label", { class: "wide" }, [document.createTextNode(label), i]); };
-    const no = el("input", { type: "checkbox", checked: !!p.noCard }); no.addEventListener("change", () => { p.noCard = no.checked; changed(); });
-    const when = p.unveil && p.unveil > today ? "Its card arrives on its unveil, " + p.unveil + "." : "In the binder now.";
+    const no = el("input", { type: "checkbox", checked: !!p.noCard }); no.addEventListener("change", () => { p.noCard = no.checked; changed(); when(); });
+    const from = el("input", { type: "date", value: p.cardsFrom && p.cardsFrom !== "on" ? p.cardsFrom : "" }), whenP = el("p", { class: "wide note", style: "margin:0" });
+    const when = () => { const on = p.cardsFrom === "on" || (p.cardsFrom && p.cardsFrom <= today); whenP.textContent = p.noCard ? "No card." : !p.cardsFrom ? "Not on sale yet: set a date when the thumbnail's settled." : p.unveil && p.unveil > today ? "Its cards go on sale on its unveil, " + p.unveil + (p.cardsFrom !== "on" && p.cardsFrom > p.unveil ? ", or " + p.cardsFrom + " if that's later" : "") + "." : on ? "On sale now." : "On sale from " + p.cardsFrom + "."; };
+    from.addEventListener("change", () => { p.cardsFrom = from.value || ""; changed(); when(); }); when();
+    const always = el("button", { type: "button", class: "btn small quiet", text: "On sale now", onclick: () => { p.cardsFrom = "on"; from.value = ""; changed(); when(); } });
     wrap.appendChild(el("section", { class: "prow", style: "display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap" }, [prev,
-      el("div", { class: "fields", style: "flex:1;min-width:240px" }, [el("p", { class: "wide", style: "margin:0;font-weight:700", text: p.title }), el("p", { class: "wide note", style: "margin:0", text: when }),
+      el("div", { class: "fields", style: "flex:1;min-width:240px" }, [el("p", { class: "wide", style: "margin:0;font-weight:700", text: p.title }), whenP,
         text("episodeUrl", "Episode link (from the piece)", "https://youtu.be/…", 300), text("episodeTitle", "Episode title", "Look up, or type it in"), text("cardBlurb", "The curator's quote (signed \u2014 the curator)", "Your connection with the game, in a line or two"),
+        el("label", {}, [document.createTextNode("Cards from"), el("small", { text: "The common and the rare go on sale this day (not before its unveil). Empty: not yet." }), from]), el("div", { class: "row" }, [always]),
         el("label", { class: "check" }, [rare, document.createTextNode(" Show the rare")]), el("label", { class: "check" }, [no, document.createTextNode(" No card for this piece")])])]));
     draw();
   });
@@ -2747,6 +2802,157 @@ async function pieceImage(file) {
   x.fillStyle = "#000"; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
   return c.toDataURL("image/jpeg", 0.85);
 }
+/* ---------- Episode day (Joe 10/13) ----------
+   One episode in one place: its piece (the Pieces tab's editor), its unveil date and drink of the week (on the piece), its
+   gift (a shop item tagged with the piece) and when its trading cards go on sale. Add it to the museum puts it all in the draft
+   at once; Take it back out removes exactly what that added (it says so first, and warns if you've edited it since).
+   Work in progress and what was added live in this browser: localStorage "goq-curator-episodes" = { staged, added }. */
+const EP_KEY = "goq-curator-episodes";
+let epState = (() => { try { const j = JSON.parse(localStorage.getItem(EP_KEY) || "null"); if (j && typeof j === "object") return { staged: j.staged || null, added: Array.isArray(j.added) ? j.added : [] }; } catch (e) {} return { staged: null, added: [] }; })();
+let epSaveT = 0;
+function saveEp(now) { clearTimeout(epSaveT); const go = () => { try { localStorage.setItem(EP_KEY, JSON.stringify(epState)); } catch (e) { status("Couldn't keep the episode in this browser: storage is full. Add it to the museum, or remove the piece's picture.", true); } }; if (now) go(); else epSaveT = setTimeout(go, 400); }
+const pieceSig = p => fingerprint(JSON.stringify(GOQ.normalizePiece(p, 0)));
+const itemSig = it => fingerprint(JSON.stringify([it.name, it.price, it.description, it.image || "", it.gift || ""]));
+// GOQ ART text (the Paint Room's format, paint-room.html parseArtText: keep the two in step). Returns { pics: [{ name, px }], why }.
+function parseArtText(text, w, h) {
+  const pics = [], lines = String(text || "").split(/\r?\n/);
+  let pal = { ".": null }, rows = [], name = "", why = "", fresh = false;
+  const hexRGB = v => { v = v.replace("#", ""); if (v.length === 3) v = [...v].map(c => c + c).join(""); return [parseInt(v.slice(0, 2), 16), parseInt(v.slice(2, 4), 16), parseInt(v.slice(4, 6), 16)]; };
+  const finish = () => {
+    if (rows.length === h) { const out = new Uint8ClampedArray(w * h * 4); rows.forEach((r, y) => [...r].forEach((c, x) => { const v = pal[c]; if (v) out.set([v[0], v[1], v[2], 255], (y * w + x) * 4); })); pics.push({ name, px: out }); }
+    else if (rows.length && !why) why = "Found " + rows.length + " rows of " + w + " where " + h + " were needed.";
+    rows = []; name = ""; fresh = false;
+  };
+  for (const raw of lines) {
+    const t = raw.trim().replace(/^[\s"'`\[]+|[\s"'`,\];]+$/g, "");
+    if (!t || /^```/.test(raw.trim())) continue;
+    const hd = /^GOQ ART\b\s*(.*)$/i.exec(t);
+    if (hd) { finish(); name = hd[1].replace(/\s*\d+\s*x\s*\d+\s*$/i, "").trim(); continue; }
+    const pm = /^(\S)\s*(?:[=:]|is)?\s*(#[0-9a-f]{6}\b|#[0-9a-f]{3}\b|transparent\b|none\b|clear\b)/i.exec(t);
+    if (pm && t.length < 60 && !(t.length === w && [...t].every(c => c in pal))) { if (rows.length) finish(); if (!fresh) { pal = { ".": null }; fresh = true; } pal[pm[1]] = /^#/.test(pm[2]) ? hexRGB(pm[2]) : null; continue; }
+    if (t.length === w && [...t].every(c => c in pal)) { rows.push(t); fresh = false; if (rows.length === h) finish(); continue; }
+    if (t.length === w && /^[^\s]+$/.test(t) && rows.length) { const bad = [...t].find(c => !(c in pal)); why = "Row " + (rows.length + 1) + " uses \"" + bad + "\", which isn't one of the colors listed above it."; rows = []; name = ""; fresh = false; continue; }
+    if (rows.length) finish();
+  }
+  finish();
+  return { pics, why: pics.length ? "" : why || "Couldn't find a " + w + "×" + h + " picture in that text. It needs the color lines, then " + h + " rows of " + w + " characters." };
+}
+const artPng = px => { const [c, x] = canvasOf(16, 16); x.putImageData(new ImageData(new Uint8ClampedArray(px), 16, 16), 0, 0); return c.toDataURL("image/png"); };
+// The Paint Room's shop items in this browser (its IndexedDB, misc "items"), without ever creating that database.
+function paintRoomItems() {
+  return new Promise(res => {
+    try {
+      const r = indexedDB.open("goq-paint-room");
+      r.onupgradeneeded = () => { r.transaction.abort(); }; // no Paint Room here yet: don't make an empty one
+      r.onerror = () => res([]); r.onblocked = () => res([]);
+      r.onsuccess = () => { const d = r.result; try { if (!d.objectStoreNames.contains("misc")) { d.close(); return res([]); } const q = d.transaction("misc").objectStore("misc").get("items"); q.onsuccess = () => { d.close(); res(Object.values(q.result || {}).filter(it => it && it.png).sort((a, b) => (b.made || "").localeCompare(a.made || ""))); }; q.onerror = () => { d.close(); res([]); }; } catch (e) { d.close(); res([]); } };
+    } catch (e) { res([]); }
+  });
+}
+function newEpisode() {
+  const piece = GOQ.normalizePiece({ id: uid(), title: "", developer: "", kind: "episode", cardsFrom: "", unveil: GOQ.todayISO() }, draft.pieces.length);
+  piece.title = ""; piece.developer = "";
+  return { piece, gift: { name: "", price: 30, description: "", image: null } };
+}
+function renderEpisode() {
+  const main = $("#main"); main.innerHTML = "";
+  const wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
+  wrap.appendChild(el("h2", { class: "title", text: "Episode day" }));
+  wrap.appendChild(el("p", { class: "note", text: "Everything for one episode in one place: the new piece, its unveil date and drink of the week, its gift and when its trading cards go on sale. Add it to the museum puts it all in at once; Take it back out (below) removes exactly what that added. You can still edit the piece in the Pieces tab afterwards. This page keeps your work in this browser until you add it." }));
+  const st = epState.staged;
+  if (!st) {
+    wrap.appendChild(el("div", { class: "row" }, [el("button", { class: "btn primary", type: "button", text: "Start a new episode", onclick: () => { epState.staged = newEpisode(); saveEp(true); renderEpisode(); } })]));
+  } else {
+    const P = st.piece, G = st.gift;
+    // 1. The piece: the same editor as the Pieces tab
+    const sec1 = el("section", { class: "prow", style: "display:block" }, [el("h3", { text: "1. The piece", style: "margin:0 0 4px" }), el("p", { class: "note", style: "margin:0 0 8px", text: "Its unveil date is the day the episode goes up: the ceremony plays, and its drink of the week and gift go on sale. In curator mode it waits under a cloth until you unveil it." })]);
+    sec1.appendChild(pieceRow(P, -1, "NEW", { staged: true, redraw: () => { saveEp(true); renderEpisode(); } }));
+    sec1.addEventListener("input", () => saveEp()); sec1.addEventListener("change", () => saveEp());
+    wrap.appendChild(sec1);
+    // 2. The gift
+    const gpv = el("div", { style: "display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0" });
+    const drawGift = () => { gpv.innerHTML = ""; if (!G.image) { gpv.appendChild(el("span", { class: "note", text: "No picture yet: the shop draws a placeholder." })); return; } [1, 2, 4].forEach(k => gpv.appendChild(el("img", { src: G.image, alt: k === 4 ? "The gift's picture" : "", style: "image-rendering:pixelated;width:" + 16 * k + "px;height:" + 16 * k + "px;background:repeating-conic-gradient(#ddd 0 25%,#fff 0 50%) 0 0/8px 8px;border-radius:4px" }))); };
+    drawGift();
+    const gName = el("input", { type: "text", maxlength: 60, value: G.name, placeholder: "Toy tank" }); gName.addEventListener("input", () => { G.name = gName.value; saveEp(); });
+    const gPrice = el("input", { type: "number", min: 0, max: 999, value: G.price, style: "max-width:110px" }); gPrice.addEventListener("input", () => { G.price = Math.max(0, Math.min(999, Math.round(+gPrice.value || 0))); saveEp(); });
+    const gDesc = el("textarea", { maxlength: 240, placeholder: "One or two sentences." }); gDesc.value = G.description; gDesc.addEventListener("input", () => { G.description = gDesc.value; saveEp(); });
+    const ta = el("textarea", { rows: 6, placeholder: "Paste Claude's art (GOQ ART: the color lines, then 16 rows of 16 characters)", style: "font-family:ui-monospace,Menlo,Consolas,monospace;white-space:pre" }), taMsg = el("div");
+    const usePaste = () => { taMsg.innerHTML = ""; const r = parseArtText(ta.value, 16, 16); if (!r.pics.length) { taMsg.appendChild(el("p", { class: "note err", text: r.why })); return; }
+      const put = pic => { G.image = artPng(pic.px); if (!G.name && pic.name) { G.name = pic.name; gName.value = pic.name; } saveEp(true); drawGift(); ta.value = ""; taMsg.innerHTML = ""; status("Gift picture set"); };
+      if (r.pics.length === 1) return put(r.pics[0]);
+      taMsg.appendChild(el("p", { class: "note", style: "margin:4px 0", text: "That has " + r.pics.length + " pictures. Which one?" })); r.pics.forEach((pic, i) => taMsg.appendChild(el("button", { class: "btn small", type: "button", text: pic.name || "Picture " + (i + 1), onclick: () => put(pic) })));
+    };
+    const gFile = el("input", { type: "file", accept: "image/*", class: "sr-only", id: "epGiftFile" });
+    gFile.addEventListener("change", async e => { const f = e.target.files[0]; e.target.value = ""; if (!f) return; try { G.image = await itemImage(f); saveEp(true); drawGift(); } catch (err) { status(err.message, true); } });
+    const prSel = el("select", { "aria-label": "A gift from the Paint Room" }, [el("option", { value: "", text: "From the Paint Room…" })]);
+    paintRoomItems().then(list => { if (!list.length) { prSel.hidden = true; return; } list.forEach(it => prSel.appendChild(el("option", { value: it.id, text: it.name || "Untitled" }))); prSel._list = list; });
+    prSel.addEventListener("change", () => { const it = (prSel._list || []).find(q => q.id === prSel.value); if (!it) return; G.image = it.png; G.name = it.name || G.name; G.price = it.price; G.description = it.description || G.description; gName.value = G.name; gPrice.value = G.price; gDesc.value = G.description; prSel.value = ""; saveEp(true); drawGift(); status("Took the gift from the Paint Room"); });
+    wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [el("h3", { text: "2. The gift", style: "margin:0 0 4px" }),
+      el("p", { class: "note", style: "margin:0 0 8px", text: "A new shop item: free for everyone at the ceremony, then on sale until the next unveil. Leave the name empty for no gift." }),
+      el("div", { class: "fields" }, [el("label", {}, [document.createTextNode("Name"), gName]), el("label", {}, [document.createTextNode("Price (tokens)"), gPrice]), el("label", { class: "wide" }, [document.createTextNode("Description"), gDesc])]),
+      el("p", { style: "margin:10px 0 2px;font-weight:700", text: "Picture (16×16)" }), gpv,
+      el("label", { class: "wide" }, [document.createTextNode("Paste art from Claude"), ta]), el("div", { class: "row" }, [el("button", { class: "btn small", type: "button", text: "Use it", onclick: usePaste }), el("label", { class: "btn small quiet", for: "epGiftFile", text: "Choose a PNG" }), gFile, prSel, G.image ? el("button", { class: "btn small quiet", type: "button", text: "Remove picture", onclick: () => { G.image = null; saveEp(true); renderEpisode(); } }) : null]), taMsg]));
+    // 3. Trading cards
+    const cf = el("input", { type: "date", value: P.cardsFrom && P.cardsFrom !== "on" ? P.cardsFrom : "" }); cf.addEventListener("change", () => { P.cardsFrom = cf.value || ""; saveEp(); });
+    wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [el("h3", { text: "3. Trading cards", style: "margin:0 0 4px" }),
+      el("p", { class: "note", style: "margin:0 0 8px", text: "Its common and rare cards. Leave this empty while the thumbnail is being tested; set the date later here or in the Cards tab (episode title and quote are there too)." }),
+      el("div", { class: "fields" }, [el("label", {}, [document.createTextNode("Cards from"), cf])])]));
+    // Add / start over
+    wrap.appendChild(el("div", { class: "row", style: "margin:14px 0 22px" }, [
+      el("button", { class: "btn primary", type: "button", text: "Add it to the museum", onclick: () => addEpisode() }),
+      el("button", { class: "btn quiet", type: "button", text: "Start over", onclick: () => { if (!confirm("Clear this episode from the page? Nothing in the museum changes.")) return; epState.staged = null; saveEp(true); renderEpisode(); } })]));
+  }
+  // What Episode day has added
+  const added = epState.added.slice().reverse();
+  wrap.appendChild(el("h3", { text: "Added from Episode day", style: "margin:18px 0 6px" }));
+  if (!added.length) wrap.appendChild(el("p", { class: "note", text: "Nothing yet." }));
+  added.forEach(rec => {
+    const p = draft.pieces.find(q => q.id === rec.id), it = rec.giftId && draft.settings.shop.items.find(q => q.id === rec.giftId);
+    const bits = [p ? (p.unveil ? "Unveils " + p.unveil : "No unveil date") : "The piece is gone", it ? "gift: " + it.name : rec.giftId ? "its gift is gone" : "no gift", p ? (p.cardsFrom === "on" || (p.cardsFrom && p.cardsFrom <= GOQ.todayISO()) ? "cards on sale" : p.cardsFrom ? "cards from " + p.cardsFrom : "no cards yet") : null].filter(Boolean);
+    wrap.appendChild(el("section", { class: "prow", style: "display:flex;gap:12px;align-items:center;flex-wrap:wrap" }, [
+      el("div", { style: "flex:1;min-width:220px" }, [el("b", { text: (p && p.title) || rec.title || "Untitled" }), el("p", { class: "note", style: "margin:2px 0 0", text: bits.join(" · ") + ". Added " + new Date(rec.at).toLocaleDateString() + "." })]),
+      p ? el("button", { class: "btn small", type: "button", text: "Stage its ceremony in the preview", onclick: async () => { await refreshPreview(); const t = game.testUnveil(p.id); status(t ? "Staged " + t + " in the preview: walk up to it to unveil it" : "It isn't on display in the preview (check its genre)", !t); } }) : null,
+      el("button", { class: "btn small quiet", type: "button", text: "Take it back out", onclick: () => takeEpisodeOut(rec) })]));
+  });
+}
+function addEpisode() {
+  const st = epState.staged; if (!st) return; const P = st.piece, G = st.gift;
+  if (!String(P.title || "").trim()) { status("Give the piece a title first.", true); return; }
+  if (!P.unveil && !confirm("No unveil date: it goes up right away, with no ceremony. Add it anyway?")) return;
+  if (draft.pieces.some(q => q.id === P.id)) P.id = uid();
+  const giftOn = !!String(G.name || "").trim(), items = draft.settings.shop.items;
+  if (giftOn && items.length >= 40) { status("The shop already has 40 items, the most a pack keeps. Remove one in the Shop tab, or leave the gift's name empty.", true); return; }
+  const piece = GOQ.normalizePiece(Object.assign({}, P, { title: P.title.trim(), developer: String(P.developer || "").trim() || "Unknown developer" }), draft.pieces.length);
+  if (!confirm("Add \"" + piece.title + "\" to the museum" + (piece.unveil ? ", unveiling " + piece.unveil : "") + (giftOn ? ", with its gift \"" + G.name.trim() + "\"" : "") + "?")) return;
+  draft.pieces.push(piece);
+  let gid = "";
+  if (giftOn) { gid = "gift-" + piece.id; items.push({ id: gid, name: G.name.trim().slice(0, 60), price: G.price, description: String(G.description || "").trim().slice(0, 240), image: G.image || null, use: "", gift: piece.id }); }
+  const it = gid && items.find(q => q.id === gid);
+  epState.added.push({ id: piece.id, title: piece.title, at: new Date().toISOString(), pieceSig: pieceSig(piece), giftId: gid, giftSig: it ? itemSig(it) : "" });
+  epState.staged = null; saveEp(true); changed({ now: true }); renderEpisode();
+  status("Added " + piece.title + " to the museum. Apply to preview to see it; export the pack when you're ready.");
+}
+function takeEpisodeOut(rec) {
+  const items = draft.settings.shop.items, p = draft.pieces.find(q => q.id === rec.id), it = rec.giftId && items.find(q => q.id === rec.giftId);
+  const others = items.filter(q => q.gift === rec.id && q !== it);
+  if (!p && !it) { if (confirm("That episode's piece and gift are already gone. Clear it from this list?")) { epState.added = epState.added.filter(r => r !== rec); saveEp(true); renderEpisode(); } return; }
+  const what = [];
+  if (p) what.push("the piece \"" + p.title + "\"" + (p.unveil ? " (unveiling " + p.unveil + ")" : "") + " with its placards and links" + (p.drink ? ", its drink of the week (" + p.drink + ")" : "") + " and its trading cards");
+  if (it) what.push("its gift, \"" + it.name + "\"");
+  let msg = "Take it back out of the museum?\n\nThis removes " + what.join(", and ") + ".";
+  if (p && pieceSig(p) !== rec.pieceSig) msg += "\n\nYou've changed this piece since you added it (in the Pieces tab or elsewhere). Those changes go too: the whole piece is removed.";
+  if (it && itemSig(it) !== rec.giftSig) msg += "\n\nIts gift was changed since too; that goes as well.";
+  if (others.length) msg += "\n\n" + others.map(q => "\"" + q.name + "\"").join(", ") + (others.length === 1 ? " is" : " are") + " also set as its gift and will stay in the shop as a regular item.";
+  if (p && p.unveil && p.unveil <= GOQ.todayISO()) msg += "\n\nIt's already been unveiled: players who got its gift or cards keep them.";
+  msg += "\n\nNothing else changes. It comes back to the Episode day page" + (epState.staged ? " only if that page is empty (it isn't now)" : "") + ", so you can fix it and add it again.";
+  if (!confirm(msg)) return;
+  if (p) draft.pieces = draft.pieces.filter(q => q !== p);
+  if (it) draft.settings.shop.items = items.filter(q => q !== it);
+  others.forEach(q => { q.gift = ""; });
+  if (!epState.staged && p) epState.staged = { piece: GOQ.normalizePiece(p, 0), gift: it ? { name: it.name, price: it.price, description: it.description || "", image: it.image || null } : { name: "", price: 30, description: "", image: null } };
+  epState.added = epState.added.filter(r => r !== rec); saveEp(true); changed({ now: true }); renderEpisode();
+  status("Took " + ((p && p.title) || rec.title) + " back out of the museum.");
+}
 function renderPieces() {
   const main = $("#main"); main.innerHTML = "";
   const spots = GOQ.spotCount(), cases = GOQ.caseCount(), wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
@@ -2781,7 +2987,7 @@ function renderPieces() {
   });
   if (pieceFilter.trim()) find.dispatchEvent(new Event("input"));
   wrap.appendChild(el("div", { class: "row" }, [el("button", { class: "btn primary", type: "button", text: "Add a piece", onclick: () => {
-    const np = GOQ.normalizePiece({ id: uid(), title: "New piece", developer: "" }, draft.pieces.length); draft.pieces.push(np); openPieces.add(np.id); savePieceState(); changed({ now: true }); renderPieces();
+    const np = GOQ.normalizePiece({ id: uid(), title: "New piece", developer: "", cardsFrom: "" }, draft.pieces.length); draft.pieces.push(np); openPieces.add(np.id); savePieceState(); changed({ now: true }); renderPieces();
     const rows = document.querySelectorAll(".prow"); const last = rows[rows.length - 1]; if (last) { last.scrollIntoView({ block: "nearest" }); last.querySelector("input").focus(); }
   } })]));
   /* Guestbook: entries the front desk reads out, newest last. */
@@ -2815,14 +3021,15 @@ function foldPiece(row, p, place) {
   row.append(head, body); row.classList.add("fold"); if (openPieces.has(p.id)) row.classList.add("open");
   return row;
 }
-function pieceRow(p, i, place) {
+function pieceRow(p, i, place, opts) {
+  const redraw = (opts && opts.redraw) || renderPieces; pieceRedraw = (opts && opts.redraw) || null; // Episode day draws a piece that isn't in the museum yet (opts.staged)
   const row = el("article", { class: "prow" + (p.kind === "community" ? " community" : ""), "aria-label": p.title || "Untitled piece" });
   const th = el("img", { class: "th", alt: "" });
   if (p.image) { th.src = p.image; th.classList.add("photo"); } else th.src = GOQ.placeholderPainting(p).toDataURL();
   const fileId = "img-" + p.id, file = el("input", { type: "file", accept: "image/*", class: "sr-only", id: fileId });
   file.addEventListener("change", async e => {
     const f = e.target.files[0]; e.target.value = ""; if (!f) return;
-    try { p.image = await pieceImage(f); changed({ now: true }); renderPieces(); } catch (err) { status(err.message, true); }
+    try { p.image = await pieceImage(f); changed({ now: true }); redraw(); } catch (err) { status(err.message, true); }
   });
   /* Curator's pick: a medal pinned to the piece, and a tag in its placard and in the archive. */
   const pickBox = el("input", { type: "checkbox", checked: !!p.pick });
@@ -2836,14 +3043,14 @@ function pieceRow(p, i, place) {
     el("span", { class: "spotlbl" + (on ? "" : " off"), text: spotTxt, title: on ? "" : "Not in a case: it's on its room's touch screen. Move it lower in the list, or add a case to its room, to put it back in a case." }),
     el("div", { class: "side-acts" }, [
       el("label", { class: "btn small", for: fileId, text: p.image ? "Replace image" : "Add image" }), file,
-      p.image ? el("button", { class: "btn small quiet", type: "button", text: "Remove image", onclick: () => { p.image = null; changed({ now: true }); renderPieces(); } }) : null,
+      p.image ? el("button", { class: "btn small quiet", type: "button", text: "Remove image", onclick: () => { p.image = null; changed({ now: true }); redraw(); } }) : null,
     ]),
   ]);
   const f = (label, input, wide, hint) => el("label", { class: wide ? "wide" : "" }, [document.createTextNode(label), hint ? el("small", { text: hint }) : null, input]);
   const text = (key, ph) => { const inp = el("input", { type: "text", value: p[key] || "", placeholder: ph || "" }); inp.addEventListener("input", () => { p[key] = inp.value; changed(); if (key === "title") row.setAttribute("aria-label", inp.value || "Untitled piece"); }); return inp; };
   const area = (key, ph) => { const t = el("textarea", { placeholder: ph || "" }); t.value = p[key] || ""; t.addEventListener("input", () => { p[key] = t.value; changed(); }); return t; };
   const kind = el("select", {}, [el("option", { value: "episode", text: "Episode (display case)" }), el("option", { value: "community", text: "Community find (painting)" })]);
-  kind.value = p.kind; kind.addEventListener("change", () => { p.kind = kind.value; changed({ now: true }); renderPieces(); });
+  kind.value = p.kind; kind.addEventListener("change", () => { p.kind = kind.value; changed({ now: true }); redraw(); });
   const link = (key, ph) => {
     const inp = el("input", { type: "url", value: p[key] || "", placeholder: ph });
     inp.addEventListener("input", () => { const v = inp.value.trim(); p[key] = /^https?:\/\/\S+$/i.test(v) ? v : ""; inp.setCustomValidity(v && !p[key] ? "Start the link with https://" : ""); changed(); });
@@ -2878,13 +3085,14 @@ function pieceRow(p, i, place) {
   const placard = p.kind === "episode"
     ? [f("Observation (yours)", area("observation", "What you noticed while playing. Every placard frames this as your own view (Words, Pieces)."), true), f("Intention (the developer's)", area("intention", "What the developer was going for."), true)]
     : [f("Guest writer", text("guestWriter", "Name (Discord)")), el("span"), f("Guest note", area("guestNote", "The guest writer's note."), true)];
-  const move = (d) => { const j = i + d; if (j < 0 || j >= draft.pieces.length) return; const a = draft.pieces; [a[i], a[j]] = [a[j], a[i]]; changed({ now: true }); renderPieces(); };
+  const move = (d) => { const j = i + d; if (j < 0 || j >= draft.pieces.length) return; const a = draft.pieces; [a[i], a[j]] = [a[j], a[i]]; changed({ now: true }); redraw(); };
   const fields = el("div", { class: "fields" }, [
     f("Title", text("title", "Game title")), f("Developer", text("developer", "Who made it")),
     f("Frame", kind), el("div", { class: "fieldset" }, [el("span", { class: "flabel", text: "Unveiling" }), el("small", { text: "Off: it hangs right away." }), unveilBox]),
     el("div", { class: "fieldset wide" }, [el("span", { class: "flabel", text: "Curator's pick" }), el("small", { text: "Pins a medal to the piece and tags its placard." }), el("div", { class: "unveil" }, [el("label", { class: "check" }, [pickBox, document.createTextNode("This is one of my picks")])])]),
     ...placard,
     f("How a visitor would describe it", text("hint", "the one where the clock never ran out but I still rushed"), true, "Visitors say this when they come back to tell you how it went: \"I tried Lantern Keeper, the one where...\" Keep it to one line, in their words."),
+    p.kind === "episode" ? answersBox(p) : null,
     p.kind === "episode" ? relBox(p) : null,
     p.kind === "episode" ? genreBox(p) : null,
     p.kind === "episode" ? blendBox(p) : null,
@@ -2892,12 +3100,12 @@ function pieceRow(p, i, place) {
     f("The game", link("gameUrl", "https://store.steampowered.com/... or itch.io"), false, "Shown as \"Play the game\""),
     f("Gameplay clip", (i => { ["autocapitalize", "autocorrect"].forEach(k => i.setAttribute(k, "off")); i.spellcheck = false; return i; })(text("clipUrl", "acrobatic-car_1.webm or https://youtu.be/...")), false, "Plays muted and looping beside the placard's text. Best: a short .webm or .mp4 in the clips folder (type just its name; about 320×180, no sound). A YouTube link works too, but YouTube's overlay shows each time it loops."),
     f("Clip loop (YouTube only)", text("clipLoop", "12:53-13:00"), false, "From and to, in the YouTube video. That stretch loops. A clip file loops by itself and ignores this."),
-    el("div", { class: "acts" }, [
+    opts && opts.staged ? null : el("div", { class: "acts" }, [
       el("button", { class: "btn small quiet", type: "button", text: "Move up", disabled: i === 0, onclick: () => move(-1) }),
       el("button", { class: "btn small quiet", type: "button", text: "Move down", disabled: i === draft.pieces.length - 1, onclick: () => move(1) }),
       el("button", { class: "btn small quiet", type: "button", text: "Remove piece", onclick: () => {
         if (!confirm("Remove \"" + (p.title || "this piece") + "\" from the museum?")) return;
-        draft.pieces.splice(i, 1); changed({ now: true }); renderPieces();
+        draft.pieces.splice(i, 1); changed({ now: true }); redraw();
       } }),
     ]),
   ]);
@@ -3015,6 +3223,39 @@ $("#importFile").addEventListener("change", async e => {
     if (!j || j.format !== GOQ.PACK_FORMAT) throw new Error("That file isn't a museum pack.");
     if ((Object.keys(draft.assets).length || draft.pieces.length) && !confirm("Replace everything here with this pack? Export first if you want to keep the current one.")) return;
     migrateFloors(j); useDraft(j); changed({ now: true, keepBase: true }); setBase(text, "import", j.savedAt); await game.setPack(packOut()); fillRoomPicker(); render(); status("Imported " + f.name);
+  } catch (err) { status(err instanceof SyntaxError ? "That file couldn't be read as JSON." : err.message, true); }
+});
+
+/* Art from the Paint Room (museum-art.json): changes art only, by the same rules as the Paint Room's own export.
+   Slots this build doesn't have, or whose size changed, are skipped. Art the Paint Room wrote before ("ours": hashes of what
+   it wrote) is replaced, or removed if you went back to the original; other art already here is only replaced if you say so. */
+const artHash = str => { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619); return (h >>> 0).toString(36) + "." + str.length; };
+$("#artFile").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try {
+    const j = JSON.parse(await f.text());
+    if (!j || j.format !== "goq-art") throw new Error("That file isn't art from the Paint Room (museum-art.json).");
+    const ours = j.ours || {}, mine = (k, src) => !!src && (ours[k] || []).includes(artHash(src));
+    const add = [], rep = [], clash = [], skip = [], del = [];
+    for (const k in j.assets || {}) {
+      const sl = GOQ.SLOT[k], src = j.assets[k] && j.assets[k].src;
+      if (!sl || !src) { skip.push(k + " (not in this build)"); continue; }
+      const g = GOQ.sheetGrid(sl), img = await loadImg(src).catch(() => null);
+      if (!img || img.width !== sl.w * g.cols || img.height !== sl.h * g.rows) { skip.push(sl.label + " (size changed)"); continue; }
+      const cur = draft.assets[k] && draft.assets[k].src;
+      if (cur === src) continue;
+      (!cur ? add : mine(k, cur) ? rep : clash).push(k);
+    }
+    for (const k in j.remove || {}) { const cur = draft.assets[k] && draft.assets[k].src; if (cur && (j.remove[k] || []).includes(artHash(cur))) del.push(k); }
+    const name = k => (GOQ.SLOT[k] || {}).label || k;
+    if (!add.length && !rep.length && !clash.length && !del.length) { status("Nothing to import: the draft already has that art" + (skip.length ? " (skipped: " + skip.join(", ") + ")" : "") + "."); return; }
+    const sum = [add.length && "add " + add.length, rep.length && "update " + rep.length, del.length && "go back to the original for " + del.length].filter(Boolean).join(", ");
+    if ((add.length || rep.length || del.length) && !confirm("Import art from the Paint Room: " + (sum || "nothing new") + "." + (skip.length ? "\n\nSkipped: " + skip.join(", ") + "." : "") + "\n\nNothing but art changes.")) return;
+    const take = clash.length && confirm(clash.length + " slot" + (clash.length === 1 ? " already has" : "s already have") + " other art: " + clash.map(name).join(", ") + ".\n\nReplace with the Paint Room's? (Cancel keeps what's there.)") ? clash : [];
+    for (const k of [...add, ...rep, ...take]) draft.assets[k] = { src: j.assets[k].src };
+    for (const k of del) delete draft.assets[k];
+    changed({ now: true }); await game.setPack(packOut()); render();
+    status("Imported art: " + [add.length && add.length + " added", rep.length && rep.length + " updated", take.length && take.length + " replaced", del.length && del.length + " back to the original"].filter(Boolean).join(", ") + ". Export the pack to put it on the site.");
   } catch (err) { status(err instanceof SyntaxError ? "That file couldn't be read as JSON." : err.message, true); }
 });
 

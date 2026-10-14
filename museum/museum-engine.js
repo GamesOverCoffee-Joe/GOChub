@@ -47,6 +47,13 @@ const PAL = {
   carpet:  ["#e8c070", "#9a3040", "#7c2434", "#4a1420", "#f4dca0"],
   darkwood: ["#8a5e3e", "#5e3c26", "#43291a", "#1c100a", "#704a30"],
   plush:   ["#8c8c8c", "#7e7e7e", "#727272", "#9a9a9a"],
+  wp_pastel:    ["#f9bfaf", "#f5b0b4", "#faa4af", "#daadc4", "#abc0ce", "#c19ecf", "#f566c2"], // Joe's pastel streaks, traced (10/14)
+  wp_stripes:   ["#e8dcc0", "#a8b890", "#8a6a48", "#3a2a20", "#c8a878"], // Wallpaper (Joe 10/14): paper, its pattern, the trim, a dark line, the trim's highlight
+  wp_diamond:   ["#d8c8d8", "#9a7aa0", "#6a4a58", "#2a1c24", "#a07888"],
+  wp_dots:      ["#f0e4c8", "#d0805a", "#8a5a3a", "#2c1c14", "#c09068"],
+  wp_pinstripe: ["#6a2430", "#d8a848", "#3a1a20", "#1c0c10", "#8a4048"],
+  wp_check:     ["#d8e0e8", "#a8b8c8", "#4a5a6a", "#1c2430", "#8090a0"],
+  wp_wainscot:  ["#e8e0c8", "#c8b890", "#7a5030", "#2c1810", "#a87048"],
   m_dusk:  ["#2a1838", "#6a2850", "#c84e48", "#f0904a", "#f8d070", "#1c1428", "#3a2440", "#fff0c0"],
   m_canyon: ["#7ab8e0", "#a8d4ec", "#f4f8fc", "#c85a38", "#9a3c24", "#e8b878", "#4a4048", "#f0e0a0"],
   m_storm: ["#48506a", "#6a7490", "#9aa4bc", "#f8f4c0", "#4a7a3a", "#2e5428", "#7aa050", "#d8e0e8"],
@@ -106,6 +113,7 @@ const PAL = {
   easel:   [null, "#8a5a32", "#5a3a1a", "#f4f0e6", "#c84a3a", "#3a6ac8", "#e0b040"],
   stall:   [null, "#c84a4a", "#f4f0e6", "#8a5a32", "#5a3a1a", "#181820"],
   ledsign: [null, "#0a080c", "#2a2630", "#55505e", "#1c0808"],
+  eotmled: [null, "#0a080c", "#2a2630", "#7a5a20", "#1c0808", "#e8b24a"], // a gold frame
   arcade:  [null, "#1a1424", "#3a2a5a", "#5a48a0", "#101018", "#40d0c0", "#f0c040", "#e05050", "#5878c8"],
   garage:  ["#c8ccd4", "#9aa0ac", "#6a707c", "#181820", "#3a3a44", "#e8c040"], // slat, slat edge, slat shadow, outline, frame, hazard yellow
   cafesign: ["#ecece0", "#c08850", "#2f4a3a", "#181820", "#7a4a26", "#f0c060"], // chalk, wood, chalkboard, outline, dark wood, yellow chalk
@@ -188,6 +196,75 @@ const CHAR_FRAMES = [DOWN0, DOWNA, mirror(DOWNA), UP0, UPA, mirror(UPA), LEFT0, 
 const DIR_ROW = { down: 0, up: 1, left: 2, right: 3 };
 
 /* ---------- Placeholder drawings ---------- */
+/* A tall mural (both wall rows, 256×32) from a short one: the short one along the bottom, its top row's sky carried up above it, with a few dots of color k. */
+function tallMural(short, k) { const a = mk(256, 32); for (let y = 0; y < 32; y++) for (let x = 0; x < 256; x++) a[y][x] = y >= 16 ? short[y - 16][x] : (hash(x, y) % 97 === 0 ? k : short[0][x]); return a; }
+/* Joe's pastel streaks (10/14), traced to 7 colors: 256×32, one digit per pixel (the wp_pastel palette, light to dark). */
+const WP_PASTEL = [
+  "6666666666666666666666666666666666666666666666666666662000111111122222222221000222666666666665555555555555555555555555555555544445555555555555555555554443000000000000000000000000000000000000000000000000000000000000000000000022222222222222222222222220000000",
+  "6666666666666666666666666666666666666666666666666666662000111111111111122221000222666666666665555555555555555555555555555555544445555555555555555555554441000000000000000000000000000000000000000000000000000000000000000000000022222222222222222222222220001111",
+  "6666666666666666666666666666666666666666666666666666662000111111111111112221000222266666666663555555555555555555555555333544444445555555555555555555554443000111000000000000000000000000000000000000000000000000000000000000011111111111111111111111111110000000",
+  "0222200022222222222222222222222222222222222222222222222222222000000000000000000222222200000000000000000000000000000000000344445544444444444444444444444444444555444444444444444444444444444444444444444444444444444444444444444444444444444444444444444440000000",
+  "0222200012222222222222222222222222222222222222222222222222222000000000000000000222222200000000000000000000000000000000000344445544444444444444444444444444444555444444444444444444444444444444444444444444444444444444444444444444444444444444444444444440000000",
+  "0222200012222222222222222222222222222222222222222222222222222000000000000000000222222200000000000000000000000000000000000344444444444444444444444444444444444555444444444444444444444444444444444444444444444444444444444444444444444444444444444444444440000000",
+  "2222222222222222222222266633333333333333333333333333333333333333333333330000000222211100000000000000000000000000000000000033333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333555544444444444444444444444444443333333",
+  "2222222222226662222666666655555555555555555555555555555555444555555555550000000222200000000000000000000000000000000000000000000001112222222222222222222222222222222222222222222222222222222222222222222222222222222222222555555555555555555555444444444445555555",
+  "2222222222226662222666666655555555555555555555555555555555444555555555550000000222200000000000000000000000000000000000000000000011112222222222222222222222222222222222222222222222222222222222222222222222222222222222222555555555555555555555444444444445555555",
+  "2222222222226662222666666655555555555555555555555555555333333355555555530000000222100000000000000000000000000000000000000000000011112222222222222222222222222222222222222222222222222222222222222222111222222222222222222555555555555555555555444444444445555555",
+  "5555533355555555555555555555555555555555555555544440001222222222200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000444455555555555555555555555555555555555444444444444445555555",
+  "5555533355555555555555555553355555555555555555544440002222222222200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000444455555555555555555555555555555555555444444555555555555445",
+  "5555533355555555555555555555555555555555555555544440001222222222200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000444455555555555555555555555555555555554444444444444445554444",
+  "3333311133333333333333333311133333333333333333333331112222222222211111111111111111111111111111113333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333444555555555555555555555555555553333333333333333333333333333",
+  "0000000000000000000000000000000000000111222222222222222222222222222222222222222222222222222223333555555555555555555555555555555555555555555555555555555555555555555533333333333555555555555555555555555555555555555555555533555555532221112222111133333333333333",
+  "0000000000000000001111000000000000001111222222222222222222222222222222222222222222222222222223333555555555555555555555555555555555555555555555555555555555555555555533333333333333555555555555555555555555555555555555555555555555532221111222111133333333333333",
+  "0011111100000000111111000000000000001111222222222222222222222222222222222222222222222222222223333555555555555555555555555555555555555555555555555555555555555555555533333333333333333555555555555555555555555555555555555333555555532221111222111133333333333333",
+  "5555555522222222222222222222222222222222222222222222220000000000000000002222222222222222222222222222222222222222222222222222222222222222222222222222226665555555555555533333333333333333355555555555555555555555555555533122111111111113333333333333333333333333",
+  "5555555522222222222222222222222222222222222222222222220000000000000000002222222222222222222222222222222222222222222222222222222222222222222222222222226665555555555555533333333333333333335555555555555555555555555555533222211122221113333333333333333333333333",
+  "5555555522222222222222222222222222222222222222222222220000000000000000002222222222222222222222222222222222222222222222222222222222222222222222222222226665555555555555533333333333333333335555555555555555555555555555333222222222221113333333333333333333333333",
+  "3333333322222222222222222222222222222222222222222222221111111111111111112222222222222222221111111111222211111111111111333333333333333333333333333333335555555555555555555555555333333333344444444444444444444444444444444333333333333331111111111133333333333333",
+  "0222222222222222222222222222222222222222222222222222222222222222222222222222222222222222210000000000000000000000000000555555555555555555444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444440000000000000033334444444",
+  "0222222222222222222222222222222222222222222222222222222222222222222222222222222222222222210000000000000000000000000000555555555555555555444444444444444444444555444444444444444444444444444444444444444444444444444444444444444444443340000000000000033333334444",
+  "0222222222222222222222222222222222222222222222222222222222222222222222222222222222222222210000000000000000000000000000555555555555555555444444444444444444444555444444444444444444444444444444444444444444444444444444444444444444443340000000000000033333334444",
+  "6666655555555555555555555555555555555555555555555555555555555555555555552222222222222200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111555555555555555555555333333333333333333",
+  "6666655555555555555555555555555555555555555555555555555555555555555555552222222222222200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000222222222222222222222555555555555555555555333333333333333333",
+  "6666655555555555555555555555555555555555555555555555555555555555555555552222222222222200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000222222222222222222222555555555555555555555333333333333333333",
+  "6666233333333333333333333333333333333333333333333333333333333333333333332222222222222211111110000000000000000000000000000000000013333333333333333333333333333333333333333333333333333300000000000000333333333333333333333555555555555555555555333333333333333333",
+  "2222222222222222222000000000002222222222222222222222222222222222222222222222222222222222222220000000000000000000000000000000000035555555555555555555555555555444455544444445555444444433344444444444444444444444444444444444444444444444444444444444444444444444",
+  "2222222222222222222000000000022222222222222222222222222222222222222222222222222222222222222220000000000000000000000000000000000035555555555555555555555555555444555555544445555555444433333344444444444444444444444444444444444444444444444444444444444444444444",
+  "2222222222222222222000000000022222222222222222222222222222222222222222222222222222222222222220000000000000000000000000000000000035555555555555555555555555555444555555544445555555444433333344444444444444444444444444444444444444444444444444444444444444444444",
+  "3333333333333331000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111110555555555555555555555555555554444444444444444444444444444444433344444444444444444444444444444444",
+];
+/* The wing wallpapers (Joe 10/14): carrying on from his pastel streaks, each in its own way, in 7 soft shades (light to deep, as wp_pastel).
+   Drift: the streak bands slope across the wall. Wave: they ripple. Ribbon: wide calm bands with thin streaky seams.
+   Haze: sparse and light at the top, gathering toward the floor. Scatter: short dashes over soft bands. */
+function wingPaper(kind) {
+  const a = mk(256, 32), seed = kind.length * 977 + kind.charCodeAt(0) * 31, H = (p, q) => hash(p * 7 + seed, q * 13 + 5) >>> 0;
+  const pick = (b, s, lean) => { const r = Math.min(99, H(b, s) % 100 + (lean || 0)); return r < 30 ? 0 : r < 52 ? 1 : r < 68 ? 2 : r < 80 ? 3 : r < 90 ? 4 : r < 97 ? 5 : 6; };
+  for (let y = 0; y < 32; y++) for (let x = 0; x < 256; x++) {
+    let v;
+    if (kind === "ribbon") { const b = Math.floor(y / 8), r = y % 8;
+      if (r === 0) { const s = Math.floor((x + H(b, 9) % 16) / (3 + H(b, 4) % 7)); v = 2 + H(b * 31 + s, 3) % 4; } // the thin streaky seam
+      else { const s = Math.floor((x + H(b * 8 + (r >> 1), 2) % 64) / (14 + H(b * 8 + (r >> 1), 1) % 30)); v = H(b * 8 + (r >> 1), s) % 4 === 0 ? 2 + H(b, s + 7) % 3 : b % 2; } } // the calm band, with long soft streaks through it
+    else if (kind === "scatter") { v = Math.floor(y / 4) % 2;
+      const d = Math.floor((x + H(y, 4) % 16) / (3 + H(y, 5) % 4)); if (H(d, y) % 4 === 0) { const r = H(d, y + 1) % 20; v = r < 7 ? 2 : r < 12 ? 3 : r < 16 ? 4 : r < 19 ? 5 : 6; } }
+    else if (kind === "haze") { const b = Math.floor(y / 2), lean = Math.round(y * 1.4) - 8, len = Math.max(4, 8 + H(b, 1) % 28 - Math.floor(y / 5)); v = pick(b, Math.floor((x + H(b, 2) % 64) / len), lean); }
+    else { const b = Math.floor((kind === "drift" ? y + x / 20 : y + 2.6 * Math.sin(x * Math.PI / 64) + 1.2 * Math.sin(x * Math.PI / 32)) / 3), len = 5 + H(b, 1) % 20;
+      v = pick(b, Math.floor((x + H(b, 2) % 64) / len)); if (H(x >> 1, y) % 13 === 0) v = pick(b + 1, Math.floor((x + H(b + 1, 2) % 64) / (5 + H(b + 1, 1) % 20))); } // now and then a stray bit of the next band
+    a[y][x] = v;
+  }
+  return a;
+}
+/* A wing's 7 soft shades from its color: mostly the color washed toward cream, with two neighbouring hues for the streaks, and one deeper accent. */
+function wingPal(c) {
+  const [r, g, b] = hexRgb(c).map(v => v / 255), mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+  const s = d ? d / (1 - Math.abs(2 * l - 1)) : 0, h = !d ? 0 : mx === r ? 60 * (((g - b) / d) % 6) : mx === g ? 60 * ((b - r) / d + 2) : 60 * ((r - g) / d + 4);
+  const hue = dh => { const H = ((h + dh) % 360 + 360) % 360, S = Math.min(Math.max(s, 0.45), 0.7), C = (1 - Math.abs(2 * 0.6 - 1)) * S, X = C * (1 - Math.abs((H / 60) % 2 - 1)), m = 0.6 - C / 2;
+    const [R, G, B] = H < 60 ? [C, X, 0] : H < 120 ? [X, C, 0] : H < 180 ? [0, C, X] : H < 240 ? [0, X, C] : H < 300 ? [X, 0, C] : [C, 0, X];
+    return "#" + [R, G, B].map(v => Math.round((v + m) * 255).toString(16).padStart(2, "0")).join(""); };
+  const cream = "#fbf1e8", base = hue(0);
+  return [mixHex(base, cream, 0.62), mixHex(base, cream, 0.5), mixHex(hue(24), cream, 0.48), mixHex(hue(-30), cream, 0.44), mixHex(base, cream, 0.36), mixHex(hue(50), cream, 0.42), mixHex(base, cream, 0.16)]; // about as soft as Joe's pastel streaks
+}
+/* Wallpaper: both wall rows (16×32), a pattern on the paper between the same trim as the plain walls (top 5 rows, bottom 4). */
+function wallpaper(pat) { return fillFn(mk(16, 32), (x, y) => (y === 0 ? 3 : y === 1 || y === 3 ? 2 : y === 2 ? 4 : y === 4 ? 3 : y === 28 ? 3 : y === 29 ? 4 : y >= 30 ? (y === 31 ? 3 : 2) : pat(x, y))); }
 const GEN = {
   character: f => CHAR_FRAMES[f],
   floor_marble: () => fillFn(mk(16, 16), (x, y) => (x === 0 || y === 0 || hash(x, y) % 31 === 0 ? 2 : ((x >> 3) + (y >> 3)) % 2 ? 1 : 0)),
@@ -200,11 +277,12 @@ const GEN = {
   wall_top: () => fillFn(mk(16, 16), (x, y) => (y === 15 ? 2 : 3)),
   wall_upper: () => fillFn(mk(16, 16), (x, y) => (y === 0 ? 3 : y === 3 ? 2 : y === 4 ? 4 : y === 2 ? 0 : 1)),
   wall_lower: () => fillFn(mk(16, 16), (x, y) => (y === 12 ? 4 : y === 13 ? 0 : y >= 14 ? (y === 15 ? 3 : 2) : 1)),
-  // Doors are drawn over the wall, so everything outside the door is see-through.
-  doorway_upper: () => fillFn(mk(16, 16), (x, y) => (y >= 4 && x >= 1 && x <= 14 ? (x <= 2 || x >= 13 || y <= 5 ? (x === 1 || x === 14 || y === 4 ? 5 : 4) : y >= 7 ? 3 : 1) : undefined)),
-  doorway_lower: () => fillFn(mk(16, 16), (x, y) => (x >= 1 && x <= 14 ? (x <= 2 || x >= 13 ? (x === 1 || x === 14 ? 5 : 4) : y >= 14 ? 4 : 3) : undefined)),
-  staff_upper: () => fillFn(mk(16, 16), (x, y) => (x >= 3 && x <= 12 && y >= 5 ? (x === 3 || x === 12 || y === 5 ? 3 : y === 9 && x >= 5 && x <= 10 ? 0 : 2) : undefined)),
-  staff_lower: () => fillFn(mk(16, 16), (x, y) => (x >= 3 && x <= 12 ? (x === 3 || x === 12 || y === 15 ? 3 : x === 10 && (y === 3 || y === 4) ? 0 : 2) : undefined)),
+  // Doors are drawn over the wall, so everything outside the door is see-through. Every door is one tile tall, a person's
+  // height, the same as the doors in bottom and side walls (Joe 10/14): in a back wall it's all in the lower row, plain wall above.
+  doorway_upper: () => mk(16, 16),
+  doorway_lower: () => fillFn(mk(16, 16), (x, y) => (x >= 1 && x <= 14 ? (x <= 2 || x >= 13 || y <= 1 ? (x === 1 || x === 14 || y === 0 ? 5 : 4) : y >= 14 ? 4 : 3) : undefined)),
+  staff_upper: () => mk(16, 16),
+  staff_lower: () => fillFn(mk(16, 16), (x, y) => (x >= 3 && x <= 12 ? (x === 3 || x === 12 || y === 0 || y === 15 ? 3 : y === 3 && x >= 5 && x <= 10 ? 0 : x === 10 && (y === 8 || y === 9) ? 0 : 2) : undefined)),
   exit_door: () => fillFn(mk(16, 16), (x, y) => (x >= 2 && x <= 13 && y >= 1 ? (x === 2 || x === 13 || y === 1 || x === 7 || x === 8 ? 2 : (x - y + 32) % 7 === 0 ? 4 : 1) : undefined)),
   // Seen from above, a doorway in a side wall: the frame runs across (top and bottom), the opening goes through the wall.
   // A wooden door in a side wall, its gold handle toward the room (drawn mirrored on a right-hand wall).
@@ -251,6 +329,12 @@ const GEN = {
   sign: () => {
     let a = mk(16, 16);
     rect(a, 2, 1, 12, 9, 0); rect(a, 4, 3, 8, 1, 2); rect(a, 4, 5, 6, 1, 2); rect(a, 4, 7, 7, 1, 2);
+    rect(a, 7, 10, 2, 4, 2); rect(a, 5, 14, 6, 2, 2);
+    return outline(a);
+  },
+  sign_down: () => { // the same stand, with a big arrow pointing down (the basement stairs)
+    let a = mk(16, 16);
+    rect(a, 2, 1, 12, 9, 0); rect(a, 7, 2, 2, 3, 2); rect(a, 4, 5, 8, 1, 2); rect(a, 5, 6, 6, 1, 2); rect(a, 6, 7, 4, 1, 2); rect(a, 7, 8, 2, 1, 2);
     rect(a, 7, 10, 2, 4, 2); rect(a, 5, 14, 6, 2, 2);
     return outline(a);
   },
@@ -662,6 +746,22 @@ const GEN = {
   // Plush carpet for a room's floor. Gray, so a room's floor color (Rooms, Layout) tints it any color.
   carpet_floor: () => fillFn(mk(16, 16), (x, y) => { const h = hash(x, y) % 9; return h === 0 ? 2 : h === 1 ? 3 : (x + y * 3) % 8 === 0 ? 2 : (x * 3 + y) % 11 === 0 ? 0 : 1; }),
   /* Murals: landscapes painted along the top row of a wall (256×16; a wall shorter than that shows the middle of it). */
+  mural_tall_dusk: () => tallMural(GEN.mural_dusk(), 7),
+  mural_tall_canyon: () => tallMural(GEN.mural_canyon(), 2),
+  mural_tall_isles: () => tallMural(GEN.mural_isles(), 6),
+  mural_tall_forest: () => tallMural(GEN.mural_forest(), 2),
+  wallpaper_pastel: () => WP_PASTEL.map(r => [...r].map(Number)),
+  wallpaper_wing_drift: () => wingPaper("drift"),
+  wallpaper_wing_wave: () => wingPaper("wave"),
+  wallpaper_wing_ribbon: () => wingPaper("ribbon"),
+  wallpaper_wing_haze: () => wingPaper("haze"),
+  wallpaper_wing_scatter: () => wingPaper("scatter"),
+  wallpaper_stripes: () => wallpaper((x, y) => (x % 8 < 3 ? 1 : 0)),
+  wallpaper_diamond: () => wallpaper((x, y) => ((x + y) % 8 === 0 || (x - y + 64) % 8 === 0 ? 1 : (x % 8 === 4 && y % 8 === 4) ? 1 : 0)),
+  wallpaper_dots: () => wallpaper((x, y) => ((x % 8 === 2 && y % 8 === 2) || (x % 8 === 6 && y % 8 === 6) ? 1 : 0)),
+  wallpaper_pinstripe: () => wallpaper((x, y) => (x % 8 === 0 ? 1 : 0)),
+  wallpaper_check: () => wallpaper((x, y) => ((x >> 2) + (y >> 2)) % 2),
+  wallpaper_wainscot: () => wallpaper((x, y) => (y < 18 ? ((x % 8 === 3 && y % 6 === 2) ? 1 : 0) : y === 18 ? 3 : y === 19 ? 4 : x % 8 === 0 ? 3 : x % 8 === 1 ? 4 : 2)), // paper above, wood panels below
   mural_dusk: () => { // a red sunset behind jagged peaks
     const a = fillFn(mk(256, 16), (x, y) => (y < 2 ? 0 : y < 5 ? 1 : y < 8 ? 2 : y < 11 ? 3 : 4));
     [[52, 9], [170, 8]].forEach(([cx, cy]) => circ(a, cx, cy, 3.5, 7));
@@ -809,6 +909,12 @@ const GEN = {
     return a;
   },
   // The black LED board for NOW PLAYING: four tiles wide, one line tall. The red letters are drawn on it as they scroll.
+  eotm_sign: () => { // Employee of the Month: the NOW PLAYING board's little sister, two tiles wide, in a gold frame
+    const a = mk(32, 12);
+    rect(a, 0, 0, 32, 12, 5); rect(a, 1, 1, 30, 10, 3); rect(a, 2, 2, 28, 8, 1);
+    fillFn(a, (x, y, v) => (v === 1 && x >= 3 && x <= 28 && y >= 3 && y <= 8 && (x + y) % 2 === 0 ? 4 : undefined)); // the unlit LEDs
+    return a;
+  },
   led_sign: () => {
     const a = mk(64, 12);
     rect(a, 0, 0, 64, 12, 3); rect(a, 1, 1, 62, 10, 2); rect(a, 2, 2, 60, 8, 1);
@@ -1234,7 +1340,7 @@ const SLOTS = [
   { key: "lockers", label: "Locker", group: "Staff", w: 16, h: 32, pal: "locker", gen: GEN.lockers, note: "One locker, standing against the wall across both wall rows. Six stand side by side." },
   { key: "corkboard", label: "Corkboard", group: "Staff", w: 32, h: 32, pal: "cork", gen: GEN.corkboard, note: "Hangs across both wall rows. Holds your notes for upcoming episodes." },
   { key: "time_clock", label: "Time clock", group: "Staff", w: 16, h: 16, pal: "locker", gen: GEN.time_clock, note: "Where staff clock out. " + OVER_NOTE },
-  { key: "eotm_frame", label: "Employee of the Month frame", group: "Staff", w: 32, h: 32, pal: "gold", gen: GEN.eotm_frame, note: "In the lobby. The staff uniform sprite stands in the window from (8,5) to (23,21)." },
+  { key: "eotm_frame", retired: true, label: "Employee of the Month frame (no longer used)", group: "Staff", w: 32, h: 32, pal: "gold", gen: GEN.eotm_frame, note: "In the lobby. The staff uniform sprite stands in the window from (8,5) to (23,21)." },
   { key: "break_table", label: "Break table", group: "Staff", w: 32, h: 16, pal: "wood", gen: GEN.break_table },
   { key: "coffee_counter", label: "Coffee counter", group: "Staff", w: 32, h: 16, pal: "locker", gen: GEN.coffee_counter, note: "The curator's mug sits here once it's been found for the day." },
   { key: "shadow_figure", label: "Something in the dark", group: "Cozy loop", w: 16, h: 16, pal: "shadow", gen: GEN.shadow_figure, note: "Rarely seen after closing. Drawn faintly over the darkness, so keep it mostly black with something pale for eyes." },
@@ -1387,6 +1493,24 @@ const SLOTS = [
   { key: "closeup_case", label: "Case close-up frame", group: "Pieces", w: 24, h: 24, pal: "glass", gen: GEN.closeup_case, note: "Nine-slice around the art when you look into a case." },
   { key: "pick_medal", label: "Curator's pick medal", group: "Pieces", w: 8, h: 12, pal: "medal", gen: GEN.pick_medal, note: "A ribbon rosette pinned to the front corner of a curator's pick (cases and paintings), and shown by its title in the placard panel and the archive. Leave the background transparent." },
   { key: "leaderboard", label: "Staff leaderboard", group: "Staff", w: 32, h: 32, pal: "chalk", gen: GEN.leaderboard, note: "Hangs across both wall rows in the staff room. Lists this month's top staff." },
+  { key: "sign_down", label: "Sign stand (arrow down)", group: "Furniture", w: 16, h: 16, pal: "wood", gen: GEN.sign_down, note: "By the stairs down to the basement." },
+  { key: "eotm_sign", label: "Employee of the Month sign", group: "Staff", w: 32, h: 12, pal: "eotmled", gen: GEN.eotm_sign, note: "In the lobby, centered on the wall: a little LED board that scrolls the Employee of the Month's name and points (red letters, drawn by the game, from (3,2) to (28,9))." },
+  { key: "wallpaper_stripes", label: "Wallpaper: Stripes", group: "Wallpaper", w: 16, h: 32, pal: "wp_stripes", gen: GEN.wallpaper_stripes, note: "Both wall rows, repeated along every wall of a room that uses it (choose it in the curator's Rooms, Room settings). Keep the left and right edges matching so it tiles; the trim at the top and bottom matches the plain walls'." },
+  { key: "wallpaper_diamond", label: "Wallpaper: Diamonds", group: "Wallpaper", w: 16, h: 32, pal: "wp_diamond", gen: GEN.wallpaper_diamond, note: "Both wall rows, repeated along every wall of a room that uses it (choose it in the curator's Rooms, Room settings). Keep the left and right edges matching so it tiles; the trim at the top and bottom matches the plain walls'." },
+  { key: "wallpaper_dots", label: "Wallpaper: Polka dots", group: "Wallpaper", w: 16, h: 32, pal: "wp_dots", gen: GEN.wallpaper_dots, note: "Both wall rows, repeated along every wall of a room that uses it (choose it in the curator's Rooms, Room settings). Keep the left and right edges matching so it tiles; the trim at the top and bottom matches the plain walls'." },
+  { key: "wallpaper_pinstripe", label: "Wallpaper: Pinstripe", group: "Wallpaper", w: 16, h: 32, pal: "wp_pinstripe", gen: GEN.wallpaper_pinstripe, note: "Both wall rows, repeated along every wall of a room that uses it (choose it in the curator's Rooms, Room settings). Keep the left and right edges matching so it tiles; the trim at the top and bottom matches the plain walls'." },
+  { key: "wallpaper_check", label: "Wallpaper: Small check", group: "Wallpaper", w: 16, h: 32, pal: "wp_check", gen: GEN.wallpaper_check, note: "Both wall rows, repeated along every wall of a room that uses it (choose it in the curator's Rooms, Room settings). Keep the left and right edges matching so it tiles; the trim at the top and bottom matches the plain walls'." },
+  { key: "wallpaper_wainscot", label: "Wallpaper: Wainscot", group: "Wallpaper", w: 16, h: 32, pal: "wp_wainscot", gen: GEN.wallpaper_wainscot, note: "Both wall rows, repeated along every wall of a room that uses it (choose it in the curator's Rooms, Room settings). Keep the left and right edges matching so it tiles; the trim at the top and bottom matches the plain walls'." },
+  { key: "mural_tall_dusk", label: "Tall mural: dusk peaks", group: "Murals", w: 256, h: 32, pal: "m_dusk", gen: GEN.mural_tall_dusk, note: "Both wall rows, from the top of the wall to the floor. A shorter wall shows the middle of it; a longer one repeats it. With Keep the wall's trim on (in the curator), the top 5 rows and the bottom 4 are left as the wall's own trim." },
+  { key: "mural_tall_canyon", label: "Tall mural: canyon road", group: "Murals", w: 256, h: 32, pal: "m_canyon", gen: GEN.mural_tall_canyon, note: "Both wall rows, from the top of the wall to the floor. A shorter wall shows the middle of it; a longer one repeats it. With Keep the wall's trim on (in the curator), the top 5 rows and the bottom 4 are left as the wall's own trim." },
+  { key: "mural_tall_isles", label: "Tall mural: floating isles", group: "Murals", w: 256, h: 32, pal: "m_isles", gen: GEN.mural_tall_isles, note: "Both wall rows, from the top of the wall to the floor. A shorter wall shows the middle of it; a longer one repeats it. With Keep the wall's trim on (in the curator), the top 5 rows and the bottom 4 are left as the wall's own trim." },
+  { key: "mural_tall_forest", label: "Tall mural: moonlit forest", group: "Murals", w: 256, h: 32, pal: "m_forest", gen: GEN.mural_tall_forest, note: "Both wall rows, from the top of the wall to the floor. A shorter wall shows the middle of it; a longer one repeats it. With Keep the wall's trim on (in the curator), the top 5 rows and the bottom 4 are left as the wall's own trim." },
+  { key: "wallpaper_pastel", label: "Wallpaper: Pastel streaks", group: "Wallpaper", w: 256, h: 32, pal: "wp_pastel", gen: GEN.wallpaper_pastel, note: "Joe's pastel streaks: both wall rows, 256 wide. Along a wall every other copy is mirrored, so the ends always meet. No trim of its own: it covers the wall from top to floor." },
+  { key: "wallpaper_wing_drift", label: "Wing wallpaper: Drift", group: "Wallpaper", wing: true, w: 256, h: 32, pal: "wp_pastel", gen: GEN.wallpaper_wing_drift, note: "Carries on from the Pastel streaks: the streak bands slope gently across the wall. On a wing's walls it's drawn in soft shades of the wing's color (shown here in the pastel colors); paint it yourself and your colors are used as they are." },
+  { key: "wallpaper_wing_wave", label: "Wing wallpaper: Wave", group: "Wallpaper", wing: true, w: 256, h: 32, pal: "wp_pastel", gen: GEN.wallpaper_wing_wave, note: "Carries on from the Pastel streaks: the streak bands ripple. On a wing's walls it's drawn in soft shades of the wing's color (shown here in the pastel colors); paint it yourself and your colors are used as they are." },
+  { key: "wallpaper_wing_ribbon", label: "Wing wallpaper: Ribbon", group: "Wallpaper", wing: true, w: 256, h: 32, pal: "wp_pastel", gen: GEN.wallpaper_wing_ribbon, note: "Carries on from the Pastel streaks: wide calm bands with thin streaky seams. On a wing's walls it's drawn in soft shades of the wing's color (shown here in the pastel colors); paint it yourself and your colors are used as they are." },
+  { key: "wallpaper_wing_haze", label: "Wing wallpaper: Haze", group: "Wallpaper", wing: true, w: 256, h: 32, pal: "wp_pastel", gen: GEN.wallpaper_wing_haze, note: "Carries on from the Pastel streaks: light and sparse at the top, gathering toward the floor. On a wing's walls it's drawn in soft shades of the wing's color (shown here in the pastel colors); paint it yourself and your colors are used as they are." },
+  { key: "wallpaper_wing_scatter", label: "Wing wallpaper: Scatter", group: "Wallpaper", wing: true, w: 256, h: 32, pal: "wp_pastel", gen: GEN.wallpaper_wing_scatter, note: "Carries on from the Pastel streaks: short dashes over soft bands. On a wing's walls it's drawn in soft shades of the wing's color (shown here in the pastel colors); paint it yourself and your colors are used as they are." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
 const SLOT = {}; SLOTS.forEach(s => { s.frames = s.frames || 1; s.fps = s.fps || 0; SLOT[s.key] = s; });
@@ -1568,7 +1692,8 @@ function normalizePiece(p, i) {
     drinkPrice: Math.max(0, Math.min(99, Math.round(+p.drinkPrice || 0))), drinkIced: !!p.drinkIced, // the drink of the week's price, and whether it's served iced
     drinkColor: isHex(p.drinkColor) ? p.drinkColor : "", drinkLine: Array.isArray(p.drinkLine) ? p.drinkLine.map(x => str(x, 200)).filter(Boolean).slice(0, 6) : [], // its cup color, and what the barista says
     gift: p.gift && str(p.gift.name, 50) ? { name: str(p.gift.name, 50), description: str(p.gift.description, 160), price: Math.max(1, Math.min(99, Math.round(+p.gift.price || 5))) } : null, // and its gift
-    episodeTitle: str(p.episodeTitle, 140), cardBlurb: str(p.cardBlurb, 140), noCard: !!p.noCard, // its trading card: the episode's title (Cards tab fetches it), a blurb (else the hint), or no card at all
+    episodeTitle: str(p.episodeTitle, 140), cardBlurb: str(p.cardBlurb, 140), noCard: !!p.noCard, cardsFrom: p.cardsFrom === undefined ? "on" : p.cardsFrom === "on" || /^\d{4}-\d{2}-\d{2}$/.test(p.cardsFrom || "") ? p.cardsFrom : "", // its trading card: the episode's title (Cards tab fetches it), a blurb (else the hint), or no card at all
+    answers: Array.isArray(p.answers) ? [0, 1, 2].map(i => { const x = p.answers[i]; return str(x && typeof x === "object" ? x.a : x, 6000); }) : ["", "", ""], // the developer's answers to the three questions (ANSWER_QS), for the answer cards (Joe 10/13)
     hint: str(p.hint, 160), pick: !!p.pick, rel: str(p.rel, 30), genre: str(p.genre, 30), blend: str(p.blend, 30), // blend: a second category it also belongs to
     colors: colors.length >= 2 ? colors : ["#f0ecf8", "#a898d0", "#584a88", "#1a1430"],
     style: STYLES.includes(p.style) ? p.style : STYLES[strSeed(str(p.title, 80) || String(i)) % STYLES.length],
@@ -2042,6 +2167,12 @@ const TUT_ROOMS = ["tut_office", "tut_room1", "tut_room2"];
 const NOTE_KEYS = [..."abcdefghijklmnopqrstuvwxyz.,!?"].map((k, i) => ({ k, col: i % 10, span: 1 }))
   .concat([{ k: "CAPS", label: "Caps", col: 0, span: 2 }, { k: "'", col: 2, span: 1 }, { k: " ", label: "Space", col: 3, span: 3 }, { k: "DEL", label: "Del", col: 6, span: 2 }, { k: "DONE", label: "Done", col: 8, span: 2 }]);
 /* The ten starting shirt colors for visitors (Visitors tab). */
+/* Your look (Joe 10/13): anyone who's signed in with a badge (Patreon members, staff, the curator) picks a skin tone and a shirt
+   color in My Stuff, Wardrobe. Swapped into your own sprite only (sheet "<base>~look:<from>-<to>,..."). */
+const SKIN_TONES = [["Lightest", "#fbe8d4"], ["Light", "#f8e0c0"], ["Light medium", "#e8c098"], ["Medium", "#d8a878"], ["Medium tan", "#c89060"], ["Tan", "#a8744c"], ["Deep", "#8a5a3a"], ["Deepest", "#5e3c26"]];
+const LOOK_SHIRTS = [["Red", "#c83838"], ["Orange", "#e07830"], ["Yellow", "#e8c040"], ["Green", "#58a048"], ["Teal", "#3a9a98"], ["Blue", "#3a68c8"], ["Purple", "#8850c0"], ["Pink", "#e070a8"], ["Brown", "#8a5a34"], ["Gray", "#808898"], ["White", "#ece8e0"], ["Black", "#2a2a32"]];
+/* The three questions every developer answers when they submit a game (answer cards, Joe 10/13). */
+const ANSWER_QS = ["What were you hoping the player would feel while playing your game?", "Why did you choose this experience?", "Were there specific moments, mechanics, or ideas you built around that emotional goal?"];
 const SHIRT_COLORS = ["#c83838", "#e07830", "#e8c040", "#58a048", "#3a9a98", "#3a68c8", "#8850c0", "#e070a8", "#8a5a34", "#808898"];
 /* The tutorial's three games, in a row: made-up games, each with a different relationship between the curator's
    observation (front) and the developer's intention (back). The middle one opens the far door once it's read both
@@ -2066,6 +2197,10 @@ const TEXT = {
   "unveil.theater":    { g: "Unveiling", l: "After the unveil, if the piece has an episode: watch it in the screening nook ({title})", v: [["and see the episode in the theater!"]] },
   "unveil.drink":      { g: "Unveiling", l: "After the unveil, if the piece brings a drink: the drink of the week ({drink})", v: [["To celebrate, we're offering a new drink called {drink} in the café!"]] },
   "unveil.gift":       { g: "Unveiling", l: "After the unveil, if the piece brings a gift: everyone here gets one free ({item})", v: [["And everyone here today will receive the featured item: {item} for free!"]] },
+  "unveil.waitCurator": { g: "Unveiling", l: "Talking to the curator by the covered piece, before the ceremony ({title})", by: "claude", v: [["Today's the day.", "{title} is under that cloth, and it comes off any minute. Stick around."], ["You made it! I've been waiting all week to show everybody {title}."]] },
+  "unveil.waitUsher":  { g: "Unveiling", l: "Talking to the usher by the covered piece, before the ceremony", by: "claude", v: [["Find a good spot. The curator's about to do the honors."]] },
+  "unveil.waitYou":    { g: "Unveiling", l: "Playing as the curator: the usher by the covered piece, waiting on you ({title})", by: "claude", v: [["Everyone's here, Curator.", "Pull the cloth off {title} whenever you're ready."]] },
+  "unveil.ask":        { g: "Unveiling", l: "Playing as the curator: facing the covered piece ({title})", by: "claude", v: [["Pull the cloth off {title}?"]] },
   "unveil.got":        { g: "Unveiling", l: "The note when you get the unveil gift ({item})", v: [["You got the {item}"]] },
   "case.covered":      { g: "Pieces", l: "Case under a cloth (unveiling soon)", v: [["Something is under a cloth in this case.", "The card says it will be unveiled on {date}."]] },
   "painting.covered":  { g: "Pieces", l: "Painting under a sheet (unveiling soon)", v: [["Something is hanging under a sheet.", "The card says it will be unveiled on {date}."]] },
@@ -2671,7 +2806,7 @@ function normalizeLayout(L) {
   const art = a => (a && typeof a === "object" ? Object.fromEntries(Object.entries(a).filter(([k, v]) => ["top", "upper", "lower", "floor"].includes(k) && SLOT[v])) : {});
   const out = { hallArt: art(L.hallArt), rooms: [], halls: [], doors: [], stairs: [] };
   (Array.isArray(L.rooms) ? L.rooms : []).slice(0, 40).forEach((r, i) => { if (!r) return;
-    out.rooms.push({ id: id(r.id, "room" + i), name: str(r.name, 40) || "Room", x: n(r.x, 1, LAYOUT_MAX_W - 4, 2), y: n(r.y, 3, LAYOUT_MAX_H - 4, 3), w: n(r.w, 2, 60, 8), h: n(r.h, 2, 60, 6), art: art(r.art), light: r.light !== false, genre: str(r.genre, 30), color: hexOr(r.color), tint: { floor: hexOr(r.tint && r.tint.floor), wall: hexOr(r.tint && r.tint.wall) },
+    out.rooms.push({ id: id(r.id, "room" + i), name: str(r.name, 40) || "Room", x: n(r.x, 1, LAYOUT_MAX_W - 4, 2), y: n(r.y, 3, LAYOUT_MAX_H - 4, 3), w: n(r.w, 2, 60, 8), h: n(r.h, 2, 60, 6), art: art(r.art), light: r.light !== false, genre: str(r.genre, 30), color: hexOr(r.color), tint: { floor: hexOr(r.tint && r.tint.floor), wall: hexOr(r.tint && r.tint.wall) }, wallpaper: SLOT[r.wallpaper] && SLOT[r.wallpaper].group === "Wallpaper" ? r.wallpaper : "",
       edits: (Array.isArray(r.edits) ? r.edits : []).slice(0, 400).filter(e => Array.isArray(e) && (e[2] === "." || e[2] === "#")).map(e => [n(e[0], -30, 90, 0), n(e[1], -30, 90, 0), e[2]]) }); });
   (Array.isArray(L.halls) ? L.halls : []).slice(0, 60).forEach((h, i) => { if (!h) return;
     const path = (Array.isArray(h.path) ? h.path : []).slice(0, 8).map(p => [n(p && p[0], 1, LAYOUT_MAX_W - 3, 1), n(p && p[1], 3, LAYOUT_MAX_H - 3, 3)]);
@@ -2784,7 +2919,7 @@ prepLayoutRoom(ROOMS.museum);
 /* A pristine copy of the built-in rooms. A pack's "rooms" replaces any of these or adds new ones;
    the level editor in curator.html writes them. Rooms are plain data, so a deep copy is enough. */
 const BUILTIN_ROOMS = JSON.parse(JSON.stringify(ROOMS));
-const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "runners", "lamps", "arrows", "murals", "tint", "windowAt", "intercom", "lightSwitch", "eotmAt",
+const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "runners", "lamps", "mats", "wallpaper", "arrows", "murals", "tint", "windowAt", "intercom", "lightSwitch", "eotmAt",
   "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "enterAt", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt", "posters", "floorLights", "camAt", "colorGlows", "keypadAt"];
 /* Light checks so a hand-edited or damaged pack can't break the game: rectangular map, sane size, a spawn on the map. */
 function normalizeRoom(id, d) {
@@ -3012,6 +3147,8 @@ function buildRoom(id, pieces, o) {
     // Colors: a room's floor and wall tints, and a hallway's walls blending from the room at one end to the room at the other.
     const part = m[0] === "floor" ? "floor" : m[0] === "upper" || m[0] === "lower" ? "wall" : null;
     if (part && r.tiles[y][x]) { const t = tintAt(def, lay, z, part, x, y, o.genres); if (t) r.tiles[y][x] += "@" + t; }
+    const zr = part === "wall" && z >= 0 && lay.zones[z].kind === "room" ? lay.zones[z] : null; // a wing with its own wallpaper (Joe 10/14): "key|color", the color for the wing patterns
+    if (zr && zr.rect.wallpaper) { (r.wpAt || (r.wpAt = mk(w, h, null)))[y][x] = zr.rect.wallpaper + (SLOT[zr.rect.wallpaper].wing ? "|" + (themeOf(zr, o.genres) || (zr.rect.tint && zr.rect.tint.wall) || "#c890a8") : ""); }
     r.solid[y][x] = !WALK_TILES.includes(ch);
   }
   (def.props || []).forEach(p => {
@@ -3051,11 +3188,13 @@ function buildRoom(id, pieces, o) {
     def.wallArt.forEach(w => { for (let i = 0; i < SLOT[w.key].w / T; i++) r.events[(w.x + i) + "," + ((w.y || 1) + 1)] = w.cafe && w.key !== "cafe_menu" ? { cafe: true } : { say: w.say || ["The café menu."] }; });
   }
   r.decals = def.decals || []; r.glows = def.glows || []; r.bunting = !!def.bunting;
+  r.wallpaper = SLOT[def.wallpaper] && SLOT[def.wallpaper].group === "Wallpaper" ? def.wallpaper : null; // every wall in the room papered with it
   // Hallway dressing: carpet runner tiles [x, y, "h0".."v2"], accent lights on the wall [x, y], and arrow signs pointing the way.
   r.runners = runnerTiles(def);
   r.lamps = (def.lamps || []).filter(Array.isArray);
+  r.matList = Array.isArray(def.mats) ? def.mats.filter(a => Array.isArray(a) && Number.isFinite(a[0]) && Number.isFinite(a[1])) : null; // doormats placed in the curator; none set: one inside every doorway (doorMats)
   r.arrows = (def.arrows || []).filter(a => a && typeof a === "object");
-  r.murals = (def.murals || []).filter(m => m && SLOT[m.key]).map(m => ({ x: m.x | 0, y: m.y | 0, w: Math.max(1, m.w | 0 || 1), key: m.key, at: Number.isFinite(m.at) ? Math.max(0, m.at | 0) : -1 })); // at: which part of the art (pixels from its left)
+  r.murals = (def.murals || []).filter(m => m && SLOT[m.key]).map(m => ({ x: m.x | 0, y: m.y | 0, w: Math.max(1, m.w | 0 || 1), key: m.key, at: Number.isFinite(m.at) ? Math.max(0, m.at | 0) : -1, trim: !!m.trim })); // at: which part of the art (pixels from its left)
   r.arrows.forEach(a => { for (let i = 0; i < (a.w || 4); i++) { const k = (a.x + i) + "," + ((a.y || 1) + 1); if (!r.events[k]) r.events[k] = { arrow: a }; } });
   if (def.catSpots && o.catRoom === id) {
     const [x, y] = def.catSpots[o.catIndex % def.catSpots.length];
@@ -3211,6 +3350,7 @@ class Game {
       if (this.staff && this.staff.curator && this.rooms.office && !this.curator) { const sp = ROOMS.office.spawn; this.enterRoom("office", sp[0], sp[1], sp[2], true); } // the curator starts in their office
     };
     if (this.outsideStart()) { this.entryFn = go; const sp = ROOMS.outside.spawn; this.enterRoom("outside", sp[0], sp[1], sp[2], true); } else go(); // every visit starts out front (Joe 10/12)
+    if (this.curatorPlay() && !this.progress.recording) this.progress.recording = { tod: this.tod() }; // on a curator badge, recording mode starts by itself (the office PC turns it off, Joe 10/13)
     this.applyRecording();
     this.ready = this.setPack(pack); this.updateHud();
     this.ready.then(() => { this.started = true; if (this.needTutorial() && !this.outsideNow()) this.startTutorial(); }); // a new player starts with the tutorial
@@ -3276,7 +3416,7 @@ class Game {
     const sp = b ? [b.x + (b.w >> 1), b.y + (b.h >> 1), "down"] : ROOMS[room].spawn;
     this.closeAll(); this.warp(room, sp[0], sp[1], sp[2]);
   }
-  closeAll() { this.el.text.style.display = "none"; this.el.cu.style.display = "none"; this.txt = null; this.mode = "walk"; }
+  closeAll() { this.el.text.style.display = "none"; this.el.cu.style.display = "none"; this.txt = null; this.mode = "walk"; if (this.el.ans) this.el.ans.style.display = "none"; this.ans = null; }
   sheet(key) {
     if (key.endsWith("@rainbow")) return this.cache[key] || this.rainbow(key);
     if (key.includes("~")) return this.cache[key] || this.swapped(key);
@@ -3293,7 +3433,8 @@ class Game {
   }
   /* "goq_hat~bx-hat-purple": the art with one of Bluu's colorways swapped in (exact colors, from BLUU_GEAR). */
   swapped(key) {
-    const [base, id] = key.split("~"), src = this.sheet(base), w = src.naturalWidth || src.width, h = src.naturalHeight || src.height, g = BLUU_GEAR.find(b => b.id === id);
+    const [base, id] = key.split("~"), src = this.sheet(base), w = src.naturalWidth || src.width, h = src.naturalHeight || src.height;
+    const g = /^look:/.test(id) ? { swap: Object.fromEntries(id.slice(5).split(",").map(pr => pr.split("-").map(c => "#" + c))) } : BLUU_GEAR.find(b => b.id === id); // your look, or a Bluu colorway
     if (!w || !h || !g) return src;
     const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(src, 0, 0);
     const d = x.getImageData(0, 0, w, h), px = d.data, rgb = hx => [1, 3, 5].map(i => parseInt(hx.slice(i, i + 2), 16)), map = Object.entries(g.swap).map(([a, b]) => [rgb(a), rgb(b)]);
@@ -3539,6 +3680,9 @@ class Game {
     // The screening nook's video: the episode plays over the game; B, Start or the button closes it.
     el.tv = h("gt-tv"); el.tv.innerHTML = '<div class="gt-tv-bar"><span class="gt-tv-t"></span><a class="gt-tv-yt" target="_blank" rel="noopener">YouTube \u2197</a><button type="button" class="gt-tv-x">Close (B)</button></div><div class="gt-tv-box"></div>';
     el.tv.querySelector(".gt-tv-x").addEventListener("click", e => { e.stopPropagation(); this.closeTv(); });
+    // Answer cards (the curator, for recording): the developer's answer in a dark box over gray stripes that scroll by.
+    el.ans = h("gt-ans"); el.ans.innerHTML = '<canvas class="gt-ans-bg" aria-hidden="true"></canvas><div class="gt-ans-box"><p class="gt-ans-h">GAMES OVER QUALIA</p><p class="gt-ans-t"></p></div>';
+    el.ans.addEventListener("click", e => { e.stopPropagation(); this.answerStep(1); });
     el.endWrap = h("gt-endwrap");
     el.end = h("gt-end", el.endWrap);
     el.end.innerHTML = '<p class="gt-end-sign">CLOSED</p><p class="gt-end-line">The museum is closed for the night.</p><p class="gt-end-sum"></p>' +
@@ -3546,7 +3690,15 @@ class Game {
     el.end.querySelector("button").addEventListener("click", () => this.reopen());
     if (!document.getElementById("gt-end-css")) {
       const st = document.createElement("style"); st.id = "gt-end-css";
-      st.textContent = `.gt-endwrap{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#000;z-index:8}
+      st.textContent = `.gt-ans{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:9;overflow:hidden;background:#2e2e30;cursor:pointer}
+.gt-ans-bg{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+.gt-ans-box{position:relative;z-index:1;box-sizing:border-box;width:calc(212px * var(--s));max-height:calc(132px * var(--s));overflow:hidden;background:#1c1c1e;padding:calc(8px * var(--s)) calc(10px * var(--s));box-shadow:0 0 0 calc(1px * var(--s)) #111113,calc(2px * var(--s)) calc(2px * var(--s)) 0 calc(1px * var(--s)) rgba(0,0,0,.45);animation:gt-ans-in .25s steps(3)}
+.gt-ans-h{margin:0 0 calc(7px * var(--s));color:#ead9ca;font-family:var(--pixel, monospace);font-size:calc(5px * var(--s));letter-spacing:calc(1px * var(--s));text-align:center;opacity:.8}
+.gt-ans-t{margin:0;color:#aac6ce;font-family:var(--pixel, monospace);font-size:calc(6px * var(--s));line-height:1.75;text-align:center;overflow-wrap:anywhere;white-space:pre-line}
+.gt-ans.q .gt-ans-t{color:#ead9ca}
+@keyframes gt-ans-in{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion: reduce){.gt-ans-box{animation:none}}
+.gt-endwrap{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#000;z-index:8}
 .gt-end{box-sizing:border-box;width:calc(208px * var(--s));max-height:calc(152px * var(--s));overflow:hidden;border-style:solid;border-width:calc(8px * var(--s));border-image-slice:8 fill;border-image-repeat:stretch;
   background:#f8f8f0;background-clip:padding-box;color:#181820;text-align:center;padding:calc(4px * var(--s)) calc(4px * var(--s)) calc(2px * var(--s));image-rendering:pixelated;
   animation:gtEndIn .5s steps(5) both}
@@ -3944,7 +4096,7 @@ class Game {
      walk around to the back (facing down) for the developer's intention. From the ends, you're told to walk around. */
   useCase(c) {
     if (c.state === "empty") { this.say(this.tx("case.empty")); return; }
-    if (c.state === "covered") { this.say(this.tx("case.covered", { date: niceDate(c.piece.unveil), title: c.piece.title })); return; }
+    if (c.state === "covered") { if (this.askUnveil(c)) return; this.say(this.tx("case.covered", { date: niceDate(c.piece.unveil), title: c.piece.title })); return; }
     if (c.state === "crate") { this.hang(c); return; }
     if (c.state === "wall" && this.offerRecommend(c.piece, () => this.useCaseNow(c))) return;
     this.useCaseNow(c);
@@ -4247,7 +4399,7 @@ class Game {
     this.spook = null; this.figure = null; this.hideEnd(); this.trans = null; this.fade = 0; this.mode = "walk"; this.microwaved = false;
     this.rebuild();
     const w = this.endKind === "brb" && this.progress.where;
-    const go = () => { if (w && w.room !== "outside" && this.rooms[w.room]) this.enterRoom(w.room, w.x, w.y, w.dir); else { const sp = ROOMS.lobby.spawn; this.enterRoom("lobby", sp[0], sp[1], sp[2]); } };
+    const go = () => { if (this.curatorPlay() && this.rooms.office) { const sp = ROOMS.office.spawn; this.enterRoom("office", sp[0], sp[1], sp[2]); } else if (w && w.room !== "outside" && this.rooms[w.room]) this.enterRoom(w.room, w.x, w.y, w.dir); else { const sp = ROOMS.lobby.spawn; this.enterRoom("lobby", sp[0], sp[1], sp[2]); } };
     if (this.outsideStart()) { this.entryFn = go; const sp = ROOMS.outside.spawn; this.enterRoom("outside", sp[0], sp[1], sp[2]); } else go(); // back out front, like any start
     this.wrap.focus({ preventScroll: true });
     if (this.needTutorial() && !this.outsideNow()) this.startTutorial(); // quit in the middle of it: it starts over
@@ -4281,7 +4433,7 @@ class Game {
      the chore count: four colored quarters (settling in, getting busy, the rush, winding down), the ones gone by bright, a
      hand sweeping round; once the loop's over, a moon. Not in the chill museum, the tutorial or recording. */
   signImg() { if (!this._sign) { const im = new Image(); im.onload = () => { this._signOk = true; }; im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(this.museumLogo(false)); this._sign = im; } return this._signOk ? this._sign : null; }
-  outsideStart() { return !this.curator && !!this.saveKey && !this.headless && !this.recording() && !!this.rooms.outside; } // every visit starts out front (not the curator's preview)
+  outsideStart() { return !this.curator && !!this.saveKey && !this.headless && !this.recording() && !this.curatorPlay() && !!this.rooms.outside; } // every visit starts out front (not the curator's preview)
   enterMuseum() { // through the glass doors: to wherever you'd have started
     const go = this.entryFn || (() => { const sp = ROOMS.lobby.spawn; this.enterRoom("lobby", sp[0], sp[1], sp[2]); }); this.entryFn = null;
     this.mode = "busy"; this.trans = { t: 0, dur: 14, switched: false, fn: go, after: () => { this.dialK = undefined; if (this.needTutorial()) this.startTutorial(); } };
@@ -4640,10 +4792,21 @@ class Game {
       }
       cer.pieces.push(p); const obj = c || sp; cer.covered.push([obj, obj.state]); obj.state = "covered"; // under the cloth until the curator pulls it off
     }
+    for (const cer of this.ceremonies) { // what the hosts say if you talk to them first (Joe 10/13: the curator only said "...")
+      const vars = { title: cer.pieces.map(p => p.title).join(" and ") };
+      if (cer.curator) cer.curator.lines = [this.tx("unveil.waitCurator", vars)];
+      if (cer.usher) cer.usher.lines = [this.tx(this.isCurator() ? "unveil.waitYou" : "unveil.waitUsher", vars)];
+    }
   }
-  testUnveil() { // curator preview: stage the ceremony for the newest piece, as if it were unveiled today
+  ceremonyAt(obj) { return (this.ceremonies || []).find(c => !c.done && c.covered.some(([o]) => o === obj)) || null; } // the ceremony waiting on this covered piece
+  askUnveil(obj) { // the curator (you) at the covered piece: start the ceremony when you're ready (Joe 10/13)
+    const cer = this.ceremonyAt(obj); if (!cer || !this.isCurator() || this.room.id !== "museum") return false;
+    this.ask(this.tx("unveil.ask", { title: cer.pieces.map(p => p.title).join(" and ") }).join(" "), ["Unveil it", "Not yet"], i => { if (i === 0) this.startCeremony(cer); }, 1);
+    return true;
+  }
+  testUnveil(id) { // curator preview: stage the ceremony for a piece (id) or the newest one, as if it were unveiled today
     const m = this.rooms.museum, shown = q => m && (m.cases.some(c => c.piece && c.piece.id === q.id) || (m.hung || []).some(h => h.piece && h.piece.id === q.id));
-    const p = this.pack.pieces.filter(q => !q.tut && shown(q)).slice(-1)[0]; if (!p) return false;
+    const p = this.pack.pieces.filter(q => !q.tut && shown(q) && (!id || q.id === id)).slice(-1)[0]; if (!p) return false;
     this.unveilTest = p.id; if (this.progress.unveils) delete this.progress.unveils[p.id]; if (this.progress.sides) delete this.progress.sides[p.id]; this.rebuild(); return p.title; // unread, like a real unveil day (so its border's blue)
   }
   startCeremony(cer) {
@@ -4660,8 +4823,9 @@ class Game {
         this.say(this.tx("unveil.curator", vars), () => after(16, () => {
           cer.covered.forEach(([obj, st]) => { obj.state = st === "covered" ? "wall" : st; }); this.flash = 8; // the cloth comes off
           face(cer.curator, "down");
-          cer.crowd.forEach((n, i) => { n.pose = { kind: i % 2 ? "heart" : "startled", t0: this.t, dur: 110 }; });
-          after(80, () => {
+          const snap = cer.crowd.slice().sort(() => Math.random() - 0.5).slice(0, Math.min(cer.crowd.length, 2 + ((Math.random() * 3) | 0))); // two to four of them take a photo, one after another (Joe 10/13)
+          cer.crowd.forEach((n, i) => { if (snap.includes(n)) { n.pose = null; n.snapAt = this.t + 14 + snap.indexOf(n) * (18 + ((Math.random() * 10) | 0)); } else n.pose = { kind: i % 2 ? "heart" : "startled", t0: this.t, dur: 110 }; });
+          after(Math.max(80, 14 + snap.length * 28 + 30), () => {
             const p = cer.pieces[0], week = this.weekDrink(), gift = cer.pieces.map(q => this.giftOf(q)).find(Boolean), pages = [...this.tx("unveil.read", vars)];
             if (cer.pieces.some(q => q.gameUrl) && this.rooms.museum.props.some(q => q.key === "arcade_cabinet")) pages.push(...this.tx("unveil.arcade", vars));
             if (cer.pieces.some(q => q.episodeUrl)) pages.push(...this.tx("unveil.theater", vars));
@@ -4902,7 +5066,15 @@ class Game {
      order; and the keypad only works after closing (announcement made, lights out). One code for everyone (curator, Staff
      tab), so players can trade it. A curator badge always gets in, and starts there. */
   /* What you look like: the curator in person on a curator badge, the staff uniform on shift, the shirt if you wear it. */
-  playerSheet(base) { return this.isCurator() ? "curator" : this.staff ? "player_staff" : this.progress.wearShirt ? "player_goq_shirt" : base || "player"; }
+  playerSheet(base) { const k = this.isCurator() ? "curator" : this.staff ? "player_staff" : this.progress.wearShirt ? "player_goq_shirt" : base || "player"; return k + this.lookSuffix(k); }
+  canLook() { const P = this.progress, real = b => !!b && !b.volunteer && /^\d+$/.test(String(b.badge || "")); if (!P) return false; return P.staff ? real(P.staff) : real(P.lastBadge); } // a badge number (a Patreon member or the curator), not a volunteer: on shift, the badge you're on; off shift, the last one you signed in with (Joe 10/14)
+  lookSuffix(k) { // your skin tone everywhere; your shirt on your own clothes (the player, the curator), not on a uniform or the GOQ shirt
+    const L = this.progress.look; if (!L || !this.canLook() || !SLOT[k] || this.headless) return "";
+    const pal = PAL[SLOT[k].pal] || [], sw = [];
+    if (L.skin && pal[1] && L.skin !== pal[1]) sw.push(pal[1].slice(1) + "-" + L.skin.slice(1));
+    if (L.shirt && pal[2] && (k === "player" || k === "curator") && L.shirt !== pal[2]) sw.push(pal[2].slice(1) + "-" + L.shirt.slice(1));
+    return sw.length ? "~look:" + sw.join(",") : "";
+  }
   isCurator() { return !!(this.curator || (this.staff && this.staff.curator)); } // a curator badge, or the curator preview's curator view
   /* What people call you to your face: your badge name, or for a curator badge one of the curator's nicknames (Staff tab).
      Official things (the ON SHIFT tag, clocking in, the leaderboard, lockers, Employee of the Month) keep the badge name. */
@@ -4959,7 +5131,7 @@ class Game {
   }
   recording() { return !!(this.progress && this.progress.recording && this.staff && this.staff.curator); }
   setRecording(on) { this.progress.recording = on ? { tod: this.tod() } : null; this.saveProgress(); this.applyRecording(); this.updateHud(); }
-  applyRecording() { // recording mode: holds the time of day; museum.html hides the touch controls (goq-rec on <html>)
+  applyRecording() { // recording mode: holds the time of day; goq-rec on <html> (the touch controls stay, Joe 10/13)
     const rec = this.recording();
     if (rec) this.timeOverride = this.progress.recording.tod; else if (this.recTod) this.timeOverride = null;
     this.recTod = rec;
@@ -5492,6 +5664,12 @@ class Game {
     if (a && a.name) return { pages: [this.tx(a.sofar ? "eotm.sofar" : "eotm.auto", { name: a.name, points: a.points, month: a.month })] };
     return null;
   }
+  eotmLine() { // what the little LED sign scrolls
+    const e = this.pack.settings.staff.eotm, a = this.board && this.board.eotm;
+    if (e.name) return "EMPLOYEE OF THE MONTH: " + e.name;
+    if (a && a.name) return (a.sofar ? "LEADING " + (a.month || "THIS MONTH") : "EMPLOYEE OF THE MONTH") + ": " + a.name + " - " + a.points + " PTS";
+    return "EMPLOYEE OF THE MONTH: COULD BE YOU";
+  }
   /* Chores go to the staff office when you clock out (Joe 10/12: that's what clocking out is for), not as you do them.
      Clocking out moves this shift's chores to the outbox and sends them; any that can't get through wait there for the next try (the next page load). */
   clockOutDuties() {
@@ -5633,6 +5811,7 @@ class Game {
     this.progress.lastBadge = who; this.progress.tally.shifts = (this.progress.tally.shifts || 0) + 1; this.saveProgress();
     if (this.tut && this.tut.onBadge) { const f = this.tut.onBadge; this.tut.onBadge = null; this.closeBadge(); this.updateHud(); f(true); return; } // signing in with the usher
     this.closeBadge(); this.updateHud(); this.showLoc("Clocked in: " + who.name);
+    if (this.curatorPlay()) { this.janOff(); if (this.dirClock) this.dirClock.picks = null; this.sup = null; if (this.tour) this.endTour(true); this.endSide(); if (!this.recording()) this.setRecording(true); } // a curator badge: chill, no tours or Janitor, recording on
     const to = this.staffTo || ["staff", 7, 8, "up"];
     if (this.room.id !== to[0]) this.warp(...to);
   }
@@ -6199,7 +6378,7 @@ class Game {
       { id: "fri-seat", group: "Days", day: 5, label: "Fri: the feature's free seat", find: () => { const r = this.rooms.screening, k = r && r.keepFree && [...r.keepFree][0]; return k ? at("screening", ...k.split(",").map(Number)) : "No screening nook."; } },
       { id: "sat-bluu", group: "Days", day: 6, label: "Sat: Bluu's stall", find: () => this.npcAt(n => n.vendor) || "No room for his stall." },
       { id: "sun-guest", group: "Days", day: 0, label: "Sun: staff at a café table", find: () => { const s = this.dayState().sunSeat; return s ? at("museum", s.x, s.y) : "Already chatted today, or no café table."; } },
-      { id: "unveil", group: "Days", label: "An unveiling (any day)", run: () => { const t = this.testUnveil(); return t ? "Staged " + t + ". Walk into its wing to see the ceremony." : "No piece on display."; } },
+      { id: "unveil", group: "Days", label: "An unveiling (any day)", run: () => { const t = this.testUnveil(); return t ? "Staged " + t + ". " + (this.isCurator() ? "Walk up to it and press the action button to unveil it." : "Walk into its wing to see the ceremony.") : "No piece on display."; } },
       { id: "usher", group: "The loop", beat: 0, label: "0:00 The usher's empty mug", find: () => this.npcAt(n => n.usher && !n.tourUsher) || "He's off with the tour." },
       { id: "boxes", group: "The loop", beat: 0, label: "0:00 The deliveries (basement)", find: () => { const S = this.supState(), b = S.boxes.find(b => b.room === "storage") || S.boxes[0]; return b ? at(b.room, b.x, b.y) : "Both boxes are already up."; } },
       { id: "stocking", group: "The loop", beat: 0, label: "0:00 The shopkeeper stocking", find: () => this.npcAt(n => n.role === "shopkeeper") || (this.onBreak === "shopkeeper" ? "He has the day off (he's Sunday's guest at the café)." : "The shopkeeper's away.") },
@@ -6254,7 +6433,8 @@ class Game {
     for (const p of (pack || this.pack).pieces) { const v = ytVideoId(p.episodeUrl); if (!v || st[v]) continue; st[v] = "loading"; const im = new Image(); im.onload = () => { st[v] = "ok"; }; im.onerror = () => { st[v] = "no"; }; im.src = "thumbs/" + v + ".jpg"; }
   }
   cardThumb(p) { const v = ytVideoId(p.episodeUrl); return v && this.thumbState && this.thumbState[v] === "ok" ? "thumbs/" + v + ".jpg" : ""; }
-  cardList() { const t = todayISO(); return this.pack.pieces.filter(p => !p.tut && !p.noCard && (!p.unveil || p.unveil <= t)).sort((a, b) => ((a.unveil || "") < (b.unveil || "") ? -1 : (a.unveil || "") > (b.unveil || "") ? 1 : 0)); }
+  cardsOn(p, t) { t = t || todayISO(); return p.cardsFrom === "on" || (!!p.cardsFrom && p.cardsFrom <= t); } // a piece's cards are on sale from cardsFrom ("on": always; "": not yet, Joe 10/13)
+  cardList() { const t = todayISO(); return this.pack.pieces.filter(p => !p.tut && !p.noCard && (!p.unveil || p.unveil <= t) && this.cardsOn(p, t)).sort((a, b) => ((a.unveil || "") < (b.unveil || "") ? -1 : (a.unveil || "") > (b.unveil || "") ? 1 : 0)); }
   cardsOwned() { return this.progress.cards || (this.progress.cards = {}); }
   addCard(id, kind) { const o = this.cardsOwned(), had = Object.assign({ c: 0, r: 0, f: 0 }, o[id] || {}), c = o[id] || (o[id] = { c: 0, r: 0, f: 0 }); c[kind] = (c[kind] || 0) + 1; this.lastHad = had; this.progress.tally.cards = (this.progress.tally.cards || 0) + 1; this.saveProgress(); } // lastHad: what you had of that card before (the card view says new or repeat)
   randomCard(rare) { const L = this.cardList(); if (!L.length) return null; return { p: L[(Math.random() * L.length) | 0], kind: Math.random() * 100 < rare ? "r" : "c" }; }
@@ -6838,6 +7018,7 @@ class Game {
     const d = n.drink;
     if (n.sipT > 0) n.sipT--;
     if (n.snapT > 0) n.snapT--;
+    if (n.snapAt && this.t >= n.snapAt) { n.snapAt = 0; n.snapT = 34; } // a photo at the unveiling: the phone comes up and flashes
     if (!d || this.mode !== "walk") return;
     if (!d.empty && --d.t <= 0) { n.sipT = 40; d.t = 500 + Math.random() * 700; if (++d.sips >= 4) d.empty = true; }
     else if (d.empty && (n.sitting || n.still) && --d.t <= 0) n.drink = null; // set it down somewhere
@@ -6875,10 +7056,14 @@ class Game {
   /* Patreon members on shift: two or three of them are in the staff room each day, never the one clocked in on this browser. */
   placeMembers() {
     const r = this.rooms && this.rooms.staff; if (!r) return;
-    r.npcs = r.npcs.filter(n => !n.patron);
-    const all = (this.pack.settings.staff.members || []).filter(m => !this.staff || (m.badge ? m.badge !== this.staff.badge : m.name.toLowerCase() !== this.staff.name.toLowerCase()));
-    const seed = strSeed("members" + todayISO()), list = all.map((m, i) => ({ m, k: hash(seed, i) })).sort((a, b) => a.k - b.k).map(x => x.m);
-    list.slice(0, 2 + seed % 2).forEach((m, i) => this.addVisitor("staff", { name: m.name, sheet: ["visitor_a", "visitor_b", "visitor_c"][(seed + i) % 3] }, Object.assign({ patron: true, staff: true }, m.shirts && m.shirts.length ? { shirt: m.shirts[(seed + i) % m.shirts.length] } : {}))); // a member's own shirt colors (Staff tab), a different one day to day
+    // Today's members on shift are picked from everyone (so you clocking in or out never swaps someone else in), then you're left out
+    // if you're one of them. Whoever's already standing in the room stays where they are (Joe 10/13: they shuffled at the time clock).
+    const me = m => this.staff && (m.badge ? m.badge === this.staff.badge : m.name.toLowerCase() === this.staff.name.toLowerCase());
+    const all = this.pack.settings.staff.members || [], seed = strSeed("members" + todayISO());
+    const today = all.map((m, i) => ({ m, k: hash(seed, i) })).sort((a, b) => a.k - b.k).map(x => x.m).slice(0, 2 + seed % 2);
+    const want = today.filter(m => !me(m)), names = new Set(want.map(m => m.name));
+    r.npcs = r.npcs.filter(n => !n.patron || names.has(n.member));
+    today.forEach((m, i) => { if (me(m) || r.npcs.some(n => n.patron && n.member === m.name)) return; this.addVisitor("staff", { name: m.name, sheet: ["visitor_a", "visitor_b", "visitor_c"][(seed + i) % 3] }, Object.assign({ patron: true, staff: true }, m.shirts && m.shirts.length ? { shirt: m.shirts[(seed + i) % m.shirts.length] } : {})); }); // a member's own shirt colors (Staff tab), a different one day to day
     this.lastStaffKey = this.staff ? this.staff.badge + "|" + this.staff.name : "";
   }
   /* The Patron Board: every member, always, and who's on shift in the staff room today. */
@@ -6998,16 +7183,66 @@ class Game {
       });
       return;
     }
-    const opts = ["My Stuff", ...(this.dialOn() ? ["Check time"] : []), ...(this.progress.fieldNotes ? ["Field notes"] : []), "Settings", "Save", "Back"]; // (Joe 10/12: Recent notices, Controls and Respawn under Settings; Save asks if you're quitting)
+    const opts = ["My Stuff", ...(this.dialOn() ? ["Check time"] : []), ...(this.isCurator() && this.answerPieces().length ? ["Developer answers"] : []), ...(this.progress.fieldNotes ? ["Field notes"] : []), "Settings", "Save", "Back"]; // (Joe 10/12: Recent notices, Controls and Respawn under Settings; Save asks if you're quitting)
     this.choose("PAUSED", opts, k => {
       const o = opts[k];
       if (o === "My Stuff") this.myStuff();
       else if (o === "Field notes") this.fieldNotes(() => this.openMenu());
       else if (o === "Settings") this.settingsMenu();
       else if (o === "Save") this.saveAsk();
+      else if (o === "Developer answers") this.answersMenu();
       else if (o === "Check time") this.dialShow = this.t; // the menu closes and the dial's label slides in again (Joe 10/12)
     });
   }
+  /* ----- Answer cards (Joe 10/13): the curator brings up a developer's answers to the three questions (ANSWER_QS), for the
+     recording. Each question gets a card ("GAMES OVER QUALIA" and the question), then its answer, split into as many cards as it
+     takes at one comfortable size (never shrunk, never cut off). Edited on each piece in the curator (Developer answers). */
+  answerPieces() { return this.pack.pieces.filter(p => !p.tut && p.answers && p.answers.some(Boolean)).slice().reverse(); } // newest first
+  answersMenu() {
+    const ps = this.answerPieces(), opts = [...ps.map(p => p.title), "Back"];
+    this.choose("Developer answers", opts, i => {
+      const p = ps[i]; if (!p) { this.openMenu(); return; }
+      const qs = [0, 1, 2].filter(k => p.answers[k]), cs = [...qs.map(k => (k + 1) + ". " + ANSWER_QS[k].slice(0, 34) + "…"), "Back"];
+      this.choose(p.title + ": start from", cs, k => { if (k < qs.length) this.showAnswers(p, qs[k]); else this.answersMenu(); }, cs.length - 1);
+    }, opts.length - 1);
+  }
+  showAnswers(p, q) { // from question q (0 to 2) on; also called by the curator page's "Show it in the preview"
+    const qs = p && p.answers ? [0, 1, 2].filter(k => p.answers[k] && k >= (q || 0)) : []; if (!qs.length) return false;
+    this.closeAll(); this.mode = "answer"; this.el.ans.style.display = "flex"; this.ansOff = -1; this.drawAnsBg();
+    const cards = []; for (const k of qs) { cards.push({ q: true, text: ANSWER_QS[k] }); this.answerPages(p.answers[k]).forEach(t => cards.push({ q: false, text: t })); }
+    this.ans = { p, cards, i: 0 }; this.renderAnswer(); return true;
+  }
+  answerPages(text) { // the answer split into cards that fit the box at its normal size, at word breaks (a sentence end when one's close)
+    const box = this.el.ans.querySelector(".gt-ans-box"), t = this.el.ans.querySelector(".gt-ans-t"); this.el.ans.classList.remove("q"); box.querySelector(".gt-ans-h").style.display = "none";
+    const fits = n => { t.textContent = words.slice(i, n).join(" "); return box.scrollHeight <= box.clientHeight + 1; };
+    const words = String(text).trim().split(/[ \t]+/).filter(Boolean), out = []; let i = 0;
+    while (i < words.length) {
+      let lo = i + 1, hi = words.length, best = i + 1;
+      while (lo <= hi) { const mid = (lo + hi) >> 1; if (fits(mid)) { best = mid; lo = mid + 1; } else hi = mid - 1; }
+      if (best < words.length) { for (let j = best; j > i + Math.ceil((best - i) * 0.6); j--) if (/[.!?…]["')\]]*$/.test(words[j - 1])) { best = j; break; } } // end the card on a sentence when one's near
+      out.push(words.slice(i, best).join(" ")); i = best;
+    }
+    return out;
+  }
+  renderAnswer() {
+    const A = this.ans, c = A.cards[A.i], box = this.el.ans.querySelector(".gt-ans-box");
+    this.el.ans.classList.toggle("q", c.q); box.querySelector(".gt-ans-h").style.display = c.q ? "" : "none";
+    this.el.ans.querySelector(".gt-ans-t").textContent = c.text;
+    box.style.animation = "none"; void box.offsetWidth; box.style.animation = ""; // each card fades in
+  }
+  drawAnsBg() { // the stripes at the game's own resolution (pixelated like everything else), scrolling about 4.6 px a second
+    const cv = this.el.ans.querySelector(".gt-ans-bg"), off = Math.floor(this.t * 16 / 156) % 16; if (off === this.ansOff) return; this.ansOff = off;
+    if (cv.width !== SW) { cv.width = SW; cv.height = SH; }
+    const x = cv.getContext("2d"), img = this.ansImg || (this.ansImg = x.createImageData(SW, SH)), d = img.data;
+    for (let y = 0; y < SH; y++) for (let X = 0; X < SW; X++) {
+      const band = ((X + y + off) & 15) < 8, dx = (X - SW / 2) / (SW / 2), dy = (y - SH / 2) / (SH / 2), r = Math.sqrt(dx * dx + dy * dy) / Math.SQRT2;
+      const v = Math.round(Math.max(0, Math.min(1, (r - 0.3) / 0.7)) * 4) / 4, k = 1 - 0.55 * v, base = band ? 43 : 56, i = (y * SW + X) * 4; // the vignette in four steps
+      d[i] = d[i + 1] = Math.round(base * k); d[i + 2] = Math.round((base + 2) * k); d[i + 3] = 255;
+    }
+    x.putImageData(img, 0, 0);
+  }
+  answerStep(d) { const A = this.ans; if (!A) return; const j = A.i + d; if (j < 0) return; if (j >= A.cards.length) { this.closeAnswers(); return; } A.i = j; this.renderAnswer(); }
+  closeAnswers() { if (this.el.ans) this.el.ans.style.display = "none"; this.ans = null; if (this.mode === "answer") this.mode = "walk"; }
   settingsMenu() {
     const opts = ["Recent notices", "Controls", "Respawn", "Back"];
     this.choose("SETTINGS", opts, k => {
@@ -7067,7 +7302,7 @@ class Game {
     const n = (this.progress.photos || []).length;
     const an = Object.keys(this.progress.ach || {}).length + "/" + this.pack.settings.achievements.length;
     const sv = this.ownedItems().length, cl = this.cardList(), co = cl.filter(p => { const o = this.cardsOwned()[p.id]; return o && (o.c || o.r || o.f); }).length;
-    const opts = ["Photos (" + n + ")", "Souvenirs (" + sv + ")", ...(cl.length ? ["Cards (" + co + "/" + cl.length + ")"] : []), "Achievements (" + an + ")", ...(this.progress.shirt || ["shades", "hat", "case"].some(u => this.gear(u)) ? ["Wardrobe"] : []), "Back"];
+    const opts = ["Photos (" + n + ")", "Souvenirs (" + sv + ")", ...(cl.length ? ["Cards (" + co + "/" + cl.length + ")"] : []), "Achievements (" + an + ")", ...(this.progress.shirt || this.canLook() || ["shades", "hat", "case"].some(u => this.gear(u)) ? ["Wardrobe"] : []), "Back"];
     this.choose("MY STUFF", opts, k => {
       const o = opts[k];
       const back = () => this.myStuff();
@@ -7094,8 +7329,19 @@ class Game {
       const name = id => id ? BLUU_GEAR.find(g => g.id === id).name : use === "hat" ? "GOQ Hat" : "GOQ Shades", nx = all[(all.indexOf(L.pick) + 1) % all.length];
       add("Switch to the " + name(nx), () => { (p.gearPick = p.gearPick || {})[use] = nx; on[use] = true; this.showLoc(name(nx) + " on."); this.wardrobe(); });
     }
+    if (this.canLook()) { add("Skin tone", () => this.lookMenu("skin")); add("Shirt color", () => this.lookMenu("shirt")); }
     add("Back", () => this.myStuff());
     this.choose("Wardrobe", opts, k => { acts[k](); this.saveProgress(); }, opts.length - 1);
+  }
+  lookMenu(kind, at) { // a skin tone or shirt color: it's on you as soon as you pick it; Back returns to the Wardrobe
+    const L = this.progress.look || (this.progress.look = {}), list = kind === "skin" ? SKIN_TONES : LOOK_SHIRTS, cur = L[kind] || "";
+    const opts = [(cur ? "" : "\u2713 ") + "The usual", ...list.map(([n, hx]) => (cur === hx ? "\u2713 " : "") + n), "Back"];
+    const q = kind === "skin" ? "Skin tone" : "Shirt color" + (this.staff || this.progress.wearShirt ? " (your own clothes: it shows when you're out of uniform)" : "");
+    this.choose(q, opts, i => {
+      if (i === opts.length - 1) { this.wardrobe(); return; }
+      L[kind] = i === 0 ? "" : list[i - 1][1]; this.saveProgress(); this.lookMenu(kind, i);
+    }, opts.length - 1);
+    if (at) { this.ch.i = at; this.renderChoice(); } // stay on the one you just picked
   }
   /* Controls: keyboard, touch and controller, one page each. The one you're using comes first. */
   /* Settings → Controls: each action and its two keys; pick one to change it. */
@@ -7365,6 +7611,7 @@ class Game {
       if (eps.length && Math.random() < 0.4) { const p = eps[Math.floor(Math.random() * eps.length)]; this.say(this.tx("patron.enjoyed", { title: p.title }, true).map((x, k) => (k ? x : npc.member + ": " + x))); return; }
       this.staffTalk("member", null, npc.member); return;
     }
+    if (npc.janitor) { this.say(this.tx((this.jan && this.jan.say) || "jan.wait")); return; } // the janitor: a line for what he's doing (Janitor in the Writers' Room), read now so the pack's own lines win
     if (npc.role) { this.staffTalk(npc.role); return; }
     if (npc.follow) { this.followerTalk(npc); return; }
     if (npc.cur) { this.curiousTalk(npc); return; }
@@ -7458,7 +7705,7 @@ class Game {
     else { if (z.id === "strategy" && was && was.id === "upper" && this.upperWalk) this.quest("upperHall"); this.upperWalk = false; }
     if (z.kind !== "room") return;
     const cer = (this.ceremonies || []).find(q => q.zone === z && !q.done);
-    if (cer && this.room.id === "museum") { if (this.mode === "walk" && !this.trans) this.startCeremony(cer); else { const a = this.afterTrans; this.afterTrans = () => { if (a) a(); this.startCeremony(cer); }; } }
+    if (cer && this.room.id === "museum" && !this.isCurator()) { if (this.mode === "walk" && !this.trans) this.startCeremony(cer); else { const a = this.afterTrans; this.afterTrans = () => { if (a) a(); this.startCeremony(cer); }; } }
     this.visit(this.room.id + ":" + z.id);
     if (!quiet) this.showLoc(z.name, "place");
   }
@@ -7475,7 +7722,7 @@ class Game {
     else if (e.caseAt) this.useCase(e.caseAt);
     else if (e.spot) {
       const s = e.spot;
-      if (s.state === "covered") this.say(this.tx("painting.covered", { date: niceDate(s.piece.unveil), title: s.piece.title }));
+      if (s.state === "covered") { if (!this.askUnveil(s)) this.say(this.tx("painting.covered", { date: niceDate(s.piece.unveil), title: s.piece.title })); }
       else if (s.state === "crate") this.hang(s);
       else if (!(s.state === "wall" && this.offerRecommend(s.piece, () => { if (!this.tidy(s)) this.viewPiece(s.piece, undefined, true); })) && !this.tidy(s)) this.viewPiece(s.piece, undefined, true); // a painting has one side: one read stamps it
     }
@@ -7579,7 +7826,7 @@ class Game {
     this.say(pages);
   }
   occupied(x, y, self) {
-    const f = this.fol, pl = this.player; // you and whoever is following you never block each other
+    const f = this.fol, pl = this.player; // you and whoever is following you never block each other (nor do people in the tour's line, lining up)
     return [this.player, ...this.room.npcs].some(c => c !== self && !(f && ((self === pl && c === f) || (self === f && c === pl))) && ((c.x === x && c.y === y) || (c.moving && c.x + DIRS[c.dir][0] === x && c.y + DIRS[c.dir][1] === y)));
   }
   blocked(x, y, self) { const r = this.room; return x < 0 || y < 0 || x >= r.w || y >= r.h || r.solid[y][x] || this.occupied(x, y, self) || (self && self !== this.player && r.keepFree && r.keepFree.has(x + "," + y)); } // keepFree: a seat saved for you
@@ -7657,6 +7904,11 @@ class Game {
     if (this.t % 600 === 0 && this.mode === "walk") {
       const t = this.tod(); if (this.lastTod && t !== this.lastTod) this.rebuild(); this.lastTod = t;
       const b = this.catBucket(); if (this.lastCat !== undefined && b !== this.lastCat) this.moveCat(); this.lastCat = b;
+    }
+    if (this.mode === "answer") { // an answer card: A (or right) the next one, left the one before, B or Start puts them away
+      if (this.ans) this.drawAnsBg(); // the stripes keep scrolling
+      if (has("a") || has("right")) this.answerStep(1); else if (has("left")) this.answerStep(-1); else if (has("b") || has("start")) this.closeAnswers();
+      return;
     }
     if (this.mode === "read") {
       const r = this.rd;
@@ -8077,7 +8329,7 @@ class Game {
     T.phase = -1; // replay the current part of the tour on the new map
   }
   endTour(quiet) { // the group's gone (a new loop, or a new visit): out of every room, the usher back at his desk
-    const T = this.tour; if (!T) return;
+    const T = this.tour; if (!T) return; this.tourLineEnd(T);
     const all = [...T.members, T.guide].filter(Boolean);
     for (const id in this.rooms || {}) this.rooms[id].npcs = this.rooms[id].npcs.filter(n => !all.includes(n));
     if (this.fol && all.includes(this.fol)) this.fol = null;
@@ -8117,49 +8369,102 @@ class Game {
         Object.assign(n, { gone: false, leaving: false, fading: false, leaveTo: null, route: null, walkTo: null, goal: null, moving: false, prog: 0, sitting: false, sitFrom: null, where: "lobby", x: at[0], y: at[1], dir: "up" });
         if (this.room === L) { n.alpha = 0; n.fadeIn = true; } else delete n.alpha; for (const id in this.rooms) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== n); L.npcs.push(n); }); // in the room now, so the next one gets a spot of their own
       if (phase === 0) { // waiting in the lobby (also after the curator jumps the clock back)
+        this.tourLineEnd(T);
         T.members.forEach((n, i) => { n.still = true; n.random = false; n.queue = null; if (this.fol === n) { this.fol = null; n.follow = false; } this.tourHome(n, i);
           if (fresh && n.goal && n.goal.room === "lobby") { const g = n.goal; n.where = "lobby"; n.moving = false; n.walkTo = null; n.route = null; [n.x, n.y] = g.at; n.dir = g.dir; n.goal = null; if (g.sit) this.tourSit(n, g.sit);
             const g2 = n.goal; if (g2 && g2.room === "lobby" && this.tileFree(L, g2.at[0], g2.at[1], n)) { [n.x, n.y] = g2.at; n.dir = g2.dir; n.goal = null; if (g2.sit) this.tourSit(n, g2.sit); } } }); // a new day or a rebuilt museum: they're already sitting when you walk in (someone on their seat: straight to another, not a walk over)
         if (T.guide) { this.tourDrop(T.guide); T.guide = null; } this.restoreUsher();
-      } else if (phase === 1 && T.school) { // the teacher leads the kids to the first piece (the usher stays at his desk)
-        const c = T.stop1, at = [c.x, c.y + 1], tch = T.members[0];
-        this.tourPlace(tch, "museum", at, "up");
-      } else if (phase === 1) { // the usher leaves his desk and leads them to the first piece
+      } else if (phase === 1 && T.school) { // the teacher takes the kids to the first piece (the usher stays at his desk)
+        const c = T.stop1, at = [c.x, c.y + 1], tch = T.members[0], kids = T.members.slice(1);
+        this.tourLineStart(T, tch, kids, { room: "museum", at, dir: "up" }, () => this.tourAround(M, at, kids.length).map((p, i) => kids[i] && { n: kids[i], room: "museum", at: p, dir: this.janFace(p, at[0], at[1]) }), fresh);
+      } else if (phase === 1) { // the usher leaves his desk and takes them to the first piece
         const u = L.npcs.find(n => n.usher && !n.tourUsher);
         if (u) { T.deskUsher = u; L.npcs = L.npcs.filter(n => n !== u); }
         if (!T.guide) T.guide = { sheet: "usher", x: u ? u.x : 3, y: u ? u.y : 3, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 0, still: true, tourUsher: true, where: "lobby", lines: [], lineI: -1 };
-        const c = T.stop1, at = [c.x, c.y + 1]; this.tourPlace(T.guide, "museum", at, "up");
-        this.tourAround(M, at, T.members.length).forEach((p, i) => this.tourPlace(T.members[i], "museum", p, this.janFace(p, at[0], at[1])));
+        if (!Object.values(this.rooms).some(r => r.npcs.includes(T.guide)) && this.rooms[T.guide.where]) this.rooms[T.guide.where].npcs.push(T.guide); // standing in for the usher at his desk till the dip
+        const c = T.stop1, at = [c.x, c.y + 1], m = T.members, order = [m[0], m[4], m[1], m[2], m[3]].filter(Boolean); // the kid right behind his grown-up
+        this.tourLineStart(T, T.guide, order, { room: "museum", at, dir: "up" }, () => this.tourAround(M, at, m.length).map((p, i) => m[i] && { n: m[i], room: "museum", at: p, dir: this.janFace(p, at[0], at[1]) }), fresh);
       } else if (phase === 2 && T.school) { // the rush: on to the second piece, and one kid slips away
         T.mood = T.explained ? "happy" : "bored"; const c = T.stop2, at = [c.x, c.y + 1], tch = T.members[0], k = T.members.find(m => m.tourKid);
-        this.tourPlace(tch, "museum", at, "up");
-        if (k && !T.kidDone) { this.tourStand(k); if (T.lostSpot) this.tourPlace(k, T.lostSpot.room, T.lostSpot.at, T.lostSpot.dir); else this.tourPlace(k, "museum", this.freeSpot(M) || M.spawn, "down"); }
+        const kids = T.members.slice(1).filter(m => m !== k || T.kidDone);
+        const lost = k && !T.kidDone ? [T.lostSpot ? { n: k, room: T.lostSpot.room || "museum", at: T.lostSpot.at, dir: T.lostSpot.dir } : { n: k, room: "museum", at: this.freeSpot(M) || M.spawn, dir: "down" }] : []; // he slips away in the dip
+        this.tourLineStart(T, tch, kids, { room: "museum", at, dir: "up" }, () => this.tourAround(M, at, kids.length).map((p, i) => kids[i] && { n: kids[i], room: "museum", at: p, dir: this.janFace(p, at[0], at[1]) }), fresh, lost);
       } else if (phase === 2) { // happy: on to another wing (the usher goes back to his desk); bored: they wander off
         T.mood = T.coffee || T.explained ? "happy" : "bored";
-        if (T.guide) this.tourPlace(T.guide, "lobby", T.deskUsher ? [T.deskUsher.x, T.deskUsher.y] : [3, 3], "down");
-        if (T.mood === "happy") { const c = T.stop2, at = [c.x, c.y + 1]; this.tourAround(M, at, T.members.length + 1).forEach((p, i) => T.members[i] && this.tourPlace(T.members[i], "museum", p, this.janFace(p, c.x, c.y))); }
+        const desk = T.guide ? [{ n: T.guide, room: "lobby", at: T.deskUsher ? [T.deskUsher.x, T.deskUsher.y] : [3, 3], dir: "down" }] : []; // the usher back to his desk
+        let moved = false;
+        if (T.mood === "happy") { const c = T.stop2, at = [c.x, c.y + 1], m = T.members, spots = this.tourAround(M, at, m.length + 1), order = [m[0], m[4], m[1], m[2], m[3]].filter(Boolean);
+          if (spots.length) { moved = true; this.tourLineStart(T, order[0], order.slice(1), { room: "museum", at: spots[0], dir: this.janFace(spots[0], c.x, c.y) }, () => order.slice(1).map((n, i) => spots[i + 1] && { n, room: "museum", at: spots[i + 1], dir: this.janFace(spots[i + 1], c.x, c.y) }), fresh, desk); } }
+        if (!moved && T.guide) this.tourPlace(T.guide, "lobby", desk[0].at, "down");
         else T.members.forEach(n => { if (n.tourKid) return; n.goal = null; n.walkTo = null; if (n.where === "museum") { n.still = false; n.random = true; const z = this.zoneAt(M, n.x, n.y); n.zone = z && z.kind === "room" ? z.id : T.stop1 && (this.zoneAt(M, T.stop1.x, T.stop1.y) || {}).id; } }); // scattered: they stroll on their own
       } else if (phase === 3) { // back to the lobby to leave; the kid goes missing
+        const home = [], lost = [];
         T.members.forEach((n, i) => { n.still = true; n.random = false; n.queue = null; n.seat = null; if (n.sitting) { n.sitting = false; if (n.sitFrom) [n.x, n.y] = n.sitFrom; } n.route = null;
-          if (n.tourKid && !T.school && !T.kidDone) { if (T.lostSpot) this.tourPlace(n, T.lostSpot.room || "museum", T.lostSpot.at, T.lostSpot.dir); else this.tourPlace(n, "museum", this.freeSpot(M, null, T.lostZone) || this.freeSpot(M), "down"); }
-          else if (!(n.tourKid && T.school && !T.kidDone)) this.tourHome(n, i); }); // the school's kid is already off somewhere since the rush
+          if (n.tourKid && !T.school && !T.kidDone) lost.push(T.lostSpot ? { n, room: T.lostSpot.room || "museum", at: T.lostSpot.at, dir: T.lostSpot.dir } : { n, room: "museum", at: this.freeSpot(M, null, T.lostZone) || this.freeSpot(M), dir: "down" }); // he goes missing in the dip
+          else if (!(n.tourKid && T.school && !T.kidDone)) { if (this.fol === n) this.tourHome(n, i); else home.push([n, i]); } }); // the school's kid is already off somewhere since the rush (and whoever's following you comes back on their own)
+        const spot = i => { const st = T.seats && T.seats[i]; return st ? { at: st.from, dir: st.sit, sit: st } : { at: T.gather[i] || T.gather[0], dir: "left" }; };
+        if (home.length) { const [n0, i0] = home[0], s0 = spot(i0);
+          this.tourLineStart(T, n0, home.slice(1).map(h => h[0]), { room: "lobby", at: s0.at, dir: s0.dir, sit: s0.sit }, () => home.slice(1).map(([n, i]) => Object.assign({ n, room: "lobby" }, spot(i))), fresh, lost); }
+        else lost.forEach(o => { if (o.at) this.lineJump(o.n, o.room, o.at[0], o.at[1]); o.n.dir = o.dir; });
       } else if (phase === 4) { // out the front doors (the kid too, found or not)
+        this.tourLineEnd(T);
         T.members.forEach(n => { this.tourStand(n); if (this.fol === n) { this.fol = null; n.follow = false; } n.goal = null; n.walkTo = null; n.still = true; if (n.where === this.room.id && this.room.id === "lobby") { n.leaving = true; n.leaveT = 0; n.alpha = 1; } else this.tourDrop(n); });
         if (T.guide) this.tourDrop(T.guide); T.guide = null; this.restoreUsher();
       }
     }
-    if (T.phase === 3 && !T.regrouped && T.members.filter(m => !m.tourKid && !m.gone).every(m => m.where === "lobby" && !m.goal)) T.regrouped = true; // back in the lobby: now they notice who's missing
+    if (T.line) this.tourDip(T); // ready to move on to the next stop
+    if (T.phase === 3 && !T.regrouped && !T.line && T.members.filter(m => !m.tourKid && !m.gone).every(m => m.where === "lobby" && !m.goal)) T.regrouped = true; // back in the lobby: now they notice who's missing
     // Everyone in the tour belongs to the room they're in (rebuilds make new lists), and heads for their goal.
     for (const n of [...T.members, T.guide].filter(Boolean)) {
       if (n.leaving || n.gone) continue;
       if (this.fol === n) { n.where = this.room.id; n.goal = null; continue; } // following you
       const R = this.rooms[n.where]; if (R && !R.npcs.includes(n)) { for (const id in this.rooms) if (id !== n.where) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== n); R.npcs.push(n); }
+      if (n.inLine && T.line) continue; // waiting for the dip to the next stop: standing still till then
       if (n.aside) { if (n.where !== this.room.id) n.aside = null; else continue; } // stepping out of your way first ("Could I get by?"): then on with the tour
       const tags = T.school ? (n.schoolKid && (T.phase === 1 || T.phase === 2)) || (n.tourKid && (T.phase === 1 || (T.phase === 2 && T.kidDone))) : n.tourKid && (T.phase === 1 || T.phase === 2);
       if (tags) { this.kidTag(n, T); continue; } // sticking with his grown-up (on Tuesdays, the teacher) until the group heads back
       this.tourMove(n);
     }
     if (T.guide && T.phase === 2 && !T.guide.goal && T.guide.where === "lobby") { this.tourDrop(T.guide); T.guide = null; this.restoreUsher(); } // back at his desk
+  }
+  /* ----- The tour moves on in a dip to black (Joe 10/14) -----
+     Walking the group from stop to stop (as a crowd, then single file) kept jamming, parking people in odd spots and boxing you
+     in, so now it doesn't walk at all. Each leg, if any of them (or the stop they're going to) is on screen, the screen dips to
+     black and they're at the next stop when it comes back; you stay where you are. Off screen, they're just there, no dip
+     (Joe 10/14). The dip waits while you're talking or in a menu (they stand still till then). */
+  tourLineStart(T, leader, followers, dest, arrive, fresh, also) {
+    this.tourLineEnd(T);
+    const people = [leader, ...followers].filter(n => n && !n.gone && !n.leaving), extra = (also || []).filter(o => o && o.n && !o.n.gone && !o.n.leaving); if (!people.length && !extra.length) return;
+    [...people, ...extra.map(o => o.n)].forEach(n => { this.tourStand(n); Object.assign(n, { goal: null, walkTo: null, route: null, aside: null, tagging: false, hurry: false, still: true, random: false, inLine: true, queue: null }); delete n.fadeOut; if (!n.fadeIn) delete n.alpha; if (this.fol === n) { this.fol = null; n.follow = false; } });
+    const L = { people, dest, arrive, also: extra };
+    if (fresh || !this.tourSeen(L)) { this.tourLineDone(T, L); return; } // a new day, a rebuilt museum, or nobody you can see: they're already there
+    T.line = L; // the dip (tourDip, from updateTour)
+  }
+  tourLineEnd(T) { if (T && T.line) { const L = T.line; [...L.people, ...L.also.map(o => o.n)].forEach(n => { n.inLine = false; }); T.line = null; } }
+  tourSeen(L) { // on screen: any of them, or the stop they're going to
+    if (!this.room) return false;
+    const on = (room, x, y) => room === this.room.id && (x + 1) * T > this.camX && x * T < this.camX + SW && (y + 1) * T > this.camY && y * T < this.camY + SH;
+    return [...L.people, ...L.also.map(o => o.n)].some(n => on(n.where, n.x, n.y)) || on(L.dest.room, L.dest.at[0], L.dest.at[1]) || (L.arrive() || []).some(o => o && o.at && on(o.room, o.at[0], o.at[1]));
+  }
+  tourDip(T) { // the group's ready to move on: dip to black, and there they are
+    const L = T.line; if (L.dipping || this.trans || this.mode !== "walk") return;
+    if (!this.tourSeen(L)) { this.tourLineDone(T, L); return; }
+    L.dipping = true; this.mode = "busy";
+    this.trans = { t: 0, dur: 16, switched: false, fn: () => this.tourLineDone(T, L, true) };
+  }
+  lineJump(n, room, x, y) { // straight to a tile (in another room too), fading in if you can see it
+    const R = this.rooms[room]; if (!R) return; const was = n.where;
+    if (was !== room) { for (const id in this.rooms) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== n); R.npcs.push(n); }
+    n.where = room; n.x = x; n.y = y; n.moving = false; n.prog = 0; n.walkTo = null; n.route = null;
+    if (room === this.room.id && was !== room) { n.alpha = 0; n.fadeIn = true; }
+  }
+  tourLineDone(T, L, dip) { // at the stop: the leader on the spot, the rest round it (in a dip: no fading in, the screen's doing that)
+    if (T.line === L) T.line = null;
+    const place = (n, room, at, dir, sit) => { n.inLine = false; if (n.where !== room || n.x !== at[0] || n.y !== at[1]) this.lineJump(n, room, at[0], at[1]); if (dip) { n.fadeIn = false; delete n.alpha; } n.dir = dir; n.goal = null; if (sit) this.tourSit(n, sit); };
+    const lead = L.people[0], d = L.dest; L.people.forEach(n => { n.inLine = false; });
+    if (lead && !lead.gone) place(lead, d.room, d.at, d.dir, d.sit);
+    (L.arrive() || []).filter(Boolean).forEach(o => { if (o.n && !o.n.gone && o.at) place(o.n, o.room, o.at, o.dir, o.sit); });
+    L.also.forEach(o => { if (!o.n.gone && o.at) place(o.n, o.room, o.at, o.dir, o.sit); else o.n.inLine = false; }); // and anyone going off on their own (the kid wandering off, the usher back to his desk)
   }
   kidTag(n, T) { // the kid sticks with one of the grown-ups, the way a follower sticks with you; if they queue for coffee, he waits by them
     const P = T.members.find(m => !m.tourKid && !m.schoolKid && !m.gone && !m.leaving); if (!P) return;
@@ -8633,9 +8938,10 @@ class Game {
   /* ----- The chill museum (Joe 10/12) -----
      Play without any of the problems: a switch in Settings (there from the start), or the curator offers it the first time you
      solve every problem in one loop. Solved ones are kept for the loop as they happen (some states reset later on). */
-  chillOn() { return !!(this.progress && this.progress.chill); }
-  noJanitor() { return this.chillOn() && this.progress.chillJan === false; } // chill, Janitor off: no litter at all, the bins never fill (Joe 10/12)
-  noTours() { return this.chillOn() && this.progress.chillTour === false; } // chill, Tours off: no tour group, no school group
+  curatorPlay() { return !!(this.progress && this.staff && this.staff.curator && !this.curator && !this.headless); } // playing on a curator badge (not the curator page's preview)
+  chillOn() { return this.curatorPlay() || !!(this.progress && this.progress.chill); } // a curator badge always plays chill, without changing your own setting (Joe 10/13)
+  noJanitor() { return this.curatorPlay() || (this.chillOn() && this.progress.chillJan === false); } // chill, Janitor off: no litter at all, the bins never fill (Joe 10/12)
+  noTours() { return this.curatorPlay() || (this.chillOn() && this.progress.chillTour === false); } // chill, Tours off: no tour group, no school group
   setChillPart(part, on) { // the two switches under Chill museum
     if (part === "jan") { this.progress.chillJan = !!on; this.janOff(); }
     else if (part === "tour") { this.progress.chillTour = !!on; if (this.tour) this.endTour(true); }
@@ -9178,6 +9484,11 @@ class Game {
       for (const l of r.floorLights) this.drawFlip("aisle_light", l.side === "r", l.x * T + (l.side === "r" ? 11 : 1) - cx, l.y * T + 8 - cy);
     }
     if (r.marquee) this.drawSlot("marquee_lights", REDUCED_MOTION ? 0 : this.frame("marquee_lights"), 0, r.marquee.x * T - cx, r.marquee.y * T - cy);
+    if (r.eotmAt) { // the Employee of the Month sign: the same ticker, smaller (Joe 10/14: people can change how they look, so a name instead of a picture)
+      const x0 = r.eotmAt.x * T - cx, y0 = r.eotmAt.y * T + 10 - cy, line = this.ledText(this.eotmLine()), win = 26, span = line.width + win;
+      const o = REDUCED_MOTION ? win : Math.floor(this.t / 8) * 2 % span;
+      ctx.save(); ctx.beginPath(); ctx.rect(x0 + 3, y0 + 2, win, 8); ctx.clip(); ctx.drawImage(line, x0 + 3 + win - o, y0 + 2); ctx.restore();
+    }
     if (!r.nowSign) return;
     // One line, scrolling right to left like an LED ticker: it jumps two columns at a time, a little chunky.
     const x0 = r.nowSign.x * T - cx, y0 = r.nowSign.y * T + 10 - cy, p = this.nowPlaying();
@@ -9388,6 +9699,7 @@ class Game {
   /* The floor tile just inside each doorway, for its mat. */
   doorMats(r) {
     if (r._mats) return r._mats;
+    if (r.matList) return (r._mats = r.matList.filter(([x, y]) => r.solid[y] && r.solid[y][x] !== undefined)); // placed in the curator
     const out = [];
     for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) {
       const o = r.over[y][x]; if (!o) continue;
@@ -9402,6 +9714,21 @@ class Game {
     const out = [];
     for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) if (r.over[y][x] && /door|exit/.test(r.over[y][x])) out.push([x, y]);
     return (r._doors = out);
+  }
+  /* A wallpaper's art as it runs along a wall: a 16-wide one as is; a wider one with a mirrored copy after it, so its ends always meet. */
+  wallpaperArt(spec) {
+    const [key, col] = String(spec).split("|"); if (!SLOT[key]) return null;
+    let img = this.sheet(key);
+    if (col && SLOT[key].wing && !this.overrides[key]) { // a wing pattern in the wing's colors (yours instead, if you've painted it)
+      const ck2 = "wpwing|" + spec; if (!this.cache[ck2]) { const a = SLOT[key].gen(), pal = wingPal(col).map(hexRgb), c = document.createElement("canvas"); c.width = a[0].length; c.height = a.length; const x = c.getContext("2d"), id = x.createImageData(c.width, c.height);
+        a.forEach((row, y) => row.forEach((v, xx) => { const q = pal[v] || pal[0], k = (y * c.width + xx) * 4; id.data[k] = q[0]; id.data[k + 1] = q[1]; id.data[k + 2] = q[2]; id.data[k + 3] = 255; })); x.putImageData(id, 0, 0); this.cache[ck2] = c; }
+      img = this.cache[ck2];
+    }
+    const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height; if (w <= T) return img;
+    const ck = "wpwide|" + spec, hit = this.cache[ck]; if (hit && hit.src === img) return hit.c;
+    const c = document.createElement("canvas"); c.width = w * 2; c.height = h; const x = c.getContext("2d"); x.imageSmoothingEnabled = false;
+    x.drawImage(img, 0, 0); x.save(); x.translate(w * 2, 0); x.scale(-1, 1); x.drawImage(img, 0, 0); x.restore();
+    this.cache[ck] = { src: img, c }; return c;
   }
   pos(c) { const [dx, dy] = DIRS[c.dir]; return { x: c.x * T + dx * c.prog, y: c.y * T + dy * c.prog }; }
   /* Draw one whole room, edge to edge, onto a new canvas: no player, no lighting. The level editor uses this. */
@@ -9426,8 +9753,18 @@ class Game {
     if (!full) { this.camX = cx; this.camY = cy; }
     const tx0 = Math.max(0, Math.floor(cx / T)), ty0 = Math.max(0, Math.floor(cy / T)), tx1 = Math.min(r.w - 1, Math.floor((cx + VWp) / T)), ty1 = Math.min(r.h - 1, Math.floor((cy + VHp) / T));
     for (let y = ty0; y <= ty1; y++) for (let x = tx0; x <= tx1; x++) {
+      const t = r.tiles[y][x]; if (!t) continue;
+      const spec = (r.wpAt && r.wpAt[y][x]) || r.wallpaper, wr = spec && /_wall_(upper|lower)(@|$)/.exec(t), wp = wr && this.wallpaperArt(spec);
+      if (wp) ctx.drawImage(wp, (x * T) % wp.width, wr[1] === "lower" ? T : 0, T, T, x * T - cx, y * T - cy, T, T); // wallpaper instead of the plain wall
+      else this.drawSlot(t, this.frame(t), 0, x * T - cx, y * T - cy);
+    }
+    for (const m of r.murals) { // murals go on the wall itself, under the doors, windows, pictures and signs (Joe 10/14): the middle of the mural's art, as wide as its wall (repeated if the wall is longer)
+      const img = this.sheet(m.key), iw = img.naturalWidth || img.width, w = m.w * T; if (!iw) continue;
+      const mh = SLOT[m.key].h > T ? 2 * T : T, top = m.trim ? 5 : 0, hh = mh - top - (m.trim && mh > T ? 4 : 0); // tall murals cover both wall rows (Joe 10/14); trim kept: the wall's own molding and baseboard show
+      for (let o = 0; o < w; o += iw) { const room = iw - Math.min(w, iw), sx = m.at >= 0 ? Math.min(room, m.at) : Math.max(0, Math.floor(room / 2)), sw = Math.min(iw - sx, w - o); ctx.drawImage(img, sx, top, sw, hh, m.x * T + o - cx, m.y * T + top - cy, sw, hh); }
+    }
+    for (let y = ty0; y <= ty1; y++) for (let x = tx0; x <= tx1; x++) {
       const sx = x * T - cx, sy = y * T - cy;
-      if (r.tiles[y][x]) this.drawSlot(r.tiles[y][x], this.frame(r.tiles[y][x]), 0, sx, sy);
       if (r.over[y][x] && !this.underMarquee(r, x, y)) { const o = r.over[y][x]; if (o === "doorway_side") this.drawFlip(o, r.solid[y][x + 1] !== false, sx, sy); else this.drawSlot(o, this.frame(o), 0, sx, sy); } // side doors: handle toward the room
     }
     for (const h of r.hung) {
@@ -9470,8 +9807,7 @@ class Game {
     if (r.clockAt) this.drawSlot("time_clock", 0, 0, r.clockAt.x * T - cx, r.clockAt.y * T - cy);
     if (r.eotmAt) {
       const x = r.eotmAt.x * T - cx, y = r.eotmAt.y * T - cy;
-      this.drawSlot("eotm_frame", 0, 0, x, y);
-      if (this.eotmInfo()) this.drawSlot("player_staff", 0, 0, x + 8, y + 6);
+      this.drawSlot("eotm_sign", 0, 0, x, y + 10); // (its letters scroll in drawMarquee, over the lighting)
     }
     const tod = this.tod();
     if (r.windowAt) {
@@ -9493,10 +9829,6 @@ class Game {
     for (const ru of r.runners) drawRunner(ctx, this.sheet(ru.k[0] === "v" ? "carpet_v" : "carpet_h"), ru, cx, cy);
     for (const [x, y] of r.lamps) this.drawSlot("wall_sconce", 0, 0, x * T - cx, y * T - cy);
     for (const a of r.arrows) ctx.drawImage(this.arrowArt(a), a.x * T - cx, (a.y || 1) * T - cy);
-    for (const m of r.murals) { // the middle of the mural's art, as wide as its wall (repeated if the wall is longer)
-      const img = this.sheet(m.key), iw = img.naturalWidth || img.width, w = m.w * T; if (!iw) continue;
-      for (let o = 0; o < w; o += iw) { const room = iw - Math.min(w, iw), sx = m.at >= 0 ? Math.min(room, m.at) : Math.max(0, Math.floor(room / 2)), sw = Math.min(iw - sx, w - o); ctx.drawImage(img, sx, 0, sw, T, m.x * T + o - cx, m.y * T - cy, sw, T); }
-    }
     for (const [mx, my] of this.doorMats(r)) this.drawSlot("doormat", 0, 0, mx * T - cx, my * T - cy);
     for (const st of r.stairs) this.drawSlot(st.kind === "up" ? "stair_up" : "stair_down", 0, 0, st.x * T - cx, st.y * T - cy);
     this.drawReadBorders(r, cx, cy); // on the floor, under the cases and people
@@ -9651,7 +9983,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 42";
+const VERSION = "2026-11-18 cards 59";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
@@ -9660,7 +9992,7 @@ const CLAUDE_SHOP = { "goq-tote": "A sturdy canvas tote with the GOQ logo. Holds
   "goq-mousepad": "An extra-wide mousepad with the GOQ logo. Your desk has never looked this cozy.", "goq-lanyard": "A GOQ lanyard. Now you look like you work here. Do you?" }; // shop descriptions Claude wrote (Joe 10/11)
 const CLAUDE_QUOTES = {"piece-g3at9r2": "No yellow paint, no hand-holding. Just me, a dragon and the whole sky. I got it completely.", "piece-45lxgqh": "Deep, clever, and built for someone who isn't me. I respect it from a safe distance.", "piece-8ybe96c": "A glowing dot gave me cosmic dread. What it was really about, I never felt.", "piece-rn49jj6": "I had a blast pushing drunks around. The warning about drinking went right past me.", "piece-wr2s44o": "It kept me at arm's length, until the wizard I'd built started to feel like mine.", "piece-e6304vj": "It wouldn't tell me a thing. Then termites ate my bow, and I was hooked.", "piece-3qn8otm": "It wanted me sweating in the shadows. I just memorized the guards like homework.", "piece-iewg971": "Touch everything, for no reason at all. The first game I ever found myself in.", "piece-110bezd": "Make the thing you fear the thing you control. I felt every bit of that turn.", "piece-34ub7ui": "Built to unsettle me. Instead it became my favorite place to sit and fish.", "piece-ngafqv9": "I felt the shadow on my heels. What it was saying about anxiety, I missed.", "piece-okfuqok": "It wanted pinball fever. I found my calm in the snake mode instead.", "piece-wd37bxb": "An unfinished game, finished by its own jokes. I was in on every one.", "piece-qql6aew": "A hard story in a world that never asked me to care. I kept looking for the stakes.", "piece-wn546o7": "Made for the obsessed flash-game kid. I never got the chance to become him.", "piece-6akkzg9": "The synergies sang. Why I was buying beach balls on credit, I'll never know.", "piece-wpusqmb": "It reached for grief and despair. I kept laughing, and I'm still not sure why.", "piece-p0gsjux": "I played it like Tetris and lost. Once I chased the gems, it finally clicked.", "piece-v4zp9gn": "The maze vanishes when you move. I never quite needed to remember it.", "piece-dpq1d5y": "It wanted me to feel cool finding its secrets. I just kept looking for the exit.", "piece-vx7436f": "A tiny root in a giant world. I loved the root. The world felt smaller than promised.", "piece-uw8z1nn": "I fought the game instead of learning it. It's fair. It just isn't for me.", "piece-ct78svp": "Big numbers, big dopamine. I chased the categories and forgot the totals.", "piece-0x8bbhf": "Beautiful dream puzzles. I warmed the whole world without noticing I had.", "piece-xc2ez00": "No grind, just tinkering. Every level felt like my own little invention.", "piece-50vrtaq": "A whole galaxy on a lunch break. Fun rhythm, but I'm a long-campaign kind of person.", "piece-7oesrvl": "Two halves of one screen, aching to meet. I felt every reunion.", "piece-4wnzood": "It wanted me to feel persuaded. I just felt quizzed, hunting for the right answer.", "piece-8e4ay05": "Stop defending, start hunting. That's when it became my game.", "piece-fv1px6m": "Meant to spark wonder. I wandered a ship where everything mattered the same.", "piece-um9vhkk": "It taught me everything without a word. The darkness in its caves only flickered.", "piece-hvr5h0t": "Every shot shoves you backward. Pure joy, until I couldn't tell which way to grow.", "piece-sp4cec4t": "Cats, missions, meteors. The game I loved was the plain deal underneath."}; // the curator's quotes on the trading cards Claude wrote (by piece id), for the Writers' Room's claude tag
 const CLAUDE_ACH = { skimmer: { name: "TL;DR", desc: "Read at least one side of every piece in the museum." } }; // achievements Claude wrote (Joe 10/11)
-window.GOQ = { ytVideoId, CLAUDE_QUOTES, CLAUDE_ACH, CLAUDE_LINES, CLAUDE_SHOP, BLUU_GEAR, PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
+window.GOQ = { ANSWER_QS, ytVideoId, CLAUDE_QUOTES, CLAUDE_ACH, CLAUDE_LINES, CLAUDE_SHOP, BLUU_GEAR, PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
   spotRooms: () => Object.keys(ROOMS).filter(id => (ROOMS[id].spots || []).length).map(id => ({ id, name: ROOMS[id].name, n: ROOMS[id].spots.length })),

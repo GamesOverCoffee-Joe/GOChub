@@ -290,3 +290,8 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Out front | Left planter | A planter by the doors. Somebody waters it. Probably the Janitor. |
 | Out front | Right planter | A planter. A bee's been at the flowers. |
 | Out front | The red car | A little red car. / There's a GOQ sticker on the back window. |
+| Unveiling | The curator by the covered piece, before the ceremony | Today's the day. / {title} is under that cloth, and it comes off any minute. Stick around. |
+| Unveiling | The curator by the covered piece (second version) | You made it! I've been waiting all week to show everybody {title}. |
+| Unveiling | The usher by the covered piece, before the ceremony | Find a good spot. The curator's about to do the honors. |
+| Unveiling | Playing as the curator: the usher, waiting on you | Everyone's here, Curator. / Pull the cloth off {title} whenever you're ready. |
+| Unveiling | Playing as the curator: facing the covered piece | Pull the cloth off {title}? |
