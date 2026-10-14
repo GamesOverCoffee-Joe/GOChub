@@ -7500,6 +7500,7 @@ class Game {
       if (eps.length && Math.random() < 0.4) { const p = eps[Math.floor(Math.random() * eps.length)]; this.say(this.tx("patron.enjoyed", { title: p.title }, true).map((x, k) => (k ? x : npc.member + ": " + x))); return; }
       this.staffTalk("member", null, npc.member); return;
     }
+    if (npc.janitor) { this.say(this.tx((this.jan && this.jan.say) || "jan.wait")); return; } // the janitor: a line for what he's doing (Janitor in the Writers' Room), read now so the pack's own lines win
     if (npc.role) { this.staffTalk(npc.role); return; }
     if (npc.follow) { this.followerTalk(npc); return; }
     if (npc.cur) { this.curiousTalk(npc); return; }
@@ -9854,7 +9855,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 53";
+const VERSION = "2026-11-18 cards 54";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
