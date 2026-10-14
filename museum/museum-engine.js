@@ -8304,7 +8304,7 @@ class Game {
     people.forEach(n => { this.tourStand(n); Object.assign(n, { goal: null, walkTo: null, route: null, aside: null, tagging: false, hurry: false, still: true, random: false, inLine: true, queue: null, spd: 0 }); delete n.fadeOut; if (!n.fadeIn) delete n.alpha; if (this.fol === n) { this.fol = null; n.follow = false; } });
     const L = { people, dest, arrive, formed: false, form: 0, last: this.t, wait: 0, route: null };
     if (fresh) { this.tourLineDone(T, L, true); return; } // a new day or a rebuilt museum: they're already there
-    T.line = L; this.lineSlots(L);
+    T.line = L; L.slots = null; // (the spots are worked out once nobody's mid-step: tourLineStep)
   }
   tourLineEnd(T) { if (T && T.line) { T.line.people.forEach(n => { n.inLine = false; }); T.line = null; } }
   lineSlots(L) { // who falls in where: whoever's nearest the end of the line comes next (already beside it: they just stay put), into a free
@@ -8357,7 +8357,9 @@ class Game {
     const ps = Math.max(0.2, this.pack.settings.staff.patronSpeed || 0.6), STEP = Math.ceil(T_TILE / ps);
     if (!L.formed) { // filing in behind the leader: everyone steps toward their spot at the same steady pace (they can pass each other)
       L.people.forEach(n => { if (n.moving && n.where !== this.room.id) { n.x += DIRS[n.dir][0]; n.y += DIRS[n.dir][1]; n.moving = false; n.prog = 0; } });
-      if (L.people.some(n => n.moving) || this.t - L.last < STEP) return;
+      if (L.people.some(n => n.moving)) return;
+      if (!L.slots) { this.lineSlots(L); L.last = this.t; return; } // everyone's finished the step they were taking: now who goes where
+      if (this.t - L.last < STEP) return;
       L.form++; L.last = this.t;
       const R = this.rooms[lead.where]; let left = 0;
       L.people.slice(1).forEach((n, i) => { const s = L.slots[i]; if (!s) return; if (n.where !== lead.where) { this.lineJump(n, lead.where, s[0], s[1]); return; } if (n.x === s[0] && n.y === s[1]) return; left++;
@@ -9894,7 +9896,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 48";
+const VERSION = "2026-11-18 cards 49";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
