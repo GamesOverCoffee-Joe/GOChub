@@ -106,6 +106,7 @@ const PAL = {
   easel:   [null, "#8a5a32", "#5a3a1a", "#f4f0e6", "#c84a3a", "#3a6ac8", "#e0b040"],
   stall:   [null, "#c84a4a", "#f4f0e6", "#8a5a32", "#5a3a1a", "#181820"],
   ledsign: [null, "#0a080c", "#2a2630", "#55505e", "#1c0808"],
+  eotmled: [null, "#0a080c", "#2a2630", "#7a5a20", "#1c0808", "#e8b24a"], // a gold frame
   arcade:  [null, "#1a1424", "#3a2a5a", "#5a48a0", "#101018", "#40d0c0", "#f0c040", "#e05050", "#5878c8"],
   garage:  ["#c8ccd4", "#9aa0ac", "#6a707c", "#181820", "#3a3a44", "#e8c040"], // slat, slat edge, slat shadow, outline, frame, hazard yellow
   cafesign: ["#ecece0", "#c08850", "#2f4a3a", "#181820", "#7a4a26", "#f0c060"], // chalk, wood, chalkboard, outline, dark wood, yellow chalk
@@ -200,11 +201,12 @@ const GEN = {
   wall_top: () => fillFn(mk(16, 16), (x, y) => (y === 15 ? 2 : 3)),
   wall_upper: () => fillFn(mk(16, 16), (x, y) => (y === 0 ? 3 : y === 3 ? 2 : y === 4 ? 4 : y === 2 ? 0 : 1)),
   wall_lower: () => fillFn(mk(16, 16), (x, y) => (y === 12 ? 4 : y === 13 ? 0 : y >= 14 ? (y === 15 ? 3 : 2) : 1)),
-  // Doors are drawn over the wall, so everything outside the door is see-through.
-  doorway_upper: () => fillFn(mk(16, 16), (x, y) => (y >= 4 && x >= 1 && x <= 14 ? (x <= 2 || x >= 13 || y <= 5 ? (x === 1 || x === 14 || y === 4 ? 5 : 4) : y >= 7 ? 3 : 1) : undefined)),
-  doorway_lower: () => fillFn(mk(16, 16), (x, y) => (x >= 1 && x <= 14 ? (x <= 2 || x >= 13 ? (x === 1 || x === 14 ? 5 : 4) : y >= 14 ? 4 : 3) : undefined)),
-  staff_upper: () => fillFn(mk(16, 16), (x, y) => (x >= 3 && x <= 12 && y >= 5 ? (x === 3 || x === 12 || y === 5 ? 3 : y === 9 && x >= 5 && x <= 10 ? 0 : 2) : undefined)),
-  staff_lower: () => fillFn(mk(16, 16), (x, y) => (x >= 3 && x <= 12 ? (x === 3 || x === 12 || y === 15 ? 3 : x === 10 && (y === 3 || y === 4) ? 0 : 2) : undefined)),
+  // Doors are drawn over the wall, so everything outside the door is see-through. Every door is one tile tall, a person's
+  // height, the same as the doors in bottom and side walls (Joe 10/14): in a back wall it's all in the lower row, plain wall above.
+  doorway_upper: () => mk(16, 16),
+  doorway_lower: () => fillFn(mk(16, 16), (x, y) => (x >= 1 && x <= 14 ? (x <= 2 || x >= 13 || y <= 1 ? (x === 1 || x === 14 || y === 0 ? 5 : 4) : y >= 14 ? 4 : 3) : undefined)),
+  staff_upper: () => mk(16, 16),
+  staff_lower: () => fillFn(mk(16, 16), (x, y) => (x >= 3 && x <= 12 ? (x === 3 || x === 12 || y === 0 || y === 15 ? 3 : y === 3 && x >= 5 && x <= 10 ? 0 : x === 10 && (y === 8 || y === 9) ? 0 : 2) : undefined)),
   exit_door: () => fillFn(mk(16, 16), (x, y) => (x >= 2 && x <= 13 && y >= 1 ? (x === 2 || x === 13 || y === 1 || x === 7 || x === 8 ? 2 : (x - y + 32) % 7 === 0 ? 4 : 1) : undefined)),
   // Seen from above, a doorway in a side wall: the frame runs across (top and bottom), the opening goes through the wall.
   // A wooden door in a side wall, its gold handle toward the room (drawn mirrored on a right-hand wall).
@@ -815,6 +817,12 @@ const GEN = {
     return a;
   },
   // The black LED board for NOW PLAYING: four tiles wide, one line tall. The red letters are drawn on it as they scroll.
+  eotm_sign: () => { // Employee of the Month: the NOW PLAYING board's little sister, two tiles wide, in a gold frame
+    const a = mk(32, 12);
+    rect(a, 0, 0, 32, 12, 5); rect(a, 1, 1, 30, 10, 3); rect(a, 2, 2, 28, 8, 1);
+    fillFn(a, (x, y, v) => (v === 1 && x >= 3 && x <= 28 && y >= 3 && y <= 8 && (x + y) % 2 === 0 ? 4 : undefined)); // the unlit LEDs
+    return a;
+  },
   led_sign: () => {
     const a = mk(64, 12);
     rect(a, 0, 0, 64, 12, 3); rect(a, 1, 1, 62, 10, 2); rect(a, 2, 2, 60, 8, 1);
@@ -1217,7 +1225,6 @@ const SLOTS = [
   { key: "bench_side", label: "Bench, sideways", group: "Furniture", w: 16, h: 32, pal: "wood", gen: GEN.bench_side, note: "Two tiles tall, one wide. Drawn with its back on the right so you sit facing left; it's mirrored when it's set to face right." },
   { key: "front_desk", label: "Front desk with guestbook", group: "Furniture", w: 48, h: 16, pal: "wood", gen: GEN.desk },
   { key: "sign_stand", label: "Sign stand", group: "Furniture", w: 16, h: 16, pal: "wood", gen: GEN.sign },
-  { key: "sign_down", label: "Sign stand (arrow down)", group: "Furniture", w: 16, h: 16, pal: "wood", gen: GEN.sign_down, note: "By the stairs down to the basement." },
 
   { key: "wall_frame_gold", label: "Gold frame on the wall", group: "Frames", w: 32, h: 32, pal: "gold", gen: GEN.wall_frame_gold, note: "Episode pieces. Leave the window from (4,4) to (27,21) transparent; the art shows through it. The plate below is the placard." },
   { key: "wall_frame_wood", label: "Wood frame on the wall", group: "Frames", w: 32, h: 32, pal: "wood", gen: GEN.wall_frame_wood, note: "Community pieces. Same window as the gold frame." },
@@ -1241,7 +1248,7 @@ const SLOTS = [
   { key: "lockers", label: "Locker", group: "Staff", w: 16, h: 32, pal: "locker", gen: GEN.lockers, note: "One locker, standing against the wall across both wall rows. Six stand side by side." },
   { key: "corkboard", label: "Corkboard", group: "Staff", w: 32, h: 32, pal: "cork", gen: GEN.corkboard, note: "Hangs across both wall rows. Holds your notes for upcoming episodes." },
   { key: "time_clock", label: "Time clock", group: "Staff", w: 16, h: 16, pal: "locker", gen: GEN.time_clock, note: "Where staff clock out. " + OVER_NOTE },
-  { key: "eotm_frame", label: "Employee of the Month frame", group: "Staff", w: 32, h: 32, pal: "gold", gen: GEN.eotm_frame, note: "In the lobby. The staff uniform sprite stands in the window from (8,5) to (23,21)." },
+  { key: "eotm_frame", retired: true, label: "Employee of the Month frame (no longer used)", group: "Staff", w: 32, h: 32, pal: "gold", gen: GEN.eotm_frame, note: "In the lobby. The staff uniform sprite stands in the window from (8,5) to (23,21)." },
   { key: "break_table", label: "Break table", group: "Staff", w: 32, h: 16, pal: "wood", gen: GEN.break_table },
   { key: "coffee_counter", label: "Coffee counter", group: "Staff", w: 32, h: 16, pal: "locker", gen: GEN.coffee_counter, note: "The curator's mug sits here once it's been found for the day." },
   { key: "shadow_figure", label: "Something in the dark", group: "Cozy loop", w: 16, h: 16, pal: "shadow", gen: GEN.shadow_figure, note: "Rarely seen after closing. Drawn faintly over the darkness, so keep it mostly black with something pale for eyes." },
@@ -1394,6 +1401,8 @@ const SLOTS = [
   { key: "closeup_case", label: "Case close-up frame", group: "Pieces", w: 24, h: 24, pal: "glass", gen: GEN.closeup_case, note: "Nine-slice around the art when you look into a case." },
   { key: "pick_medal", label: "Curator's pick medal", group: "Pieces", w: 8, h: 12, pal: "medal", gen: GEN.pick_medal, note: "A ribbon rosette pinned to the front corner of a curator's pick (cases and paintings), and shown by its title in the placard panel and the archive. Leave the background transparent." },
   { key: "leaderboard", label: "Staff leaderboard", group: "Staff", w: 32, h: 32, pal: "chalk", gen: GEN.leaderboard, note: "Hangs across both wall rows in the staff room. Lists this month's top staff." },
+  { key: "sign_down", label: "Sign stand (arrow down)", group: "Furniture", w: 16, h: 16, pal: "wood", gen: GEN.sign_down, note: "By the stairs down to the basement." },
+  { key: "eotm_sign", label: "Employee of the Month sign", group: "Staff", w: 32, h: 12, pal: "eotmled", gen: GEN.eotm_sign, note: "In the lobby, centered on the wall: a little LED board that scrolls the Employee of the Month's name and points (red letters, drawn by the game, from (3,2) to (28,9))." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
 const SLOT = {}; SLOTS.forEach(s => { s.frames = s.frames || 1; s.fps = s.fps || 0; SLOT[s.key] = s; });
@@ -2802,7 +2811,7 @@ prepLayoutRoom(ROOMS.museum);
 /* A pristine copy of the built-in rooms. A pack's "rooms" replaces any of these or adds new ones;
    the level editor in curator.html writes them. Rooms are plain data, so a deep copy is enough. */
 const BUILTIN_ROOMS = JSON.parse(JSON.stringify(ROOMS));
-const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "runners", "lamps", "arrows", "murals", "tint", "windowAt", "intercom", "lightSwitch", "eotmAt",
+const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "runners", "lamps", "mats", "arrows", "murals", "tint", "windowAt", "intercom", "lightSwitch", "eotmAt",
   "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "enterAt", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt", "posters", "floorLights", "camAt", "colorGlows", "keypadAt"];
 /* Light checks so a hand-edited or damaged pack can't break the game: rectangular map, sane size, a spawn on the map. */
 function normalizeRoom(id, d) {
@@ -3072,6 +3081,7 @@ function buildRoom(id, pieces, o) {
   // Hallway dressing: carpet runner tiles [x, y, "h0".."v2"], accent lights on the wall [x, y], and arrow signs pointing the way.
   r.runners = runnerTiles(def);
   r.lamps = (def.lamps || []).filter(Array.isArray);
+  r.matList = Array.isArray(def.mats) ? def.mats.filter(a => Array.isArray(a) && Number.isFinite(a[0]) && Number.isFinite(a[1])) : null; // doormats placed in the curator; none set: one inside every doorway (doorMats)
   r.arrows = (def.arrows || []).filter(a => a && typeof a === "object");
   r.murals = (def.murals || []).filter(m => m && SLOT[m.key]).map(m => ({ x: m.x | 0, y: m.y | 0, w: Math.max(1, m.w | 0 || 1), key: m.key, at: Number.isFinite(m.at) ? Math.max(0, m.at | 0) : -1 })); // at: which part of the art (pixels from its left)
   r.arrows.forEach(a => { for (let i = 0; i < (a.w || 4); i++) { const k = (a.x + i) + "," + ((a.y || 1) + 1); if (!r.events[k]) r.events[k] = { arrow: a }; } });
@@ -4946,7 +4956,7 @@ class Game {
      tab), so players can trade it. A curator badge always gets in, and starts there. */
   /* What you look like: the curator in person on a curator badge, the staff uniform on shift, the shirt if you wear it. */
   playerSheet(base) { const k = this.isCurator() ? "curator" : this.staff ? "player_staff" : this.progress.wearShirt ? "player_goq_shirt" : base || "player"; return k + this.lookSuffix(k); }
-  canLook() { const P = this.progress; return !!(P && ((P.lastBadge && !P.lastBadge.volunteer) || (P.staff && !P.staff.volunteer))); } // signed in with a badge at least once
+  canLook() { const P = this.progress, real = b => !!b && !b.volunteer && /^\d+$/.test(String(b.badge || "")); if (!P) return false; return P.staff ? real(P.staff) : real(P.lastBadge); } // a badge number (a Patreon member or the curator), not a volunteer: on shift, the badge you're on; off shift, the last one you signed in with (Joe 10/14)
   lookSuffix(k) { // your skin tone everywhere; your shirt on your own clothes (the player, the curator), not on a uniform or the GOQ shirt
     const L = this.progress.look; if (!L || !this.canLook() || !SLOT[k] || this.headless) return "";
     const pal = PAL[SLOT[k].pal] || [], sw = [];
@@ -5542,6 +5552,12 @@ class Game {
     const a = this.board && this.board.eotm;
     if (a && a.name) return { pages: [this.tx(a.sofar ? "eotm.sofar" : "eotm.auto", { name: a.name, points: a.points, month: a.month })] };
     return null;
+  }
+  eotmLine() { // what the little LED sign scrolls
+    const e = this.pack.settings.staff.eotm, a = this.board && this.board.eotm;
+    if (e.name) return "EMPLOYEE OF THE MONTH: " + e.name;
+    if (a && a.name) return (a.sofar ? "LEADING " + (a.month || "THIS MONTH") : "EMPLOYEE OF THE MONTH") + ": " + a.name + " - " + a.points + " PTS";
+    return "EMPLOYEE OF THE MONTH: COULD BE YOU";
   }
   /* Chores go to the staff office when you clock out (Joe 10/12: that's what clocking out is for), not as you do them.
      Clocking out moves this shift's chores to the outbox and sends them; any that can't get through wait there for the next try (the next page load). */
@@ -9360,6 +9376,11 @@ class Game {
       for (const l of r.floorLights) this.drawFlip("aisle_light", l.side === "r", l.x * T + (l.side === "r" ? 11 : 1) - cx, l.y * T + 8 - cy);
     }
     if (r.marquee) this.drawSlot("marquee_lights", REDUCED_MOTION ? 0 : this.frame("marquee_lights"), 0, r.marquee.x * T - cx, r.marquee.y * T - cy);
+    if (r.eotmAt) { // the Employee of the Month sign: the same ticker, smaller (Joe 10/14: people can change how they look, so a name instead of a picture)
+      const x0 = r.eotmAt.x * T - cx, y0 = r.eotmAt.y * T + 10 - cy, line = this.ledText(this.eotmLine()), win = 26, span = line.width + win;
+      const o = REDUCED_MOTION ? win : Math.floor(this.t / 8) * 2 % span;
+      ctx.save(); ctx.beginPath(); ctx.rect(x0 + 3, y0 + 2, win, 8); ctx.clip(); ctx.drawImage(line, x0 + 3 + win - o, y0 + 2); ctx.restore();
+    }
     if (!r.nowSign) return;
     // One line, scrolling right to left like an LED ticker: it jumps two columns at a time, a little chunky.
     const x0 = r.nowSign.x * T - cx, y0 = r.nowSign.y * T + 10 - cy, p = this.nowPlaying();
@@ -9570,6 +9591,7 @@ class Game {
   /* The floor tile just inside each doorway, for its mat. */
   doorMats(r) {
     if (r._mats) return r._mats;
+    if (r.matList) return (r._mats = r.matList.filter(([x, y]) => r.solid[y] && r.solid[y][x] !== undefined)); // placed in the curator
     const out = [];
     for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) {
       const o = r.over[y][x]; if (!o) continue;
@@ -9652,8 +9674,7 @@ class Game {
     if (r.clockAt) this.drawSlot("time_clock", 0, 0, r.clockAt.x * T - cx, r.clockAt.y * T - cy);
     if (r.eotmAt) {
       const x = r.eotmAt.x * T - cx, y = r.eotmAt.y * T - cy;
-      this.drawSlot("eotm_frame", 0, 0, x, y);
-      if (this.eotmInfo()) this.drawSlot("player_staff", 0, 0, x + 8, y + 6);
+      this.drawSlot("eotm_sign", 0, 0, x, y + 10); // (its letters scroll in drawMarquee, over the lighting)
     }
     const tod = this.tod();
     if (r.windowAt) {
@@ -9833,7 +9854,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 52";
+const VERSION = "2026-11-18 cards 53";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

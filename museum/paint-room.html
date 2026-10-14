@@ -289,6 +289,18 @@ details.more .foot{margin-top:12px}
 .irows{display:flex;flex-direction:column;gap:8px}
 .irow{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:10px;border:2px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);font:inherit}
 button.irow{cursor:pointer}
+/* Desktop mode (Joe 10/14): wider pages, lists in columns, and the painter with the grid on the left and everything else on the right. */
+.desk .app{max-width:1000px;padding-left:24px;padding-right:24px}
+.desk .app.painting{max-width:1480px}
+.desk .dock .in{max-width:1000px}
+.desk .grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+.desk .irows{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.desk .pair{gap:14px}
+.deskwrap{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:24px;align-items:start}
+.deskL{position:sticky;top:12px;min-width:0}
+.deskR{min-width:0}
+.deskL .stage{height:calc(100vh - 210px);height:calc(100svh - 210px);min-height:360px}
+.deskR > :first-child{margin-top:0}
 button.irow:active{transform:translateY(1px)}
 .irow .chk{flex:none;width:48px;height:48px}
 .irow img.px{width:32px;height:32px;image-rendering:pixelated;image-rendering:crisp-edges;object-fit:contain}
@@ -384,14 +396,21 @@ const DRAFT_KEY = "goq-curator-draft";
 const readDraftPack = () => { try { const j = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); return j && j.format === GOQ.PACK_FORMAT ? j : null; } catch (e) { return null; } };
 
 const origCache = {};
-const original = key => origCache[key] || (origCache[key] = isItemKey(key) ? canvasOf(ITEM_SIZE, ITEM_SIZE)[0] : GOQ.placeholder(key)); // a new item starts blank
+const original = key => { if (isItemKey(key) && gearIcon[key.slice(5)]) return copyOf(gearIcon[key.slice(5)]); return origCache[key] || (origCache[key] = isItemKey(key) ? canvasOf(ITEM_SIZE, ITEM_SIZE)[0] : GOQ.placeholder(key)); }; // a new item starts blank; a shop item drawn from the game's art starts from that
+const gearIcon = {}; // shop items with no picture of their own (the GOQ shades, hat, mug and phone case): their icon as the game draws it, by item id
+const copyOf = src => { const [c, x] = canvasOf(src.width, src.height); x.drawImage(src, 0, 0); return c; };
+async function loadShopIcons(items) { // the game's own icons for the shop items that have no picture (loadShopIcons, then they're in gearIcon)
+  const need = (items || []).filter(it => it && !it.image && !gearIcon[it.id]); if (!need.length) return false;
+  try { const g = await contextGame(); need.forEach(it => { try { gearIcon[it.id] = copyOf(g.itemIcon(it)); } catch (e) {} }); } catch (e) { return false; }
+  return true;
+}
 // Images for art that isn't built in (the library's and the folder pack's), decoded once.
 const imgCache = {};
 async function warm(src) { if (src && !imgCache[src]) { try { imgCache[src] = await loadImg(src); } catch (e) { imgCache[src] = null; } } return imgCache[src]; }
 await Promise.all([...Object.values(DB.data.art).map(a => warm(a.png)), ...Object.values(itemsStore()).filter(i => i.png).map(i => warm(i.png)), ...Object.keys(packAssets).filter(k => SLOT[k]).map(k => warm(packAssets[k].src))]);
 /* The art the game would show: yours (painted here) first, then the pack's custom art, then the built-in. */
 function inUse(key) {
-  if (isItemKey(key)) { const it = itemsStore()[key.slice(5)], img = it && it.png && imgCache[it.png], [c, x] = canvasOf(ITEM_SIZE, ITEM_SIZE); if (img) x.drawImage(img, 0, 0, ITEM_SIZE, ITEM_SIZE); return c; }
+  if (isItemKey(key)) { const it = itemsStore()[key.slice(5)], img = it && it.png && imgCache[it.png], [c, x] = canvasOf(ITEM_SIZE, ITEM_SIZE); if (img) x.drawImage(img, 0, 0, ITEM_SIZE, ITEM_SIZE); else if (it && gearIcon[it.id]) x.drawImage(gearIcon[it.id], 0, 0); return c; }
   const s = SLOT[key], { w, h } = sheetSize(s), a = DB.data.art[key], src = a ? a.png : packAssets[key] && packAssets[key].src, img = src && imgCache[src];
   if (!img) return original(key);
   const [c, x] = canvasOf(w, h); x.drawImage(img, 0, 0, w, h, 0, 0, w, h); return c;
@@ -485,9 +504,11 @@ function top(title, back) {
   return el("header", { class: "top" }, [back ? el("button", { class: "iconbtn", type: "button", "aria-label": "Back", text: "←", onclick: () => history.length > 1 ? history.back() : go({ name: "home" }) }) : null,
     back ? el("div", { class: "crumb", text: title }) : el("h1", { text: title })]);
 }
+const deskOn = () => meta.desktop === true || (meta.desktop !== false && matchMedia("(min-width: 1000px) and (pointer: fine)").matches); // desktop mode: on by itself on a wide screen with a mouse, or as you set it
 function render() {
   if (editor) { editor.close(); editor = null; }
   $app.innerHTML = "";
+  document.body.classList.toggle("desk", deskOn()); $app.classList.toggle("painting", view.name === "paint");
   if (view.name === "home") return renderHome();
   if (view.name === "find") return renderFind();
   if (view.name === "slot") return SLOT[view.key] ? renderSlot() : go({ name: "home" }, true);
@@ -534,6 +555,9 @@ function renderHome() {
   $app.appendChild(el("section", { class: "panel", "aria-labelledby": "h-gift" }, [el("h2", { id: "h-gift", text: "The weekly gift" }),
     el("p", { class: "small", style: "margin:-4px 0 10px", text: "Draw a new shop item for an exhibit's unveiling, set its name, price and date, and send it to the curator." }),
     el("button", { class: "btn wide", type: "button", text: "Shop items", onclick: () => go({ name: "items" }) })]));
+  $app.appendChild(el("section", { class: "panel", "aria-labelledby": "h-desk" }, [el("h2", { id: "h-desk", text: "Desktop mode" }),
+    el("p", { class: "small", style: "margin:-4px 0 10px", text: deskOn() ? "On: wider pages, and the painter puts the grid on the left with the tools and previews beside it." : "Off: one column, made for a phone." + (meta.desktop === false ? "" : " It comes on by itself on a big screen with a mouse.") }),
+    el("button", { class: "btn wide", type: "button", text: deskOn() ? "Turn desktop mode off" : "Turn desktop mode on", onclick: () => { meta.desktop = !deskOn(); saveMeta(); render(); } })]));
 
   // Quick tiles
   const n = st => SLOTS.filter(s => status(s.key) === st).length;
@@ -735,6 +759,7 @@ function itemIconBox(src, cv) {
   return box;
 }
 function itemState(it) {
+  if (it.fromShop && it.sent === itemSig(it)) return "In the shop, not changed here yet";
   if (!it.sentAt) return "Not sent yet";
   return it.sent && it.sent === itemSig(it) ? "Sent " + new Date(it.sentAt).toLocaleDateString() : "Changed since you sent it";
 }
@@ -742,8 +767,12 @@ const itemSig = it => srcHash(JSON.stringify([it.name, it.price, it.description,
 async function styleReference() {
   const out = ["GOQ Museum: shop item style reference", "", "Every picture below is a shop item from the game, 16 by 16 pixels. Each lists its colors, then 16 rows of 16 characters, one per pixel (\".\" is see-through). New items should match this look: the outline, how many colors, the shading and the light from the top left.", ""];
   const seen = new Set(), add = async (name, src) => { if (!src || seen.has(src)) return; seen.add(src); try { const d = await pngPixels(src, ITEM_SIZE, ITEM_SIZE); const t = d && artToText(d, ITEM_SIZE, ITEM_SIZE, name); if (t) out.push(t, ""); } catch (e) {} };
-  const src = shopSource(); for (const it of ((src && src.settings && src.settings.shop && src.settings.shop.items) || [])) await add(it.name, it.image);
-  for (const it of Object.values(itemsStore())) await add(it.name, it.png);
+  const src = shopSource(), shop = (src && src.settings && src.settings.shop && src.settings.shop.items) || [];
+  await loadShopIcons(shop);
+  const addCanvas = (name, cv) => { if (!cv || seen.has("icon:" + name)) return; seen.add("icon:" + name); const t = artToText(cv.getContext("2d").getImageData(0, 0, ITEM_SIZE, ITEM_SIZE).data, ITEM_SIZE, ITEM_SIZE, name); if (t) out.push(t, ""); };
+  const mine = itemsStore();
+  for (const it of shop) { const m = mine[it.id]; if (m && m.png) continue; if (it.image) await add(it.name, it.image); else addCanvas(it.name, gearIcon[it.id]); } // (edited here: your version, below)
+  for (const it of Object.values(mine)) await add(it.name, it.png);
   return out.length > 4 ? out.join("\n") : null;
 }
 function renderItems() {
@@ -757,25 +786,33 @@ function renderItems() {
   } }));
   const mine = Object.values(itemsStore()).sort((a, b) => (b.made || "").localeCompare(a.made || ""));
   const src = shopSource(), pieces = pieceList(src), title = id => (pieces.find(p => p.id === id) || {}).title;
-  const sec1 = el("section", { class: "panel" }, [el("h2", { text: "Made here" })]);
+  const sec1 = el("section", { class: "panel" }, [el("h2", { text: "Made or edited here" })]);
   if (!mine.length) sec1.appendChild(el("p", { class: "small", style: "margin:0", text: "Nothing yet. New weekly gift starts one." }));
   const l1 = el("div", { class: "irows" }); sec1.appendChild(l1);
   mine.forEach(it => l1.appendChild(el("button", { class: "irow", type: "button", onclick: () => go({ name: "item", id: it.id }) }, [itemIconBox(null, inUse("item:" + it.id)),
     el("div", {}, [el("b", { text: it.name || "New weekly gift" }), el("span", { text: (it.piece ? "Gift for " + (title(it.piece) || "an exhibit") + (it.unveil ? ", unveils " + niceDay(it.unveil) : "") : "No exhibit yet") }), el("span", { text: itemState(it) })])])));
   $app.appendChild(sec1);
   const shop = (src && src.settings && src.settings.shop && src.settings.shop.items) || [];
-  const sec2 = el("section", { class: "panel" }, [el("h2", { text: "Already in the shop" }), el("p", { class: "small", style: "margin:-4px 0 10px", text: (readDraftPack() ? "From the curator's draft in this browser." : "From this folder's museum-pack.json.") + " Change these in the curator." })]);
+  const sec2 = el("section", { class: "panel" }, [el("h2", { text: "Already in the shop" }), el("p", { class: "small", style: "margin:-4px 0 10px", text: (readDraftPack() ? "From the curator's draft in this browser." : "From this folder's museum-pack.json.") + " Tap one to edit it here: its picture, name, price and description. Send to the curator puts your changes in." })]);
   const l2 = el("div", { class: "irows" }); sec2.appendChild(l2);
-  shop.filter(it => !mine.some(m => m.id === it.id)).forEach(it => l2.appendChild(el("div", { class: "irow" }, [itemIconBox(it.image),
-    el("div", {}, [el("b", { text: it.name }), el("span", { text: it.gift ? "Gift for " + (title(it.gift) || "an exhibit") : "Always in the shop" })])])));
+  shop.filter(it => !mine.some(m => m.id === it.id)).forEach(it => l2.appendChild(el("button", { class: "irow", type: "button", onclick: () => editShopItem(it, pieces) }, [itemIconBox(it.image, !it.image && gearIcon[it.id] ? copyOf(gearIcon[it.id]) : null),
+    el("div", {}, [el("b", { text: it.name }), el("span", { text: it.gift ? "Gift for " + (title(it.gift) || "an exhibit") : "Always in the shop" }), el("span", { text: "Tap to edit" })])])));
+  loadShopIcons(shop).then(got => { if (got && view.name === "items") render(); }); // the game's pictures for the gear, then the list again with them
   if (!shop.length) l2.appendChild(el("p", { class: "small", style: "margin:0", text: "Couldn't read the shop (open the curator in this browser once)." }));
   $app.appendChild(sec2);
   const refMsg = el("p", { class: "small", role: "status", style: "margin:8px 0 0" });
   $app.appendChild(el("section", { class: "panel" }, [el("h2", { text: "For your Claude project" }),
-    el("p", { class: "small", style: "margin:-4px 0 10px", text: "The style reference: every shop item's picture as text, so Claude can match the look. Upload it to the project as item-style-reference.txt whenever it grows." }),
+    el("p", { class: "small", style: "margin:-4px 0 10px", text: "Claude draws new items to match the ones already in your shop. These buttons write every shop item's picture out as text, in a file called item-style-reference.txt. Download it, and in your Claude project replace the file with the same name, whenever you've added items (so the next drawing matches them too). Copy does the same but puts the text on your clipboard, to paste straight into a chat." }),
     el("div", { class: "foot" }, [
-      el("button", { class: "btn quiet wide", type: "button", text: "Copy the style reference", onclick: async () => { const t = await styleReference(); if (!t) return toast("No item pictures yet"); copyText(t, "Copied the style reference"); } }),
-      el("button", { class: "btn quiet wide", type: "button", text: "Download item-style-reference.txt", onclick: async () => { const t = await styleReference(); if (!t) return toast("No item pictures yet"); download("item-style-reference.txt", new Blob([t], { type: "text/plain" })); refMsg.textContent = "Downloaded."; } }), refMsg])]));
+      el("button", { class: "btn quiet wide", type: "button", text: "Copy the style reference", onclick: async () => { const t = await styleReference(); if (!t) return toast("No item pictures yet"); copyText(t, "Copied the style reference (" + (t.match(/^GOQ ART /gm) || []).length + " pictures)"); } }),
+      el("button", { class: "btn quiet wide", type: "button", text: "Download item-style-reference.txt", onclick: async () => { const t = await styleReference(); if (!t) return toast("No item pictures yet"); download("item-style-reference.txt", new Blob([t], { type: "text/plain" })); refMsg.textContent = "Downloaded, with " + (t.match(/^GOQ ART /gm) || []).length + " pictures. Now replace item-style-reference.txt in your Claude project with it."; } }), refMsg])]));
+}
+async function editShopItem(it, pieces) { // an item already in the shop, into the Paint Room to edit (same id, so sending updates it)
+  const p = (pieces || []).find(q => q.id === it.gift);
+  if (it.image) await warm(it.image); else await loadShopIcons([it]);
+  const rec = { id: it.id, name: it.name || "", price: Math.max(0, Math.min(999, Math.round(+it.price || 0))), description: it.description || "", piece: it.gift || "", unveil: (p && p.unveil) || "", png: it.image || null, gear: it.use || "", fromShop: true, made: new Date().toISOString() };
+  rec.sentAt = rec.made; rec.sent = itemSig(rec);
+  await putItem(rec); go({ name: "item", id: it.id });
 }
 function renderItem() {
   const it = Object.assign({}, itemsStore()[view.id]), src = shopSource(), pieces = pieceList(src).slice().sort((a, b) => (b.unveil || "9").localeCompare(a.unveil || "9"));
@@ -784,8 +821,10 @@ function renderItem() {
   let saveT = 0; const keep = () => { clearTimeout(saveT); saveT = setTimeout(() => putItem(Object.assign({}, itemsStore()[it.id], it)).catch(() => toast("Couldn't save: storage is full")), 300); };
   // The picture
   const pv = el("div", { class: "ipv" }); [1, 2, 4].forEach(k => { const c = inUse("item:" + it.id); c.className = "px"; c.style.width = 16 * k + "px"; c.style.height = 16 * k + "px"; pv.appendChild(el("div", { class: "chk" }, [c])); });
-  $app.appendChild(el("section", { class: "panel" }, [el("h2", { text: "The picture" }), it.png ? pv : el("p", { class: "small", style: "margin:0 0 10px", text: "Not drawn yet. Paint it, or open the painter and paste Claude's art (under More)." }),
-    el("button", { class: "btn wide", type: "button", text: it.png ? "Edit the picture" : "Paint it", onclick: () => go({ name: "paint", key: "item:" + it.id }) })]));
+  const gear = !it.png && gearIcon[it.id];
+  $app.appendChild(el("section", { class: "panel" }, [el("h2", { text: "The picture" }), it.png || gear ? pv : el("p", { class: "small", style: "margin:0 0 10px", text: "Not drawn yet. Paint it, or open the painter and paste Claude's art (under More)." }),
+    gear ? el("p", { class: "small", style: "margin:8px 0 10px", text: "This is drawn from the game's own art for it. Edit it to give the shop its own picture; what players wear stays the same (change that in the art list)." }) : null,
+    el("button", { class: "btn wide", type: "button", text: it.png || gear ? "Edit the picture" : "Paint it", onclick: () => go({ name: "paint", key: "item:" + it.id }) })]));
   // The details
   const name = el("input", { type: "text", maxlength: 60, value: it.name || "", placeholder: "Toy tank" });
   const price = el("input", { type: "number", min: 0, max: 999, inputmode: "numeric", value: it.price });
@@ -827,7 +866,7 @@ let itemFlash = null; // the message after sending, shown at the top of the redr
 async function sendItem(id, msg) {
   const it = itemsStore()[id], say = (t, warn) => { msg.innerHTML = ""; msg.appendChild(el("div", { class: "banner" + (warn ? "" : " info"), text: t })); msg.scrollIntoView({ block: "nearest" }); };
   if (!it) return;
-  if (!it.png) return say("Draw the picture first (Paint it).", true);
+  if (!it.png && !it.fromShop) return say("Draw the picture first (Paint it).", true);
   if (!it.name) return say("Give it a name first.", true);
   let d = readDraftPack(), fresh = null;
   if (!d) { // no draft in this browser yet: start one from this folder's newest pack, the way the curator does
@@ -845,7 +884,8 @@ async function sendItem(id, msg) {
   if (other && !confirm("\"" + other.name + "\" is already the gift for " + pc.title + ". Make \"" + it.name + "\" its gift instead? " + other.name + " stays in the shop as a regular item.")) return;
   const redate = pc && it.unveil && it.unveil !== pc.unveil;
   if (redate && pc.unveil && !confirm(pc.title + " unveils on " + pc.unveil + " in the curator. Change it to " + it.unveil + "?")) return;
-  const rec = { id: it.id, name: it.name, price: it.price, description: it.description || "", image: it.png, gift: pc ? pc.id : "" };
+  if (!it.png && !(had && (had.image || had.use))) return say("Draw the picture first (Paint it).", true);
+  const rec = { id: it.id, name: it.name, price: it.price, description: it.description || "", image: it.png || (had ? had.image || null : null), gift: pc ? pc.id : "" }; // (an item from the shop you didn't repaint keeps its picture)
   if (other) other.gift = "";
   if (had) Object.assign(had, rec); else sh.items.push(Object.assign(rec, { use: "" }));
   if (redate) pc.unveil = it.unveil;
@@ -1646,6 +1686,12 @@ function renderPaint() {
   ])]);
   $app.appendChild(more);
   dock([el("button", { class: "btn primary", type: "button", text: "Save", onclick: () => save() })]);
+  if (deskOn()) { // desktop: the grid and what goes with it on the left, the previews, tools and colors on the right
+    const kids = [...$app.children], head = kids.filter(k => k.matches("header.top, .banner")), L = el("div", { class: "deskL" }), Rt = el("div", { class: "deskR" });
+    const left = new Set(kids.filter(k => k.matches(".stage, .zoom, .framelabel, .frames, .framebar, .fset") || (k.matches("p.small") && k.previousElementSibling && k.previousElementSibling.matches(".stage")))); // (worked out before anything moves)
+    kids.forEach(k => { if (!head.includes(k)) (left.has(k) ? L : Rt).appendChild(k); });
+    $app.appendChild(el("div", { class: "deskwrap" }, [L, Rt]));
+  }
 
   /* Pixels */
   const idx = (x, y) => ((fy0() + y) * W + fx0() + x) * 4;
@@ -1980,7 +2026,7 @@ function renderPaint() {
 
   // Painting order on a phone: the grid, then the zoom row, tools, selection bar and colors right under it;
   // frames, frame settings, the trace and More follow.
-  zoomRow.after(tools, selBar, palPanel);
+  const deskR = $app.querySelector(".deskR"); if (deskR) deskR.prepend(tools, selBar, palPanel); else zoomRow.after(tools, selBar, palPanel); // (desktop mode: at the top of the right-hand column)
   setTool("pencil"); paintChips(); paintPalette(); paintTrace(); if (!fset.fixed) paintFs(); size(); fit(); paint(); ctxSetup();
 }
 

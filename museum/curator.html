@@ -441,7 +441,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 52";
+window.GOQ_WANT = "2026-11-18 cards 53";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -1167,11 +1167,12 @@ const PLACE_GROUPS = [
     { kind: "spot", name: "Painting spot", key: "wall_frame_wood", note: "Community pieces hang here. Tap the wall; it takes two tiles across both wall rows." },
     { kind: "prop", key: "overflow_screen", name: "Touch screen", note: "The room's extra pieces: episodes of its genre that don't fit in its cases. One per room is plenty." },
   ] },
-  { name: "Furniture", items: ["bench", "bench_side", "plant", "planter_wide", "sign_stand", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board", "day_board"].map(k => ({ kind: "prop", key: k })) },
+  { name: "Furniture", items: ["bench", "bench_side", "plant", "planter_wide", "sign_stand", "sign_down", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board", "day_board"].map(k => ({ kind: "prop", key: k })) },
   { name: "Shop and café", items: ["shelf_unit", "magazine_rack", "item_rack", "shop_counter", "cafe_counter", "espresso_machine", "coffee_grinder", "cup_stacks", "bus_tub", "cafe_table", "cafe_stool", "floor_lamp", "postcard_spinner", "basket", "planter", "cat_bed"].map(k => ({ kind: "prop", key: k }))
     .concat([{ kind: "decal", key: "rug" }]) },
   { name: "Storage and floors", items: [{ kind: "stairs", key: "stair_up", name: "Stairs up", note: "Step on it to change floors. Select it to choose where it leads." },
-    { kind: "stairs", key: "stair_down", name: "Stairs down", note: "Step on it to change floors. Select it to choose where it leads." }]
+    { kind: "stairs", key: "stair_down", name: "Stairs down", note: "Step on it to change floors. Select it to choose where it leads." },
+    { kind: "mat", name: "Doormat", key: "doormat", note: "A mat on the floor. Until you place, move or remove one, a room has a mat inside every doorway; after that it has just the ones you put down." }]
     .concat(["railing", "storage_shelves", "box_stack", "workbench"].map(k => ({ kind: "prop", key: k }))) },
   { name: "Hallways", items: [
     { kind: "lamp", key: "wall_sconce", name: "Accent light", note: "A small wall light. Tap a wall (the back wall of a room or hallway)." },
@@ -1241,10 +1242,18 @@ function roomItems(d) {
   (d.wallArt || []).forEach((a, i) => out.push({ type: "wallArt", i, x: a.x, y: a.y || 1, w: sw(a.key), h: 2, label: (GOQ.SLOT[a.key] || {}).label || a.key }));
   (d.murals || []).forEach((m, i) => out.push({ type: "mural", i, x: m.x, y: m.y, w: m.w || 1, h: 1, label: "Mural" }));
   (d.lamps || []).forEach((a, i) => out.push({ type: "lamp", i, x: a[0], y: a[1], w: 1, h: 1, label: "Accent light" }));
+  roomMats(d).forEach((a, i) => out.push({ type: "mat", i, x: a[0], y: a[1], w: 1, h: 1, label: Array.isArray(d.mats) ? "Doormat" : "Doormat (automatic)" }));
   (d.arrows || []).forEach((a, i) => out.push({ type: "arrow", i, x: a.x, y: a.y || 1, w: a.w || 4, h: 2, label: "Arrow sign" }));
   (d.decals || []).forEach((a, i) => out.push({ type: "decal", i, x: a.x, y: a.y, w: a.w || sw(a.key), h: a.w ? a.h || 1 : sh(a.key), label: (GOQ.SLOT[a.key] || {}).label || a.key }));
   return out;
 }
+/* A room's doormats: the ones placed here, or (none placed yet) the automatic one inside each doorway, as the game works them out. */
+function roomMats(d) {
+  if (Array.isArray(d.mats)) return d.mats;
+  const r = d === roomDef(R.id) && edGame.rooms && edGame.rooms[R.id]; if (!r) return [];
+  return (r.matList ? [] : edGame.doorMats(r)).map(a => a.slice());
+}
+function ownMats(d) { if (!Array.isArray(d.mats)) d.mats = roomMats(d); return d.mats; } // the first change: the automatic mats become placed ones you can edit
 function itemAt(d, x, y) { return roomItems(d).find(it => x >= it.x && x < it.x + it.w && y >= it.y && y < it.y + it.h) || null; }
 const DOOR_CH = "DdSsBEH";
 function doorTileAt(d, x, y) {
@@ -1576,6 +1585,7 @@ function placeAt(t) {
   else if (p.kind === "decal") (d.decals = d.decals || []).push(p.key === "rug" ? Object.assign({ key: "rug", x: t.x, y: t.y, w: 3, h: 2, pattern: "band", motif: "diamond" }, GOQ.RUG_PRESETS["Deep red"]) : { key: p.key, x: t.x, y: t.y });
   else if (p.kind === "spawn") d.spawn = [t.x, t.y, (d.spawn && d.spawn[2]) || "down"];
   else if (p.kind === "catSpot") (d.catSpots = d.catSpots || []).push([t.x, t.y]);
+  else if (p.kind === "mat") ownMats(d).push([t.x, t.y]);
   else if (p.kind === "mugSpot") (d.mugSpots = d.mugSpots || []).push([t.x, t.y]);
   else if (p.kind === "lightSwitch") d.lightSwitch = [t.x, t.y];
   else if (p.kind === "intercom") d.intercom = [t.x, t.y];
@@ -1614,7 +1624,8 @@ function placeAt(t) {
 }
 function removeItem(d, it) {
   const arr = { mural: "murals", lamp: "lamps", arrow: "arrows", glow: "glows", visitor: "visitors", catSpot: "catSpots", mugSpot: "mugSpots", case: "cases", prop: "props", spot: "spots", wallArt: "wallArt", decal: "decals", stairs: "stairs" }[it.type];
-  if (arr) d[arr].splice(it.i, 1);
+  if (it.type === "mat") ownMats(d).splice(it.i, 1);
+  else if (arr) d[arr].splice(it.i, 1);
   else if (it.type === "fixed") delete d[it.key];
 }
 /* Wall things sit on a back wall's upper row. In the museum they can move to another wall: dy, if that's a wall too, else 0. */
@@ -1638,6 +1649,7 @@ function moveItem(d, it, dx, dy) {
   else if (it.type === "case") { d.cases[it.i][0] += dx; d.cases[it.i][1] += dy; }
   else if (it.type === "stairs") { d.stairs[it.i].x += dx; d.stairs[it.i].y += dy; }
   else if (it.type === "catSpot") { d.catSpots[it.i][0] += dx; d.catSpots[it.i][1] += dy; }
+  else if (it.type === "mat") { const a = ownMats(d)[it.i]; a[0] += dx; a[1] += dy; }
   else if (it.type === "mugSpot") { d.mugSpots[it.i][0] += dx; d.mugSpots[it.i][1] += dy; }
   else if (it.type === "glow") { d.glows[it.i][0] += dx; d.glows[it.i][1] += dy; }
   else if (it.type === "spawn") { d.spawn[0] += dx; d.spawn[1] += dy; }
@@ -1791,13 +1803,13 @@ function layMove(t) {
   d.layout = L; recarve(d); roomChanged();
 }
 /* The things placed in a room, so a drag can move them from where they started. */
-const ITEM_KEYS = ["props", "cases", "spots", "wallArt", "decals", "glows", "catSpots", "mugSpots", "visitors", "featuredAt", "runners", "lamps", "arrows", "murals"];
+const ITEM_KEYS = ["props", "cases", "spots", "wallArt", "decals", "glows", "catSpots", "mugSpots", "visitors", "featuredAt", "runners", "lamps", "mats", "arrows", "murals"];
 function itemsOf(d) { const o = {}; ITEM_KEYS.forEach(k => { if (d[k] !== undefined) o[k] = clone(d[k]); }); return o; }
 function shiftItems(items, box, dx, dy) {
   const out = clone(items); if (!box || (!dx && !dy)) return out;
   const inside = (x, y) => x >= box.x && y >= box.y && x < box.x + box.w && y < box.y + box.h;
   ["props", "decals", "visitors", "wallArt", "arrows", "murals"].forEach(k => (out[k] || []).forEach(o => { if (inside(o.x, o.y === undefined ? 1 : o.y)) { o.x += dx; if (o.y !== undefined) o.y += dy; } }));
-  ["cases", "glows", "catSpots", "mugSpots", "runners", "lamps"].forEach(k => (out[k] || []).forEach(p => { if (inside(p[0], p[1])) { p[0] += dx; p[1] += dy; } }));
+  ["cases", "glows", "catSpots", "mugSpots", "runners", "lamps", "mats"].forEach(k => (out[k] || []).forEach(p => { if (inside(p[0], p[1])) { p[0] += dx; p[1] += dy; } }));
   (out.spots || []).forEach((p, i) => { if (Array.isArray(p) && inside(p[0], p[1])) { p[0] += dx; p[1] += dy; } });
   if (out.featuredAt && inside(out.featuredAt[0], out.featuredAt[1])) { out.featuredAt[0] += dx; out.featuredAt[1] += dy; }
   return out;
@@ -2021,7 +2033,8 @@ function renderInspector() {
   const notes = { mural: "Painted along the top row of the wall; the wall's own color shows below it. Drag it along the wall, or onto another wall.", lamp: "A small accent light on the wall. Drag it along the wall, or onto another wall.", arrow: "Drag it along the wall, or onto another wall.", glow: "A warm pool of light, shown even when the room's lights are on. Drag it to move it.", case: "Holds the next episode in Pieces order. The front placard is read from below it, the back from above.", spot: "A painting spot for the next community piece, across both wall rows.",
     spawn: "Where you appear when jumping to this room.", catSpot: "One of the places the cat might nap today.", mugSpot: "One of the places the curator's mug might turn up.", fixed: "A built-in feature. Drag it to move it.", locker: "Lockers are part of the staff room." };
   if (notes[it.type]) box.appendChild(el("p", { class: "note", text: notes[it.type] }));
-  if (it.type !== "spawn" && it.type !== "locker") box.appendChild(el("div", { class: "row" }, [delBtn()]));
+  if (it.type === "mat") box.appendChild(el("p", { class: "note", text: Array.isArray(d.mats) ? "This room has just the mats you've put down." : "Automatic: one inside every doorway. Place, move or remove one and this room keeps just the mats you choose." }));
+  if (it.type !== "spawn" && it.type !== "locker") box.appendChild(el("div", { class: "row" }, [delBtn(), it.type === "mat" && Array.isArray(d.mats) ? el("button", { type: "button", class: "btn small quiet", text: "Back to automatic doormats", onclick: () => { snapshot(); delete editable(R.id).mats; R.sel = null; roomChanged(true); } }) : null]));
 }
 function renderDoor(box, d, it) {
   const ev = doorEvent(d, it.x, it.y), ch = getCh(d, it.x, it.y);
