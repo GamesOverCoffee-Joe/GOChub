@@ -2668,6 +2668,10 @@ const TEXT = {
   "microwave.react":   { g: "Staff", l: "Someone in the staff room, right after the microwave goes off (shown in the corner; one at random)", by: "claude", v: [["WHO MICROWAVED A BURRITO FOR TEN MINUTES?"], ["Is... is it supposed to sound like that?"], ["Every. Single. Week."]] },
   "microwave.chat":    { g: "Staff", l: "Talking to someone who was in the staff room when the microwave went off (once each; one at random)", by: "claude", v: [["I heard it from across the room.", "I think I'm still hearing it."], ["You know there's a sign. Right there. \"NO BURRITOS.\"", "...Okay, there isn't. But there should be."], ["I'm not cleaning that.", "I'm just letting you know now, so there's no confusion later."]] },
   "usher.leading":     { g: "Tour", l: "The usher leading the tour, on the way to its first stop", by: "claude", v: [["This way, everyone! Stay close.", "First stop's just through here."], ["Follow me, folks!", "...Not that way. This way."]] },
+  "tour.goSleepy":     { g: "Tour", l: "The usher starts the tour without his coffee, just before the group heads off (you see them go)", v: [["Usher: Ok, everyone, it's uh... *yawn* tour time. So if you could... please follow me."]] },
+  "tour.goCoffee":     { g: "Tour", l: "The usher starts the tour with his coffee, just before the group heads off (you see them go)", v: [["Usher: Alright everyone! It's time for the tour. Please watch your step and follow me the first exhibit."]] },
+  "school.go":         { g: "Tour", l: "Tuesday: the teacher starts the school tour, just before the kids head off (you see them go)", v: [["Teacher: Ok, everyone, single file, were headed to the first exhibit."]] },
+  "school.next":       { g: "Tour", l: "Tuesday: the teacher moving the kids on to the next exhibit (you see them go)", v: [["Teacher: Here we go to the next exhibit! Stay close please. No wandering."]] },
   "tour.walking":      { g: "Tour", l: "Someone in the tour group, on the way to its first stop", by: "claude", v: [["Ooh, where are we going first?"], ["Is it far? I wore the wrong shoes."], ["I hope the first one's the dragon game."]] },
   "school.teacherWalk":{ g: "Tour", l: "Tuesday: the teacher, leading the kids to the first stop", by: "claude", v: [["Single file, friends! Hands to yourselves!", "...Tyler. Hands. To. Yourself."]] },
   "microwave.after":   { g: "Staff", l: "Microwave after the incident", v: [["Yeah, let's not open that."]] },
@@ -8377,6 +8381,7 @@ class Game {
       } else if (phase === 1 && T.school) { // the teacher takes the kids to the first piece (the usher stays at his desk)
         const c = T.stop1, at = [c.x, c.y + 1], tch = T.members[0], kids = T.members.slice(1);
         this.tourLineStart(T, tch, kids, { room: "museum", at, dir: "up" }, () => this.tourAround(M, at, kids.length).map((p, i) => kids[i] && { n: kids[i], room: "museum", at: p, dir: this.janFace(p, at[0], at[1]) }), fresh);
+        if (T.line) T.line.say = "school.go"; // the announcement, just before they go (if you see them go: tourDip)
       } else if (phase === 1) { // the usher leaves his desk and takes them to the first piece
         const u = L.npcs.find(n => n.usher && !n.tourUsher);
         if (u) { T.deskUsher = u; L.npcs = L.npcs.filter(n => n !== u); }
@@ -8384,11 +8389,13 @@ class Game {
         if (!Object.values(this.rooms).some(r => r.npcs.includes(T.guide)) && this.rooms[T.guide.where]) this.rooms[T.guide.where].npcs.push(T.guide); // standing in for the usher at his desk till the dip
         const c = T.stop1, at = [c.x, c.y + 1], m = T.members, order = [m[0], m[4], m[1], m[2], m[3]].filter(Boolean); // the kid right behind his grown-up
         this.tourLineStart(T, T.guide, order, { room: "museum", at, dir: "up" }, () => this.tourAround(M, at, m.length).map((p, i) => m[i] && { n: m[i], room: "museum", at: p, dir: this.janFace(p, at[0], at[1]) }), fresh);
+        if (T.line) T.line.say = T.coffee ? "tour.goCoffee" : "tour.goSleepy"; // the announcement, just before they go (if you see them go: tourDip)
       } else if (phase === 2 && T.school) { // the rush: on to the second piece, and one kid slips away
         T.mood = T.explained ? "happy" : "bored"; const c = T.stop2, at = [c.x, c.y + 1], tch = T.members[0], k = T.members.find(m => m.tourKid);
         const kids = T.members.slice(1).filter(m => m !== k || T.kidDone);
         const lost = k && !T.kidDone ? [T.lostSpot ? { n: k, room: T.lostSpot.room || "museum", at: T.lostSpot.at, dir: T.lostSpot.dir } : { n: k, room: "museum", at: this.freeSpot(M) || M.spawn, dir: "down" }] : []; // he slips away in the dip
         this.tourLineStart(T, tch, kids, { room: "museum", at, dir: "up" }, () => this.tourAround(M, at, kids.length).map((p, i) => kids[i] && { n: kids[i], room: "museum", at: p, dir: this.janFace(p, at[0], at[1]) }), fresh, lost);
+        if (T.line) T.line.say = "school.next"; // the announcement, just before they go (if you see them go: tourDip)
       } else if (phase === 2) { // happy: on to another wing (the usher goes back to his desk); bored: they wander off
         T.mood = T.coffee || T.explained ? "happy" : "bored";
         const desk = T.guide ? [{ n: T.guide, room: "lobby", at: T.deskUsher ? [T.deskUsher.x, T.deskUsher.y] : [3, 3], dir: "down" }] : []; // the usher back to his desk
@@ -8449,8 +8456,9 @@ class Game {
   tourDip(T) { // the group's ready to move on: dip to black, and there they are
     const L = T.line; if (L.dipping || this.trans || this.mode !== "walk") return;
     if (!this.tourSeen(L)) { this.tourLineDone(T, L); return; }
-    L.dipping = true; this.mode = "busy";
-    this.trans = { t: 0, dur: 16, switched: false, fn: () => this.tourLineDone(T, L, true) };
+    L.dipping = true;
+    const dip = () => { this.mode = "busy"; this.trans = { t: 0, dur: 16, switched: false, fn: () => this.tourLineDone(T, L, true) }; };
+    if (L.say) this.say(this.tx(L.say), dip); else dip(); // the announcement, then off they go (Joe 10/14)
   }
   lineJump(n, room, x, y) { // straight to a tile (in another room too), fading in if you can see it
     const R = this.rooms[room]; if (!R) return; const was = n.where;
@@ -9983,7 +9991,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 59";
+const VERSION = "2026-11-18 cards 60";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
