@@ -5,7 +5,7 @@
    a museum pack (JSON) can replace any slot with an image, and add the museum's pieces. */
 (function () {
 "use strict";
-const T = 16, T_TILE = T, VW = 15, VH = 10, SW = VW * T, SH = VH * T;
+const T = 16, VW = 15, VH = 10, SW = VW * T, SH = VH * T;
 const PACK_FORMAT = "goq-museum-pack";
 
 /* ---------- Placeholder colors ----------
@@ -7692,7 +7692,7 @@ class Game {
   }
   occupied(x, y, self) {
     const f = this.fol, pl = this.player; // you and whoever is following you never block each other (nor do people in the tour's line, lining up)
-    return [this.player, ...this.room.npcs].some(c => c !== self && !(f && ((self === pl && c === f) || (self === f && c === pl))) && !(self && self.inLine && c.inLine) && ((c.x === x && c.y === y) || (c.moving && c.x + DIRS[c.dir][0] === x && c.y + DIRS[c.dir][1] === y)));
+    return [this.player, ...this.room.npcs].some(c => c !== self && !(f && ((self === pl && c === f) || (self === f && c === pl))) && ((c.x === x && c.y === y) || (c.moving && c.x + DIRS[c.dir][0] === x && c.y + DIRS[c.dir][1] === y)));
   }
   blocked(x, y, self) { const r = this.room; return x < 0 || y < 0 || x >= r.w || y >= r.h || r.solid[y][x] || this.occupied(x, y, self) || (self && self !== this.player && r.keepFree && r.keepFree.has(x + "," + y)); } // keepFree: a seat saved for you
   tryMove(c, d) {
@@ -7702,10 +7702,6 @@ class Game {
       const inWay = m => m.x === nx && m.y === ny || (m.moving && m.x + DIRS[m.dir][0] === nx && m.y + DIRS[m.dir][1] === ny); // standing there, or stepping into it (he walks at their pace now, so he's often mid-step)
       const k = ours && (T.phase >= 0 && T.phase <= 3) && this.room.npcs.find(m => (m.tourKid || m.schoolKid) && m !== this.fol && inWay(m));
       if (k) { const was = [k.x, k.y, k.moving, k.prog, k.dir]; k.x = c.x; k.y = c.y; k.moving = false; k.prog = 0; k.route = null; k.stepWait = 6; if (this.blocked(nx, ny, c)) [k.x, k.y, k.moving, k.prog, k.dir] = was; } // undone if something else is in the way too (never two on one tile)
-    }
-    if (c === this.player && this.tour && this.tour.on && this.tour.line && this.blocked(nx, ny, c)) { // walking into someone in the walking line: you swap places, so the line can never box you in; the line's next step puts them back in their place (Joe 10/14). Standing at a stop: no swapping (you could push them anywhere), ask them to move instead
-      const T = this.tour, m = this.room.npcs.find(q => q.inLine && T.line.people.includes(q) && !q.moving && !q.sitting && q.x === nx && q.y === ny);
-      if (m) { m.x = c.x; m.y = c.y; m.walkTo = null; m.route = null; if (this.blocked(nx, ny, c)) { m.x = nx; m.y = ny; } }
     }
     if (this.blocked(nx, ny, c)) {
       if (c === this.player) {
@@ -8243,48 +8239,52 @@ class Game {
           if (fresh && n.goal && n.goal.room === "lobby") { const g = n.goal; n.where = "lobby"; n.moving = false; n.walkTo = null; n.route = null; [n.x, n.y] = g.at; n.dir = g.dir; n.goal = null; if (g.sit) this.tourSit(n, g.sit);
             const g2 = n.goal; if (g2 && g2.room === "lobby" && this.tileFree(L, g2.at[0], g2.at[1], n)) { [n.x, n.y] = g2.at; n.dir = g2.dir; n.goal = null; if (g2.sit) this.tourSit(n, g2.sit); } } }); // a new day or a rebuilt museum: they're already sitting when you walk in (someone on their seat: straight to another, not a walk over)
         if (T.guide) { this.tourDrop(T.guide); T.guide = null; } this.restoreUsher();
-      } else if (phase === 1 && T.school) { // the teacher leads the kids to the first piece in single file (the usher stays at his desk)
+      } else if (phase === 1 && T.school) { // the teacher takes the kids to the first piece (the usher stays at his desk)
         const c = T.stop1, at = [c.x, c.y + 1], tch = T.members[0], kids = T.members.slice(1);
         this.tourLineStart(T, tch, kids, { room: "museum", at, dir: "up" }, () => this.tourAround(M, at, kids.length).map((p, i) => kids[i] && { n: kids[i], room: "museum", at: p, dir: this.janFace(p, at[0], at[1]) }), fresh);
-      } else if (phase === 1) { // the usher leaves his desk and leads them to the first piece, single file (Joe 10/14)
+      } else if (phase === 1) { // the usher leaves his desk and takes them to the first piece
         const u = L.npcs.find(n => n.usher && !n.tourUsher);
         if (u) { T.deskUsher = u; L.npcs = L.npcs.filter(n => n !== u); }
         if (!T.guide) T.guide = { sheet: "usher", x: u ? u.x : 3, y: u ? u.y : 3, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 0, still: true, tourUsher: true, where: "lobby", lines: [], lineI: -1 };
+        if (!Object.values(this.rooms).some(r => r.npcs.includes(T.guide)) && this.rooms[T.guide.where]) this.rooms[T.guide.where].npcs.push(T.guide); // standing in for the usher at his desk till the dip
         const c = T.stop1, at = [c.x, c.y + 1], m = T.members, order = [m[0], m[4], m[1], m[2], m[3]].filter(Boolean); // the kid right behind his grown-up
         this.tourLineStart(T, T.guide, order, { room: "museum", at, dir: "up" }, () => this.tourAround(M, at, m.length).map((p, i) => m[i] && { n: m[i], room: "museum", at: p, dir: this.janFace(p, at[0], at[1]) }), fresh);
       } else if (phase === 2 && T.school) { // the rush: on to the second piece, and one kid slips away
         T.mood = T.explained ? "happy" : "bored"; const c = T.stop2, at = [c.x, c.y + 1], tch = T.members[0], k = T.members.find(m => m.tourKid);
         const kids = T.members.slice(1).filter(m => m !== k || T.kidDone);
-        this.tourLineStart(T, tch, kids, { room: "museum", at, dir: "up" }, () => this.tourAround(M, at, kids.length).map((p, i) => kids[i] && { n: kids[i], room: "museum", at: p, dir: this.janFace(p, at[0], at[1]) }), fresh);
-        if (k && !T.kidDone) { this.tourStand(k); k.inLine = false; if (T.lostSpot) this.tourPlace(k, T.lostSpot.room, T.lostSpot.at, T.lostSpot.dir); else this.tourPlace(k, "museum", this.freeSpot(M) || M.spawn, "down"); }
-      } else if (phase === 2) { // happy: on to another wing, single file behind the first of them (the usher goes back to his desk); bored: they wander off
+        const lost = k && !T.kidDone ? [T.lostSpot ? { n: k, room: T.lostSpot.room || "museum", at: T.lostSpot.at, dir: T.lostSpot.dir } : { n: k, room: "museum", at: this.freeSpot(M) || M.spawn, dir: "down" }] : []; // he slips away in the dip
+        this.tourLineStart(T, tch, kids, { room: "museum", at, dir: "up" }, () => this.tourAround(M, at, kids.length).map((p, i) => kids[i] && { n: kids[i], room: "museum", at: p, dir: this.janFace(p, at[0], at[1]) }), fresh, lost);
+      } else if (phase === 2) { // happy: on to another wing (the usher goes back to his desk); bored: they wander off
         T.mood = T.coffee || T.explained ? "happy" : "bored";
-        if (T.guide) this.tourPlace(T.guide, "lobby", T.deskUsher ? [T.deskUsher.x, T.deskUsher.y] : [3, 3], "down");
+        const desk = T.guide ? [{ n: T.guide, room: "lobby", at: T.deskUsher ? [T.deskUsher.x, T.deskUsher.y] : [3, 3], dir: "down" }] : []; // the usher back to his desk
+        let moved = false;
         if (T.mood === "happy") { const c = T.stop2, at = [c.x, c.y + 1], m = T.members, spots = this.tourAround(M, at, m.length + 1), order = [m[0], m[4], m[1], m[2], m[3]].filter(Boolean);
-          if (spots.length) this.tourLineStart(T, order[0], order.slice(1), { room: "museum", at: spots[0], dir: this.janFace(spots[0], c.x, c.y) }, () => order.slice(1).map((n, i) => spots[i + 1] && { n, room: "museum", at: spots[i + 1], dir: this.janFace(spots[i + 1], c.x, c.y) }), fresh); }
+          if (spots.length) { moved = true; this.tourLineStart(T, order[0], order.slice(1), { room: "museum", at: spots[0], dir: this.janFace(spots[0], c.x, c.y) }, () => order.slice(1).map((n, i) => spots[i + 1] && { n, room: "museum", at: spots[i + 1], dir: this.janFace(spots[i + 1], c.x, c.y) }), fresh, desk); } }
+        if (!moved && T.guide) this.tourPlace(T.guide, "lobby", desk[0].at, "down");
         else T.members.forEach(n => { if (n.tourKid) return; n.goal = null; n.walkTo = null; if (n.where === "museum") { n.still = false; n.random = true; const z = this.zoneAt(M, n.x, n.y); n.zone = z && z.kind === "room" ? z.id : T.stop1 && (this.zoneAt(M, T.stop1.x, T.stop1.y) || {}).id; } }); // scattered: they stroll on their own
-      } else if (phase === 3) { // back to the lobby to leave, single file; the kid goes missing
-        const home = [];
+      } else if (phase === 3) { // back to the lobby to leave; the kid goes missing
+        const home = [], lost = [];
         T.members.forEach((n, i) => { n.still = true; n.random = false; n.queue = null; n.seat = null; if (n.sitting) { n.sitting = false; if (n.sitFrom) [n.x, n.y] = n.sitFrom; } n.route = null;
-          if (n.tourKid && !T.school && !T.kidDone) { n.inLine = false; if (T.lostSpot) this.tourPlace(n, T.lostSpot.room || "museum", T.lostSpot.at, T.lostSpot.dir); else this.tourPlace(n, "museum", this.freeSpot(M, null, T.lostZone) || this.freeSpot(M), "down"); }
+          if (n.tourKid && !T.school && !T.kidDone) lost.push(T.lostSpot ? { n, room: T.lostSpot.room || "museum", at: T.lostSpot.at, dir: T.lostSpot.dir } : { n, room: "museum", at: this.freeSpot(M, null, T.lostZone) || this.freeSpot(M), dir: "down" }); // he goes missing in the dip
           else if (!(n.tourKid && T.school && !T.kidDone)) { if (this.fol === n) this.tourHome(n, i); else home.push([n, i]); } }); // the school's kid is already off somewhere since the rush (and whoever's following you comes back on their own)
         const spot = i => { const st = T.seats && T.seats[i]; return st ? { at: st.from, dir: st.sit, sit: st } : { at: T.gather[i] || T.gather[0], dir: "left" }; };
         if (home.length) { const [n0, i0] = home[0], s0 = spot(i0);
-          this.tourLineStart(T, n0, home.slice(1).map(h => h[0]), { room: "lobby", at: s0.at, dir: s0.dir, sit: s0.sit }, () => home.slice(1).map(([n, i]) => Object.assign({ n, room: "lobby" }, spot(i))), fresh); }
+          this.tourLineStart(T, n0, home.slice(1).map(h => h[0]), { room: "lobby", at: s0.at, dir: s0.dir, sit: s0.sit }, () => home.slice(1).map(([n, i]) => Object.assign({ n, room: "lobby" }, spot(i))), fresh, lost); }
+        else lost.forEach(o => { if (o.at) this.lineJump(o.n, o.room, o.at[0], o.at[1]); o.n.dir = o.dir; });
       } else if (phase === 4) { // out the front doors (the kid too, found or not)
         this.tourLineEnd(T);
         T.members.forEach(n => { this.tourStand(n); if (this.fol === n) { this.fol = null; n.follow = false; } n.goal = null; n.walkTo = null; n.still = true; if (n.where === this.room.id && this.room.id === "lobby") { n.leaving = true; n.leaveT = 0; n.alpha = 1; } else this.tourDrop(n); });
         if (T.guide) this.tourDrop(T.guide); T.guide = null; this.restoreUsher();
       }
     }
-    if (T.line) this.tourLineStep(T); // the group walking single file
+    if (T.line) this.tourDip(T); // ready to move on to the next stop
     if (T.phase === 3 && !T.regrouped && !T.line && T.members.filter(m => !m.tourKid && !m.gone).every(m => m.where === "lobby" && !m.goal)) T.regrouped = true; // back in the lobby: now they notice who's missing
     // Everyone in the tour belongs to the room they're in (rebuilds make new lists), and heads for their goal.
     for (const n of [...T.members, T.guide].filter(Boolean)) {
       if (n.leaving || n.gone) continue;
       if (this.fol === n) { n.where = this.room.id; n.goal = null; continue; } // following you
       const R = this.rooms[n.where]; if (R && !R.npcs.includes(n)) { for (const id in this.rooms) if (id !== n.where) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== n); R.npcs.push(n); }
-      if (n.inLine && T.line) continue; // in the line: tourLineStep walks them
+      if (n.inLine && T.line) continue; // waiting for the dip to the next stop: standing still till then
       if (n.aside) { if (n.where !== this.room.id) n.aside = null; else continue; } // stepping out of your way first ("Could I get by?"): then on with the tour
       const tags = T.school ? (n.schoolKid && (T.phase === 1 || T.phase === 2)) || (n.tourKid && (T.phase === 1 || (T.phase === 2 && T.kidDone))) : n.tourKid && (T.phase === 1 || T.phase === 2);
       if (tags) { this.kidTag(n, T); continue; } // sticking with his grown-up (on Tuesdays, the teacher) until the group heads back
@@ -8292,118 +8292,48 @@ class Game {
     }
     if (T.guide && T.phase === 2 && !T.guide.goal && T.guide.where === "lobby") { this.tourDrop(T.guide); T.guide = null; this.restoreUsher(); } // back at his desk
   }
-  /* ----- The tour in single file (Joe 10/14) -----
-     Only the leader (the usher, the teacher, or the first of the group) finds the way, on a route that ignores people; everyone
-     else steps into the tile the person ahead of them just left, all at once and at one steady pace, so the line never breaks
-     and nobody has to find their own way (that's where they used to jam, and box you in). The same rule carries the line through
-     doors: the next person goes where the one ahead was, the other side of the door included. It starts with everyone filing
-     in behind the leader (lineSlots) and ends with them spreading out round the stop (arrive). */
-  tourLineStart(T, leader, followers, dest, arrive, fresh) {
+  /* ----- The tour moves on in a dip to black (Joe 10/14) -----
+     Walking the group from stop to stop (as a crowd, then single file) kept jamming, parking people in odd spots and boxing you
+     in, so now it doesn't walk at all. Each leg, if you can see any of them, the screen dips to black and they're at the next
+     stop when it comes back; if you were with them (close to any of them), you come along and stand beside them.
+     Out of sight, they're just there. The dip waits while you're talking or in a menu (they stand still till then). */
+  tourLineStart(T, leader, followers, dest, arrive, fresh, also) {
     this.tourLineEnd(T);
-    const people = [leader, ...followers].filter(n => n && !n.gone && !n.leaving); if (!people.length) return;
-    people.forEach(n => { this.tourStand(n); Object.assign(n, { goal: null, walkTo: null, route: null, aside: null, tagging: false, hurry: false, still: true, random: false, inLine: true, queue: null, spd: 0 }); delete n.fadeOut; if (!n.fadeIn) delete n.alpha; if (this.fol === n) { this.fol = null; n.follow = false; } });
-    const L = { people, dest, arrive, formed: false, form: 0, last: this.t, wait: 0, route: null };
-    if (fresh) { this.tourLineDone(T, L, true); return; } // a new day or a rebuilt museum: they're already there
-    T.line = L; L.slots = null; // (the spots are worked out once nobody's mid-step: tourLineStep)
+    const people = [leader, ...followers].filter(n => n && !n.gone && !n.leaving), extra = (also || []).filter(o => o && o.n && !o.n.gone && !o.n.leaving); if (!people.length && !extra.length) return;
+    [...people, ...extra.map(o => o.n)].forEach(n => { this.tourStand(n); Object.assign(n, { goal: null, walkTo: null, route: null, aside: null, tagging: false, hurry: false, still: true, random: false, inLine: true, queue: null }); delete n.fadeOut; if (!n.fadeIn) delete n.alpha; if (this.fol === n) { this.fol = null; n.follow = false; } });
+    const L = { people, dest, arrive, also: extra };
+    if (fresh || !this.tourSeen(L)) { this.tourLineDone(T, L); return; } // a new day, a rebuilt museum, or nobody you can see: they're already there
+    T.line = L; // the dip (tourDip, from updateTour)
   }
-  tourLineEnd(T) { if (T && T.line) { T.line.people.forEach(n => { n.inLine = false; }); T.line = null; } }
-  lineSlots(L) { // who falls in where: whoever's nearest the end of the line comes next (already beside it: they just stay put), into a free
-    // tile beside it, away from where they're headed; they walk there (out of sight: they're just there). The order is the line's order.
-    const lead = L.people[0], R = this.rooms[lead.where], line = new Set(L.people), used = new Set([lead.x + "," + lead.y]), rest = L.people.slice(1), order = [], slots = [];
-    const here = n => n.where === lead.where;
-    const free = (x, y) => R.solid[y] && R.solid[y][x] === false && !used.has(x + "," + y) && !R.events[x + "," + y] && !(this.room === R && this.player.x === x && this.player.y === y) && !R.npcs.some(m => (!line.has(m) || rest.includes(m)) && m.x === x && m.y === y);
-    const first = this.wallRoute(R, lead.x, lead.y, ...(lead.where === L.dest.room ? L.dest.at : this.janStand(lead.where, this.janHop(lead.where, L.dest.room)))), ahead = first && first[0] ? DIRS[first[0]] : [0, 1];
-    let cur = [lead.x, lead.y];
-    while (rest.length) {
-      const dist = n => here(n) ? Math.abs(n.x - cur[0]) + Math.abs(n.y - cur[1]) : 999;
-      rest.sort((a, b) => dist(a) - dist(b)); const n = rest.shift();
-      let at;
-      if (dist(n) === 1 && !used.has(n.x + "," + n.y)) at = [n.x, n.y]; // already beside the end of the line
-      else {
-        const opts = Object.values(DIRS).map(([dx, dy]) => [cur[0] + dx, cur[1] + dy]).filter(([x, y]) => free(x, y));
-        const score = ([x, y]) => (x - cur[0]) * ahead[0] + (y - cur[1]) * ahead[1] + (here(n) ? (Math.abs(x - n.x) + Math.abs(y - n.y)) * 0.01 : 0); // behind, then nearest them
-        at = opts.sort((a, b) => score(a) - score(b))[0] || this.tourAround(R, cur, 8).find(([x, y]) => free(x, y)) || cur;
-      }
-      used.add(at[0] + "," + at[1]); order.push(n); slots.push(at); cur = at;
-    }
-    L.people = [lead, ...order]; L.slots = slots;
-    order.forEach((n, i) => { const s = slots[i]; if (n.x === s[0] && n.y === s[1] && here(n)) return;
-      if (!here(n) || n.where !== this.room.id) this.lineJump(n, lead.where, s[0], s[1]); }); // out of sight: just there (in sight, tourLineStep walks them over)
+  tourLineEnd(T) { if (T && T.line) { const L = T.line; [...L.people, ...L.also.map(o => o.n)].forEach(n => { n.inLine = false; }); T.line = null; } }
+  tourSeen(L) { return !!this.room && [...L.people, ...L.also.map(o => o.n)].some(n => n.where === this.room.id); }
+  tourDip(T) { // the group's ready to move on: dip to black, and there they are
+    const L = T.line; if (L.dipping || this.trans || this.mode !== "walk") return;
+    if (!this.tourSeen(L)) { this.tourLineDone(T, L); return; }
+    const p = this.player, bring = L.people.some(n => n.where === this.room.id && Math.abs(n.x - p.x) + Math.abs(n.y - p.y) <= 8); // with them (anyone in the group close by): you come along
+    L.dipping = true; this.mode = "busy";
+    this.trans = { t: 0, dur: 16, switched: false, fn: () => { this.tourLineDone(T, L, true); if (bring) this.tourBring(L); } };
   }
-  wallRoute(R, sx, sy, tx, ty, skip) { // the shortest way around walls and furniture only (people step aside or wait), as directions; skip: one more tile to go round
-    if (!R || !R.solid[ty] || R.solid[ty][tx] !== false) return null;
-    const W = R.w, prev = new Map(), start = sy * W + sx, goal = ty * W + tx, q = [start]; prev.set(start, -1);
-    for (let qi = 0; qi < q.length; qi++) { const c = q[qi]; if (c === goal) break; const cx = c % W, cy = (c / W) | 0;
-      for (const [dx, dy] of Object.values(DIRS)) { const nx = cx + dx, ny = cy + dy, k = ny * W + nx; if (nx < 0 || ny < 0 || nx >= W || ny >= R.h || prev.has(k) || !R.solid[ny] || R.solid[ny][nx] !== false || (skip && skip[0] === nx && skip[1] === ny)) continue; prev.set(k, c); q.push(k); } }
-    if (!prev.has(goal)) return null;
-    const out = []; let c = goal; while (prev.get(c) !== -1) { const pc = prev.get(c), dx = (c % W) - (pc % W), dy = ((c / W) | 0) - ((pc / W) | 0); out.unshift(dx > 0 ? "right" : dx < 0 ? "left" : dy > 0 ? "down" : "up"); c = pc; }
-    return out;
+  tourBring(L) { // you, beside the group at the stop
+    const d = L.dest, R = this.rooms[d.room]; if (!R) return;
+    const at = this.tourAround(R, d.at, 24).find(([x, y]) => this.tileFree(R, x, y) && !R.events[x + "," + y]); if (!at) return;
+    const dir = this.janFace(at, d.at[0], d.at[1]);
+    if (d.room !== this.room.id) this.enterRoom(d.room, at[0], at[1], dir);
+    else { const p = this.player; p.x = at[0]; p.y = at[1]; p.dir = dir; p.moving = false; p.prog = 0; p.sitting = false; this.path = null; this.pathAct = null; }
   }
-  lineJump(n, room, x, y) { // to a tile that isn't next door (another room, or a broken line): there, fading in if you can see it
+  lineJump(n, room, x, y) { // straight to a tile (in another room too), fading in if you can see it
     const R = this.rooms[room]; if (!R) return; const was = n.where;
     if (was !== room) { for (const id in this.rooms) this.rooms[id].npcs = this.rooms[id].npcs.filter(m => m !== n); R.npcs.push(n); }
     n.where = room; n.x = x; n.y = y; n.moving = false; n.prog = 0; n.walkTo = null; n.route = null;
     if (room === this.room.id && was !== room) { n.alpha = 0; n.fadeIn = true; }
   }
-  lineMove(n, room, x, y) { // one step of the line: walked if it's next door and you can see it, otherwise just there
-    if (n.where === room && n.x === x && n.y === y) return;
-    const dx = x - n.x, dy = y - n.y, d = dx > 0 ? "right" : dx < 0 ? "left" : dy > 0 ? "down" : "up";
-    if (n.where === room && Math.abs(dx) + Math.abs(dy) === 1) { n.dir = d; if (room === this.room.id) { n.moving = true; n.prog = 0; n.spd = 0; } else { n.x = x; n.y = y; } return; }
-    this.lineJump(n, room, x, y);
-  }
-  tourLineStep(T) {
-    const L = T.line, lead = L.people[0]; if (!lead || lead.gone) { this.tourLineEnd(T); return; }
-    if (L.people.some(n => n.gone || n.leaving)) { L.people = L.people.filter(n => !n.gone && !n.leaving); if (!L.people.length) { this.tourLineEnd(T); return; } }
-    const ps = Math.max(0.2, this.pack.settings.staff.patronSpeed || 0.6), STEP = Math.ceil(T_TILE / ps);
-    if (!L.formed) { // filing in behind the leader: everyone steps toward their spot at the same steady pace (they can pass each other)
-      L.people.forEach(n => { if (n.moving && n.where !== this.room.id) { n.x += DIRS[n.dir][0]; n.y += DIRS[n.dir][1]; n.moving = false; n.prog = 0; } });
-      if (L.people.some(n => n.moving)) return;
-      if (!L.slots) { this.lineSlots(L); L.last = this.t; return; } // everyone's finished the step they were taking: now who goes where
-      if (this.t - L.last < STEP) return;
-      L.form++; L.last = this.t;
-      const R = this.rooms[lead.where]; let left = 0;
-      L.people.slice(1).forEach((n, i) => { const s = L.slots[i]; if (!s) return; if (n.where !== lead.where) { this.lineJump(n, lead.where, s[0], s[1]); return; } if (n.x === s[0] && n.y === s[1]) return; left++;
-        const rt = this.wallRoute(R, n.x, n.y, s[0], s[1]), d = rt && rt[0]; if (!d) { if (L.form > 24) this.lineJump(n, lead.where, s[0], s[1]); return; }
-        const nx = n.x + DIRS[d][0], ny = n.y + DIRS[d][1], you = R === this.room && this.player.x === nx && this.player.y === ny, other = R.npcs.some(m => !m.inLine && m.x === nx && m.y === ny);
-        if ((you || other) && L.form < 24) return; // waits a moment for whoever's in the way, then slips past
-        this.lineMove(n, lead.where, nx, ny); });
-      if (left && L.form < 40) return;
-      if (left) L.people.slice(1).forEach((n, i) => { const s = L.slots[i]; if (s && !(n.x === s[0] && n.y === s[1])) this.lineJump(n, lead.where, s[0], s[1]); }); // still not there: squeezed in
-      L.formed = true; L.last = this.t; return;
-    }
-    L.people.forEach(n => { if (n.moving && n.where !== this.room.id) { n.x += DIRS[n.dir][0]; n.y += DIRS[n.dir][1]; n.moving = false; n.prog = 0; } }); // mid-step in a room you just left: that step's done
-    if (L.people.some(n => n.moving)) return;
-    if (this.t - L.last < STEP) return; // one steady step at a time, everyone together
-    const R = this.rooms[lead.where], toDoor = lead.where !== L.dest.room, hop = toDoor ? this.janHop(lead.where, L.dest.room) : null;
-    const [tx, ty] = toDoor ? this.janStand(lead.where, hop) : L.dest.at;
-    let next;
-    if (lead.x === tx && lead.y === ty) {
-      if (!toDoor) { this.tourLineDone(T, L, false); return; }
-      const a = this.janArrive(hop, lead.where); next = { room: hop, x: a[0], y: a[1] }; // the leader through the door
-      const Rn = this.rooms[hop], inWay = Rn && Rn.npcs.find(m => !L.people.includes(m) && m.x === a[0] && m.y === a[1]); if ((inWay || (Rn === this.room && this.player.x === a[0] && this.player.y === a[1])) && (L.wait++ < 90)) return;
-    } else {
-      if (!L.route || !L.route.length || L.routeAt !== lead.x + "," + lead.y + ">" + tx + "," + ty) L.route = this.wallRoute(R, lead.x, lead.y, tx, ty);
-      const d = L.route && L.route[0]; if (!d) { if (++L.wait > 600) this.tourLineDone(T, L, true); return; } // no way there: they're just there in a while
-      let nx = lead.x + DIRS[d][0], ny = lead.y + DIRS[d][1];
-      if (R === this.room && this.player.x === nx && this.player.y === ny && L.wait >= 45) { const alt = this.wallRoute(R, lead.x, lead.y, tx, ty, [nx, ny]); if (alt && alt.length) { L.route = alt; nx = lead.x + DIRS[alt[0]][0]; ny = lead.y + DIRS[alt[0]][1]; } } // you're standing in the way: after a moment the line goes round you (if there's a way round)
-      const you = R === this.room && this.player.x === nx && this.player.y === ny, other = R.npcs.find(m => !L.people.includes(m) && (m.x === nx && m.y === ny || (m.moving && m.x + DIRS[m.dir][0] === nx && m.y + DIRS[m.dir][1] === ny)));
-      if (you || (other && L.wait < 45)) { L.wait++; return; } // waits for you; steps past anyone else after a moment
-      L.route.shift(); L.routeAt = nx + "," + ny + ">" + tx + "," + ty; next = { room: lead.where, x: nx, y: ny };
-    }
-    L.wait = 0;
-    const was = L.people.map(n => ({ room: n.where, x: n.x, y: n.y }));
-    this.lineMove(lead, next.room, next.x, next.y);
-    L.people.slice(1).forEach((n, i) => this.lineMove(n, was[i].room, was[i].x, was[i].y));
-    L.last = this.t;
-  }
-  tourLineDone(T, L, now) { // arrived: the leader stops at the spot, the rest spread out round it (a few steps each)
-    if (T.line === L) T.line = null; L.people.forEach(n => { n.inLine = false; });
-    const lead = L.people[0], d = L.dest, place = (n, room, at, dir, sit) => {
-      if (now || room !== this.room.id || n.where !== room) { if (n.where !== room || n.x !== at[0] || n.y !== at[1]) this.lineJump(n, room, at[0], at[1]); n.dir = dir; n.goal = null; if (sit) this.tourSit(n, sit); }
-      else { this.tourPlace(n, room, at, dir); if (sit) n.goal.sit = sit; }
-    };
-    if (lead) place(lead, d.room, d.at, d.dir, d.sit);
+  tourLineDone(T, L, dip) { // at the stop: the leader on the spot, the rest round it (in a dip: no fading in, the screen's doing that)
+    if (T.line === L) T.line = null;
+    const place = (n, room, at, dir, sit) => { n.inLine = false; if (n.where !== room || n.x !== at[0] || n.y !== at[1]) this.lineJump(n, room, at[0], at[1]); if (dip) { n.fadeIn = false; delete n.alpha; } n.dir = dir; n.goal = null; if (sit) this.tourSit(n, sit); };
+    const lead = L.people[0], d = L.dest; L.people.forEach(n => { n.inLine = false; });
+    if (lead && !lead.gone) place(lead, d.room, d.at, d.dir, d.sit);
     (L.arrive() || []).filter(Boolean).forEach(o => { if (o.n && !o.n.gone && o.at) place(o.n, o.room, o.at, o.dir, o.sit); });
+    L.also.forEach(o => { if (!o.n.gone && o.at) place(o.n, o.room, o.at, o.dir, o.sit); else o.n.inLine = false; }); // and anyone going off on their own (the kid wandering off, the usher back to his desk)
   }
   kidTag(n, T) { // the kid sticks with one of the grown-ups, the way a follower sticks with you; if they queue for coffee, he waits by them
     const P = T.members.find(m => !m.tourKid && !m.schoolKid && !m.gone && !m.leaving); if (!P) return;
@@ -9896,7 +9826,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 50";
+const VERSION = "2026-11-18 cards 51";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
