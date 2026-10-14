@@ -195,6 +195,8 @@ const CHAR_FRAMES = [DOWN0, DOWNA, mirror(DOWNA), UP0, UPA, mirror(UPA), LEFT0, 
 const DIR_ROW = { down: 0, up: 1, left: 2, right: 3 };
 
 /* ---------- Placeholder drawings ---------- */
+/* A tall mural (both wall rows, 256×32) from a short one: the short one along the bottom, its top row's sky carried up above it, with a few dots of color k. */
+function tallMural(short, k) { const a = mk(256, 32); for (let y = 0; y < 32; y++) for (let x = 0; x < 256; x++) a[y][x] = y >= 16 ? short[y - 16][x] : (hash(x, y) % 97 === 0 ? k : short[0][x]); return a; }
 /* Wallpaper: both wall rows (16×32), a pattern on the paper between the same trim as the plain walls (top 5 rows, bottom 4). */
 function wallpaper(pat) { return fillFn(mk(16, 32), (x, y) => (y === 0 ? 3 : y === 1 || y === 3 ? 2 : y === 2 ? 4 : y === 4 ? 3 : y === 28 ? 3 : y === 29 ? 4 : y >= 30 ? (y === 31 ? 3 : 2) : pat(x, y))); }
 const GEN = {
@@ -678,6 +680,10 @@ const GEN = {
   // Plush carpet for a room's floor. Gray, so a room's floor color (Rooms, Layout) tints it any color.
   carpet_floor: () => fillFn(mk(16, 16), (x, y) => { const h = hash(x, y) % 9; return h === 0 ? 2 : h === 1 ? 3 : (x + y * 3) % 8 === 0 ? 2 : (x * 3 + y) % 11 === 0 ? 0 : 1; }),
   /* Murals: landscapes painted along the top row of a wall (256×16; a wall shorter than that shows the middle of it). */
+  mural_tall_dusk: () => tallMural(GEN.mural_dusk(), 7),
+  mural_tall_canyon: () => tallMural(GEN.mural_canyon(), 2),
+  mural_tall_isles: () => tallMural(GEN.mural_isles(), 6),
+  mural_tall_forest: () => tallMural(GEN.mural_forest(), 2),
   wallpaper_stripes: () => wallpaper((x, y) => (x % 8 < 3 ? 1 : 0)),
   wallpaper_diamond: () => wallpaper((x, y) => ((x + y) % 8 === 0 || (x - y + 64) % 8 === 0 ? 1 : (x % 8 === 4 && y % 8 === 4) ? 1 : 0)),
   wallpaper_dots: () => wallpaper((x, y) => ((x % 8 === 2 && y % 8 === 2) || (x % 8 === 6 && y % 8 === 6) ? 1 : 0)),
@@ -1423,6 +1429,10 @@ const SLOTS = [
   { key: "wallpaper_pinstripe", label: "Wallpaper: Pinstripe", group: "Wallpaper", w: 16, h: 32, pal: "wp_pinstripe", gen: GEN.wallpaper_pinstripe, note: "Both wall rows, repeated along every wall of a room that uses it (choose it in the curator's Rooms, Room settings). Keep the left and right edges matching so it tiles; the trim at the top and bottom matches the plain walls'." },
   { key: "wallpaper_check", label: "Wallpaper: Small check", group: "Wallpaper", w: 16, h: 32, pal: "wp_check", gen: GEN.wallpaper_check, note: "Both wall rows, repeated along every wall of a room that uses it (choose it in the curator's Rooms, Room settings). Keep the left and right edges matching so it tiles; the trim at the top and bottom matches the plain walls'." },
   { key: "wallpaper_wainscot", label: "Wallpaper: Wainscot", group: "Wallpaper", w: 16, h: 32, pal: "wp_wainscot", gen: GEN.wallpaper_wainscot, note: "Both wall rows, repeated along every wall of a room that uses it (choose it in the curator's Rooms, Room settings). Keep the left and right edges matching so it tiles; the trim at the top and bottom matches the plain walls'." },
+  { key: "mural_tall_dusk", label: "Tall mural: dusk peaks", group: "Murals", w: 256, h: 32, pal: "m_dusk", gen: GEN.mural_tall_dusk, note: "Both wall rows, from the top of the wall to the floor. A shorter wall shows the middle of it; a longer one repeats it. With Keep the wall's trim on (in the curator), the top 5 rows and the bottom 4 are left as the wall's own trim." },
+  { key: "mural_tall_canyon", label: "Tall mural: canyon road", group: "Murals", w: 256, h: 32, pal: "m_canyon", gen: GEN.mural_tall_canyon, note: "Both wall rows, from the top of the wall to the floor. A shorter wall shows the middle of it; a longer one repeats it. With Keep the wall's trim on (in the curator), the top 5 rows and the bottom 4 are left as the wall's own trim." },
+  { key: "mural_tall_isles", label: "Tall mural: floating isles", group: "Murals", w: 256, h: 32, pal: "m_isles", gen: GEN.mural_tall_isles, note: "Both wall rows, from the top of the wall to the floor. A shorter wall shows the middle of it; a longer one repeats it. With Keep the wall's trim on (in the curator), the top 5 rows and the bottom 4 are left as the wall's own trim." },
+  { key: "mural_tall_forest", label: "Tall mural: moonlit forest", group: "Murals", w: 256, h: 32, pal: "m_forest", gen: GEN.mural_tall_forest, note: "Both wall rows, from the top of the wall to the floor. A shorter wall shows the middle of it; a longer one repeats it. With Keep the wall's trim on (in the curator), the top 5 rows and the bottom 4 are left as the wall's own trim." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
 const SLOT = {}; SLOTS.forEach(s => { s.frames = s.frames || 1; s.fps = s.fps || 0; SLOT[s.key] = s; });
@@ -3104,7 +3114,7 @@ function buildRoom(id, pieces, o) {
   r.lamps = (def.lamps || []).filter(Array.isArray);
   r.matList = Array.isArray(def.mats) ? def.mats.filter(a => Array.isArray(a) && Number.isFinite(a[0]) && Number.isFinite(a[1])) : null; // doormats placed in the curator; none set: one inside every doorway (doorMats)
   r.arrows = (def.arrows || []).filter(a => a && typeof a === "object");
-  r.murals = (def.murals || []).filter(m => m && SLOT[m.key]).map(m => ({ x: m.x | 0, y: m.y | 0, w: Math.max(1, m.w | 0 || 1), key: m.key, at: Number.isFinite(m.at) ? Math.max(0, m.at | 0) : -1 })); // at: which part of the art (pixels from its left)
+  r.murals = (def.murals || []).filter(m => m && SLOT[m.key]).map(m => ({ x: m.x | 0, y: m.y | 0, w: Math.max(1, m.w | 0 || 1), key: m.key, at: Number.isFinite(m.at) ? Math.max(0, m.at | 0) : -1, trim: !!m.trim })); // at: which part of the art (pixels from its left)
   r.arrows.forEach(a => { for (let i = 0; i < (a.w || 4); i++) { const k = (a.x + i) + "," + ((a.y || 1) + 1); if (!r.events[k]) r.events[k] = { arrow: a }; } });
   if (def.catSpots && o.catRoom === id) {
     const [x, y] = def.catSpots[o.catIndex % def.catSpots.length];
@@ -9656,7 +9666,8 @@ class Game {
     }
     for (const m of r.murals) { // murals go on the wall itself, under the doors, windows, pictures and signs (Joe 10/14): the middle of the mural's art, as wide as its wall (repeated if the wall is longer)
       const img = this.sheet(m.key), iw = img.naturalWidth || img.width, w = m.w * T; if (!iw) continue;
-      for (let o = 0; o < w; o += iw) { const room = iw - Math.min(w, iw), sx = m.at >= 0 ? Math.min(room, m.at) : Math.max(0, Math.floor(room / 2)), sw = Math.min(iw - sx, w - o); ctx.drawImage(img, sx, 0, sw, T, m.x * T + o - cx, m.y * T - cy, sw, T); }
+      const mh = SLOT[m.key].h > T ? 2 * T : T, top = m.trim ? 5 : 0, hh = mh - top - (m.trim && mh > T ? 4 : 0); // tall murals cover both wall rows (Joe 10/14); trim kept: the wall's own molding and baseboard show
+      for (let o = 0; o < w; o += iw) { const room = iw - Math.min(w, iw), sx = m.at >= 0 ? Math.min(room, m.at) : Math.max(0, Math.floor(room / 2)), sw = Math.min(iw - sx, w - o); ctx.drawImage(img, sx, top, sw, hh, m.x * T + o - cx, m.y * T + top - cy, sw, hh); }
     }
     for (let y = ty0; y <= ty1; y++) for (let x = tx0; x <= tx1; x++) {
       const sx = x * T - cx, sy = y * T - cy;
@@ -9878,7 +9889,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 56";
+const VERSION = "2026-11-18 cards 57";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
