@@ -7703,9 +7703,9 @@ class Game {
       const k = ours && (T.phase >= 0 && T.phase <= 3) && this.room.npcs.find(m => (m.tourKid || m.schoolKid) && m !== this.fol && inWay(m));
       if (k) { const was = [k.x, k.y, k.moving, k.prog, k.dir]; k.x = c.x; k.y = c.y; k.moving = false; k.prog = 0; k.route = null; k.stepWait = 6; if (this.blocked(nx, ny, c)) [k.x, k.y, k.moving, k.prog, k.dir] = was; } // undone if something else is in the way too (never two on one tile)
     }
-    if (c === this.player && this.tour && this.tour.on && this.blocked(nx, ny, c)) { // walking into someone in the tour group: you swap places, so the group can never box you in (Joe 10/14)
-      const T = this.tour, m = this.room.npcs.find(q => (T.members.includes(q) || q === T.guide) && !q.moving && !q.sitting && q.x === nx && q.y === ny);
-      if (m && !(m === T.guide || m.teacher) || (m && T.line)) { m.x = c.x; m.y = c.y; m.walkTo = null; m.route = null; if (this.blocked(nx, ny, c)) { m.x = nx; m.y = ny; } }
+    if (c === this.player && this.tour && this.tour.on && this.tour.line && this.blocked(nx, ny, c)) { // walking into someone in the walking line: you swap places, so the line can never box you in; the line's next step puts them back in their place (Joe 10/14). Standing at a stop: no swapping (you could push them anywhere), ask them to move instead
+      const T = this.tour, m = this.room.npcs.find(q => q.inLine && T.line.people.includes(q) && !q.moving && !q.sitting && q.x === nx && q.y === ny);
+      if (m) { m.x = c.x; m.y = c.y; m.walkTo = null; m.route = null; if (this.blocked(nx, ny, c)) { m.x = nx; m.y = ny; } }
     }
     if (this.blocked(nx, ny, c)) {
       if (c === this.player) {
@@ -9896,7 +9896,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 49";
+const VERSION = "2026-11-18 cards 50";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
