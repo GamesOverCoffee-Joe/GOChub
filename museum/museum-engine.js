@@ -2673,9 +2673,9 @@ const TEXT = {
   "school.go":         { g: "Tour", l: "Tuesday: the teacher starts the school tour, just before the kids head off (you see them go)", v: [["Teacher: Ok, everyone, single file, were headed to the first exhibit."]] },
   "school.next":       { g: "Tour", l: "Tuesday: the teacher moving the kids on to the next exhibit (you see them go)", v: [["Teacher: Here we go to the next exhibit! Stay close please. No wandering."]] },
   "tour.goNext":      { g: "Tour", l: "A happy tour group moving on to its second exhibit without the usher, a visitor leading (you see them go)", by: "claude", v: [["Visitor: The usher said the next exhibit is this way. I think. Follow me, everyone!"], ["Visitor: Ok, I guess I'm the tour guide now. Next exhibit, let's go!"]] },
-  "tour.goBack":       { g: "Tour", l: "A happy tour group heading back to the lobby at the end (you see them go)", by: "claude", v: [["Visitor: That's the tour! Back to the lobby, everyone. Is everybody here?", "...", "Ok, looks like everyone. Let's go!"]] },
+  "tour.goBack":       { g: "Tour", l: "A happy tour group heading back to the lobby at the end (you see them go)", by: "claude", v: [["Visitor: That's the tour! Back to the lobby, everyone. Is everybody here? ...Close enough."]] },
   "tour.goBackBored":  { g: "Tour", l: "A bored tour group heading back to the lobby at the end (you see them go)", by: "claude", v: [["Visitor: Well, that was a tour. I guess. Let's head back to the lobby."]] },
-  "school.goBack":     { g: "Tour", l: "Tuesday: the teacher taking the kids back to the lobby at the end (you see them go)", by: "claude", v: [["Teacher: Ok, class, back to the lobby! Single file. Let's count off... one, two, three...", "...", "Ok! Let's go."]] },
+  "school.goBack":     { g: "Tour", l: "Tuesday: the teacher taking the kids back to the lobby at the end (you see them go)", by: "claude", v: [["Teacher: Ok, class, back to the lobby! Single file. Let's count off... one, two, three... close enough."]] },
   "tour.walking":      { g: "Tour", l: "Someone in the tour group, on the way to its first stop", by: "claude", v: [["Ooh, where are we going first?"], ["Is it far? I wore the wrong shoes."], ["I hope the first one's the dragon game."]] },
   "school.teacherWalk":{ g: "Tour", l: "Tuesday: the teacher, leading the kids to the first stop", by: "claude", v: [["Single file, friends! Hands to yourselves!", "...Tyler. Hands. To. Yourself."]] },
   "microwave.after":   { g: "Staff", l: "Microwave after the incident", v: [["Yeah, let's not open that."]] },
@@ -9995,7 +9995,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 62";
+const VERSION = "2026-11-18 cards 63";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
