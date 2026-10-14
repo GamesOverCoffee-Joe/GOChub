@@ -254,6 +254,12 @@ const GEN = {
     rect(a, 7, 10, 2, 4, 2); rect(a, 5, 14, 6, 2, 2);
     return outline(a);
   },
+  sign_down: () => { // the same stand, with a big arrow pointing down (the basement stairs)
+    let a = mk(16, 16);
+    rect(a, 2, 1, 12, 9, 0); rect(a, 7, 2, 2, 3, 2); rect(a, 4, 5, 8, 1, 2); rect(a, 5, 6, 6, 1, 2); rect(a, 6, 7, 4, 1, 2); rect(a, 7, 8, 2, 1, 2);
+    rect(a, 7, 10, 2, 4, 2); rect(a, 5, 14, 6, 2, 2);
+    return outline(a);
+  },
   // A piece on the wall: frame with a see-through window (4,4 to 27,21) where the art shows, and a placard plate.
   wall_frame_gold: () => fillFn(mk(32, 32), (x, y) => {
     if (y <= 25) { const d = Math.min(x, y, 31 - x, 25 - y); return d === 0 ? 3 : d === 1 ? 1 : d === 2 ? ((x + y) % 3 ? 0 : 2) : d === 3 ? 2 : undefined; }
@@ -1211,6 +1217,7 @@ const SLOTS = [
   { key: "bench_side", label: "Bench, sideways", group: "Furniture", w: 16, h: 32, pal: "wood", gen: GEN.bench_side, note: "Two tiles tall, one wide. Drawn with its back on the right so you sit facing left; it's mirrored when it's set to face right." },
   { key: "front_desk", label: "Front desk with guestbook", group: "Furniture", w: 48, h: 16, pal: "wood", gen: GEN.desk },
   { key: "sign_stand", label: "Sign stand", group: "Furniture", w: 16, h: 16, pal: "wood", gen: GEN.sign },
+  { key: "sign_down", label: "Sign stand (arrow down)", group: "Furniture", w: 16, h: 16, pal: "wood", gen: GEN.sign_down, note: "By the stairs down to the basement." },
 
   { key: "wall_frame_gold", label: "Gold frame on the wall", group: "Frames", w: 32, h: 32, pal: "gold", gen: GEN.wall_frame_gold, note: "Episode pieces. Leave the window from (4,4) to (27,21) transparent; the art shows through it. The plate below is the placard." },
   { key: "wall_frame_wood", label: "Wood frame on the wall", group: "Frames", w: 32, h: 32, pal: "wood", gen: GEN.wall_frame_wood, note: "Community pieces. Same window as the gold frame." },
