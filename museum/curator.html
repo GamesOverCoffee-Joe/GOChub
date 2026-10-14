@@ -441,7 +441,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 58";
+window.GOQ_WANT = "2026-11-18 cards 59";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -1880,6 +1880,12 @@ function renderLayoutPanel(box, d) {
       colorField("Floor color", "Tints the floor art. Clear for the art's own color.", () => (r.tint || {}).floor, (q, v) => { q.tint = Object.assign({}, q.tint, { floor: v }); }),
       colorField("Wall color", "Tints the walls, under any murals. Clear for the art's own color.", () => (r.tint || {}).wall, (q, v) => { q.tint = Object.assign({}, q.tint, { wall: v }); }),
     ]));
+    { // this wing's wallpaper (Joe 10/14): the wing patterns come out in soft shades of the theme color
+      const papers = GOQ.SLOTS.filter(x => x.group === "Wallpaper" && !x.retired);
+      const ws = el("select", {}, [el("option", { value: "", text: "None (the walls above)" }), ...papers.map(x => el("option", { value: x.key, text: x.label.replace(/^(Wing )?[Ww]allpaper: /, "") + (x.wing ? " (in this wing's colors)" : "") }))]);
+      ws.value = r.wallpaper || ""; ws.addEventListener("change", () => layEdit(L2 => { const q = layRoom(L2, r.id); if (ws.value) q.wallpaper = ws.value; else delete q.wallpaper; }));
+      box.appendChild(field("Wallpaper", ws, "Covers this room's walls. The wing patterns (Drift, Wave, Ribbon, Haze, Scatter) are drawn in soft shades of the theme color, so they follow it if you change it."));
+    }
     const lt = el("input", { type: "checkbox", checked: r.light !== false }); lt.addEventListener("change", () => layEdit(L2 => { layRoom(L2, r.id).light = lt.checked; }));
     box.appendChild(el("label", { class: "check" }, [lt, document.createTextNode("Has a light switch (it must be off to close the museum)")]));
     box.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small quiet", text: "Delete this room", onclick: () => {
@@ -2096,7 +2102,7 @@ function renderRoomSettings(box, d) {
   })));
   { // wallpaper: every wall in the room papered with one pattern, under everything hung on it (Joe 10/14)
     const papers = GOQ.SLOTS.filter(x => x.group === "Wallpaper" && !x.retired);
-    const s = el("select", {}, [el("option", { value: "", text: "None (the walls above)" }), ...papers.map(x => el("option", { value: x.key, text: x.label.replace(/^Wallpaper: /, "") }))]);
+    const s = el("select", {}, [el("option", { value: "", text: "None (the walls above)" }), ...papers.map(x => el("option", { value: x.key, text: x.label.replace(/^(Wing )?[Ww]allpaper: /, "") + (x.wing ? " (pastel)" : "") }))]);
     s.value = d.wallpaper || "";
     const pv = el("canvas", { width: 64, height: 32, style: "image-rendering:pixelated;width:128px;height:64px;border:1px solid var(--line);border-radius:4px;display:" + (d.wallpaper ? "block" : "none") });
     const show = k => { pv.style.display = k ? "block" : "none"; if (!k) return; const x = pv.getContext("2d"), img = edGame.sheet(k); x.clearRect(0, 0, 64, 32); if (img) { if ((img.naturalWidth || img.width) > 16) x.drawImage(img, 0, 0); else for (let i = 0; i < 4; i++) x.drawImage(img, i * 16, 0); } }; // (a wide one: its first 64 pixels)

@@ -233,6 +233,36 @@ const WP_PASTEL = [
   "2222222222222222222000000000022222222222222222222222222222222222222222222222222222222222222220000000000000000000000000000000000035555555555555555555555555555444555555544445555555444433333344444444444444444444444444444444444444444444444444444444444444444444",
   "3333333333333331000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111110555555555555555555555555555554444444444444444444444444444444433344444444444444444444444444444444",
 ];
+/* The wing wallpapers (Joe 10/14): carrying on from his pastel streaks, each in its own way, in 7 soft shades (light to deep, as wp_pastel).
+   Drift: the streak bands slope across the wall. Wave: they ripple. Ribbon: wide calm bands with thin streaky seams.
+   Haze: sparse and light at the top, gathering toward the floor. Scatter: short dashes over soft bands. */
+function wingPaper(kind) {
+  const a = mk(256, 32), seed = kind.length * 977 + kind.charCodeAt(0) * 31, H = (p, q) => hash(p * 7 + seed, q * 13 + 5) >>> 0;
+  const pick = (b, s, lean) => { const r = Math.min(99, H(b, s) % 100 + (lean || 0)); return r < 30 ? 0 : r < 52 ? 1 : r < 68 ? 2 : r < 80 ? 3 : r < 90 ? 4 : r < 97 ? 5 : 6; };
+  for (let y = 0; y < 32; y++) for (let x = 0; x < 256; x++) {
+    let v;
+    if (kind === "ribbon") { const b = Math.floor(y / 8), r = y % 8;
+      if (r === 0) { const s = Math.floor((x + H(b, 9) % 16) / (3 + H(b, 4) % 7)); v = 2 + H(b * 31 + s, 3) % 4; } // the thin streaky seam
+      else { const s = Math.floor((x + H(b * 8 + (r >> 1), 2) % 64) / (14 + H(b * 8 + (r >> 1), 1) % 30)); v = H(b * 8 + (r >> 1), s) % 4 === 0 ? 2 + H(b, s + 7) % 3 : b % 2; } } // the calm band, with long soft streaks through it
+    else if (kind === "scatter") { v = Math.floor(y / 4) % 2;
+      const d = Math.floor((x + H(y, 4) % 16) / (3 + H(y, 5) % 4)); if (H(d, y) % 4 === 0) { const r = H(d, y + 1) % 20; v = r < 7 ? 2 : r < 12 ? 3 : r < 16 ? 4 : r < 19 ? 5 : 6; } }
+    else if (kind === "haze") { const b = Math.floor(y / 2), lean = Math.round(y * 1.4) - 8, len = Math.max(4, 8 + H(b, 1) % 28 - Math.floor(y / 5)); v = pick(b, Math.floor((x + H(b, 2) % 64) / len), lean); }
+    else { const b = Math.floor((kind === "drift" ? y + x / 20 : y + 2.6 * Math.sin(x * Math.PI / 64) + 1.2 * Math.sin(x * Math.PI / 32)) / 3), len = 5 + H(b, 1) % 20;
+      v = pick(b, Math.floor((x + H(b, 2) % 64) / len)); if (H(x >> 1, y) % 13 === 0) v = pick(b + 1, Math.floor((x + H(b + 1, 2) % 64) / (5 + H(b + 1, 1) % 20))); } // now and then a stray bit of the next band
+    a[y][x] = v;
+  }
+  return a;
+}
+/* A wing's 7 soft shades from its color: mostly the color washed toward cream, with two neighbouring hues for the streaks, and one deeper accent. */
+function wingPal(c) {
+  const [r, g, b] = hexRgb(c).map(v => v / 255), mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+  const s = d ? d / (1 - Math.abs(2 * l - 1)) : 0, h = !d ? 0 : mx === r ? 60 * (((g - b) / d) % 6) : mx === g ? 60 * ((b - r) / d + 2) : 60 * ((r - g) / d + 4);
+  const hue = dh => { const H = ((h + dh) % 360 + 360) % 360, S = Math.min(Math.max(s, 0.45), 0.7), C = (1 - Math.abs(2 * 0.6 - 1)) * S, X = C * (1 - Math.abs((H / 60) % 2 - 1)), m = 0.6 - C / 2;
+    const [R, G, B] = H < 60 ? [C, X, 0] : H < 120 ? [X, C, 0] : H < 180 ? [0, C, X] : H < 240 ? [0, X, C] : H < 300 ? [X, 0, C] : [C, 0, X];
+    return "#" + [R, G, B].map(v => Math.round((v + m) * 255).toString(16).padStart(2, "0")).join(""); };
+  const cream = "#fbf1e8", base = hue(0);
+  return [mixHex(base, cream, 0.62), mixHex(base, cream, 0.5), mixHex(hue(24), cream, 0.48), mixHex(hue(-30), cream, 0.44), mixHex(base, cream, 0.36), mixHex(hue(50), cream, 0.42), mixHex(base, cream, 0.16)]; // about as soft as Joe's pastel streaks
+}
 /* Wallpaper: both wall rows (16×32), a pattern on the paper between the same trim as the plain walls (top 5 rows, bottom 4). */
 function wallpaper(pat) { return fillFn(mk(16, 32), (x, y) => (y === 0 ? 3 : y === 1 || y === 3 ? 2 : y === 2 ? 4 : y === 4 ? 3 : y === 28 ? 3 : y === 29 ? 4 : y >= 30 ? (y === 31 ? 3 : 2) : pat(x, y))); }
 const GEN = {
@@ -721,6 +751,11 @@ const GEN = {
   mural_tall_isles: () => tallMural(GEN.mural_isles(), 6),
   mural_tall_forest: () => tallMural(GEN.mural_forest(), 2),
   wallpaper_pastel: () => WP_PASTEL.map(r => [...r].map(Number)),
+  wallpaper_wing_drift: () => wingPaper("drift"),
+  wallpaper_wing_wave: () => wingPaper("wave"),
+  wallpaper_wing_ribbon: () => wingPaper("ribbon"),
+  wallpaper_wing_haze: () => wingPaper("haze"),
+  wallpaper_wing_scatter: () => wingPaper("scatter"),
   wallpaper_stripes: () => wallpaper((x, y) => (x % 8 < 3 ? 1 : 0)),
   wallpaper_diamond: () => wallpaper((x, y) => ((x + y) % 8 === 0 || (x - y + 64) % 8 === 0 ? 1 : (x % 8 === 4 && y % 8 === 4) ? 1 : 0)),
   wallpaper_dots: () => wallpaper((x, y) => ((x % 8 === 2 && y % 8 === 2) || (x % 8 === 6 && y % 8 === 6) ? 1 : 0)),
@@ -1471,6 +1506,11 @@ const SLOTS = [
   { key: "mural_tall_isles", label: "Tall mural: floating isles", group: "Murals", w: 256, h: 32, pal: "m_isles", gen: GEN.mural_tall_isles, note: "Both wall rows, from the top of the wall to the floor. A shorter wall shows the middle of it; a longer one repeats it. With Keep the wall's trim on (in the curator), the top 5 rows and the bottom 4 are left as the wall's own trim." },
   { key: "mural_tall_forest", label: "Tall mural: moonlit forest", group: "Murals", w: 256, h: 32, pal: "m_forest", gen: GEN.mural_tall_forest, note: "Both wall rows, from the top of the wall to the floor. A shorter wall shows the middle of it; a longer one repeats it. With Keep the wall's trim on (in the curator), the top 5 rows and the bottom 4 are left as the wall's own trim." },
   { key: "wallpaper_pastel", label: "Wallpaper: Pastel streaks", group: "Wallpaper", w: 256, h: 32, pal: "wp_pastel", gen: GEN.wallpaper_pastel, note: "Joe's pastel streaks: both wall rows, 256 wide. Along a wall every other copy is mirrored, so the ends always meet. No trim of its own: it covers the wall from top to floor." },
+  { key: "wallpaper_wing_drift", label: "Wing wallpaper: Drift", group: "Wallpaper", wing: true, w: 256, h: 32, pal: "wp_pastel", gen: GEN.wallpaper_wing_drift, note: "Carries on from the Pastel streaks: the streak bands slope gently across the wall. On a wing's walls it's drawn in soft shades of the wing's color (shown here in the pastel colors); paint it yourself and your colors are used as they are." },
+  { key: "wallpaper_wing_wave", label: "Wing wallpaper: Wave", group: "Wallpaper", wing: true, w: 256, h: 32, pal: "wp_pastel", gen: GEN.wallpaper_wing_wave, note: "Carries on from the Pastel streaks: the streak bands ripple. On a wing's walls it's drawn in soft shades of the wing's color (shown here in the pastel colors); paint it yourself and your colors are used as they are." },
+  { key: "wallpaper_wing_ribbon", label: "Wing wallpaper: Ribbon", group: "Wallpaper", wing: true, w: 256, h: 32, pal: "wp_pastel", gen: GEN.wallpaper_wing_ribbon, note: "Carries on from the Pastel streaks: wide calm bands with thin streaky seams. On a wing's walls it's drawn in soft shades of the wing's color (shown here in the pastel colors); paint it yourself and your colors are used as they are." },
+  { key: "wallpaper_wing_haze", label: "Wing wallpaper: Haze", group: "Wallpaper", wing: true, w: 256, h: 32, pal: "wp_pastel", gen: GEN.wallpaper_wing_haze, note: "Carries on from the Pastel streaks: light and sparse at the top, gathering toward the floor. On a wing's walls it's drawn in soft shades of the wing's color (shown here in the pastel colors); paint it yourself and your colors are used as they are." },
+  { key: "wallpaper_wing_scatter", label: "Wing wallpaper: Scatter", group: "Wallpaper", wing: true, w: 256, h: 32, pal: "wp_pastel", gen: GEN.wallpaper_wing_scatter, note: "Carries on from the Pastel streaks: short dashes over soft bands. On a wing's walls it's drawn in soft shades of the wing's color (shown here in the pastel colors); paint it yourself and your colors are used as they are." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
 const SLOT = {}; SLOTS.forEach(s => { s.frames = s.frames || 1; s.fps = s.fps || 0; SLOT[s.key] = s; });
@@ -2766,7 +2806,7 @@ function normalizeLayout(L) {
   const art = a => (a && typeof a === "object" ? Object.fromEntries(Object.entries(a).filter(([k, v]) => ["top", "upper", "lower", "floor"].includes(k) && SLOT[v])) : {});
   const out = { hallArt: art(L.hallArt), rooms: [], halls: [], doors: [], stairs: [] };
   (Array.isArray(L.rooms) ? L.rooms : []).slice(0, 40).forEach((r, i) => { if (!r) return;
-    out.rooms.push({ id: id(r.id, "room" + i), name: str(r.name, 40) || "Room", x: n(r.x, 1, LAYOUT_MAX_W - 4, 2), y: n(r.y, 3, LAYOUT_MAX_H - 4, 3), w: n(r.w, 2, 60, 8), h: n(r.h, 2, 60, 6), art: art(r.art), light: r.light !== false, genre: str(r.genre, 30), color: hexOr(r.color), tint: { floor: hexOr(r.tint && r.tint.floor), wall: hexOr(r.tint && r.tint.wall) },
+    out.rooms.push({ id: id(r.id, "room" + i), name: str(r.name, 40) || "Room", x: n(r.x, 1, LAYOUT_MAX_W - 4, 2), y: n(r.y, 3, LAYOUT_MAX_H - 4, 3), w: n(r.w, 2, 60, 8), h: n(r.h, 2, 60, 6), art: art(r.art), light: r.light !== false, genre: str(r.genre, 30), color: hexOr(r.color), tint: { floor: hexOr(r.tint && r.tint.floor), wall: hexOr(r.tint && r.tint.wall) }, wallpaper: SLOT[r.wallpaper] && SLOT[r.wallpaper].group === "Wallpaper" ? r.wallpaper : "",
       edits: (Array.isArray(r.edits) ? r.edits : []).slice(0, 400).filter(e => Array.isArray(e) && (e[2] === "." || e[2] === "#")).map(e => [n(e[0], -30, 90, 0), n(e[1], -30, 90, 0), e[2]]) }); });
   (Array.isArray(L.halls) ? L.halls : []).slice(0, 60).forEach((h, i) => { if (!h) return;
     const path = (Array.isArray(h.path) ? h.path : []).slice(0, 8).map(p => [n(p && p[0], 1, LAYOUT_MAX_W - 3, 1), n(p && p[1], 3, LAYOUT_MAX_H - 3, 3)]);
@@ -3107,6 +3147,8 @@ function buildRoom(id, pieces, o) {
     // Colors: a room's floor and wall tints, and a hallway's walls blending from the room at one end to the room at the other.
     const part = m[0] === "floor" ? "floor" : m[0] === "upper" || m[0] === "lower" ? "wall" : null;
     if (part && r.tiles[y][x]) { const t = tintAt(def, lay, z, part, x, y, o.genres); if (t) r.tiles[y][x] += "@" + t; }
+    const zr = part === "wall" && z >= 0 && lay.zones[z].kind === "room" ? lay.zones[z] : null; // a wing with its own wallpaper (Joe 10/14): "key|color", the color for the wing patterns
+    if (zr && zr.rect.wallpaper) { (r.wpAt || (r.wpAt = mk(w, h, null)))[y][x] = zr.rect.wallpaper + (SLOT[zr.rect.wallpaper].wing ? "|" + (themeOf(zr, o.genres) || (zr.rect.tint && zr.rect.tint.wall) || "#c890a8") : ""); }
     r.solid[y][x] = !WALK_TILES.includes(ch);
   }
   (def.props || []).forEach(p => {
@@ -9674,9 +9716,16 @@ class Game {
     return (r._doors = out);
   }
   /* A wallpaper's art as it runs along a wall: a 16-wide one as is; a wider one with a mirrored copy after it, so its ends always meet. */
-  wallpaperArt(key) {
-    const img = this.sheet(key), w = img.naturalWidth || img.width, h = img.naturalHeight || img.height; if (w <= T) return img;
-    const ck = "wpwide|" + key, hit = this.cache[ck]; if (hit && hit.src === img) return hit.c;
+  wallpaperArt(spec) {
+    const [key, col] = String(spec).split("|"); if (!SLOT[key]) return null;
+    let img = this.sheet(key);
+    if (col && SLOT[key].wing && !this.overrides[key]) { // a wing pattern in the wing's colors (yours instead, if you've painted it)
+      const ck2 = "wpwing|" + spec; if (!this.cache[ck2]) { const a = SLOT[key].gen(), pal = wingPal(col).map(hexRgb), c = document.createElement("canvas"); c.width = a[0].length; c.height = a.length; const x = c.getContext("2d"), id = x.createImageData(c.width, c.height);
+        a.forEach((row, y) => row.forEach((v, xx) => { const q = pal[v] || pal[0], k = (y * c.width + xx) * 4; id.data[k] = q[0]; id.data[k + 1] = q[1]; id.data[k + 2] = q[2]; id.data[k + 3] = 255; })); x.putImageData(id, 0, 0); this.cache[ck2] = c; }
+      img = this.cache[ck2];
+    }
+    const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height; if (w <= T) return img;
+    const ck = "wpwide|" + spec, hit = this.cache[ck]; if (hit && hit.src === img) return hit.c;
     const c = document.createElement("canvas"); c.width = w * 2; c.height = h; const x = c.getContext("2d"); x.imageSmoothingEnabled = false;
     x.drawImage(img, 0, 0); x.save(); x.translate(w * 2, 0); x.scale(-1, 1); x.drawImage(img, 0, 0); x.restore();
     this.cache[ck] = { src: img, c }; return c;
@@ -9703,11 +9752,10 @@ class Game {
     const cy = full ? 0 : Math.round(rh <= SH ? (rh - SH) / 2 : Math.max(0, Math.min(rh - SH, fy + 8 - SH * (ROOMS[r.id].camAt || 0.5))));
     if (!full) { this.camX = cx; this.camY = cy; }
     const tx0 = Math.max(0, Math.floor(cx / T)), ty0 = Math.max(0, Math.floor(cy / T)), tx1 = Math.min(r.w - 1, Math.floor((cx + VWp) / T)), ty1 = Math.min(r.h - 1, Math.floor((cy + VHp) / T));
-    const wp = r.wallpaper ? this.wallpaperArt(r.wallpaper) : null, wpw = wp ? wp.width : 0;
     for (let y = ty0; y <= ty1; y++) for (let x = tx0; x <= tx1; x++) {
       const t = r.tiles[y][x]; if (!t) continue;
-      const wr = wp && /_wall_(upper|lower)(@|$)/.exec(t);
-      if (wr) ctx.drawImage(wp, (x * T) % wpw, wr[1] === "lower" ? T : 0, T, T, x * T - cx, y * T - cy, T, T); // wallpaper instead of the plain wall
+      const spec = (r.wpAt && r.wpAt[y][x]) || r.wallpaper, wr = spec && /_wall_(upper|lower)(@|$)/.exec(t), wp = wr && this.wallpaperArt(spec);
+      if (wp) ctx.drawImage(wp, (x * T) % wp.width, wr[1] === "lower" ? T : 0, T, T, x * T - cx, y * T - cy, T, T); // wallpaper instead of the plain wall
       else this.drawSlot(t, this.frame(t), 0, x * T - cx, y * T - cy);
     }
     for (const m of r.murals) { // murals go on the wall itself, under the doors, windows, pictures and signs (Joe 10/14): the middle of the mural's art, as wide as its wall (repeated if the wall is longer)
@@ -9935,7 +9983,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 58";
+const VERSION = "2026-11-18 cards 59";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
