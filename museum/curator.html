@@ -441,7 +441,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 54";
+window.GOQ_WANT = "2026-11-18 cards 55";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -2092,6 +2092,16 @@ function renderRoomSettings(box, d) {
     return el("label", { class: "rfield" }, [el("span", { text: part === "floor" ? "Floor color" : "Wall color" }), el("small", { text: "Tints the art. Clear for its own color." }),
       el("div", { class: "row", style: "gap:8px;align-items:center" }, [inp, el("button", { type: "button", class: "btn small quiet", text: "Clear", disabled: !v, onclick: () => set("") })])]);
   })));
+  { // wallpaper: every wall in the room papered with one pattern, under everything hung on it (Joe 10/14)
+    const papers = GOQ.SLOTS.filter(x => x.group === "Wallpaper" && !x.retired);
+    const s = el("select", {}, [el("option", { value: "", text: "None (the walls above)" }), ...papers.map(x => el("option", { value: x.key, text: x.label.replace(/^Wallpaper: /, "") }))]);
+    s.value = d.wallpaper || "";
+    const pv = el("canvas", { width: 64, height: 32, style: "image-rendering:pixelated;width:128px;height:64px;border:1px solid var(--line);border-radius:4px;display:" + (d.wallpaper ? "block" : "none") });
+    const show = k => { pv.style.display = k ? "block" : "none"; if (!k) return; const x = pv.getContext("2d"), img = edGame.sheet(k); x.clearRect(0, 0, 64, 32); if (img) for (let i = 0; i < 4; i++) x.drawImage(img, i * 16, 0); };
+    if (d.wallpaper) show(d.wallpaper);
+    s.addEventListener("change", () => { snapshot(); const dd = editable(R.id); if (s.value) dd.wallpaper = s.value; else delete dd.wallpaper; show(s.value); roomChanged(true); });
+    box.appendChild(el("label", { class: "rfield" }, [el("span", { text: "Wallpaper" }), el("small", { text: "Covers every wall in this room. Pictures, windows, signs and murals go on top. Repaint the patterns in Art, Wallpaper." }), s, pv]));
+  }
   const bunt = el("input", { type: "checkbox", checked: !!d.bunting }); bunt.addEventListener("change", () => { snapshot(); editable(R.id).bunting = bunt.checked; roomChanged(true); });
   box.appendChild(el("label", { class: "check" }, [bunt, document.createTextNode("Bunting along the walls")]));
   const crowd = el("input", { type: "checkbox", checked: !!d.crowd }); crowd.addEventListener("change", () => { snapshot(); editable(R.id).crowd = crowd.checked; roomChanged(true); });

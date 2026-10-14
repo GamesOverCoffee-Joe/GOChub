@@ -47,6 +47,12 @@ const PAL = {
   carpet:  ["#e8c070", "#9a3040", "#7c2434", "#4a1420", "#f4dca0"],
   darkwood: ["#8a5e3e", "#5e3c26", "#43291a", "#1c100a", "#704a30"],
   plush:   ["#8c8c8c", "#7e7e7e", "#727272", "#9a9a9a"],
+  wp_stripes:   ["#e8dcc0", "#a8b890", "#8a6a48", "#3a2a20", "#c8a878"], // Wallpaper (Joe 10/14): paper, its pattern, the trim, a dark line, the trim's highlight
+  wp_diamond:   ["#d8c8d8", "#9a7aa0", "#6a4a58", "#2a1c24", "#a07888"],
+  wp_dots:      ["#f0e4c8", "#d0805a", "#8a5a3a", "#2c1c14", "#c09068"],
+  wp_pinstripe: ["#6a2430", "#d8a848", "#3a1a20", "#1c0c10", "#8a4048"],
+  wp_check:     ["#d8e0e8", "#a8b8c8", "#4a5a6a", "#1c2430", "#8090a0"],
+  wp_wainscot:  ["#e8e0c8", "#c8b890", "#7a5030", "#2c1810", "#a87048"],
   m_dusk:  ["#2a1838", "#6a2850", "#c84e48", "#f0904a", "#f8d070", "#1c1428", "#3a2440", "#fff0c0"],
   m_canyon: ["#7ab8e0", "#a8d4ec", "#f4f8fc", "#c85a38", "#9a3c24", "#e8b878", "#4a4048", "#f0e0a0"],
   m_storm: ["#48506a", "#6a7490", "#9aa4bc", "#f8f4c0", "#4a7a3a", "#2e5428", "#7aa050", "#d8e0e8"],
@@ -189,6 +195,8 @@ const CHAR_FRAMES = [DOWN0, DOWNA, mirror(DOWNA), UP0, UPA, mirror(UPA), LEFT0, 
 const DIR_ROW = { down: 0, up: 1, left: 2, right: 3 };
 
 /* ---------- Placeholder drawings ---------- */
+/* Wallpaper: both wall rows (16×32), a pattern on the paper between the same trim as the plain walls (top 5 rows, bottom 4). */
+function wallpaper(pat) { return fillFn(mk(16, 32), (x, y) => (y === 0 ? 3 : y === 1 || y === 3 ? 2 : y === 2 ? 4 : y === 4 ? 3 : y === 28 ? 3 : y === 29 ? 4 : y >= 30 ? (y === 31 ? 3 : 2) : pat(x, y))); }
 const GEN = {
   character: f => CHAR_FRAMES[f],
   floor_marble: () => fillFn(mk(16, 16), (x, y) => (x === 0 || y === 0 || hash(x, y) % 31 === 0 ? 2 : ((x >> 3) + (y >> 3)) % 2 ? 1 : 0)),
@@ -670,6 +678,12 @@ const GEN = {
   // Plush carpet for a room's floor. Gray, so a room's floor color (Rooms, Layout) tints it any color.
   carpet_floor: () => fillFn(mk(16, 16), (x, y) => { const h = hash(x, y) % 9; return h === 0 ? 2 : h === 1 ? 3 : (x + y * 3) % 8 === 0 ? 2 : (x * 3 + y) % 11 === 0 ? 0 : 1; }),
   /* Murals: landscapes painted along the top row of a wall (256×16; a wall shorter than that shows the middle of it). */
+  wallpaper_stripes: () => wallpaper((x, y) => (x % 8 < 3 ? 1 : 0)),
+  wallpaper_diamond: () => wallpaper((x, y) => ((x + y) % 8 === 0 || (x - y + 64) % 8 === 0 ? 1 : (x % 8 === 4 && y % 8 === 4) ? 1 : 0)),
+  wallpaper_dots: () => wallpaper((x, y) => ((x % 8 === 2 && y % 8 === 2) || (x % 8 === 6 && y % 8 === 6) ? 1 : 0)),
+  wallpaper_pinstripe: () => wallpaper((x, y) => (x % 8 === 0 ? 1 : 0)),
+  wallpaper_check: () => wallpaper((x, y) => ((x >> 2) + (y >> 2)) % 2),
+  wallpaper_wainscot: () => wallpaper((x, y) => (y < 18 ? ((x % 8 === 3 && y % 6 === 2) ? 1 : 0) : y === 18 ? 3 : y === 19 ? 4 : x % 8 === 0 ? 3 : x % 8 === 1 ? 4 : 2)), // paper above, wood panels below
   mural_dusk: () => { // a red sunset behind jagged peaks
     const a = fillFn(mk(256, 16), (x, y) => (y < 2 ? 0 : y < 5 ? 1 : y < 8 ? 2 : y < 11 ? 3 : 4));
     [[52, 9], [170, 8]].forEach(([cx, cy]) => circ(a, cx, cy, 3.5, 7));
@@ -1403,6 +1417,12 @@ const SLOTS = [
   { key: "leaderboard", label: "Staff leaderboard", group: "Staff", w: 32, h: 32, pal: "chalk", gen: GEN.leaderboard, note: "Hangs across both wall rows in the staff room. Lists this month's top staff." },
   { key: "sign_down", label: "Sign stand (arrow down)", group: "Furniture", w: 16, h: 16, pal: "wood", gen: GEN.sign_down, note: "By the stairs down to the basement." },
   { key: "eotm_sign", label: "Employee of the Month sign", group: "Staff", w: 32, h: 12, pal: "eotmled", gen: GEN.eotm_sign, note: "In the lobby, centered on the wall: a little LED board that scrolls the Employee of the Month's name and points (red letters, drawn by the game, from (3,2) to (28,9))." },
+  { key: "wallpaper_stripes", label: "Wallpaper: Stripes", group: "Wallpaper", w: 16, h: 32, pal: "wp_stripes", gen: GEN.wallpaper_stripes, note: "Both wall rows, repeated along every wall of a room that uses it (choose it in the curator's Rooms, Room settings). Keep the left and right edges matching so it tiles; the trim at the top and bottom matches the plain walls'." },
+  { key: "wallpaper_diamond", label: "Wallpaper: Diamonds", group: "Wallpaper", w: 16, h: 32, pal: "wp_diamond", gen: GEN.wallpaper_diamond, note: "Both wall rows, repeated along every wall of a room that uses it (choose it in the curator's Rooms, Room settings). Keep the left and right edges matching so it tiles; the trim at the top and bottom matches the plain walls'." },
+  { key: "wallpaper_dots", label: "Wallpaper: Polka dots", group: "Wallpaper", w: 16, h: 32, pal: "wp_dots", gen: GEN.wallpaper_dots, note: "Both wall rows, repeated along every wall of a room that uses it (choose it in the curator's Rooms, Room settings). Keep the left and right edges matching so it tiles; the trim at the top and bottom matches the plain walls'." },
+  { key: "wallpaper_pinstripe", label: "Wallpaper: Pinstripe", group: "Wallpaper", w: 16, h: 32, pal: "wp_pinstripe", gen: GEN.wallpaper_pinstripe, note: "Both wall rows, repeated along every wall of a room that uses it (choose it in the curator's Rooms, Room settings). Keep the left and right edges matching so it tiles; the trim at the top and bottom matches the plain walls'." },
+  { key: "wallpaper_check", label: "Wallpaper: Small check", group: "Wallpaper", w: 16, h: 32, pal: "wp_check", gen: GEN.wallpaper_check, note: "Both wall rows, repeated along every wall of a room that uses it (choose it in the curator's Rooms, Room settings). Keep the left and right edges matching so it tiles; the trim at the top and bottom matches the plain walls'." },
+  { key: "wallpaper_wainscot", label: "Wallpaper: Wainscot", group: "Wallpaper", w: 16, h: 32, pal: "wp_wainscot", gen: GEN.wallpaper_wainscot, note: "Both wall rows, repeated along every wall of a room that uses it (choose it in the curator's Rooms, Room settings). Keep the left and right edges matching so it tiles; the trim at the top and bottom matches the plain walls'." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
 const SLOT = {}; SLOTS.forEach(s => { s.frames = s.frames || 1; s.fps = s.fps || 0; SLOT[s.key] = s; });
@@ -2811,7 +2831,7 @@ prepLayoutRoom(ROOMS.museum);
 /* A pristine copy of the built-in rooms. A pack's "rooms" replaces any of these or adds new ones;
    the level editor in curator.html writes them. Rooms are plain data, so a deep copy is enough. */
 const BUILTIN_ROOMS = JSON.parse(JSON.stringify(ROOMS));
-const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "runners", "lamps", "mats", "arrows", "murals", "tint", "windowAt", "intercom", "lightSwitch", "eotmAt",
+const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "runners", "lamps", "mats", "wallpaper", "arrows", "murals", "tint", "windowAt", "intercom", "lightSwitch", "eotmAt",
   "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "enterAt", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt", "posters", "floorLights", "camAt", "colorGlows", "keypadAt"];
 /* Light checks so a hand-edited or damaged pack can't break the game: rectangular map, sane size, a spawn on the map. */
 function normalizeRoom(id, d) {
@@ -3078,6 +3098,7 @@ function buildRoom(id, pieces, o) {
     def.wallArt.forEach(w => { for (let i = 0; i < SLOT[w.key].w / T; i++) r.events[(w.x + i) + "," + ((w.y || 1) + 1)] = w.cafe && w.key !== "cafe_menu" ? { cafe: true } : { say: w.say || ["The café menu."] }; });
   }
   r.decals = def.decals || []; r.glows = def.glows || []; r.bunting = !!def.bunting;
+  r.wallpaper = SLOT[def.wallpaper] && SLOT[def.wallpaper].group === "Wallpaper" ? def.wallpaper : null; // every wall in the room papered with it
   // Hallway dressing: carpet runner tiles [x, y, "h0".."v2"], accent lights on the wall [x, y], and arrow signs pointing the way.
   r.runners = runnerTiles(def);
   r.lamps = (def.lamps || []).filter(Array.isArray);
@@ -9630,9 +9651,19 @@ class Game {
     const cy = full ? 0 : Math.round(rh <= SH ? (rh - SH) / 2 : Math.max(0, Math.min(rh - SH, fy + 8 - SH * (ROOMS[r.id].camAt || 0.5))));
     if (!full) { this.camX = cx; this.camY = cy; }
     const tx0 = Math.max(0, Math.floor(cx / T)), ty0 = Math.max(0, Math.floor(cy / T)), tx1 = Math.min(r.w - 1, Math.floor((cx + VWp) / T)), ty1 = Math.min(r.h - 1, Math.floor((cy + VHp) / T));
+    const wp = r.wallpaper ? this.sheet(r.wallpaper) : null;
+    for (let y = ty0; y <= ty1; y++) for (let x = tx0; x <= tx1; x++) {
+      const t = r.tiles[y][x]; if (!t) continue;
+      const wr = wp && /_wall_(upper|lower)(@|$)/.exec(t);
+      if (wr) ctx.drawImage(wp, 0, wr[1] === "lower" ? T : 0, T, T, x * T - cx, y * T - cy, T, T); // wallpaper instead of the plain wall
+      else this.drawSlot(t, this.frame(t), 0, x * T - cx, y * T - cy);
+    }
+    for (const m of r.murals) { // murals go on the wall itself, under the doors, windows, pictures and signs (Joe 10/14): the middle of the mural's art, as wide as its wall (repeated if the wall is longer)
+      const img = this.sheet(m.key), iw = img.naturalWidth || img.width, w = m.w * T; if (!iw) continue;
+      for (let o = 0; o < w; o += iw) { const room = iw - Math.min(w, iw), sx = m.at >= 0 ? Math.min(room, m.at) : Math.max(0, Math.floor(room / 2)), sw = Math.min(iw - sx, w - o); ctx.drawImage(img, sx, 0, sw, T, m.x * T + o - cx, m.y * T - cy, sw, T); }
+    }
     for (let y = ty0; y <= ty1; y++) for (let x = tx0; x <= tx1; x++) {
       const sx = x * T - cx, sy = y * T - cy;
-      if (r.tiles[y][x]) this.drawSlot(r.tiles[y][x], this.frame(r.tiles[y][x]), 0, sx, sy);
       if (r.over[y][x] && !this.underMarquee(r, x, y)) { const o = r.over[y][x]; if (o === "doorway_side") this.drawFlip(o, r.solid[y][x + 1] !== false, sx, sy); else this.drawSlot(o, this.frame(o), 0, sx, sy); } // side doors: handle toward the room
     }
     for (const h of r.hung) {
@@ -9697,10 +9728,6 @@ class Game {
     for (const ru of r.runners) drawRunner(ctx, this.sheet(ru.k[0] === "v" ? "carpet_v" : "carpet_h"), ru, cx, cy);
     for (const [x, y] of r.lamps) this.drawSlot("wall_sconce", 0, 0, x * T - cx, y * T - cy);
     for (const a of r.arrows) ctx.drawImage(this.arrowArt(a), a.x * T - cx, (a.y || 1) * T - cy);
-    for (const m of r.murals) { // the middle of the mural's art, as wide as its wall (repeated if the wall is longer)
-      const img = this.sheet(m.key), iw = img.naturalWidth || img.width, w = m.w * T; if (!iw) continue;
-      for (let o = 0; o < w; o += iw) { const room = iw - Math.min(w, iw), sx = m.at >= 0 ? Math.min(room, m.at) : Math.max(0, Math.floor(room / 2)), sw = Math.min(iw - sx, w - o); ctx.drawImage(img, sx, 0, sw, T, m.x * T + o - cx, m.y * T - cy, sw, T); }
-    }
     for (const [mx, my] of this.doorMats(r)) this.drawSlot("doormat", 0, 0, mx * T - cx, my * T - cy);
     for (const st of r.stairs) this.drawSlot(st.kind === "up" ? "stair_up" : "stair_down", 0, 0, st.x * T - cx, st.y * T - cy);
     this.drawReadBorders(r, cx, cy); // on the floor, under the cases and people
@@ -9855,7 +9882,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 54";
+const VERSION = "2026-11-18 cards 55";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
