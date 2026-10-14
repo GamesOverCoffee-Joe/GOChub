@@ -396,3 +396,47 @@ Toys that play with the games themselves. Every piece on display has a card in a
 - **The card:** black, red and gold. The title, the art, a thin stripe in the category's color, a short blurb, the episode it came from, and the museum logo.
 
 - **Still to design:** the binder's look, and anything that rewards a full set.
+
+## **Later** *(Joe 10/14: pinned to build later)*
+
+### **Exhibits that showcase the developers**
+
+The museum showcases the developers, not the critique. Joe is still the curator: he chooses what goes on the walls and frames it, but the voices on the placards are the developers'. Each exhibit tells a short story in three beats.
+
+| Beat | What it is | Where it lives |
+|---|---|---|
+| Before | The developer's intentions: what they hoped players would feel, why, and what they built around it (the three questions Joe already asks) | Placard, side one (the answer cards already hold these) |
+| The episode | The middle of the story | On YouTube: the exhibit points to it, "Watch the episode" |
+| After | The developer's reaction to the episode: what landed, what didn't, what surprised them | Placard, side two (new) |
+
+- **The hook:** the gap between what they hoped and how they reacted makes people want to watch the episode, and play the game.
+- **The curator's voice:** a small wall label beside the piece. Title, developer, which episode and when, and one warm line on why it's in the collection. A welcome, not a review. The current "curator's observations" side goes, apart from that line.
+- **Filling in over time:** on unveiling day only the intentions are up, and the reaction side says it's on its way. When the developer replies, it's added and the exhibit is complete. That's a reason to come back, and a developer who never replies doesn't hold anything up. Older episodes may never get one, so the "on its way" state should read naturally.
+- **Play it:** a link at the exhibit to the game's page (each piece already has a game link).
+- **Curious visitors ask by title,** not by feeling: "I'm looking for Near the Fear, have you seen it?" You help them find it; no right or wrong. Once there, they react to the developer's words.
+- **Developer links:** a link that opens the museum at a developer's own exhibit, with a little welcome. The "oh, there's my game" moment, and something they'll share.
+- **Joe's side of it:** a second message to each developer after the episode airs ("Want to share your reaction for your exhibit?"), saying it'll be shown in the museum. Maybe a suggested length. Honest reactions ("he got this wrong") are fine, and make the exhibits more interesting.
+- **To build:** a "developer's reaction" field per piece in the curator, side two of the placard showing it, the wall label line, a Watch the episode link, and curious visitors switching from matching to asking by title.
+
+### **A new tutorial: learning the verbs**
+
+The tutorial teaches the museum's verbs instead of matching visitors to games. Each room teaches one thing the real museum uses, and it stays funny because the curator likes gamification (the usher's line at the front desk sets it up).
+
+- **Front desk (as now):** the usher signs you in, says the curator likes gamification, and points you through the first door.
+- **Room 1, The Sign:** an empty room with one sign in the middle and a barrier at the far side. Reading the sign is the whole task. Then a treasure chest opens, Zelda style: "You got the watering can!" The barrier opens. *Teaches: walk up to something and press A (placards work the same way).* Later on, someone jokes that the museum really did buy a treasure chest so volunteers would feel powerful.
+- **Room 2, The Sad Plant:** a trainer sits behind a desk staring at a wilted plant in the middle of the room (a "..." over her head). Two corner plants are healthy, so you can see what fine looks like. Talk to her: she's supposed to be running this room, but staff aren't allowed to water the plants, it has to be visitors, and nobody ever comes. Water it with your new can: it perks up, she's thrilled, the barrier opens. *Teaches: spot a problem from how someone's acting, talk to learn what's wrong, fix it with something you have, people react.*
+- **The timer, in room 2:** the day dial appears for the first time here ("I've been sitting here since the morning"). While you're in the room it ticks over and a corner plant starts to droop: you water that one too. Nothing to fail; it shows that time passes and new problems show up. *Teaches: the day's timeline.*
+- **Room 3, The Lost Trainee:** another trainee who's been in training for three weeks, still wandering because they lost the box with their stuff in it. You find the box (in room 1, say), carry it to them, then lead them back to the front door. On the way, the room 2 trainer thanks you again, and the room 1 sign has changed ("You've already read this sign"). At the front door they thank you and bolt out; the usher: "...Was that a trainee? They were supposed to finish today." *Teaches: carrying something to someone (the supply boxes, the staff item), leading someone (the lost kid, curious visitors), and that people remember what you did.*
+- **Back at the desk:** the usher wraps up and you get your volunteer tag (or your badge). The field notes show for the first time, with what you just did: "Watered a sad plant. Returned a lost trainee." *Teaches: the notebook lists what you helped with.*
+
+| Tutorial | In the museum |
+|---|---|
+| Reading the sign | Placards, and the developers' words |
+| Watering the plant for someone | Coffee for the usher, the café's and shop's supplies, the jammed trash can |
+| Spotting the staring trainer | Cues: the usher's empty mug, the bustling barista |
+| Carrying the trainee's box | The supply boxes, the staff room item |
+| Leading the lost trainee | The lost kid, curious visitors |
+| Being thanked again on the way back | People remembering you through the day |
+| The plant drooping as the dial moves | The day's timeline |
+
+- **Still to decide:** whether the watering can becomes the real way to water plants (now you water them just by interacting), names for the trainer and the lost trainee, and whether the three made-up games go (or one stays as an example of the developer-voice exhibit).
