@@ -2672,6 +2672,10 @@ const TEXT = {
   "tour.goCoffee":     { g: "Tour", l: "The usher starts the tour with his coffee, just before the group heads off (you see them go)", v: [["Usher: Alright everyone! It's time for the tour. Please watch your step and follow me the first exhibit."]] },
   "school.go":         { g: "Tour", l: "Tuesday: the teacher starts the school tour, just before the kids head off (you see them go)", v: [["Teacher: Ok, everyone, single file, were headed to the first exhibit."]] },
   "school.next":       { g: "Tour", l: "Tuesday: the teacher moving the kids on to the next exhibit (you see them go)", v: [["Teacher: Here we go to the next exhibit! Stay close please. No wandering."]] },
+  "tour.goNext":      { g: "Tour", l: "A happy tour group moving on to its second exhibit without the usher, a visitor leading (you see them go)", by: "claude", v: [["Visitor: The usher said the next exhibit is this way. I think. Follow me, everyone!"], ["Visitor: Ok, I guess I'm the tour guide now. Next exhibit, let's go!"]] },
+  "tour.goBack":       { g: "Tour", l: "A happy tour group heading back to the lobby at the end (you see them go)", by: "claude", v: [["Visitor: That's the tour! Back to the lobby, everyone. Is everybody here? ...Close enough."]] },
+  "tour.goBackBored":  { g: "Tour", l: "A bored tour group heading back to the lobby at the end (you see them go)", by: "claude", v: [["Visitor: Well, that was a tour. I guess. Let's head back to the lobby."]] },
+  "school.goBack":     { g: "Tour", l: "Tuesday: the teacher taking the kids back to the lobby at the end (you see them go)", by: "claude", v: [["Teacher: Ok, class, back to the lobby! Single file. Let's count off... one, two, three... close enough."]] },
   "tour.walking":      { g: "Tour", l: "Someone in the tour group, on the way to its first stop", by: "claude", v: [["Ooh, where are we going first?"], ["Is it far? I wore the wrong shoes."], ["I hope the first one's the dragon game."]] },
   "school.teacherWalk":{ g: "Tour", l: "Tuesday: the teacher, leading the kids to the first stop", by: "claude", v: [["Single file, friends! Hands to yourselves!", "...Tyler. Hands. To. Yourself."]] },
   "microwave.after":   { g: "Staff", l: "Microwave after the incident", v: [["Yeah, let's not open that."]] },
@@ -8401,7 +8405,7 @@ class Game {
         const desk = T.guide ? [{ n: T.guide, room: "lobby", at: T.deskUsher ? [T.deskUsher.x, T.deskUsher.y] : [3, 3], dir: "down" }] : []; // the usher back to his desk
         let moved = false;
         if (T.mood === "happy") { const c = T.stop2, at = [c.x, c.y + 1], m = T.members, spots = this.tourAround(M, at, m.length + 1), order = [m[0], m[4], m[1], m[2], m[3]].filter(Boolean);
-          if (spots.length) { moved = true; this.tourLineStart(T, order[0], order.slice(1), { room: "museum", at: spots[0], dir: this.janFace(spots[0], c.x, c.y) }, () => order.slice(1).map((n, i) => spots[i + 1] && { n, room: "museum", at: spots[i + 1], dir: this.janFace(spots[i + 1], c.x, c.y) }), fresh, desk); } }
+          if (spots.length) { moved = true; this.tourLineStart(T, order[0], order.slice(1), { room: "museum", at: spots[0], dir: this.janFace(spots[0], c.x, c.y) }, () => order.slice(1).map((n, i) => spots[i + 1] && { n, room: "museum", at: spots[i + 1], dir: this.janFace(spots[i + 1], c.x, c.y) }), fresh, desk); } if (T.line) T.line.say = "tour.goNext"; }
         if (!moved && T.guide) this.tourPlace(T.guide, "lobby", desk[0].at, "down");
         else T.members.forEach(n => { if (n.tourKid) return; n.goal = null; n.walkTo = null; if (n.where === "museum") { n.still = false; n.random = true; const z = this.zoneAt(M, n.x, n.y); n.zone = z && z.kind === "room" ? z.id : T.stop1 && (this.zoneAt(M, T.stop1.x, T.stop1.y) || {}).id; } }); // scattered: they stroll on their own
       } else if (phase === 3) { // back to the lobby to leave; the kid goes missing
@@ -8411,7 +8415,7 @@ class Game {
           else if (!(n.tourKid && T.school && !T.kidDone)) { if (this.fol === n) this.tourHome(n, i); else home.push([n, i]); } }); // the school's kid is already off somewhere since the rush (and whoever's following you comes back on their own)
         const spot = i => { const st = T.seats && T.seats[i]; return st ? { at: st.from, dir: st.sit, sit: st } : { at: T.gather[i] || T.gather[0], dir: "left" }; };
         if (home.length) { const [n0, i0] = home[0], s0 = spot(i0);
-          this.tourLineStart(T, n0, home.slice(1).map(h => h[0]), { room: "lobby", at: s0.at, dir: s0.dir, sit: s0.sit }, () => home.slice(1).map(([n, i]) => Object.assign({ n, room: "lobby" }, spot(i))), fresh, lost); }
+          this.tourLineStart(T, n0, home.slice(1).map(h => h[0]), { room: "lobby", at: s0.at, dir: s0.dir, sit: s0.sit }, () => home.slice(1).map(([n, i]) => Object.assign({ n, room: "lobby" }, spot(i))), fresh, lost); if (T.line) T.line.say = T.school ? "school.goBack" : T.mood === "bored" ? "tour.goBackBored" : "tour.goBack"; }
         else lost.forEach(o => { if (o.at) this.lineJump(o.n, o.room, o.at[0], o.at[1]); o.n.dir = o.dir; });
       } else if (phase === 4) { // out the front doors (the kid too, found or not)
         this.tourLineEnd(T);
@@ -9991,7 +9995,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 60";
+const VERSION = "2026-11-18 cards 61";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
