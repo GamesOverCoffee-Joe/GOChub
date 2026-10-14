@@ -297,6 +297,6 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Unveiling | Playing as the curator: facing the covered piece | Pull the cloth off {title}? |
 | Tour | A happy tour group moving on to its second exhibit without the usher, a visitor leading | Visitor: The usher said the next exhibit is this way. I think. Follow me, everyone! |
 | Tour | The same (second version) | Visitor: Ok, I guess I'm the tour guide now. Next exhibit, let's go! |
-| Tour | A happy tour group heading back to the lobby at the end | Visitor: That's the tour! Back to the lobby, everyone. Is everybody here? ...Close enough. |
+| Tour | A happy tour group heading back to the lobby at the end | Visitor: That's the tour! Back to the lobby, everyone. Is everybody here? / ... / Ok, looks like everyone. Let's go! |
 | Tour | A bored tour group heading back to the lobby at the end | Visitor: Well, that was a tour. I guess. Let's head back to the lobby. |
-| Tour | Tuesday: the teacher taking the kids back to the lobby at the end | Teacher: Ok, class, back to the lobby! Single file. Let's count off... one, two, three... close enough. |
+| Tour | Tuesday: the teacher taking the kids back to the lobby at the end | Teacher: Ok, class, back to the lobby! Single file. Let's count off... one, two, three... / ... / Ok! Let's go. |
