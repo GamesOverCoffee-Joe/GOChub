@@ -525,6 +525,13 @@ Everything follows reduced motion (still pictures, no shake), like the token mom
 
 - Each light switch clicks off with a small flash. The last one: the museum dims room by room in a slow wave, then Lights out.
 
+### **Built in cards 70**
+
+- The card flip: the picked card flies to the middle face down, then turns over in 3D (lift, edge-on shading, a shine, a settle). Pack cards fly back into the fan.
+- Item get: anything bought that isn't a card pops up big with sparkles and its name, then drops into the bag.
+- The café hand-off: the drink is set on the counter (clink, steam), then hops into your hand.
+- Red lenses tint the screen red; a fake pair (one lens) darkens the right half. The red lens secret: later.
+
 ### **Other**
 
 - Achievements: the toast slides in with an overshoot and the badge spins once.

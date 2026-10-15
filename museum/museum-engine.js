@@ -2807,6 +2807,7 @@ const PIXEL_FONT = (() => {
 })();
 const KONAMI = ["up", "up", "down", "down", "left", "right", "left", "right", "b", "a", "start"];
 const POP_KINDS = ["dusted", "straightened", "watered", "mugs", "wiped", "litter"]; // tokens that just pop over your head
+const HANDOFF = 34; // frames: a café drink set on the counter, then handed over
 const COIN_FX = 130; // frames in the big token moment
 const REDUCED_MOTION = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 const BROWSE_LINES = [["Hmm. Hmm hmm hmm."], ["Should I get the mug? I should get the mug.", "...Or the tote."], ["I've been standing here a while.", "I'm very close to deciding."], ["Don't rush me. This is a big decision."]];
@@ -3801,8 +3802,6 @@ class Game {
 .gt-cfx .cfx-slot.on{transform:translateY(calc(-8px * var(--s)))}
 .gt-cfx .cfx-slot.on .gt-cback{outline:calc(1.5px * var(--s)) solid #e8c070;outline-offset:calc(1px * var(--s))}
 .gt-cfx .cfx-slot.out{transform:translateY(calc(160px * var(--s)));opacity:0;transition:transform .35s ease-in,opacity .35s}
-.gt-cfx .cfx-slot.away{transform:translateY(calc(-8px * var(--s))) scaleX(0);transition:transform .14s ease-in}
-.gt-cfx .cfx-slot.face{animation:gtFlipIn .3s cubic-bezier(.2,1.6,.4,1) both}
 .gt-cback{--k:1;position:relative;width:calc(104px * var(--k));height:calc(146px * var(--k));box-sizing:border-box;border-radius:calc(5px * var(--k));flex:none;display:flex;align-items:center;justify-content:center;
   background:radial-gradient(ellipse 75% 65% at 50% 50%,#c8202e 0%,#9a1422 35%,#4a060c 70%,#0c0002 100%);border:calc(2px * var(--k)) solid #e8c070;
   box-shadow:inset 0 0 0 calc(3px * var(--k)) #2a0408,inset 0 0 0 calc(4px * var(--k)) #b8883a,0 calc(3px * var(--k)) calc(8px * var(--k)) rgba(0,0,0,.6)}
@@ -3811,13 +3810,8 @@ class Game {
 @keyframes gtTremble{0%{translate:calc(.8px * var(--k)) 0}25%{translate:calc(-.8px * var(--k)) calc(.5px * var(--k))}50%{translate:0 calc(-.6px * var(--k))}75%{translate:calc(-.6px * var(--k)) 0}}
 @keyframes gtGlow{to{box-shadow:inset 0 0 0 calc(3px * var(--k)) #2a0408,inset 0 0 0 calc(4px * var(--k)) #fff4c8,0 0 calc(14px * var(--k)) calc(3px * var(--k)) #ffd860,0 0 calc(30px * var(--k)) #ff8ab8}}
 .gt-cfx .cfx-big{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(3px * var(--s));pointer-events:none}
-.gt-cfx .cfx-hold{position:relative;z-index:1}
-.gt-cfx .cfx-hold.pop{animation:gtPopIn .25s cubic-bezier(.2,1.5,.4,1) both}
 @keyframes gtPopIn{from{transform:scale(.3);opacity:0}}
-.gt-cfx .cfx-hold.flipout{transform:scaleX(0);transition:transform .14s ease-in}
-.gt-cfx .cfx-hold.flipin{animation:gtFlipIn .32s cubic-bezier(.2,1.6,.4,1) both}
 @keyframes gtFlipIn{from{transform:scaleX(0)}}
-.gt-cfx .cfx-hold.leave{transform:translateY(calc(40px * var(--s))) scale(.4);opacity:0;transition:transform .25s ease-in,opacity .25s}
 .gt-cfx .cfx-cap{font-family:var(--pixel, monospace);font-size:calc(6px * var(--s));color:#f4dca0;min-height:calc(6px * var(--s));text-shadow:calc(1px * var(--s)) calc(1px * var(--s)) 0 #000;position:relative;z-index:1}
 .gt-cfx .cfx-cap.rare{color:#fff4c8;text-shadow:0 0 calc(4px * var(--s)) #ffd860,0 0 calc(2px * var(--s)) #ff8ab8}
 .gt-cfx .cfx-hint{font-family:var(--pixel, monospace);font-size:calc(4px * var(--s));color:#c8b898;min-height:calc(4px * var(--s));text-align:center;position:relative;z-index:1}
@@ -3851,6 +3845,42 @@ class Game {
 @keyframes gtTear{to{transform:translate(calc(40px * var(--s)),calc(-50px * var(--s))) rotate(28deg);opacity:0}}
 .gt-pack .pk-bit{position:absolute;top:calc(8px * var(--k));width:calc(2px * var(--s));height:calc(2px * var(--s));background:#e8e8f8;animation:gtConf .7s ease-out forwards}
 .gt-pack.gone{transform:translateY(calc(70px * var(--s)));opacity:0;transition:transform .35s ease-in,opacity .35s}
+.gt-cfx .cfx-spot{flex:none}
+.gt-cfx .cfx-fly{position:absolute;z-index:1;transform-origin:50% 50%}
+.gt-cfx .cfx-fly.go{transition:transform .45s cubic-bezier(.2,.9,.3,1)}
+.gt-cfx .cfx-fly.back{transition:transform .35s cubic-bezier(.5,0,.8,.6)}
+.gt-cfx .cfx-lift{position:relative;width:100%;height:100%;transition:transform .18s ease-out}
+.gt-cfx .cfx-lift.ready{transform:scale(1.05)}
+.gt-cfx .cfx-lift.turn{animation:gtLift .55s ease-in-out}
+@keyframes gtLift{0%{transform:scale(1.05)}50%{transform:scale(1.14) translateY(calc(-3px * var(--s)))}100%{transform:scale(1)}}
+.gt-cfx .cfx-lift.settle{animation:gtSettle .28s ease-out}
+@keyframes gtSettle{40%{transform:scale(.965)}100%{transform:scale(1)}}
+.gt-cfx .cfx-flip{position:relative;width:100%;height:100%;transform-style:preserve-3d;transform:perspective(calc(320px * var(--s))) rotateY(0deg);transition:transform .55s cubic-bezier(.45,.05,.25,1)}
+.gt-cfx .cfx-flip.turn{transform:perspective(calc(320px * var(--s))) rotateY(180deg)}
+.gt-cfx .cfx-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.gt-cfx .cfx-face.cfx-front{transform:rotateY(180deg)}
+.gt-cfx .cfx-face::after{content:"";position:absolute;inset:0;border-radius:calc(5px * var(--s));background:#000;opacity:0;pointer-events:none}
+.gt-cfx .cfx-flip.turn .cfx-face::after{animation:gtShade .55s ease-in-out}
+@keyframes gtShade{50%{opacity:.6}}
+.gt-cfx .cfx-sheen{position:absolute;inset:0;border-radius:calc(5px * var(--s));overflow:hidden;pointer-events:none}
+.gt-cfx .cfx-sheen::before{content:"";position:absolute;top:-20%;bottom:-20%;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,250,225,.55),transparent);transform:skewX(-12deg)}
+.gt-cfx .cfx-flip.shine .cfx-sheen::before{animation:gtSheen2 .6s ease-out .05s}
+@keyframes gtSheen2{to{left:130%}}
+.gt-cfx .cfx-get{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(6px * var(--s));pointer-events:none}
+.gt-cfx .cfx-icon{position:relative;width:calc(44px * var(--s));height:calc(44px * var(--s));animation:gtHop .5s cubic-bezier(.2,1.5,.4,1) both}
+.gt-cfx .cfx-icon::before{content:"";position:absolute;inset:-45%;border-radius:50%;background:radial-gradient(circle,rgba(255,232,150,.5) 0%,rgba(255,200,90,.18) 40%,transparent 68%)}
+.gt-cfx .cfx-icon img{position:relative}
+.gt-cfx .cfx-icon img{width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;display:block;filter:drop-shadow(0 calc(2px * var(--s)) 0 rgba(0,0,0,.55))}
+@keyframes gtHop{0%{transform:translateY(calc(30px * var(--s))) scale(.2);opacity:0}60%{transform:translateY(calc(-6px * var(--s))) scale(1.1);opacity:1}100%{transform:none}}
+.gt-cfx .cfx-icon.bob img{animation:gtBob 1.4s ease-in-out infinite}
+@keyframes gtBob{50%{transform:translateY(calc(-2px * var(--s)))}}
+.gt-cfx .cfx-ring{position:absolute;left:50%;top:50%;width:0;height:0}
+.gt-cfx .cfx-ring i{position:absolute;width:calc(3px * var(--s));height:calc(3px * var(--s));margin:calc(-1.5px * var(--s));background:#fff4c8;box-shadow:0 0 calc(3px * var(--s)) #ffd860;animation:gtRing .7s cubic-bezier(.1,.8,.3,1) .12s both}
+@keyframes gtRing{from{transform:translate(0,0) scale(1.4);opacity:1}to{transform:translate(var(--dx),var(--dy)) scale(.4);opacity:0}}
+.gt-cfx .cfx-name{font-family:var(--pixel, monospace);font-size:calc(7px * var(--s));color:#fff4c8;background:#7c2434;border:calc(1px * var(--s)) solid #e8c070;padding:calc(2px * var(--s)) calc(6px * var(--s));text-shadow:calc(1px * var(--s)) calc(1px * var(--s)) 0 #000;animation:gtBanner .35s cubic-bezier(.2,1.4,.4,1) .2s both;max-width:90%;text-align:center}
+@keyframes gtBanner{from{transform:scaleX(0);opacity:0}}
+.gt-cfx .cfx-get.away .cfx-icon{transform:translateY(calc(70px * var(--s))) scale(.25);opacity:0;transition:transform .3s ease-in,opacity .3s;animation:none}
+.gt-cfx .cfx-get.away .cfx-name{opacity:0;transition:opacity .2s}
 @media (prefers-reduced-motion: reduce){.gt-cfx,.gt-cfx *{animation:none !important;transition:none !important}}
 .gt-cardview{position:absolute;inset:0;z-index:9;display:none;flex-direction:column;align-items:center;justify-content:center;gap:calc(3px * var(--s));background:rgba(10,6,8,.78)}
 .gt-card-cap{font-family:var(--pixel, monospace);font-size:calc(6px * var(--s));color:#f4dca0;min-height:calc(6px * var(--s));text-shadow:calc(1px * var(--s)) calc(1px * var(--s)) 0 #000}
@@ -6237,6 +6267,7 @@ class Game {
   }
   coinPop(n) { const P = this.pops = this.pops || [], o = P[P.length - 1]; if (o && this.t - o.t0 < 24) { o.n += n; return; } P.push({ n, t0: this.t }); }
   updateCoins(has) {
+    if (this.handoff && this.t - this.handoff.t0 >= HANDOFF) { const h = this.handoff; this.handoff = null; if (this.mode === "busy") this.mode = "walk"; h.then(); }
     if (this.pops && this.pops.length) this.pops = this.pops.filter(o => this.t - o.t0 < 70);
     const F = this.coinFx;
     if (!F && this.coinQ && this.coinQ.length && this.mode === "walk" && !this.trans && !this.recording()) { // all at once: they add up into one moment
@@ -6246,6 +6277,29 @@ class Game {
     F.t++; if (F.t > 40 && F.t < COIN_FX - 14 && (has("a") || has("b"))) F.t = COIN_FX - 14; // A skips to the end
     if (F.t === 30) this.updateHud(true);
     if (F.t >= COIN_FX) { this.coinFx = null; if (this.mode === "busy") this.mode = "walk"; }
+  }
+  /* The café hand-off: the cup drops onto the counter with a clink and a puff of steam, waits a beat, then hops into your hand. */
+  drawHandoff(ctx, cx, cy) {
+    const H = this.handoff; if (!H) return;
+    const k = this.t - H.t0, p = this.player, q = this.pos(p), hx = q.x + { down: 11, up: 2, left: 1, right: 8 }[p.dir], hy = q.y - 4 + 9;
+    const sx0 = H.x + 4, sy0 = H.y + 1;
+    let x = sx0, y = sy0;
+    if (k < 8) y = sy0 - Math.round((1 - k / 8) * (1 - k / 8) * 6);
+    else if (k >= 20) { const f = Math.min(1, (k - 20) / 13); x = sx0 + (hx - sx0) * f; y = sy0 + (hy - sy0) * f - Math.sin(f * Math.PI) * 6; }
+    ctx.globalAlpha = k < 3 ? k / 3 : 1;
+    if (H.mug) this.drawSlot("travel_mug", 0, 0, Math.round(x - cx), Math.round(y - cy)); else ctx.drawImage(this.cupCanvas(H.d, H.k), Math.round(x - cx), Math.round(y - cy));
+    ctx.globalAlpha = 1;
+    if (k >= 8 && k < 13) { ctx.fillStyle = "#fffbe8"; const gx = Math.round(sx0 + 9 - cx), gy = Math.round(sy0 + 1 - cy), z = k < 10 ? 1 : 2; ctx.fillRect(gx - z, gy, z * 2 + 1, 1); ctx.fillRect(gx, gy - z, 1, z * 2 + 1); } // clink
+    if (!H.mug && !H.d.iced && k >= 6 && k < 24) { ctx.fillStyle = "rgba(255,255,255," + (0.6 * (1 - (k - 6) / 18)).toFixed(2) + ")"; for (let i = 0; i < 2; i++) { const w = Math.round(Math.sin((k + i * 5) / 3)); ctx.fillRect(Math.round(sx0 + 2 + i * 3 + w - cx), Math.round(sy0 - 2 - (k - 6) / 3 - i - cy), 1, 2); } } // steam
+  }
+  /* The red lens shades (Bluu's ultra rare): everything looks red while you wear them. A fake pair has only its right lens,
+     so only the right half of the screen. */
+  drawLens(ctx) {
+    const sh = this.using("shades"); if (!sh) return;
+    const red = this.gearLooks("shades").pick === "bx-shades-redlens"; if (!red && sh !== "fake") return;
+    ctx.save(); ctx.globalCompositeOperation = "multiply"; ctx.fillStyle = red ? "#ff6a5a" : "#8a8aa0"; // a fake pair's lens is the plain dark one
+    if (sh === "fake") ctx.fillRect(SW / 2, 0, SW / 2, SH); else ctx.fillRect(0, 0, SW, SH);
+    ctx.restore();
   }
   drawCoins(ctx, cx, cy) {
     const glyphs = (txt, x, y, sc, col, edge) => { // PIXEL_FONT text with a dark edge around it
@@ -6487,9 +6541,9 @@ class Game {
     else if (this.shopConfirm !== it.id) { this.shopConfirm = it.id; this.shopMsg = "Buy " + it.name + " for " + it.price + " tokens? Press A again."; }
     else if (it.base === "card") { // a card: into your binder (not Souvenirs), and you see it right away
       this.progress.tokens = t - it.price; this.countDown(t); (this.progress.bluuCards || (this.progress.bluuCards = [])).push(it.id); this.shopConfirm = null; this.shopMsg = ""; this.updateHud(true);
-      const p = this.pack.pieces.find(q => q.id === it.card); if (p) { this.addCard(p.id, it.cardKind); this.showCards([{ p, kind: it.cardKind, had: this.lastHad }], "shop"); return; }
+      const p = this.pack.pieces.find(q => q.id === it.card); if (p) { this.addCard(p.id, it.cardKind); this.cardFx([{ p, kind: it.cardKind, had: this.lastHad }], "bluu"); return; }
     }
-    else { this.progress.tokens = t - it.price; this.countDown(t); own.push(it); this.progress.tally.popups = (this.progress.tally.popups || 0) + 1; this.saveProgress(); this.updateHud(true); this.shopConfirm = null; this.shopMsg = this.tx("sat.bought", { item: it.name }).join(" "); }
+    else { this.progress.tokens = t - it.price; this.countDown(t); own.push(it); this.progress.tally.popups = (this.progress.tally.popups || 0) + 1; this.saveProgress(); this.updateHud(true); this.shopConfirm = null; this.shopMsg = this.tx("sat.bought", { item: it.name }).join(" "); this.itemGet(it); return; }
     this.renderShop();
   }
   shopSelect() {
@@ -6518,6 +6572,7 @@ class Game {
     else {
       this.progress.tokens = t - it.price; this.countDown(t); this.progress.items.push(it.id); this.saveProgress(); this.updateHud();
       this.shopConfirm = null; this.shopMsg = "You bought " + it.name + "! " + (this.staff ? "It's in the staff room's collection cabinet." : "It's in your collection.");
+      this.itemGet(it); return;
     }
     this.renderShop();
   }
@@ -6702,6 +6757,7 @@ class Game {
     this.mode = "cfx"; requestAnimationFrame(() => v.classList.add("dim"));
     F.big = document.createElement("div"); F.big.className = "cfx-big"; v.appendChild(F.big);
     F.row = document.createElement("div"); F.row.className = "cfx-row" + (F.pack ? " fan" : ""); v.appendChild(F.row);
+    if (slot === "bluu") { F.phase = "reveal"; this.cfxLater(250, () => this.cfxBig(list[0], null)); return; } // Bluu's card: you saw which one, so it just comes up and turns over
     if (!F.pack) { // five backs to pick from (whichever you pick is your card)
       F.phase = "pick"; F.slots = [];
       for (let i = 0; i < 5; i++) { const sl = document.createElement("div"); sl.className = "cfx-slot in"; sl.style.setProperty("--d", (0.08 + i * 0.09) + "s"); sl.appendChild(this.cardBack(S * 0.4)); F.row.appendChild(sl); F.slots.push(sl);
@@ -6713,6 +6769,18 @@ class Game {
     pk.innerHTML = '<div class="pk-top"></div><div class="pk-band">' + this.goqMark() + '<b>CARD PACK</b></div><div class="pk-bot"></div>'; v.appendChild(pk);
     this.cfxLater(600, () => { pk.className = "gt-pack wig" + (hot ? " hot" : ""); F.busy = false; this.cfxHint("A: open it"); });
   }
+  /* Item get (Joe 10/15): something you buy (not a card) pops up big over a dim, with a burst of sparkles and its name,
+     then drops into your bag and you're back at the counter. */
+  itemGet(it) {
+    const v = this.el.cfx, S = this.scale || 1; v.innerHTML = ""; v.className = "gt-cfx"; v.style.display = "block"; this.el.shop.style.display = "none";
+    const F = this.cfx = { item: it, list: [], phase: "item", busy: true, id: (this.cfx ? this.cfx.id : 0) + 1 }; this.mode = "cfx"; requestAnimationFrame(() => v.classList.add("dim"));
+    const g = F.get = document.createElement("div"); g.className = "cfx-get"; v.appendChild(g);
+    const ic = document.createElement("div"); ic.className = "cfx-icon"; const im = document.createElement("img"); im.alt = ""; try { im.src = this.itemIcon(it).toDataURL(); } catch (e) {} ic.appendChild(im);
+    const ring = document.createElement("div"); ring.className = "cfx-ring"; for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2, sp = document.createElement("i"); sp.style.setProperty("--dx", "calc(" + Math.round(Math.cos(a) * 46) + "px * var(--s))"); sp.style.setProperty("--dy", "calc(" + Math.round(Math.sin(a) * 40) + "px * var(--s))"); ring.appendChild(sp); }
+    ic.appendChild(ring); g.appendChild(ic);
+    const nm = document.createElement("div"); nm.className = "cfx-name"; nm.textContent = it.name; g.appendChild(nm);
+    this.cfxLater(600, () => { ic.classList.add("bob"); F.busy = false; this.cfxHint("A: OK"); });
+  }
   cfxLater(ms, fn) { const id = this.cfx && this.cfx.id; setTimeout(() => { if (this.cfx && this.cfx.id === id) fn(); }, REDUCED_MOTION ? Math.min(ms, 120) : ms); }
   cfxHint(t) { const F = this.cfx; let h = this.el.cfx.querySelector(":scope > .cfx-hint"); if (!h) { h = document.createElement("div"); h.className = "cfx-hint"; h.style.cssText = "position:absolute;left:0;right:0;bottom:calc(5px * var(--s))"; this.el.cfx.appendChild(h); } h.textContent = t || ""; }
   cfxSel() { const F = this.cfx; F.slots.forEach((sl, i) => sl.classList.toggle("on", i === F.sel)); }
@@ -6720,15 +6788,16 @@ class Game {
     const F = this.cfx; if (!F || F.busy) return;
     if (F.phase === "pick") { const n = F.sel; if (has("left")) F.sel = Math.max(0, F.sel - 1); if (has("right")) F.sel = Math.min(4, F.sel + 1); if (F.sel !== n) this.cfxSel(); if (has("a")) this.cfxPick(); return; }
     if (!(has("a") || has("b") || has("start"))) return;
+    if (F.phase === "item") { F.busy = true; this.cfxHint(""); F.get.classList.add("away"); this.cfxLater(300, () => this.cfxClose()); return; } // into the bag
     if (F.phase === "pack") this.cfxTear();
     else if (F.phase === "shown") this.cfxPut();
     else if (F.phase === "fan") this.cfxReveal();
     else if (F.phase === "done") this.cfxClose();
   }
-  cfxPick() { // the others slide away; yours flips over and comes up big
+  cfxPick() { // the others slide away; yours lifts out of the row and flies to the middle, still face down
     const F = this.cfx; F.busy = true; this.cfxHint("");
-    F.slots.forEach((sl, i) => { if (i !== F.sel) { sl.classList.remove("in"); sl.classList.add("out"); } else sl.classList.add("away"); });
-    this.cfxLater(170, () => this.cfxBig(F.list[0]));
+    F.slots.forEach((sl, i) => { if (i !== F.sel) { sl.classList.remove("in"); sl.classList.add("out"); } });
+    this.cfxBig(F.list[0], F.slots[F.sel]);
   }
   cfxTear() { // rip the top off, paper bits fly, the pack drops away and its cards fan out face down
     const F = this.cfx, pk = F.packEl; F.busy = true; this.cfxHint(""); pk.className = "gt-pack"; pk.querySelector(".pk-top").classList.add("tear");
@@ -6739,22 +6808,37 @@ class Game {
       this.cfxLater(700, () => { F.phase = "fan"; F.busy = false; this.cfxHint("A: flip"); });
     });
   }
-  cfxReveal() { const F = this.cfx, sl = F.slots[F.i]; F.busy = true; this.cfxHint(""); sl.classList.remove("in"); sl.classList.add("on"); this.cfxLater(140, () => { sl.classList.add("away"); this.cfxLater(160, () => this.cfxBig(F.list[F.i])); }); }
-  cfxBig(c) { // big in the middle: the back pops up, then flips to the card (a rare builds up first)
-    const F = this.cfx, S = this.scale || 1, B = F.big; B.innerHTML = "";
+  cfxReveal() { const F = this.cfx, sl = F.slots[F.i]; F.busy = true; this.cfxHint(""); sl.classList.remove("in"); sl.classList.add("on"); this.cfxLater(120, () => this.cfxBig(F.list[F.i], sl)); }
+  /* One card, one journey (Joe 10/15): it flies from where it was (a slot, or up from below) to the middle face down,
+     waits a beat (a rare trembles and glows), then turns over for real: a 3D flip that lifts toward you, darkens edge-on,
+     catches a shine and settles. */
+  cfxBig(c, from) {
+    const F = this.cfx, S = this.scale || 1, k = S * 0.82, v = this.el.cfx, B = F.big, rare = c.kind === "r";
+    B.innerHTML = "";
     const cap = document.createElement("div"); cap.className = "cfx-cap"; B.appendChild(cap);
-    const hold = document.createElement("div"); hold.className = "cfx-hold pop"; hold.style.setProperty("--s", S * 0.82); const back = this.cardBack(S * 0.82); hold.appendChild(back); B.appendChild(hold);
-    const hint = document.createElement("div"); hint.className = "cfx-hint"; B.appendChild(hint); F.hold = hold;
-    const rare = c.kind === "r";
-    if (rare) this.cfxLater(260, () => back.classList.add("glow"));
-    this.cfxLater(rare ? 1250 : 420, () => {
-      hold.className = "cfx-hold flipout";
-      this.cfxLater(150, () => {
-        hold.innerHTML = ""; hold.appendChild(this.cardElement(c.p, c.kind)); hold.className = "cfx-hold flipin";
-        cap.textContent = this.cardCap(c); cap.className = "cfx-cap" + (rare ? " rare" : "");
-        if (rare) this.cfxRare();
-        const last = F.i >= F.list.length - 1;
-        this.cfxLater(rare ? 900 : 350, () => { F.phase = "shown"; F.busy = false; hint.textContent = F.pack ? (F.i + 1) + " / " + F.list.length + (last ? "   A: done" : "   A: next") : "A: done"; });
+    const spot = document.createElement("div"); spot.className = "cfx-spot"; spot.style.width = "calc(104px * " + k + ")"; spot.style.height = "calc(146px * " + k + ")"; B.appendChild(spot);
+    const hint = document.createElement("div"); hint.className = "cfx-hint"; B.appendChild(hint);
+    const O = v.getBoundingClientRect(), R = spot.getBoundingClientRect();
+    const fly = document.createElement("div"); fly.className = "cfx-fly"; fly.style.cssText = "left:" + (R.left - O.left) + "px;top:" + (R.top - O.top) + "px;width:" + R.width + "px;height:" + R.height + "px";
+    fly.innerHTML = '<div class="cfx-lift"><div class="cfx-flip"><div class="cfx-face cfx-back"></div><div class="cfx-face cfx-front"></div></div></div>';
+    const lift = fly.firstChild, flip = lift.firstChild, backF = flip.children[0], frontF = flip.children[1], back = this.cardBack(k);
+    backF.appendChild(back); const fw = document.createElement("div"); fw.style.setProperty("--s", k); fw.appendChild(this.cardElement(c.p, c.kind)); frontF.appendChild(fw);
+    const sheen = document.createElement("i"); sheen.className = "cfx-sheen"; frontF.appendChild(sheen);
+    let t0 = "translate(0," + Math.round(O.bottom - R.top + 10) + "px) scale(.6)"; // up from below (Bluu's card)
+    if (from) { const Q = from.getBoundingClientRect(), r = parseFloat(from.style.rotate) || 0; t0 = "translate(" + Math.round(Q.left + Q.width / 2 - (R.left + R.width / 2)) + "px," + Math.round(Q.top + Q.height / 2 - (R.top + R.height / 2)) + "px) scale(" + (Math.min(Q.width, Q.height * 104 / 146) / R.width).toFixed(3) + ") rotate(" + r + "deg)"; from.style.visibility = "hidden"; } // (a tilted slot's box is wider than its card: sized by its height)
+    fly.style.transform = t0; v.appendChild(fly); F.fly = fly; F.flyFrom = from || null; void fly.offsetWidth;
+    fly.classList.add("go"); fly.style.transform = "none";
+    this.cfxLater(470, () => {
+      lift.classList.add("ready"); if (rare) back.classList.add("glow");
+      this.cfxLater(rare ? 1000 : 220, () => {
+        lift.classList.remove("ready"); lift.classList.add("turn"); flip.classList.add("turn");
+        if (rare) this.cfxLater(260, () => this.cfxRare());
+        this.cfxLater(560, () => {
+          lift.classList.remove("turn"); lift.classList.add("settle"); flip.classList.add("shine");
+          cap.textContent = this.cardCap(c); cap.className = "cfx-cap" + (rare ? " rare" : "");
+          const last = F.i >= F.list.length - 1;
+          this.cfxLater(rare ? 700 : 300, () => { F.phase = "shown"; F.busy = false; hint.textContent = F.pack ? (F.i + 1) + " / " + F.list.length + (last ? "   A: done" : "   A: next") : "A: done"; });
+        });
       });
     });
   }
@@ -6767,14 +6851,17 @@ class Game {
     for (let i = 0; i < 28; i++) { const e = add("cfx-conf"); const a = Math.random() * Math.PI * 2, r = 50 + Math.random() * 70; e.style.background = cols[i % cols.length]; e.style.setProperty("--dx", "calc(" + Math.round(Math.cos(a) * r) + "px * var(--s))"); e.style.setProperty("--dy", "calc(" + Math.round(Math.sin(a) * r * 0.7 + 30) + "px * var(--s))"); e.style.setProperty("--r", Math.round(Math.random() * 720) + "deg"); e.style.animationDelay = (Math.random() * 0.12) + "s"; }
     v.classList.remove("shake"); void v.offsetWidth; v.classList.add("shake");
   }
-  cfxPut() { // the big card goes down into its place in the fan (a pack), or you're done (a single card)
+  cfxPut() { // a pack's card flies back down into its place in the fan, face up; a single card: done
     const F = this.cfx;
     if (!F.pack) { this.cfxClose(); return; }
-    F.busy = true; F.hold.className = "cfx-hold leave"; this.el.cfx.querySelectorAll(".cfx-stamp,.cfx-conf").forEach(e => e.remove());
-    this.cfxLater(240, () => {
-      F.big.innerHTML = ""; const sl = F.slots[F.i], c = F.list[F.i]; sl.innerHTML = ""; const w = document.createElement("div"); w.style.setProperty("--s", (this.scale || 1) * 0.42); w.appendChild(this.cardElement(c.p, c.kind)); sl.appendChild(w); sl.className = "cfx-slot face";
-      if (++F.i < F.list.length) { this.cfxLater(200, () => { F.phase = "fan"; F.busy = false; this.cfxHint("A: flip"); }); return; }
-      this.cfxLater(250, () => { F.phase = "done"; F.busy = false; this.cfxHint("A: done"); });
+    F.busy = true; this.el.cfx.querySelectorAll(".cfx-stamp,.cfx-conf,.cfx-burst").forEach(e => e.remove()); F.big.innerHTML = "";
+    const sl = F.slots[F.i], c = F.list[F.i], fly = F.fly, O = fly.getBoundingClientRect(), Q = sl.getBoundingClientRect(), r = parseFloat(sl.style.rotate) || 0;
+    fly.classList.remove("go"); fly.classList.add("back");
+    fly.style.transform = "translate(" + Math.round(Q.left + Q.width / 2 - (O.left + O.width / 2)) + "px," + Math.round(Q.top + Q.height / 2 - (O.top + O.height / 2)) + "px) scale(" + (Math.min(Q.width, Q.height * 104 / 146) / O.width).toFixed(3) + ") rotate(" + r + "deg)";
+    this.cfxLater(360, () => {
+      fly.remove(); F.fly = null; sl.innerHTML = ""; const w = document.createElement("div"); w.style.setProperty("--s", (this.scale || 1) * 0.42); w.appendChild(this.cardElement(c.p, c.kind)); sl.appendChild(w); sl.className = "cfx-slot"; sl.style.visibility = "";
+      if (++F.i < F.list.length) { this.cfxLater(120, () => { F.phase = "fan"; F.busy = false; this.cfxHint("A: flip"); }); return; }
+      this.cfxLater(200, () => { F.phase = "done"; F.busy = false; this.cfxHint("A: done"); });
     });
   }
   cfxClose() { const v = this.el.cfx; this.cfx = null; v.style.display = "none"; v.innerHTML = ""; v.className = "gt-cfx"; this.mode = "shop"; this.el.shop.style.display = "block"; this.renderShop(); }
@@ -7005,7 +7092,10 @@ class Game {
       this.drink = { kind: d.id === "week" ? 3 : i, name: d.name, sips: 0, color: d.color || "", iced: !!d.iced, mug }; this.sipClock = 240; // the first sip a few seconds after you get it // mug: "real" or "fake" (your travel mug), "" (a cup)
       if (d.id === "cocoa") this.quest("cocoa");
       this.progress.tally.drinks = (this.progress.tally.drinks || 0) + 1; this.bump(this.progress.stats.drinks, d.id); this.saveProgress();
-      this.say(d.line && d.line.length ? d.line : this.tx("drink.served")); // the drink of the week can come with its own line
+      const said = () => this.say(d.line && d.line.length ? d.line : this.tx("drink.served")); // the drink of the week can come with its own line
+      const p = this.player, [dx, dy] = DIRS[p.dir];
+      if (REDUCED_MOTION || this.recording()) { said(); return; }
+      this.handoff = { t0: this.t, x: (p.x + dx) * T, y: (p.y + dy) * T, d, k: i, mug, then: said }; this.mode = "busy"; // a tiny moment (Joe 10/15): set down on the counter, then into your hand
     };
     const mug = this.gear("mug"); // own a travel mug: the barista asks every time
     if (mug) this.choose(this.tx("drink.useMug").join(" "), ["Yes, my mug", "No, a cup"], k => serve(k === 0 ? mug : ""), 1); else serve("");
@@ -10165,7 +10255,7 @@ class Game {
       const pk = c.pose ? this.t - c.pose.t0 : 999, jump = c.pose && /^(startled|guard|pose)$/.test(c.pose.kind) && pk < 14 ? Math.round(Math.sin(Math.PI * pk / 14) * 3) : 0; // a little jump when photographed
       const hop = (c.react && c.react.how === "loved" && this.t - c.react.t0 < 48 ? Math.round(Math.abs(Math.sin((this.t - c.react.t0) / 8)) * 4) : 0) + jump - (c.pose && c.pose.kind === "bow" && pk > 8 && pk < 50 ? 1 : 0); // a happy hop; the usher's bow dips
       const sx = Math.round(p.x - cx), sy = Math.round(p.y - cy - 4) + (c.sitting ? 2 : 0) - (c === this.player && this.segway && !c.sitting ? 4 : 0) - hop;
-      const cup = c === this.player ? this.drink : c.drink, cupFirst = cup && c.dir === "up";
+      const cup = c === this.player ? (this.handoff ? null : this.drink) : c.drink, cupFirst = cup && c.dir === "up";
       const bagAt = c.bag && !c.sitting ? [sx + { down: 1, up: 9, left: 9, right: -1 }[c.dir], sy + 9] : null, bagFirst = bagAt && c.dir !== "down"; // a shop bag hangs at their side
       if (bagFirst) this.drawSlot("shop_bag", 0, 0, ...bagAt);
       const SI = this.side && this.side.item, held = SI && !c.sitting && ((c === this.player && this.carryItem) || (c.itemPair === "taker" && SI.phase >= 2 && !SI.got)) ? SI.kind : -1; // the break room mix-up: the item in hand
@@ -10250,7 +10340,7 @@ class Game {
       g.addColorStop(0, "rgba(255,255,240," + (0.45 * this.flash / 6).toFixed(3) + ")"); g.addColorStop(1, "rgba(255,255,240,0)");
       ctx.fillStyle = g; ctx.fillRect(x0 - 30, y0 - 30, 60, 60);
     }
-    if (!full) this.drawCoins(ctx, cx, cy);
+    if (!full) { this.drawHandoff(ctx, cx, cy); this.drawCoins(ctx, cx, cy); this.drawLens(ctx); }
     if (this.fade > 0) { ctx.globalAlpha = Math.min(1, this.fade); ctx.fillStyle = "#000"; ctx.fillRect(0, 0, SW, SH); ctx.globalAlpha = 1; }
   }
 }
@@ -10286,7 +10376,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 69";
+const VERSION = "2026-11-18 cards 70";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
