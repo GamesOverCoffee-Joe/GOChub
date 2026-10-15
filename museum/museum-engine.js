@@ -1662,22 +1662,27 @@ function genreOf(p, genres) {
   if (p.genre && genres.some(g => g.id === p.genre)) return p.genre;
   return "";
 }
-/* Episodes in cases. Newest first, each goes to a free case in its genre's room, and only there: add cases to a room
-   and more of its genre come out of the archive; take some away and its oldest go back in. Episodes with no genre go in
-   rooms with no genre. Whatever doesn't fit is archived on Someone's PC. Returns the piece in each case, room by room. */
+/* Episodes in cases, by air date (Joe 10/15): the wings are a timeline. The cases are taken wing by wing in the wings' timeline
+   order (each wing's "order", then the layout's order), case by case; the episodes go in oldest first. Undated ones count
+   as the oldest, in the Pieces order. More episodes than cases: the oldest go to the archive on Someone's PC, so the newest
+   always has a case. Returns the piece in each case, room by room, and each case (slots) with its wing. */
+function piecesByAir(pieces) { return pieces.map((p, i) => [p, i]).sort((a, b) => (a[0].aired || "").localeCompare(b[0].aired || "") || a[1] - b[1]).map(x => x[0]); }
 function assignCases(pieces, genres) {
   const slots = [];
   for (const id in ROOMS) {
     const def = ROOMS[id], lay = layoutOf(def);
     (def.cases || []).forEach(([x, y], i) => {
       const z = lay && lay.zoneAt[y] ? lay.zoneAt[y][x] : -1, zone = z >= 0 ? lay.zones[z] : null;
-      slots.push({ room: id, i, genre: zone && zone.rect && zone.rect.genre || "", where: zone ? zone.name : def.name, p: null });
+      const rank = zone && zone.rect ? (zone.rect.order || 50) * 100 + z : 99999; // (rooms come first among the zones, in the layout's order)
+      slots.push({ room: id, i, genre: zone && zone.rect && zone.rect.genre || "", wing: zone && zone.rect ? zone.rect.id : "", where: zone ? zone.name : def.name, rank, p: null });
     });
   }
-  const eps = pieces.filter(p => p.kind === "episode"), newest = eps.slice().reverse(), placed = new Set();
-  for (const p of newest) { const g = genreOf(p, genres), s = slots.find(s => !s.p && s.genre === g); if (s) { s.p = p; placed.add(p.id); } }
+  const order = slots.slice().sort((a, b) => a.rank - b.rank || (a.room === b.room ? a.i - b.i : 0));
+  const eps = piecesByAir(pieces.filter(p => p.kind === "episode")), shown = eps.slice(Math.max(0, eps.length - order.length));
+  shown.forEach((p, k) => { order[k].p = p; });
   const byRoom = {}; slots.forEach(s => ((byRoom[s.room] = byRoom[s.room] || [])[s.i] = s.p));
-  return { byRoom, slots, archived: eps.filter(p => !placed.has(p.id)) };
+  const placed = new Set(shown.map(p => p.id));
+  return { byRoom, slots, order, archived: eps.filter(p => !placed.has(p.id)) };
 }
 function normalizePiece(p, i) {
   p = p && typeof p === "object" ? p : {};
@@ -1688,6 +1693,7 @@ function normalizePiece(p, i) {
     observation: str(p.observation), intention: str(p.intention), guestWriter: str(p.guestWriter, 80), guestNote: str(p.guestNote),
     episodeUrl: safeUrl(p.episodeUrl), gameUrl: safeUrl(p.gameUrl), clipUrl: safeUrl(p.clipUrl) || (/^[\w.-]{1,80}\.(webm|mp4)$/i.test(String(p.clipUrl || "").trim()) ? String(p.clipUrl).trim() : ""), clipLoop: str(p.clipLoop, 30), image: str(p.image, 20000000) || null,
     unveil: /^\d{4}-\d{2}-\d{2}$/.test(p.unveil || "") ? p.unveil : "",
+    aired: /^\d{4}-\d{2}-\d{2}$/.test(p.aired || "") ? p.aired : "", // the day its episode aired: the wings fill by it (Joe 10/15)
     drink: str(p.drink, 40), // unveiling: the drink of the week it brings (until the next unveil that brings one)
     drinkPrice: Math.max(0, Math.min(99, Math.round(+p.drinkPrice || 0))), drinkIced: !!p.drinkIced, // the drink of the week's price, and whether it's served iced
     drinkColor: isHex(p.drinkColor) ? p.drinkColor : "", drinkLine: Array.isArray(p.drinkLine) ? p.drinkLine.map(x => str(x, 200)).filter(Boolean).slice(0, 6) : [], // its cup color, and what the barista says
@@ -2814,7 +2820,7 @@ function normalizeLayout(L) {
   const art = a => (a && typeof a === "object" ? Object.fromEntries(Object.entries(a).filter(([k, v]) => ["top", "upper", "lower", "floor"].includes(k) && SLOT[v])) : {});
   const out = { hallArt: art(L.hallArt), rooms: [], halls: [], doors: [], stairs: [] };
   (Array.isArray(L.rooms) ? L.rooms : []).slice(0, 40).forEach((r, i) => { if (!r) return;
-    out.rooms.push({ id: id(r.id, "room" + i), name: str(r.name, 40) || "Room", x: n(r.x, 1, LAYOUT_MAX_W - 4, 2), y: n(r.y, 3, LAYOUT_MAX_H - 4, 3), w: n(r.w, 2, 60, 8), h: n(r.h, 2, 60, 6), art: art(r.art), light: r.light !== false, genre: str(r.genre, 30), color: hexOr(r.color), tint: { floor: hexOr(r.tint && r.tint.floor), wall: hexOr(r.tint && r.tint.wall) }, wallpaper: SLOT[r.wallpaper] && SLOT[r.wallpaper].group === "Wallpaper" ? r.wallpaper : "",
+    out.rooms.push({ id: id(r.id, "room" + i), name: str(r.name, 40) || "Room", x: n(r.x, 1, LAYOUT_MAX_W - 4, 2), y: n(r.y, 3, LAYOUT_MAX_H - 4, 3), w: n(r.w, 2, 60, 8), h: n(r.h, 2, 60, 6), art: art(r.art), light: r.light !== false, genre: str(r.genre, 30), color: hexOr(r.color), tint: { floor: hexOr(r.tint && r.tint.floor), wall: hexOr(r.tint && r.tint.wall) }, wallpaper: SLOT[r.wallpaper] && SLOT[r.wallpaper].group === "Wallpaper" ? r.wallpaper : "", order: n(r.order, 0, 99, 0),
       edits: (Array.isArray(r.edits) ? r.edits : []).slice(0, 400).filter(e => Array.isArray(e) && (e[2] === "." || e[2] === "#")).map(e => [n(e[0], -30, 90, 0), n(e[1], -30, 90, 0), e[2]]) }); });
   (Array.isArray(L.halls) ? L.halls : []).slice(0, 60).forEach((h, i) => { if (!h) return;
     const path = (Array.isArray(h.path) ? h.path : []).slice(0, 8).map(p => [n(p && p[0], 1, LAYOUT_MAX_W - 3, 1), n(p && p[1], 3, LAYOUT_MAX_H - 3, 3)]);
@@ -4931,7 +4937,7 @@ class Game {
   /* Thursday: five questions, multiple choice, a few seconds each. Mostly from the pieces themselves; your own ones too. */
   trivia() {
     const ps = this.pack.pieces.filter(p => !p.tut && !(p.unveil && p.unveil > todayISO())), gs = this.pack.settings.genres, wings = this.wingZones();
-    const wingOf = p => { const g = genreOf(p, gs); const z = wings.find(q => q.rect.genre === g); return z ? z.name : ""; };
+    const at = {}; assignCases(this.pack.pieces, gs).slots.forEach(s => { if (s.p) at[s.p.id] = s.where; }); const wingOf = p => at[p.id] || ""; // the wing its case is in
     const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]), others = (all, right) => shuffle([...new Set(all.filter(v => v && v !== right))]).slice(0, 3);
     const qs = [];
     const custom = (this.pack.settings.text["thu.questions"] || TEXT["thu.questions"].v).filter(e => e && e.length >= 3 && !/^\[/.test(e[0]));
@@ -5101,7 +5107,8 @@ class Game {
   officeCode() { return this.wings().map(w => this.wingDigit(w.id)).join(""); }
   wingDone(id) { // every piece in the wing read front and back (once done, it stays done when new pieces arrive)
     const done = this.progress.wingsDone || (this.progress.wingsDone = {}); if (done[id]) return true;
-    const today = todayISO(), ps = this.pack.pieces.filter(p => genreOf(p, this.pack.settings.genres) === id && !(p.unveil && p.unveil > today));
+    const today = todayISO(), inWing = new Set(assignCases(this.pack.pieces, this.pack.settings.genres).slots.filter(s => s.p && s.genre === id).map(s => s.p.id)); // the pieces in its cases (the wings go by air date now)
+    const ps = this.pack.pieces.filter(p => inWing.has(p.id) && !(p.unveil && p.unveil > today));
     if (!ps.length || !ps.every(p => this.isRead(p))) return false;
     done[id] = todayISO(); this.saveProgress(); return true;
   }
@@ -7676,7 +7683,7 @@ class Game {
     const split = archiveSplit(this.pack.pieces), cases = assignCases(this.pack.pieces, this.pack.settings.genres);
     o.caseFor = cases.byRoom; o.community = split.community; this.archived = [...cases.archived, ...split.archived.filter(p => p.kind !== "episode")];
     // A room's overflow (its genre's episodes that don't fit its cases) is on that room's touch screen.
-    this.overflow = {}; cases.archived.forEach(p => { const g = genreOf(p, this.pack.settings.genres); (this.overflow[g] = this.overflow[g] || []).push(p); });
+    this.overflow = {}; const first = cases.order.find(sl => sl.genre); if (first && cases.archived.length) this.overflow[first.genre] = cases.archived.slice(); // the oldest that don't fit: on the touch screen at the start of the timeline (the first wing's)
     this.rooms = {}; Object.keys(ROOMS).forEach(id => (this.rooms[id] = buildRoom(id, this.pack.pieces, o)));
     this.tutDress(); this.seatGuests(); this.placeJoe(); this.placeDay();
     this.placeCurious(); this.placeMembers(); this.giveLife();
@@ -9995,7 +10002,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 63";
+const VERSION = "2026-11-18 cards 64";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
