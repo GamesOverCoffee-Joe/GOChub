@@ -315,3 +315,14 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Café | The same (second version) | Three coffees. Zero regrets. / Your heart is doing a drum solo. Time to move. |
 | Café | The coffee rush wears off | The coffee wears off. / You could really go for a nap. |
 | Café | The same (second version) | Your legs have stopped vibrating. / Was that a minute or an hour? |
+| The reader | Talking to or looking at her ({book}: today's book) | She's reading {book}. / She doesn't look up. |
+| The reader | The same (second version) | {book}. She turns a page. / You don't exist right now. |
+| The reader | The same (third version) | She's deep into {book}. / She looks incredibly comfy. |
+| The reader | The reading nook's bookshelf | A little shelf of video game strategy guides. / None of these are what she's reading. She must've brought her own books. |
+| The reader | Her side table | A cup of coffee, still warm. And a very small ashtray with a little leaf on it. / ...Is that allowed in here? |
+| The reader | Her armchair, once she's gone home | Her armchair. She left her plaid blanket on it. / She'll be back tomorrow. |
+| The reader | Visitors near the nook, about her | Is she... allowed to just read in here? / She looks so comfy. Nobody wants to be the one to ask. |
+| The reader | The same (second version) | She was already here when I got here. / I think she's always here. |
+| The reader | The same (third version) | I've never seen anyone that comfortable in a museum. |
+| The reader | The same (fourth version) | Do you think she knows this is a museum? |
+| Pack (museum room) | The reading nook's lamp | A fringed lamp, angled just right for reading. |

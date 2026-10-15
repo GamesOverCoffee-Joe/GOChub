@@ -113,6 +113,10 @@ const PAL = {
   easel:   [null, "#8a5a32", "#5a3a1a", "#f4f0e6", "#c84a3a", "#3a6ac8", "#e0b040"],
   stall:   [null, "#c84a4a", "#f4f0e6", "#8a5a32", "#5a3a1a", "#181820"],
   ledsign: [null, "#0a080c", "#2a2630", "#55505e", "#1c0808"],
+  rchair:  [null, "#24585a", "#357a76", "#1a1418", "#3a2418", "#f0ece4", "#26242c", "#6aaea4"], // the reader's armchair: teal velvet (it has to stand out on the wing's plum carpet), its legs, the plaid blanket's white and black, a highlight
+  rtable:  [null, "#7a4a2a", "#a86a3a", "#1a1418", "#f0ece4", "#5a3420", "#8a8c94", "#4a9a3a"], // her side table: wood, a white cup, coffee, the ashtray, its little leaf
+  rshelf:  [null, "#5a3a22", "#7a4a2a", "#1a1418", "#c83a3a", "#3a68c8", "#e8c040", "#58a048", "#8850c0"], // the nook's bookshelf: wood, and the guides' spines
+  rbook:   [null, "#c8c8c8", "#f4efe0", "#1a1418", "#b0a890"], // her book: the cover (tinted to the book), the pages, the lines of text
   coin: ["#fff2a0", "#f0c038", "#b87818", "#1a1008", "#fffbe8"], // the token: gold, its rim, a black Q (index 3) and a glint
   eotmled: [null, "#0a080c", "#2a2630", "#7a5a20", "#1c0808", "#e8b24a"], // a gold frame
   arcade:  [null, "#1a1424", "#3a2a5a", "#5a48a0", "#101018", "#40d0c0", "#f0c040", "#e05050", "#5878c8"],
@@ -1072,6 +1076,33 @@ const GEN = {
     rect(a, 2, 7, 12, 12, 2); rect(a, 2, 7, 12, 2, 1); rect(a, 4, 13, 2, 2, 3); rect(a, 10, 13, 2, 2, 3); rect(a, 3, 18, 10, 1, 3); rect(a, 9, 15, 4, 1, 3); rect(a, 4, 16, 3, 2, 6); px(a, 11, 10, 7);
     return outline(a);
   },
+  reader_chair: f => { // the reading nook's armchair, facing left (she sits in it); frame 1: empty, her plaid blanket left on it
+    const a = mk(16, 16);
+    rect(a, 10, 1, 5, 12, 1); rect(a, 11, 2, 3, 9, 2); rect(a, 2, 8, 9, 4, 1); rect(a, 3, 8, 7, 1, 2); rect(a, 1, 6, 4, 6, 1); rect(a, 2, 6, 2, 1, 7); // the back, the seat, the arm in front
+    rect(a, 2, 12, 13, 1, 1); rect(a, 2, 13, 1, 2, 4); rect(a, 13, 13, 1, 2, 4); // under the seat, the legs
+    if (f === 1) for (let y = 3; y < 12; y++) for (let x = 6; x < 15; x++) if (y > 7 || x > 9) { if ((x + y) % 2 === 0 || (y < 8 && x === 10)) a[y][x] = ((x >> 1) + (y >> 1)) % 2 ? 5 : 6; } // the black and white plaid, over the back and seat
+    return outline(a);
+  },
+  reader_book: f => { // her open book: frame 0 the pages, frame 1 the cover (tinted to the book she's reading)
+    const a = mk(8, 8);
+    if (f === 1) { rect(a, 0, 1, 8, 6, 1); return outline(a); }
+    rect(a, 1, 2, 3, 4, 2); rect(a, 4, 2, 3, 4, 2); px(a, 4, 2, 3); px(a, 4, 5, 3); for (const y of [3, 4]) { rect(a, 1, y, 2, 1, 4); rect(a, 5, y, 2, 1, 4); }
+    return a;
+  },
+  reader_table: () => { // her side table: a coffee, and a tiny ashtray with a leaf on it
+    const a = mk(16, 16);
+    rect(a, 2, 8, 12, 2, 2); rect(a, 2, 10, 12, 1, 1); rect(a, 4, 11, 1, 4, 1); rect(a, 11, 11, 1, 4, 1); // the top, its edge, the legs
+    rect(a, 3, 4, 4, 4, 4); rect(a, 4, 4, 2, 1, 5); px(a, 7, 5, 4); px(a, 7, 6, 4); // the cup of coffee
+    rect(a, 9, 6, 4, 2, 6); px(a, 10, 6, 7); px(a, 11, 6, 7); px(a, 11, 5, 7); px(a, 12, 6, 7); // the ashtray, and its little green leaf
+    return outline(a);
+  },
+  reader_shelf: () => { // a small bookshelf of video game strategy guides
+    const a = mk(16, 32);
+    rect(a, 1, 6, 14, 24, 1); rect(a, 2, 7, 12, 22, 2); for (const y of [13, 20, 27]) rect(a, 2, y, 12, 1, 1); rect(a, 1, 30, 2, 2, 1); rect(a, 13, 30, 2, 2, 1);
+    const cols = [4, 5, 6, 7, 8]; let k = 0;
+    for (const [y, h] of [[8, 5], [15, 5], [22, 5]]) for (let x = 3; x < 13; x += 2) { const c = cols[(k++ * 3) % 5], hh = h - (k % 3 === 0 ? 1 : 0); rect(a, x, y + h - hh, 2, hh, c); px(a, x, y + h - hh + 1, 2); }
+    return outline(a);
+  },
   espresso_wall: () => { // built into the café's back wall (Joe 10/15): the machine on a ledge behind the barista, cups warming on top
     const a = mk(16, 32);
     rect(a, 0, 25, 16, 2, 5); rect(a, 0, 27, 16, 1, 4); rect(a, 2, 28, 1, 2, 4); rect(a, 13, 28, 1, 2, 4); // the ledge and its brackets
@@ -1452,7 +1483,7 @@ const SLOTS = [
   { key: "supply_box", label: "Delivery box", group: "Days of the week", w: 16, h: 16, frames: 2, pal: "supbox", gen: GEN.supply_box, note: "2 frames side by side (32×16): the shop's stock, then the café's supplies. They turn up by the basement's garage door when the loop needs them; carried over your head." },
   { key: "lost_box", label: "Misplaced box (Mondays)", group: "Days of the week", w: 16, h: 16, pal: "lbox", gen: GEN.lost_box, note: "Five of these turn up around the museum on Mondays." },
   { key: "easel", label: "The artist's easel (Wednesdays)", group: "Days of the week", w: 16, h: 32, pal: "easel", gen: GEN.easel, note: "Two tiles tall." },
-  { key: "popup_table", label: "Pop-up table (Saturdays)", group: "Days of the week", w: 32, h: 16, pal: "stall", gen: GEN.popup_table, note: "In the lobby on Saturdays. The three items for sale are drawn on top." },
+  { key: "popup_table", label: "Pop-up table (Saturdays)", group: "Days of the week", w: 32, h: 16, pal: "stall", gen: GEN.popup_table, note: "In the lobby on Saturdays. Nothing is drawn on it: what Bluu sells is in his menu." },
   { key: "hall_poster", label: "Theater hallway poster", group: "Screening nook", w: 16, h: 32, pal: "hposter", gen: GEN.hall_poster, note: "On the hallway's left wall, seen edge on (mirrored for the right wall). Two tiles tall. It's dark in there; keep it dim." },
   { key: "aisle_light", label: "Hallway floor light", group: "Screening nook", w: 4, h: 3, pal: "aisle", gen: GEN.aisle_light, note: "A little light by the wall along the theater hallway's floor (mirrored on the right). Drawn over the dark, with a soft glow." },
   { key: "theater_screen", label: "Screening nook screen", group: "Screening nook", w: 96, h: 48, frames: 2, pal: "screen", gen: GEN.theater_screen, note: "2 frames (192×48), six tiles wide and three tall (both wall rows and the wall cap above). The picture is the 80×45 window at (8, 2): the episode playing this hour shows there, muted, when it can; otherwise it flickers softly between the frames." },
@@ -1543,6 +1574,10 @@ const SLOTS = [
   { key: "wallpaper_wing_scatter", label: "Wing wallpaper: Scatter", group: "Wallpaper", wing: true, w: 256, h: 32, pal: "wp_pastel", gen: GEN.wallpaper_wing_scatter, note: "Carries on from the Pastel streaks: short dashes over soft bands. On a wing's walls it's drawn in soft shades of the wing's color (shown here in the pastel colors); paint it yourself and your colors are used as they are." },
   { key: "token_coin", label: "Token", group: "Gift shop and café", w: 16, h: 16, pal: "coin", gen: GEN.token_coin, note: "A gift shop token. Big in the reward moment (drawn 3x over a spinning sunburst) and over your head when a chore pays." },
   { key: "espresso_wall", label: "Espresso machine (on the wall)", group: "Gift shop and café", w: 16, h: 32, pal: "barista", gen: GEN.espresso_wall, note: "Built into the café's back wall, behind the barista, across both wall rows: the machine sits on a ledge (rows 25 to 27). When she makes your drink she turns to it: steam rises from the top, coffee drips from the left spout (column 4, row 20) into a cup on the drip tray (rows 23 and 24)." },
+  { key: "reader_chair", label: "Reading nook armchair", group: "Furniture", w: 16, h: 16, frames: 2, pal: "rchair", gen: GEN.reader_chair, note: "2 frames (32×16): the armchair, facing left, that the reader sits in; then the same chair once she's gone home, with her black and white plaid blanket left on it." },
+  { key: "reader_book", label: "The reader's book", group: "Furniture", w: 8, h: 8, frames: 2, pal: "rbook", gen: GEN.reader_book, note: "2 frames (16×8), drawn in front of her: the open pages, then the cover behind them. Keep the cover grey: the game tints it to the book she's reading today." },
+  { key: "reader_table", label: "Reading nook side table", group: "Furniture", w: 16, h: 16, pal: "rtable", gen: GEN.reader_table, note: "Beside her chair: a cup of coffee and a very small ashtray with a leaf on it." },
+  { key: "reader_shelf", label: "Reading nook bookshelf", group: "Furniture", w: 16, h: 32, pal: "rshelf", gen: GEN.reader_shelf, note: "A small bookshelf of video game strategy guides. Two tiles tall." },
   { key: "token_coin_small", label: "Token (small)", group: "Gift shop and café", w: 8, h: 8, pal: "coin", gen: GEN.token_coin_small, note: "The little token in the corner count and next to prices." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
@@ -2648,6 +2683,11 @@ const TEXT = {
   "rack.empty":        { g: "Gift shop", l: "A stand with nothing for sale", v: [["A stand of little knickknacks.", "Nothing on this one is for sale. They're just here to keep you company."]] },
   "rack.available":    { g: "Gift shop", l: "Stand close-up: for sale", v: [["{n} tokens. Available to buy at the counter up front."]] },
   "cur.hello":         { g: "Curious visitors", l: "When you walk up to them (takes turns)", v: [["Oh, hello!"], ["Oh! Hi there."], ["Hm? Oh, hello!"]] },
+  "reader.look":      { g: "The reader", l: "Talking to or looking at the reader in the reading nook ({book}: what she's reading today)", by: "claude", v: [["She's reading {book}.", "She doesn't look up."], ["{book}. She turns a page.", "You don't exist right now."], ["She's deep into {book}.", "She looks incredibly comfy."]] },
+  "reader.shelf":     { g: "The reader", l: "The reading nook's bookshelf", by: "claude", v: [["A little shelf of video game strategy guides.", "None of these are what she's reading. She must've brought her own books."]] },
+  "reader.table":     { g: "The reader", l: "Her side table", by: "claude", v: [["A cup of coffee, still warm. And a very small ashtray with a little leaf on it.", "...Is that allowed in here?"]] },
+  "reader.chair":     { g: "The reader", l: "Her armchair, once she's gone home", by: "claude", v: [["Her armchair. She left her plaid blanket on it.", "She'll be back tomorrow."]] },
+  "reader.chatter":   { g: "The reader", l: "Visitors near the reading nook, now and then, about her", by: "claude", v: [["Is she... allowed to just read in here?", "She looks so comfy. Nobody wants to be the one to ask."], ["She was already here when I got here.", "I think she's always here."], ["I've never seen anyone that comfortable in a museum."], ["Do you think she knows this is a museum?"]] },
   "coffee.zoom":      { g: "Café", l: "Finishing a third caffeinated drink in a row: you're about to move at double speed for a minute", by: "claude", v: [["That's three in a row.", "Your eye is twitching. You can hear colors.", "Your legs feel... fast."], ["Three coffees. Zero regrets.", "Your heart is doing a drum solo. Time to move."]] },
   "coffee.crash":     { g: "Café", l: "The coffee rush wears off (a minute later)", by: "claude", v: [["The coffee wears off.", "You could really go for a nap."], ["Your legs have stopped vibrating.", "Was that a minute or an hour?"]] },
   "coin.find":        { g: "Tokens", l: "Now and then, looking at something turns up a token (one, popping over your head)", by: "claude", v: [["Huh? There's a token wedged in here.", "Finders keepers."], ["Oh! Somebody dropped a token.", "It's yours now."], ["Wait... is that a token?", "It is! Lucky."]] },
@@ -3356,10 +3396,14 @@ function buildRoom(id, pieces, o) {
       if (cands.length) { const [x, y] = cands[Math.floor(Math.random() * cands.length)]; extra.push(Object.assign(someone(), { _x: x, _y: y, zone: cz })); }
     }
   }
+  { // the reader (Joe 10/15): in her armchair in the reading nook all day, every day; she goes home at closing
+    const rc = (def.props || []).find(p => p.key === "reader_chair");
+    if (rc && !o.closing && o.tod !== "night") extra.push({ sheet: "visitor_b", shirt: "#3a5a7a", x: 0, y: 0, _x: rc.x, _y: rc.y, still: true, sitting: true, dir: rc.sit || "left", reader: true, lines: [["..."]] });
+  }
   const who = (def.visitors || []).concat(extra).filter(v => (!v.day || o.tod !== "night") && (v.patrol ? o.closing : !v.night || o.tod === "night") && (!o.closing || v.staff || v.patrol)); // the guard does rounds only at closing, whatever the hour (Joe 10/9)
   r.npcs = who.filter(v => !v.random || v._x !== undefined).map(v => ({ sitting: !!v.sitting, still: v.still, browsing: v.browsing, staff: v.staff, patrol: v.patrol, usher: v.usher, role: v.role || (v.usher ? "usher" : undefined), slow: v.slow, goRight: true, pause: 0, stuck: 0,
     sheet: v.sheet, x: v._x !== undefined ? v._x : v.x, y: v._y !== undefined ? v._y : v.y, dir: DIRS_LIST.includes(v.dir) ? v.dir : "down", moving: false, prog: 0, step: false, bumpT: 0, timer: 60 + Math.random() * 120, lines: v.lines, lineI: -1,
-    random: !!v.random, zone: v.zone || null,
+    random: !!v.random, zone: v.zone || null, reader: v.reader, shirt: v.shirt,
   }));
   return r;
 }
@@ -6762,6 +6806,13 @@ class Game {
      and it flips over big. A pack: it drops in and wiggles (harder, and glowing, with a rare inside); A tears it open and
      its cards fan out face down, then each flips over big in turn. A rare one builds up first (it trembles and glows),
      then flips with a flash, a spinning sunburst, confetti, a RARE! stamp and a shake. Then back to the shop. */
+  /* What the reader is reading today (Joe 10/15): one of the A Court of Thorns and Roses books, Jane Eyre, or a Sailor Moon volume. */
+  readerBook() {
+    const d = todayISO(); if (this._rb && this._rb.d === d) return this._rb.b; const h = strSeed("reader:" + d), set = h % 3;
+    const acotar = [["A Court of Thorns and Roses", "#c83a4a"], ["A Court of Mist and Fury", "#3a5ac8"], ["A Court of Wings and Ruin", "#d8a040"], ["A Court of Frost and Starlight", "#8ac8e0"], ["A Court of Silver Flames", "#a8a8b8"]];
+    const b = set === 0 ? (([t, c]) => ({ t, c }))(acotar[(h >>> 3) % acotar.length]) : set === 1 ? { t: "Jane Eyre", c: "#6a3a2a" } : { t: "Sailor Moon, volume " + (1 + (h >>> 3) % 12), c: "#e070a8" };
+    this._rb = { d, b }; return b;
+  }
   goqMark() { // the gold GOQ letters, without MUSEUM (the card backs, the pack)
     const L = '<path d="M86 26 A34 34 0 1 0 96 50 L66 50"/><circle cx="150" cy="50" r="34"/><circle cx="238" cy="50" r="34"/><path d="M247 62 L272 92"/>';
     return '<svg viewBox="0 0 300 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id="goqGoldB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbe7a8"/><stop offset=".55" stop-color="#e8c070"/><stop offset="1" stop-color="#a87a30"/></linearGradient></defs>' +
@@ -7545,9 +7596,9 @@ class Game {
     if (dark && !n.patrol) return null; // in the dark, only the night guard can be caught
     n.shots = n.lastShot && now - n.lastShot < 1800 ? (n.shots || 0) + 1 : 1; n.lastShot = now;
     const facesArt = !n.moving && (this.room.cases.some(c => c.piece && c.x === n.x && Math.abs(c.y - n.y) === 1) || this.room.hung.some(h => n.y === h.y + 2 && (h.x === n.x || h.x + 1 === n.x)));
-    const kind = n.shots >= 3 ? "annoyed" : n.patrol ? "guard" : n.usher ? "bow" : n.still && n.staff && !n.patron ? "busy" : n.follow ? "heart"
+    const kind = n.reader ? "busy" : n.shots >= 3 ? "annoyed" : n.patrol ? "guard" : n.usher ? "bow" : n.still && n.staff && !n.patron ? "busy" : n.follow ? "heart"
       : n.cur && !n.back ? "shy" : n.snapT > 0 ? "snapback" : n.sitting || n.patron ? "wave" : facesArt ? "startled" : "pose";
-    const who = n.member || (n.patrol ? "The night guard" : n.usher || n.tourUsher ? "The usher" : n.janitor ? "The Janitor" : n.role === "barista" ? "The barista" : n.role === "shopkeeper" ? "The shopkeeper" : n.teacher ? "The teacher" : kind === "busy" || n.consDream ? "The conservator" : n.schoolKid || n.tourKid ? "A kid" : "A visitor");
+    const who = n.member || (n.patrol ? "The night guard" : n.usher || n.tourUsher ? "The usher" : n.janitor ? "The Janitor" : n.role === "barista" ? "The barista" : n.role === "shopkeeper" ? "The shopkeeper" : n.teacher ? "The teacher" : n.reader ? "The reader" : kind === "busy" || n.consDream ? "The conservator" : n.schoolKid || n.tourKid ? "A kid" : "A visitor");
     const face = OPP[p.dir], keep = n.homeDir !== undefined ? n.homeDir : n.dir;
     if (n.moving) { n.moving = false; n.prog = 0; } // mid-step (the guard on his rounds): they stop where they were, not step toward you
     if (kind === "busy") {} else if (kind === "shy") n.dir = p.dir; else n.dir = face; // the shy turn away; the busy don't look up
@@ -8017,6 +8068,7 @@ class Game {
     if (npc.follow) { this.followerTalk(npc); return; }
     if (npc.cur) { this.curiousTalk(npc); return; }
     if (npc.back) { this.backTalk(npc); return; }
+    if (npc.random && !npc.member && this.room.npcs.some(n => n.reader && Math.abs(n.x - npc.x) + Math.abs(n.y - npc.y) <= 14) && Math.random() < 0.35) { this.say(this.tx("reader.chatter")); return; } // near the reading nook: they're talking about her
     const named = pages => (npc.member ? pages.map((p, k) => (k === 0 ? npc.member + ": " + p : p)) : pages);
     const chat = () => { npc.lineI = (npc.lineI + 1) % npc.lines.length; this.say(named(npc.lines[npc.lineI])); };
     if (npc.sitting) { chat(); return; }
@@ -8032,6 +8084,7 @@ class Game {
     if (r.npcs.some(n => n.x === e.x && n.y === e.y)) { this.say(["Someone's already sitting there."]); return; }
     const p = this.player;
     p.sitFrom = [p.x, p.y]; p.x = e.x; p.y = e.y; p.dir = e.sit; p.sitting = true; p.moving = false; this.sipClock = Math.min(this.sipClock > 0 ? this.sipClock : 60, 60); this.inputLock = true; // a sip within a second of sitting, or sooner if one was due
+    if (this.room.props.some(q => q.key === "reader_chair" && q.x === e.x && q.y === e.y)) this.say(this.tx("reader.chair")); // her armchair, once she's gone home: the blanket she left
     p.bench = !!e.bench; this.sitIdle = 0; this.asleep = false;
     if (this.sundaySeat(e)) return; // Sunday: coffee with someone from the staff
     if (this.triviaSeat(e)) return; // Thursday: the free seat at the trivia tables
@@ -8484,6 +8537,7 @@ class Game {
       else if (out) { out.moving = false; out.prog = 0; out.route = null; npc = out; }
     }
     if (!npc && this.room.id === "lobby" && this.notesHere() && (() => { const d = this.room.props.find(q => q.key === "front_desk"); return d && fx === d.x + 2 && fy === d.y; })()) { this.pickNotes(); return; } // the field notes on the front desk
+    if (npc && npc.reader) { this.say(this.tx("reader.look", { book: this.readerBook().t })); return; } // she ignores everyone: all you get is what she's reading
     if (npc && this.carryBox && (npc.role === "shopkeeper" || npc.role === "barista")) { this.deliver(npc.role); return; } // a delivery box for them
     if (npc && (npc.consDream || npc.itemPair)) { if (!npc.walkTo && !npc.sitting) this.faceYou(npc, 240); if (this.sideTalk(npc)) return; } // the conservator out in the wings, the break room pair
     if (npc && (npc.tour || npc.tourUsher)) { npc.timer = 180; if (!npc.walkTo) this.faceYou(npc, 240); this.tourTalk(npc); return; } // the tour group
@@ -9943,7 +9997,7 @@ class Game {
     const ctx = this.ctx, k = p.plant && this.isThirsty(p.plant) ? "plant_thirsty" : p.key === "trash_can" && this.binFull(this.room.id, p.x, p.y) ? "trash_full" : p.key;
     const px0 = p.x * T - cx, py0 = p.y * T - (SLOT[k].h - T) - cy;
     if (k === "bench_side") { this.drawFlip(k, p.sit === "right", px0, py0); return; } // whoever sits on it is drawn over both seats
-    this.drawSlot(k, k === "microwave_counter" ? (this.microwaved ? 1 : 0) : k === "office_tv" ? (this.tvOn ? 1 : 0) : this.frame(k), 0, px0, py0);
+    this.drawSlot(k, k === "microwave_counter" ? (this.microwaved ? 1 : 0) : k === "office_tv" ? (this.tvOn ? 1 : 0) : k === "reader_chair" ? (this.room.npcs.some(n => n.reader && n.x === p.x && n.y === p.y) ? 0 : 1) : this.frame(k), 0, px0, py0);
     if (k === "museum_sign") { const im = this.signImg(), X = Math.round(px0), Y = Math.round(py0); // the GOQ Museum logo, over the doors out front
       if (im) ctx.drawImage(im, X + 6, Y + 5, 52, 23); ctx.fillStyle = "#1c1620"; ctx.fillRect(X + 3, Y + 21, 58, 8); // (its own MUSEUM is too small to read here: ours, bigger)
       ctx.font = "bold 7px monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = "#e8505e"; ctx.fillText("M U S E U M", X + 32, Y + 25); ctx.textAlign = "start"; }
@@ -10318,6 +10372,7 @@ class Game {
         if (hex) this.drawSlot("visitor_shirt@" + hex, c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
       }
       if (cup && !cupFirst) this.drawCup(sx, sy, c);
+      if (c.reader && c.sitting && !c.leaving) { const b = this.readerBook(), bx = sx + (c.dir === "right" ? 11 : c.dir === "left" ? -3 : 4), by = sy + 8; this.drawSlot("reader_book@" + b.c, 1, 0, bx, by); this.drawSlot("reader_book", 0, 0, bx, by); } // her book, open in front of her
       if (bagAt && !bagFirst) this.drawSlot("shop_bag", 0, 0, ...bagAt);
       if (heldAt && !heldFirst) this.drawSlot("held_items", held, 0, ...heldAt);
       if (c !== this.player && c.snapT > 0) { // a visitor taking a photo of a piece: phone held up above their head, then a flash
@@ -10410,7 +10465,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 71";
+const VERSION = "2026-11-18 cards 72";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
