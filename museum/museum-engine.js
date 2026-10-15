@@ -3757,6 +3757,7 @@ class Game {
 .gt-shift .shift{background:#2f6b4f;color:#f8f0c0}
 .gt-shift .tok{background:#7c5a0c;color:#fff6cc}
 .gt-coin{width:1em;height:1em;vertical-align:-.12em;margin-right:.3em;image-rendering:pixelated;image-rendering:crisp-edges}
+.gt-shop-row img.gt-coin,.gt-janky .gt-shop-row img.gt-coin{width:1em;height:1em;transform:none;flex:none}
 .gt-shift .pulse{animation:gtPulse .5s steps(3)}
 @keyframes gtPulse{50%{transform:scale(1.25)}}
 .gt-shift b{font-weight:normal;color:#fff;margin-right:calc(3px * var(--s))}
@@ -4465,7 +4466,7 @@ class Game {
       const b = document.createElement("b"); b.textContent = "ON SHIFT"; c.appendChild(b);
       c.appendChild(document.createTextNode(n + " pt" + (n === 1 ? "" : "s"))); c.title = s.name + " is on shift" + (s.token ? "" : " (offline test badge: points stay in this browser)"); h.appendChild(c);
     }
-    if (tokens > 0 || (this.zone && this.zone.id === "cafe")) {
+    { // always there, 0 included (Joe 10/15)
       const c = document.createElement("span"); c.className = "chip tok" + (pulse ? " pulse" : ""); this.tokTag(c, tokens); c.title = tokens + " gift shop tokens"; h.appendChild(c);
     }
     h.style.display = h.children.length ? "flex" : "none";
@@ -6161,9 +6162,9 @@ class Game {
     if (big) { (this.coinQ = this.coinQ || []).push(n); this.updateHud(); } else { this.coinPop(n); this.updateHud(true); }
   }
   /* An amount of tokens, as the little coin and the number (the HUD, prices). */
-  tokTag(el, n) {
+  tokTag(el, n, before) {
     const src = this.sheet("token_coin_small"); if (this._coinArt !== src) { this._coinArt = src; try { this._coinSrc = src.toDataURL ? src.toDataURL() : src.src; } catch (e) { this._coinSrc = ""; } }
-    el.textContent = ""; if (this._coinSrc) { const i = document.createElement("img"); i.className = "gt-coin"; i.src = this._coinSrc; i.alt = "tokens:"; el.appendChild(i); } else el.textContent = "T ";
+    el.textContent = before || ""; if (this._coinSrc) { const i = document.createElement("img"); i.className = "gt-coin"; i.src = this._coinSrc; i.alt = "tokens:"; el.appendChild(i); } else el.textContent = "T ";
     el.appendChild(document.createTextNode(String(n)));
   }
   coinPop(n) { const P = this.pops = this.pops || [], o = P[P.length - 1]; if (o && this.t - o.t0 < 24) { o.n += n; return; } P.push({ n, t0: this.t }); }
@@ -6192,25 +6193,24 @@ class Game {
     }
     const F = this.coinFx; if (!F) return;
     const t = F.t, out = t > COIN_FX - 14 ? (COIN_FX - t) / 14 : 1, still = REDUCED_MOTION;
-    const ease = u => { u = Math.max(0, Math.min(1, u)); const c = 1.9; return 1 + (c + 1) * Math.pow(u - 1, 3) + c * Math.pow(u - 1, 2); }; // overshoots, then settles
-    const mx = SW / 2, my = SH / 2 - 10, grow = still ? 1 : ease(t / 22);
+    const ease = u => { u = Math.max(0, Math.min(1, u)); const c = 2.2; return 1 + (c + 1) * Math.pow(u - 1, 3) + c * Math.pow(u - 1, 2); }; // overshoots a little, then settles back
+    const mx = SW / 2, my = SH / 2 - 10, grow = still ? 1 : ease(t / 20);
     ctx.globalAlpha = 0.6 * Math.min(1, t / 10) * out; ctx.fillStyle = "#0c0814"; ctx.fillRect(0, 0, SW, SH);
-    { // the sunburst: gold and red rays, turning, drawn pixel by pixel so the edges stay crisp
+    { // the sunburst: gold and red rays, turning, the gold ones reaching further. Half see-through in the middle, fading to nothing at the edge
       const c = this.burstCv || (this.burstCv = document.createElement("canvas")); c.width = SW; c.height = SH;
-      const x = c.getContext("2d"), d = x.createImageData(SW, SH), px = d.data, spin = still ? 0 : t * 0.018, R = 74 * grow, rays = 14;
-      const gold = [240, 192, 56], red = [200, 48, 44], hot = [255, 240, 170];
+      const x = c.getContext("2d"), d = x.createImageData(SW, SH), px = d.data, spin = still ? 0 : t * 0.018, R = 96 * grow, rays = 14;
+      const gold = [240, 192, 56], red = [200, 48, 44];
       for (let y = 0; y < SH; y++) for (let xx = 0; xx < SW; xx++) {
-        const dx = xx - mx, dy = y - my, r = Math.hypot(dx, dy); if (r > R) continue;
-        if (r > R - 12 && hash(xx, y) % 12 < r - (R - 12)) continue; // a dithered edge
-        const a = Math.atan2(dy, dx) + spin, ray = Math.floor((a / (Math.PI * 2) + 2) * rays) % 2, col = r < 13 ? hot : ray ? gold : red, i = (y * SW + xx) * 4;
-        px[i] = col[0]; px[i + 1] = col[1]; px[i + 2] = col[2]; px[i + 3] = 255;
+        const dx = xx - mx, dy = y - my, r = Math.hypot(dx, dy); if (r >= R) continue;
+        const a = Math.atan2(dy, dx) + spin, ray = Math.floor((a / (Math.PI * 2) + 2) * rays) % 2, reach = ray ? R : R * 0.72; if (r >= reach) continue;
+        const col = ray ? gold : red, i = (y * SW + xx) * 4;
+        px[i] = col[0]; px[i + 1] = col[1]; px[i + 2] = col[2]; px[i + 3] = Math.round(128 * (1 - r / reach)); // 50% in the middle to 0% at the tip
       }
-      x.putImageData(d, 0, 0); ctx.globalAlpha = 0.9 * out; ctx.drawImage(c, 0, 0);
+      x.putImageData(d, 0, 0); ctx.globalAlpha = out; ctx.drawImage(c, 0, 0);
     }
     ctx.globalAlpha = out;
-    const rise = still ? 0 : (1 - ease(t / 26)) * (SH / 2 + 30), flip = still || t > 34 ? 1 : Math.abs(Math.cos(t * 0.28)) * 0.85 + 0.15; // rises from below, spinning on the way up
-    const cw = Math.max(3, Math.round(48 * flip)), bob = still ? 0 : Math.round(Math.sin(t * 0.09) * 1.5);
-    ctx.drawImage(this.sheet("token_coin"), Math.round(mx - cw / 2), Math.round(my - 24 + rise + bob), cw, 48);
+    const sz = Math.max(1, Math.round(48 * grow)), bob = still || t < 24 ? 0 : Math.round(Math.sin((t - 24) * 0.09) * 1.5); // scales in from nothing, with a small bounce back
+    ctx.drawImage(this.sheet("token_coin"), Math.round(mx - sz / 2), Math.round(my - sz / 2 + bob), sz, sz);
     if (!still) for (let i = 0; i < 6; i++) { // sparkles winking around it
       const k = (t + i * 11) % 36; if (k > 14 || t < 20) continue; const an = i * 1.05 + Math.floor((t + i * 11) / 36) * 2.3, r = 30 + (i % 3) * 6;
       const sx = Math.round(mx + Math.cos(an) * r), sy = Math.round(my + Math.sin(an) * r * 0.8), z = k < 7 ? 1 : 2; ctx.fillStyle = "#fffbe8";
@@ -6325,7 +6325,7 @@ class Game {
     if (!rows.length) { back(); return; }
     const label = r => r.p.title + (r.k === "r" ? " (rare)" : r.k === "f" ? " (fake)" : "") + (r.n > 1 ? " x" + r.n : "") + "  ·  " + this.sellPrice(r.k) + " T";
     this.menuRet = back; // B: back to the shop
-    this.openList("SELL CARDS  ·  TOKENS " + (this.progress.tokens || 0), [...rows.map(label), "Back"], i => {
+    this.openList("SELL CARDS  ·  WALLET " + (this.progress.tokens || 0), [...rows.map(label), "Back"], i => {
       if (i >= rows.length) { back(); return; }
       const r = rows[i], sell = () => {
         const o = this.cardsOwned()[r.p.id]; o[r.k] = Math.max(0, (o[r.k] || 0) - 1); const n = this.sellPrice(r.k);
@@ -6360,7 +6360,7 @@ class Game {
     box.innerHTML = "";
     const head = document.createElement("div"); head.className = "gt-shop-head";
     const t1 = document.createElement("span"); t1.textContent = "GIFT SHOP";
-    const t2 = document.createElement("span"); t2.textContent = "TOKENS " + (this.progress.tokens || 0);
+    const t2 = document.createElement("span"); this.tokTag(t2, this.progress.tokens || 0, "WALLET ");
     head.appendChild(t1); head.appendChild(t2); box.appendChild(head);
     const sub = document.createElement("div"); sub.style.textAlign = "center"; sub.textContent = this.tx("shop.stock").join(" "); box.appendChild(sub); // the stock rotates
     const split = document.createElement("div"); split.className = "gt-split"; box.appendChild(split);
@@ -6389,7 +6389,7 @@ class Game {
     this.shopSel = Math.max(0, Math.min(rows.length - 1, this.shopSel)); box.innerHTML = "";
     const head = document.createElement("div"); head.className = "gt-shop-head";
     const t1 = document.createElement("span"); [...this.tx("sat.window").join(" ").toUpperCase()].forEach((ch, i) => { const c = document.createElement("span"); c.className = "jk"; c.textContent = ch === " " ? "\u00a0" : ch; c.style.transform = "rotate(" + ((hash(i, 7) % 15) - 7) + "deg) translateY(" + ((hash(i, 3) % 3) - 1) + "px)"; t1.appendChild(c); });
-    const t2 = document.createElement("span"); t2.textContent = "TOKENS " + (this.progress.tokens || 0);
+    const t2 = document.createElement("span"); this.tokTag(t2, this.progress.tokens || 0, "WALLET ");
     head.appendChild(t1); head.appendChild(t2); box.appendChild(head);
     const split = document.createElement("div"); split.className = "gt-split"; box.appendChild(split);
     const list = document.createElement("div"); list.className = "gt-shop-list"; split.appendChild(list);
@@ -6791,7 +6791,7 @@ class Game {
   renderCafe() {
     const m = this.cm, box = this.el.cafe; box.innerHTML = "";
     const head = document.createElement("div"); head.className = "gt-shop-head";
-    const t1 = document.createElement("span"); t1.textContent = "CAFE"; const t2 = document.createElement("span"); t2.textContent = "TOKENS " + (this.progress.tokens || 0);
+    const t1 = document.createElement("span"); t1.textContent = "CAFE"; const t2 = document.createElement("span"); this.tokTag(t2, this.progress.tokens || 0, "WALLET ");
     head.appendChild(t1); head.appendChild(t2); box.appendChild(head);
     const split = document.createElement("div"); split.className = "gt-split"; box.appendChild(split);
     const list = document.createElement("div"); list.className = "gt-shop-list"; split.appendChild(list);
@@ -7901,8 +7901,11 @@ class Game {
   /* Joe 10/15: now and then, looking at something turns up a token (three a day at most, each spot once). Returns what to
      do after its words, or nothing. */
   coinFind(e) {
-    if (this.tut || this.curator || this.recording() || Math.random() > 1 / 18) return;
-    const d = this.dayState(), k = this.room.id + ":" + (e.name || e.say), got = d.coins || (d.coins = []); if (got.length >= 3 || got.includes(k)) return;
+    if (this.tut || this.curator || this.recording()) return;
+    const first = !this.progress.firstCoin; // the first thing you look at after the tutorial always has one (Joe 10/15), so you know they're out there
+    if (!first && Math.random() > 1 / 18) return;
+    const d = this.dayState(), k = this.room.id + ":" + (e.name || e.say), got = d.coins || (d.coins = []); if (!first && (got.length >= 3 || got.includes(k))) return;
+    if (first) this.progress.firstCoin = true;
     return () => { got.push(k); this.progress.tally.found = (this.progress.tally.found || 0) + 1; this.saveProgress(); this.say(this.tx("coin.find"), () => this.earn(1)); };
   }
   /* An arrow sign's words and color: from its genre (Visitors, Genres), unless it has its own. */
@@ -10106,7 +10109,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 65";
+const VERSION = "2026-11-18 cards 66";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
