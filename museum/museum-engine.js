@@ -4150,7 +4150,7 @@ class Game {
 .gt-scr{position:absolute;overflow:hidden;pointer-events:none;background:#000}
 .gt-scr iframe{position:absolute;left:-12%;top:-12%;width:124%;height:124%;border:0;filter:saturate(.85) brightness(.88) contrast(1.06)}
 .gt-scr-fx{position:absolute;inset:0;background-image:linear-gradient(rgba(0,0,0,0) 50%,rgba(0,0,0,.32) 50%),linear-gradient(90deg,rgba(0,0,0,0) 50%,rgba(0,0,0,.12) 50%);background-size:100% calc(2px * var(--s)),calc(2px * var(--s)) 100%;box-shadow:inset 0 0 calc(5px * var(--s)) rgba(0,0,0,.65)}
-.gt-reader.clip{grid-template-columns:calc(112px * var(--s)) minmax(0,1fr);grid-template-rows:calc(63px * var(--s)) minmax(0,1fr) auto;grid-template-areas:"clip body" "head body" "foot foot";column-gap:calc(6px * var(--s));padding-top:calc(4px * var(--s))}
+.gt-reader.clip{grid-template-columns:calc(68px * var(--s)) minmax(0,1fr);grid-template-rows:calc(38px * var(--s)) minmax(0,1fr) auto;grid-template-areas:"clip body" "head body" "foot foot";column-gap:calc(6px * var(--s));padding-top:calc(4px * var(--s))}
 .gt-rd-clip{grid-area:clip;position:relative;overflow:hidden;background:#000;outline:calc(1px * var(--s)) solid #181820}
 .gt-rd-clip > img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
 .gt-list-split{display:grid;grid-template-columns:minmax(0,1fr) calc(104px * var(--s));gap:calc(5px * var(--s));align-items:start}
@@ -4168,9 +4168,9 @@ class Game {
 .gt-reader.clip .gt-rd-links{gap:calc(2px * var(--s))}
 .gt-reader.clip .gt-rd-links{flex-direction:row;flex-wrap:wrap;margin-left:0}
 .gt-reader.clip .gt-rd-links > *{flex:1}
-.gt-reader.clip .gt-rd-body{grid-area:body;height:calc(106px * var(--s));margin-top:0;font-size:calc(6.5px * var(--s))}
+.gt-reader.clip .gt-rd-body{grid-area:body;height:calc(106px * var(--s));margin-top:0;font-size:calc(6px * var(--s))}
 .gt-reader.clip .gt-rd-foot{grid-area:foot;align-self:end} /* the divider and the keys stay together at the bottom */
-.gt-reader.clip.flip{grid-template-columns:minmax(0,1fr) calc(112px * var(--s));grid-template-areas:"body clip" "body head" "foot foot"}
+.gt-reader.clip.flip{grid-template-columns:minmax(0,1fr) calc(68px * var(--s));grid-template-areas:"body clip" "body head" "foot foot"}
 .gt-rd-clip > img.photo{image-rendering:auto}
 .gt-rd-clip .gt-pick{position:absolute;left:calc(2px * var(--s));bottom:calc(2px * var(--s));z-index:2;margin:0;padding:calc(1px * var(--s)) calc(2px * var(--s));background:rgba(248,244,236,.92);border:calc(.5px * var(--s)) solid #181820}
 .gt-rd-body b.red{color:#a8322a}
@@ -10673,7 +10673,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 82";
+const VERSION = "2026-11-18 cards 83";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
