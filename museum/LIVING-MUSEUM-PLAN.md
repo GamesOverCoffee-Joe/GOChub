@@ -440,3 +440,16 @@ The tutorial teaches the museum's verbs instead of matching visitors to games. E
 | The plant drooping as the dial moves | The day's timeline |
 
 - **Still to decide:** whether the watering can becomes the real way to water plants (now you water them just by interacting), names for the trainer and the lost trainee, and whether the three made-up games go (or one stays as an example of the developer-voice exhibit).
+
+### **The duster and the dust bunnies** *(Joe 10/14)*
+
+A second chest, and the museum's first (very gentle) fight. Dusty frames are already a chore; the dust bunnies are where the dust comes from.
+
+- **The pickup:** a second treasure chest, Zelda style: "You got the duster!", held up over your head. The treasure-chest joke gets a sequel: the museum bought two.
+- **Dust bunnies:** little bunnies of dust that hop around a room and head for the nearest clean frame. If one gets there, it rubs against it and the frame goes dusty (the dusty look frames already have).
+- **Fighting them:** swing the duster and a bunny bursts into a small puff of dust and is gone. Miss one and it leaves a dusty frame behind, which you dust the usual way.
+- **Harmless:** they never hurt you; at most they hop away when you get close. Cozy, with a silly Zelda energy.
+- **In the tutorial:** its own small room (or part of room 1, after the watering can): three frames on the wall and two or three bunnies hopping toward them. Get them before they dust anything, or dust whatever they got to. Either way you pass; nothing to fail. *Teaches: the duster, on the frames, which the real museum needs.*
+- **In the museum (optional):** now and then rather than every day, so it stays a surprise. The conservator could mention he keeps finding dust in the basement and it's getting worse. The janitor, if he sees you: "Did you just... fight the dust?" On shift, each bunny could count as a chore point toward Employee of the Month. Once in a while, a big one in the basement: the Dust Bunny King.
+- **What it takes:** the game's first swing-and-hit: a swing animation, a hit check in front of you, the bunnies' simple head-for-a-frame movement, and the puff. The dusty frames, the chest, the pickup line and the chore points build on what's already there.
+- **Still to decide:** tutorial only, or the museum too; and whether bunnies only dust frames (simplest, and it ties into the existing chore) or other things too, like the cases.
