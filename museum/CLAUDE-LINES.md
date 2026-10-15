@@ -274,7 +274,6 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Janitor | The Janitor at the jammed trash can | Who jams a cup in a trash can? ⏎ Every. Single. Day. / I was on my break. ⏎ I was ON. MY. BREAK. |
 | Janitor | Talking to the Janitor after you unjammed the trash can and cleaned up round it (once) | Somebody pulled a cup out of that jammed can. And picked up the mess. ⏎ ...That was you, wasn't it? ⏎ Thanks. Really. |
 | Chill museum | The curator: the conservator (stopped to talk with him at closing) | And you stopped to talk to the conservator at closing. He doesn't get a lot of that. ⏎ He won't say so, but it made his night. |
-| Field notes | Finding the curator's field notes on the front desk | A notebook, left on the end of the front desk. FIELD NOTES, in the curator's handwriting. ⏎ Inside: a list of everything that keeps going wrong around here. Some of it's crossed out. Most of it isn't. ⏎ A sticky note on the cover: "If you found this, keep it. Maybe you'll have better luck. -the curator" ⏎ (The field notes are in your pause menu now.) |
 | Field notes | The usher | The usher's coffee: Buried in schedules every morning. Never gets a coffee before the tour. |
 | Field notes | The shopkeeper | The shop's stock: Deliveries land in the basement. The shop can't open till its box comes up. |
 | Field notes | The jammed trash can | The jammed can: Somebody jams a cup in a trash can's flap every single day. People just leave their trash beside it. |
@@ -341,7 +340,8 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Tutorial | The trainer, again, before the plant's watered | It's so sad. Look at it. |
 | Tutorial | Training Room B: the trainer unhooks a rope, after you first talk to her | She unhooks one of the velvet ropes for you. |
 | Tutorial | The trainer, after you water the sad plant | You watered it! Look at it perk up! / Thank you. The door to the closet's open now. |
-| Tutorial | The trainer, right after the thanks: the day dial shows up when she's done | Oh, and see that little timer in the lower left corner? / That's the day. It goes by while you're in here. / Plants get thirsty as the day goes on. Just so you know. |
+| Tutorial | The trainer, right after the thanks: then the view zooms in on the day dial | Oh, and see that little timer in the lower left corner? |
+| Tutorial | The trainer, once the view's back from the day dial | That's the day. It goes by while you're in here. / Plants get thirsty as the day goes on. Just so you know. |
 | Tutorial | The trainer, when the day dial ticks over and a corner plant droops | Oh no. Now that one in the corner's looking thirsty. / Time flies in here. |
 | Tutorial | The trainer, while the corner plant is still thirsty | The one in the corner's thirsty now too. If you've got a sec. |
 | Tutorial | The trainer, after you water the corner plant | You're a natural. Plants just get thirsty as the day goes on. |
@@ -363,7 +363,7 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Tutorial | The usher's wrap-up, signed in with a badge | You did it! Your badge is all set. |
 | Tutorial | The usher hands you tokens, the first time you finish (the big coin moment comes after) | Oh, and here. Five tokens, for finishing training. |
 | Tutorial | The usher, after the tokens (the ... is you asking about the exchange rate) | You can spend them in the gift shop and the café. / ... / The exchange rate? Don't think about it too hard. |
-| Tutorial | The usher, right before the field notes | Oh, and the curator keeps field notes on everything. Here's what you did today. |
+| Tutorial | The usher, right before the field notes | Oh, and the curator keeps field notes on everything. They're in your menu now. / Here's what you did today. |
 | Tutorial | The field notes page in the wrap-up (one line under the title) | Today's training |
 | Tutorial | The usher, after the field notes | Not bad for a first day. Head out through the glass door when you're ready. |
 | Tutorial | Field notes: you read the sign | Read a sign. |

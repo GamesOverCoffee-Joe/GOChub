@@ -141,6 +141,7 @@ dialog.settings::backdrop{background:rgba(10,5,7,.7)}
   font-size:calc(8px * var(--s));line-height:1.4;border:calc(1px * var(--s)) solid #f8f8f0;box-shadow:0 0 0 calc(1px * var(--s)) #181820;opacity:0;transform:translateY(-120%);
   transition:transform .25s steps(4),opacity .25s steps(4);pointer-events:none;max-width:70%;z-index:6}
 .gt-loc.on{opacity:1;transform:none}
+.gt-loc-spark{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;image-rendering:pixelated}
 /* Close-up of a piece: the art fills the space above the text box. */
 .gt-closeup{position:absolute;left:0;right:0;top:0;height:calc(112px * var(--s));display:none;align-items:center;justify-content:center;
   background:rgba(24,24,32,.82);cursor:pointer;z-index:4}
@@ -233,7 +234,7 @@ dialog.settings::backdrop{background:rgba(10,5,7,.7)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 78";
+window.GOQ_WANT = "2026-11-18 cards 79";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
