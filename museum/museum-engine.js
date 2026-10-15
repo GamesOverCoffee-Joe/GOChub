@@ -3791,18 +3791,18 @@ class Game {
 .gt-cfx.dim{background:rgba(10,6,8,.82)}
 .gt-cfx.shake{animation:gtShake .35s linear}
 @keyframes gtShake{20%{transform:translate(calc(2px * var(--s)),calc(-1px * var(--s)))}40%{transform:translate(calc(-2px * var(--s)),calc(1px * var(--s)))}60%{transform:translate(calc(1px * var(--s)),calc(1px * var(--s)))}80%{transform:translate(calc(-1px * var(--s)),0)}}
-.gt-cfx .row{position:absolute;left:0;right:0;bottom:calc(16px * var(--s));display:flex;justify-content:center;align-items:flex-end;gap:calc(5px * var(--s))}
-.gt-cfx .row.fan{bottom:calc(30px * var(--s));gap:calc(8px * var(--s))}
-.gt-cfx .slot{position:relative;flex:none;transition:transform .15s,opacity .35s}
-.gt-cfx .slot.in{animation:gtSlideUp .5s cubic-bezier(.2,1.25,.4,1) backwards;animation-delay:var(--d)}
+.gt-cfx .cfx-row{position:absolute;left:0;right:0;bottom:calc(16px * var(--s));display:flex;justify-content:center;align-items:flex-end;gap:calc(5px * var(--s))}
+.gt-cfx .cfx-row.fan{bottom:calc(30px * var(--s));gap:calc(8px * var(--s))}
+.gt-cfx .cfx-slot{position:relative;flex:none;transition:transform .15s,opacity .35s}
+.gt-cfx .cfx-slot.in{animation:gtSlideUp .5s cubic-bezier(.2,1.25,.4,1) backwards;animation-delay:var(--d)}
 @keyframes gtSlideUp{from{transform:translateY(calc(150px * var(--s)));opacity:0}}
-.gt-cfx .row.fan .slot.in{animation-name:gtFanOut}
+.gt-cfx .cfx-row.fan .cfx-slot.in{animation-name:gtFanOut}
 @keyframes gtFanOut{from{transform:translateY(calc(-30px * var(--s))) scale(.7) rotate(0deg);opacity:0}}
-.gt-cfx .slot.on{transform:translateY(calc(-8px * var(--s)))}
-.gt-cfx .slot.on .gt-cback{outline:calc(1.5px * var(--s)) solid #e8c070;outline-offset:calc(1px * var(--s))}
-.gt-cfx .slot.out{transform:translateY(calc(160px * var(--s)));opacity:0;transition:transform .35s ease-in,opacity .35s}
-.gt-cfx .slot.away{transform:translateY(calc(-8px * var(--s))) scaleX(0);transition:transform .14s ease-in}
-.gt-cfx .slot.face{animation:gtFlipIn .3s cubic-bezier(.2,1.6,.4,1) both}
+.gt-cfx .cfx-slot.on{transform:translateY(calc(-8px * var(--s)))}
+.gt-cfx .cfx-slot.on .gt-cback{outline:calc(1.5px * var(--s)) solid #e8c070;outline-offset:calc(1px * var(--s))}
+.gt-cfx .cfx-slot.out{transform:translateY(calc(160px * var(--s)));opacity:0;transition:transform .35s ease-in,opacity .35s}
+.gt-cfx .cfx-slot.away{transform:translateY(calc(-8px * var(--s))) scaleX(0);transition:transform .14s ease-in}
+.gt-cfx .cfx-slot.face{animation:gtFlipIn .3s cubic-bezier(.2,1.6,.4,1) both}
 .gt-cback{--k:1;position:relative;width:calc(104px * var(--k));height:calc(146px * var(--k));box-sizing:border-box;border-radius:calc(5px * var(--k));flex:none;display:flex;align-items:center;justify-content:center;
   background:radial-gradient(ellipse 75% 65% at 50% 50%,#c8202e 0%,#9a1422 35%,#4a060c 70%,#0c0002 100%);border:calc(2px * var(--k)) solid #e8c070;
   box-shadow:inset 0 0 0 calc(3px * var(--k)) #2a0408,inset 0 0 0 calc(4px * var(--k)) #b8883a,0 calc(3px * var(--k)) calc(8px * var(--k)) rgba(0,0,0,.6)}
@@ -3810,46 +3810,46 @@ class Game {
 .gt-cback.glow{animation:gtTremble .07s linear infinite,gtGlow .9s ease-in forwards}
 @keyframes gtTremble{0%{translate:calc(.8px * var(--k)) 0}25%{translate:calc(-.8px * var(--k)) calc(.5px * var(--k))}50%{translate:0 calc(-.6px * var(--k))}75%{translate:calc(-.6px * var(--k)) 0}}
 @keyframes gtGlow{to{box-shadow:inset 0 0 0 calc(3px * var(--k)) #2a0408,inset 0 0 0 calc(4px * var(--k)) #fff4c8,0 0 calc(14px * var(--k)) calc(3px * var(--k)) #ffd860,0 0 calc(30px * var(--k)) #ff8ab8}}
-.gt-cfx .big{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(3px * var(--s));pointer-events:none}
-.gt-cfx .hold{position:relative;z-index:1}
-.gt-cfx .hold.pop{animation:gtPopIn .25s cubic-bezier(.2,1.5,.4,1) both}
+.gt-cfx .cfx-big{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(3px * var(--s));pointer-events:none}
+.gt-cfx .cfx-hold{position:relative;z-index:1}
+.gt-cfx .cfx-hold.pop{animation:gtPopIn .25s cubic-bezier(.2,1.5,.4,1) both}
 @keyframes gtPopIn{from{transform:scale(.3);opacity:0}}
-.gt-cfx .hold.flipout{transform:scaleX(0);transition:transform .14s ease-in}
-.gt-cfx .hold.flipin{animation:gtFlipIn .32s cubic-bezier(.2,1.6,.4,1) both}
+.gt-cfx .cfx-hold.flipout{transform:scaleX(0);transition:transform .14s ease-in}
+.gt-cfx .cfx-hold.flipin{animation:gtFlipIn .32s cubic-bezier(.2,1.6,.4,1) both}
 @keyframes gtFlipIn{from{transform:scaleX(0)}}
-.gt-cfx .hold.leave{transform:translateY(calc(40px * var(--s))) scale(.4);opacity:0;transition:transform .25s ease-in,opacity .25s}
-.gt-cfx .cap{font-family:var(--pixel, monospace);font-size:calc(6px * var(--s));color:#f4dca0;min-height:calc(6px * var(--s));text-shadow:calc(1px * var(--s)) calc(1px * var(--s)) 0 #000;position:relative;z-index:1}
-.gt-cfx .cap.rare{color:#fff4c8;text-shadow:0 0 calc(4px * var(--s)) #ffd860,0 0 calc(2px * var(--s)) #ff8ab8}
-.gt-cfx .hint{font-family:var(--pixel, monospace);font-size:calc(4px * var(--s));color:#c8b898;min-height:calc(4px * var(--s));text-align:center;position:relative;z-index:1}
-.gt-cfx .flash{position:absolute;inset:0;background:#fff;pointer-events:none;animation:gtFlash .55s ease-out forwards;z-index:3}
+.gt-cfx .cfx-hold.leave{transform:translateY(calc(40px * var(--s))) scale(.4);opacity:0;transition:transform .25s ease-in,opacity .25s}
+.gt-cfx .cfx-cap{font-family:var(--pixel, monospace);font-size:calc(6px * var(--s));color:#f4dca0;min-height:calc(6px * var(--s));text-shadow:calc(1px * var(--s)) calc(1px * var(--s)) 0 #000;position:relative;z-index:1}
+.gt-cfx .cfx-cap.rare{color:#fff4c8;text-shadow:0 0 calc(4px * var(--s)) #ffd860,0 0 calc(2px * var(--s)) #ff8ab8}
+.gt-cfx .cfx-hint{font-family:var(--pixel, monospace);font-size:calc(4px * var(--s));color:#c8b898;min-height:calc(4px * var(--s));text-align:center;position:relative;z-index:1}
+.gt-cfx .cfx-flash{position:absolute;inset:0;background:#fff;pointer-events:none;animation:gtFlash .55s ease-out forwards;z-index:3}
 @keyframes gtFlash{from{opacity:.95}to{opacity:0}}
-.gt-cfx .burst{position:absolute;left:50%;top:47%;width:calc(300px * var(--s));height:calc(300px * var(--s));margin:calc(-150px * var(--s)) 0 0 calc(-150px * var(--s));border-radius:50%;pointer-events:none;
+.gt-cfx .cfx-burst{position:absolute;left:50%;top:47%;width:calc(300px * var(--s));height:calc(300px * var(--s));margin:calc(-150px * var(--s)) 0 0 calc(-150px * var(--s));border-radius:50%;pointer-events:none;
   background:repeating-conic-gradient(#ffd860 0deg 9deg,rgba(255,154,200,.85) 9deg 18deg,#ffd860 18deg 27deg,rgba(154,216,255,.85) 27deg 36deg);
   -webkit-mask:radial-gradient(circle,rgba(0,0,0,.55) 0%,rgba(0,0,0,0) 68%);mask:radial-gradient(circle,rgba(0,0,0,.55) 0%,rgba(0,0,0,0) 68%);animation:gtSpin 9s linear infinite,gtBurstIn .5s cubic-bezier(.2,1.4,.4,1) both}
 @keyframes gtSpin{to{rotate:360deg}}
 @keyframes gtBurstIn{from{transform:scale(0)}}
-.gt-cfx .stamp{position:absolute;left:73%;top:9%;z-index:4;font-family:var(--pixel, monospace);font-size:calc(9px * var(--s));color:#fff4c8;background:#c8302c;border:calc(1.5px * var(--s)) solid #fff4c8;
+.gt-cfx .cfx-stamp{position:absolute;left:73%;top:9%;z-index:4;font-family:var(--pixel, monospace);font-size:calc(9px * var(--s));color:#fff4c8;background:#c8302c;border:calc(1.5px * var(--s)) solid #fff4c8;
   padding:calc(2px * var(--s)) calc(5px * var(--s));box-shadow:0 0 0 calc(1px * var(--s)) #3a1008,0 calc(2px * var(--s)) 0 #3a1008;transform:translateX(-50%) rotate(12deg);animation:gtStamp .35s cubic-bezier(.2,1.6,.4,1) both;pointer-events:none}
 @keyframes gtStamp{from{transform:translateX(-50%) rotate(12deg) scale(3);opacity:0}}
-.gt-cfx .conf{position:absolute;left:50%;top:45%;width:calc(2px * var(--s));height:calc(3px * var(--s));z-index:2;pointer-events:none;animation:gtConf 1.5s cubic-bezier(.1,.7,.3,1) forwards}
+.gt-cfx .cfx-conf{position:absolute;left:50%;top:45%;width:calc(2px * var(--s));height:calc(3px * var(--s));z-index:2;pointer-events:none;animation:gtConf 1.5s cubic-bezier(.1,.7,.3,1) forwards}
 @keyframes gtConf{to{transform:translate(var(--dx),var(--dy)) rotate(var(--r));opacity:0}}
 .gt-pack{--k:1;position:absolute;left:50%;top:46%;width:calc(96px * var(--k));height:calc(140px * var(--k));margin:calc(-70px * var(--k)) 0 0 calc(-48px * var(--k));box-sizing:border-box;border-radius:calc(3px * var(--k));
   background:linear-gradient(120deg,#9a98b0 0%,#f4f4ff 22%,#b0aec8 40%,#ffffff 55%,#a4a2bc 72%,#e8e8f8 88%,#8e8ca8 100%);box-shadow:0 calc(4px * var(--k)) calc(10px * var(--k)) rgba(0,0,0,.6);display:flex;flex-direction:column;align-items:center;justify-content:center}
-.gt-pack .band{width:100%;height:46%;background:radial-gradient(ellipse 80% 70% at 50% 50%,#c8202e,#7a0e18 70%,#3a0408);border-top:calc(1.5px * var(--k)) solid #e8c070;border-bottom:calc(1.5px * var(--k)) solid #e8c070;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(3px * var(--k))}
-.gt-pack .band svg{width:58%;height:auto;display:block}
-.gt-pack .band b{font-family:var(--pixel, monospace);font-weight:normal;font-size:calc(5px * var(--k));color:#f4dca0;letter-spacing:.1em}
-.gt-pack .top,.gt-pack .bot{position:absolute;left:0;right:0;height:calc(10px * var(--k));background:repeating-linear-gradient(90deg,#c8c6dc 0 calc(2px * var(--k)),#8e8ca8 calc(2px * var(--k)) calc(4px * var(--k)))}
-.gt-pack .top{top:0;clip-path:polygon(0 0,100% 0,100% 80%,95% 100%,88% 70%,80% 100%,72% 75%,64% 100%,55% 70%,47% 100%,40% 75%,32% 100%,24% 70%,16% 100%,8% 75%,0 100%)}
-.gt-pack .bot{bottom:0}
+.gt-pack .pk-band{width:100%;height:46%;background:radial-gradient(ellipse 80% 70% at 50% 50%,#c8202e,#7a0e18 70%,#3a0408);border-top:calc(1.5px * var(--k)) solid #e8c070;border-bottom:calc(1.5px * var(--k)) solid #e8c070;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(3px * var(--k))}
+.gt-pack .pk-band svg{width:58%;height:auto;display:block}
+.gt-pack .pk-band b{font-family:var(--pixel, monospace);font-weight:normal;font-size:calc(5px * var(--k));color:#f4dca0;letter-spacing:.1em}
+.gt-pack .pk-top,.gt-pack .pk-bot{position:absolute;left:0;right:0;height:calc(10px * var(--k));background:repeating-linear-gradient(90deg,#c8c6dc 0 calc(2px * var(--k)),#8e8ca8 calc(2px * var(--k)) calc(4px * var(--k)))}
+.gt-pack .pk-top{top:0;clip-path:polygon(0 0,100% 0,100% 80%,95% 100%,88% 70%,80% 100%,72% 75%,64% 100%,55% 70%,47% 100%,40% 75%,32% 100%,24% 70%,16% 100%,8% 75%,0 100%)}
+.gt-pack .pk-bot{bottom:0}
 .gt-pack.drop{animation:gtDrop .55s linear both}
 @keyframes gtDrop{0%{transform:translateY(calc(-170px * var(--s)))}60%{transform:translateY(0) scale(1,1);animation-timing-function:ease-out}72%{transform:translateY(calc(2px * var(--s))) scale(1.12,.86)}86%{transform:scale(.95,1.06)}100%{transform:none}}
 .gt-pack.wig{animation:gtWig 1.3s ease-in-out infinite}
 .gt-pack.wig.hot{animation:gtWigHot .45s ease-in-out infinite;box-shadow:0 0 calc(10px * var(--k)) calc(2px * var(--k)) #ffd860,0 calc(4px * var(--k)) calc(10px * var(--k)) rgba(0,0,0,.6)}
 @keyframes gtWig{0%,100%{transform:rotate(0)}25%{transform:rotate(-2deg)}75%{transform:rotate(2deg)}}
 @keyframes gtWigHot{0%,100%{transform:rotate(0) scale(1)}20%{transform:rotate(-5deg) scale(1.03)}40%{transform:rotate(4deg)}60%{transform:rotate(-4deg) scale(1.03)}80%{transform:rotate(5deg)}}
-.gt-pack .top.tear{animation:gtTear .45s ease-in forwards}
+.gt-pack .pk-top.tear{animation:gtTear .45s ease-in forwards}
 @keyframes gtTear{to{transform:translate(calc(40px * var(--s)),calc(-50px * var(--s))) rotate(28deg);opacity:0}}
-.gt-pack .bit{position:absolute;top:calc(8px * var(--k));width:calc(2px * var(--s));height:calc(2px * var(--s));background:#e8e8f8;animation:gtConf .7s ease-out forwards}
+.gt-pack .pk-bit{position:absolute;top:calc(8px * var(--k));width:calc(2px * var(--s));height:calc(2px * var(--s));background:#e8e8f8;animation:gtConf .7s ease-out forwards}
 .gt-pack.gone{transform:translateY(calc(70px * var(--s)));opacity:0;transition:transform .35s ease-in,opacity .35s}
 @media (prefers-reduced-motion: reduce){.gt-cfx,.gt-cfx *{animation:none !important;transition:none !important}}
 .gt-cardview{position:absolute;inset:0;z-index:9;display:none;flex-direction:column;align-items:center;justify-content:center;gap:calc(3px * var(--s));background:rgba(10,6,8,.78)}
@@ -6700,21 +6700,21 @@ class Game {
     const v = this.el.cfx, S = this.scale || 1; v.innerHTML = ""; v.className = "gt-cfx"; v.style.display = "block"; this.el.shop.style.display = "none";
     const F = this.cfx = { list, pack: slot === "pack", sel: 2, i: 0, busy: true, id: (this.cfx ? this.cfx.id : 0) + 1 };
     this.mode = "cfx"; requestAnimationFrame(() => v.classList.add("dim"));
-    F.big = document.createElement("div"); F.big.className = "big"; v.appendChild(F.big);
-    F.row = document.createElement("div"); F.row.className = "row" + (F.pack ? " fan" : ""); v.appendChild(F.row);
+    F.big = document.createElement("div"); F.big.className = "cfx-big"; v.appendChild(F.big);
+    F.row = document.createElement("div"); F.row.className = "cfx-row" + (F.pack ? " fan" : ""); v.appendChild(F.row);
     if (!F.pack) { // five backs to pick from (whichever you pick is your card)
       F.phase = "pick"; F.slots = [];
-      for (let i = 0; i < 5; i++) { const sl = document.createElement("div"); sl.className = "slot in"; sl.style.setProperty("--d", (0.08 + i * 0.09) + "s"); sl.appendChild(this.cardBack(S * 0.4)); F.row.appendChild(sl); F.slots.push(sl);
+      for (let i = 0; i < 5; i++) { const sl = document.createElement("div"); sl.className = "cfx-slot in"; sl.style.setProperty("--d", (0.08 + i * 0.09) + "s"); sl.appendChild(this.cardBack(S * 0.4)); F.row.appendChild(sl); F.slots.push(sl);
         sl.addEventListener("click", e => { e.stopPropagation(); if (F.phase !== "pick" || F.busy) return; if (F.sel === i) this.cfxPick(); else { F.sel = i; this.cfxSel(); } }); }
       this.cfxHint("Pick a card"); this.cfxLater(650, () => { F.busy = false; this.cfxSel(); });
       return;
     }
     F.phase = "pack"; const hot = list.some(c => c.kind === "r"), pk = F.packEl = document.createElement("div"); pk.className = "gt-pack drop"; pk.style.setProperty("--k", S * 0.62);
-    pk.innerHTML = '<div class="top"></div><div class="band">' + this.goqMark() + '<b>CARD PACK</b></div><div class="bot"></div>'; v.appendChild(pk);
+    pk.innerHTML = '<div class="pk-top"></div><div class="pk-band">' + this.goqMark() + '<b>CARD PACK</b></div><div class="pk-bot"></div>'; v.appendChild(pk);
     this.cfxLater(600, () => { pk.className = "gt-pack wig" + (hot ? " hot" : ""); F.busy = false; this.cfxHint("A: open it"); });
   }
   cfxLater(ms, fn) { const id = this.cfx && this.cfx.id; setTimeout(() => { if (this.cfx && this.cfx.id === id) fn(); }, REDUCED_MOTION ? Math.min(ms, 120) : ms); }
-  cfxHint(t) { const F = this.cfx; let h = this.el.cfx.querySelector(":scope > .hint"); if (!h) { h = document.createElement("div"); h.className = "hint"; h.style.cssText = "position:absolute;left:0;right:0;bottom:calc(5px * var(--s))"; this.el.cfx.appendChild(h); } h.textContent = t || ""; }
+  cfxHint(t) { const F = this.cfx; let h = this.el.cfx.querySelector(":scope > .cfx-hint"); if (!h) { h = document.createElement("div"); h.className = "cfx-hint"; h.style.cssText = "position:absolute;left:0;right:0;bottom:calc(5px * var(--s))"; this.el.cfx.appendChild(h); } h.textContent = t || ""; }
   cfxSel() { const F = this.cfx; F.slots.forEach((sl, i) => sl.classList.toggle("on", i === F.sel)); }
   cfxKey(has) {
     const F = this.cfx; if (!F || F.busy) return;
@@ -6731,27 +6731,27 @@ class Game {
     this.cfxLater(170, () => this.cfxBig(F.list[0]));
   }
   cfxTear() { // rip the top off, paper bits fly, the pack drops away and its cards fan out face down
-    const F = this.cfx, pk = F.packEl; F.busy = true; this.cfxHint(""); pk.className = "gt-pack"; pk.querySelector(".top").classList.add("tear");
-    for (let i = 0; i < 7; i++) { const b = document.createElement("i"); b.className = "bit"; b.style.left = (10 + i * 12) + "%"; b.style.setProperty("--dx", "calc(" + ((i - 3) * 9) + "px * var(--s))"); b.style.setProperty("--dy", "calc(" + (-18 - (i % 3) * 8) + "px * var(--s))"); b.style.setProperty("--r", (i * 70) + "deg"); pk.appendChild(b); }
+    const F = this.cfx, pk = F.packEl; F.busy = true; this.cfxHint(""); pk.className = "gt-pack"; pk.querySelector(".pk-top").classList.add("tear");
+    for (let i = 0; i < 7; i++) { const b = document.createElement("i"); b.className = "pk-bit"; b.style.left = (10 + i * 12) + "%"; b.style.setProperty("--dx", "calc(" + ((i - 3) * 9) + "px * var(--s))"); b.style.setProperty("--dy", "calc(" + (-18 - (i % 3) * 8) + "px * var(--s))"); b.style.setProperty("--r", (i * 70) + "deg"); pk.appendChild(b); }
     this.cfxLater(380, () => {
       pk.classList.add("gone"); F.slots = [];
-      F.list.forEach((c, i) => { const sl = document.createElement("div"); sl.className = "slot in"; const r = (i - (F.list.length - 1) / 2) * 9; sl.style.cssText = "--d:" + (0.06 + i * 0.1) + "s;rotate:" + r + "deg;margin-bottom:calc(" + (-Math.abs(r) / 3) + "px * var(--s))"; sl.appendChild(this.cardBack((this.scale || 1) * 0.42)); F.row.appendChild(sl); F.slots.push(sl); });
+      F.list.forEach((c, i) => { const sl = document.createElement("div"); sl.className = "cfx-slot in"; const r = (i - (F.list.length - 1) / 2) * 9; sl.style.cssText = "--d:" + (0.06 + i * 0.1) + "s;rotate:" + r + "deg;margin-bottom:calc(" + (-Math.abs(r) / 3) + "px * var(--s))"; sl.appendChild(this.cardBack((this.scale || 1) * 0.42)); F.row.appendChild(sl); F.slots.push(sl); });
       this.cfxLater(700, () => { F.phase = "fan"; F.busy = false; this.cfxHint("A: flip"); });
     });
   }
   cfxReveal() { const F = this.cfx, sl = F.slots[F.i]; F.busy = true; this.cfxHint(""); sl.classList.remove("in"); sl.classList.add("on"); this.cfxLater(140, () => { sl.classList.add("away"); this.cfxLater(160, () => this.cfxBig(F.list[F.i])); }); }
   cfxBig(c) { // big in the middle: the back pops up, then flips to the card (a rare builds up first)
     const F = this.cfx, S = this.scale || 1, B = F.big; B.innerHTML = "";
-    const cap = document.createElement("div"); cap.className = "cap"; B.appendChild(cap);
-    const hold = document.createElement("div"); hold.className = "hold pop"; hold.style.setProperty("--s", S * 0.82); const back = this.cardBack(S * 0.82); hold.appendChild(back); B.appendChild(hold);
-    const hint = document.createElement("div"); hint.className = "hint"; B.appendChild(hint); F.hold = hold;
+    const cap = document.createElement("div"); cap.className = "cfx-cap"; B.appendChild(cap);
+    const hold = document.createElement("div"); hold.className = "cfx-hold pop"; hold.style.setProperty("--s", S * 0.82); const back = this.cardBack(S * 0.82); hold.appendChild(back); B.appendChild(hold);
+    const hint = document.createElement("div"); hint.className = "cfx-hint"; B.appendChild(hint); F.hold = hold;
     const rare = c.kind === "r";
     if (rare) this.cfxLater(260, () => back.classList.add("glow"));
     this.cfxLater(rare ? 1250 : 420, () => {
-      hold.className = "hold flipout";
+      hold.className = "cfx-hold flipout";
       this.cfxLater(150, () => {
-        hold.innerHTML = ""; hold.appendChild(this.cardElement(c.p, c.kind)); hold.className = "hold flipin";
-        cap.textContent = this.cardCap(c); cap.className = "cap" + (rare ? " rare" : "");
+        hold.innerHTML = ""; hold.appendChild(this.cardElement(c.p, c.kind)); hold.className = "cfx-hold flipin";
+        cap.textContent = this.cardCap(c); cap.className = "cfx-cap" + (rare ? " rare" : "");
         if (rare) this.cfxRare();
         const last = F.i >= F.list.length - 1;
         this.cfxLater(rare ? 900 : 350, () => { F.phase = "shown"; F.busy = false; hint.textContent = F.pack ? (F.i + 1) + " / " + F.list.length + (last ? "   A: done" : "   A: next") : "A: done"; });
@@ -6760,19 +6760,19 @@ class Game {
   }
   cfxRare() { // flash, sunburst, confetti, the stamp, a shake
     const v = this.el.cfx, add = (cls, parent) => { const e = document.createElement("div"); e.className = cls; (parent || v).appendChild(e); return e; };
-    add("flash"); this.cfxLater(600, () => { const f = v.querySelector(":scope > .flash"); if (f) f.remove(); });
-    const burst = document.createElement("div"); burst.className = "burst"; this.cfx.big.insertBefore(burst, this.cfx.big.firstChild); burst.style.position = "absolute";
-    const st = add("stamp"); st.textContent = "RARE!";
+    add("cfx-flash"); this.cfxLater(600, () => { const f = v.querySelector(":scope > .cfx-flash"); if (f) f.remove(); });
+    const burst = document.createElement("div"); burst.className = "cfx-burst"; this.cfx.big.insertBefore(burst, this.cfx.big.firstChild); burst.style.position = "absolute";
+    const st = add("cfx-stamp"); st.textContent = "RARE!";
     const cols = ["#ffd860", "#ff8ab8", "#8ad8ff", "#c8ffb0", "#fff4c8", "#e8c070"];
-    for (let i = 0; i < 28; i++) { const e = add("conf"); const a = Math.random() * Math.PI * 2, r = 50 + Math.random() * 70; e.style.background = cols[i % cols.length]; e.style.setProperty("--dx", "calc(" + Math.round(Math.cos(a) * r) + "px * var(--s))"); e.style.setProperty("--dy", "calc(" + Math.round(Math.sin(a) * r * 0.7 + 30) + "px * var(--s))"); e.style.setProperty("--r", Math.round(Math.random() * 720) + "deg"); e.style.animationDelay = (Math.random() * 0.12) + "s"; }
+    for (let i = 0; i < 28; i++) { const e = add("cfx-conf"); const a = Math.random() * Math.PI * 2, r = 50 + Math.random() * 70; e.style.background = cols[i % cols.length]; e.style.setProperty("--dx", "calc(" + Math.round(Math.cos(a) * r) + "px * var(--s))"); e.style.setProperty("--dy", "calc(" + Math.round(Math.sin(a) * r * 0.7 + 30) + "px * var(--s))"); e.style.setProperty("--r", Math.round(Math.random() * 720) + "deg"); e.style.animationDelay = (Math.random() * 0.12) + "s"; }
     v.classList.remove("shake"); void v.offsetWidth; v.classList.add("shake");
   }
   cfxPut() { // the big card goes down into its place in the fan (a pack), or you're done (a single card)
     const F = this.cfx;
     if (!F.pack) { this.cfxClose(); return; }
-    F.busy = true; F.hold.className = "hold leave"; this.el.cfx.querySelectorAll(".stamp,.conf").forEach(e => e.remove());
+    F.busy = true; F.hold.className = "cfx-hold leave"; this.el.cfx.querySelectorAll(".cfx-stamp,.cfx-conf").forEach(e => e.remove());
     this.cfxLater(240, () => {
-      F.big.innerHTML = ""; const sl = F.slots[F.i], c = F.list[F.i]; sl.innerHTML = ""; const w = document.createElement("div"); w.style.setProperty("--s", (this.scale || 1) * 0.42); w.appendChild(this.cardElement(c.p, c.kind)); sl.appendChild(w); sl.className = "slot face";
+      F.big.innerHTML = ""; const sl = F.slots[F.i], c = F.list[F.i]; sl.innerHTML = ""; const w = document.createElement("div"); w.style.setProperty("--s", (this.scale || 1) * 0.42); w.appendChild(this.cardElement(c.p, c.kind)); sl.appendChild(w); sl.className = "cfx-slot face";
       if (++F.i < F.list.length) { this.cfxLater(200, () => { F.phase = "fan"; F.busy = false; this.cfxHint("A: flip"); }); return; }
       this.cfxLater(250, () => { F.phase = "done"; F.busy = false; this.cfxHint("A: done"); });
     });
@@ -10286,7 +10286,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 68";
+const VERSION = "2026-11-18 cards 69";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
