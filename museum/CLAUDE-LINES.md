@@ -121,7 +121,6 @@ Not mine: "No refunds." and "You can't afford that." are Joe's.
 
 | Group | Line | What Claude wrote |
 | --- | --- | --- |
-| Supplies | Just chatting with the barista while she's stressed | Chat? Now? I'm down to my last sleeve of cups. ⏎ ... ⏎ Sorry. That came out wrong. I'm fine. Everything's fine. / I'd love to talk but the rush is coming and I have, like, four lids. ⏎ Ask me again when I'm not panicking. |
 | Tour | Tuesday: the teacher before the tour | Okay, friends, bottoms on the bench, please. ⏎ ... ⏎ Please. ⏎ *sigh* We're waiting for everyone to use the bathroom. / Field trip day. I've had three coffees and it's not enough. |
 | Tour | Tuesday: the teacher at a stop | Eyes up here, friends! Eyes on the glass, not ON the glass. ⏎ No fingerprints! / Who can tell me what this one is about? ⏎ ... ⏎ Anyone? |
 | Tour | Tuesday: a kid's question she fumbles | Teacher, what's {title} about? ⏎ ... ⏎ Well, um. It's about... feelings. And games. Game feelings. ⏎ *the kids stare* |
@@ -140,7 +139,8 @@ Not mine: "No refunds." and "You can't afford that." are Joe's.
 | --- | --- | --- |
 | Supplies | Looking at the gift shop's empty shelf | An empty shelf. Just dust and a price tag for something that isn't here. / Nothing on this shelf but a sticky note: "STOCK COMING. ALLEGEDLY." |
 | Supplies | Just chatting with the shopkeeper while a shelf's empty | Sorry, I can't stop looking at that empty shelf. ⏎ It's like a missing tooth. A missing merch tooth. / You know what sells really well? Things that are on the shelf. ⏎ ... ⏎ Not that I'd know today. |
-| Supplies | The barista once every order takes forever | I'm hand-washing mugs between orders. Mugs. In this economy. ⏎ Sorry for the wait. Truly. / Every order's taking forever. I'm using the backup grinder. ⏎ ... ⏎ The backup grinder is a hammer. |
+| Supplies | Just chatting with the barista while her supply box is still in the basement (stressed; she doesn't say where it is) | Chat? Now? My delivery box never came up. / I'm down to my last sleeve of cups. / ... / Sorry. That came out wrong. I'm fine. Everything's fine. |
+| Supplies | The barista once the rush hits and every order takes forever (her supply box never came up) | My supply box never showed, so I'm hand-washing mugs between orders. Mugs. In this economy. / Sorry for the wait. Truly. |
 | Tour | The tour's kid at the arcade, before anyone notices | Shh. I'm almost at the next level. / Did you know this one has a secret ending? I didn't either. I'm finding out. |
 
 (Removed: the teacher's head-count line at the rush, since nobody notices the kid's gone until they're back in the lobby.)
@@ -163,10 +163,8 @@ The trash bag replaced picking up three pieces by hand, so the "hands full", "in
 
 | Group | Line | What Claude wrote |
 | --- | --- | --- |
-| Litter | Litter without a trash bag | I'm not touching that with my bare hands. ⏎ The janitor must have a spare trash bag. |
 | Litter | The staff room can: take a bag? | A roll of trash bags under the can. Tear one off? |
 | Litter | Taking a bag | *rrrip* ⏎ One trash bag. I'm basically a professional now. |
-| Litter | Putting an unused bag back | You roll the bag back up and tuck it under the can. ⏎ Nobody saw that. |
 | Litter | An empty bag at another can: toss it? | It's empty. I haven't even used it yet. Toss it anyway? |
 | Litter | Tossing an empty bag | *fwip* ⏎ A perfectly good bag. Gone. You monster. |
 | Litter | The bag into an empty can | *fwump* ⏎ The whole bag goes in. Much better. / *fwump* ⏎ Out of sight, out of mind. |
@@ -271,6 +269,11 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Litter | The jammed trash can, hands free | There's a cup wedged in the flap. Nothing else is getting in there. Pull it out? |
 | Litter | The jammed trash can, with something in your hands | The flap won't budge. There's a cup wedged in it. ⏎ You'll need both hands free to work it loose. |
 | Litter | Pulling the cup out of the jammed trash can | *squeak* ...*pop* ⏎ Got it. The flap swings free again. ⏎ Now, where to put this cup... |
+| Litter | Trying to pick up litter without a trash bag (there's a roll in the staff room, or the janitor has spares) | I'm not touching that with my bare hands. / The janitor must have a spare trash bag. There's a roll of them in the staff room, too. |
+| Litter | The roll of trash bags in the staff room, hands empty: take one? (one page, Yes/No) | A roll of trash bags. Tear one off? |
+| Litter | The roll of trash bags, when there's no janitor today (nothing to pick up) | A roll of trash bags. The janitor's whole personality. |
+| Litter | The roll of trash bags, with your hands full (a drink, a box) | My hands are full. The bags can wait. |
+| Litter | Putting an unused trash bag back (the roll in the staff room, or the can there) | You roll the bag back up with the others. / Nobody saw that. |
 | Janitor | The Janitor at the jammed trash can | Who jams a cup in a trash can? ⏎ Every. Single. Day. / I was on my break. ⏎ I was ON. MY. BREAK. |
 | Janitor | Talking to the Janitor after you unjammed the trash can and cleaned up round it (once) | Somebody pulled a cup out of that jammed can. And picked up the mess. ⏎ ...That was you, wasn't it? ⏎ Thanks. Really. |
 | Chill museum | The curator: the conservator (stopped to talk with him at closing) | And you stopped to talk to the conservator at closing. He doesn't get a lot of that. ⏎ He won't say so, but it made his night. |
@@ -284,6 +287,7 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Field notes | The conservator | The conservator: Only comes upstairs at closing. Somebody should say hi. |
 | Gift shop | The Sell cards row | The shop buys trading cards back, at half what they cost. Real ones only. |
 | Days of the week | Saturday: Bluu's Sell cards row | Bluu buys cards back. Half price. He doesn't ask where they came from, and you don't ask where they're going. |
+| Days of the week | Thursday: the barista at the counter, before you've played, while she's stressed (her supply box is still downstairs; then the drink menu) | Trivia's tonight, and I can't even think about that right now. / What can I get you? |
 | Gift shop | Selling the only copy of a card | That's your only {title} card. Sell it anyway? |
 | Out front | The museum sign | GOQ MUSEUM / Games, framed. |
 | Out front | Left planter | A planter by the doors. Somebody waters it. Probably the Janitor. |

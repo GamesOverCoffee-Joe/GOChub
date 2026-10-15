@@ -73,7 +73,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 @keyframes gtblink{50%{opacity:0}}
 .gt-loc{position:absolute;left:calc(4px * var(--s));top:calc(4px * var(--s));padding:calc(5px * var(--s)) calc(8px * var(--s));background:#181820;color:#f8f8f0;
   font-size:calc(8px * var(--s));line-height:1.4;border:calc(1px * var(--s)) solid #f8f8f0;opacity:0;transform:translateY(-120%);
-  transition:transform .25s steps(4),opacity .25s steps(4);pointer-events:none;max-width:70%;z-index:6}
+  transition:transform .25s steps(4),opacity .25s steps(4);pointer-events:none;max-width:70%;z-index:6;text-wrap:balance}
 .gt-loc.on{opacity:1;transform:none}
 .gt-closeup{position:absolute;left:0;right:0;top:0;height:calc(112px * var(--s));display:none;align-items:center;justify-content:center;background:rgba(24,24,32,.82);cursor:pointer;z-index:4}
 .gt-cu-frame{box-sizing:border-box;width:calc(112px * var(--s));border-style:solid;border-width:calc(8px * var(--s));border-image-slice:8;border-image-repeat:stretch;background:#000;image-rendering:pixelated}
@@ -445,7 +445,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 79";
+window.GOQ_WANT = "2026-11-18 cards 80";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -1176,7 +1176,7 @@ const TILE_BRUSHES = [
   { ch: ".", name: "Floor" }, { ch: "=", name: "Runner" }, { ch: "#", name: "Wall top" }, { ch: "^", name: "Wall, upper" }, { ch: "v", name: "Wall, lower" },
   { ch: "D", name: "Doorway", pair: "d", note: "Paint on the upper wall row; the lower half is added below." },
   { ch: "S", name: "Staff door", pair: "s", note: "Paint on the upper wall row; the lower half is added below." },
-  { ch: "B", name: "Door in a bottom wall" }, { ch: "H", name: "Door in a side wall", note: "Paint on the left or right wall." }, { ch: "E", name: "Front doors" },
+  { ch: "B", name: "Door in a bottom wall" }, { ch: "K", name: "Closed door in a bottom wall", note: "A shut wooden door, like the tutorial's." }, { ch: "H", name: "Door in a side wall", note: "Paint on the left or right wall." }, { ch: "E", name: "Front doors" },
 ];
 const PLACE_GROUPS = [
   { name: "Display", items: [
@@ -1184,7 +1184,7 @@ const PLACE_GROUPS = [
     { kind: "spot", name: "Painting spot", key: "wall_frame_wood", note: "Community pieces hang here. Tap the wall; it takes two tiles across both wall rows." },
     { kind: "prop", key: "overflow_screen", name: "Touch screen", note: "The oldest episodes that don't fit in the cases wait on the one in Volume I (the start of the timeline). The other wings' screens give their digit for the office door." },
   ] },
-  { name: "Furniture", items: ["bench", "bench_side", "plant", "planter_wide", "sign_stand", "sign_down", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board", "day_board", "reader_chair", "reader_table", "reader_shelf", "tut_chest", "velvet_rope", "velvet_rope_v"].map(k => ({ kind: "prop", key: k })) },
+  { name: "Furniture", items: ["bench", "bench_side", "plant", "planter_wide", "sign_stand", "sign_down", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board", "day_board", "reader_chair", "reader_table", "reader_shelf", "tut_chest", "velvet_rope", "velvet_rope_v", "trash_bag_roll"].map(k => ({ kind: "prop", key: k })) },
   { name: "Shop and café", items: ["shelf_unit", "magazine_rack", "item_rack", "shop_counter", "cafe_counter", "espresso_machine", "coffee_grinder", "cup_stacks", "bus_tub", "cafe_table", "cafe_stool", "floor_lamp", "postcard_spinner", "basket", "planter", "cat_bed"].map(k => ({ kind: "prop", key: k }))
     .concat([{ kind: "decal", key: "rug" }]) },
   { name: "Storage and floors", items: [{ kind: "stairs", key: "stair_up", name: "Stairs up", note: "Step on it to change floors. Select it to choose where it leads." },
@@ -1272,7 +1272,7 @@ function roomMats(d) {
 }
 function ownMats(d) { if (!Array.isArray(d.mats)) d.mats = roomMats(d); return d.mats; } // the first change: the automatic mats become placed ones you can edit
 function itemAt(d, x, y) { return roomItems(d).find(it => x >= it.x && x < it.x + it.w && y >= it.y && y < it.y + it.h) || null; }
-const DOOR_CH = "DdSsBEH";
+const DOOR_CH = "DdSsBKEH";
 function doorTileAt(d, x, y) {
   const ch = getCh(d, x, y); if (!DOOR_CH.includes(ch)) return null;
   const ey = ch === "D" || ch === "S" ? y + 1 : y; // the event sits on the lower half
@@ -1389,9 +1389,9 @@ function slotSwatch(key, isChar) {
 }
 function brushSwatch(b) {
   const d = roomDef(R.id), art = d.art || {};
-  const key = { ".": art.floor, "=": art.runner || "lobby_runner", "#": art.top, "^": art.upper, "v": art.lower, D: "doorway_upper", S: "staff_door_upper", B: "doorway_bottom", H: "doorway_side", E: "exit_door" }[b.ch];
+  const key = { ".": art.floor, "=": art.runner || "lobby_runner", "#": art.top, "^": art.upper, "v": art.lower, D: "doorway_upper", S: "staff_door_upper", B: "doorway_bottom", K: "door_bottom", H: "doorway_side", E: "exit_door" }[b.ch];
   const c = slotSwatch(key || art.floor);
-  if ("DSBEH".includes(b.ch)) { const x = c.getContext("2d"), base = slotSwatch("BEH".includes(b.ch) ? art.top : art.upper); x.globalCompositeOperation = "destination-over"; x.drawImage(base, 0, 0); }
+  if ("DSBKEH".includes(b.ch)) { const x = c.getContext("2d"), base = slotSwatch("BKEH".includes(b.ch) ? art.top : art.upper); x.globalCompositeOperation = "destination-over"; x.drawImage(base, 0, 0); }
   return c;
 }
 async function openRoom(keepView) {
@@ -1436,7 +1436,7 @@ function drawEditorNow() {
     else if (it.type === "case") outline(it, "#a8d0e8", true);
   });
   for (let ty = 0; ty < H(d); ty++) for (let tx = 0; tx < W(d); tx++) {
-    const ch = getCh(d, tx, ty); if (!"dsBEH".includes(ch)) continue;
+    const ch = getCh(d, tx, ty); if (!"dsBKEH".includes(ch)) continue;
     const ev = doorEvent(d, tx, ty); tag(tx, ty, ev ? "\u2192" : "!", ev ? "#e8b24a" : "#f08a6a");
   }
   if (drag && drag.it && R.sel) { // dragging: the map catches up on release, so shade where it was and draw it where it's going
@@ -1560,7 +1560,7 @@ function paintAt(t) {
   const d = editable(R.id), b = R.brush;
   if (t.x < 0 || t.y < 0 || t.x >= W(d) || t.y >= H(d)) return;
   setCh(d, t.x, t.y, b.ch); if (b.pair) setCh(d, t.x, t.y + 1, b.pair);
-  if ("DSBEH".includes(b.ch)) { R.sel = { type: "door", x: t.x, y: b.pair ? t.y + 1 : t.y, w: 1, h: 1, label: "Door" }; }
+  if ("DSBKEH".includes(b.ch)) { R.sel = { type: "door", x: t.x, y: b.pair ? t.y + 1 : t.y, w: 1, h: 1, label: "Door" }; }
   roomChanged();
 }
 function fillAt(t) {
@@ -1579,7 +1579,7 @@ function eraseAt(t) {
     const ch = getCh(d, t.x, t.y);
     if (ch === "D" || ch === "S") { setCh(d, t.x, t.y, "^"); setCh(d, t.x, t.y + 1, "v"); d.events = (d.events || []).filter(e => !(e.x === t.x && e.y === t.y + 1)); }
     else if (ch === "d" || ch === "s") { setCh(d, t.x, t.y - 1, "^"); setCh(d, t.x, t.y, "v"); d.events = (d.events || []).filter(e => !(e.x === t.x && e.y === t.y)); }
-    else if (ch === "B" || ch === "E" || ch === "H") { setCh(d, t.x, t.y, "#"); d.events = (d.events || []).filter(e => !(e.x === t.x && e.y === t.y)); }
+    else if (ch === "B" || ch === "K" || ch === "E" || ch === "H") { setCh(d, t.x, t.y, "#"); d.events = (d.events || []).filter(e => !(e.x === t.x && e.y === t.y)); }
     else if (t.x > 0 && t.y > 0 && t.x < W(d) - 1 && t.y < H(d) - 1) setCh(d, t.x, t.y, ".");
   }
   roomChanged(true);

@@ -103,6 +103,7 @@ const PAL = {
   odeck:   [null, "#6a4a30", "#4a3220", "#1c1c22", "#34445e", "#6a7a9a", "#8a8a96"],
   clutter: [null, "#2a2a32", "#4a4a56", "#d4d4dc", "#ece4d4", "#7a4a28", "#f0d020", "#b89810", "#ffffff", "#3a7ae0", "#141418"],
   joe:     [null, "#acd6ee", "#82b6d6", "#5a8cae", "#34343c", "#9ca2aa", "#6c7078", "#e8fbff", "#5a6a7a", "#6a4028"],
+  bagroll: [null, "#1e1e24", "#3a3a44", "#4a4a56", "#c8a070", "#8a6a40"], // the roll of trash bags: black plastic, its sheen, the cardboard core
   wdoor:   [null, "#3a2414", "#7a4e2a", "#9a6a3a", "#5a381c", "#e8b84a", "#fff0a0", "#a07020"],
   keypad:  [null, "#2a2a32", "#4a4a56", "#8a8a96", "#1a1a20", "#000000", "#ff3a30", "#40e070"],
   kid:     [null, "#e8c098", "#f0a020", "#181820"],
@@ -305,6 +306,18 @@ const GEN = {
     rect(a, 9, 3, 6, 10, 1); rect(a, 10, 4, 4, 8, 2); px(a, 11, 5, f === 2 ? 7 : f === 1 ? 6 : 4);
     for (let y = 7; y < 12; y += 2) { px(a, 10, y, 3); px(a, 12, y, 3); }
     return a;
+  },
+  door_bottom: () => { // a closed wooden door in a bottom wall (Joe 10/15: the tutorial's rooms have doors, not open doorways), seen from above
+    const a = mk(16, 16);
+    rect(a, 1, 0, 14, 16, 1); rect(a, 3, 0, 10, 16, 2); rect(a, 3, 0, 10, 2, 3); for (const x of [6, 9]) rect(a, x, 2, 1, 14, 4);
+    rect(a, 10, 8, 2, 2, 5); px(a, 10, 8, 6); px(a, 11, 9, 7); // the gold handle
+    return a;
+  },
+  trash_bag_roll: () => { // a roll of black trash bags on the floor, a torn edge hanging off it
+    const a = mk(16, 16);
+    rect(a, 3, 8, 10, 6, 1); rect(a, 3, 8, 10, 1, 3); rect(a, 4, 10, 8, 1, 2); rect(a, 4, 12, 8, 1, 2); rect(a, 1, 9, 2, 4, 4); px(a, 2, 10, 5); // the roll, its cardboard core
+    rect(a, 12, 13, 2, 2, 1); px(a, 13, 15, 1); // the loose end
+    return outline(a);
   },
   doorway_bottom: () => fillFn(mk(16, 16), (x, y) => (x >= 1 && x <= 14 ? (x <= 2 || x >= 13 ? (x === 1 || x === 14 ? 5 : 4) : y <= 1 ? 4 : 3) : undefined)),
   plant: () => {
@@ -1600,6 +1613,8 @@ const SLOTS = [
   { key: "reader_shelf", label: "Reading nook bookshelf", group: "Furniture", w: 16, h: 32, pal: "rshelf", gen: GEN.reader_shelf, note: "A small bookshelf of video game strategy guides. Two tiles tall." },
   { key: "velvet_rope_v", label: "Velvet rope (up and down)", group: "Furniture", w: 16, h: 16, pal: "tbarrier", gen: GEN.velvet_rope_v, note: "A velvet rope running up and down. It's drawn from the Velvet rope's art (this is just its picture in the curator)." },
   { key: "token_coin_small", label: "Token (small)", group: "Gift shop and café", w: 8, h: 8, pal: "coin", gen: GEN.token_coin_small, note: "The little token in the corner count and next to prices." },
+  { key: "door_bottom", label: "Closed door in a bottom wall", group: "Doors", w: 16, h: 16, pal: "wdoor", gen: GEN.door_bottom, note: "A wooden door in a bottom wall, shut (map letter K in the Rooms editor's brushes). The tutorial's rooms use it." },
+  { key: "trash_bag_roll", label: "Roll of trash bags", group: "Furniture", w: 16, h: 16, pal: "bagroll", gen: GEN.trash_bag_roll, note: "On the floor by the staff room's trash can: A on it takes a trash bag (or puts an unused one back)." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
 const SLOT = {}; SLOTS.forEach(s => { s.frames = s.frames || 1; s.fps = s.fps || 0; SLOT[s.key] = s; });
@@ -2193,8 +2208,8 @@ const ROOMS = {
     art: { top: "staff_wall_top", upper: "staff_wall_upper", lower: "staff_wall_lower", floor: "staff_floor" },
     map: [
       "#############",
-      "#^^^^^^^^^D^#",
-      "#vvvvvvvvvdv#",
+      "#^^^^^^^^^S^#",
+      "#vvvvvvvvvsv#",
       "#...........#",
       "#...........#",
       "#...........#",
@@ -2221,15 +2236,15 @@ const ROOMS = {
     art: { top: "gallery_wall_top", upper: "gallery_wall_upper", lower: "gallery_wall_lower", floor: "gallery_floor" },
     map: [
       "###########",
-      "#^^^^D^^^^#",
-      "#vvvvdvvvv#",
+      "#^^^^S^^^^#",
+      "#vvvvsvvvv#",
       "#.........#",
       "#.........#",
       "#.........#",
       "#.........#",
       "#.........#",
       "#.........#",
-      "#####B#####",
+      "#####K#####",
     ],
     spawn: [5, 8, "up"],
     props: [{ key: "sign_stand", x: 5, y: 5, event: { tutSign: true } }], // the chest, the barrier and later the trainee's box are added as you go (tutDress)
@@ -2242,15 +2257,15 @@ const ROOMS = {
     art: { top: "gallery_wall_top", upper: "gallery_wall_upper", lower: "gallery_wall_lower", floor: "gallery_floor" },
     map: [
       "###########",
-      "#^^^^D^^^^#",
-      "#vvvvdvvvv#",
+      "#^^^^S^^^^#",
+      "#vvvvsvvvv#",
       "#.........#",
       "#.........#",
       "#.........#",
       "#.........#",
       "#.........#",
       "#.........#",
-      "#####B#####",
+      "#####K#####",
     ],
     spawn: [5, 8, "up"],
     props: [
@@ -2274,7 +2289,7 @@ const ROOMS = {
       "#.......#",
       "#.......#",
       "#.......#",
-      "####B####",
+      "####K####",
     ],
     spawn: [4, 6, "up"],
     props: [{ key: "bench", x: 1, y: 3, sit: "right", say: ["A bench. Someone's been sitting here a long time."] }],
@@ -2440,6 +2455,7 @@ const TEXT = {
   "wed.after":         { g: "Days of the week", l: "Wednesday: the artist after you've shown him a photo", v: [["(hmm, no, no, that's not right. Hmm..)"]] },
   "wed.sketch":        { g: "Days of the week", l: "The artist's sketch on the staff corkboard, for a week ({desc}: the photo)", v: [["It's {desc} that the artist drew for you. It's actually really good."]] },
   "thu.ask":           { g: "Days of the week", l: "Thursday: the barista at the counter, before you've played (then the drink menu)", v: [["Yo! It's trivia night! If You wanna play, grab a seat. What can I get you?"]] },
+  "thu.askRushed":    { g: "Days of the week", l: "Thursday: the barista at the counter, before you've played, while she's stressed (her supply box is still downstairs; then the drink menu)", by: "claude", v: [["Trivia's tonight, and I can't even think about that right now.", "What can I get you?"]] },
   "thu.seat":          { g: "Days of the week", l: "Thursday: sitting down in the empty seat at the trivia tables (then Play / Not now)", v: [["Okay! Who's ready for some GOQ trivia?", "5 questions. 10 seconds per question. Ready?", "Go!"]] },
   "thu.right":         { g: "Days of the week", l: "Thursday: a right answer", v: [["Correct!"]] },
   "thu.wrong":         { g: "Days of the week", l: "Thursday: a wrong answer (someone at a café table answers next; {answer}: the right one)", v: [["Wrong! Who else?"]] },
@@ -2601,8 +2617,8 @@ const TEXT = {
   "shop.stocking":     { g: "Supplies", l: "The shop counter (or the shopkeeper) while he's still stocking the shelves", by: "claude", v: [["Sorry, still stocking. The shop's not open yet.", "If only someone would bring me the stock box from the basement..."]] },
   "line.wait":         { g: "Supplies", l: "The café counter when there's a line ahead of you", by: "claude", v: [["There's a line. I should wait my turn at the back."]] },
   "cafe.rushed":       { g: "Supplies", l: "The barista while she's rushing back and forth behind the counter (her supply box hasn't come up)", by: "claude", v: [["Sorry, sorry! I'm doing the work of three people back here.", "The supply box is still down in the basement and the rush is coming.", "...", "If anyone happened to bring it up, I'd love them forever."], ["Can't talk! Cups! Lids! Beans! None of which I have!"]] },
-  "cafe.rushChat":     { g: "Supplies", l: "Just chatting with the barista while her supply box is still in the basement (stressed)", by: "claude", v: [["Chat? Now? I'm down to my last sleeve of cups.", "...", "Sorry. That came out wrong. I'm fine. Everything's fine."], ["I'd love to talk but the rush is coming and I have, like, four lids.", "Ask me again when I'm not panicking."]] },
-  "cafe.slowChat":     { g: "Supplies", l: "The barista once the rush hits and every order takes forever (her supplies never came up)", by: "claude", v: [["I'm hand-washing mugs between orders. Mugs. In this economy.", "Sorry for the wait. Truly."], ["Every order's taking forever. I'm using the backup grinder.", "...", "The backup grinder is a hammer."]] },
+  "cafe.rushChat":     { g: "Supplies", l: "Just chatting with the barista while her supply box is still in the basement (stressed; she doesn't say where it is)", by: "claude", v: [["Chat? Now? My delivery box never came up.", "I'm down to my last sleeve of cups.", "...", "Sorry. That came out wrong. I'm fine. Everything's fine."], ["I'd love to talk, but my supply box still isn't here and the rush is coming.", "I have, like, four lids.", "Ask me again when I'm not panicking."]] },
+  "cafe.slowChat":     { g: "Supplies", l: "The barista once the rush hits and every order takes forever (her supply box never came up)", by: "claude", v: [["My supply box never showed, so I'm hand-washing mugs between orders. Mugs. In this economy.", "Sorry for the wait. Truly."], ["Every order's taking forever. No delivery box means I'm using the backup grinder.", "...", "The backup grinder is a hammer."]] },
   "cafe.rushOrder":    { g: "Supplies", l: "The barista, after she dashes back to the counter to take your order", by: "claude", v: [["Oh! Hi! Sorry. *pant* What can I get you?"], ["Ah, a customer! One sec— okay. What'll it be?"]] },
   "line.impatient":    { g: "Supplies", l: "Someone behind you in the café line, when you stand at the counter without ordering (shown in the corner; one version picked at random)", by: "claude", v: [["Uh, are you gonna order?"], ["*sigh* Some of us have places to be."], ["Any day now..."], ["Do you need help reading the menu?"], ["I can hear my coffee getting cold and I don't even have it yet."]] },
   "line.inLine":       { g: "Supplies", l: "Asking someone in the café line to move", by: "claude", v: [["Sorry, I'm in line."], ["Uh, there's a line?"], ["I've been waiting here forever. I'm not moving."]] },
@@ -2665,8 +2681,11 @@ const TEXT = {
   "bin.tubPopcorn":    { g: "Screening nook", l: "Trying to put a popcorn bag in the café's dish tub", by: "claude", v: [["The dish tub is for mugs. The popcorn bag goes in the trash."]] },
   "popcorn.hands":     { g: "Screening nook", l: "Popcorn, with something already in your hands", by: "claude", v: [["My hands are full already."]] },
   "litter.pick":       { g: "Litter", l: "Picking up litter ({thing}: cup, wrapper or napkin)", by: "claude", v: [["You pick up a {thing}. Gross."], ["A {thing}. People are animals."], ["You pick up the {thing}."]] },
-  "litter.noBag":      { g: "Litter", l: "Trying to pick up litter without a trash bag (in the staff room, or the janitor has spares)", by: "claude", v: [["I'm not touching that with my bare hands.", "The janitor must have a spare trash bag."]] },
+  "litter.noBag":      { g: "Litter", l: "Trying to pick up litter without a trash bag (there's a roll in the staff room, or the janitor has spares)", by: "claude", v: [["I'm not touching that with my bare hands.", "The janitor must have a spare trash bag. There's a roll of them in the staff room, too."]] },
   "bag.ask":           { g: "Litter", l: "The staff room trash can, hands empty: take a trash bag? (one page, Yes/No)", by: "claude", v: [["A roll of trash bags under the can. Tear one off?"]] },
+  "bag.askRoll":       { g: "Litter", l: "The roll of trash bags in the staff room, hands empty: take one? (one page, Yes/No)", by: "claude", v: [["A roll of trash bags. Tear one off?"]] },
+  "bag.roll":          { g: "Litter", l: "The roll of trash bags, when there's no janitor today (nothing to pick up)", by: "claude", v: [["A roll of trash bags. The janitor's whole personality."]] },
+  "bag.full":          { g: "Litter", l: "The roll of trash bags, with your hands full (a drink, a box)", by: "claude", v: [["My hands are full. The bags can wait."]] },
   "jam.look":          { g: "Litter", l: "The jammed trash can, hands free (one page, then Pull it out / Leave it)", by: "claude", v: [["There's a cup wedged in the flap. Nothing else is getting in there. Pull it out?"]] },
   "sell.shop":         { g: "Gift shop", l: "The gift shop's Sell cards row (what it says beside the list)", by: "claude", v: [["The shop buys trading cards back, at half what they cost. Real ones only."]] },
   "sell.bluu":         { g: "Days of the week", l: "Saturday: Bluu's Sell cards row", by: "claude", v: [["Bluu buys cards back. Half price. He doesn't ask where they came from, and you don't ask where they're going."]] },
@@ -2676,7 +2695,7 @@ const TEXT = {
   "jam.janitor":       { g: "Janitor", l: "The Janitor at the jammed trash can, sweeping up round it (and the notice when he pulls the cup out)", by: "claude", v: [["Who jams a cup in a trash can?", "Every. Single. Day."], ["I was on my break.", "I was ON. MY. BREAK."]] },
   "jam.thanks":        { g: "Janitor", l: "Talking to the Janitor after you unjammed the trash can and cleaned up round it (once)", by: "claude", v: [["Somebody pulled a cup out of that jammed can. And picked up the mess.", "...That was you, wasn't it?", "Thanks. Really."]] },
   "bag.take":          { g: "Litter", l: "Taking a trash bag", by: "claude", v: [["*rrrip*", "One trash bag. I'm basically a professional now."]] },
-  "bag.back":          { g: "Litter", l: "Putting an unused trash bag back (staff room can)", by: "claude", v: [["You roll the bag back up and tuck it under the can.", "Nobody saw that."]] },
+  "bag.back":          { g: "Litter", l: "Putting an unused trash bag back (the roll in the staff room, or the can there)", by: "claude", v: [["You roll the bag back up with the others.", "Nobody saw that."]] },
   "bag.unused":        { g: "Litter", l: "Your trash bag's still empty, at a can outside the staff room: toss it? (one page, then Toss it / Keep it)", by: "claude", v: [["It's empty. I haven't even used it yet. Toss it anyway?"]] },
   "bag.tossed":        { g: "Litter", l: "Tossing an empty trash bag", by: "claude", v: [["*fwip*", "A perfectly good bag. Gone. You monster."]] },
   "bag.binned":        { g: "Litter", l: "Your trash bag into an empty can", by: "claude", v: [["*fwump*", "The whole bag goes in. Much better."], ["*fwump*", "Out of sight, out of mind."]] },
@@ -3090,7 +3109,7 @@ function normalizeRoom(id, d) {
   if (d && typeof d === "object" && d.layout) { d = Object.assign({}, d); prepLayoutRoom(d); }
   if (!d || typeof d !== "object" || !Array.isArray(d.map) || !d.map.length) return null;
   const big = !!d.layout, h = Math.min(big ? LAYOUT_MAX_H : 40, Math.max(6, d.map.length)), w = Math.min(big ? LAYOUT_MAX_W : 48, Math.max(6, String(d.map[0]).length));
-  const map = []; for (let y = 0; y < h; y++) map.push(String(d.map[y] || "").padEnd(w, "#").slice(0, w).replace(/[^#^v.=DdSsEBH ]/g, "."));
+  const map = []; for (let y = 0; y < h; y++) map.push(String(d.map[y] || "").padEnd(w, "#").slice(0, w).replace(/[^#^v.=DdSsEBKH ]/g, "."));
   const out = {}; ROOM_KEYS.forEach(k => { if (d[k] !== undefined) out[k] = JSON.parse(JSON.stringify(d[k])); });
   out.map = map; out.name = str(d.name, 40) || id;
   out.art = Object.assign({ top: "gallery_wall_top", upper: "gallery_wall_upper", lower: "gallery_wall_lower", floor: "gallery_floor" }, out.art || {});
@@ -3124,7 +3143,7 @@ function applyRooms(rooms) {
 }
 const MAP_TILE = { " ": [null], "#": ["top"], "^": ["upper"], "v": ["lower"], ".": ["floor"], "=": ["runner"],
   "D": ["upper", "doorway_upper"], "d": ["lower", "doorway_lower"], "S": ["upper", "staff_door_upper"], "s": ["lower", "staff_door_lower"],
-  "E": ["top", "exit_door"], "B": ["top", "doorway_bottom"], "H": ["top", "doorway_side"],
+  "E": ["top", "exit_door"], "B": ["top", "doorway_bottom"], "K": ["top", "door_bottom"], "H": ["top", "doorway_side"],
   "R": ["roof"], "G": ["upper", "glass_door_upper"], "g": ["lower", "glass_door_lower"], ",": ["walkway"], "|": ["floor", "lot_stripe"] }; // (the parking lot out front)
 const WALK_TILES = ".=,|"; // the map characters you can walk on
 
@@ -3712,9 +3731,10 @@ class Game {
     if (p.sitting) this.standUp(p.dir);
     const npc = room.npcs.find(n => n.x === tx && n.y === ty);
     const ev = room.events[tx + "," + ty];
+    const thing = (this.sup && this.sup.boxes.some(b => b.room === room.id && b.x === tx && b.y === ty)) || (this.litter && (this.litter[room.id] || []).some(l => l.x === tx && l.y === ty)); // a delivery box or litter: walk up to it and pick it up (Joe 10/15)
     this.tapMark = { x: tx, y: ty, t: 40 };
-    if (!npc && !room.solid[ty][tx]) { const path = this.findPath(p.x, p.y, tx, ty); if (path) { this.path = path; this.pathAct = null; this.pathTries = 0; } return; }
-    if (!npc && !ev) return;
+    if (!npc && !thing && !room.solid[ty][tx]) { const path = this.findPath(p.x, p.y, tx, ty); if (path) { this.path = path; this.pathAct = null; this.pathTries = 0; } return; }
+    if (!npc && !ev && !thing) return;
     // Walk to the best tile next to it, then face it.
     let best = null;
     for (const [d, [dx, dy]] of Object.entries(DIRS)) {
@@ -4224,7 +4244,7 @@ class Game {
   toastSparkle(el, ms) {
     if (typeof document === "undefined") return;
     const s = parseFloat(getComputedStyle(el).getPropertyValue("--s")) || 1, w = Math.max(8, Math.round(el.offsetWidth / s)), h = Math.max(8, Math.round(el.offsetHeight / s));
-    const cv = document.createElement("canvas"); cv.width = w; cv.height = h; cv.className = "gt-loc-spark"; el.appendChild(cv);
+    const cv = document.createElement("canvas"); cv.width = w; cv.height = h; cv.className = "gt-loc-spark"; cv.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;image-rendering:pixelated"; el.appendChild(cv); // (its own styles: the curator's preview has its own copy of the page's)
     const ctx = cv.getContext("2d"), t0 = performance.now(), N = 6, life = 800, gap = Math.max(150, (ms - life) / (N - 1)); // one or two always twinkling
     const at = [...Array(N)].map(() => [2 + Math.floor(Math.random() * Math.max(1, w - 4)), 2 + Math.floor(Math.random() * Math.max(1, h - 4))]);
     const frame = now => {
@@ -7236,13 +7256,13 @@ class Game {
     if (this.carryBox) { this.deliver("barista"); return; }
     if (this.trashBag != null) { this.say(this.tx("bag.hands")); return; }
     if (!menu && !this.tut && this.lineAhead()) { this.say(this.tx("line.wait")); return; } // there's a line: join it at the back
-    { const ba = !menu && this.room.npcs.find(n => n.role === "barista" && n.pace && n.home && !(n.x === n.home[0] && n.y === n.home[1]));
-      if (ba) { this.mode = "busy"; if (ba.moving) { const [dx, dy] = DIRS[ba.dir]; ba.x += dx; ba.y += dy; ba.moving = false; ba.prog = 0; } ba.dir = OPP[this.player.dir]; ba.pose = { kind: "startled", t0: this.t, dur: 40 }; this.rush = { ba, t: 0 }; return; } } // rushed off her feet: she notices you, dashes to her spot, then takes your order
+    { const ba = !menu && this.room.npcs.find(n => n.role === "barista" && n.pace && n.home); // (at her spot too, or mid-step: she always reacts, Joe 10/15)
+      if (ba) { this.mode = "busy"; if (ba.moving) { const [dx, dy] = DIRS[ba.dir]; ba.x += dx; ba.y += dy; ba.moving = false; ba.prog = 0; } ba.dir = OPP[this.player.dir]; ba.pose = { kind: "startled", t0: this.t, dur: 40 }; this.rush = { ba, t: 0 }; return; } } // rushed off her feet: she notices you (finishing her step), dashes back to her spot if she's off it, then takes your order
     if (!menu && !this.drink && this.sup && this.sup.cafeDone && !this.sup.freeGiven) { // the next time you talk to her after bringing her box: thanks (Joe 10/12)
       this.sup.freeGiven = true; this.drink = { kind: 0, name: this.pack.settings.shop.drinks[0].name, sips: 0, color: "", iced: !!this.pack.settings.shop.drinks[0].iced, caf: this.pack.settings.shop.drinks[0].caf !== false }; this.sipClock = 240; this.say(this.tx("supply.free")); return;
     }
     if (!menu && !this.tut && this.weekday() === 4 && !this.dayState().thuDone && this.dayState().thuSeat) { // Thursday: the barista points you to the free seat, then takes your order
-      this.say(this.tx("thu.ask"), () => this.cafe(true));
+      this.say(this.tx(this.sup && this.sup.cafeNeeded && !this.sup.cafeDone && !this.closing ? "thu.askRushed" : "thu.ask"), () => this.cafe(true)); // stressed (her box is still downstairs): no invite
       return;
     }
     if (this.drink && this.drink.empty) {
@@ -7353,6 +7373,14 @@ class Game {
     }, 1);
   }
   npcPopcorn() { return { kind: 0, popcorn: true, sips: 0, empty: false, t: 300 + Math.random() * 600 }; }
+  /* The roll of trash bags by the staff room's can (Joe 10/15): tear one off, or put an unused one back. */
+  bagRoll() {
+    if (this.trashBag === 0) { this.trashBag = null; this.say(this.tx("bag.back")); return; }
+    if (this.trashBag != null) { this.say(this.tx("bag.hands")); return; }
+    if (this.drink || this.carryBox || this.carryItem) { this.say(this.tx("bag.full")); return; }
+    if (this.noJanitor()) { this.say(this.tx("bag.roll")); return; } // (no litter to pick up without him)
+    this.choose(this.tx("bag.askRoll").join(" "), ["Yes", "No"], k => { if (k === 0) { this.trashBag = 0; this.say(this.tx("bag.take")); } }, 1);
+  }
   bin(e) {
     if (e.tub && this.drink && this.drink.popcorn) { this.say(this.tx("bin.tubPopcorn")); return; } // a popcorn bag goes in the trash, not the café's dish tub
     const [bx, by] = [e.x !== undefined ? e.x : this.player.x + DIRS[this.player.dir][0], e.y !== undefined ? e.y : this.player.y + DIRS[this.player.dir][1]];
@@ -7365,7 +7393,7 @@ class Game {
       for (let i = 0; i < k; i++) this.count("litter"); this.say(this.tx("bag.binned", { n: k })); return;
     }
     if (this.trashBag != null && e.tub) { this.say(this.tx("bag.hands")); return; }
-    if (!e.tub && this.room.id === "staff" && !this.noJanitor() && !this.drink && !this.carryBox && !this.carryItem) { // the roll of trash bags under the staff room's can (not while the Janitor is switched off: no trash to pick up)
+    if (!e.tub && this.room.id === "staff" && !this.room.props.some(q => q.key === "trash_bag_roll") && !this.noJanitor() && !this.drink && !this.carryBox && !this.carryItem) { // no roll beside it: the bags are under the can (not while the Janitor is switched off: no trash to pick up)
       this.choose(this.tx("bag.ask").join(" "), ["Yes", "No"], k => { if (k === 0) { this.trashBag = 0; this.say(this.tx("bag.take")); } }, 1); return;
     }
     if (this.drink && this.drink.empty && !e.tub && this.binFull(this.room.id, bx, by)) { this.say(this.tx("bin.full")); return; }
@@ -8370,6 +8398,7 @@ class Game {
     else if (e.cafe) this.cafe();
     else if (e.staffCoffee) this.staffCoffee();
     else if (e.trash) this.bin(e);
+    else if (e.bagRoll) this.bagRoll();
     else if (e.popcorn) this.popcornStand();
     else if (e.upcoming) this.workbench();
     else if (e.pc) this.someonesPC();
@@ -10499,7 +10528,7 @@ class Game {
     if (r.featuredAt) this.drawFeatured(r, cx, cy);
     const shelf = r.props.find(p => p.mugShelf);
     if (shelf && this.progress.mug === todayISO()) this.drawSlot("usher_mug", 0, 0, (shelf.x + 1) * T + 6 - cx, shelf.y * T - 3 - cy);
-    const chars = (full ? (full.noPeople ? [] : r.npcs.slice()) : [this.player, ...r.npcs]).sort((a, b) => this.pos(a).y - this.pos(b).y);
+    const chars = (full ? (full.noPeople ? [] : r.npcs.slice()) : [this.player, ...r.npcs]).sort((a, b) => this.pos(a).y - this.pos(b).y), bubbles = []; // the "?"/"!" and reaction bubbles: over everything, after the tops
     for (const c of chars) {
       const p = this.pos(c), prog = c.moving ? c.prog : c.bumpT > 0 ? 16 - c.bumpT : -1;
       const col = prog >= 0 && prog < 8 ? (c.step ? 1 : 2) : 0;
@@ -10559,18 +10588,18 @@ class Game {
         if (pk >= c.pose.dur) c.pose = null;
         else if (c.pose.kind !== "snapback") {
           const fr = { startled: pk < 40 ? 0 : 2, guard: 0, heart: 1, pose: 3, busy: 4, wave: 5, shy: 6, annoyed: 7, bow: 3 }[c.pose.kind];
-          ctx.globalAlpha = Math.min(1, (c.pose.dur - pk) / 15) * (c.alpha !== undefined ? Math.max(0, c.alpha) : 1);
-          this.drawSlot("emote", fr, 0, sx + 4, sy - 10 + (Math.floor(this.t / 20) % 2)); ctx.globalAlpha = c.alpha !== undefined ? Math.max(0, c.alpha) : 1;
+          const ea = Math.min(1, (c.pose.dur - pk) / 15) * (c.alpha !== undefined ? Math.max(0, c.alpha) : 1), ey = sy - 10 + (Math.floor(this.t / 20) % 2);
+          bubbles.push(() => { ctx.globalAlpha = ea; this.drawSlot("emote", fr, 0, sx + 4, ey); ctx.globalAlpha = 1; }); // drawn after the tall things' tops (the café's wall machine hid the barista's "!", Joe 10/15)
         }
       }
       if (c.member && !c.dayPerson && !c.leaving && !this.full && Math.abs(c.x - this.player.x) + Math.abs(c.y - this.player.y) <= 2) { // name tags: Patreon members (not the day-of-the-week people)
         ctx.font = "6px monospace"; const w = Math.ceil(ctx.measureText(c.member).width) + 4, nx = Math.round(sx + 8 - w / 2), ny = sy - (bub >= 0 ? 18 : 8);
         ctx.fillStyle = "rgba(24,24,32,.85)"; ctx.fillRect(nx, ny, w, 8); ctx.fillStyle = "#f8f0c0"; ctx.textBaseline = "top"; ctx.fillText(c.member, nx + 2, ny + 1);
       }
-      if (bub >= 0) this.drawSlot("bubble", bub, 0, sx + 4, sy - 9 + (Math.floor(this.t / 20) % 2));
+      if (bub >= 0) { const by = sy - 9 + (Math.floor(this.t / 20) % 2), ba = ctx.globalAlpha; bubbles.push(() => { ctx.globalAlpha = ba; this.drawSlot("bubble", bub, 0, sx + 4, by); ctx.globalAlpha = 1; }); }
       ctx.globalAlpha = 1;
     }
-    this.drawUppers(r, cx, cy);
+    this.drawUppers(r, cx, cy); bubbles.forEach(f => f());
     this.drawReadBorders(r, cx, cy, "cases"); // read cases: a faint sparkle, over their redrawn tops
     if (full) return;
     this.drawLighting(r, cx, cy, pp);
@@ -10632,7 +10661,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 79";
+const VERSION = "2026-11-18 cards 80";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
