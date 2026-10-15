@@ -1763,7 +1763,7 @@ function normalizePiece(p, i) {
     unveil: /^\d{4}-\d{2}-\d{2}$/.test(p.unveil || "") ? p.unveil : "",
     aired: /^\d{4}-\d{2}-\d{2}$/.test(p.aired || "") ? p.aired : "", // the day its episode aired: the wings fill by it (Joe 10/15)
     drink: str(p.drink, 40), // unveiling: the drink of the week it brings (until the next unveil that brings one)
-    drinkPrice: Math.max(0, Math.min(99, Math.round(+p.drinkPrice || 0))), drinkIced: !!p.drinkIced, drinkCaf: !!p.drinkCaf, // the drink of the week's price, and whether it's served iced
+    drinkPrice: Math.max(0, Math.min(99, Math.round(+p.drinkPrice || 0))), drinkIced: !!p.drinkIced, drinkCaf: p.drinkCaf !== false, // the drink of the week (caffeinated unless unticked)'s price, and whether it's served iced
     drinkColor: isHex(p.drinkColor) ? p.drinkColor : "", drinkLine: Array.isArray(p.drinkLine) ? p.drinkLine.map(x => str(x, 200)).filter(Boolean).slice(0, 6) : [], // its cup color, and what the barista says
     gift: p.gift && str(p.gift.name, 50) ? { name: str(p.gift.name, 50), description: str(p.gift.description, 160), price: Math.max(1, Math.min(99, Math.round(+p.gift.price || 5))) } : null, // and its gift
     episodeTitle: str(p.episodeTitle, 140), cardBlurb: str(p.cardBlurb, 140), noCard: !!p.noCard, cardsFrom: p.cardsFrom === undefined ? "on" : p.cardsFrom === "on" || /^\d{4}-\d{2}-\d{2}$/.test(p.cardsFrom || "") ? p.cardsFrom : "", // its trading card: the episode's title (Cards tab fetches it), a blurb (else the hint), or no card at all
@@ -3396,9 +3396,9 @@ function buildRoom(id, pieces, o) {
       if (cands.length) { const [x, y] = cands[Math.floor(Math.random() * cands.length)]; extra.push(Object.assign(someone(), { _x: x, _y: y, zone: cz })); }
     }
   }
-  { // the reader (Joe 10/15): in her armchair in the reading nook all day, every day; she goes home at closing
+  { // the reader (Joe 10/15): in her armchair in the reading nook whenever the museum's open, evenings too; she goes home at closing
     const rc = (def.props || []).find(p => p.key === "reader_chair");
-    if (rc && !o.closing && o.tod !== "night") extra.push({ sheet: "visitor_b", shirt: "#3a5a7a", x: 0, y: 0, _x: rc.x, _y: rc.y, still: true, sitting: true, dir: rc.sit || "left", reader: true, lines: [["..."]] });
+    if (rc && !o.closing) extra.push({ sheet: "visitor_b", shirt: "#3a5a7a", x: 0, y: 0, _x: rc.x, _y: rc.y, still: true, sitting: true, dir: rc.sit || "left", reader: true, lines: [["..."]] });
   }
   const who = (def.visitors || []).concat(extra).filter(v => (!v.day || o.tod !== "night") && (v.patrol ? o.closing : !v.night || o.tod === "night") && (!o.closing || v.staff || v.patrol)); // the guard does rounds only at closing, whatever the hour (Joe 10/9)
   r.npcs = who.filter(v => !v.random || v._x !== undefined).map(v => ({ sitting: !!v.sitting, still: v.still, browsing: v.browsing, staff: v.staff, patrol: v.patrol, usher: v.usher, role: v.role || (v.usher ? "usher" : undefined), slow: v.slow, goRight: true, pause: 0, stuck: 0,
@@ -7075,7 +7075,7 @@ class Game {
     { const ba = !menu && this.room.npcs.find(n => n.role === "barista" && n.pace && n.home && !(n.x === n.home[0] && n.y === n.home[1]));
       if (ba) { this.mode = "busy"; if (ba.moving) { const [dx, dy] = DIRS[ba.dir]; ba.x += dx; ba.y += dy; ba.moving = false; ba.prog = 0; } ba.dir = OPP[this.player.dir]; ba.pose = { kind: "startled", t0: this.t, dur: 40 }; this.rush = { ba, t: 0 }; return; } } // rushed off her feet: she notices you, dashes to her spot, then takes your order
     if (!menu && !this.drink && this.sup && this.sup.cafeDone && !this.sup.freeGiven) { // the next time you talk to her after bringing her box: thanks (Joe 10/12)
-      this.sup.freeGiven = true; this.drink = { kind: 0, name: this.pack.settings.shop.drinks[0].name, sips: 0, color: "", iced: !!this.pack.settings.shop.drinks[0].iced }; this.sipClock = 240; this.say(this.tx("supply.free")); return;
+      this.sup.freeGiven = true; this.drink = { kind: 0, name: this.pack.settings.shop.drinks[0].name, sips: 0, color: "", iced: !!this.pack.settings.shop.drinks[0].iced, caf: this.pack.settings.shop.drinks[0].caf !== false }; this.sipClock = 240; this.say(this.tx("supply.free")); return;
     }
     if (!menu && !this.tut && this.weekday() === 4 && !this.dayState().thuDone && this.dayState().thuSeat) { // Thursday: the barista points you to the free seat, then takes your order
       this.say(this.tx("thu.ask"), () => this.cafe(true));
@@ -7152,7 +7152,7 @@ class Game {
   closeCafe() { this.el.cafe.style.display = "none"; this.cm = null; this.mode = "walk"; this.inputLock = true; }
   cafePick() {
     const m = this.cm, i = m.i, drinks = m.drinks;
-    if (i === drinks.length) { this.closeCafe(); if (this.sup && this.sup.cafeDone && !this.sup.freeGiven && !this.drink && this.trashBag == null && !this.carryBox && !this.carryItem) { this.sup.freeGiven = true; this.drink = { kind: 0, name: this.pack.settings.shop.drinks[0].name, sips: 0, color: "", iced: !!this.pack.settings.shop.drinks[0].iced }; this.sipClock = 240; this.say(this.tx("supply.free")); return; } if (this.sup && this.sup.cafeNeeded && !this.sup.cafeDone && !this.closing && !this.director().over) this.say(this.tx(this.director().beat >= 2 ? "cafe.slowChat" : "cafe.rushChat")); else this.staffTalk("barista"); return; } // stressed before the rush, swamped once orders are slow // stressed while her supplies are still in the basement
+    if (i === drinks.length) { this.closeCafe(); if (this.sup && this.sup.cafeDone && !this.sup.freeGiven && !this.drink && this.trashBag == null && !this.carryBox && !this.carryItem) { this.sup.freeGiven = true; this.drink = { kind: 0, name: this.pack.settings.shop.drinks[0].name, sips: 0, color: "", iced: !!this.pack.settings.shop.drinks[0].iced, caf: this.pack.settings.shop.drinks[0].caf !== false }; this.sipClock = 240; this.say(this.tx("supply.free")); return; } if (this.sup && this.sup.cafeNeeded && !this.sup.cafeDone && !this.closing && !this.director().over) this.say(this.tx(this.director().beat >= 2 ? "cafe.slowChat" : "cafe.rushChat")); else this.staffTalk("barista"); return; } // stressed before the rush, swamped once orders are slow // stressed while her supplies are still in the basement
     if (i > drinks.length) { this.closeCafe(); return; }
     const d = drinks[i], price = m.cost(d);
     if (price && (this.progress.tokens || 0) < price) { m.msg = "That's " + price + " token" + (price > 1 ? "s" : "") + ". Chores earn tokens."; this.renderCafe(); return; }
@@ -8095,7 +8095,7 @@ class Game {
   /* The coffee rush (Joe 10/15): finish three caffeinated drinks in a row (doing nothing else between: walking, sitting, the
      café and putting your cup away don't count) and you move at double speed for a minute. Returns true when it kicks in. */
   coffeeDone() {
-    const d = this.drink; if (!d || !d.caf || d.staffBrew || d.popcorn || this.tut) { this.coffeeRun = 0; return false; }
+    const d = this.drink; if (!d || !(d.caf || d.staffBrew) || d.popcorn || this.tut) { this.coffeeRun = 0; return false; } // the staff room's brew counts: it's coffee, just bad
     if ((this.coffeeRun = (this.coffeeRun || 0) + 1) < 3) return false;
     this.coffeeRun = 0; this.progress.tally.rushes = (this.progress.tally.rushes || 0) + 1; this.saveProgress();
     this.say(this.tx("coffee.zoom"), () => { this.zoomT = ZOOM; this.crashDue = false; });
@@ -10465,7 +10465,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 73";
+const VERSION = "2026-11-18 cards 74";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

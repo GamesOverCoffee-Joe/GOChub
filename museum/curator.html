@@ -445,7 +445,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 73";
+window.GOQ_WANT = "2026-11-18 cards 74";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -525,7 +525,7 @@ function packOut() {
     if (p.blend) o.blend = p.blend;
     if (p.unveil) o.unveil = p.unveil;
     if (p.aired) o.aired = p.aired;
-    if (p.drink) { o.drink = p.drink; if (p.drinkColor) o.drinkColor = p.drinkColor; if (p.drinkLine && p.drinkLine.length) o.drinkLine = p.drinkLine; if (p.drinkPrice) o.drinkPrice = p.drinkPrice; if (p.drinkIced) o.drinkIced = true; if (p.drinkCaf) o.drinkCaf = true; }
+    if (p.drink) { o.drink = p.drink; if (p.drinkColor) o.drinkColor = p.drinkColor; if (p.drinkLine && p.drinkLine.length) o.drinkLine = p.drinkLine; if (p.drinkPrice) o.drinkPrice = p.drinkPrice; if (p.drinkIced) o.drinkIced = true; if (p.drinkCaf === false) o.drinkCaf = false; }
     if (p.pick) o.pick = true;
     if (p.answers && p.answers.some(x => x && String(x.a !== undefined ? x.a : x).trim())) o.answers = [0, 1, 2].map(i => { const x = p.answers[i]; return String((x && typeof x === "object" ? x.a : x) || ""); }); // the developer's answers to the three questions
     if (p.episodeTitle) o.episodeTitle = p.episodeTitle; if (p.cardBlurb) o.cardBlurb = p.cardBlurb; if (p.noCard) o.noCard = true; if (p.cardsFrom !== "on") o.cardsFrom = p.cardsFrom || ""; // its trading card (Cards tab); cardsFrom: missing = always (older packs), "" = not yet
@@ -2689,7 +2689,7 @@ function renderShop() {
       el("label", {}, [document.createTextNode("Drink name"), nm]), el("label", {}, [document.createTextNode("Cup color"), col]),
       (() => { const pr = el("input", { type: "number", min: 0, max: 99, value: p.drinkPrice || 0, "aria-label": "Price" }); pr.addEventListener("input", () => { p.drinkPrice = Math.max(0, Math.min(99, Math.round(+pr.value || 0))); changed(); }); return el("label", {}, [document.createTextNode("Price (tokens)"), pr]); })(),
       (() => { const ic = el("input", { type: "checkbox", checked: !!p.drinkIced }); ic.addEventListener("change", () => { p.drinkIced = ic.checked; changed(); }); return el("label", { class: "check", style: "align-self:end" }, [ic, document.createTextNode("Iced")]); })(),
-      (() => { const cf = el("input", { type: "checkbox", checked: !!p.drinkCaf }); cf.addEventListener("change", () => { p.drinkCaf = cf.checked; changed(); }); return el("label", { class: "check", style: "align-self:end", title: "Counts toward the coffee rush" }, [cf, document.createTextNode("Has caffeine")]); })(),
+      (() => { const cf = el("input", { type: "checkbox", checked: p.drinkCaf !== false }); cf.addEventListener("change", () => { p.drinkCaf = cf.checked; changed(); }); return el("label", { class: "check", style: "align-self:end", title: "Counts toward the coffee rush" }, [cf, document.createTextNode("Has caffeine")]); })(),
       el("label", { class: "wide" }, [document.createTextNode("The barista's line"), line])]));
   });
   wrap.appendChild(drinks);
@@ -3097,7 +3097,7 @@ function pieceRow(p, i, place, opts) {
     el("small", { text: "The ceremony on that day hands these out. Leave blank for none." }),
     xin("Drink of the week", "Name on the café menu", () => p.drink, v => { p.drink = v; }),
     (() => { const pr = el("input", { type: "number", min: 0, max: 99, value: p.drinkPrice || 0, "aria-label": "Drink price" }); pr.addEventListener("input", () => { p.drinkPrice = Math.max(0, Math.min(99, Math.round(+pr.value || 0))); changed(); }); const ic = el("input", { type: "checkbox", checked: !!p.drinkIced }); ic.addEventListener("change", () => { p.drinkIced = ic.checked; changed(); });
-      const cf = el("input", { type: "checkbox", checked: !!p.drinkCaf }); cf.addEventListener("change", () => { p.drinkCaf = cf.checked; changed(); });
+      const cf = el("input", { type: "checkbox", checked: p.drinkCaf !== false }); cf.addEventListener("change", () => { p.drinkCaf = cf.checked; changed(); });
       return el("div", { class: "rrow" }, [el("label", { class: "rfield" }, [el("span", { text: "Drink price (tokens)" }), pr]), el("label", { class: "check" }, [ic, document.createTextNode("Iced")]), el("label", { class: "check", title: "Counts toward the coffee rush: three in a row and you move fast for a minute" }, [cf, document.createTextNode("Has caffeine")])]); })(),
     (() => { const inp = el("input", { type: "color", value: p.drinkColor || "#c89040", "aria-label": "Drink color" }); inp.addEventListener("input", () => { p.drinkColor = inp.value; changed(); }); return el("label", { class: "rfield" }, [el("span", { text: "Drink color (the cup in your hand)" }), inp]); })(),
     (() => { const t = el("textarea", { rows: 2, placeholder: "What the barista says when serving it (one page per line)", "aria-label": "Barista's line" }); t.value = (p.drinkLine || []).join("\n");
