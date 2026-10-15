@@ -445,7 +445,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 75";
+window.GOQ_WANT = "2026-11-18 cards 76";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -2428,7 +2428,7 @@ function renderVisitors() {
   st.curious = st.curious || { perDay: 3 };
   const wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
   wrap.appendChild(el("h2", { class: "title", text: "Visitors" }));
-  wrap.appendChild(el("p", { text: "Curious visitors wait in the museum's wings with a \"?\" over their heads. Each is after one episode that's out in a case, and describes it by its hint (\"the one where...\", in Pieces), never by name. They follow you anywhere until you look at a case and show them. Ask \"Do you remember the name?\" and they'll tell you the title: that's the only hint, and finding it after asking earns fewer tokens (Tokens tab). The right one: they're thrilled and head off to play it (3 staff points). The wrong one: \"not that one\", and they keep following. The next day the ones you helped come back to the lobby with a \"!\" and say what they made of your take, picked at random: they agree, they think you got it wrong, or they can't see where you got that. The relationships below are only used by the tutorial now." }));
+  wrap.appendChild(el("p", { text: "Curious visitors wait in the museum's wings with a \"?\" over their heads. Each is after one episode that's out in a case, and describes it by its hint (\"the one where...\", in Pieces), never by name. They follow you anywhere until you look at a case and show them. Ask \"Do you remember the name?\" and they'll tell you the title: that's the only hint, and finding it after asking earns fewer tokens (Tokens tab). The right one: they're thrilled and head off to play it (3 staff points). The wrong one: \"not that one\", and they keep following. The next day the ones you helped come back to the lobby with a \"!\" and say what they made of your take, picked at random: they agree, they think you got it wrong, or they can't see where you got that. The relationships below aren't used by anything right now (the new tutorial doesn't need them); they're kept in case they come back." }));
   const per = el("input", { type: "number", min: 0, max: 10, value: st.curious.perDay, style: "max-width:120px" });
   per.addEventListener("input", () => { st.curious.perDay = Math.max(0, Math.min(10, Math.round(+per.value || 0))); changed(); });
   wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:10px 0 14px" }, [el("label", {}, [document.createTextNode("Curious visitors a day"), el("small", { text: "Anyone you talked to but didn't get to show a game comes back the next day; the rest are new faces. 0 turns curious visitors off." }), per])]));
