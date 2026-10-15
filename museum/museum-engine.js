@@ -113,6 +113,7 @@ const PAL = {
   easel:   [null, "#8a5a32", "#5a3a1a", "#f4f0e6", "#c84a3a", "#3a6ac8", "#e0b040"],
   stall:   [null, "#c84a4a", "#f4f0e6", "#8a5a32", "#5a3a1a", "#181820"],
   ledsign: [null, "#0a080c", "#2a2630", "#55505e", "#1c0808"],
+  coin: ["#fff2a0", "#f0c038", "#b87818", "#1a1008", "#fffbe8"], // the token: gold, its rim, a black Q (index 3) and a glint
   eotmled: [null, "#0a080c", "#2a2630", "#7a5a20", "#1c0808", "#e8b24a"], // a gold frame
   arcade:  [null, "#1a1424", "#3a2a5a", "#5a48a0", "#101018", "#40d0c0", "#f0c040", "#e05050", "#5878c8"],
   garage:  ["#c8ccd4", "#9aa0ac", "#6a707c", "#181820", "#3a3a44", "#e8c040"], // slat, slat edge, slat shadow, outline, frame, hazard yellow
@@ -331,6 +332,25 @@ const GEN = {
     rect(a, 2, 1, 12, 9, 0); rect(a, 4, 3, 8, 1, 2); rect(a, 4, 5, 6, 1, 2); rect(a, 4, 7, 7, 1, 2);
     rect(a, 7, 10, 2, 4, 2); rect(a, 5, 14, 6, 2, 2);
     return outline(a);
+  },
+  token_coin: () => { // a gift shop token: a gold coin with a black Q on it
+    const Q = [" XXXX ", "XX  XX", "XX  XX", "XX  XX", "XX XXX", " XXXX ", "    XX"];
+    return fillFn(mk(16, 16), (x, y) => {
+      const d = Math.hypot(x - 7.5, y - 7.5); if (d > 7.6) return;
+      if (d > 6.7) return 3;
+      const q = Q[y - 4] && Q[y - 4][x - 5]; if (q === "X") return 3;
+      if (d > 5.6) return x + y < 12 ? 0 : 2; // the rim: lit at the top left
+      return (x - 4) * (x - 4) + (y - 3.5) * (y - 3.5) < 3 && !q ? 4 : x + y > 19 ? 2 : 1;
+    });
+  },
+  token_coin_small: () => { // the same coin, small: the HUD and words about tokens
+    const Q = [".XX.", "X..X", "X..X", ".XX.", "..XX"];
+    return fillFn(mk(8, 8), (x, y) => {
+      const d = Math.hypot(x - 3.5, y - 3.5); if (d > 4.1) return;
+      if (d > 3.3) return 3;
+      if (Q[y - 1] && Q[y - 1][x - 2] === "X") return 3;
+      return x + y < 5 ? 0 : x + y > 9 ? 2 : 1;
+    });
   },
   sign_down: () => { // the same stand, with a big arrow pointing down (the basement stairs)
     let a = mk(16, 16);
@@ -1511,6 +1531,8 @@ const SLOTS = [
   { key: "wallpaper_wing_ribbon", label: "Wing wallpaper: Ribbon", group: "Wallpaper", wing: true, w: 256, h: 32, pal: "wp_pastel", gen: GEN.wallpaper_wing_ribbon, note: "Carries on from the Pastel streaks: wide calm bands with thin streaky seams. On a wing's walls it's drawn in soft shades of the wing's color (shown here in the pastel colors); paint it yourself and your colors are used as they are." },
   { key: "wallpaper_wing_haze", label: "Wing wallpaper: Haze", group: "Wallpaper", wing: true, w: 256, h: 32, pal: "wp_pastel", gen: GEN.wallpaper_wing_haze, note: "Carries on from the Pastel streaks: light and sparse at the top, gathering toward the floor. On a wing's walls it's drawn in soft shades of the wing's color (shown here in the pastel colors); paint it yourself and your colors are used as they are." },
   { key: "wallpaper_wing_scatter", label: "Wing wallpaper: Scatter", group: "Wallpaper", wing: true, w: 256, h: 32, pal: "wp_pastel", gen: GEN.wallpaper_wing_scatter, note: "Carries on from the Pastel streaks: short dashes over soft bands. On a wing's walls it's drawn in soft shades of the wing's color (shown here in the pastel colors); paint it yourself and your colors are used as they are." },
+  { key: "token_coin", label: "Token", group: "Gift shop and café", w: 16, h: 16, pal: "coin", gen: GEN.token_coin, note: "A gift shop token. Big in the reward moment (drawn 3x over a spinning sunburst) and over your head when a chore pays." },
+  { key: "token_coin_small", label: "Token (small)", group: "Gift shop and café", w: 8, h: 8, pal: "coin", gen: GEN.token_coin_small, note: "The little token in the corner count and next to prices." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
 const SLOT = {}; SLOTS.forEach(s => { s.frames = s.frames || 1; s.fps = s.fps || 0; SLOT[s.key] = s; });
@@ -1615,7 +1637,7 @@ const VISITOR_NAMES = ["Ada", "Bea", "Cal", "Dot", "Eli", "Fern", "Gus", "Hana",
 /* Chores that count toward staff points (recommending a visitor the right piece, and closing up, are worth 3). */
 const pts = n => n + " point" + (n === 1 ? "" : "s");
 /* Tokens each thing earns (curator, Tokens tab). Staff points (POINT_KINDS) are separate and don't change. */
-const REWARD_DEFAULTS = { dusted: 1, straightened: 1, watered: 1, mugs: 1, wiped: 1, litter: 1, supplies: 3, tour: 3, item: 3, conservator: 2, helped: 5, closings: 3, boxes: 5, kid: 3, artist: [1, 3, 6, 12], trivia: 1, triviaPerfect: 2 };
+const REWARD_DEFAULTS = { dusted: 1, straightened: 1, watered: 1, mugs: 1, wiped: 1, litter: 1, supplies: 3, tour: 3, item: 3, conservator: 2, helped: 5, helpedName: 3, closings: 3, boxes: 5, kid: 3, artist: [1, 3, 6, 12], trivia: 1, triviaPerfect: 2 };
 const POINT_KINDS = ["dusted", "straightened", "watered", "mugs", "wiped", "helped", "closings"];
 const chorePoints = k => (k === "helped" || k === "closings" ? 3 : 1);
 const TEST_BADGES = [{ badge: "0001", key: "QQQQQQ", name: "Test Staff" }];
@@ -2615,11 +2637,16 @@ const TEXT = {
   "rack.empty":        { g: "Gift shop", l: "A stand with nothing for sale", v: [["A stand of little knickknacks.", "Nothing on this one is for sale. They're just here to keep you company."]] },
   "rack.available":    { g: "Gift shop", l: "Stand close-up: for sale", v: [["{n} tokens. Available to buy at the counter up front."]] },
   "cur.hello":         { g: "Curious visitors", l: "When you walk up to them (takes turns)", v: [["Oh, hello!"], ["Oh! Hi there."], ["Hm? Oh, hello!"]] },
-  "cur.help":          { g: "Curious visitors", l: "After \"Do you need help?\" (what they're looking for comes next: one of their relationship's asks, in Visitors)", v: [["Actually, yes! My name is {name}, and I was looking for a game recommendation."]] },
+  "coin.find":        { g: "Tokens", l: "Now and then, looking at something turns up a token (one, popping over your head)", by: "claude", v: [["Huh? There's a token wedged in here.", "Finders keepers."], ["Oh! Somebody dropped a token.", "It's yours now."], ["Wait... is that a token?", "It is! Lucky."]] },
+  "cur.helpFind":     { g: "Curious visitors", l: "After \"Do you need help?\" (what they're looking for comes next, in cur.want)", by: "claude", v: [["Actually, yes! My name is {name}, and I'm trying to find a game from the show."]] },
+  "cur.want":         { g: "Curious visitors", l: "What they're looking for, by its description ({hint}: the piece's hint, \"the one where...\")", by: "claude", v: [["It's {hint}.", "Do you know where it is?"], ["You know, {hint}?", "I've been walking around forever. Do you know where it is?"]] },
+  "cur.name":         { g: "Curious visitors", l: "After \"Do you remember the name?\" ({title}: what they're after). Finding it after this is worth fewer tokens", by: "claude", v: [["Hmm... I'm pretty sure it was called {title}."], ["Oh! Yeah, I think it's {title}."]] },
+  "cur.lead2":        { g: "Curious visitors", l: "Question, after they tell you the name: can you take them there?", by: "claude", v: [["So, can you show me where it is?"]] },
+  "cur.nope":         { g: "Curious visitors", l: "You show them the wrong case ({title}: the one you showed; {hint}: what they're after). They keep following you", by: "claude", v: [["Hmm, no, that's not the one.", "It's {hint}."], ["Ooh, {title} looks cool, but it's not the one I'm looking for."]] },
   "cur.busy":          { g: "Curious visitors", l: "After \"Sorry, I'm busy.\"", v: [["Oh, no worries! I'll keep looking around."]] },
   "cur.follow":        { g: "Curious visitors", l: "They start following you", v: [["Lead the way! I'm right behind you."]] },
   "cur.lead":          { g: "Curious visitors", l: "Talking to them while they follow you", v: [["Where are we headed?"]] },
-  "cur.remind":        { g: "Curious visitors", l: "You ask what they were looking for again (what they want comes next)", v: [["Oh, right! Like I said:"], ["Sure! I'm after this:"]] },
+  "cur.remind":        { g: "Curious visitors", l: "You ask what they were looking for again (what they want comes next, in cur.want; then the name, if they told you)", v: [["Oh, right! Like I said:"], ["Sure! I'm after this:"]] },
   "cur.release":       { g: "Curious visitors", l: "You tell them never mind", v: [["No worries. I'll keep looking around."]] },
   "cur.staffOnly":     { g: "Curious visitors", l: "You go into the staff room while they follow you", v: [["(From the other side of the door:) Staff only? I'll wait right here!"]] },
   "cur.closing":       { g: "Curious visitors", l: "Closing time while they follow you", v: [["Oh! Closing time already?", "I'll come back tomorrow. Save me a good one!"]] },
@@ -2627,8 +2654,6 @@ const TEXT = {
   "cur.unread":        { g: "Curious visitors", l: "Question: recommend a case you haven't read both sides of?", v: [["You haven't read both sides of {title} yet. Recommend it to {name} anyway?"]] },
   "cur.thanks":        { g: "Curious visitors", l: "You recommend the right piece: what they say before they head out ({title})", v: [["Oh! This is perfect! Ok, I'm gonna go home and give {title} a try. Thank you!"]] },
   "cur.missNone":      { g: "Curious visitors", l: "You recommend a piece with no relationship set ({title}; usually each relationship has its own miss lines, in Visitors)", v: [["I don't see any observations here at all."]] },
-  "cur.giveUp":        { g: "Curious visitors", l: "After a third piece that isn't what they wanted: they stop following you", v: [["Thanks for your time! I'll keep looking."]] },
-  "cur.recall":        { g: "Curious visitors", l: "Question: recommend one from memory (the pieces you've recommended right before come next, by name)", v: [["Which one comes to mind?"]] },
   "cur.back":          { g: "Curious visitors", l: "Back the next day, in the lobby: hello ({title}: the game you recommended; {hint}: \", the one where...\" from the piece)", v: [["Hey! Remember me from yesterday? You recommended {title} to me{hint}."]] },
   "cur.agree":         { g: "Curious visitors", l: "Next day, picked at random: they see why the curator felt that way ({title})", v: [["I get it. I completely understand why the curator felt the way he felt about {title}"]] },
   "cur.disagree":      { g: "Curious visitors", l: "Next day, picked at random: they think the curator got it wrong ({title})", v: [["I think the curator was absolutely wrong about {title}.", "I didn't get what he said at all."]] },
@@ -2776,11 +2801,13 @@ function officeUnlock(lock) {
 const PIXEL_FONT = (() => {
   const g = "A:010101111101101 B:110101110101110 C:011100100100011 D:110101101101110 E:111100110100111 F:111100110100100 G:011100101101011 H:101101111101101 I:111010010010111 J:001001001101010 K:101101110101101 L:100100100100111 M:101111111101101 N:110101101101101 O:010101101101010 P:110101110100100 Q:010101101110011 R:110101110101101 S:011100010001110 T:111010010010010 U:101101101101111 V:101101101101010 W:101101111111101 X:101101010101101 Y:101101010010010 Z:111001010100111 0:111101101101111 1:010110010010111 2:110001010100111 3:110001010001110 4:101101111001001 5:111100110001110 6:011100111101111 7:111001010010010 8:111101111101111 9:111101111001110";
   const out = { " ": ["000", "000", "000", "000", "000"], ":": ["000", "010", "000", "010", "000"], "-": ["000", "000", "111", "000", "000"], ".": ["000", "000", "000", "000", "010"],
-    "!": ["010", "010", "010", "000", "010"], "?": ["110", "001", "010", "000", "010"], "'": ["010", "010", "000", "000", "000"], "&": ["010", "101", "010", "101", "011"], ",": ["000", "000", "000", "010", "100"], "/": ["001", "001", "010", "100", "100"] };
+    "!": ["010", "010", "010", "000", "010"], "?": ["110", "001", "010", "000", "010"], "'": ["010", "010", "000", "000", "000"], "&": ["010", "101", "010", "101", "011"], ",": ["000", "000", "000", "010", "100"], "/": ["001", "001", "010", "100", "100"], "+": ["000", "010", "111", "010", "000"] };
   g.split(" ").forEach(e => { const [k, b] = e.split(":"); out[k] = [0, 1, 2, 3, 4].map(i => b.slice(i * 3, i * 3 + 3)); });
   return out;
 })();
 const KONAMI = ["up", "up", "down", "down", "left", "right", "left", "right", "b", "a", "start"];
+const POP_KINDS = ["dusted", "straightened", "watered", "mugs", "wiped", "litter"]; // tokens that just pop over your head
+const COIN_FX = 130; // frames in the big token moment
 const REDUCED_MOTION = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 const BROWSE_LINES = [["Hmm. Hmm hmm hmm."], ["Should I get the mug? I should get the mug.", "...Or the tote."], ["I've been standing here a while.", "I'm very close to deciding."], ["Don't rush me. This is a big decision."]];
 const SIT_LINES = [["Best seat in the house."], ["I come here for the café. The art is a bonus."], ["Shh. I'm people-watching."]];
@@ -3729,6 +3756,7 @@ class Game {
   box-shadow:0 0 0 calc(1px * var(--s)) #181820;white-space:nowrap;opacity:.92}
 .gt-shift .shift{background:#2f6b4f;color:#f8f0c0}
 .gt-shift .tok{background:#7c5a0c;color:#fff6cc}
+.gt-coin{width:1em;height:1em;vertical-align:-.12em;margin-right:.3em;image-rendering:pixelated;image-rendering:crisp-edges}
 .gt-shift .pulse{animation:gtPulse .5s steps(3)}
 @keyframes gtPulse{50%{transform:scale(1.25)}}
 .gt-shift b{font-weight:normal;color:#fff;margin-right:calc(3px * var(--s))}
@@ -4438,7 +4466,7 @@ class Game {
       c.appendChild(document.createTextNode(n + " pt" + (n === 1 ? "" : "s"))); c.title = s.name + " is on shift" + (s.token ? "" : " (offline test badge: points stay in this browser)"); h.appendChild(c);
     }
     if (tokens > 0 || (this.zone && this.zone.id === "cafe")) {
-      const c = document.createElement("span"); c.className = "chip tok" + (pulse ? " pulse" : ""); c.textContent = tokens + " T"; c.title = tokens + " gift shop tokens"; h.appendChild(c);
+      const c = document.createElement("span"); c.className = "chip tok" + (pulse ? " pulse" : ""); this.tokTag(c, tokens); c.title = tokens + " gift shop tokens"; h.appendChild(c);
     }
     h.style.display = h.children.length ? "flex" : "none";
   }
@@ -4487,9 +4515,9 @@ class Game {
     const s = this.staff, t = s && this.progress.staffTally[s.badge]; if (!t) return 0;
     return POINT_KINDS.reduce((a, k) => a + (t[k] || 0) * chorePoints(k), 0);
   }
-  count(kind, target) {
+  count(kind, target, tokens) { // tokens: instead of the Tokens tab's amount for this kind
     this.progress.tally[kind] = (this.progress.tally[kind] || 0) + 1;
-    this.earn(this.pack.settings.rewards[kind] !== undefined ? this.pack.settings.rewards[kind] : 1); // Tokens tab
+    this.earn(tokens !== undefined ? tokens : this.pack.settings.rewards[kind] !== undefined ? this.pack.settings.rewards[kind] : 1, !POP_KINDS.includes(kind)); // Tokens tab. Chores pop over your head; the rest get the big moment
     const s = this.staff; if (!s) { this.favor(kind); return; }
     const t = this.progress.staffTally[s.badge] || (this.progress.staffTally[s.badge] = { name: s.name });
     t[kind] = (t[kind] || 0) + 1; t.name = s.name;
@@ -4878,7 +4906,7 @@ class Game {
       if (d.monDone) { this.say(this.tx("mon.after")); return true; }
       const left = d.boxes.filter(b => !d.found.includes(b.i));
       if (left.length) { const z = this.zoneAt(this.rooms.museum, left[0].x, left[0].y), i = d.monTalks || 0; d.monTalks = i + 1; this.saveProgress(); this.say(this.txAt("mon.ask", i, { n: d.found.length, room: z ? z.name : this.nearZone(this.rooms.museum, left[0].x, left[0].y) })); return true; } // the first version once, then the next
-      const nb = this.pack.settings.rewards.boxes; d.monDone = true; this.earn(nb); this.progress.tally.boxes = (this.progress.tally.boxes || 0) + 1; this.saveProgress(); this.say(this.tx("mon.done", { n: nb })); return true;
+      const nb = this.pack.settings.rewards.boxes; d.monDone = true; this.earn(nb, true); this.progress.tally.boxes = (this.progress.tally.boxes || 0) + 1; this.saveProgress(); this.say(this.tx("mon.done", { n: nb })); return true;
     }
     if (n.kid) {
       if (d.kidDone) return true; // already back with his mom (they're on their way out)
@@ -4890,7 +4918,7 @@ class Game {
     }
     if (n.mom) {
       if (this.fol && this.fol.kid && !d.kidDone) { // reunited
-        const k = this.fol; this.fol = null; k.follow = false; k.still = true; d.kidDone = true; this.earn(this.pack.settings.rewards.kid); this.progress.tally.kids = (this.progress.tally.kids || 0) + 1; this.saveProgress();
+        const k = this.fol; this.fol = null; k.follow = false; k.still = true; d.kidDone = true; this.earn(this.pack.settings.rewards.kid, true); this.progress.tally.kids = (this.progress.tally.kids || 0) + 1; this.saveProgress();
         this.say(this.tx("tue.found", { n: this.pack.settings.rewards.kid }), () => { [k, n].forEach(q => { q.leaving = true; q.leaveT = 0; q.alpha = 1; }); this.kidNpc = null; });
       } else if (!d.kidDone) this.say(this.tx("tue.mom"));
       return true;
@@ -4904,7 +4932,7 @@ class Game {
         this.albumPick = j => { const p = ph[j]; if (!p) return;
           if (p.of === "artist" || p.of === "easel") { this.say(this.tx(p.of === "artist" ? "wed.self" : "wed.ownEasel", { desc: p.desc })); return; } // no tokens, and you can show him another
           const tier = Math.max(0, Math.min(3, p.rarity || 0)), n = this.pack.settings.rewards.artist[tier];
-          d.wedDone = true; this.earn(n); this.progress.sketch = { ph: JSON.parse(JSON.stringify(p)), day: todayISO() }; this.progress.tally.sketches = (this.progress.tally.sketches || 0) + 1; this.saveProgress();
+          d.wedDone = true; this.earn(n, true); this.progress.sketch = { ph: JSON.parse(JSON.stringify(p)), day: todayISO() }; this.progress.tally.sketches = (this.progress.tally.sketches || 0) + 1; this.saveProgress();
           this.say(this.tx("wed.r" + tier, { desc: p.desc, n })); };
         this.mode = "album"; this.albumSel = 0; this.el.album.style.display = "block"; this.renderAlbum();
       }, 1);
@@ -4950,7 +4978,7 @@ class Game {
       if (qs.length >= 12) break;
     }
     const quiz = this.quiz = { qs: shuffle(qs).slice(0, 5), i: 0, score: 0 };
-    const finish = () => { const d = this.dayState(), tokens = quiz.score * this.pack.settings.rewards.trivia + (quiz.score === 5 ? this.pack.settings.rewards.triviaPerfect : 0); d.thuDone = true; if (tokens) this.earn(tokens); this.progress.tally.trivia = (this.progress.tally.trivia || 0) + 1; this.saveProgress(); this.quiz = null; this.say(this.tx("thu.done", { n: quiz.score, tokens })); };
+    const finish = () => { const d = this.dayState(), tokens = quiz.score * this.pack.settings.rewards.trivia + (quiz.score === 5 ? this.pack.settings.rewards.triviaPerfect : 0); d.thuDone = true; if (tokens) this.earn(tokens, true); this.progress.tally.trivia = (this.progress.tally.trivia || 0) + 1; this.saveProgress(); this.quiz = null; this.say(this.tx("thu.done", { n: quiz.score, tokens })); };
     const next = () => {
       const q = quiz.qs[quiz.i]; if (!q) { finish(); return; }
       const opts = shuffle([q.right, ...q.wrong]), secs = 10;
@@ -6126,7 +6154,74 @@ class Game {
 
   /* ----- gift shop and café -----
      Every chore earns a token (closing up earns 3). Tokens buy souvenirs; drinks are free unless the host sets a price. */
-  earn(n) { if (!n) return; this.progress.tokens = (this.progress.tokens || 0) + n; this.updateHud(true); }
+  /* Joe 10/15: a one-off reward (helping a visitor, the lost kid, a delivery...) gets its moment, a big coin rising over a
+     spinning sunburst, once you're free to walk. Chores and finds just pop a little coin over your head. */
+  earn(n, big) {
+    if (!n) return; this.progress.tokens = (this.progress.tokens || 0) + n;
+    if (big) { (this.coinQ = this.coinQ || []).push(n); this.updateHud(); } else { this.coinPop(n); this.updateHud(true); }
+  }
+  /* An amount of tokens, as the little coin and the number (the HUD, prices). */
+  tokTag(el, n) {
+    const src = this.sheet("token_coin_small"); if (this._coinArt !== src) { this._coinArt = src; try { this._coinSrc = src.toDataURL ? src.toDataURL() : src.src; } catch (e) { this._coinSrc = ""; } }
+    el.textContent = ""; if (this._coinSrc) { const i = document.createElement("img"); i.className = "gt-coin"; i.src = this._coinSrc; i.alt = "tokens:"; el.appendChild(i); } else el.textContent = "T ";
+    el.appendChild(document.createTextNode(String(n)));
+  }
+  coinPop(n) { const P = this.pops = this.pops || [], o = P[P.length - 1]; if (o && this.t - o.t0 < 24) { o.n += n; return; } P.push({ n, t0: this.t }); }
+  updateCoins(has) {
+    if (this.pops && this.pops.length) this.pops = this.pops.filter(o => this.t - o.t0 < 70);
+    const F = this.coinFx;
+    if (!F && this.coinQ && this.coinQ.length && this.mode === "walk" && !this.trans && !this.recording()) { // all at once: they add up into one moment
+      this.coinFx = { n: this.coinQ.reduce((a, b) => a + b, 0), t: 0 }; this.coinQ = []; this.mode = "busy"; this.player.moving = false; return;
+    }
+    if (!F) return;
+    F.t++; if (F.t > 40 && F.t < COIN_FX - 14 && (has("a") || has("b"))) F.t = COIN_FX - 14; // A skips to the end
+    if (F.t === 30) this.updateHud(true);
+    if (F.t >= COIN_FX) { this.coinFx = null; if (this.mode === "busy") this.mode = "walk"; }
+  }
+  drawCoins(ctx, cx, cy) {
+    const glyphs = (txt, x, y, sc, col, edge) => { // PIXEL_FONT text with a dark edge around it
+      const put = (ox, oy, c) => { ctx.fillStyle = c; let tx = x + ox; for (const ch of txt) { (PIXEL_FONT[ch] || []).forEach((row, yy) => [...row].forEach((v, xx) => { if (v === "1") ctx.fillRect(tx + xx * sc, y + oy + yy * sc, sc, sc); })); tx += 4 * sc; } };
+      if (edge) for (const [ox, oy] of [[-1, 0], [1, 0], [0, -1], [0, 1], [1, 1], [-1, 1], [1, -1], [-1, -1]]) put(ox * Math.max(1, sc / 2), oy * Math.max(1, sc / 2), edge);
+      put(0, 0, col);
+    };
+    ctx.imageSmoothingEnabled = false;
+    for (const o of this.pops || []) { // over your head: a little coin and +N, rising and fading
+      const k = this.t - o.t0, q = this.pos(this.player), rise = REDUCED_MOTION ? 6 : Math.min(14, k * 0.5), a = k > 50 ? Math.max(0, 1 - (k - 50) / 20) : 1;
+      const txt = "+" + o.n, w = 9 + txt.length * 4, x0 = Math.round(q.x + 8 - w / 2 - cx), y0 = Math.round(q.y - 12 - rise - cy);
+      ctx.globalAlpha = a; ctx.drawImage(this.sheet("token_coin_small"), x0, y0); glyphs(txt, x0 + 10, y0 + 1, 1, "#fff6cc", "#2a1a08"); ctx.globalAlpha = 1;
+    }
+    const F = this.coinFx; if (!F) return;
+    const t = F.t, out = t > COIN_FX - 14 ? (COIN_FX - t) / 14 : 1, still = REDUCED_MOTION;
+    const ease = u => { u = Math.max(0, Math.min(1, u)); const c = 1.9; return 1 + (c + 1) * Math.pow(u - 1, 3) + c * Math.pow(u - 1, 2); }; // overshoots, then settles
+    const mx = SW / 2, my = SH / 2 - 10, grow = still ? 1 : ease(t / 22);
+    ctx.globalAlpha = 0.6 * Math.min(1, t / 10) * out; ctx.fillStyle = "#0c0814"; ctx.fillRect(0, 0, SW, SH);
+    { // the sunburst: gold and red rays, turning, drawn pixel by pixel so the edges stay crisp
+      const c = this.burstCv || (this.burstCv = document.createElement("canvas")); c.width = SW; c.height = SH;
+      const x = c.getContext("2d"), d = x.createImageData(SW, SH), px = d.data, spin = still ? 0 : t * 0.018, R = 74 * grow, rays = 14;
+      const gold = [240, 192, 56], red = [200, 48, 44], hot = [255, 240, 170];
+      for (let y = 0; y < SH; y++) for (let xx = 0; xx < SW; xx++) {
+        const dx = xx - mx, dy = y - my, r = Math.hypot(dx, dy); if (r > R) continue;
+        if (r > R - 12 && hash(xx, y) % 12 < r - (R - 12)) continue; // a dithered edge
+        const a = Math.atan2(dy, dx) + spin, ray = Math.floor((a / (Math.PI * 2) + 2) * rays) % 2, col = r < 13 ? hot : ray ? gold : red, i = (y * SW + xx) * 4;
+        px[i] = col[0]; px[i + 1] = col[1]; px[i + 2] = col[2]; px[i + 3] = 255;
+      }
+      x.putImageData(d, 0, 0); ctx.globalAlpha = 0.9 * out; ctx.drawImage(c, 0, 0);
+    }
+    ctx.globalAlpha = out;
+    const rise = still ? 0 : (1 - ease(t / 26)) * (SH / 2 + 30), flip = still || t > 34 ? 1 : Math.abs(Math.cos(t * 0.28)) * 0.85 + 0.15; // rises from below, spinning on the way up
+    const cw = Math.max(3, Math.round(48 * flip)), bob = still ? 0 : Math.round(Math.sin(t * 0.09) * 1.5);
+    ctx.drawImage(this.sheet("token_coin"), Math.round(mx - cw / 2), Math.round(my - 24 + rise + bob), cw, 48);
+    if (!still) for (let i = 0; i < 6; i++) { // sparkles winking around it
+      const k = (t + i * 11) % 36; if (k > 14 || t < 20) continue; const an = i * 1.05 + Math.floor((t + i * 11) / 36) * 2.3, r = 30 + (i % 3) * 6;
+      const sx = Math.round(mx + Math.cos(an) * r), sy = Math.round(my + Math.sin(an) * r * 0.8), z = k < 7 ? 1 : 2; ctx.fillStyle = "#fffbe8";
+      ctx.fillRect(sx - z, sy, z * 2 + 1, 1); ctx.fillRect(sx, sy - z, 1, z * 2 + 1);
+    }
+    if (t >= 24 || still) { // +N, popping in big
+      const txt = "+" + F.n, k = still ? 1 : t - 24, sc = k < 4 ? 6 : k < 8 ? 5 : 4, w = txt.length * 4 * sc - sc;
+      glyphs(txt, Math.round(mx - w / 2), Math.round(my + 30 - (sc - 4) * 2), sc, "#fff6cc", "#3a1008");
+    }
+    ctx.globalAlpha = 1;
+  }
   shopDoor() {
     this.warp(...((arguments[0] && arguments[0].warp) || ["shop", 1, 5, "right"]));
   }
@@ -6275,7 +6370,7 @@ class Game {
       if (r.item) {
         const img = document.createElement("img"); img.src = this.itemIcon(r.item).toDataURL(); img.alt = ""; row.appendChild(img);
         const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = (r.item.gift ? "LIMITED " : r.item.id === this.featuredId() ? "* " : "") + r.item.name; row.appendChild(nm);
-        const pr = document.createElement("span"); pr.className = "pr"; if (owned.includes(r.item.id)) { pr.className = "pr gt-tag"; pr.textContent = "OWNED"; } else pr.textContent = r.item.price + " T"; row.appendChild(pr);
+        const pr = document.createElement("span"); pr.className = "pr"; if (owned.includes(r.item.id)) { pr.className = "pr gt-tag"; pr.textContent = "OWNED"; } else this.tokTag(pr, r.item.price); row.appendChild(pr);
       } else if (r.shirt) {
         const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = "GOQ shirt"; row.appendChild(nm);
         const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = this.progress.shirt ? "YOURS" : "GONE"; row.appendChild(pr);
@@ -6303,7 +6398,7 @@ class Game {
       if (r.item) {
         const img = document.createElement("img"); img.src = this.itemIcon(r.item).toDataURL(); img.alt = ""; row.appendChild(img);
         const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = r.item.name; row.appendChild(nm);
-        const pr = document.createElement("span"); pr.className = "pr"; pr.textContent = mine(r.item) ? "SOLD" : r.item.price + " T"; row.appendChild(pr);
+        const pr = document.createElement("span"); pr.className = "pr"; if (mine(r.item)) pr.textContent = "SOLD"; else this.tokTag(pr, r.item.price); row.appendChild(pr);
       } else { const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = r.sell ? "Sell cards" : "Leave"; row.appendChild(nm); }
       row.addEventListener("click", e => { e.stopPropagation(); if (this.shopSel === i) this.shopSelect(); else { this.shopSel = i; this.shopConfirm = null; this.shopMsg = ""; this.renderShop(); } });
       list.appendChild(row);
@@ -6705,7 +6800,7 @@ class Game {
       const row = document.createElement("div"); row.className = "gt-shop-row" + (i === m.i ? " on" : "");
       if (r.d) { const img = document.createElement("img"); img.alt = ""; img.src = this.cafeCup(r.d, r.k); row.appendChild(img); }
       const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = r.d ? (this.isSpecial(r.d) ? "* " : "") + r.d.name : r.label; row.appendChild(nm);
-      if (r.d) { const c = m.cost(r.d), pr = document.createElement("span"); pr.className = "pr"; pr.textContent = c ? c + " T" : "Free"; row.appendChild(pr); }
+      if (r.d) { const c = m.cost(r.d), pr = document.createElement("span"); pr.className = "pr"; if (c) this.tokTag(pr, c); else pr.textContent = "Free"; row.appendChild(pr); }
       row.addEventListener("click", e => { e.stopPropagation(); if (m.i === i) this.cafePick(); else { m.i = i; m.msg = ""; this.renderCafe(); } });
       list.appendChild(row);
     });
@@ -6794,35 +6889,38 @@ class Game {
     return Math.min(3, base + ((this.extraPrints || {})[p.id] || 0));
   }
   /* ----- curious visitors -----
-     A few curious visitors come in each day (curator, Visitors tab). Talk to one and they say what they're looking for: a
-     game with a certain relationship between the curator's observation and the developer's intention (settings.relations;
-     each piece has one, in the Pieces tab). They follow you anywhere in the building until you stop at a piece and
-     recommend it. The right one: they're thrilled and head off to play it (worth 3 staff points, "helped"), and the piece
-     joins the ones you can recommend from memory (progress.recall: talk to whoever's following you). The wrong one: they
-     say what they read there and keep following; after three they give up for now. The next day the ones you helped come
-     back to the lobby and say what they made of the curator's take, picked at random (agree, disagree, puzzled). */
+     A few curious visitors come in each day (curator, Visitors tab). Each is after one episode that's out in a case, and
+     describes it the way people do: its hint ("the one where..."). Talk to one and they follow you anywhere in the building
+     until you stop at a case and show them. Ask whether they remember the name and they'll tell you (Joe 10/15: that's the
+     only hint). The right one: they're thrilled and head off to play it, worth more tokens if you found it from the
+     description alone (helped, else helpedName). The wrong one: "not that one", and they keep following. The next day the
+     ones you helped come back to the lobby and say what they made of the curator's take, picked at random (agree, disagree,
+     puzzled). */
   rel(id) { return this.pack.settings.relations.find(m => m.id === id) || null; }
   pickLine(list, key) { return list[strSeed(key) % list.length]; }
   isRead(p) { const k = (p.tut ? this.tut && this.tut.sides : this.progress.sides || {})[p.id] || {}; return p.kind === "episode" ? !!(k.front && k.back) : !!k.note; }
-  /* What a visitor can ask for: a relationship with lines to ask with that at least one episode has. */
-  askable() { const have = new Set(this.pack.pieces.filter(p => p.kind === "episode" && p.rel).map(p => p.rel)); return this.pack.settings.relations.filter(m => m.ask.length && have.has(m.id)); }
+  /* What a visitor can ask for: an episode out in a case (not under a cloth), with a hint to describe it by. */
+  wantable() {
+    const out = new Set();
+    for (const id in this.rooms) for (const c of this.rooms[id].cases || []) { const p = c.piece; if (p && p.kind === "episode" && p.hint && !p.tut && !["empty", "covered", "crate"].includes(c.state)) out.add(p.id); }
+    return [...out];
+  }
   /* Today's curious visitors. Anyone not shown the right game yet comes back tomorrow; new faces fill the rest. */
   curiousPlan() {
-    const t = todayISO(), cv = this.progress.curious || (this.progress.curious = { day: "", list: [], back: [] }), rels = this.askable(), pick = a => a[Math.floor(Math.random() * a.length)];
-    const fix = () => cv.list.forEach(v => { if (!v.rel || !rels.some(m => m.id === v.rel)) v.rel = rels.length ? pick(rels).id : ""; }); // an older save's visitors, or a relationship no piece has anymore
+    const t = todayISO(), cv = this.progress.curious || (this.progress.curious = { day: "", list: [], back: [] }), wants = this.wantable(), pick = a => a[Math.floor(Math.random() * a.length)];
+    const fix = () => { if (wants.length) cv.list.forEach(v => { if (!v.want || !wants.includes(v.want)) { const free = wants.filter(w => !cv.list.some(o => o.want === w)); v.want = pick(free.length ? free : wants); v.asked = false; } }); }; // an older save's visitors, or a piece that's gone back in storage
     if (cv.day === t) { fix(); return cv; }
     cv.back = (cv.back || []).filter(v => !v.day || daysBetween(v.day, t) <= 3); // the ones you helped wait in the lobby for three days at most
-    if (!rels.length) return cv; // nothing to ask for yet (an older pack, before the real one loads): don't use up the day
-    // Random for every player and every day. Relationships are dealt from a shuffled deck, so one day's visitors want different things.
+    if (!wants.length) return cv; // nothing out to ask for yet (before the rooms are built): don't use up the day
+    // Random for every player and every day. The episodes are dealt from a shuffled deck, so one day's visitors want different games.
     const per = this.pack.settings.curious.perDay;
     // Visitors you talked to but didn't get to show the right game come back; the rest of the day's faces are new.
-    const carry = cv.list.filter(v => v.met && v.state !== "recommended").slice(0, per).map(v => Object.assign(v, { state: "waiting", room: null, misses: 0 }));
+    const carry = cv.list.filter(v => v.met && v.state !== "recommended").slice(0, per).map(v => Object.assign(v, { state: "waiting", room: null }));
     const names = shuffled(VISITOR_NAMES.filter(n => ![...carry, ...cv.back].some(v => v.name === n))), list = carry.slice();
-    let deck = shuffled(rels.filter(m => !carry.some(v => v.rel === m.id)));
-    while (list.length < per && rels.length && names.length) {
-      if (!deck.length) deck = shuffled(rels);
-      const m = deck.pop();
-      list.push({ id: "v" + t.replace(/-/g, "") + Math.random().toString(36).slice(2, 8), name: names.pop(), sheet: pick(["visitor_a", "visitor_b", "visitor_c"]), rel: m.id, state: "waiting", room: null });
+    let deck = shuffled(wants.filter(w => !carry.some(v => v.want === w)));
+    while (list.length < per && names.length) {
+      if (!deck.length) deck = shuffled(wants);
+      list.push({ id: "v" + t.replace(/-/g, "") + Math.random().toString(36).slice(2, 8), name: names.pop(), sheet: pick(["visitor_a", "visitor_b", "visitor_c"]), want: deck.pop(), state: "waiting", room: null });
     }
     cv.day = t; cv.list = list; fix(); this.saveProgress();
     return cv;
@@ -6868,45 +6966,48 @@ class Game {
     }
     return out.length ? out[Math.floor(Math.random() * out.length)] : null;
   }
+  /* What they're after, in their words: "It's the one where...". */
+  wantLines(v) { const p = this.pieceById(v.want); return p ? this.tx("cur.want", { hint: p.hint, name: v.name }) : []; }
+  /* "Do you remember the name?": the one hint. Finding it now is worth helpedName instead of helped. */
+  tellName(n, then) {
+    const v = n.cur, p = this.pieceById(v.want); v.asked = true; this.saveProgress();
+    this.say(this.tx("cur.name", { title: p ? p.title : "", name: v.name }).map((pg, k) => (k ? pg : v.name + ": " + pg)), then);
+  }
   curiousTalk(n) {
     const v = n.cur; v.met = true;
-    const m = this.rel(v.rel), named = ps => ps.map(p => v.name + ": " + p), hello = named(this.tx("cur.hello", { name: v.name })), q = hello.pop();
+    const named = ps => ps.map(p => v.name + ": " + p), hello = named(this.tx("cur.hello", { name: v.name })), q = hello.pop();
     this.say(hello, () => this.choose(q, ["Do you need help?", "Can I get by you?", "Never mind"], i => {
       if (i === 1) { this.askToMove(n, named); return; }
       if (i !== 0) return;
-      const pages = this.tx("cur.help", { name: v.name }).slice();
-      if (m && m.ask.length) pages.push(this.pickLine(m.ask, v.id));
-      const last = named(pages).pop();
-      this.say(named(pages).slice(0, -1), () => this.ask(last, ["Follow me!", "Sorry, I'm busy."], k => {
-        if (k === 0) this.startFollow(n); else this.say(named(this.tx("cur.busy", { name: v.name })));
-      }, 1));
+      const pages = named([...this.tx("cur.helpFind", { name: v.name }), ...this.wantLines(v)]), last = pages.pop();
+      const offer = q2 => this.ask(q2, ["Follow me!", ...(v.asked ? [] : ["Do you remember the name?"]), "Sorry, I'm busy."], k => {
+        if (k === 0) this.startFollow(n);
+        else if (k === 1 && !v.asked) this.tellName(n, () => offer(v.name + ": " + this.tx("cur.lead2", { name: v.name }).join(" ")));
+        else this.say(named(this.tx("cur.busy", { name: v.name })));
+      }, v.asked ? 1 : 2);
+      this.say(pages, () => offer(last));
     }, 2));
   }
   startFollow(n) {
-    n.cur.state = "following"; n.cur.misses = 0; n.follow = true; n.still = false; n.route = null; n.aside = null; n.lost = 0; this.fol = n; this.saveProgress();
+    n.cur.state = "following"; n.follow = true; n.still = false; n.route = null; n.aside = null; n.lost = 0; this.fol = n; this.saveProgress();
     this.say(this.tx("cur.follow", { name: n.cur.name }));
   }
-  /* Talking to whoever's following you: what they wanted again, a piece from memory (one you've recommended right before), or let them go. */
+  /* Talking to whoever's following you: what they wanted again, the name (if you haven't asked), or let them go. */
   followerTalk(n) {
-    const v = n.cur, rc = (this.progress.recall || []).map(id => this.pieceById(id)).filter(p => p && p.kind === "episode").sort((a, b) => a.title.localeCompare(b.title));
-    const opts = ["Keep going", "What were you looking for?", ...(rc.length ? ["Recommend from memory"] : []), "Never mind"], last = opts.length - 1;
+    const v = n.cur, opts = ["Keep going", "What were you looking for?", ...(v.asked ? [] : ["Do you remember the name?"]), "Never mind"], last = opts.length - 1;
     this.choose(n.member + ": " + this.tx("cur.lead", { name: n.member }).join(" "), opts, i => {
-      if (i === 1) { // a reminder of what they asked for, in their words, then back to walking
-        const m = this.rel(v.rel), pages = [...this.tx("cur.remind", { name: v.name })];
-        if (m && m.ask.length) pages.push(this.pickLine(m.ask, v.id));
-        this.say(pages.map(p => n.member + ": " + p)); return;
+      if (i === 1) { // a reminder of what they asked for, in their words (and the name, if they told you), then back to walking
+        const p = this.pieceById(v.want), pages = [...this.tx("cur.remind", { name: v.name }), ...this.wantLines(v), ...(v.asked && p ? this.tx("cur.name", { title: p.title, name: v.name }) : [])];
+        this.say(pages.map((pg, k) => (k ? pg : n.member + ": " + pg))); return;
       }
-      if (rc.length && i === 2) { // just the names: which one fits is still yours to remember
-        this.choose(this.tx("cur.recall", { name: v.name }).join(" "), [...rc.map(p => p.title), "Never mind"], k => { if (k < rc.length) this.recommend(n, rc[k]); });
-        return;
-      }
+      if (i === 2 && !v.asked) { this.tellName(n); return; }
       if (i === last) this.releaseFollower(n, this.tx("cur.release", { name: n.member }));
     }, 0);
   }
   /* They stop following you and go back to the room they came to see (pages: what they say first). */
   releaseFollower(n, pages) {
     const v = n.cur, home = v.home && this.rooms[v.home] ? v.home : this.room.id;
-    this.fol = null; n.follow = false; n.timer = 120; v.state = "waiting"; v.room = home; v.misses = 0; this.saveProgress();
+    this.fol = null; n.follow = false; n.timer = 120; v.state = "waiting"; v.room = home; this.saveProgress();
     this.say(pages.map((p, k) => (k ? p : n.member + ": " + p)), () => {
       if (home === this.room.id) { n.zone = v.zone || n.zone; n.goalT = null; n.route = null; return; } // they stroll back to their own room
       // Somewhere else: they head out the nearest way and go back to their own floor.
@@ -6965,21 +7066,17 @@ class Game {
     if (n.tutWant) { this.tutRecommend(n, piece); return; }
     const v = n.cur, cv = this.curiousPlan(), named = ps => ps.map((p, k) => (k ? p : v.name + ": " + p));
     this.progress.tally.recs = (this.progress.tally.recs || 0) + 1; n.dir = OPP[this.player.dir];
-    if (!v.rel || piece.rel !== v.rel) { // not what they wanted: they say what they read there, and keep following you (three, and they give up for now)
-      v.misses = (v.misses || 0) + 1; this.progress.stats.nope++; this.saveProgress();
-      const pages = named(this.missLines(piece, v.name, v.id));
-      if (v.misses < 3) this.say(pages);
-      else this.say(pages, () => this.releaseFollower(n, this.tx("cur.giveUp", { name: v.name })));
-      return;
+    if (piece.id !== v.want) { // not the one: they say so, and keep following you
+      this.progress.stats.nope++; this.saveProgress();
+      const p = this.pieceById(v.want); this.say(named(this.tx("cur.nope", { title: piece.title, name: v.name, hint: p ? p.hint : "" }))); return;
     }
     this.fol = null; n.follow = false; n.cur = null;
     cv.list = cv.list.filter(x => x !== v); Object.assign(v, { state: "recommended", piece: piece.id, day: todayISO(), room: null, take: ["agree", "disagree", "puzzled"][Math.floor(Math.random() * 3)] }); cv.back.push(v);
-    const rc = this.progress.recall || (this.progress.recall = []); if (!rc.includes(piece.id)) rc.push(piece.id); // you know this one by heart now
-    this.count("helped", v.id); this.updateHud(true); this.bump(this.progress.stats.loved, genreOf(piece, this.pack.settings.genres)); this.saveProgress();
-    this.cheer(n, () => this.say(named(this.tx("cur.thanks", { title: piece.title, name: v.name })), () => { n.leaving = true; n.leaveT = 0; n.alpha = 1; }), this.pack.settings.rewards.helped);
+    this.count("helped", v.id, v.asked ? this.pack.settings.rewards.helpedName : undefined); // found from the description alone: helped; after asking the name: helpedName this.bump(this.progress.stats.loved, genreOf(piece, this.pack.settings.genres)); this.saveProgress();
+    this.cheer(n, () => this.say(named(this.tx("cur.thanks", { title: piece.title, name: v.name })), () => { n.leaving = true; n.leaveT = 0; n.alpha = 1; }));
   }
   /* The right recommendation: they're thrilled (a big heart, sparkles, a hop), you see it for a moment, then they talk. */
-  cheer(n, then, tokens) { // a little moment: your controls wait, the text box clears, the view eases in on them while the heart floats up, then back out
+  cheer(n, then) { // a little moment: your controls wait, the text box clears, the view eases in on them while the heart floats up, then back out
     this.el.text.style.display = "none"; this.txt = null; this.mode = "busy"; n.dir = OPP[this.player.dir];
     n.react = { how: "thrilled", t0: this.t };
     const cv = this.canvas, q = this.pos(n), zoom = !REDUCED_MOTION && cv;
@@ -6991,7 +7088,6 @@ class Game {
     setTimeout(() => {
       if (zoom) { cv.style.transition = ""; cv.style.transformOrigin = ""; }
       if (this.mode === "busy") this.mode = "walk";
-      if (tokens) this.showLoc("+" + tokens + " token" + (tokens === 1 ? "" : "s"));
       then();
     }, 2250);
   }
@@ -7800,7 +7896,14 @@ class Game {
     else if (e.joe) this.joeGlitch();
     else if (e.poster) this.say(this.tx("hall.poster", null, true));
     else if (e.arrow) { const a = this.arrowInfo(e.arrow); this.say(this.tx("hall.arrow", { place: a.label, PLACE: a.label.toUpperCase(), arrow: { left: "\u2190", right: "\u2192", up: "\u2191", down: "\u2193" }[e.arrow.dir] || "" })); }
-    else if (e.say) this.say(typeof e.say === "string" ? this.tx(e.say, null, true) : e.say); // a Words key, or the lines themselves
+    else if (e.say) { const pages = typeof e.say === "string" ? this.tx(e.say, null, true) : e.say; this.say(pages, this.coinFind(e)); } // a Words key, or the lines themselves
+  }
+  /* Joe 10/15: now and then, looking at something turns up a token (three a day at most, each spot once). Returns what to
+     do after its words, or nothing. */
+  coinFind(e) {
+    if (this.tut || this.curator || this.recording() || Math.random() > 1 / 18) return;
+    const d = this.dayState(), k = this.room.id + ":" + (e.name || e.say), got = d.coins || (d.coins = []); if (got.length >= 3 || got.includes(k)) return;
+    return () => { got.push(k); this.progress.tally.found = (this.progress.tally.found || 0) + 1; this.saveProgress(); this.say(this.tx("coin.find"), () => this.earn(1)); };
   }
   /* An arrow sign's words and color: from its genre (Visitors, Genres), unless it has its own. */
   arrowInfo(a) {
@@ -7907,7 +8010,7 @@ class Game {
       const c = this.cine; c.blend += (c.goal > c.blend ? 1 : -1) / 40; c.blend = Math.max(0, Math.min(1, c.blend));
       if (this.mode === "busy" && c.wait > 0 && --c.wait === 0 && c.then) { const fn = c.then; c.then = null; fn(); }
     }
-    this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.living("director", () => this.updateDirector()); this.living("litter", () => this.updateLitter()); this.living("supplies", () => this.updateSupplies()); this.living("tour", () => this.updateTour()); this.living("side", () => this.updateSide()); this.living("cons", () => this.updateCons()); this.living("hold", () => this.updateLineHold()); this.living("rush", () => this.updateRush()); this.living("brew", () => this.updateBrew()); this.living("janitor", () => this.updateJanitor()); if (this.t % 30 === 0) this.living("solved", () => this.checkSolved());
+    this.updateCoins(has); this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.living("director", () => this.updateDirector()); this.living("litter", () => this.updateLitter()); this.living("supplies", () => this.updateSupplies()); this.living("tour", () => this.updateTour()); this.living("side", () => this.updateSide()); this.living("cons", () => this.updateCons()); this.living("hold", () => this.updateLineHold()); this.living("rush", () => this.updateRush()); this.living("brew", () => this.updateBrew()); this.living("janitor", () => this.updateJanitor()); if (this.t % 30 === 0) this.living("solved", () => this.checkSolved());
     if (this.petT > 0) this.petT--;
     if (this.t % 20 === 0) this.flushToasts();
     if (this.flickerT > 0) this.flickerT--;
@@ -9967,6 +10070,7 @@ class Game {
       g.addColorStop(0, "rgba(255,255,240," + (0.45 * this.flash / 6).toFixed(3) + ")"); g.addColorStop(1, "rgba(255,255,240,0)");
       ctx.fillStyle = g; ctx.fillRect(x0 - 30, y0 - 30, 60, 60);
     }
+    if (!full) this.drawCoins(ctx, cx, cy);
     if (this.fade > 0) { ctx.globalAlpha = Math.min(1, this.fade); ctx.fillStyle = "#000"; ctx.fillRect(0, 0, SW, SH); ctx.globalAlpha = 1; }
   }
 }
@@ -10002,7 +10106,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 64";
+const VERSION = "2026-11-18 cards 65";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

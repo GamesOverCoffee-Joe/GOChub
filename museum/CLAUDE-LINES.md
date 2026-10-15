@@ -300,3 +300,14 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Tour | A happy tour group heading back to the lobby at the end | Visitor: That's the tour! Back to the lobby, everyone. Is everybody here? ...Close enough. |
 | Tour | A bored tour group heading back to the lobby at the end | Visitor: Well, that was a tour. I guess. Let's head back to the lobby. |
 | Tour | Tuesday: the teacher taking the kids back to the lobby at the end | Teacher: Ok, class, back to the lobby! Single file. Let's count off... one, two, three... close enough. |
+| Curious visitors | After "Do you need help?" | Visitor: Actually, yes! My name is {name}, and I'm trying to find a game from the show. |
+| Curious visitors | What they're looking for, by its description | Visitor: It's {hint}. / Do you know where it is? |
+| Curious visitors | The same (second version) | Visitor: You know, {hint}? / I've been walking around forever. Do you know where it is? |
+| Curious visitors | After "Do you remember the name?" | Visitor: Hmm... I'm pretty sure it was called {title}. |
+| Curious visitors | The same (second version) | Visitor: Oh! Yeah, I think it's {title}. |
+| Curious visitors | Question after they tell you the name | Visitor: So, can you show me where it is? |
+| Curious visitors | You show them the wrong case | Visitor: Hmm, no, that's not the one. / It's {hint}. |
+| Curious visitors | The same (second version) | Visitor: Ooh, {title} looks cool, but it's not the one I'm looking for. |
+| Tokens | Looking at something turns up a token | Huh? There's a token wedged in here. / Finders keepers. |
+| Tokens | The same (second version) | Oh! Somebody dropped a token. / It's yours now. |
+| Tokens | The same (third version) | Wait... is that a token? / It is! Lucky. |
