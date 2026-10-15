@@ -445,7 +445,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 74";
+window.GOQ_WANT = "2026-11-18 cards 75";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -1402,10 +1402,18 @@ async function openRoom(keepView) {
 }
 
 /* ----- drawing the map ----- */
+/* Redraws are bundled into one per screen frame (Joe 10/15: dragging lagged on a phone, which fires many moves per frame),
+   the canvas is only resized when its box changes (resizing throws the whole canvas away), and it's at most 2x sharp. */
+let edDrawQ = 0;
 function drawEditor() {
+  if (edDrawQ) return;
+  edDrawQ = requestAnimationFrame(() => { edDrawQ = 0; drawEditorNow(); });
+}
+function drawEditorNow() {
   const cv = R.cv; if (!cv || !cv.isConnected) return;
-  const d = roomDef(R.id), box = cv.parentElement, bw = box.clientWidth, bh = box.clientHeight, dpr = window.devicePixelRatio || 1;
-  cv.width = Math.round(bw * dpr); cv.height = Math.round(bh * dpr); cv.style.width = bw + "px"; cv.style.height = bh + "px";
+  const d = roomDef(R.id), box = cv.parentElement, bw = box.clientWidth, bh = box.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+  const pw = Math.round(bw * dpr), ph = Math.round(bh * dpr);
+  if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; cv.style.width = bw + "px"; cv.style.height = bh + "px"; }
   const x = cv.getContext("2d"); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.imageSmoothingEnabled = false;
   x.fillStyle = "#120b0e"; x.fillRect(0, 0, bw, bh);
   const rw = W(d) * 16, rh = H(d) * 16;
