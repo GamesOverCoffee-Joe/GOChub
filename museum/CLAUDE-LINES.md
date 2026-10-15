@@ -330,31 +330,40 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Tutorial | The lost trainee's name (Training Room C) | Dale |
 | Tutorial | Training Room A: the sign in the middle (reading it is the whole task) | TRAINING ROOM A / Congratulations! You read the sign. / That's it. That's the lesson. Walk up to things and press A. The placards work the same way. |
 | Tutorial | Training Room A: the sign, once you're on your way back | You've already read this sign. / ...It says so, right there. |
+| Tutorial | Training Room A: after the sign, the chest shows up | *poof* / A treasure chest appeared in the corner. / ...Was that there before? |
 | Tutorial | The item you get from the chest (one line) | Watering can |
 | Tutorial | After the chest: the watering can | You got the watering can! / The museum really did buy a treasure chest. The curator says it makes volunteers feel powerful. |
 | Tutorial | The chest, before you've read the sign | A treasure chest. It's locked tight. / Maybe there's something to read first. |
 | Tutorial | The chest, after | It's empty. You already got the good stuff. |
-| Tutorial | A velvet rope in front of a door | A velvet rope. You're not done in here yet. |
 | Tutorial | A thirsty plant, with nothing to water it with | It needs water. You don't have anything to water it with. |
 | Tutorial | A plant that's fine ({name}) | The {name} looks happy. |
-| Tutorial | The intercom or a light switch in training | Not part of today's training. |
-| Tutorial | Training Room B: the trainer, before the plant's watered | Oh! Hi. Sorry, I've been staring at this plant all day. / I'm supposed to be running this room. But staff aren't allowed to water the plants. It has to be a visitor. / And nobody ever comes in here. / I've been sitting here since the morning. |
+| Tutorial | Training Room B: the trainer, the first time you talk to her across the desk | Oh! Hi. Sorry, I've been staring at this plant all day. / Staff aren't allowed to water the plants. It has to be a visitor. And nobody ever comes in here. / Wait, is that a watering can? Oh thank goodness. / Here, let me get the rope for you. |
 | Tutorial | The trainer, again, before the plant's watered | It's so sad. Look at it. |
-| Tutorial | The trainer, after you water the sad plant | You watered it! Look at it perk up! / Thank you. You can go on through. The rope's down. |
+| Tutorial | Training Room B: the trainer unhooks a rope, after you first talk to her | She unhooks one of the velvet ropes for you. |
+| Tutorial | The trainer, after you water the sad plant | You watered it! Look at it perk up! / Thank you. The door to the closet's open now. |
+| Tutorial | The trainer, right after the thanks: the day dial shows up when she's done | Oh, and see that little timer in the lower left corner? / That's the day. It goes by while you're in here. / Plants get thirsty as the day goes on. Just so you know. |
 | Tutorial | The trainer, when the day dial ticks over and a corner plant droops | Oh no. Now that one in the corner's looking thirsty. / Time flies in here. |
 | Tutorial | The trainer, while the corner plant is still thirsty | The one in the corner's thirsty now too. If you've got a sec. |
 | Tutorial | The trainer, after you water the corner plant | You're a natural. Plants just get thirsty as the day goes on. |
 | Tutorial | The trainer, after everything's watered | This is the best day this room has ever had. |
 | Tutorial | The trainer, when you lead the trainee back through | Hey, thanks again for the plant! / ...Is that the trainee? I thought they left weeks ago. |
-| Tutorial | Training Room C: the lost trainee, before you bring their box | Oh, hi. I've been in training for three weeks. / I lost my box. All my stuff's in it. / I think I left it in one of the other rooms. Room A, maybe? |
+| Tutorial | The Supply Closet: the lost trainee, before you bring their box | Oh, hi. I've been in training for three weeks. / I can't leave without my box. It's got all my stuff from training in it. / I think I left it in Room A. Can you grab it for me? |
 | Tutorial | The trainee, when you bring their box (the last page asks to follow) | My box! You found it! / Okay. This is embarrassing. Can you show me the way out? |
 | Tutorial | The trainee, if you say not yet | No rush. I've been here three weeks. What's another minute. |
 | Tutorial | The trainee, following you | Right behind you. |
 | Tutorial | The trainee, at the front desk, before they bolt out the glass door | Freedom! Thank you so much! |
-| Tutorial | The usher, after the trainee bolts | ...Was that a trainee? / They were supposed to finish training weeks ago. / Anyway. Come see me before you go. |
+| Tutorial | The usher, after the trainee bolts (the closing instructions come right after) | ...Was that a trainee? / They were supposed to finish training weeks ago. / Anyway. |
+| Tutorial | The usher's closing instructions (and again if you ask before announcing) | Last thing. Let's close up for the night. / Make the closing announcement on the intercom over there. / Then turn off the lights in Room A, Room B and the closet. / Come see me when you're done. |
+| Tutorial | The usher, after the announcement, before the lights are off | Now the lights. Room A, Room B and the closet. Each room's got a switch on the wall. |
+| Tutorial | The office intercom, before it's time to close up | The intercom. Not yet. |
+| Tutorial | A light switch in training, before it's time to close up | A light switch. Leave it on for now. |
+| Tutorial | After the last of the three rooms goes dark | That's all three rooms. Go see the usher. |
 | Tutorial | The usher, after the wrap-up | Head on out through the glass door. The museum's all yours. |
-| Tutorial | The usher's wrap-up, for a volunteer | You did it! Here's your volunteer tag. / Oh, and the curator keeps field notes on everything. Here's what you did today. |
-| Tutorial | The usher's wrap-up, signed in with a badge | You did it! Your badge is all set. / Oh, and the curator keeps field notes on everything. Here's what you did today. |
+| Tutorial | The usher's wrap-up, for a volunteer | You did it! Here's your volunteer tag. |
+| Tutorial | The usher's wrap-up, signed in with a badge | You did it! Your badge is all set. |
+| Tutorial | The usher hands you tokens, the first time you finish (the big coin moment comes after) | Oh, and here. Five tokens, for finishing training. |
+| Tutorial | The usher, after the tokens (the ... is you asking about the exchange rate) | You can spend them in the gift shop and the café. / ... / The exchange rate? Don't think about it too hard. |
+| Tutorial | The usher, right before the field notes | Oh, and the curator keeps field notes on everything. Here's what you did today. |
 | Tutorial | The field notes page in the wrap-up (one line under the title) | Today's training |
 | Tutorial | The usher, after the field notes | Not bad for a first day. Head out through the glass door when you're ready. |
 | Tutorial | Field notes: you read the sign | Read a sign. |
@@ -363,5 +372,7 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Tutorial | Field notes: the corner plant | Watered a plant that got thirsty later on. |
 | Tutorial | Field notes: the trainee's box | Found a lost box. |
 | Tutorial | Field notes: the trainee | Returned a lost trainee. |
+| Tutorial | Field notes: the closing announcement | Made the closing announcement. |
+| Tutorial | Field notes: the lights | Turned off the lights. |
 | Tutorial | Picking up the trainee's box | A box of somebody's stuff. A stapler, a mug, three weeks of snacks. |
 | Tutorial | Your hands are full | Your hands are full. |

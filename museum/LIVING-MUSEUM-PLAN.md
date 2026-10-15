@@ -418,7 +418,7 @@ The museum showcases the developers, not the critique. Joe is still the curator:
 - **Joe's side of it:** a second message to each developer after the episode airs ("Want to share your reaction for your exhibit?"), saying it'll be shown in the museum. Maybe a suggested length. Honest reactions ("he got this wrong") are fine, and make the exhibits more interesting.
 - **To build:** a "developer's reaction" field per piece in the curator, side two of the placard showing it, the wall label line, a Watch the episode link, and curious visitors switching from matching to asking by title.
 
-### **A new tutorial: learning the verbs** *(built, cards 76: the watering can is tutorial only, the three made-up games are gone, the duster comes later; the trainer is Fern and the trainee is Dale, both placeholders in Words)*
+### **A new tutorial: learning the verbs** *(built, cards 76: the watering can is tutorial only, the three made-up games are gone, the duster comes later; the trainer is Fern and the trainee is Dale, both placeholders in Words. Cards 77, Joe 10/15: the chest only shows up after the sign and the doors are locked instead of roped off; Fern talks across her desk and unhooks a velvet rope; the day dial only appears once she points it out, and the corner plant gets thirsty only after the sad one is watered (optional); room 3 is the Supply Closet; at the end you make the closing announcement and turn off the lights in the three rooms, and the first time you finish you get 5 tokens.)*
 
 The tutorial teaches the museum's verbs instead of matching visitors to games. Each room teaches one thing the real museum uses, and it stays funny because the curator likes gamification (the usher's line at the front desk sets it up).
 

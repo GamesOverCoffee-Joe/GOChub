@@ -1078,18 +1078,21 @@ const GEN = {
     rect(a, 2, 7, 12, 12, 2); rect(a, 2, 7, 12, 2, 1); rect(a, 4, 13, 2, 2, 3); rect(a, 10, 13, 2, 2, 3); rect(a, 3, 18, 10, 1, 3); rect(a, 9, 15, 4, 1, 3); rect(a, 4, 16, 3, 2, 6); px(a, 11, 10, 7);
     return outline(a);
   },
-  tut_chest: f => { // the tutorial's treasure chest (Joe 10/15): shut, then open (the watering can came out of it)
+  tut_chest: f => { // the tutorial's treasure chest (Joe 10/15): it appears once you've read the sign; open it for the watering can
     const a = mk(16, 16);
     rect(a, 2, 8, 12, 6, 1); rect(a, 3, 9, 10, 1, 2); rect(a, 2, 11, 12, 1, 4); rect(a, 4, 8, 1, 6, 4); rect(a, 11, 8, 1, 6, 4); // the body, its gold bands
     if (f === 1) { rect(a, 2, 2, 12, 4, 2); rect(a, 3, 3, 10, 1, 1); rect(a, 2, 5, 12, 1, 4); rect(a, 3, 6, 10, 2, 6); px(a, 6, 6, 5); px(a, 10, 7, 5); } // the lid up behind, the dark inside, a glint
     else { rect(a, 2, 4, 12, 4, 2); rect(a, 3, 5, 10, 1, 1); rect(a, 2, 7, 12, 1, 4); rect(a, 7, 7, 2, 3, 5); px(a, 7, 9, 3); } // the lid down, the lock
     return outline(a);
   },
-  tut_barrier: () => { // a velvet rope between two brass posts, in front of a door you can't go through yet
+  velvet_rope: f => { // a velvet rope (Joe 10/15: placeable anywhere; ropes side by side join into one line): 0 a brass post, 1 the rope across, 2 the rope up and down
     const a = mk(16, 16);
-    for (const x of [2, 13]) { rect(a, x, 4, 1, 9, 1); px(a, x, 3, 2); rect(a, x - 1, 13, 3, 2, 1); }
-    for (let x = 3; x < 13; x++) { const y = 5 + Math.round(Math.sin((x - 3) / 9 * Math.PI) * 2); px(a, x, y, 4); px(a, x, y + 1, 5); }
-    return outline(a);
+    if (f === 0) { rect(a, 7, 4, 2, 9, 1); rect(a, 7, 3, 2, 1, 2); rect(a, 6, 13, 4, 2, 1); return outline(a); }
+    if (f === 1) { for (let x = 0; x < 16; x++) { const y = 6 + Math.round(Math.sin(((x + 8) % 16) / 16 * Math.PI) * 2); px(a, x, y, 4); px(a, x, y + 1, 5); } return a; }
+    for (let y = 0; y < 16; y++) { px(a, 8 + ((y >> 2) & 1 ? 0 : 0), y, 4); px(a, 9, y, 5); } return a;
+  },
+  velvet_rope_v: () => { // its icon in the curator (it's drawn from the velvet rope's art)
+    const a = mk(16, 16); rect(a, 8, 0, 1, 16, 4); rect(a, 9, 0, 1, 16, 5); rect(a, 7, 4, 2, 9, 1); rect(a, 6, 13, 4, 2, 1); return outline(a);
   },
   reader_chair: f => { // the reading nook's armchair, facing left (she sits in it); frame 1: empty, her plaid blanket left on it
     const a = mk(16, 16);
@@ -1589,12 +1592,13 @@ const SLOTS = [
   { key: "wallpaper_wing_scatter", label: "Wing wallpaper: Scatter", group: "Wallpaper", wing: true, w: 256, h: 32, pal: "wp_pastel", gen: GEN.wallpaper_wing_scatter, note: "Carries on from the Pastel streaks: short dashes over soft bands. On a wing's walls it's drawn in soft shades of the wing's color (shown here in the pastel colors); paint it yourself and your colors are used as they are." },
   { key: "token_coin", label: "Token", group: "Gift shop and café", w: 16, h: 16, pal: "coin", gen: GEN.token_coin, note: "A gift shop token. Big in the reward moment (drawn 3x over a spinning sunburst) and over your head when a chore pays." },
   { key: "espresso_wall", label: "Espresso machine (on the wall)", group: "Gift shop and café", w: 16, h: 32, pal: "barista", gen: GEN.espresso_wall, note: "Built into the café's back wall, behind the barista, across both wall rows: the machine sits on a ledge (rows 25 to 27). When she makes your drink she turns to it: steam rises from the top, coffee drips from the left spout (column 4, row 20) into a cup on the drip tray (rows 23 and 24)." },
-  { key: "tut_chest", label: "Tutorial treasure chest", group: "Furniture", w: 16, h: 16, frames: 2, pal: "tchest", gen: GEN.tut_chest, note: "2 frames (32×16): shut, then open. In Training Room A: read the sign and it opens, Zelda style, and you get the watering can." },
-  { key: "tut_barrier", label: "Tutorial barrier (velvet rope)", group: "Furniture", w: 16, h: 16, pal: "tbarrier", gen: GEN.tut_barrier, note: "In front of a training room's far door until you've done that room's task." },
+  { key: "tut_chest", label: "Tutorial treasure chest", group: "Furniture", w: 16, h: 16, frames: 2, pal: "tchest", gen: GEN.tut_chest, note: "2 frames (32×16): shut, then open. Place it in Training Room A: it appears once you've read the sign; open it, Zelda style, for the watering can." },
+  { key: "velvet_rope", label: "Velvet rope", group: "Furniture", w: 16, h: 16, frames: 3, pal: "tbarrier", gen: GEN.velvet_rope, note: "3 frames (48×16): a brass post, the rope going across, the rope going up and down. Placed side by side (or in a column, or round a corner), ropes join into one line with a post at every tile. In the tutorial, Fern opens the one nearest her desk." },
   { key: "reader_chair", label: "Reading nook armchair", group: "Furniture", w: 16, h: 16, frames: 2, pal: "rchair", gen: GEN.reader_chair, note: "2 frames (32×16): the armchair, facing left, that the reader sits in; then the same chair once she's gone home, with her black and white plaid blanket left on it." },
   { key: "reader_book", label: "The reader's book", group: "Furniture", w: 8, h: 8, frames: 2, pal: "rbook", gen: GEN.reader_book, note: "2 frames (16×8), drawn in front of her: the open pages, then the cover behind them. Keep the cover grey: the game tints it to the book she's reading today." },
   { key: "reader_table", label: "Reading nook side table", group: "Furniture", w: 16, h: 16, pal: "rtable", gen: GEN.reader_table, note: "Beside her chair: a cup of coffee and a very small ashtray with a leaf on it." },
   { key: "reader_shelf", label: "Reading nook bookshelf", group: "Furniture", w: 16, h: 32, pal: "rshelf", gen: GEN.reader_shelf, note: "A small bookshelf of video game strategy guides. Two tiles tall." },
+  { key: "velvet_rope_v", label: "Velvet rope (up and down)", group: "Furniture", w: 16, h: 16, pal: "tbarrier", gen: GEN.velvet_rope_v, note: "A velvet rope running up and down. It's drawn from the Velvet rope's art (this is just its picture in the curator)." },
   { key: "token_coin_small", label: "Token (small)", group: "Gift shop and café", w: 8, h: 8, pal: "coin", gen: GEN.token_coin_small, note: "The little token in the corner count and next to prices." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
@@ -2335,31 +2339,40 @@ const TEXT = {
   "tut.traineeName":  { g: "Tutorial", l: "The lost trainee's name (Training Room C)", by: "claude", v: [["Dale"]] },
   "tut.sign":        { g: "Tutorial", l: "Training Room A: the sign in the middle (reading it is the whole task)", by: "claude", v: [["TRAINING ROOM A", "Congratulations! You read the sign.", "That's it. That's the lesson. Walk up to things and press A. The placards work the same way."]] },
   "tut.sign2":       { g: "Tutorial", l: "Training Room A: the sign, once you're on your way back", by: "claude", v: [["You've already read this sign.", "...It says so, right there."]] },
+  "tut.chestAppears":  { g: "Tutorial", l: "Training Room A: after the sign, the chest shows up", by: "claude", v: [["*poof*", "A treasure chest appeared in the corner.", "...Was that there before?"]] },
   "tut.canName":     { g: "Tutorial", l: "The item you get from the chest (one line)", by: "claude", v: [["Watering can"]] },
   "tut.gotCan":      { g: "Tutorial", l: "After the chest: the watering can", by: "claude", v: [["You got the watering can!", "The museum really did buy a treasure chest. The curator says it makes volunteers feel powerful."]] },
   "tut.chestShut":   { g: "Tutorial", l: "The chest, before you've read the sign", by: "claude", v: [["A treasure chest. It's locked tight.", "Maybe there's something to read first."]] },
   "tut.chestEmpty":  { g: "Tutorial", l: "The chest, after", by: "claude", v: [["It's empty. You already got the good stuff."]] },
-  "tut.barrier":     { g: "Tutorial", l: "A velvet rope in front of a door", by: "claude", v: [["A velvet rope. You're not done in here yet."]] },
   "tut.noCan":       { g: "Tutorial", l: "A thirsty plant, with nothing to water it with", by: "claude", v: [["It needs water. You don't have anything to water it with."]] },
   "tut.plantFine":   { g: "Tutorial", l: "A plant that's fine ({name})", by: "claude", v: [["The {name} looks happy."]] },
-  "tut.notThat":     { g: "Tutorial", l: "The intercom or a light switch in training", by: "claude", v: [["Not part of today's training."]] },
-  "tut.trainer.hello":  { g: "Tutorial", l: "Training Room B: the trainer, before the plant's watered", by: "claude", v: [["Oh! Hi. Sorry, I've been staring at this plant all day.", "I'm supposed to be running this room. But staff aren't allowed to water the plants. It has to be a visitor.", "And nobody ever comes in here.", "I've been sitting here since the morning."]] },
+  "tut.trainer.hello":  { g: "Tutorial", l: "Training Room B: the trainer, the first time you talk to her across the desk", by: "claude", v: [["Oh! Hi. Sorry, I've been staring at this plant all day.", "Staff aren't allowed to water the plants. It has to be a visitor. And nobody ever comes in here.", "Wait, is that a watering can? Oh thank goodness.", "Here, let me get the rope for you."]] },
   "tut.trainer.again0":  { g: "Tutorial", l: "The trainer, again, before the plant's watered", by: "claude", v: [["It's so sad. Look at it."]] },
-  "tut.trainer.thanks":  { g: "Tutorial", l: "The trainer, after you water the sad plant", by: "claude", v: [["You watered it! Look at it perk up!", "Thank you. You can go on through. The rope's down."]] },
+  "tut.ropeOpen":  { g: "Tutorial", l: "Training Room B: the trainer unhooks a rope, after you first talk to her", by: "claude", v: [["She unhooks one of the velvet ropes for you."]] },
+  "tut.trainer.thanks":  { g: "Tutorial", l: "The trainer, after you water the sad plant", by: "claude", v: [["You watered it! Look at it perk up!", "Thank you. The door to the closet's open now."]] },
+  "tut.trainer.timer":  { g: "Tutorial", l: "The trainer, right after the thanks: the day dial shows up when she's done", by: "claude", v: [["Oh, and see that little timer in the lower left corner?", "That's the day. It goes by while you're in here.", "Plants get thirsty as the day goes on. Just so you know."]] },
   "tut.trainer.droop":  { g: "Tutorial", l: "The trainer, when the day dial ticks over and a corner plant droops", by: "claude", v: [["Oh no. Now that one in the corner's looking thirsty.", "Time flies in here."]] },
   "tut.trainer.droopAsk":  { g: "Tutorial", l: "The trainer, while the corner plant is still thirsty", by: "claude", v: [["The one in the corner's thirsty now too. If you've got a sec."]] },
   "tut.trainer.droopThanks":  { g: "Tutorial", l: "The trainer, after you water the corner plant", by: "claude", v: [["You're a natural. Plants just get thirsty as the day goes on."]] },
   "tut.trainer.after":  { g: "Tutorial", l: "The trainer, after everything's watered", by: "claude", v: [["This is the best day this room has ever had."]] },
   "tut.trainer.again":  { g: "Tutorial", l: "The trainer, when you lead the trainee back through", by: "claude", v: [["Hey, thanks again for the plant!", "...Is that the trainee? I thought they left weeks ago."]] },
-  "tut.trainee.lost":  { g: "Tutorial", l: "Training Room C: the lost trainee, before you bring their box", by: "claude", v: [["Oh, hi. I've been in training for three weeks.", "I lost my box. All my stuff's in it.", "I think I left it in one of the other rooms. Room A, maybe?"]] },
+  "tut.trainee.lost":  { g: "Tutorial", l: "The Supply Closet: the lost trainee, before you bring their box", by: "claude", v: [["Oh, hi. I've been in training for three weeks.", "I can't leave without my box. It's got all my stuff from training in it.", "I think I left it in Room A. Can you grab it for me?"]] },
   "tut.trainee.box":  { g: "Tutorial", l: "The trainee, when you bring their box (the last page asks to follow)", by: "claude", v: [["My box! You found it!", "Okay. This is embarrassing. Can you show me the way out?"]] },
   "tut.trainee.wait":  { g: "Tutorial", l: "The trainee, if you say not yet", by: "claude", v: [["No rush. I've been here three weeks. What's another minute."]] },
   "tut.trainee.follow":  { g: "Tutorial", l: "The trainee, following you", by: "claude", v: [["Right behind you."]] },
   "tut.trainee.bye":  { g: "Tutorial", l: "The trainee, at the front desk, before they bolt out the glass door", by: "claude", v: [["Freedom! Thank you so much!"]] },
-  "tut.usher.trainee":  { g: "Tutorial", l: "The usher, after the trainee bolts", by: "claude", v: [["...Was that a trainee?", "They were supposed to finish training weeks ago.", "Anyway. Come see me before you go."]] },
+  "tut.usher.trainee":  { g: "Tutorial", l: "The usher, after the trainee bolts (the closing instructions come right after)", by: "claude", v: [["...Was that a trainee?", "They were supposed to finish training weeks ago.", "Anyway."]] },
+  "tut.usher.closing":  { g: "Tutorial", l: "The usher's closing instructions (and again if you ask before announcing)", by: "claude", v: [["Last thing. Let's close up for the night.", "Make the closing announcement on the intercom over there.", "Then turn off the lights in Room A, Room B and the closet.", "Come see me when you're done."]] },
+  "tut.usher.lights":  { g: "Tutorial", l: "The usher, after the announcement, before the lights are off", by: "claude", v: [["Now the lights. Room A, Room B and the closet. Each room's got a switch on the wall."]] },
+  "tut.intercomEarly":  { g: "Tutorial", l: "The office intercom, before it's time to close up", by: "claude", v: [["The intercom. Not yet."]] },
+  "tut.lightsEarly":  { g: "Tutorial", l: "A light switch in training, before it's time to close up", by: "claude", v: [["A light switch. Leave it on for now."]] },
+  "tut.allDark":  { g: "Tutorial", l: "After the last of the three rooms goes dark", by: "claude", v: [["That's all three rooms. Go see the usher."]] },
   "tut.usher.bye":   { g: "Tutorial", l: "The usher, after the wrap-up", by: "claude", v: [["Head on out through the glass door. The museum's all yours."]] },
-  "tut.wrapTag":     { g: "Tutorial", l: "The usher's wrap-up, for a volunteer", by: "claude", v: [["You did it! Here's your volunteer tag.", "Oh, and the curator keeps field notes on everything. Here's what you did today."]] },
-  "tut.wrapBadge":   { g: "Tutorial", l: "The usher's wrap-up, signed in with a badge", by: "claude", v: [["You did it! Your badge is all set.", "Oh, and the curator keeps field notes on everything. Here's what you did today."]] },
+  "tut.wrapTag":  { g: "Tutorial", l: "The usher's wrap-up, for a volunteer", by: "claude", v: [["You did it! Here's your volunteer tag."]] },
+  "tut.wrapBadge":  { g: "Tutorial", l: "The usher's wrap-up, signed in with a badge", by: "claude", v: [["You did it! Your badge is all set."]] },
+  "tut.tokens":  { g: "Tutorial", l: "The usher hands you tokens, the first time you finish (the big coin moment comes after)", by: "claude", v: [["Oh, and here. Five tokens, for finishing training."]] },
+  "tut.exchange":  { g: "Tutorial", l: "The usher, after the tokens (the ... is you asking about the exchange rate)", by: "claude", v: [["You can spend them in the gift shop and the café.", "...", "The exchange rate? Don't think about it too hard."]] },
+  "tut.notesIntro":  { g: "Tutorial", l: "The usher, right before the field notes", by: "claude", v: [["Oh, and the curator keeps field notes on everything. Here's what you did today."]] },
   "tut.notesSub":    { g: "Tutorial", l: "The field notes page in the wrap-up (one line under the title)", by: "claude", v: [["Today's training"]] },
   "tut.wrapEnd":     { g: "Tutorial", l: "The usher, after the field notes", by: "claude", v: [["Not bad for a first day. Head out through the glass door when you're ready."]] },
   "tut.did.sign":    { g: "Tutorial", l: "Field notes: you read the sign", by: "claude", v: [["Read a sign."]] },
@@ -2368,6 +2381,8 @@ const TEXT = {
   "tut.did.droop":   { g: "Tutorial", l: "Field notes: the corner plant", by: "claude", v: [["Watered a plant that got thirsty later on."]] },
   "tut.did.box":     { g: "Tutorial", l: "Field notes: the trainee's box", by: "claude", v: [["Found a lost box."]] },
   "tut.did.trainee":  { g: "Tutorial", l: "Field notes: the trainee", by: "claude", v: [["Returned a lost trainee."]] },
+  "tut.did.announce":  { g: "Tutorial", l: "Field notes: the closing announcement", by: "claude", v: [["Made the closing announcement."]] },
+  "tut.did.lights":  { g: "Tutorial", l: "Field notes: the lights", by: "claude", v: [["Turned off the lights."]] },
   "tut.gotBox":      { g: "Tutorial", l: "Picking up the trainee's box", by: "claude", v: [["A box of somebody's stuff. A stapler, a mug, three weeks of snacks."]] },
   "tut.handsFull":   { g: "Tutorial", l: "Your hands are full", by: "claude", v: [["Your hands are full."]] },
   "tut.photo":         { g: "Tutorial", l: "Taking your first photo in the tutorial", v: [["Oh yeah, you can take photos.", "They don't help you here, though."]] },
@@ -2906,6 +2921,8 @@ const PIXEL_FONT = (() => {
 const KONAMI = ["up", "up", "down", "down", "left", "right", "left", "right", "b", "a", "start"];
 const POP_KINDS = ["dusted", "straightened", "watered", "mugs", "wiped", "litter"]; // tokens that just pop over your head
 const HO = { brew: 12, turn: 76, end: 104 }; // the café hand-off, in frames: she turns to the machine, it brews, she turns back round with your drink, and it's yours
+const TUT_DARK = ["tut_room1", "tut_room2", "tut_room3"]; // the rooms whose lights go off at the end of the tutorial (not the office)
+const TUT_TOKENS = 5; // for finishing the tutorial the first time
 const TUT_DROOP = 900; // frames in Training Room B before the day dial ticks over and a corner plant droops (15 seconds)
 const ZOOM = 3600; // the coffee rush: a minute, at double speed
 const COIN_FX = 130; // frames in the big token moment
@@ -4684,7 +4701,7 @@ class Game {
     this.mode = "busy"; this.trans = { t: 0, dur: 14, switched: false, fn: go, after: () => { this.dialK = undefined; if (this.needTutorial()) this.startTutorial(); } };
   }
   outsideNow() { return !!(this.room && this.room.id === "outside"); } // the parking lot out front: no museum time there
-  dialOn() { if (this.tut) return this.tut.dialT0 !== undefined && !this.headless && /^tut_room[23]$/.test(this.room.id); return !!(this.rooms && this.rooms.museum && !this.chillOn() && !this.recording() && this.pack && !this.headless && !this.outsideNow()); } // the day dial is showing
+  dialOn() { if (this.tut) return this.tut.dialT0 !== undefined && !this.headless; return !!(this.rooms && this.rooms.museum && !this.chillOn() && !this.recording() && this.pack && !this.headless && !this.outsideNow()); } // the day dial is showing (in the tutorial: only once Fern's shown it to you)
   drawDayDial() {
     if (!this.dialOn()) return;
     const ctx = this.ctx, d = this.tut ? this.tutDial() : this.director(), R = 7, x = 4 + R + 1, y = SH - 4 - R - 1, f = Math.min(1, d.min / d.minutes);
@@ -5554,20 +5571,46 @@ class Game {
     return Object.assign({ tutId: id, member: this.tutName(id), shirt, sheet, room, x, y, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 9999, still: true, lines: [["..."]], lineI: -1 }, extra);
   }
   tutThirsty(id) { const t = this.tut; return !!t && (id === "tut-r2-sad" ? !t.watered : id === t.droop ? !t.droopWatered : false); }
-  /* After the rooms are built (and when things change): room A's chest, its barrier and the box, room B's barrier, and the two of them. */
+  /* After the rooms are built (and when things change): room A's chest (hidden until you've read the sign) and the trainee's
+     box, the rope Fern opens, her desk (talk to her across it), and the two of them. */
   tutDress() {
     const t = this.tut; if (!t) return;
-    const put = (room, key, x, y, ev) => { const r = this.rooms[room]; if (!r || r.props.some(q => q.tutKey === key)) return; r.props.push({ key, x, y, tutKey: key }); r.solid[y][x] = true; if (ev) r.events[x + "," + y] = ev; };
-    const take = (room, key) => { const r = this.rooms[room]; if (!r) return; const q = r.props.find(p => p.tutKey === key); if (!q) return; r.props = r.props.filter(p => p !== q); r.solid[q.y][q.x] = false; delete r.events[q.x + "," + q.y]; };
-    const [cx, cy] = TUT_SPOTS.chest, [bx, by] = TUT_SPOTS.barrier, [ox, oy] = TUT_SPOTS.box;
-    put("tut_room1", "tut_chest", cx, cy, { tutChest: true });
-    if (t.open1) take("tut_room1", "tut_barrier"); else put("tut_room1", "tut_barrier", bx, by, { tutBarrier: true });
-    if (t.open2) take("tut_room2", "tut_barrier"); else put("tut_room2", "tut_barrier", bx, by, { tutBarrier: true });
-    if (t.boxOut && !t.boxTaken) put("tut_room1", "supply_box", ox, oy, { tutBox: true }); else take("tut_room1", "supply_box");
+    const A = this.rooms.tut_room1, B = this.rooms.tut_room2;
+    if (A) {
+      const ch = A.props.find(q => q.key === "tut_chest");
+      if (ch) { ch.hidden = !t.read; A.solid[ch.y][ch.x] = !!t.read; if (t.read) A.events[ch.x + "," + ch.y] = { tutChest: true }; else delete A.events[ch.x + "," + ch.y]; }
+      const [ox, oy] = TUT_SPOTS.box, bx = A.props.find(q => q.tutKey === "supply_box");
+      if (t.boxOut && !t.boxTaken) { if (!bx) { A.props.push({ key: "supply_box", x: ox, y: oy, tutKey: "supply_box" }); A.solid[oy][ox] = true; A.events[ox + "," + oy] = { tutBox: true }; } }
+      else if (bx) { A.props = A.props.filter(q => q !== bx); A.solid[bx.y][bx.x] = false; delete A.events[bx.x + "," + bx.y]; }
+    }
+    if (B) {
+      const desk = B.props.find(q => q.key === "break_table" || q.key === "front_desk");
+      if (desk) for (let i = 0; i < SLOT[desk.key].w / T; i++) B.events[(desk.x + i) + "," + desk.y] = { tutDesk: true };
+      if (t.ropeOpen) { const rp = this.tutRope(); if (rp) { B.props = B.props.filter(q => q !== rp); B.solid[rp.y][rp.x] = false; delete B.events[rp.x + "," + rp.y]; } }
+      const n = t.people.trainer, at = this.tutFernAt();
+      if (n && at && !t.fernPlaced) { t.fernPlaced = true; n.x = at[0]; n.y = at[1]; n.dir = at[2]; n.homeDir = undefined; }
+    }
     for (const p of Object.values(t.people)) {
       if (p.gone || p === this.fol) continue;
       const r = this.rooms[p.room]; if (r && !r.npcs.includes(p)) r.npcs.push(p);
     }
+  }
+  /* Fern: behind her desk, on the side nearest the sad plant, looking at it. */
+  tutFernAt() {
+    const B = this.rooms.tut_room2; if (!B) return null;
+    const desk = B.props.find(q => q.key === "break_table" || q.key === "front_desk"), plant = B.props.find(q => q.plant === "tut-r2-sad"); if (!desk) return null;
+    const w = SLOT[desk.key].w / T, ys = [desk.y - 1, desk.y + 1], cands = [];
+    for (const y of ys) for (let i = 0; i < w; i++) { const x = desk.x + i; if (B.solid[y] && B.solid[y][x] === false) cands.push([x, y]); }
+    if (!cands.length) return null;
+    const d = c => plant ? Math.abs(c[0] - plant.x) + Math.abs(c[1] - plant.y) : 0; cands.sort((a, b) => d(a) - d(b) || a[1] - b[1]);
+    const [x, y] = cands[0], dir = !plant ? "down" : plant.y === y ? (plant.x < x ? "left" : "right") : plant.y < y ? "up" : "down";
+    return [x, y, dir];
+  }
+  /* The rope Fern unhooks for you: the one nearest her. */
+  tutRope() {
+    const B = this.rooms.tut_room2, n = this.tut && this.tut.people.trainer; if (!B || !n) return null;
+    const ropes = B.props.filter(q => q.key === "velvet_rope" || q.key === "velvet_rope_v"); if (!ropes.length) return null;
+    return ropes.sort((a, b) => Math.abs(a.x - n.x) + Math.abs(a.y - n.y) - (Math.abs(b.x - n.x) + Math.abs(b.y - n.y)))[0];
   }
   startTutorial(replay) {
     if (this.tut) return;
@@ -5598,6 +5641,8 @@ class Game {
     const t = this.tut, U = pages => this.tutSaid("Usher", pages);
     if (!t) { this.say(["The training desk."]); return; }
     if (t.step === "wrap") { this.tutWrap(); return; }
+    if (t.step === "closing") { this.say(U(this.tx("tut.usher.closing"))); return; }
+    if (t.step === "lights") { this.say(U(this.tx("tut.usher.lights"))); return; }
     if (t.step === "done") { this.say(U(this.tx("tut.usher.bye"))); return; }
     if (t.step !== "intro") { this.say(U(this.tx("tut.usher.go"))); return; }
     t.step = "signin";
@@ -5623,16 +5668,19 @@ class Game {
   tutWrap() {
     const t = this.tut, U = pages => this.tutSaid("Usher", pages); if (!t) return;
     t.step = "done";
+    const notes = () => { const lines = t.did.map(k => "\u2713 " + this.tx("tut.did." + k)[0]); this.read({ title: "FIELD NOTES", sub: this.tx("tut.notesSub")[0], sections: [{ label: "", text: lines.join("\n") }] }, () => this.say(U(this.tx("tut.wrapEnd")))); };
+    const pay = !this.progress.tutorialPaid; // five tokens, the first time you finish (Joe 10/15)
     this.say(U(this.tx(this.staff ? "tut.wrapBadge" : "tut.wrapTag")), () => {
-      const lines = t.did.map(k => "✓ " + this.tx("tut.did." + k)[0]);
-      this.read({ title: "FIELD NOTES", sub: this.tx("tut.notesSub")[0], sections: [{ label: "", text: lines.join("\n") }] }, () => this.say(U(this.tx("tut.wrapEnd"))));
+      if (!pay) { this.say(U(this.tx("tut.notesIntro")), notes); return; }
+      this.progress.tutorialPaid = todayISO(); this.saveProgress();
+      this.say(U(this.tx("tut.tokens")), () => { this.earn(TUT_TOKENS, true); this.afterCoin = () => this.say(U([...this.tx("tut.exchange"), ...this.tx("tut.notesIntro")]), notes); });
     });
   }
   tutDid(k) { const t = this.tut; if (t && !t.did.includes(k)) t.did.push(k); }
   /* Things that happen on their own: the day dial ticking over in room B (a corner plant droops), and the trainee looking around. */
   tutTick() {
     const t = this.tut; if (!t || this.mode !== "walk") return;
-    if (t.dialT0 !== undefined && !t.droop && this.t - t.dialT0 > TUT_DROOP && this.room.id === "tut_room2") {
+    if (t.dialT0 !== undefined && t.watered && !t.droop && this.t - t.dialT0 > TUT_DROOP && this.room.id === "tut_room2") {
       t.droop = "tut-r2-a"; const tr = t.people.trainer;
       this.say(this.tutSaid(tr.member, this.tx("tut.trainer.droop")));
     }
@@ -5651,10 +5699,10 @@ class Game {
       const leading = this.fol && this.fol.tutId === "trainee";
       if (e.tutDoor === "office-r1") { if (t.step === "intro" || t.step === "signin") this.say(this.tutSaid("Usher", this.tx("tut.usher.wait"))); else go("tut_room1", 5, 8, "up"); }
       else if (e.tutDoor === "r1-office") go("tut_office", 10, 3, "down", () => { if (leading) this.tutHome(); });
-      else if (e.tutDoor === "r1-r2") go("tut_room2", 5, 8, "up", () => this.tutIntoB(leading));
+      else if (e.tutDoor === "r1-r2") { if (!t.can) say("tut.locked"); else go("tut_room2", 5, 8, "up"); } // locked until you've got the watering can
       else if (e.tutDoor === "r2-r1") go("tut_room1", 5, 3, "down");
-      else if (e.tutDoor === "r2-r3") go("tut_room3", 4, 6, "up");
-      else if (e.tutDoor === "r3-r2") go("tut_room2", 5, 3, "down", () => this.tutIntoB(leading));
+      else if (e.tutDoor === "r2-r3") { if (!t.watered) say("tut.locked"); else go("tut_room3", 4, 6, "up"); } // locked until the sad plant's watered
+      else if (e.tutDoor === "r3-r2") go("tut_room2", 5, 3, "down");
       else if (e.tutDoor === "glass") {
         if (t.step !== "done") this.say(this.room.id === "tut_office" ? this.tutSaid("Usher", this.tx("tut.notYet")) : this.tx("tut.notYet"));
         else this.say(this.tutSpeak("tut.done"), () => this.endTutorial(false));
@@ -5666,11 +5714,16 @@ class Game {
     if (e.tutSign) { // room A: reading it is the whole task; the chest opens, and the barrier with it
       if (t.read) { say(t.boxOut ? "tut.sign2" : "tut.sign"); return true; }
       t.read = true; this.tutDid("sign");
-      this.say(this.tx("tut.sign"), () => { t.can = true; this.tutDid("can"); this.itemGet({ name: this.tx("tut.canName")[0], img: this.sheet("watering_can"), id: "tut-can" }, "walk", () => this.say(this.tx("tut.gotCan"), () => { t.open1 = true; this.tutDress(); this.showLoc(this.tx("tut.unlocked")[0]); })); });
+      this.say(this.tx("tut.sign"), () => { this.tutDress(); this.say(this.tx("tut.chestAppears")); }); // and a treasure chest appears
       return true;
     }
-    if (e.tutChest) { say(t.can ? "tut.chestEmpty" : "tut.chestShut"); return true; }
-    if (e.tutBarrier) { say("tut.barrier"); return true; }
+    if (e.tutChest) { // open it: the watering can, and the door unlocks
+      if (t.can) { say("tut.chestEmpty"); return true; }
+      t.can = true; this.tutDid("can");
+      this.itemGet({ name: this.tx("tut.canName")[0], img: this.sheet("watering_can"), id: "tut-can" }, "walk", () => this.say(this.tx("tut.gotCan"), () => this.showLoc(this.tx("tut.unlocked")[0])));
+      return true;
+    }
+    if (e.tutDesk) { const n = t.people.trainer; if (n && this.room.npcs.includes(n)) this.tutTalk(n); return true; } // across her desk, like the shop counter
     if (e.tutBox) { // the trainee's box, in room A: carry it to them
       if (this.carryBox) { say("tut.handsFull"); return true; }
       t.boxTaken = true; this.carryBox = "tut"; this.tutDress(); say("tut.gotBox"); return true;
@@ -5681,19 +5734,27 @@ class Game {
       if (!t.can) { say("tut.noCan"); return true; }
       if (e.plant === "tut-r2-sad") {
         t.watered = true; this.tutDid("plant"); this.showLoc("Watered the " + (e.name || "plant"));
-        tr.dir = OPP[this.player.dir] === "up" ? "down" : tr.dir;
-        this.cheer(tr, () => this.say(S(this.tx("tut.trainer.thanks")), () => { tr.dir = "down"; t.open2 = true; this.tutDress(); this.showLoc(this.tx("tut.unlocked")[0]); })); // (then back to watching her plant)
+        const home = tr.dir;
+        this.cheer(tr, () => this.say(S(this.tx("tut.trainer.thanks")), () => { tr.dir = home; this.showLoc(this.tx("tut.unlocked")[0]);
+          this.say(S(this.tx("tut.trainer.timer")), () => { t.dialT0 = this.t; this.dialK = undefined; }); })); // then the little timer in the corner, for the first time
       } else { t.droopWatered = true; this.tutDid("droop"); this.showLoc("Watered the " + (e.name || "plant")); this.say(S(this.tx("tut.trainer.droopThanks"))); }
       return true;
     }
-    if (e.announce || e.lights) { this.say(this.tx("tut.notThat")); return true; }
+    if (e.announce) { // the last part: the closing announcement, from the office
+      if (t.step === "lights" || t.step === "wrap" || t.step === "done") say("intercom.again");
+      else if (t.step !== "closing") say("tut.intercomEarly");
+      else this.choose(this.tx("intercom.ask").join(" "), ["Yes", "Not yet"], i => { if (i !== 0) return; this.say(this.tx("intercom.announce"), () => { t.step = "lights"; this.tutDid("announce"); }); });
+      return true;
+    }
+    if (e.lights) { // then the lights in the three back rooms
+      if (t.step !== "lights") { say("tut.lightsEarly"); return true; }
+      const k = e.key || this.room.id;
+      if (this.lightsOff.has(k)) { this.lightsOff.delete(k); this.showLoc("Lights on"); return true; }
+      this.lightsOff.add(k); this.showLoc("Lights off");
+      if (TUT_DARK.every(id => this.lightsOff.has(id))) { this.tutDid("lights"); t.step = "wrap"; setTimeout(() => { if (this.tut) say("tut.allDark"); }, 400); }
+      return true;
+    }
     return false;
-  }
-  /* Into room B: the dial starts the first time; leading the trainee through, the trainer thanks you again. */
-  tutIntoB(leading) {
-    const t = this.tut; if (!t) return;
-    if (t.dialT0 === undefined) { t.dialT0 = this.t; this.dialK = undefined; }
-    if (leading && !t.thankedAgain) { t.thankedAgain = true; const tr = t.people.trainer; setTimeout(() => { if (this.tut && this.mode === "walk") this.say(this.tutSaid(tr.member, this.tx("tut.trainer.again"))); }, 300); }
   }
   /* Out front with the trainee: they thank you and bolt out the glass door; the usher can't believe it. */
   tutHome() {
@@ -5702,8 +5763,8 @@ class Game {
       if (!this.tut) return;
       this.say(this.tutSaid(n.member, this.tx("tut.trainee.bye")), () => {
         this.fol = null; n.follow = false; n.leaving = true; n.leaveT = 0; n.alpha = 1; n.route = null; n.leaveTo = TUT_SPOTS.glass; n.tagging = true; n.hurry = true; n.onGone = () => { n.gone = true; };
-        this.tutDid("trainee"); t.step = "wrap";
-        setTimeout(() => { if (this.tut && this.mode === "walk") { const u = this.room.npcs.find(m => m.usher); if (u) u.dir = "down"; this.say(this.tutSaid("Usher", this.tx("tut.usher.trainee"))); } }, 1400);
+        this.tutDid("trainee"); t.step = "closing";
+        setTimeout(() => { if (this.tut && this.mode === "walk") { const u = this.room.npcs.find(m => m.usher); if (u) u.dir = "down"; this.say(this.tutSaid("Usher", [...this.tx("tut.usher.trainee"), ...this.tx("tut.usher.closing")])); } }, 1400);
       });
     }, 300);
   }
@@ -5715,7 +5776,11 @@ class Game {
     if (!t) return true;
     const S = pages => this.tutSaid(n.member, pages);
     if (n.tutId === "trainer") {
-      if (!t.watered) { if (!t.metTrainer) { t.metTrainer = true; this.say(S(this.tx("tut.trainer.hello"))); } else this.say(S(this.tx("tut.trainer.again0"))); }
+      if (!t.watered) {
+        if (!t.ropeOpen) { t.metTrainer = true; this.say(S(this.tx("tut.trainer.hello")), () => { t.ropeOpen = true; this.tutDress(); this.say(this.tx("tut.ropeOpen")); }); } // and she unhooks a rope for you
+        else this.say(S(this.tx("tut.trainer.again0")));
+      }
+      else if ((t.boxGiven || this.fol === t.people.trainee) && !t.thankedAgain) { t.thankedAgain = true; this.say(S(this.tx("tut.trainer.again"))); } // leading the trainee out: only if you talk to her
       else this.say(S(this.tx(t.droop && !t.droopWatered ? "tut.trainer.droopAsk" : "tut.trainer.after")));
       return true;
     }
@@ -6379,7 +6444,7 @@ class Game {
     if (!F) return;
     F.t++; if (F.t > 40 && F.t < COIN_FX - 14 && (has("a") || has("b"))) F.t = COIN_FX - 14; // A skips to the end
     if (F.t === 30) this.updateHud(true);
-    if (F.t >= COIN_FX) { this.coinFx = null; if (this.mode === "busy") this.mode = "walk"; }
+    if (F.t >= COIN_FX) { this.coinFx = null; if (this.mode === "busy") this.mode = "walk"; if (this.afterCoin) { const fn = this.afterCoin; this.afterCoin = null; fn(); } }
   }
   /* The café hand-off (Joe 10/15): the barista turns round to the espresso machine on the wall behind her, it hisses (steam,
      and a drip into the cup on the drip tray; an iced drink: a clink, no steam), and she turns back to you holding your drink
@@ -10037,7 +10102,20 @@ class Game {
     x.fillStyle = "#ff4030"; for (const k of lit) { const [px, py] = k.split(",").map(Number); x.fillRect(px, py, 1, 1); }
     cache.set(s, c); return c;
   }
+  /* Velvet ropes join their neighbors (Joe 10/15): a post on every rope tile, and rope toward each rope next to it (on its
+     own: across, or up and down for the vertical one). */
+  drawRope(p, cx, cy) {
+    const ctx = this.ctx, r = this.room, rope = (x, y) => r.props.some(q => (q.key === "velvet_rope" || q.key === "velvet_rope_v") && q.x === x && q.y === y && !q.hidden);
+    const hz = p.key === "velvet_rope", hook = (x, y) => !!(r.solid[y] && r.solid[y][x]); // an end next to a wall or a desk hooks onto it (along the rope's own way)
+    const X = Math.round(p.x * T - cx), Y = Math.round(p.y * T - cy), L = rope(p.x - 1, p.y) || (hz && hook(p.x - 1, p.y)), R = rope(p.x + 1, p.y) || (hz && hook(p.x + 1, p.y)), U = rope(p.x, p.y - 1) || (!hz && hook(p.x, p.y - 1)), D = rope(p.x, p.y + 1) || (!hz && hook(p.x, p.y + 1));
+    const lone = !L && !R && !U && !D, half = (f, sx, sy, w, h) => { ctx.save(); ctx.beginPath(); ctx.rect(X + sx, Y + sy, w, h); ctx.clip(); this.drawSlot("velvet_rope", f, 0, X, Y); ctx.restore(); };
+    if (L || (lone && p.key === "velvet_rope")) half(1, 0, 0, 8, 16); if (R || (lone && p.key === "velvet_rope")) half(1, 8, 0, 8, 16);
+    if (U || (lone && p.key === "velvet_rope_v")) half(2, 0, 0, 16, 8); if (D || (lone && p.key === "velvet_rope_v")) half(2, 0, 8, 16, 8);
+    this.drawSlot("velvet_rope", 0, 0, X, Y);
+  }
   drawProp(p, cx, cy) {
+    if (p.hidden) return; // (the tutorial's chest, before you've read the sign)
+    if (p.key === "velvet_rope" || p.key === "velvet_rope_v") { this.drawRope(p, cx, cy); return; }
     const ctx = this.ctx, k = p.plant && this.isThirsty(p.plant) ? "plant_thirsty" : p.key === "trash_can" && this.binFull(this.room.id, p.x, p.y) ? "trash_full" : p.key;
     const px0 = p.x * T - cx, py0 = p.y * T - (SLOT[k].h - T) - cy;
     if (k === "bench_side") { this.drawFlip(k, p.sit === "right", px0, py0); return; } // whoever sits on it is drawn over both seats
@@ -10510,7 +10588,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 76";
+const VERSION = "2026-11-18 cards 77";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

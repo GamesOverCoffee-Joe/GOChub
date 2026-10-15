@@ -445,7 +445,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 76";
+window.GOQ_WANT = "2026-11-18 cards 77";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -1184,7 +1184,7 @@ const PLACE_GROUPS = [
     { kind: "spot", name: "Painting spot", key: "wall_frame_wood", note: "Community pieces hang here. Tap the wall; it takes two tiles across both wall rows." },
     { kind: "prop", key: "overflow_screen", name: "Touch screen", note: "The room's extra pieces: episodes of its genre that don't fit in its cases. One per room is plenty." },
   ] },
-  { name: "Furniture", items: ["bench", "bench_side", "plant", "planter_wide", "sign_stand", "sign_down", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board", "day_board"].map(k => ({ kind: "prop", key: k })) },
+  { name: "Furniture", items: ["bench", "bench_side", "plant", "planter_wide", "sign_stand", "sign_down", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board", "day_board", "reader_chair", "reader_table", "reader_shelf", "tut_chest", "velvet_rope", "velvet_rope_v"].map(k => ({ kind: "prop", key: k })) },
   { name: "Shop and café", items: ["shelf_unit", "magazine_rack", "item_rack", "shop_counter", "cafe_counter", "espresso_machine", "coffee_grinder", "cup_stacks", "bus_tub", "cafe_table", "cafe_stool", "floor_lamp", "postcard_spinner", "basket", "planter", "cat_bed"].map(k => ({ kind: "prop", key: k }))
     .concat([{ kind: "decal", key: "rug" }]) },
   { name: "Storage and floors", items: [{ kind: "stairs", key: "stair_up", name: "Stairs up", note: "Step on it to change floors. Select it to choose where it leads." },
@@ -1196,7 +1196,7 @@ const PLACE_GROUPS = [
     { kind: "mural", key: "mural_dusk", name: "Mural", note: "A landscape painted along the top row of a wall. Tap a wall: it fills that stretch of wall. Pick its art and which part of it shows after." },
     { kind: "arrow", key: "carpet_h", name: "Arrow sign", note: "A big arrow across the wall, four tiles long, pointing the way to a room. Tap a wall, then pick its room and direction." },
   ] },
-  { name: "On the wall", items: ["shop_shelves", "shop_posters", "mug_shelf", "cafe_menu"].map(k => ({ kind: "wallArt", key: k })) },
+  { name: "On the wall", items: ["shop_shelves", "shop_posters", "mug_shelf", "cafe_menu", "espresso_wall"].map(k => ({ kind: "wallArt", key: k })) },
   { name: "Spots", items: [
     { kind: "spawn", name: "Start spot", key: "player", note: "Where you appear when the preview jumps here." },
     { kind: "catSpot", name: "Cat nap spot", key: "cat" }, { kind: "mugSpot", name: "Mug spot", key: "mug" },
