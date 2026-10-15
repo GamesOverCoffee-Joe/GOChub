@@ -474,3 +474,57 @@ With about one episode a week, the 40 cases on the ground floor run out (33 epis
 - **What needs changing:** about 80 places in the engine name "the museum" directly, so on a new floor they simply don't happen until taught. Nothing that works today breaks.
 - **A first step:** a "new floor from the museum" button in the curator, stairs up and down, cases filling onto the new floor once the ground floor is full, the unveiling working on any floor, a "New this week: second floor" pointer in the lobby, the floor's own visitors and stair arrivals, and curious visitors able to send you upstairs. The lost kid and the conservator move up later if it feels right.
 - **Maybe:** one floor per season (floor 1 is season 1; a new season opens a new floor), like the Games Over Coffee lore's seasons.
+
+## **Juice** *(Joe 10/15: a working list of ideas; nothing here is planned yet unless it says built)*
+
+Game juice: small touches that make things feel good. Each thing gets one size of moment, so the big ones stay special.
+
+| Size | For | Feel |
+|---|---|---|
+| Tiny | every step, every menu move | barely noticed, but it'd feel dead without it |
+| Small | chores, coin finds | a quick puff or sparkle right where it happened |
+| Medium | buying, opening a card pack | a short moment, under a second |
+| Big | one-off rewards (the token moment) | the screen stops for you |
+| Huge | a rare card | the biggest thing in the game |
+
+Everything follows reduced motion (still pictures, no shake), like the token moment.
+
+### **Walking** *(built, cards 67)*
+
+- A one-pixel squash each time a foot lands, and a slight stretch as you start moving.
+- A small puff of dust at your feet when you start, stop or change direction (not every step).
+- Walking into a wall: a one-pixel nudge into it and a tiny squish, instead of stopping dead.
+- Followers (curious visitors, the lost kid) do a tiny hop when they catch up to you after falling behind.
+
+### **Cards**
+
+- **Buying a pack (medium):** the pack drops into the middle of the screen and lands with a squash and a wiggle. A: it tears along the top (a jagged rip line, paper bits). The cards slide out face down into a fan and flip one at a time with a squeeze and pop.
+- **A rare card (huge):** the build-up is the fun. A pack with a rare in it wiggles harder. At the rare card it hovers, trembles and glows at the edges, then flips with a white flash and the sunburst in its rarity's color (silver, gold, rainbow for the rarest), a shiny streak sweeping across, confetti, a big RARE! stamp and a little shake.
+- **Bluu's fakes:** the glow builds like a rare, then fizzles: the sunburst shrinks away with a sad little puff and a ...FAKE? stamp.
+
+### **Chores (small)**
+
+- Dusting: a dust cloud bursts off the frame, then a glint slides across it.
+- Straightening: the frame wobbles past level once and settles.
+- Watering: droplets, then the plant bounces up a pixel and stands a little taller.
+- Wiping a case: a shine sweeps across the glass.
+- Litter in the bin: the lid pops up and drops.
+
+### **Shopping (medium)**
+
+- What you buy hops off the shelf and arcs into a little bag in the corner; the wallet counts down number by number instead of jumping.
+
+### **Menus and text (tiny)**
+
+- The menu cursor bounces a pixel when it moves; the chosen row pops a little.
+- The text box pops open with a small overshoot instead of just appearing.
+
+### **Closing up (medium)**
+
+- Each light switch clicks off with a small flash. The last one: the museum dims room by room in a slow wave, then Lights out.
+
+### **Other**
+
+- Achievements: the toast slides in with an overshoot and the badge spins once.
+- A wrong case for a curious visitor: they shake their head (a quick left, right) before saying so.
+- Sound, if the game ever gets it: the coin, a card flip, the pack tearing and the wall bump first.

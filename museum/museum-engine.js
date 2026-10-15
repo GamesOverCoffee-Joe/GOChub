@@ -7044,7 +7044,8 @@ class Game {
   followStep(n) {
     if (n.moving) { this.advance(n); return; }
     const p = this.player, d = Math.abs(n.x - p.x) + Math.abs(n.y - p.y), t = this.trail && this.trail.room === this.room.id ? this.trail : null;
-    if (d <= 1 && !p.moving) { n.lost = 0; return; }
+    if (d <= 1 && !p.moving) { n.lost = 0; if (n.behind) { n.behind = false; n.hopT = this.t; } return; } // caught up: a tiny hop
+    if (d > 2) n.behind = true;
     let dir = null;
     if (t && Math.abs(t.x - n.x) + Math.abs(t.y - n.y) === 1) dir = t.x > n.x ? "right" : t.x < n.x ? "left" : t.y > n.y ? "down" : "up";
     else if (d > 1) {
@@ -7963,7 +7964,7 @@ class Game {
       if (c === this.player) {
         const e = this.room.events[nx + "," + ny];
         if (e && e.bump && !this.inputLock) { this.inputLock = true; c.walking = false; this.runEvent(e); return false; }
-        if (c.bumpT <= 0) { c.bumpT = 16; c.step = !c.step; if (!this.full && this.progress.stats && !e) this.progress.stats.bumps++; } // walked into a wall
+        if (c.bumpT <= 0) { c.bumpT = 16; c.step = !c.step; c.bumpAt = this.t; c.bumpDir = d; if (!this.full && this.progress.stats && !e) this.progress.stats.bumps++; } // walked into a wall (a little nudge and squish, in walkLook)
       }
       return false;
     }
@@ -7979,6 +7980,7 @@ class Game {
     if ((c.prog += (c === this.player && this.segway) || behind ? 2 : 1) >= T) {
       c.x += DIRS[c.dir][0]; c.y += DIRS[c.dir][1]; c.prog = 0; c.moving = false;
       if (c === this.player) {
+        c.landT = this.t; // a one-pixel squash as the foot lands
         if (!this.full && this.progress.stats) this.progress.stats.steps++;
         if (this.drink && this.drink.mug === "fake" && (this.drink.leak = (this.drink.leak || 0) + 1) >= 6) { this.drink = null; setTimeout(() => this.say(this.tx("gear.leak")), 50); } // a fake travel mug leaks (and goes back in your bag, empty)
         this.stepInDark(); this.zoneCheck();
@@ -8157,7 +8159,11 @@ class Game {
       if (pressA) this.bufA = true;
       if (this.path && this.heldDir()) { this.path = null; this.pathAct = null; }
       if (this.path) { if (this.advance(p) && this.path) this.followPath(); return; }
-      if (this.advance(p)) { const d = this.heldDir(); if (d && !this.inputLock) this.tryMove(p, d); else p.walking = false; }
+      if (this.advance(p)) {
+        const d = this.heldDir(), was = p.dir;
+        if (d && !this.inputLock) { if (this.tryMove(p, d) && d !== was) this.puff(p, "turn"); }
+        else { p.walking = false; this.puff(p, "stop"); }
+      }
       return;
     }
     if (p.bumpT > 0) p.bumpT--;
@@ -8170,7 +8176,39 @@ class Game {
     if (!d || this.inputLock) return;
     if (d !== p.dir && !p.walking && p.turnT === 0) { p.dir = d; p.turnT = 6; return; }
     if (p.turnT > 1) { p.turnT--; return; }
-    p.turnT = 0; p.walking = true; this.tryMove(p, d);
+    p.turnT = 0; p.walking = true; if (this.tryMove(p, d)) { p.goT = this.t; this.puff(p, "start"); } // a little stretch and a kick of dust as you set off
+  }
+  /* ----- walking juice (Joe 10/15) -----
+     Small, because it's every step: a puff of dust at your feet when you set off, stop or change direction, a one-pixel
+     squash each time a foot lands and a stretch as you start, and a nudge and squish when you walk into a wall. Followers
+     hop when they catch up to you. All off with reduced motion. */
+  puff(c, why) {
+    if (REDUCED_MOTION || this.segway) return;
+    const q = this.pos(c), [dx, dy] = DIRS[c.dir], back = why === "start" ? -5 : why === "stop" ? 3 : 0;
+    (this.puffs = this.puffs || []).push({ x: q.x + 8 + dx * back, y: q.y + 14 + dy * back, t0: this.t, dir: c.dir, room: this.room.id });
+    if (this.puffs.length > 12) this.puffs.shift();
+  }
+  drawPuffs(ctx, cx, cy) {
+    const P = this.puffs; if (!P || !P.length) return;
+    this.puffs = P.filter(o => this.t - o.t0 < 18 && o.room === this.room.id);
+    for (const o of this.puffs) {
+      const k = this.t - o.t0, side = o.dir === "left" || o.dir === "right" ? [0, 1] : [1, 0], spread = 1 + k * 0.25, up = Math.floor(k / 6);
+      ctx.globalAlpha = 0.7 * (1 - k / 18); ctx.fillStyle = "#e8e2d4";
+      for (const s of [-1, 1]) { const x = Math.round(o.x - cx + side[0] * s * spread * 2), y = Math.round(o.y - cy + side[1] * s * spread - up), z = k < 6 ? 2 : 1; ctx.fillRect(x - (z >> 1), y - (z >> 1), z, z); }
+      if (k < 10) ctx.fillRect(Math.round(o.x - cx), Math.round(o.y - cy - 1 - up), 1, 1);
+    }
+    ctx.globalAlpha = 1;
+  }
+  /* How you're squashed or nudged right now: { kx, ky, ox, oy } around your feet. */
+  walkLook(c) {
+    const id = { kx: 1, ky: 1, ox: 0, oy: 0 };
+    if (REDUCED_MOTION || this.full || c.sitting || (c === this.player && this.segway)) return id;
+    const t = this.t, w = 1 / 16;
+    if (c.bumpAt !== undefined && t - c.bumpAt < 6) { const [dx, dy] = DIRS[c.bumpDir] || [0, 0], k = t - c.bumpAt, n = k < 3 ? 1 : 0, sq = k < 4;
+      return { kx: sq ? (dx ? 1 - w : 1 + w) : 1, ky: sq ? (dy ? 1 - w : 1 + w) : 1, ox: dx * n, oy: dy * n }; }
+    if (c.goT !== undefined && t - c.goT < 5) return { kx: 1 - w, ky: 1 + w, ox: 0, oy: 0 };
+    if (c.landT !== undefined && t - c.landT < 4) return { kx: 1 + w, ky: 1 - w, ox: 0, oy: 0 };
+    return id;
   }
   interact() {
     const p = this.player, [dx, dy] = DIRS[p.dir], fx = p.x + dx, fy = p.y + dy;
@@ -9978,6 +10016,7 @@ class Game {
     if (r.featuredAt) this.drawFeatured(r, cx, cy);
     const shelf = r.props.find(p => p.mugShelf);
     if (shelf && this.progress.mug === todayISO()) this.drawSlot("usher_mug", 0, 0, (shelf.x + 1) * T + 6 - cx, shelf.y * T - 3 - cy);
+    if (!full) this.drawPuffs(ctx, cx, cy); // dust at your feet, under everyone
     const chars = (full ? (full.noPeople ? [] : r.npcs.slice()) : [this.player, ...r.npcs]).sort((a, b) => this.pos(a).y - this.pos(b).y);
     for (const c of chars) {
       const p = this.pos(c), prog = c.moving ? c.prog : c.bumpT > 0 ? 16 - c.bumpT : -1;
@@ -9986,10 +10025,12 @@ class Game {
       const sheet = c === this.player ? this.playerSheet(c.sheet) : c.sheet;
       if (c === this.player && this.segway && !c.sitting) { const pp3 = this.pos(c); this.drawSlot("segway", 0, 0, Math.round(pp3.x - cx), Math.round(pp3.y - cy - 1)); }
       const pk = c.pose ? this.t - c.pose.t0 : 999, jump = c.pose && /^(startled|guard|pose)$/.test(c.pose.kind) && pk < 14 ? Math.round(Math.sin(Math.PI * pk / 14) * 3) : 0; // a little jump when photographed
-      const hop = (c.react && c.react.how === "loved" && this.t - c.react.t0 < 48 ? Math.round(Math.abs(Math.sin((this.t - c.react.t0) / 8)) * 4) : 0) + jump - (c.pose && c.pose.kind === "bow" && pk > 8 && pk < 50 ? 1 : 0); // a happy hop; the usher's bow dips
+      const hop = (c.react && c.react.how === "loved" && this.t - c.react.t0 < 48 ? Math.round(Math.abs(Math.sin((this.t - c.react.t0) / 8)) * 4) : 0) + jump - (c.pose && c.pose.kind === "bow" && pk > 8 && pk < 50 ? 1 : 0) + (c.hopT !== undefined && this.t - c.hopT < 12 && !REDUCED_MOTION ? Math.round(Math.sin(Math.PI * (this.t - c.hopT) / 12) * 2) : 0); // a happy hop; the usher's bow dips; a follower catching up
       const sx = Math.round(p.x - cx), sy = Math.round(p.y - cy - 4) + (c.sitting ? 2 : 0) - (c === this.player && this.segway && !c.sitting ? 4 : 0) - hop;
       const cup = c === this.player ? this.drink : c.drink, cupFirst = cup && c.dir === "up";
       const bagAt = c.bag && !c.sitting ? [sx + { down: 1, up: 9, left: 9, right: -1 }[c.dir], sy + 9] : null, bagFirst = bagAt && c.dir !== "down"; // a shop bag hangs at their side
+      const wl = c === this.player ? this.walkLook(c) : null, squish = wl && (wl.kx !== 1 || wl.ky !== 1 || wl.ox || wl.oy); // your walk's squash and stretch: everything you're wearing and holding squashes with you
+      if (squish) { ctx.save(); ctx.translate(sx + 8 + wl.ox, sy + 16 + wl.oy); ctx.scale(wl.kx, wl.ky); ctx.translate(-(sx + 8), -(sy + 16)); }
       if (bagFirst) this.drawSlot("shop_bag", 0, 0, ...bagAt);
       const SI = this.side && this.side.item, held = SI && !c.sitting && ((c === this.player && this.carryItem) || (c.itemPair === "taker" && SI.phase >= 2 && !SI.got)) ? SI.kind : -1; // the break room mix-up: the item in hand
       const heldAt = held >= 0 ? [sx + { down: 9, up: 1, left: 1, right: 9 }[c.dir], sy + 9] : null, heldFirst = heldAt && c.dir === "up";
@@ -10030,6 +10071,7 @@ class Game {
         const ox = { down: 4, up: 4, left: 0, right: 8 }[c.dir]; if (c.dir !== "up") this.drawSlot(this.using("case") ? "phone_case" : "phone", 0, 0, sx + ox, sy + 4);
       }
       if (c === this.player && this.asleep && c.sitting && this.t % 120 < 90) { const zy = Math.floor((this.t % 120) / 30); ctx.fillStyle = "#f8f8f0"; ctx.font = "6px monospace"; ctx.fillText("z", sx + 12 + zy, sy - zy * 3); }
+      if (squish) ctx.restore();
       const bub = c.leaving || this.full ? -1 : c.tutId ? (!c.tutShown && !c.follow ? 0 : -1) : c.back ? 1 : c.cur && !c.follow ? 0 : -1; // "?" curious, "!" back to tell you how it went
       if (c.react && !this.full) this.drawReaction(c, sx, sy);
       if (c.pose && !this.full) { // the photo reaction's bubble, fading out at the end
@@ -10109,7 +10151,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 66";
+const VERSION = "2026-11-18 cards 67";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
