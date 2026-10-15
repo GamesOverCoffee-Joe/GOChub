@@ -279,6 +279,8 @@ nav.jumps a:hover,nav.jumps a:focus-visible{border-color:var(--gold)}
 #main .pvmenu{max-width:720px;padding:14px;gap:16px;color:#f3e9d2} /* the dark panel, as it looked under the preview */
 #main .pvmenu .pv-hint{color:#d8c8b8}
 #main .pvgrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+body.pv-max .preview{position:fixed;inset:0;z-index:50;border-left:0;justify-content:center;width:auto !important;max-width:none} /* Maximize: the preview fills the window (and the screen, where the browser allows) */
+body.pv-max .preview > :not(#stage):not(#controls):not(.jump):not(#pvHold){display:none}
 .preview > *{flex-shrink:0} /* the open menu scrolls the panel instead of squashing the preview */
 .pvsec{display:flex;flex-direction:column;gap:4px}
 .pvh{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted, #b8a8a0)}
@@ -387,6 +389,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
       <label class="sr-only" for="goRoom">Go to room</label>
       <select id="goRoom" class="btn" aria-label="Go to room"></select>
       <button class="btn" type="button" id="pvOpts" title="View as, time, day, the visit clock, make things happen">Options</button>
+      <button class="btn" type="button" id="pvMax" title="Fill the screen with the preview, like the game's full screen button" aria-pressed="false">Maximize</button>
     </div>
     <div id="pvHold" hidden>
         <div class="pvmenu" id="pvMenu">
@@ -413,6 +416,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
               <label class="btn" style="display:flex;gap:6px;align-items:center" title="Set how many tokens you have in this preview">Tokens <input id="walletIn" type="number" min="0" max="9999" style="width:70px"></label>
               <button class="btn" type="button" id="lineBtn" title="Eight people already queued up at the café counter (go to the café first)">A long line</button>
               <button class="btn" type="button" id="binsBtn" title="Today's jammed trash can jammed again, with a full pile of litter beside it">Jam the can</button>
+              <label class="btn" style="display:flex;gap:6px;align-items:center" title="Every card or pack you buy in this preview has a rare in it"><input id="rareIn" type="checkbox"> Rare cards</label>
             </div></div>
           <div class="pvsec"><span class="pvh">Force stock</span>
             <div class="note" style="font-size:.85rem;margin:0 0 6px">To test: what's on the gift shop's shelves, and on Bluu's table on Saturday (each real or fake). This preview only; Clear goes back to the day's own stock.</div>
@@ -441,7 +445,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 67";
+window.GOQ_WANT = "2026-11-18 cards 68";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -666,9 +670,21 @@ const edWrap = el("div", { style: "position:absolute;left:-9999px;top:0;width:10
 const edGame = new GOQ.Game(edWrap, undefined, { curator: true, capture: "focus", saveKey: null, headless: true });
 function fitPreview() {
   const w = window.innerWidth;
+  if (document.body.classList.contains("pv-max")) { const hb = 130; game.fit(w - 40, window.innerHeight - hb); return; } // maximized: as big as fits, with room for the buttons under it
   game.fit(w > 1400 ? 480 : w > 980 ? 360 : Math.min(480, w - 60), 400);
 }
 window.addEventListener("resize", fitPreview); fitPreview();
+/* Maximize (Joe 10/15): the preview fills the window, and the screen too where the browser allows. Press it again (or leave full screen) to put it back. */
+function pvMax(on) {
+  document.body.classList.toggle("pv-max", on); $("#pvMax").textContent = on ? "Restore" : "Maximize"; $("#pvMax").setAttribute("aria-pressed", on ? "true" : "false");
+  const fs = document.fullscreenElement || document.webkitFullscreenElement, de = document.documentElement;
+  if (on && !fs && (de.requestFullscreen || de.webkitRequestFullscreen)) { const r = (de.requestFullscreen || de.webkitRequestFullscreen).call(de); if (r && r.catch) r.catch(() => {}); }
+  if (!on && fs) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  setTimeout(fitPreview, 80); stage.focus({ preventScroll: true });
+}
+$("#pvMax").addEventListener("click", () => pvMax(!document.body.classList.contains("pv-max")));
+document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && document.body.classList.contains("pv-max")) pvMax(false); else setTimeout(fitPreview, 80); });
+$("#rareIn").addEventListener("change", () => { game.forceRare = $("#rareIn").checked; status(game.forceRare ? "Every card and pack you buy in the preview has a rare." : "Cards back to their usual odds."); stage.focus({ preventScroll: true }); });
 fillRoomPicker();
 /* Preview options: each setting is a row of choices (the lit one is on); the one-off actions are buttons. */
 const seg = (id, val, pick) => { const box = $("#" + id), show = v => box.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === v)); show(val);

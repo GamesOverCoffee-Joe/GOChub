@@ -3676,6 +3676,7 @@ class Game {
     el.shop = h("gt-box gt-shop");
     el.cafe = h("gt-box gt-shop gt-cafe");
     el.album = h("gt-box gt-shop gt-album");
+    el.cfx = h("gt-cfx"); el.cfx.addEventListener("click", e => { e.stopPropagation(); this.press("a"); }); // buying cards: pick one of five, or open a pack (cardFx)
     el.cardView = h("gt-cardview"); el.cardView.addEventListener("click", e => { e.stopPropagation(); this.press("a"); });
     el.reader = h("gt-box gt-reader");
     el.reader.addEventListener("click", e => { if (e.target.tagName === "A" || e.target.tagName === "BUTTON") return; e.stopPropagation(); if (this.rd && this.rd.sel >= 0) this.rdUse(); else this.press("a"); });
@@ -3784,6 +3785,73 @@ class Game {
 .gt-janky .gt-detail .pic img{transform:rotate(-10deg) scale(1.08)}
 .gt-janky .gt-detail .t{transform:rotate(-2deg);letter-spacing:.06em}
 @property --ga{syntax:'<angle>';inherits:false;initial-value:0deg}
+.gt-wallet.tick .gt-coin{animation:gtTick .12s steps(2)}
+@keyframes gtTick{50%{transform:translateY(-12%) scale(1.2)}}
+.gt-cfx{position:absolute;inset:0;z-index:9;display:none;overflow:hidden;background:rgba(10,6,8,0);transition:background .3s}
+.gt-cfx.dim{background:rgba(10,6,8,.82)}
+.gt-cfx.shake{animation:gtShake .35s linear}
+@keyframes gtShake{20%{transform:translate(calc(2px * var(--s)),calc(-1px * var(--s)))}40%{transform:translate(calc(-2px * var(--s)),calc(1px * var(--s)))}60%{transform:translate(calc(1px * var(--s)),calc(1px * var(--s)))}80%{transform:translate(calc(-1px * var(--s)),0)}}
+.gt-cfx .row{position:absolute;left:0;right:0;bottom:calc(16px * var(--s));display:flex;justify-content:center;align-items:flex-end;gap:calc(5px * var(--s))}
+.gt-cfx .row.fan{bottom:calc(30px * var(--s));gap:calc(8px * var(--s))}
+.gt-cfx .slot{position:relative;flex:none;transition:transform .15s,opacity .35s}
+.gt-cfx .slot.in{animation:gtSlideUp .5s cubic-bezier(.2,1.25,.4,1) backwards;animation-delay:var(--d)}
+@keyframes gtSlideUp{from{transform:translateY(calc(150px * var(--s)));opacity:0}}
+.gt-cfx .row.fan .slot.in{animation-name:gtFanOut}
+@keyframes gtFanOut{from{transform:translateY(calc(-30px * var(--s))) scale(.7) rotate(0deg);opacity:0}}
+.gt-cfx .slot.on{transform:translateY(calc(-8px * var(--s)))}
+.gt-cfx .slot.on .gt-cback{outline:calc(1.5px * var(--s)) solid #e8c070;outline-offset:calc(1px * var(--s))}
+.gt-cfx .slot.out{transform:translateY(calc(160px * var(--s)));opacity:0;transition:transform .35s ease-in,opacity .35s}
+.gt-cfx .slot.away{transform:translateY(calc(-8px * var(--s))) scaleX(0);transition:transform .14s ease-in}
+.gt-cfx .slot.face{animation:gtFlipIn .3s cubic-bezier(.2,1.6,.4,1) both}
+.gt-cback{--k:1;position:relative;width:calc(104px * var(--k));height:calc(146px * var(--k));box-sizing:border-box;border-radius:calc(5px * var(--k));flex:none;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse 75% 65% at 50% 50%,#c8202e 0%,#9a1422 35%,#4a060c 70%,#0c0002 100%);border:calc(2px * var(--k)) solid #e8c070;
+  box-shadow:inset 0 0 0 calc(3px * var(--k)) #2a0408,inset 0 0 0 calc(4px * var(--k)) #b8883a,0 calc(3px * var(--k)) calc(8px * var(--k)) rgba(0,0,0,.6)}
+.gt-cback svg{width:62%;height:auto;display:block;filter:drop-shadow(0 calc(1px * var(--k)) 0 rgba(0,0,0,.6))}
+.gt-cback.glow{animation:gtTremble .07s linear infinite,gtGlow .9s ease-in forwards}
+@keyframes gtTremble{0%{translate:calc(.8px * var(--k)) 0}25%{translate:calc(-.8px * var(--k)) calc(.5px * var(--k))}50%{translate:0 calc(-.6px * var(--k))}75%{translate:calc(-.6px * var(--k)) 0}}
+@keyframes gtGlow{to{box-shadow:inset 0 0 0 calc(3px * var(--k)) #2a0408,inset 0 0 0 calc(4px * var(--k)) #fff4c8,0 0 calc(14px * var(--k)) calc(3px * var(--k)) #ffd860,0 0 calc(30px * var(--k)) #ff8ab8}}
+.gt-cfx .big{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(3px * var(--s));pointer-events:none}
+.gt-cfx .hold{position:relative;z-index:1}
+.gt-cfx .hold.pop{animation:gtPopIn .25s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes gtPopIn{from{transform:scale(.3);opacity:0}}
+.gt-cfx .hold.flipout{transform:scaleX(0);transition:transform .14s ease-in}
+.gt-cfx .hold.flipin{animation:gtFlipIn .32s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes gtFlipIn{from{transform:scaleX(0)}}
+.gt-cfx .hold.leave{transform:translateY(calc(40px * var(--s))) scale(.4);opacity:0;transition:transform .25s ease-in,opacity .25s}
+.gt-cfx .cap{font-family:var(--pixel, monospace);font-size:calc(6px * var(--s));color:#f4dca0;min-height:calc(6px * var(--s));text-shadow:calc(1px * var(--s)) calc(1px * var(--s)) 0 #000;position:relative;z-index:1}
+.gt-cfx .cap.rare{color:#fff4c8;text-shadow:0 0 calc(4px * var(--s)) #ffd860,0 0 calc(2px * var(--s)) #ff8ab8}
+.gt-cfx .hint{font-family:var(--pixel, monospace);font-size:calc(4px * var(--s));color:#c8b898;min-height:calc(4px * var(--s));text-align:center;position:relative;z-index:1}
+.gt-cfx .flash{position:absolute;inset:0;background:#fff;pointer-events:none;animation:gtFlash .55s ease-out forwards;z-index:3}
+@keyframes gtFlash{from{opacity:.95}to{opacity:0}}
+.gt-cfx .burst{position:absolute;left:50%;top:47%;width:calc(300px * var(--s));height:calc(300px * var(--s));margin:calc(-150px * var(--s)) 0 0 calc(-150px * var(--s));border-radius:50%;pointer-events:none;
+  background:repeating-conic-gradient(#ffd860 0deg 9deg,rgba(255,154,200,.85) 9deg 18deg,#ffd860 18deg 27deg,rgba(154,216,255,.85) 27deg 36deg);
+  -webkit-mask:radial-gradient(circle,rgba(0,0,0,.55) 0%,rgba(0,0,0,0) 68%);mask:radial-gradient(circle,rgba(0,0,0,.55) 0%,rgba(0,0,0,0) 68%);animation:gtSpin 9s linear infinite,gtBurstIn .5s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes gtSpin{to{rotate:360deg}}
+@keyframes gtBurstIn{from{transform:scale(0)}}
+.gt-cfx .stamp{position:absolute;left:73%;top:9%;z-index:4;font-family:var(--pixel, monospace);font-size:calc(9px * var(--s));color:#fff4c8;background:#c8302c;border:calc(1.5px * var(--s)) solid #fff4c8;
+  padding:calc(2px * var(--s)) calc(5px * var(--s));box-shadow:0 0 0 calc(1px * var(--s)) #3a1008,0 calc(2px * var(--s)) 0 #3a1008;transform:translateX(-50%) rotate(12deg);animation:gtStamp .35s cubic-bezier(.2,1.6,.4,1) both;pointer-events:none}
+@keyframes gtStamp{from{transform:translateX(-50%) rotate(12deg) scale(3);opacity:0}}
+.gt-cfx .conf{position:absolute;left:50%;top:45%;width:calc(2px * var(--s));height:calc(3px * var(--s));z-index:2;pointer-events:none;animation:gtConf 1.5s cubic-bezier(.1,.7,.3,1) forwards}
+@keyframes gtConf{to{transform:translate(var(--dx),var(--dy)) rotate(var(--r));opacity:0}}
+.gt-pack{--k:1;position:absolute;left:50%;top:46%;width:calc(96px * var(--k));height:calc(140px * var(--k));margin:calc(-70px * var(--k)) 0 0 calc(-48px * var(--k));box-sizing:border-box;border-radius:calc(3px * var(--k));
+  background:linear-gradient(120deg,#9a98b0 0%,#f4f4ff 22%,#b0aec8 40%,#ffffff 55%,#a4a2bc 72%,#e8e8f8 88%,#8e8ca8 100%);box-shadow:0 calc(4px * var(--k)) calc(10px * var(--k)) rgba(0,0,0,.6);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.gt-pack .band{width:100%;height:46%;background:radial-gradient(ellipse 80% 70% at 50% 50%,#c8202e,#7a0e18 70%,#3a0408);border-top:calc(1.5px * var(--k)) solid #e8c070;border-bottom:calc(1.5px * var(--k)) solid #e8c070;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(3px * var(--k))}
+.gt-pack .band svg{width:58%;height:auto;display:block}
+.gt-pack .band b{font-family:var(--pixel, monospace);font-weight:normal;font-size:calc(5px * var(--k));color:#f4dca0;letter-spacing:.1em}
+.gt-pack .top,.gt-pack .bot{position:absolute;left:0;right:0;height:calc(10px * var(--k));background:repeating-linear-gradient(90deg,#c8c6dc 0 calc(2px * var(--k)),#8e8ca8 calc(2px * var(--k)) calc(4px * var(--k)))}
+.gt-pack .top{top:0;clip-path:polygon(0 0,100% 0,100% 80%,95% 100%,88% 70%,80% 100%,72% 75%,64% 100%,55% 70%,47% 100%,40% 75%,32% 100%,24% 70%,16% 100%,8% 75%,0 100%)}
+.gt-pack .bot{bottom:0}
+.gt-pack.drop{animation:gtDrop .55s linear both}
+@keyframes gtDrop{0%{transform:translateY(calc(-170px * var(--s)))}60%{transform:translateY(0) scale(1,1);animation-timing-function:ease-out}72%{transform:translateY(calc(2px * var(--s))) scale(1.12,.86)}86%{transform:scale(.95,1.06)}100%{transform:none}}
+.gt-pack.wig{animation:gtWig 1.3s ease-in-out infinite}
+.gt-pack.wig.hot{animation:gtWigHot .45s ease-in-out infinite;box-shadow:0 0 calc(10px * var(--k)) calc(2px * var(--k)) #ffd860,0 calc(4px * var(--k)) calc(10px * var(--k)) rgba(0,0,0,.6)}
+@keyframes gtWig{0%,100%{transform:rotate(0)}25%{transform:rotate(-2deg)}75%{transform:rotate(2deg)}}
+@keyframes gtWigHot{0%,100%{transform:rotate(0) scale(1)}20%{transform:rotate(-5deg) scale(1.03)}40%{transform:rotate(4deg)}60%{transform:rotate(-4deg) scale(1.03)}80%{transform:rotate(5deg)}}
+.gt-pack .top.tear{animation:gtTear .45s ease-in forwards}
+@keyframes gtTear{to{transform:translate(calc(40px * var(--s)),calc(-50px * var(--s))) rotate(28deg);opacity:0}}
+.gt-pack .bit{position:absolute;top:calc(8px * var(--k));width:calc(2px * var(--s));height:calc(2px * var(--s));background:#e8e8f8;animation:gtConf .7s ease-out forwards}
+.gt-pack.gone{transform:translateY(calc(70px * var(--s)));opacity:0;transition:transform .35s ease-in,opacity .35s}
+@media (prefers-reduced-motion: reduce){.gt-cfx,.gt-cfx *{animation:none !important;transition:none !important}}
 .gt-cardview{position:absolute;inset:0;z-index:9;display:none;flex-direction:column;align-items:center;justify-content:center;gap:calc(3px * var(--s));background:rgba(10,6,8,.78)}
 .gt-card-cap{font-family:var(--pixel, monospace);font-size:calc(6px * var(--s));color:#f4dca0;min-height:calc(6px * var(--s));text-shadow:calc(1px * var(--s)) calc(1px * var(--s)) 0 #000}
 .gt-card-cap.rare{color:#fff4c8;text-shadow:0 0 calc(4px * var(--s)) #ffd860,0 0 calc(2px * var(--s)) #ff8ab8}
@@ -4467,7 +4535,7 @@ class Game {
       c.appendChild(document.createTextNode(n + " pt" + (n === 1 ? "" : "s"))); c.title = s.name + " is on shift" + (s.token ? "" : " (offline test badge: points stay in this browser)"); h.appendChild(c);
     }
     { // always there, 0 included (Joe 10/15)
-      const c = document.createElement("span"); c.className = "chip tok" + (pulse ? " pulse" : ""); this.tokTag(c, tokens); c.title = tokens + " gift shop tokens"; h.appendChild(c);
+      const c = document.createElement("span"); c.className = "chip tok gt-wallet" + (pulse ? " pulse" : ""); this.tokTag(c, this.walletNow()); c.title = tokens + " gift shop tokens"; h.appendChild(c);
     }
     h.style.display = h.children.length ? "flex" : "none";
   }
@@ -6360,7 +6428,7 @@ class Game {
     box.innerHTML = "";
     const head = document.createElement("div"); head.className = "gt-shop-head";
     const t1 = document.createElement("span"); t1.textContent = "GIFT SHOP";
-    const t2 = document.createElement("span"); this.tokTag(t2, this.progress.tokens || 0, "WALLET ");
+    const t2 = document.createElement("span"); t2.className = "gt-wallet"; t2.dataset.pre = "WALLET "; this.tokTag(t2, this.walletNow(), "WALLET ");
     head.appendChild(t1); head.appendChild(t2); box.appendChild(head);
     const sub = document.createElement("div"); sub.style.textAlign = "center"; sub.textContent = this.tx("shop.stock").join(" "); box.appendChild(sub); // the stock rotates
     const split = document.createElement("div"); split.className = "gt-split"; box.appendChild(split);
@@ -6389,7 +6457,7 @@ class Game {
     this.shopSel = Math.max(0, Math.min(rows.length - 1, this.shopSel)); box.innerHTML = "";
     const head = document.createElement("div"); head.className = "gt-shop-head";
     const t1 = document.createElement("span"); [...this.tx("sat.window").join(" ").toUpperCase()].forEach((ch, i) => { const c = document.createElement("span"); c.className = "jk"; c.textContent = ch === " " ? "\u00a0" : ch; c.style.transform = "rotate(" + ((hash(i, 7) % 15) - 7) + "deg) translateY(" + ((hash(i, 3) % 3) - 1) + "px)"; t1.appendChild(c); });
-    const t2 = document.createElement("span"); this.tokTag(t2, this.progress.tokens || 0, "WALLET ");
+    const t2 = document.createElement("span"); t2.className = "gt-wallet"; t2.dataset.pre = "WALLET "; this.tokTag(t2, this.walletNow(), "WALLET ");
     head.appendChild(t1); head.appendChild(t2); box.appendChild(head);
     const split = document.createElement("div"); split.className = "gt-split"; box.appendChild(split);
     const list = document.createElement("div"); list.className = "gt-shop-list"; split.appendChild(list);
@@ -6418,10 +6486,10 @@ class Game {
     else if (t < it.price) this.shopMsg = this.tx("sat.broke", { n: it.price }).join(" ");
     else if (this.shopConfirm !== it.id) { this.shopConfirm = it.id; this.shopMsg = "Buy " + it.name + " for " + it.price + " tokens? Press A again."; }
     else if (it.base === "card") { // a card: into your binder (not Souvenirs), and you see it right away
-      this.progress.tokens = t - it.price; (this.progress.bluuCards || (this.progress.bluuCards = [])).push(it.id); this.shopConfirm = null; this.shopMsg = ""; this.updateHud(true);
+      this.progress.tokens = t - it.price; this.countDown(t); (this.progress.bluuCards || (this.progress.bluuCards = [])).push(it.id); this.shopConfirm = null; this.shopMsg = ""; this.updateHud(true);
       const p = this.pack.pieces.find(q => q.id === it.card); if (p) { this.addCard(p.id, it.cardKind); this.showCards([{ p, kind: it.cardKind, had: this.lastHad }], "shop"); return; }
     }
-    else { this.progress.tokens = t - it.price; own.push(it); this.progress.tally.popups = (this.progress.tally.popups || 0) + 1; this.saveProgress(); this.updateHud(true); this.shopConfirm = null; this.shopMsg = this.tx("sat.bought", { item: it.name }).join(" "); }
+    else { this.progress.tokens = t - it.price; this.countDown(t); own.push(it); this.progress.tally.popups = (this.progress.tally.popups || 0) + 1; this.saveProgress(); this.updateHud(true); this.shopConfirm = null; this.shopMsg = this.tx("sat.bought", { item: it.name }).join(" "); }
     this.renderShop();
   }
   shopSelect() {
@@ -6441,14 +6509,14 @@ class Game {
     if (it.cardSlot) { // a card or a pack: as many as you like; they open right away
       if (t < it.price) this.shopMsg = "You need " + (it.price - t) + " more token" + (it.price - t === 1 ? "" : "s") + ". Chores earn tokens.";
       else if (this.shopConfirm !== it.id) { this.shopConfirm = it.id; this.shopMsg = "Buy a " + (it.cardSlot === "pack" ? "pack of three" : "card") + " for " + it.price + " tokens? Press A again."; }
-      else { this.progress.tokens = t - it.price; this.shopConfirm = null; this.shopMsg = ""; this.updateHud(); const got = this.buyCards(it.cardSlot); this.showCards(got, "shop"); return; }
+      else { this.progress.tokens = t - it.price; this.countDown(t); this.shopConfirm = null; this.shopMsg = ""; this.updateHud(); const got = this.buyCards(it.cardSlot); if (got.length) this.cardFx(got, it.cardSlot); else this.renderShop(); return; }
       this.renderShop(); return;
     }
     if (this.progress.items.includes(it.id)) this.shopMsg = "You already have this one.";
     else if (t < it.price) this.shopMsg = "You need " + (it.price - t) + " more token" + (it.price - t === 1 ? "" : "s") + ". Chores earn tokens.";
     else if (this.shopConfirm !== it.id) { this.shopConfirm = it.id; this.shopMsg = "Buy " + it.name + " for " + it.price + " tokens? Press A again."; }
     else {
-      this.progress.tokens = t - it.price; this.progress.items.push(it.id); this.saveProgress(); this.updateHud();
+      this.progress.tokens = t - it.price; this.countDown(t); this.progress.items.push(it.id); this.saveProgress(); this.updateHud();
       this.shopConfirm = null; this.shopMsg = "You bought " + it.name + "! " + (this.staff ? "It's in the staff room's collection cabinet." : "It's in your collection.");
     }
     this.renderShop();
@@ -6515,7 +6583,7 @@ class Game {
     ];
   }
   testPrep(t) { // the day and the quarter the stop needs
-    this.closeAll(); if (this.el.shop) this.el.shop.style.display = "none"; if (this.el.album) this.el.album.style.display = "none"; if (this.el.cardView) this.el.cardView.style.display = "none"; if (this.el.choice) this.el.choice.style.display = "none";
+    this.closeAll(); if (this.el.shop) this.el.shop.style.display = "none"; if (this.el.album) this.el.album.style.display = "none"; if (this.el.cardView) this.el.cardView.style.display = "none"; if (this.el.cfx) { this.el.cfx.style.display = "none"; this.cfx = null; } if (this.el.choice) this.el.choice.style.display = "none";
     if (t.day !== undefined && this.weekday() !== t.day) this.setDay(t.day);
     if (t.beat !== undefined) { const d = this.director(); if (d.over || d.beat !== t.beat) this.setVisitClock(t.beat * d.minutes / 4 + 0.05); }
   }
@@ -6560,7 +6628,8 @@ class Game {
     const merch = [...(gift && (!feat || gift.id !== feat.id) ? [gift] : []), ...this.stockToday(off).filter(it => !feat || it.id !== feat.id)].slice(0, 2);
     return [feat, ...merch, ...(this.pack.settings.cards.on && this.cardList().length ? this.cardItems() : [])].filter(Boolean);
   }
-  buyCards(slot) { const out = []; for (let i = 0; i < (slot === "pack" ? 3 : 1); i++) { const c = this.randomCard(slot === "pack" ? this.pack.settings.cards.packRare : 0); if (c) out.push(c); } out.forEach(c => { this.addCard(c.p.id, c.kind); c.had = this.lastHad; }); return out; }
+  buyCards(slot) { const out = []; for (let i = 0; i < (slot === "pack" ? 3 : 1); i++) { const c = this.randomCard(slot === "pack" ? this.pack.settings.cards.packRare : 0); if (c) out.push(c); } if (this.forceRare && out.length && !out.some(c => c.kind === "r")) out[(Math.random() * out.length) | 0].kind = "r"; // the curator's preview: Rare cards
+    out.forEach(c => { this.addCard(c.p.id, c.kind); c.had = this.lastHad; }); return out; }
   cardIcon(kind) { // 16×16 for the shop list and the stands: a card (red, or gold for a rare), or a foil pack
     const ck = "cardicon|" + kind; if (this.cache[ck]) return this.cache[ck];
     const a = mk(16, 16);
@@ -6611,6 +6680,113 @@ class Game {
     if (++this.cardI < this.cardQ.length) { this.renderCardView(); return; }
     this.el.cardView.style.display = "none"; this.el.cardView.innerHTML = ""; const back = this.cardBack; this.cardQ = null;
     if (back === "shop") { this.mode = "shop"; this.renderShop(); } else if (back === "binder") { this.mode = "binder"; this.renderBinder(); } else { this.mode = "walk"; this.inputLock = true; }
+  }
+  /* ----- buying cards, with juice (Joe 10/15) -----
+     A card: the screen dims and five card backs slide up from the bottom, one after another. Pick one (left and right, A)
+     and it flips over big. A pack: it drops in and wiggles (harder, and glowing, with a rare inside); A tears it open and
+     its cards fan out face down, then each flips over big in turn. A rare one builds up first (it trembles and glows),
+     then flips with a flash, a spinning sunburst, confetti, a RARE! stamp and a shake. Then back to the shop. */
+  goqMark() { // the gold GOQ letters, without MUSEUM (the card backs, the pack)
+    const L = '<path d="M86 26 A34 34 0 1 0 96 50 L66 50"/><circle cx="150" cy="50" r="34"/><circle cx="238" cy="50" r="34"/><path d="M247 62 L272 92"/>';
+    return '<svg viewBox="0 0 300 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id="goqGoldB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbe7a8"/><stop offset=".55" stop-color="#e8c070"/><stop offset="1" stop-color="#a87a30"/></linearGradient></defs>' +
+      '<g fill="none" stroke="#000" stroke-opacity=".55" stroke-width="12" transform="translate(2,3)">' + L + '</g><g fill="none" stroke="url(#goqGoldB)" stroke-width="12">' + L + '</g></svg>';
+  }
+  cardBack(k) { const b = document.createElement("div"); b.className = "gt-cback"; b.style.setProperty("--k", k); b.innerHTML = this.goqMark(); return b; }
+  cardCap(c) {
+    const own = (this.cardsOwned()[c.p.id] || {})[c.kind] || 0, had = c.had || { c: 0, r: 0, f: 0 }, any = had.c + had.r + had.f;
+    return had[c.kind] ? "REPEAT · YOU HAVE " + (c.had ? had[c.kind] + 1 : own) : c.kind === "r" ? (any ? "RARE!" : "NEW · RARE!") : any ? "REPEAT · YOU HAVE THE " + (had.r ? "RARE" : "FAKE") : "NEW!";
+  }
+  cardFx(list, slot) {
+    const v = this.el.cfx, S = this.scale || 1; v.innerHTML = ""; v.className = "gt-cfx"; v.style.display = "block"; this.el.shop.style.display = "none";
+    const F = this.cfx = { list, pack: slot === "pack", sel: 2, i: 0, busy: true, id: (this.cfx ? this.cfx.id : 0) + 1 };
+    this.mode = "cfx"; requestAnimationFrame(() => v.classList.add("dim"));
+    F.big = document.createElement("div"); F.big.className = "big"; v.appendChild(F.big);
+    F.row = document.createElement("div"); F.row.className = "row" + (F.pack ? " fan" : ""); v.appendChild(F.row);
+    if (!F.pack) { // five backs to pick from (whichever you pick is your card)
+      F.phase = "pick"; F.slots = [];
+      for (let i = 0; i < 5; i++) { const sl = document.createElement("div"); sl.className = "slot in"; sl.style.setProperty("--d", (0.08 + i * 0.09) + "s"); sl.appendChild(this.cardBack(S * 0.4)); F.row.appendChild(sl); F.slots.push(sl);
+        sl.addEventListener("click", e => { e.stopPropagation(); if (F.phase !== "pick" || F.busy) return; if (F.sel === i) this.cfxPick(); else { F.sel = i; this.cfxSel(); } }); }
+      this.cfxHint("Pick a card"); this.cfxLater(650, () => { F.busy = false; this.cfxSel(); });
+      return;
+    }
+    F.phase = "pack"; const hot = list.some(c => c.kind === "r"), pk = F.packEl = document.createElement("div"); pk.className = "gt-pack drop"; pk.style.setProperty("--k", S * 0.62);
+    pk.innerHTML = '<div class="top"></div><div class="band">' + this.goqMark() + '<b>CARD PACK</b></div><div class="bot"></div>'; v.appendChild(pk);
+    this.cfxLater(600, () => { pk.className = "gt-pack wig" + (hot ? " hot" : ""); F.busy = false; this.cfxHint("A: open it"); });
+  }
+  cfxLater(ms, fn) { const id = this.cfx && this.cfx.id; setTimeout(() => { if (this.cfx && this.cfx.id === id) fn(); }, REDUCED_MOTION ? Math.min(ms, 120) : ms); }
+  cfxHint(t) { const F = this.cfx; let h = this.el.cfx.querySelector(":scope > .hint"); if (!h) { h = document.createElement("div"); h.className = "hint"; h.style.cssText = "position:absolute;left:0;right:0;bottom:calc(5px * var(--s))"; this.el.cfx.appendChild(h); } h.textContent = t || ""; }
+  cfxSel() { const F = this.cfx; F.slots.forEach((sl, i) => sl.classList.toggle("on", i === F.sel)); }
+  cfxKey(has) {
+    const F = this.cfx; if (!F || F.busy) return;
+    if (F.phase === "pick") { const n = F.sel; if (has("left")) F.sel = Math.max(0, F.sel - 1); if (has("right")) F.sel = Math.min(4, F.sel + 1); if (F.sel !== n) this.cfxSel(); if (has("a")) this.cfxPick(); return; }
+    if (!(has("a") || has("b") || has("start"))) return;
+    if (F.phase === "pack") this.cfxTear();
+    else if (F.phase === "shown") this.cfxPut();
+    else if (F.phase === "fan") this.cfxReveal();
+    else if (F.phase === "done") this.cfxClose();
+  }
+  cfxPick() { // the others slide away; yours flips over and comes up big
+    const F = this.cfx; F.busy = true; this.cfxHint("");
+    F.slots.forEach((sl, i) => { if (i !== F.sel) { sl.classList.remove("in"); sl.classList.add("out"); } else sl.classList.add("away"); });
+    this.cfxLater(170, () => this.cfxBig(F.list[0]));
+  }
+  cfxTear() { // rip the top off, paper bits fly, the pack drops away and its cards fan out face down
+    const F = this.cfx, pk = F.packEl; F.busy = true; this.cfxHint(""); pk.className = "gt-pack"; pk.querySelector(".top").classList.add("tear");
+    for (let i = 0; i < 7; i++) { const b = document.createElement("i"); b.className = "bit"; b.style.left = (10 + i * 12) + "%"; b.style.setProperty("--dx", "calc(" + ((i - 3) * 9) + "px * var(--s))"); b.style.setProperty("--dy", "calc(" + (-18 - (i % 3) * 8) + "px * var(--s))"); b.style.setProperty("--r", (i * 70) + "deg"); pk.appendChild(b); }
+    this.cfxLater(380, () => {
+      pk.classList.add("gone"); F.slots = [];
+      F.list.forEach((c, i) => { const sl = document.createElement("div"); sl.className = "slot in"; const r = (i - (F.list.length - 1) / 2) * 9; sl.style.cssText = "--d:" + (0.06 + i * 0.1) + "s;rotate:" + r + "deg;margin-bottom:calc(" + (-Math.abs(r) / 3) + "px * var(--s))"; sl.appendChild(this.cardBack((this.scale || 1) * 0.42)); F.row.appendChild(sl); F.slots.push(sl); });
+      this.cfxLater(700, () => { F.phase = "fan"; F.busy = false; this.cfxHint("A: flip"); });
+    });
+  }
+  cfxReveal() { const F = this.cfx, sl = F.slots[F.i]; F.busy = true; this.cfxHint(""); sl.classList.remove("in"); sl.classList.add("on"); this.cfxLater(140, () => { sl.classList.add("away"); this.cfxLater(160, () => this.cfxBig(F.list[F.i])); }); }
+  cfxBig(c) { // big in the middle: the back pops up, then flips to the card (a rare builds up first)
+    const F = this.cfx, S = this.scale || 1, B = F.big; B.innerHTML = "";
+    const cap = document.createElement("div"); cap.className = "cap"; B.appendChild(cap);
+    const hold = document.createElement("div"); hold.className = "hold pop"; hold.style.setProperty("--s", S * 0.82); const back = this.cardBack(S * 0.82); hold.appendChild(back); B.appendChild(hold);
+    const hint = document.createElement("div"); hint.className = "hint"; B.appendChild(hint); F.hold = hold;
+    const rare = c.kind === "r";
+    if (rare) this.cfxLater(260, () => back.classList.add("glow"));
+    this.cfxLater(rare ? 1250 : 420, () => {
+      hold.className = "hold flipout";
+      this.cfxLater(150, () => {
+        hold.innerHTML = ""; hold.appendChild(this.cardElement(c.p, c.kind)); hold.className = "hold flipin";
+        cap.textContent = this.cardCap(c); cap.className = "cap" + (rare ? " rare" : "");
+        if (rare) this.cfxRare();
+        const last = F.i >= F.list.length - 1;
+        this.cfxLater(rare ? 900 : 350, () => { F.phase = "shown"; F.busy = false; hint.textContent = F.pack ? (F.i + 1) + " / " + F.list.length + (last ? "   A: done" : "   A: next") : "A: done"; });
+      });
+    });
+  }
+  cfxRare() { // flash, sunburst, confetti, the stamp, a shake
+    const v = this.el.cfx, add = (cls, parent) => { const e = document.createElement("div"); e.className = cls; (parent || v).appendChild(e); return e; };
+    add("flash"); this.cfxLater(600, () => { const f = v.querySelector(":scope > .flash"); if (f) f.remove(); });
+    const burst = document.createElement("div"); burst.className = "burst"; this.cfx.big.insertBefore(burst, this.cfx.big.firstChild); burst.style.position = "absolute";
+    const st = add("stamp"); st.textContent = "RARE!";
+    const cols = ["#ffd860", "#ff8ab8", "#8ad8ff", "#c8ffb0", "#fff4c8", "#e8c070"];
+    for (let i = 0; i < 28; i++) { const e = add("conf"); const a = Math.random() * Math.PI * 2, r = 50 + Math.random() * 70; e.style.background = cols[i % cols.length]; e.style.setProperty("--dx", "calc(" + Math.round(Math.cos(a) * r) + "px * var(--s))"); e.style.setProperty("--dy", "calc(" + Math.round(Math.sin(a) * r * 0.7 + 30) + "px * var(--s))"); e.style.setProperty("--r", Math.round(Math.random() * 720) + "deg"); e.style.animationDelay = (Math.random() * 0.12) + "s"; }
+    v.classList.remove("shake"); void v.offsetWidth; v.classList.add("shake");
+  }
+  cfxPut() { // the big card goes down into its place in the fan (a pack), or you're done (a single card)
+    const F = this.cfx;
+    if (!F.pack) { this.cfxClose(); return; }
+    F.busy = true; F.hold.className = "hold leave"; this.el.cfx.querySelectorAll(".stamp,.conf").forEach(e => e.remove());
+    this.cfxLater(240, () => {
+      F.big.innerHTML = ""; const sl = F.slots[F.i], c = F.list[F.i]; sl.innerHTML = ""; const w = document.createElement("div"); w.style.setProperty("--s", (this.scale || 1) * 0.42); w.appendChild(this.cardElement(c.p, c.kind)); sl.appendChild(w); sl.className = "slot face";
+      if (++F.i < F.list.length) { this.cfxLater(200, () => { F.phase = "fan"; F.busy = false; this.cfxHint("A: flip"); }); return; }
+      this.cfxLater(250, () => { F.phase = "done"; F.busy = false; this.cfxHint("A: done"); });
+    });
+  }
+  cfxClose() { const v = this.el.cfx; this.cfx = null; v.style.display = "none"; v.innerHTML = ""; v.className = "gt-cfx"; this.mode = "shop"; this.el.shop.style.display = "block"; this.renderShop(); }
+  /* The wallet counts down when you spend (Joe 10/15): the shop's WALLET and the corner count tick from what you had to what's left. */
+  countDown(from) { const to = this.progress.tokens || 0; if (REDUCED_MOTION || !(from > to)) return; this.walletA = { from, to, t0: performance.now(), dur: Math.min(1000, 160 + 60 * (from - to)) }; this.walletTick(); }
+  walletNow() { const A = this.walletA; if (!A) return this.progress.tokens || 0; const k = (performance.now() - A.t0) / A.dur; if (k >= 1 || A.to !== (this.progress.tokens || 0)) { this.walletA = null; return this.progress.tokens || 0; } return Math.round(A.from - (A.from - A.to) * k); }
+  walletTick() {
+    if (this._wRaf || typeof requestAnimationFrame === "undefined") return;
+    const step = () => { this._wRaf = 0; const n = this.walletNow();
+      this.wrap.querySelectorAll(".gt-wallet").forEach(el => { if (el.dataset.n === String(n)) return; this.tokTag(el, n, el.dataset.pre || ""); el.dataset.n = n; el.classList.remove("tick"); void el.offsetWidth; el.classList.add("tick"); });
+      if (this.walletA) this._wRaf = requestAnimationFrame(step); };
+    this._wRaf = requestAnimationFrame(step);
   }
   /* The binder (My Stuff → Cards): a slot for every card, in order. The ones you have show their art; a rare gets a gold edge. */
   openBinder() { if (!this.cardList().length) { this.say(this.tx("card.none")); return; } this.mode = "binder"; this.binderSel = this.binderSel || 0; this.el.album.style.display = "block"; this.renderBinder(); }
@@ -6791,7 +6967,7 @@ class Game {
   renderCafe() {
     const m = this.cm, box = this.el.cafe; box.innerHTML = "";
     const head = document.createElement("div"); head.className = "gt-shop-head";
-    const t1 = document.createElement("span"); t1.textContent = "CAFE"; const t2 = document.createElement("span"); this.tokTag(t2, this.progress.tokens || 0, "WALLET ");
+    const t1 = document.createElement("span"); t1.textContent = "CAFE"; const t2 = document.createElement("span"); t2.className = "gt-wallet"; t2.dataset.pre = "WALLET "; this.tokTag(t2, this.walletNow(), "WALLET ");
     head.appendChild(t1); head.appendChild(t2); box.appendChild(head);
     const split = document.createElement("div"); split.className = "gt-split"; box.appendChild(split);
     const list = document.createElement("div"); list.className = "gt-shop-list"; split.appendChild(list);
@@ -6825,7 +7001,7 @@ class Game {
     if (price && (this.progress.tokens || 0) < price) { m.msg = "That's " + price + " token" + (price > 1 ? "s" : "") + ". Chores earn tokens."; this.renderCafe(); return; }
     this.closeCafe();
     const serve = mug => {
-      if (price) { this.progress.tokens -= price; this.saveProgress(); this.updateHud(); }
+      if (price) { this.progress.tokens -= price; this.countDown(this.progress.tokens + price); this.saveProgress(); this.updateHud(); }
       this.drink = { kind: d.id === "week" ? 3 : i, name: d.name, sips: 0, color: d.color || "", iced: !!d.iced, mug }; this.sipClock = 240; // the first sip a few seconds after you get it // mug: "real" or "fake" (your travel mug), "" (a cup)
       if (d.id === "cocoa") this.quest("cocoa");
       this.progress.tally.drinks = (this.progress.tally.drinks || 0) + 1; this.bump(this.progress.stats.drinks, d.id); this.saveProgress();
@@ -6844,7 +7020,7 @@ class Game {
     this.choose(this.tx("popcorn.ask", { price }).join(" "), ["Yes", "No"], k => {
       if (k !== 0) return;
       if (!this.curator && (this.progress.tokens || 0) < price) { this.say(this.tx("popcorn.poor", { price })); return; }
-      if (!this.curator) { this.progress.tokens -= price; this.saveProgress(); this.updateHud(true); }
+      if (!this.curator) { this.progress.tokens -= price; this.countDown(this.progress.tokens + price); this.saveProgress(); this.updateHud(true); }
       this.drink = { kind: 0, name: "Popcorn", popcorn: true, sips: 0, color: "", iced: false }; this.sipClock = 240; this.say(this.tx("popcorn.got"));
     }, 1);
   }
@@ -7044,8 +7220,7 @@ class Game {
   followStep(n) {
     if (n.moving) { this.advance(n); return; }
     const p = this.player, d = Math.abs(n.x - p.x) + Math.abs(n.y - p.y), t = this.trail && this.trail.room === this.room.id ? this.trail : null;
-    if (d <= 1 && !p.moving) { n.lost = 0; if (n.behind) { n.behind = false; n.hopT = this.t; } return; } // caught up: a tiny hop
-    if (d > 2) n.behind = true;
+    if (d <= 1 && !p.moving) { n.lost = 0; return; }
     let dir = null;
     if (t && Math.abs(t.x - n.x) + Math.abs(t.y - n.y) === 1) dir = t.x > n.x ? "right" : t.x < n.x ? "left" : t.y > n.y ? "down" : "up";
     else if (d > 1) {
@@ -7964,7 +8139,7 @@ class Game {
       if (c === this.player) {
         const e = this.room.events[nx + "," + ny];
         if (e && e.bump && !this.inputLock) { this.inputLock = true; c.walking = false; this.runEvent(e); return false; }
-        if (c.bumpT <= 0) { c.bumpT = 16; c.step = !c.step; c.bumpAt = this.t; c.bumpDir = d; if (!this.full && this.progress.stats && !e) this.progress.stats.bumps++; } // walked into a wall (a little nudge and squish, in walkLook)
+        if (c.bumpT <= 0) { c.bumpT = 16; c.step = !c.step; if (!this.full && this.progress.stats && !e) this.progress.stats.bumps++; } // walked into a wall
       }
       return false;
     }
@@ -7980,7 +8155,6 @@ class Game {
     if ((c.prog += (c === this.player && this.segway) || behind ? 2 : 1) >= T) {
       c.x += DIRS[c.dir][0]; c.y += DIRS[c.dir][1]; c.prog = 0; c.moving = false;
       if (c === this.player) {
-        c.landT = this.t; // a one-pixel squash as the foot lands
         if (!this.full && this.progress.stats) this.progress.stats.steps++;
         if (this.drink && this.drink.mug === "fake" && (this.drink.leak = (this.drink.leak || 0) + 1) >= 6) { this.drink = null; setTimeout(() => this.say(this.tx("gear.leak")), 50); } // a fake travel mug leaks (and goes back in your bag, empty)
         this.stepInDark(); this.zoneCheck();
@@ -8057,6 +8231,7 @@ class Game {
       return;
     }
     if (this.mode === "card") { if (has("a") || has("b") || has("start")) this.cardNext(); return; }
+    if (this.mode === "cfx") { this.cfxKey(has); return; }
     if (this.mode === "binder") {
       const n = this.cardList().length, cols = 6;
       let i = this.binderSel;
@@ -8159,11 +8334,7 @@ class Game {
       if (pressA) this.bufA = true;
       if (this.path && this.heldDir()) { this.path = null; this.pathAct = null; }
       if (this.path) { if (this.advance(p) && this.path) this.followPath(); return; }
-      if (this.advance(p)) {
-        const d = this.heldDir(), was = p.dir;
-        if (d && !this.inputLock) { if (this.tryMove(p, d) && d !== was) this.puff(p, "turn"); }
-        else { p.walking = false; this.puff(p, "stop"); }
-      }
+      if (this.advance(p)) { const d = this.heldDir(); if (d && !this.inputLock) this.tryMove(p, d); else p.walking = false; }
       return;
     }
     if (p.bumpT > 0) p.bumpT--;
@@ -8176,39 +8347,7 @@ class Game {
     if (!d || this.inputLock) return;
     if (d !== p.dir && !p.walking && p.turnT === 0) { p.dir = d; p.turnT = 6; return; }
     if (p.turnT > 1) { p.turnT--; return; }
-    p.turnT = 0; p.walking = true; if (this.tryMove(p, d)) { p.goT = this.t; this.puff(p, "start"); } // a little stretch and a kick of dust as you set off
-  }
-  /* ----- walking juice (Joe 10/15) -----
-     Small, because it's every step: a puff of dust at your feet when you set off, stop or change direction, a one-pixel
-     squash each time a foot lands and a stretch as you start, and a nudge and squish when you walk into a wall. Followers
-     hop when they catch up to you. All off with reduced motion. */
-  puff(c, why) {
-    if (REDUCED_MOTION || this.segway) return;
-    const q = this.pos(c), [dx, dy] = DIRS[c.dir], back = why === "start" ? -5 : why === "stop" ? 3 : 0;
-    (this.puffs = this.puffs || []).push({ x: q.x + 8 + dx * back, y: q.y + 14 + dy * back, t0: this.t, dir: c.dir, room: this.room.id });
-    if (this.puffs.length > 12) this.puffs.shift();
-  }
-  drawPuffs(ctx, cx, cy) {
-    const P = this.puffs; if (!P || !P.length) return;
-    this.puffs = P.filter(o => this.t - o.t0 < 18 && o.room === this.room.id);
-    for (const o of this.puffs) {
-      const k = this.t - o.t0, side = o.dir === "left" || o.dir === "right" ? [0, 1] : [1, 0], spread = 1 + k * 0.25, up = Math.floor(k / 6);
-      ctx.globalAlpha = 0.7 * (1 - k / 18); ctx.fillStyle = "#e8e2d4";
-      for (const s of [-1, 1]) { const x = Math.round(o.x - cx + side[0] * s * spread * 2), y = Math.round(o.y - cy + side[1] * s * spread - up), z = k < 6 ? 2 : 1; ctx.fillRect(x - (z >> 1), y - (z >> 1), z, z); }
-      if (k < 10) ctx.fillRect(Math.round(o.x - cx), Math.round(o.y - cy - 1 - up), 1, 1);
-    }
-    ctx.globalAlpha = 1;
-  }
-  /* How you're squashed or nudged right now: { kx, ky, ox, oy } around your feet. */
-  walkLook(c) {
-    const id = { kx: 1, ky: 1, ox: 0, oy: 0 };
-    if (REDUCED_MOTION || this.full || c.sitting || (c === this.player && this.segway)) return id;
-    const t = this.t, w = 1 / 16;
-    if (c.bumpAt !== undefined && t - c.bumpAt < 6) { const [dx, dy] = DIRS[c.bumpDir] || [0, 0], k = t - c.bumpAt, n = k < 3 ? 1 : 0, sq = k < 4;
-      return { kx: sq ? (dx ? 1 - w : 1 + w) : 1, ky: sq ? (dy ? 1 - w : 1 + w) : 1, ox: dx * n, oy: dy * n }; }
-    if (c.goT !== undefined && t - c.goT < 5) return { kx: 1 - w, ky: 1 + w, ox: 0, oy: 0 };
-    if (c.landT !== undefined && t - c.landT < 4) return { kx: 1 + w, ky: 1 - w, ox: 0, oy: 0 };
-    return id;
+    p.turnT = 0; p.walking = true; this.tryMove(p, d);
   }
   interact() {
     const p = this.player, [dx, dy] = DIRS[p.dir], fx = p.x + dx, fy = p.y + dy;
@@ -10016,7 +10155,6 @@ class Game {
     if (r.featuredAt) this.drawFeatured(r, cx, cy);
     const shelf = r.props.find(p => p.mugShelf);
     if (shelf && this.progress.mug === todayISO()) this.drawSlot("usher_mug", 0, 0, (shelf.x + 1) * T + 6 - cx, shelf.y * T - 3 - cy);
-    if (!full) this.drawPuffs(ctx, cx, cy); // dust at your feet, under everyone
     const chars = (full ? (full.noPeople ? [] : r.npcs.slice()) : [this.player, ...r.npcs]).sort((a, b) => this.pos(a).y - this.pos(b).y);
     for (const c of chars) {
       const p = this.pos(c), prog = c.moving ? c.prog : c.bumpT > 0 ? 16 - c.bumpT : -1;
@@ -10025,12 +10163,10 @@ class Game {
       const sheet = c === this.player ? this.playerSheet(c.sheet) : c.sheet;
       if (c === this.player && this.segway && !c.sitting) { const pp3 = this.pos(c); this.drawSlot("segway", 0, 0, Math.round(pp3.x - cx), Math.round(pp3.y - cy - 1)); }
       const pk = c.pose ? this.t - c.pose.t0 : 999, jump = c.pose && /^(startled|guard|pose)$/.test(c.pose.kind) && pk < 14 ? Math.round(Math.sin(Math.PI * pk / 14) * 3) : 0; // a little jump when photographed
-      const hop = (c.react && c.react.how === "loved" && this.t - c.react.t0 < 48 ? Math.round(Math.abs(Math.sin((this.t - c.react.t0) / 8)) * 4) : 0) + jump - (c.pose && c.pose.kind === "bow" && pk > 8 && pk < 50 ? 1 : 0) + (c.hopT !== undefined && this.t - c.hopT < 12 && !REDUCED_MOTION ? Math.round(Math.sin(Math.PI * (this.t - c.hopT) / 12) * 2) : 0); // a happy hop; the usher's bow dips; a follower catching up
+      const hop = (c.react && c.react.how === "loved" && this.t - c.react.t0 < 48 ? Math.round(Math.abs(Math.sin((this.t - c.react.t0) / 8)) * 4) : 0) + jump - (c.pose && c.pose.kind === "bow" && pk > 8 && pk < 50 ? 1 : 0); // a happy hop; the usher's bow dips
       const sx = Math.round(p.x - cx), sy = Math.round(p.y - cy - 4) + (c.sitting ? 2 : 0) - (c === this.player && this.segway && !c.sitting ? 4 : 0) - hop;
       const cup = c === this.player ? this.drink : c.drink, cupFirst = cup && c.dir === "up";
       const bagAt = c.bag && !c.sitting ? [sx + { down: 1, up: 9, left: 9, right: -1 }[c.dir], sy + 9] : null, bagFirst = bagAt && c.dir !== "down"; // a shop bag hangs at their side
-      const wl = c === this.player ? this.walkLook(c) : null, squish = wl && (wl.kx !== 1 || wl.ky !== 1 || wl.ox || wl.oy); // your walk's squash and stretch: everything you're wearing and holding squashes with you
-      if (squish) { ctx.save(); ctx.translate(sx + 8 + wl.ox, sy + 16 + wl.oy); ctx.scale(wl.kx, wl.ky); ctx.translate(-(sx + 8), -(sy + 16)); }
       if (bagFirst) this.drawSlot("shop_bag", 0, 0, ...bagAt);
       const SI = this.side && this.side.item, held = SI && !c.sitting && ((c === this.player && this.carryItem) || (c.itemPair === "taker" && SI.phase >= 2 && !SI.got)) ? SI.kind : -1; // the break room mix-up: the item in hand
       const heldAt = held >= 0 ? [sx + { down: 9, up: 1, left: 1, right: 9 }[c.dir], sy + 9] : null, heldFirst = heldAt && c.dir === "up";
@@ -10071,7 +10207,6 @@ class Game {
         const ox = { down: 4, up: 4, left: 0, right: 8 }[c.dir]; if (c.dir !== "up") this.drawSlot(this.using("case") ? "phone_case" : "phone", 0, 0, sx + ox, sy + 4);
       }
       if (c === this.player && this.asleep && c.sitting && this.t % 120 < 90) { const zy = Math.floor((this.t % 120) / 30); ctx.fillStyle = "#f8f8f0"; ctx.font = "6px monospace"; ctx.fillText("z", sx + 12 + zy, sy - zy * 3); }
-      if (squish) ctx.restore();
       const bub = c.leaving || this.full ? -1 : c.tutId ? (!c.tutShown && !c.follow ? 0 : -1) : c.back ? 1 : c.cur && !c.follow ? 0 : -1; // "?" curious, "!" back to tell you how it went
       if (c.react && !this.full) this.drawReaction(c, sx, sy);
       if (c.pose && !this.full) { // the photo reaction's bubble, fading out at the end
@@ -10151,7 +10286,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 67";
+const VERSION = "2026-11-18 cards 68";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

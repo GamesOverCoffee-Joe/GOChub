@@ -489,14 +489,16 @@ Game juice: small touches that make things feel good. Each thing gets one size o
 
 Everything follows reduced motion (still pictures, no shake), like the token moment.
 
-### **Walking** *(built, cards 67)*
+### **Walking** *(tried in cards 67, rolled back: Joe 10/15, didn't work well)*
 
 - A one-pixel squash each time a foot lands, and a slight stretch as you start moving.
 - A small puff of dust at your feet when you start, stop or change direction (not every step).
 - Walking into a wall: a one-pixel nudge into it and a tiny squish, instead of stopping dead.
 - Followers (curious visitors, the lost kid) do a tiny hop when they catch up to you after falling behind.
 
-### **Cards**
+### **Cards** *(built, cards 68, except Bluu's fakes)*
+
+- **Buying a card (Joe 10/15):** the screen dims and five card backs slide up from the bottom, one after another. Pick one (highlighted like the binder) and it flips over big. Backs: deep red, black at the edges like a lens vignette, gold trim, the gold GOQ letters.
 
 - **Buying a pack (medium):** the pack drops into the middle of the screen and lands with a squash and a wiggle. A: it tears along the top (a jagged rip line, paper bits). The cards slide out face down into a fan and flip one at a time with a squeeze and pop.
 - **A rare card (huge):** the build-up is the fun. A pack with a rare in it wiggles harder. At the rare card it hovers, trembles and glows at the edges, then flips with a white flash and the sunburst in its rarity's color (silver, gold, rainbow for the rarest), a shiny streak sweeping across, confetti, a big RARE! stamp and a little shake.
@@ -510,7 +512,7 @@ Everything follows reduced motion (still pictures, no shake), like the token mom
 - Wiping a case: a shine sweeps across the glass.
 - Litter in the bin: the lid pops up and drops.
 
-### **Shopping (medium)**
+### **Shopping (medium)** *(the wallet counting down is built, cards 68)*
 
 - What you buy hops off the shelf and arcs into a little bag in the corner; the wallet counts down number by number instead of jumping.
 
