@@ -453,3 +453,24 @@ A second chest, and the museum's first (very gentle) fight. Dusty frames are alr
 - **In the museum (optional):** now and then rather than every day, so it stays a surprise. The conservator could mention he keeps finding dust in the basement and it's getting worse. The janitor, if he sees you: "Did you just... fight the dust?" On shift, each bunny could count as a chore point toward Employee of the Month. Once in a while, a big one in the basement: the Dust Bunny King.
 - **What it takes:** the game's first swing-and-hit: a swing animation, a hit check in front of you, the bunnies' simple head-for-a-frame movement, and the puff. The dusty frames, the chest, the pickup line and the chore points build on what's already there.
 - **Still to decide:** tutorial only, or the museum too; and whether bunnies only dust frames (simplest, and it ties into the existing chore) or other things too, like the cases.
+
+### **More floors** *(Joe 10/15)*
+
+With about one episode a week, the 40 cases on the ground floor run out (33 episodes as of 10/15), so the museum grows upward. Each new floor reuses the building's shape with its own layout; floor 2 could have six wings (the five, plus the café's space laid out as a wing).
+
+- **Bulk:** very little. A floor is a compact layout and reuses the same art; the game only draws the room you're in. The real cost is Joe's setup per floor (wing names, colors, wallpapers).
+- **Visitors:** each floor has its own regulars, there when you arrive. They don't travel between floors; now and then someone appears at the stairs (or steps out of the elevator) and someone else walks to them and is gone, so it reads as coming and going.
+- **Loops get a home floor each,** instead of being copied onto every floor:
+
+| Floor | Feel | Loops that live there |
+|---|---|---|
+| Ground | The busy floor: lobby, café, gift shop, staff room, basement | The usher's coffee, café and shop supplies, the jammed trash can, the staff room item, the janitor's rounds, closing up |
+| Floor 2 | Quieter galleries | The lost kid (more room to get lost in), the conservator dreaming at closing |
+| Floor 3 and up | The quiet top floors | The dust bunnies; maybe the Dust Bunny King on the top floor |
+
+- **Things that follow the content:** the unveiling happens wherever the newest piece is (it pulls everyone up to the newest floor once a week); tours can make one stop upstairs (the dip to black makes the stairs a non-issue); curious visitors asking by title send you between floors ("That's upstairs").
+- **The split:** busy work below, calm galleries above. The loops are "keeping the museum running"; the exhibits are what you stop and enjoy.
+- **Stairs, then an elevator:** stairs for two floors, an elevator from three: a choose-a-floor menu, elevator music, a one-line chat with whoever's riding, and a floor sign listing each floor's wings.
+- **What needs changing:** about 80 places in the engine name "the museum" directly, so on a new floor they simply don't happen until taught. Nothing that works today breaks.
+- **A first step:** a "new floor from the museum" button in the curator, stairs up and down, cases filling onto the new floor once the ground floor is full, the unveiling working on any floor, a "New this week: second floor" pointer in the lobby, the floor's own visitors and stair arrivals, and curious visitors able to send you upstairs. The lost kid and the conservator move up later if it feels right.
+- **Maybe:** one floor per season (floor 1 is season 1; a new season opens a new floor), like the Games Over Coffee lore's seasons.
