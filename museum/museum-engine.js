@@ -1794,7 +1794,7 @@ function normalizePiece(p, i) {
   return {
     id: str(p.id, 60) || "piece-" + (i + 1), kind: p.kind === "community" ? "community" : "episode",
     title: str(p.title, 80) || "Untitled", developer: str(p.developer, 80) || "Unknown developer",
-    observation: str(p.observation), intention: str(p.intention), reaction: str(p.reaction), // reaction: the developer's, after the episode (the back of the case) guestWriter: str(p.guestWriter, 80), guestNote: str(p.guestNote),
+    observation: str(p.observation), intention: str(p.intention), reaction: str(p.reaction), guestWriter: str(p.guestWriter, 80), guestNote: str(p.guestNote), // reaction: the developer's, after the episode (the back of the case)
     episodeUrl: safeUrl(p.episodeUrl), gameUrl: safeUrl(p.gameUrl), clipUrl: safeUrl(p.clipUrl) || (/^[\w.-]{1,80}\.(webm|mp4)$/i.test(String(p.clipUrl || "").trim()) ? String(p.clipUrl).trim() : ""), clipLoop: str(p.clipLoop, 30), image: str(p.image, 20000000) || null,
     unveil: /^\d{4}-\d{2}-\d{2}$/.test(p.unveil || "") ? p.unveil : "",
     aired: /^\d{4}-\d{2}-\d{2}$/.test(p.aired || "") ? p.aired : "", // the day its episode aired: the wings fill by it (Joe 10/15)
@@ -4088,7 +4088,7 @@ class Game {
 .gt-shop-row .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gt-shop-row .pr{color:#505068}
 .gt-album{padding-top:calc(3px * var(--s)) !important}
-.gt-reader{left:calc(6px * var(--s));right:calc(6px * var(--s));top:calc(4px * var(--s));bottom:calc(4px * var(--s));padding:0 calc(4px * var(--s));z-index:7;display:none;overflow:hidden}
+.gt-reader{left:calc(12px * var(--s));right:calc(12px * var(--s));top:calc(9px * var(--s));bottom:calc(9px * var(--s));padding:0 calc(6px * var(--s));z-index:7;display:none;overflow:hidden}
 .gt-rd-head{display:flex;gap:calc(5px * var(--s));align-items:center;padding-bottom:calc(3px * var(--s));border-bottom:calc(1px * var(--s)) solid #b0b0c0}
 .gt-rd-head img{width:calc(40px * var(--s));height:calc(30px * var(--s));object-fit:cover;image-rendering:pixelated;border:calc(1px * var(--s)) solid #181820;flex:none;background:#000}
 .gt-rd-head img.photo{image-rendering:auto}
@@ -4108,9 +4108,11 @@ class Game {
 .gt-pick img{width:calc(5px * var(--s));height:calc(7.5px * var(--s));image-rendering:pixelated;flex:none}
 .gt-shop-row .gt-pick.sm{margin:0 0 0 calc(2px * var(--s));flex:none}
 .gt-rd-t small{display:block;font-size:calc(5.5px * var(--s));color:#505068;margin-top:calc(1px * var(--s))}
-.gt-rd-body{font-family:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;font-size:calc(7.5px * var(--s));line-height:1.42;color:#202030;height:calc(76px * var(--s));overflow:hidden;margin-top:calc(3px * var(--s));white-space:pre-wrap}
-.gt-rd-body b{display:block;font-family:var(--pixel, monospace);font-weight:normal;font-size:calc(5.5px * var(--s));color:#7c5a0c;letter-spacing:.04em;margin-bottom:calc(2px * var(--s))}
-.gt-rd-foot{display:flex;justify-content:flex-end;align-items:center;font-size:calc(5.5px * var(--s));color:#505068;border-top:calc(1px * var(--s)) solid #b0b0c0;padding-top:calc(2px * var(--s))}
+.gt-rd-body{font-family:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;font-size:calc(7.5px * var(--s));line-height:1.42;color:#202030;height:calc(66px * var(--s));overflow:hidden;margin-top:calc(3px * var(--s));white-space:pre-wrap}
+.gt-rd-body b{display:block;font-family:var(--pixel, monospace);font-weight:normal;font-size:calc(4.5px * var(--s));line-height:1.3;color:#7c5a0c;letter-spacing:.03em;margin:calc(4px * var(--s)) 0 calc(1.5px * var(--s))}
+.gt-rd-body b:first-child{margin-top:0} /* small headings, sitting close to their own text (Joe 10/15: the questions were filling the page) */
+.gt-rd-foot{display:flex;justify-content:space-between;align-items:center;gap:calc(6px * var(--s));font-size:calc(4px * var(--s));line-height:1.3;color:#505068;border-top:calc(1px * var(--s)) solid #b0b0c0;padding-top:calc(4px * var(--s));margin-top:calc(1px * var(--s))}
+.gt-rd-k{margin-left:auto;word-spacing:calc(1px * var(--s));white-space:nowrap} /* the keys, each beside its action, the pairs spaced apart; the page count on the left */
 .gt-rd-foot a{color:#181820;margin-right:calc(5px * var(--s))}
 .gt-album-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:calc(4px * var(--s));max-height:calc(86px * var(--s));overflow:auto;padding:calc(2px * var(--s))}
 .gt-polaroid{background:#fffef8;border:calc(1px * var(--s)) solid #b0b0c0;padding:calc(2px * var(--s)) calc(2px * var(--s)) calc(5px * var(--s));cursor:pointer;transform:rotate(-1.5deg)}
@@ -4166,8 +4168,8 @@ class Game {
 .gt-reader.clip .gt-rd-links{gap:calc(2px * var(--s))}
 .gt-reader.clip .gt-rd-links{flex-direction:row;flex-wrap:wrap;margin-left:0}
 .gt-reader.clip .gt-rd-links > *{flex:1}
-.gt-reader.clip .gt-rd-body{grid-area:body;height:calc(110px * var(--s));margin-top:0;font-size:calc(6.5px * var(--s))}
-.gt-reader.clip .gt-rd-foot{grid-area:foot}
+.gt-reader.clip .gt-rd-body{grid-area:body;height:calc(106px * var(--s));margin-top:0;font-size:calc(6.5px * var(--s))}
+.gt-reader.clip .gt-rd-foot{grid-area:foot;align-self:end} /* the divider and the keys stay together at the bottom */
 .gt-reader.clip.flip{grid-template-columns:minmax(0,1fr) calc(112px * var(--s));grid-template-areas:"body clip" "body head" "foot foot"}
 .gt-rd-clip > img.photo{image-rendering:auto}
 .gt-rd-clip .gt-pick{position:absolute;left:calc(2px * var(--s));bottom:calc(2px * var(--s));z-index:2;margin:0;padding:calc(1px * var(--s)) calc(2px * var(--s));background:rgba(248,244,236,.92);border:calc(.5px * var(--s)) solid #181820}
@@ -4313,7 +4315,7 @@ class Game {
   read(spec, done) {
     this.holdToast(); // a toast showing now waits until the placard closes
     const box = this.el.reader, clip = spec.clip || null, framed = !!(spec.frame || clip); box.style.display = framed ? "grid" : "block"; this.mode = "read";
-    box.innerHTML = (framed ? '<div class="gt-rd-clip"></div>' : "") + '<div class="gt-rd-head"></div><div class="gt-rd-body"></div><div class="gt-rd-foot"><span class="gt-rd-n"></span></div>';
+    box.innerHTML = (framed ? '<div class="gt-rd-clip"></div>' : "") + '<div class="gt-rd-head"></div><div class="gt-rd-body"></div><div class="gt-rd-foot"><span class="gt-rd-n"></span><span class="gt-rd-k"></span></div>';
     box.classList.toggle("gt-rd-pre", !!spec.pre); // line breaks and indents kept (the stats)
     box.classList.toggle("clip", framed); // a piece: its screen (gameplay, or its art until it has a clip) and title on one side, the placard on the other
     box.classList.toggle("flip", framed && !!spec.flip); // the developer's side: mirrored
@@ -4359,7 +4361,8 @@ class Game {
     const r = this.rd, pg = r.pages[r.i], body = this.el.reader.querySelector(".gt-rd-body");
     if (r.i >= r.pages.length - 1) r.end = true;
     body.innerHTML = ""; if (pg.label) { const b = document.createElement("b"); b.textContent = pg.label; if (pg.tone) b.className = pg.tone; body.appendChild(b); } body.appendChild(document.createTextNode(pg.text));
-    this.el.reader.querySelector(".gt-rd-n").textContent = (r.pages.length > 1 ? (r.i + 1) + " / " + r.pages.length + "   " : "") + (r.sel >= 0 ? "A: open" : r.i < r.pages.length - 1 ? "A: next" : "A: done") + "   B: close" + (this.rdButtons().length ? "   \u2191\u2193: buttons" : "");
+    this.el.reader.querySelector(".gt-rd-n").textContent = r.pages.length > 1 ? (r.i + 1) + " / " + r.pages.length : "";
+    this.el.reader.querySelector(".gt-rd-k").textContent = [r.sel >= 0 ? "A open" : r.i < r.pages.length - 1 ? "A next" : "A done", "B close", ...(this.rdButtons().length ? ["\u2191\u2193 buttons"] : [])].join("  \u00b7  ");
   }
   closeRead(full) { if (full && this.rd && this.rd.menu) this.rd.done = null; this.dropClip(); this.el.reader.style.display = "none"; const d = this.rd && this.rd.done; this.readEnded = !!(this.rd && this.rd.end); this.rd = null; this.mode = "walk"; this.inputLock = true; if (d) d(); } // readEnded: got to the last page
   /* Up and Down highlight the placard's buttons (Watch, Play, Note) in turn; A uses the highlighted one. */
@@ -4387,7 +4390,7 @@ class Game {
     // questions are the headings; no answers yet: the intention text under one heading); the back, their reaction to the episode
     // (or a line saying it's on its way). Headings are in Words, Pieces. (The curator's observation is kept, but not shown.)
     const int = () => { const qs = [0, 1, 2].filter(k => p.answers && p.answers[k]);
-      if (qs.length) qs.forEach(k => secs.push({ label: this.answerQ(k).toUpperCase(), text: p.answers[k], tone: "red" }));
+      if (qs.length) qs.forEach(k => secs.push({ label: this.answerQ(k), text: p.answers[k], tone: "red" })); // as written: long questions read better than in capitals
       else if (p.intention) secs.push({ label: this.tx("case.intLabel").join(" "), text: p.intention, tone: "red" }); }; // the developer's words: red headings
     const react = () => secs.push({ label: this.tx("case.reactLabel").join(" "), text: p.reaction || this.tx("case.reactSoon").join(" "), tone: "red" });
     if (side === "front") { int(); secs.push({ label: "", text: this.tx("case.frontNote").join(" ") }); }
@@ -10670,7 +10673,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 81";
+const VERSION = "2026-11-18 cards 82";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
