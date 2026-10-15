@@ -1794,7 +1794,7 @@ function normalizePiece(p, i) {
   return {
     id: str(p.id, 60) || "piece-" + (i + 1), kind: p.kind === "community" ? "community" : "episode",
     title: str(p.title, 80) || "Untitled", developer: str(p.developer, 80) || "Unknown developer",
-    observation: str(p.observation), intention: str(p.intention), guestWriter: str(p.guestWriter, 80), guestNote: str(p.guestNote),
+    observation: str(p.observation), intention: str(p.intention), reaction: str(p.reaction), // reaction: the developer's, after the episode (the back of the case) guestWriter: str(p.guestWriter, 80), guestNote: str(p.guestNote),
     episodeUrl: safeUrl(p.episodeUrl), gameUrl: safeUrl(p.gameUrl), clipUrl: safeUrl(p.clipUrl) || (/^[\w.-]{1,80}\.(webm|mp4)$/i.test(String(p.clipUrl || "").trim()) ? String(p.clipUrl).trim() : ""), clipLoop: str(p.clipLoop, 30), image: str(p.image, 20000000) || null,
     unveil: /^\d{4}-\d{2}-\d{2}$/.test(p.unveil || "") ? p.unveil : "",
     aired: /^\d{4}-\d{2}-\d{2}$/.test(p.aired || "") ? p.aired : "", // the day its episode aired: the wings fill by it (Joe 10/15)
@@ -2333,8 +2333,12 @@ const TEXT = {
   "case.covered":      { g: "Pieces", l: "Case under a cloth (unveiling soon)", v: [["Something is under a cloth in this case.", "The card says it will be unveiled on {date}."]] },
   "painting.covered":  { g: "Pieces", l: "Painting under a sheet (unveiling soon)", v: [["Something is hanging under a sheet.", "The card says it will be unveiled on {date}."]] },
   "case.ends":         { g: "Pieces", l: "Reading a case from the side", v: [["You can't read from the side. Front or back only."]] },
-  "case.obsLabel":     { g: "Pieces", l: "Heading over the observation (one line)", v: [["THE CURATOR'S OBSERVATION"]] },
-  "case.intLabel":     { g: "Pieces", l: "Heading over the developer's intention (one line)", v: [["THE DEVELOPER'S INTENTION"]] },
+  "case.intLabel":     { g: "Pieces", l: "Heading over the developer's intention, for a piece with no answers yet (one line)", v: [["THE DEVELOPER'S INTENTION"]] },
+  "case.q1":           { g: "Pieces", l: "Your first question to the developer (a heading on the front of each case, and on the answer cards)", v: [["What were you hoping the player would feel while playing your game?"]] },
+  "case.q2":           { g: "Pieces", l: "Your second question to the developer (a heading on the front of each case, and on the answer cards)", v: [["Why did you choose this experience?"]] },
+  "case.q3":           { g: "Pieces", l: "Your third question to the developer (a heading on the front of each case, and on the answer cards)", v: [["Were there specific moments, mechanics, or ideas you built around that emotional goal?"]] },
+  "case.reactLabel":   { g: "Pieces", l: "Heading on the back of each case: the developer's reaction (one line)", v: [["THE DEVELOPER'S REACTION"]] },
+  "case.reactSoon":    { g: "Pieces", l: "The back of a case before the developer's reaction is in (one line)", by: "claude", v: [["The developer's reaction is on its way. Check back soon."]] },
   "tut.hello":         { g: "Tutorial", l: "The usher, when you reach the desk (the last page asks for your badge)", v: [["Oh, hey! You must be the new hire.", "I'm happy to train you.", "First things first: can I get your badge number and key code?"]] },
   "tut.already":       { g: "Tutorial", l: "The usher, if you're already clocked in ({name})", v: [["Oh, hey, {name}! You're already clocked in, so we can skip the paperwork."]] },
   "tut.badgeOk":       { g: "Tutorial", l: "The usher, after a badge works", v: [["Perfect. You're all signed in."]] },
@@ -4379,13 +4383,17 @@ class Game {
   }
   viewPiece(p, side, stampAfter, onRead) { // onRead: runs if you read it to the last page
     const gold = p.kind === "episode", img = this.pieceImgs[p.id], secs = [], wasRead = !p.tut && this.isRead(p);
-    // Each side is one voice: the curator's observation (with the episode) on the front, the developer's intention (with the game) on the back. Headings are in Words, Pieces.
-    const obs = () => secs.push({ label: this.tx("case.obsLabel").join(" "), text: p.observation });
-    const int = () => secs.push({ label: this.tx("case.intLabel").join(" "), text: p.intention, tone: "red" }); // the developer's words: red headings
-    if (side === "front") { if (p.observation) obs(); secs.push({ label: "", text: this.tx("case.frontNote").join(" ") }); }
-    else if (side === "back") { if (p.intention) int(); secs.push({ label: "", text: this.tx("case.backNote").join(" ") }); }
+    // The developer's voice on both sides (Joe 10/15): the front, their intention, as their answers to your three questions (the
+    // questions are the headings; no answers yet: the intention text under one heading); the back, their reaction to the episode
+    // (or a line saying it's on its way). Headings are in Words, Pieces. (The curator's observation is kept, but not shown.)
+    const int = () => { const qs = [0, 1, 2].filter(k => p.answers && p.answers[k]);
+      if (qs.length) qs.forEach(k => secs.push({ label: this.answerQ(k).toUpperCase(), text: p.answers[k], tone: "red" }));
+      else if (p.intention) secs.push({ label: this.tx("case.intLabel").join(" "), text: p.intention, tone: "red" }); }; // the developer's words: red headings
+    const react = () => secs.push({ label: this.tx("case.reactLabel").join(" "), text: p.reaction || this.tx("case.reactSoon").join(" "), tone: "red" });
+    if (side === "front") { int(); secs.push({ label: "", text: this.tx("case.frontNote").join(" ") }); }
+    else if (side === "back") { react(); secs.push({ label: "", text: this.tx("case.backNote").join(" ") }); }
     else if (side === "end") secs.push({ label: "", text: this.tx("case.ends").join(" ") });
-    else if (gold) { if (p.observation) obs(); if (p.intention) int(); }
+    else if (gold) { int(); react(); }
     else if (p.guestNote) secs.push({ label: p.guestWriter ? "GUEST NOTE BY " + p.guestWriter.toUpperCase() : "GUEST NOTE", text: p.guestNote });
     const k0 = this.sidesOf(p), bothRead = side === "front" ? !!k0.back : side === "back" ? !!k0.front : side === undefined;
     const notes = bothRead && (this.online() || !!p.tut); // visitors' notes: only once you've read the other side too (so this is your second), or with the whole piece
@@ -7836,6 +7844,7 @@ class Game {
       else if (o === "Check time") this.dialShow = this.t; // the menu closes and the dial's label slides in again (Joe 10/12)
     });
   }
+  answerQ(k) { return this.tx("case.q" + (k + 1)).join(" ") || ANSWER_QS[k]; } // your three questions, as worded in Words, Pieces
   /* ----- Answer cards (Joe 10/13): the curator brings up a developer's answers to the three questions (ANSWER_QS), for the
      recording. Each question gets a card ("GAMES OVER QUALIA" and the question), then its answer, split into as many cards as it
      takes at one comfortable size (never shrunk, never cut off). Edited on each piece in the curator (Developer answers). */
@@ -7844,14 +7853,14 @@ class Game {
     const ps = this.answerPieces(), opts = [...ps.map(p => p.title), "Back"];
     this.choose("Developer answers", opts, i => {
       const p = ps[i]; if (!p) { this.openMenu(); return; }
-      const qs = [0, 1, 2].filter(k => p.answers[k]), cs = [...qs.map(k => (k + 1) + ". " + ANSWER_QS[k].slice(0, 34) + "…"), "Back"];
+      const qs = [0, 1, 2].filter(k => p.answers[k]), cs = [...qs.map(k => (k + 1) + ". " + this.answerQ(k).slice(0, 34) + "…"), "Back"];
       this.choose(p.title + ": start from", cs, k => { if (k < qs.length) this.showAnswers(p, qs[k]); else this.answersMenu(); }, cs.length - 1);
     }, opts.length - 1);
   }
   showAnswers(p, q) { // from question q (0 to 2) on; also called by the curator page's "Show it in the preview"
     const qs = p && p.answers ? [0, 1, 2].filter(k => p.answers[k] && k >= (q || 0)) : []; if (!qs.length) return false;
     this.closeAll(); this.mode = "answer"; this.el.ans.style.display = "flex"; this.ansOff = -1; this.drawAnsBg();
-    const cards = []; for (const k of qs) { cards.push({ q: true, text: ANSWER_QS[k] }); this.answerPages(p.answers[k]).forEach(t => cards.push({ q: false, text: t })); }
+    const cards = []; for (const k of qs) { cards.push({ q: true, text: this.answerQ(k) }); this.answerPages(p.answers[k]).forEach(t => cards.push({ q: false, text: t })); }
     this.ans = { p, cards, i: 0 }; this.renderAnswer(); return true;
   }
   answerPages(text) { // the answer split into cards that fit the box at its normal size, at word breaks (a sentence end when one's close)
@@ -10661,7 +10670,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 80";
+const VERSION = "2026-11-18 cards 81";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

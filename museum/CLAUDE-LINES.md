@@ -380,3 +380,5 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Tutorial | Field notes: the lights | Turned off the lights. |
 | Tutorial | Picking up the trainee's box | A box of somebody's stuff. A stapler, a mug, three weeks of snacks. |
 | Tutorial | Your hands are full | Your hands are full. |
+
+| Pieces | The back of a case before the developer's reaction is in (one line) | The developer's reaction is on its way. Check back soon. |
