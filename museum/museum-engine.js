@@ -1072,6 +1072,16 @@ const GEN = {
     rect(a, 2, 7, 12, 12, 2); rect(a, 2, 7, 12, 2, 1); rect(a, 4, 13, 2, 2, 3); rect(a, 10, 13, 2, 2, 3); rect(a, 3, 18, 10, 1, 3); rect(a, 9, 15, 4, 1, 3); rect(a, 4, 16, 3, 2, 6); px(a, 11, 10, 7);
     return outline(a);
   },
+  espresso_wall: () => { // built into the café's back wall (Joe 10/15): the machine on a ledge behind the barista, cups warming on top
+    const a = mk(16, 32);
+    rect(a, 0, 25, 16, 2, 5); rect(a, 0, 27, 16, 1, 4); rect(a, 2, 28, 1, 2, 4); rect(a, 13, 28, 1, 2, 4); // the ledge and its brackets
+    rect(a, 0, 11, 16, 1, 1); rect(a, 1, 12, 14, 11, 2); rect(a, 1, 16, 14, 1, 7); // the cup warmer on top, the steel body, the red stripe
+    for (const x of [2, 7, 12]) rect(a, x, 8, 2, 3, 6); // cups warming
+    for (const x of [3, 5, 10, 12]) px(a, x, 14, 6); // buttons
+    rect(a, 2, 18, 4, 2, 3); rect(a, 10, 18, 4, 2, 3); rect(a, 0, 20, 4, 1, 4); rect(a, 12, 20, 4, 1, 4); px(a, 4, 20, 3); px(a, 11, 20, 3); // two group heads, their handles out to the sides, the spouts
+    for (let x = 1; x < 15; x++) px(a, x, 23, x % 2 ? 3 : 2); rect(a, 1, 24, 14, 1, 3); // the drip tray's grill
+    return outline(a);
+  },
   coffee_grinder: () => {
     const a = mk(16, 32); rect(a, 1, 20, 14, 12, 4); rect(a, 1, 20, 14, 1, 5); rect(a, 3, 24, 10, 1, 5);
     rect(a, 5, 11, 6, 9, 2); rect(a, 5, 11, 6, 1, 1); rect(a, 4, 4, 8, 7, 1); rect(a, 5, 6, 6, 4, 4); rect(a, 7, 16, 2, 2, 3); px(a, 12, 13, 3); px(a, 13, 13, 3);
@@ -1532,6 +1542,7 @@ const SLOTS = [
   { key: "wallpaper_wing_haze", label: "Wing wallpaper: Haze", group: "Wallpaper", wing: true, w: 256, h: 32, pal: "wp_pastel", gen: GEN.wallpaper_wing_haze, note: "Carries on from the Pastel streaks: light and sparse at the top, gathering toward the floor. On a wing's walls it's drawn in soft shades of the wing's color (shown here in the pastel colors); paint it yourself and your colors are used as they are." },
   { key: "wallpaper_wing_scatter", label: "Wing wallpaper: Scatter", group: "Wallpaper", wing: true, w: 256, h: 32, pal: "wp_pastel", gen: GEN.wallpaper_wing_scatter, note: "Carries on from the Pastel streaks: short dashes over soft bands. On a wing's walls it's drawn in soft shades of the wing's color (shown here in the pastel colors); paint it yourself and your colors are used as they are." },
   { key: "token_coin", label: "Token", group: "Gift shop and café", w: 16, h: 16, pal: "coin", gen: GEN.token_coin, note: "A gift shop token. Big in the reward moment (drawn 3x over a spinning sunburst) and over your head when a chore pays." },
+  { key: "espresso_wall", label: "Espresso machine (on the wall)", group: "Gift shop and café", w: 16, h: 32, pal: "barista", gen: GEN.espresso_wall, note: "Built into the café's back wall, behind the barista, across both wall rows: the machine sits on a ledge (rows 25 to 27). When she makes your drink she turns to it: steam rises from the top, coffee drips from the left spout (column 4, row 20) into a cup on the drip tray (rows 23 and 24)." },
   { key: "token_coin_small", label: "Token (small)", group: "Gift shop and café", w: 8, h: 8, pal: "coin", gen: GEN.token_coin_small, note: "The little token in the corner count and next to prices." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
@@ -1717,7 +1728,7 @@ function normalizePiece(p, i) {
     unveil: /^\d{4}-\d{2}-\d{2}$/.test(p.unveil || "") ? p.unveil : "",
     aired: /^\d{4}-\d{2}-\d{2}$/.test(p.aired || "") ? p.aired : "", // the day its episode aired: the wings fill by it (Joe 10/15)
     drink: str(p.drink, 40), // unveiling: the drink of the week it brings (until the next unveil that brings one)
-    drinkPrice: Math.max(0, Math.min(99, Math.round(+p.drinkPrice || 0))), drinkIced: !!p.drinkIced, // the drink of the week's price, and whether it's served iced
+    drinkPrice: Math.max(0, Math.min(99, Math.round(+p.drinkPrice || 0))), drinkIced: !!p.drinkIced, drinkCaf: !!p.drinkCaf, // the drink of the week's price, and whether it's served iced
     drinkColor: isHex(p.drinkColor) ? p.drinkColor : "", drinkLine: Array.isArray(p.drinkLine) ? p.drinkLine.map(x => str(x, 200)).filter(Boolean).slice(0, 6) : [], // its cup color, and what the barista says
     gift: p.gift && str(p.gift.name, 50) ? { name: str(p.gift.name, 50), description: str(p.gift.description, 160), price: Math.max(1, Math.min(99, Math.round(+p.gift.price || 5))) } : null, // and its gift
     episodeTitle: str(p.episodeTitle, 140), cardBlurb: str(p.cardBlurb, 140), noCard: !!p.noCard, cardsFrom: p.cardsFrom === undefined ? "on" : p.cardsFrom === "on" || /^\d{4}-\d{2}-\d{2}$/.test(p.cardsFrom || "") ? p.cardsFrom : "", // its trading card: the episode's title (Cards tab fetches it), a blurb (else the hint), or no card at all
@@ -1780,7 +1791,7 @@ function normalizePack(p) {
     markup: Math.max(1, Math.min(3, Math.round((+bin.markup || 1.5) * 10) / 10)), fakes: Math.max(0, Math.min(100, Math.round(bin.fakes === undefined ? 50 : +bin.fakes || 0))) };
   // The café's regular drinks: each with its own price (an older pack's one price for all) and whether it's served iced.
   shop.drinks = DRINKS.map(d => { const o = (Array.isArray(shin.drinks) ? shin.drinks : []).find(x => x && x.id === d.id) || {};
-    return { id: d.id, name: str(o.name, 30) || d.name, price: Math.max(0, Math.min(99, Math.round(o.price === undefined ? shop.drinkPrice : +o.price || 0))), iced: !!o.iced }; });
+    return { id: d.id, name: str(o.name, 30) || d.name, price: Math.max(0, Math.min(99, Math.round(o.price === undefined ? shop.drinkPrice : +o.price || 0))), iced: !!o.iced, caf: o.caf === undefined ? d.id !== "cocoa" : !!o.caf }; }); // caf: counts toward the coffee rush (three in a row)
   const rooms = p.rooms && typeof p.rooms === "object" ? p.rooms : {};
   const vlist = v => (Array.isArray(v) ? v.filter(Array.isArray).map(pg => pg.map(x => str(x, 400)).filter(Boolean)).filter(pg => pg.length).slice(0, 30) : null);
   const textIn = (p.settings && p.settings.text) || {}, text = {};
@@ -2637,6 +2648,8 @@ const TEXT = {
   "rack.empty":        { g: "Gift shop", l: "A stand with nothing for sale", v: [["A stand of little knickknacks.", "Nothing on this one is for sale. They're just here to keep you company."]] },
   "rack.available":    { g: "Gift shop", l: "Stand close-up: for sale", v: [["{n} tokens. Available to buy at the counter up front."]] },
   "cur.hello":         { g: "Curious visitors", l: "When you walk up to them (takes turns)", v: [["Oh, hello!"], ["Oh! Hi there."], ["Hm? Oh, hello!"]] },
+  "coffee.zoom":      { g: "Café", l: "Finishing a third caffeinated drink in a row: you're about to move at double speed for a minute", by: "claude", v: [["That's three in a row.", "Your eye is twitching. You can hear colors.", "Your legs feel... fast."], ["Three coffees. Zero regrets.", "Your heart is doing a drum solo. Time to move."]] },
+  "coffee.crash":     { g: "Café", l: "The coffee rush wears off (a minute later)", by: "claude", v: [["The coffee wears off.", "You could really go for a nap."], ["Your legs have stopped vibrating.", "Was that a minute or an hour?"]] },
   "coin.find":        { g: "Tokens", l: "Now and then, looking at something turns up a token (one, popping over your head)", by: "claude", v: [["Huh? There's a token wedged in here.", "Finders keepers."], ["Oh! Somebody dropped a token.", "It's yours now."], ["Wait... is that a token?", "It is! Lucky."]] },
   "cur.helpFind":     { g: "Curious visitors", l: "After \"Do you need help?\" (what they're looking for comes next, in cur.want)", by: "claude", v: [["Actually, yes! My name is {name}, and I'm trying to find a game from the show."]] },
   "cur.want":         { g: "Curious visitors", l: "What they're looking for, by its description ({hint}: the piece's hint, \"the one where...\")", by: "claude", v: [["It's {hint}.", "Do you know where it is?"], ["You know, {hint}?", "I've been walking around forever. Do you know where it is?"]] },
@@ -2807,7 +2820,8 @@ const PIXEL_FONT = (() => {
 })();
 const KONAMI = ["up", "up", "down", "down", "left", "right", "left", "right", "b", "a", "start"];
 const POP_KINDS = ["dusted", "straightened", "watered", "mugs", "wiped", "litter"]; // tokens that just pop over your head
-const HANDOFF = 34; // frames: a café drink set on the counter, then handed over
+const HO = { brew: 14, turn: 72, slid: 96, wob: 106, hop: 116, end: 130 }; // the café hand-off, in frames: she turns to the machine, it brews, she turns back, slides the cup over, it wobbles to a stop, a beat, into your hand
+const ZOOM = 3600; // the coffee rush: a minute, at double speed
 const COIN_FX = 130; // frames in the big token moment
 const REDUCED_MOTION = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 const BROWSE_LINES = [["Hmm. Hmm hmm hmm."], ["Should I get the mug? I should get the mug.", "...Or the tote."], ["I've been standing here a while.", "I'm very close to deciding."], ["Don't rush me. This is a big decision."]];
@@ -6267,7 +6281,11 @@ class Game {
   }
   coinPop(n) { const P = this.pops = this.pops || [], o = P[P.length - 1]; if (o && this.t - o.t0 < 24) { o.n += n; return; } P.push({ n, t0: this.t }); }
   updateCoins(has) {
-    if (this.handoff && this.t - this.handoff.t0 >= HANDOFF) { const h = this.handoff; this.handoff = null; if (this.mode === "busy") this.mode = "walk"; h.then(); }
+    if (this.handoff) { const h = this.handoff, k = this.t - h.t0;
+      if (h.ba) h.ba.dir = k < HO.turn && h.m ? "up" : "down"; // her back to you at the machine, then back round with your cup
+      if (k >= HO.end) { this.handoff = null; if (this.mode === "busy") this.mode = "walk"; h.then(); } }
+    if (this.zoomT > 0 && --this.zoomT === 0) this.crashDue = true;
+    if (this.crashDue && this.mode === "walk" && !this.trans) { this.crashDue = false; this.say(this.tx("coffee.crash")); }
     if (this.pops && this.pops.length) this.pops = this.pops.filter(o => this.t - o.t0 < 70);
     const F = this.coinFx;
     if (!F && this.coinQ && this.coinQ.length && this.mode === "walk" && !this.trans && !this.recording()) { // all at once: they add up into one moment
@@ -6278,28 +6296,31 @@ class Game {
     if (F.t === 30) this.updateHud(true);
     if (F.t >= COIN_FX) { this.coinFx = null; if (this.mode === "busy") this.mode = "walk"; }
   }
-  /* The café hand-off: the cup drops onto the counter with a clink and a puff of steam, waits a beat, then hops into your hand. */
+  /* The café hand-off (Joe 10/15): the barista turns to the espresso machine on the wall behind her; steam rises, coffee
+     drips into a cup on the drip tray (an iced one gets a clink instead); she turns back and slides it across the counter to
+     you; it wobbles to a stop, and after a beat it's in your hand. Without a machine nearby she just turns round with it. */
   drawHandoff(ctx, cx, cy) {
     const H = this.handoff; if (!H) return;
-    const k = this.t - H.t0, p = this.player, q = this.pos(p), hx = q.x + { down: 11, up: 2, left: 1, right: 8 }[p.dir], hy = q.y - 4 + 9;
-    const sx0 = H.x + 4, sy0 = H.y + 1;
-    let x = sx0, y = sy0;
-    if (k < 8) y = sy0 - Math.round((1 - k / 8) * (1 - k / 8) * 6);
-    else if (k >= 20) { const f = Math.min(1, (k - 20) / 13); x = sx0 + (hx - sx0) * f; y = sy0 + (hy - sy0) * f - Math.sin(f * Math.PI) * 6; }
-    ctx.globalAlpha = k < 3 ? k / 3 : 1;
-    if (H.mug) this.drawSlot("travel_mug", 0, 0, Math.round(x - cx), Math.round(y - cy)); else ctx.drawImage(this.cupCanvas(H.d, H.k), Math.round(x - cx), Math.round(y - cy));
-    ctx.globalAlpha = 1;
-    if (k >= 8 && k < 13) { ctx.fillStyle = "#fffbe8"; const gx = Math.round(sx0 + 9 - cx), gy = Math.round(sy0 + 1 - cy), z = k < 10 ? 1 : 2; ctx.fillRect(gx - z, gy, z * 2 + 1, 1); ctx.fillRect(gx, gy - z, 1, z * 2 + 1); } // clink
-    if (!H.mug && !H.d.iced && k >= 6 && k < 24) { ctx.fillStyle = "rgba(255,255,255," + (0.6 * (1 - (k - 6) / 18)).toFixed(2) + ")"; for (let i = 0; i < 2; i++) { const w = Math.round(Math.sin((k + i * 5) / 3)); ctx.fillRect(Math.round(sx0 + 2 + i * 3 + w - cx), Math.round(sy0 - 2 - (k - 6) / 3 - i - cy), 1, 2); } } // steam
+    const k = this.t - H.t0, p = this.player, q = this.pos(p), M = H.m, ba = H.ba, iced = H.d.iced, cup = (x, y) => { x = Math.round(x - cx); y = Math.round(y - cy); if (H.mug) this.drawSlot("travel_mug", 0, 0, x, y); else ctx.drawImage(this.cupCanvas(H.d, H.k), x, y); };
+    const hand = ba ? { x: ba.x * T + 4, y: ba.y * T + 5 } : { x: H.fx + 4, y: H.fy - 6 }, onCounter = { x: H.fx + 4, y: H.fy + 1 };
+    if (M && k < HO.turn) { // at the machine
+      if (k >= HO.brew) cup(M.x, M.y + 16); // under the left group head
+      if (!iced) for (let i = 0; i < 3; i++) { const a = ((k + i * 9) % 27) / 27; ctx.fillStyle = "rgba(255,255,255," + (0.55 * (1 - a)).toFixed(2) + ")"; ctx.fillRect(Math.round(M.x + 5 + i * 3 + Math.sin((k + i * 7) / 5) - cx), Math.round(M.y + 7 - a * 9 - cy), 1, 2); } // steam off the top
+      if (k >= HO.brew + 6 && k < HO.turn - 10) { const f = (k - HO.brew) % 8; ctx.fillStyle = iced ? "#c8a070" : "#5a3420"; ctx.fillRect(Math.round(M.x + 4 - cx), Math.round(M.y + 21 + Math.min(f, 2) - cy), 1, 1); } // a drip from the spout
+      if (iced && k >= 34 && k < 40) { ctx.fillStyle = "#fffbe8"; const gx = Math.round(M.x + 12 - cx), gy = Math.round(M.y + 17 - cy); ctx.fillRect(gx - 1, gy, 3, 1); ctx.fillRect(gx, gy - 1, 1, 3); } // ice clinking
+      return;
+    }
+    if (k < HO.slid) { const f = Math.max(0, Math.min(1, (k - HO.turn) / (HO.slid - HO.turn))), e = 1 - Math.pow(1 - f, 3); cup(hand.x + (onCounter.x - hand.x) * e, hand.y + (onCounter.y - hand.y) * e); return; } // slid across
+    if (k < HO.wob) { const w = HO.wob - k; cup(onCounter.x + (w > 1 ? (w % 2 ? 1 : -1) * Math.ceil(w / 4) : 0), onCounter.y); return; } // wobbles to a stop
+    if (k < HO.hop) { cup(onCounter.x, onCounter.y); return; }
+    const f = Math.min(1, (k - HO.hop) / (HO.end - HO.hop)), hx = q.x + { down: 11, up: 2, left: 1, right: 8 }[p.dir], hy = q.y + 5;
+    cup(onCounter.x + (hx - onCounter.x) * f, onCounter.y + (hy - onCounter.y) * f - Math.sin(f * Math.PI) * 4);
   }
-  /* The red lens shades (Bluu's ultra rare): everything looks red while you wear them. A fake pair has only its right lens,
-     so only the right half of the screen. */
+  /* The red lens shades (Bluu's ultra rare): everything looks red while you wear them. */
   drawLens(ctx) {
     const sh = this.using("shades"); if (!sh) return;
-    const red = this.gearLooks("shades").pick === "bx-shades-redlens"; if (!red && sh !== "fake") return;
-    ctx.save(); ctx.globalCompositeOperation = "multiply"; ctx.fillStyle = red ? "#ff6a5a" : "#8a8aa0"; // a fake pair's lens is the plain dark one
-    if (sh === "fake") ctx.fillRect(SW / 2, 0, SW / 2, SH); else ctx.fillRect(0, 0, SW, SH);
-    ctx.restore();
+    if (this.gearLooks("shades").pick !== "bx-shades-redlens") return;
+    ctx.save(); ctx.globalCompositeOperation = "multiply"; ctx.fillStyle = "#ff6a5a"; ctx.fillRect(0, 0, SW, SH); ctx.restore();
   }
   drawCoins(ctx, cx, cy) {
     const glyphs = (txt, x, y, sc, col, edge) => { // PIXEL_FONT text with a dark edge around it
@@ -6933,7 +6954,7 @@ class Game {
   }
   giftItems() { return this.unveiled().map(p => this.giftOf(p)).filter(Boolean); } // oldest first
   weekGift() { const g = this.giftItems(); return g[g.length - 1] || null; }
-  weekDrink() { const ps = this.unveiled().filter(p => p.drink), p = ps[ps.length - 1]; return p ? { id: "week", name: p.drink, piece: p.id, color: p.drinkColor, line: p.drinkLine, price: p.drinkPrice, iced: p.drinkIced } : null; }
+  weekDrink() { const ps = this.unveiled().filter(p => p.drink), p = ps[ps.length - 1]; return p ? { id: "week", name: p.drink, piece: p.id, color: p.drinkColor, line: p.drinkLine, price: p.drinkPrice, iced: p.drinkIced, caf: p.drinkCaf } : null; }
   /* The café's regular drinks, as the menu has them (name, price, iced), with the color an iced cup shows. */
   npcDrink() { // a visitor's drink: anything on the menu, the drink of the week included, iced if the menu says so
     const wk = this.weekDrink(), menu = [...this.menuDrinks(), ...(wk ? [wk] : [])], i = Math.floor(Math.random() * menu.length), md = menu[i];
@@ -7093,9 +7114,12 @@ class Game {
       if (d.id === "cocoa") this.quest("cocoa");
       this.progress.tally.drinks = (this.progress.tally.drinks || 0) + 1; this.bump(this.progress.stats.drinks, d.id); this.saveProgress();
       const said = () => this.say(d.line && d.line.length ? d.line : this.tx("drink.served")); // the drink of the week can come with its own line
-      const p = this.player, [dx, dy] = DIRS[p.dir];
+      this.drink.caf = d.id === "week" ? !!d.caf : d.caf !== false; if (!this.drink.caf) this.coffeeRun = 0; // a cocoa breaks a coffee run
       if (REDUCED_MOTION || this.recording()) { said(); return; }
-      this.handoff = { t0: this.t, x: (p.x + dx) * T, y: (p.y + dy) * T, d, k: i, mug, then: said }; this.mode = "busy"; // a tiny moment (Joe 10/15): set down on the counter, then into your hand
+      const p = this.player, [dx, dy] = DIRS[p.dir], ba = this.room.npcs.find(n => n.role === "barista" && !n.leaving && Math.abs(n.x - p.x) + Math.abs(n.y - p.y) <= 4);
+      const w = ba && (this.room.wallArt || []).find(q => q.key === "espresso_wall" && Math.abs(q.x - ba.x) <= 3), pr = !w && ba && this.room.props.find(q => q.key === "espresso_machine" && Math.abs(q.x - ba.x) <= 3);
+      const m = w ? { x: w.x * T, y: w.y * T } : pr ? { x: pr.x * T, y: (pr.y - 1) * T } : null; // the machine she makes it at (the floor one: about where it'd be)
+      this.handoff = { t0: this.t - (!ba ? HO.slid : !m ? HO.turn : 0), fx: (p.x + dx) * T, fy: (p.y + dy) * T, d, k: i, mug, ba, m, then: said }; this.mode = "busy";
     };
     const mug = this.gear("mug"); // own a travel mug: the barista asks every time
     if (mug) this.choose(this.tx("drink.useMug").join(" "), ["Yes, my mug", "No, a cup"], k => serve(k === 0 ? mug : ""), 1); else serve("");
@@ -8016,14 +8040,23 @@ class Game {
   standUp(d) {
     const p = this.player; [p.x, p.y] = p.sitFrom; p.sitting = false; p.dir = d || p.dir; this.inputLock = true; this.asleep = false; this.sitIdle = 0; // a sip in progress finishes as you stand
   }
+  /* The coffee rush (Joe 10/15): finish three caffeinated drinks in a row (doing nothing else between: walking, sitting, the
+     café and putting your cup away don't count) and you move at double speed for a minute. Returns true when it kicks in. */
+  coffeeDone() {
+    const d = this.drink; if (!d || !d.caf || d.staffBrew || d.popcorn || this.tut) { this.coffeeRun = 0; return false; }
+    if ((this.coffeeRun = (this.coffeeRun || 0) + 1) < 3) return false;
+    this.coffeeRun = 0; this.progress.tally.rushes = (this.progress.tally.rushes || 0) + 1; this.saveProgress();
+    this.say(this.tx("coffee.zoom"), () => { this.zoomT = ZOOM; this.crashDue = false; });
+    return true;
+  }
   updateSipping() {
     const p = this.player;
     if (this.sip) {
       if (++this.sip.t >= 44) {
         this.sip = null;
         if (this.drink && ++this.drink.sips >= 4) { const n = this.drink.name.toLowerCase(); if (this.drink.kind === 2 && this.player.sitting && !this.player.bench) this.quest("finishOnStool");
-          if (this.drink.mug) { this.drink = null; this.say(this.tx("gear.mugDone", { drink: n })); } // the empty mug goes back in your bag
-          else { this.drink.empty = true; this.say(this.tx(this.drink.staffBrew ? "brew.bad" : this.drink.popcorn ? "popcorn.finished" : "drink.finished", { drink: n })); } }
+          if (this.drink.mug) { const rush = this.coffeeDone(); this.drink = null; if (!rush) this.say(this.tx("gear.mugDone", { drink: n })); } // the empty mug goes back in your bag
+          else { this.drink.empty = true; if (!this.coffeeDone()) this.say(this.tx(this.drink.staffBrew ? "brew.bad" : this.drink.popcorn ? "popcorn.finished" : "drink.finished", { drink: n })); } }
       }
       return;
     }
@@ -8242,7 +8275,7 @@ class Game {
     if (c.slow && (this.t & 1)) return false; // the night guard strolls at half speed
     if (c !== this.player && !c.slow && !c.follow && !(c.tagging && c.hurry)) { const ps = this.pack.settings.staff.patronSpeed, sp = c.leaving && !c.stroll ? Math.min(1, ps * 1.35) : ps; c.spd = (c.spd || 0) + sp; if (c.spd < 1) return false; c.spd -= 1; } // patrons: slower than you; heading out (the closing announcement) only a little brisker, not a stampede
     const behind = c.follow && c !== this.player && Math.abs(c.x - this.player.x) + Math.abs(c.y - this.player.y) > 1; // a follower who's dropped back catches up (they keep your pace)
-    if ((c.prog += (c === this.player && this.segway) || behind ? 2 : 1) >= T) {
+    if ((c.prog += (c === this.player && (this.segway || this.zoomT > 0)) || behind ? 2 : 1) >= T) {
       c.x += DIRS[c.dir][0]; c.y += DIRS[c.dir][1]; c.prog = 0; c.moving = false;
       if (c === this.player) {
         if (!this.full && this.progress.stats) this.progress.stats.steps++;
@@ -8442,6 +8475,7 @@ class Game {
   interact() {
     const p = this.player, [dx, dy] = DIRS[p.dir], fx = p.x + dx, fy = p.y + dy;
     const here = this.room.npcs.filter(n => n.x === fx && n.y === fy && !n.moving);
+    if (this.coffeeRun) { const e0 = this.room.events[fx + "," + fy], keep = (e0 && (e0.cafe || e0.tub || e0.trash || e0.sit)) || here.some(n => n.role === "barista"); if (!keep) this.coffeeRun = 0; } // doing anything else breaks a coffee run
     let npc = here.find(n => !n.tourKid && !n.schoolKid && !n.kid) || here[0]; // two on one tile: the grown-up (the guide, not the kid beside him)
     if (!npc) { // someone mid-step: stepping onto the tile you face finishes the step; stepping off it, they stay put
       const into = this.room.npcs.find(n => n.moving && !n.leaving && n.x + DIRS[n.dir][0] === fx && n.y + DIRS[n.dir][1] === fy && !(fx === p.x && fy === p.y));
@@ -9925,7 +9959,7 @@ class Game {
     if (k === "day_board") { const t = this.chalkText(["SUN.", "MON.", "TUES.", "WED.", "THURS.", "FRI.", "SAT."][this.weekday()]); ctx.drawImage(t, px0 + 16 - Math.floor(t.width / 2), py0 + 3);
       const ic = this.boardDoodle(this.weekday()); ctx.drawImage(ic, px0 + 16 - Math.floor(ic.width / 2), py0 + 11); } // and a doodle of the day's doings
     if (k === "cafe_sign") { const sp = this.cafeSpecial(); if (sp) ctx.drawImage(this.cupCanvas(sp.d, sp.k), px0 + 4, py0 + 12); }
-    if (k === "popup_table") this.popupItems().forEach((it, i) => ctx.drawImage(this.itemIcon(it), px0 + 3 + i * 9, py0 + 1, 8, 8));
+    // (Bluu's table: no item pictures on it any more, Joe 10/15. He sells four or five things, which never fit; the menu shows them.)
     if (p.collection) this.displayed().forEach((it, i) => {
       ctx.drawImage(this.itemIcon(it), px0 + [4, 13, 27, 36][i % 4], py0 + [2, 11, 20][Math.floor(i / 4)], 8, 8);
     });
@@ -10376,7 +10410,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 70";
+const VERSION = "2026-11-18 cards 71";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

@@ -311,3 +311,7 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Tokens | Looking at something turns up a token | Huh? There's a token wedged in here. / Finders keepers. |
 | Tokens | The same (second version) | Oh! Somebody dropped a token. / It's yours now. |
 | Tokens | The same (third version) | Wait... is that a token? / It is! Lucky. |
+| Café | Finishing a third caffeinated drink in a row (the coffee rush starts) | That's three in a row. / Your eye is twitching. You can hear colors. / Your legs feel... fast. |
+| Café | The same (second version) | Three coffees. Zero regrets. / Your heart is doing a drum solo. Time to move. |
+| Café | The coffee rush wears off | The coffee wears off. / You could really go for a nap. |
+| Café | The same (second version) | Your legs have stopped vibrating. / Was that a minute or an hour? |
