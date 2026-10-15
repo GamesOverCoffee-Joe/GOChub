@@ -1457,7 +1457,7 @@ const SLOTS = [
   { key: "postcard_spinner", label: "Postcard spinner", group: "Gift shop and café", w: 16, h: 32, pal: "trinket", gen: GEN.postcard_spinner, note: "Stands two tiles tall." },
   { key: "floor_lamp", label: "Floor lamp", group: "Gift shop and café", w: 16, h: 32, pal: "trinket", gen: GEN.floor_lamp, note: "Stands two tiles tall and casts a warm glow." },
   { key: "basket", label: "Basket of goodies", group: "Gift shop and café", w: 16, h: 16, pal: "trinket", gen: GEN.basket },
-  { key: "overflow_screen", label: "Touch screen on a pedestal", group: "Rooms", w: 16, h: 32, pal: "screen", gen: GEN.overflow_screen, note: "Two tiles tall. Holds the room's extra pieces: the ones of its genre that don't fit in its cases." },
+  { key: "overflow_screen", label: "Touch screen on a pedestal", group: "Rooms", w: 16, h: 32, pal: "screen", gen: GEN.overflow_screen, note: "Two tiles tall. Holds the oldest episodes that don't fit in the cases (on the screen in Volume I)." },
   { key: "hall_floor", label: "Hallway floor (dark wood)", group: "Hallways", w: 16, h: 16, pal: "darkwood", gen: GEN.floor_wood, note: "Tiles seamlessly in every direction." },
   { key: "carpet_floor", label: "Carpet floor", group: "Rooms", w: 16, h: 16, pal: "plush", gen: GEN.carpet_floor, note: "Gray on purpose: a room's floor color tints it (Rooms, Museum, Layout). Tiles seamlessly." },
   { key: "mural_dusk", label: "Mural: dusk peaks", group: "Murals", w: 256, h: 16, pal: "m_dusk", gen: GEN.mural_dusk, note: "Painted along the top row of a wall. A shorter wall shows the middle of it." },
@@ -1743,7 +1743,7 @@ function normalizeGenres(list) {
   const seen = new Set();
   return list.filter(g => g && typeof g === "object").slice(0, 12).map((g, i) => {
     let id = str(g.id, 30).toLowerCase().replace(/[^a-z0-9_-]/g, "") || "genre-" + i; while (seen.has(id)) id += "2"; seen.add(id);
-    return { id, name: str(g.name, 40) || "Genre", short: str(g.short, 16), color: isHex(g.color) ? g.color : "#a08868" };
+    return { id, name: str(g.name, 40) || "Category", short: str(g.short, 16), color: isHex(g.color) ? g.color : "#a08868" };
   });
 }
 /* Which room a piece belongs in: picked by hand in the Pieces tab ("" for rooms with no genre). */
@@ -2422,7 +2422,7 @@ const TEXT = {
   "mon.found":         { g: "Days of the week", l: "Monday: finding a box ({n}: found so far)", v: [["Found {n} of 5 boxes!"]] },
   "mon.done":          { g: "Days of the week", l: "Monday: bringing the conservator all five ({n}: tokens)", v: [["Thank f...friggen gosh.", "Here's {n} tokens for your trouble."]] },
   "mon.after":         { g: "Days of the week", l: "Monday: the conservator after you've found them", v: [["What do you want? I already gave you money."]] },
-  "tue.kid":           { g: "Days of the week", l: "Tuesday: the lost kid, the first time. One version per Tuesday, taking turns week to week ({clue}: where his mom is, like \"the Strategy wing\", \"the café\" or \"the Screening Nook\"; add your own \"in\" or \"to\")", v: [["*sniff* hello, I can't find my mommy.", "...", "I think she's in {clue}?"], ["Oh, hi. Uh, I uh, I'm lost. Could you walk me to {clue}? I think my mom is there."], ["Are you going to {clue}? Can I follow you?"]] },
+  "tue.kid":           { g: "Days of the week", l: "Tuesday: the lost kid, the first time. One version per Tuesday, taking turns week to week ({clue}: where his mom is, like \"Volume II\", \"the café\" or \"the Screening Nook\"; add your own \"in\" or \"to\")", v: [["*sniff* hello, I can't find my mommy.", "...", "I think she's in {clue}?"], ["Oh, hi. Uh, I uh, I'm lost. Could you walk me to {clue}? I think my mom is there."], ["Are you going to {clue}? Can I follow you?"]] },
   "tue.again":         { g: "Days of the week", l: "Tuesday: talking to the kid while he follows you ({clue}: like \"the café\")", v: [["I think she's in {clue}"]] },
   "tue.mom":           { g: "Days of the week", l: "Tuesday: his mom, before you've brought him", v: [["Oh my Gosh, my son, I swore he was right here! Excuse me, have you seen a little boy around?"], ["Oh my God oh my God oh my God oh my God oh my God..."]] },
   "tue.found":         { g: "Days of the week", l: "Tuesday: bringing the kid to his mom ({n}: tokens)", v: [["THANK YOU!", "Oh my goodness.", "Here, please, take {n} tokens!"]] },
@@ -2449,7 +2449,7 @@ const TEXT = {
   "thu.after":         { g: "Days of the week", l: "Thursday: the barista after you've played", v: [["We do this every Thursday. Come back next week!"]] },
   "thu.q.dev":         { g: "Days of the week", l: "Thursday: a question about who made a game ({title})", v: [["Who made {title}?"]] },
   "thu.q.wing":        { g: "Days of the week", l: "Thursday: a question about which wing a game is in ({title})", v: [["Which wing is {title} in?"]] },
-  "thu.q.which":       { g: "Days of the week", l: "Thursday: a question about which game is in a wing ({room})", v: [["Which of these is in the {room}?"]] },
+  "thu.q.which":       { g: "Days of the week", l: "Thursday: a question about which game is in a wing ({room})", v: [["Which of these is in {room}?"]] },
   "thu.questions":     { g: "Days of the week", l: "Thursday: your own questions (one per entry: the question, then the right answer, then three wrong ones; entries starting with [ are skipped)", v: [["[Your question]", "[Right answer]", "[Wrong answer]", "[Wrong answer]", "[Wrong answer]"]] },
   "screen.friday":     { g: "Screening nook", l: "The LED sign on Fridays, before the title (letters, numbers and : - . ! ? ' & , / only)", v: [["FRIDAY FEATURE:"]] },
   "card.single":       { g: "Cards", l: "The gift shop's single trading card (its description)", by: "claude", v: [["One GOQ Museum trading card, sealed. Could be anyone in here."]] },
@@ -2957,6 +2957,9 @@ const NIGHT_DIM = { lobby: 0.2, museum: 0.12, staff: 0.08, storage: 0.05, outsid
 const DIRS_LIST = ["up", "down", "left", "right"];
 const LAYOUT_MAX_W = 120, LAYOUT_MAX_H = 100, LAYOUT_SIDES = ["top", "bottom", "left", "right"];
 const hexOr = c => (/^#[0-9a-f]{6}$/i.test(c || "") ? c.toLowerCase() : "");
+/* The wings are named by their place in the timeline (Joe 10/15): Volume I holds the oldest episodes, then Volume II, and so on. */
+function roman(n) { let s = ""; for (const [v, r] of [[1000, "M"], [900, "CM"], [500, "D"], [400, "CD"], [100, "C"], [90, "XC"], [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]]) while (n >= v) { s += r; n -= v; } return s; }
+function volumeNames(rooms) { rooms.map((r, i) => [r, (r.order || 50) * 100 + i]).filter(x => x[0].genre).sort((a, b) => a[1] - b[1]).forEach((x, k) => { x[0].name = "Volume " + roman(k + 1); }); return rooms; }
 function normalizeLayout(L) {
   L = L && typeof L === "object" ? L : {};
   const n = (v, lo, hi, d) => (Number.isFinite(+v) ? Math.max(lo, Math.min(hi, Math.round(+v))) : d), zoneIds = new Set(), spotIds = new Set();
@@ -2967,6 +2970,7 @@ function normalizeLayout(L) {
   (Array.isArray(L.rooms) ? L.rooms : []).slice(0, 40).forEach((r, i) => { if (!r) return;
     out.rooms.push({ id: id(r.id, "room" + i), name: str(r.name, 40) || "Room", x: n(r.x, 1, LAYOUT_MAX_W - 4, 2), y: n(r.y, 3, LAYOUT_MAX_H - 4, 3), w: n(r.w, 2, 60, 8), h: n(r.h, 2, 60, 6), art: art(r.art), light: r.light !== false, genre: str(r.genre, 30), color: hexOr(r.color), tint: { floor: hexOr(r.tint && r.tint.floor), wall: hexOr(r.tint && r.tint.wall) }, wallpaper: SLOT[r.wallpaper] && SLOT[r.wallpaper].group === "Wallpaper" ? r.wallpaper : "", order: n(r.order, 0, 99, 0),
       edits: (Array.isArray(r.edits) ? r.edits : []).slice(0, 400).filter(e => Array.isArray(e) && (e[2] === "." || e[2] === "#")).map(e => [n(e[0], -30, 90, 0), n(e[1], -30, 90, 0), e[2]]) }); });
+  volumeNames(out.rooms);
   (Array.isArray(L.halls) ? L.halls : []).slice(0, 60).forEach((h, i) => { if (!h) return;
     const path = (Array.isArray(h.path) ? h.path : []).slice(0, 8).map(p => [n(p && p[0], 1, LAYOUT_MAX_W - 3, 1), n(p && p[1], 3, LAYOUT_MAX_H - 3, 3)]);
     const wl = h.walls && typeof h.walls === "object" ? h.walls : {};
@@ -5170,11 +5174,11 @@ class Game {
     m.props = m.props.filter(p => !(p.key === "lost_box" && p.x === b.x && p.y === b.y)); m.solid[b.y][b.x] = false; delete m.events[b.x + "," + b.y];
     this.say(this.tx("mon.found", { n: d.found.length }));
   }
-  kidClue() { // where his mom is, for {clue}: "the Strategy wing", "the café" or "the Screening Nook" (the lines add "in", "to"...)
+  kidClue() { // where his mom is, for {clue}: "Volume II", "the café" or "the Screening Nook" (the lines add "in", "to"...)
     const d = this.dayState(), mo = d.mom; if (!mo) return { clue: "" };
     const z = mo.place === "nook" ? null : (this.rooms.museum.zones || []).find(q => q.id === mo.place);
-    const place = mo.place === "nook" ? this.roomName("screening") || "Screening Nook" : mo.place === "cafe" ? "café" : z ? z.name + (z.rect && z.rect.genre && !/\bwing$/i.test(z.name) ? " wing" : "") : "museum"; // "Strategy" becomes "Strategy wing"; "Meier Wing" stays
-    return { clue: "the " + place };
+    const place = mo.place === "nook" ? this.roomName("screening") || "Screening Nook" : mo.place === "cafe" ? "café" : z ? z.name + (z.rect && z.rect.genre && !/\b(wing|volume [ivxlcdm]+)$/i.test(z.name) ? " wing" : "") : "museum"; // a wing's name ("Volume II") as is; another room's gets "wing"
+    return { clue: /^volume /i.test(place) ? place : "the " + place };
   }
   /* A line's version by number (wrapping), instead of taking turns: Monday's conservator, the kid's line for this Tuesday. */
   txAt(key, i, vars, wrap) {
@@ -6233,7 +6237,7 @@ class Game {
 
   /* ----- words ----- */
   fmt(str, vars) {
-    const out = this.roomNames(str).replace(/\{(\w+)\}/g, (m, k) => (vars && vars[k] !== undefined ? vars[k] : m));
+    const out = this.roomNames(str).replace(/\{(\w+)\}/g, (m, k) => (vars && vars[k] !== undefined ? vars[k] : m)).replace(/\b[Tt]he (Volume [IVXLCDM]+)\b/g, "$1"); // a wing is "Volume II", not "the Volume II"
     return vars ? out.replace(/\b([Aa]n?|[Tt]he) ([Aa]n?|[Tt]he)\b/g, (m, a, b) => (a[0] === a[0].toUpperCase() ? b[0].toUpperCase() : b[0].toLowerCase()) + b.slice(1)) : out; // "A {desc}" with a desc that starts "A visitor...": one article, not two
   }
   /* {room:upper} in any text: that room's or hallway's name right now (a museum room or hallway by its id, or a room like
@@ -10588,7 +10592,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 77";
+const VERSION = "2026-11-18 cards 78";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
@@ -10601,6 +10605,6 @@ window.GOQ = { ANSWER_QS, ytVideoId, CLAUDE_QUOTES, CLAUDE_ACH, CLAUDE_LINES, CL
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
   spotRooms: () => Object.keys(ROOMS).filter(id => (ROOMS[id].spots || []).length).map(id => ({ id, name: ROOMS[id].name, n: ROOMS[id].spots.length })),
-  BUILTIN_ROOMS, applyRooms, normalizeRoom, SLOTS_BY_KEY: SLOT, normalizeLayout, carveLayout, hallRects, themeOf, hallEndColors, hallLength, layoutOf, LAYOUT_MAX_W, LAYOUT_MAX_H, SAMPLE_GENRES, genreOf, assignCases, runnerTiles, drawRunner,
+  BUILTIN_ROOMS, applyRooms, normalizeRoom, SLOTS_BY_KEY: SLOT, normalizeLayout, carveLayout, hallRects, themeOf, hallEndColors, hallLength, layoutOf, LAYOUT_MAX_W, LAYOUT_MAX_H, SAMPLE_GENRES, genreOf, assignCases, volumeNames, roman, runnerTiles, drawRunner,
   placeholderPainting: p => { const n = normalizePiece(p, 0); return paint([paintingGrid(n)], 24, 18, 1, n.colors); } };
 })();

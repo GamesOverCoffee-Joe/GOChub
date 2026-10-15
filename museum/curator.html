@@ -445,7 +445,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 77";
+window.GOQ_WANT = "2026-11-18 cards 78";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -1182,7 +1182,7 @@ const PLACE_GROUPS = [
   { name: "Display", items: [
     { kind: "case", name: "Episode case", key: "display_case", note: "Episodes fill the cases by air date, wing by wing along the timeline (each wing's place in it is in the Layout tool). Stand it on the floor with room to walk all the way around." },
     { kind: "spot", name: "Painting spot", key: "wall_frame_wood", note: "Community pieces hang here. Tap the wall; it takes two tiles across both wall rows." },
-    { kind: "prop", key: "overflow_screen", name: "Touch screen", note: "The room's extra pieces: episodes of its genre that don't fit in its cases. One per room is plenty." },
+    { kind: "prop", key: "overflow_screen", name: "Touch screen", note: "The oldest episodes that don't fit in the cases wait on the one in Volume I (the start of the timeline). The other wings' screens give their digit for the office door." },
   ] },
   { name: "Furniture", items: ["bench", "bench_side", "plant", "planter_wide", "sign_stand", "sign_down", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board", "day_board", "reader_chair", "reader_table", "reader_shelf", "tut_chest", "velvet_rope", "velvet_rope_v"].map(k => ({ kind: "prop", key: k })) },
   { name: "Shop and café", items: ["shelf_unit", "magazine_rack", "item_rack", "shop_counter", "cafe_counter", "espresso_machine", "coffee_grinder", "cup_stacks", "bus_tub", "cafe_table", "cafe_stool", "floor_lamp", "postcard_spinner", "basket", "planter", "cat_bed"].map(k => ({ kind: "prop", key: k }))
@@ -1881,15 +1881,16 @@ function renderLayoutPanel(box, d) {
   if (r) {
     box.appendChild(el("h3", { text: r.name }));
     const name = el("input", { type: "text", value: r.name }); name.addEventListener("change", () => layEdit(L2 => { layRoom(L2, r.id).name = name.value.trim() || "Room"; }));
-    box.appendChild(field("Name", name, "Said when you walk in."));
+    if (r.genre) { name.disabled = true; name.value = (GOQ.volumeNames(L.rooms.map(q => ({ id: q.id, genre: q.genre, order: q.order }))).find(q => q.id === r.id) || r).name; } // a wing: named by its place in the timeline
+    box.appendChild(field("Name", name, r.genre ? "Wings are named by their place in the timeline: Volume I holds the oldest episodes, then Volume II, and so on. New wings carry on the count." : "Said when you walk in."));
     const w = el("input", { type: "number", min: 2, max: 60, value: r.w }), hh = el("input", { type: "number", min: 2, max: 60, value: r.h });
     const resize = () => { const L2 = layApply(L, { kind: "edge", id: r.id, r: true, b: true }, (+w.value || r.w) - r.w, (+hh.value || r.h) - r.h); if (!L2) { status("That would cut off a hallway. Move the hallway first.", true); return; } layEdit(L3 => Object.assign(L3, L2)); };
     w.addEventListener("change", resize); hh.addEventListener("change", resize);
     box.appendChild(el("div", { class: "rrow" }, [field("Width", w), field("Depth", hh)]));
     box.appendChild(el("p", { class: "note", text: "Floor tiles, not counting the walls. Or drag the room's walls on the map." }));
-    const genres = draft.settings.genres || GOQ.SAMPLE_GENRES, gs = el("select", {}, [el("option", { value: "", text: "None (for episodes with no genre)" })].concat(genres.map(g => el("option", { value: g.id, text: g.name }))));
+    const genres = draft.settings.genres || GOQ.SAMPLE_GENRES, gs = el("select", {}, [el("option", { value: "", text: "Not a wing (no episodes)" })].concat(genres.map(g => el("option", { value: g.id, text: g.name }))));
     gs.value = r.genre || ""; gs.addEventListener("change", () => layEdit(L2 => { layRoom(L2, r.id).genre = gs.value; }));
-    box.appendChild(field("Genre", gs, "Gives the room its color (and a name for the hallway arrows). Episodes go in the wings by air date, not by genre. Edit the genres in the Visitors tab."));
+    box.appendChild(field("Wing", gs, "Pick a category to make this room a wing: a Volume in the timeline, with that category's color. Episodes go in the wings by air date. Edit the categories in the Visitors tab."));
     if (r.genre) { const od = el("input", { type: "number", min: 1, max: 99, value: r.order || "", placeholder: "In the layout's order" }); od.addEventListener("change", () => layEdit(L2 => { const q = layRoom(L2, r.id), v = Math.round(+od.value || 0); if (v > 0) q.order = Math.min(99, v); else delete q.order; }));
       box.appendChild(field("Place in the timeline", od, "1 holds the oldest episodes, then 2, and so on; the last holds the newest. Empty: after the numbered ones, in the layout's order.")); }
     if (r.edits && r.edits.length) box.appendChild(el("div", { class: "row" }, [el("span", { class: "note", text: r.edits.length + " shape tweak" + (r.edits.length === 1 ? "" : "s") + ". " }),
@@ -1903,7 +1904,7 @@ function renderLayoutPanel(box, d) {
       return el("label", { class: "rfield" }, [el("span", { text: label }), el("small", { text: hint }), el("div", { class: "row", style: "gap:8px;align-items:center" }, [inp, clr])]);
     };
     box.appendChild(el("div", { class: "rrow" }, [
-      colorField("Theme color", r.color ? "Hallways blend from this room's theme to the next." : genreCol ? "Using its genre's color. Pick one to override it." : "Hallways blend from this room's theme to the next.", () => r.color || genreCol, (q, v) => { q.color = v; }),
+      colorField("Theme color", r.color ? "Hallways blend from this room's theme to the next." : genreCol ? "Using its category's color. Pick one to override it." : "Hallways blend from this room's theme to the next.", () => r.color || genreCol, (q, v) => { q.color = v; }),
       colorField("Floor color", "Tints the floor art. Clear for the art's own color.", () => (r.tint || {}).floor, (q, v) => { q.tint = Object.assign({}, q.tint, { floor: v }); }),
       colorField("Wall color", "Tints the walls, under any murals. Clear for the art's own color.", () => (r.tint || {}).wall, (q, v) => { q.tint = Object.assign({}, q.tint, { wall: v }); }),
     ]));
@@ -2014,11 +2015,11 @@ function renderInspector() {
     const ds = el("select", {}, [["left", "Pointing left"], ["right", "Pointing right"]].map(([v, l]) => el("option", { value: v, text: l }))); ds.value = a.dir === "left" ? "left" : "right";
     ds.addEventListener("change", () => ed(q => { q.dir = ds.value; }));
     const wd = el("input", { type: "number", min: 2, max: 8, value: a.w || 4 }); wd.addEventListener("change", () => ed(q => { q.w = Math.max(2, Math.min(8, +wd.value || 4)); }));
-    box.appendChild(el("div", { class: "rrow" }, [field("Room it points to", gs, "Its color comes from the room's genre (Visitors, Genres); its words are the room's name unless you set them below. What it says when you look at it is in Words, Signs."), field("Direction", ds), field("Length (tiles)", wd)]));
+    box.appendChild(el("div", { class: "rrow" }, [field("Room it points to", gs, "Its color comes from the wing's category (Visitors, Categories); its words are the room's name unless you set them below. What it says when you look at it is in Words, Signs."), field("Direction", ds), field("Length (tiles)", wd)]));
     const lb = el("input", { type: "text", value: a.label || "", placeholder: "(the room's name)", maxlength: 16 }); lb.addEventListener("change", () => ed(q => { if (lb.value.trim()) q.label = lb.value.trim(); else delete q.label; }));
     const cl = el("input", { type: "color", value: a.color || (genres.find(g => g.id === a.genre) || {}).color || "#c8a070" }); cl.addEventListener("change", () => ed(q => { q.color = cl.value; }));
     box.appendChild(el("div", { class: "rrow" }, [field("Words (optional)", lb), field("Own color (optional)", cl)]));
-    if (a.color) box.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small quiet", text: "Use the genre's color", onclick: () => ed(q => { delete q.color; }) })]));
+    if (a.color) box.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small quiet", text: "Use the wing's color", onclick: () => ed(q => { delete q.color; }) })]));
   }
   if (it.type === "decal" && d.decals[it.i].key === "rug") {
     const a = d.decals[it.i], ed = fn => { snapshot(); fn(editable(R.id).decals[it.i]); roomChanged(true); renderInspector(); };
@@ -2371,29 +2372,28 @@ function relBox(p) {
   show();
   return el("label", { class: "wide" }, [document.createTextNode("Relationship"), el("small", { text: "How your experience lined up with what the developer intended. Curious visitors ask for a relationship (never by name), so players have to read both sides. Edit the list in the Visitors tab." }), s, about]);
 }
-/* Genres: the museum's rooms for episodes. */
+/* Categories (internally "genres"): each wing has one, for its color; each episode has one too. */
 function renderGenres(wrap) {
   const st = draft.settings, list = st.genres = st.genres || clone(GOQ.SAMPLE_GENRES);
   const lay = GOQ.layoutOf(roomDef("museum")), roomsOf = id => lay ? lay.zones.filter(z => z.rect && z.rect.genre === id).map(z => z.name) : [];
-  wrap.appendChild(el("h3", { text: "Genres (the museum's rooms)", style: "margin:18px 0 4px" }));
-  wrap.appendChild(el("p", { class: "note", text: "Each genre is a room in the museum (pick a room's genre in Rooms, Museum, Layout). An episode is exhibited in the room for the genre you pick for it in Pieces (Exhibited in)." }));
+  wrap.appendChild(el("h3", { text: "Categories", style: "margin:18px 0 4px" }));
+  wrap.appendChild(el("p", { class: "note", text: "What kind of episode it is (pick one for each episode in Pieces). A wing gets a category too, for its color (Rooms, Museum, Layout). Episodes go in the wings by air date, not by category." }));
   list.forEach((g, i) => {
     const name = el("input", { type: "text", value: g.name, maxlength: 40 }); name.addEventListener("input", () => { g.name = name.value; changed(); });
     const sh = el("input", { type: "text", value: g.short || "", maxlength: 16, placeholder: "e.g. Dark" }); sh.addEventListener("input", () => { g.short = sh.value; changed(); });
     const col = el("input", { type: "color", value: g.color || "#a08868" }); col.addEventListener("input", () => { g.color = col.value; changed(); });
     const where = roomsOf(g.id);
     wrap.appendChild(el("article", { class: "prow", style: "display:block" }, [el("div", { class: "fields" }, [
-      el("label", {}, [document.createTextNode("Name"), name]), el("label", {}, [document.createTextNode("Short name"), el("small", { text: "On its touch screen." }), sh]), el("label", {}, [document.createTextNode("Color"), col]),
-      el("p", { class: "note wide", text: where.length ? "Room: " + where.join(", ") : "No room has this genre yet." }),
+      el("label", {}, [document.createTextNode("Name"), name]), el("label", {}, [document.createTextNode("Short name"), el("small", { text: "Where the name won't fit." }), sh]), el("label", {}, [document.createTextNode("Color"), col]),
+      el("p", { class: "note wide", text: where.length ? "Wing: " + where.join(", ") : "No wing uses this category's color." }),
       el("div", { class: "acts" }, [el("button", { type: "button", class: "btn small quiet", text: "Remove", onclick: () => {
-        if (!confirm("Remove the \u201c" + g.name + "\u201d genre? Pieces set to it go to rooms with no genre until you pick another.")) return;
+        if (!confirm("Remove the \u201c" + g.name + "\u201d category? Pieces set to it will have none until you pick another.")) return;
         list.splice(i, 1); draft.pieces.forEach(p => { if (p.genre === g.id) p.genre = ""; }); changed({ now: true }); renderVisitors(); } })]),
     ])]));
   });
-  wrap.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn primary", text: "Add a genre", onclick: () => { list.push({ id: "genre-" + Math.random().toString(36).slice(2, 7), name: "New genre", color: "#a08868" }); changed({ now: true }); renderVisitors(); } })]));
+  wrap.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn primary", text: "Add a category", onclick: () => { list.push({ id: "genre-" + Math.random().toString(36).slice(2, 7), name: "New category", color: "#a08868" }); changed({ now: true }); renderVisitors(); } })]));
 }
-/* Which room an episode is shown in: pick a genre by hand. */
-/* The museum room (wing) that shows a genre, by its current name. */
+/* The wing with a category's color, by its current name (Volume I...). */
 function wingOf(gid) { const lay = GOQ.layoutOf(roomDef("museum")), z = lay && lay.zones.find(q => q.rect && q.rect.genre === gid); return z ? z.name : ""; }
 /* The developer's answers to the three questions (answer cards, Joe 10/13): playing as the curator, the pause menu's Developer
    answers shows each question on a card, then its answer, split into as many cards as it takes, for the recording. */
@@ -2411,16 +2411,16 @@ function answersBox(p) {
 let pieceRedraw = null; // set by pieceRow: how a piece's own fields redraw the page they're on (the Pieces tab, or Episode day)
 function genreBox(p) {
   const genres = draft.settings.genres || GOQ.SAMPLE_GENRES;
-  const s = el("select", {}, [el("option", { value: "", text: "No genre (rooms without one)" })].concat(genres.map(g => el("option", { value: g.id, text: g.name }))));
+  const s = el("select", {}, [el("option", { value: "", text: "None" })].concat(genres.map(g => el("option", { value: g.id, text: g.name }))));
   s.value = p.genre || ""; s.addEventListener("change", () => { p.genre = s.value; changed({ now: true }); (pieceRedraw || renderPieces)(); });
-  return el("label", { class: "wide" }, [document.createTextNode("Exhibited in"), el("small", { text: "The room whose cases it goes in, and only that room. If its cases are full, the oldest of that genre wait on the room's touch screen until you add a case there." }), s]);
+  return el("label", { class: "wide" }, [document.createTextNode("Category"), el("small", { text: "What kind of episode it is: it colors its trading card and counts toward a player's best category. Which wing it's in goes by its air date." }), s]);
 }
 /* A second category it also belongs to (a blend). For the record; it's shown in the room it's exhibited in. */
 function blendBox(p) {
   const genres = draft.settings.genres || GOQ.SAMPLE_GENRES;
   const s = el("select", {}, [el("option", { value: "", text: "No blend" })].concat(genres.map(g => el("option", { value: g.id, text: g.name }))));
   s.value = p.blend || ""; s.addEventListener("change", () => { p.blend = s.value; changed({ now: true }); });
-  return el("label", { class: "wide" }, [document.createTextNode("Blends with"), el("small", { text: "A second category it also belongs to. It's still exhibited only in the room above." }), s]);
+  return el("label", { class: "wide" }, [document.createTextNode("Blends with"), el("small", { text: "A second category it also belongs to (for the record)." }), s]);
 }
 function renderVisitors() {
   const main = $("#main"); main.innerHTML = "";
@@ -2987,7 +2987,7 @@ function renderPieces() {
   const spots = GOQ.spotCount(), cases = GOQ.caseCount(), wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
   wrap.appendChild(el("h2", { class: "title", text: "Pieces" }));
   wrap.appendChild(el("p", { class: "note", text: "When a room has more episodes than cases, the oldest (highest in this list) move to that room's touch screen, and the newest stay in the cases. Community finds need a free wall spot to be shown. Add new pieces at the bottom." }));
-  wrap.appendChild(el("p", { text: "Episodes go in display cases (" + cases + " in the museum), in the room for their genre (set under Exhibited in): your observation on the front placard, the developer's intention on the back. Community finds hang on the walls as paintings (" + spots + " wall spots). Each kind fills its places in this order. Add more cases and wall spots in the Rooms tab." }));
+  wrap.appendChild(el("p", { text: "Episodes go in display cases (" + cases + " in the museum), wing by wing by air date, Volume I first: your observation on the front placard, the developer's intention on the back. Community finds hang on the walls as paintings (" + spots + " wall spots). Each kind fills its places in this order. Add more cases and wall spots in the Rooms tab." }));
   wrap.appendChild(el("p", { text: "Turn on \"Unveil on a date\" and visitors see the piece under a sheet until that day. In curator mode it waits in a crate, so you can hang it on camera. Links show as small buttons while someone is looking at the piece." }));
   if (!draft.pieces.length) wrap.appendChild(el("p", { class: "empty", text: "No pieces yet. Add the first one below." }));
   // Where each piece is: which gallery and case or wall spot, or on its room's touch screen (the oldest go first).
