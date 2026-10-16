@@ -7629,7 +7629,7 @@ class Game {
     }
     this.fol = null; n.follow = false; n.cur = null;
     cv.list = cv.list.filter(x => x !== v); Object.assign(v, { state: "recommended", piece: piece.id, day: todayISO(), room: null, take: ["agree", "disagree", "puzzled"][Math.floor(Math.random() * 3)] }); cv.back.push(v);
-    this.count("helped", v.id, v.asked ? this.pack.settings.rewards.helpedName : undefined); // found from the description alone: helped; after asking the name: helpedName this.bump(this.progress.stats.loved, genreOf(piece, this.pack.settings.genres)); this.saveProgress();
+    this.count("helped", v.id, v.asked ? this.pack.settings.rewards.helpedName : undefined); this.bump(this.progress.stats.loved, genreOf(piece, this.pack.settings.genres)); this.saveProgress(); // found from the description alone: helped; after asking the name: helpedName
     this.cheer(n, () => this.say(named(this.tx("cur.thanks", { title: piece.title, name: v.name })), () => { n.leaving = true; n.leaveT = 0; n.alpha = 1; }));
   }
   /* The right recommendation: they're thrilled (a big heart, sparkles, a hop), you see it for a moment, then they talk. */
@@ -10688,7 +10688,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 87";
+const VERSION = "2026-11-18 cards 88";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
