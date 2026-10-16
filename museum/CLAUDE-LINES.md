@@ -382,3 +382,4 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Tutorial | Your hands are full | Your hands are full. |
 
 | Pieces | The back of a case before the developer's reaction is in (one line) | The developer's reaction is on its way. Check back soon. |
+| Menu | After saving, the first time only: where the save lives (plain words, no tech talk) | Your museum is saved in this browser, on this device. / If you clear your browsing history, or play on a different device or browser, you'll start fresh. |
