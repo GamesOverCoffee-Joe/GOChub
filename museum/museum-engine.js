@@ -4171,11 +4171,18 @@ class Game {
 .gt-reader.clip .gt-rd-links{gap:calc(2px * var(--s))}
 .gt-reader.clip .gt-rd-links{flex-direction:row;flex-wrap:wrap;margin-left:0}
 .gt-reader.clip .gt-rd-links > *{flex:1}
-.gt-reader.clip .gt-rd-body{grid-area:body;height:100%;min-height:0;margin-top:0;font-size:calc(6px * var(--s))}
+.gt-reader.clip .gt-rd-body{grid-area:body;height:100%;min-height:0;box-sizing:border-box;padding-bottom:calc(3px * var(--s));margin-top:0;font-size:calc(6px * var(--s))}
 .gt-reader.clip .gt-rd-foot{grid-area:foot;align-self:end} /* the divider and the keys stay together at the bottom */
 .gt-reader.clip.flip{grid-template-columns:minmax(0,1fr) calc(68px * var(--s));grid-template-areas:"top left" "body left" "foot foot"}
 .gt-rd-clip > img.photo{image-rendering:auto}
 .gt-rd-clip .gt-pick{position:absolute;left:calc(2px * var(--s));bottom:calc(2px * var(--s));z-index:2;margin:0;padding:calc(1px * var(--s)) calc(2px * var(--s));background:rgba(248,244,236,.92);border:calc(.5px * var(--s)) solid #181820}
+/* The pixel font (Press Start 2P) only draws cleanly at multiples of 8 screen pixels: in-between sizes leave stray pixels (Joe 10/16).
+   Where the browser can round in CSS, the reader's pixel text snaps to the nearest step (--pxstep: 8 screen pixels, set from the
+   device's pixel density; older browsers keep the sizes above). */
+.gt-rd-body b{font-size:round(calc(4.5px * var(--s)), var(--pxstep, 8px))}
+.gt-reader.clip .gt-rd-t{font-size:round(calc(6px * var(--s)), var(--pxstep, 8px))}
+.gt-reader.clip .gt-rd-t small,.gt-reader.clip .gt-rd-links a,.gt-reader.clip .gt-rd-links button.note{font-size:round(calc(4.5px * var(--s)), var(--pxstep, 8px))}
+.gt-reader.clip .gt-pick,.gt-rd-foot{font-size:round(down, calc(4.5px * var(--s)), var(--pxstep, 8px))}
 .gt-rd-body b.red{color:#a8322a}
 .gt-closeup img.sketch{filter:grayscale(1) contrast(1.5) brightness(1.15) sepia(.25)}
 .gt-qtimer{position:absolute;left:calc(6px * var(--s));right:calc(6px * var(--s));bottom:calc(3px * var(--s));height:calc(2px * var(--s));background:#e8b24a;transform-origin:left;animation:gtq linear forwards}
@@ -4316,6 +4323,7 @@ class Game {
   /* ----- the reading panel -----
      Long text (placards, magazines) in big paragraphs you page through: A or right for the next page, left to go back, B to close. */
   read(spec, done) {
+    if (typeof document !== "undefined") document.documentElement.style.setProperty("--pxstep", (8 / (window.devicePixelRatio || 1)) + "px"); // see the pixel font's sizes in the CSS
     this.holdToast(); // a toast showing now waits until the placard closes
     const box = this.el.reader, clip = spec.clip || null, framed = !!(spec.frame || clip); box.style.display = framed ? "grid" : "block"; this.mode = "read";
     box.innerHTML = (framed ? '<div class="gt-rd-left"><div class="gt-rd-clip"></div><div class="gt-rd-head"></div></div><div class="gt-rd-top"></div>' : '<div class="gt-rd-head"></div>') + '<div class="gt-rd-body"></div><div class="gt-rd-foot"><span class="gt-rd-n"></span><span class="gt-rd-k"></span></div>'; // a piece (Joe 10/16): the picture, the pick tag and the link on the left; its title and developer over the text
@@ -4358,8 +4366,11 @@ class Game {
       pages.forEach(p => { if (p.tone === undefined) p.tone = sec.tone || ""; });
     }
     if (!pages.length) pages.push({ label: "", text: "" });
-    this.rd = { pages, i: 0, done, note: spec.note || null, sel: -1, menu: !!spec.menu }; // note: a piece you can leave a note on (its NOTE button); sel: the highlighted button
+    const rd = this.rd = { pages, i: 0, done, note: spec.note || null, sel: -1, menu: !!spec.menu }; // note: a piece you can leave a note on (its NOTE button); sel: the highlighted button
     this.renderRead();
+    // A font still loading (the pixel font loads the first time it's used: maybe right now): measured with a stand-in, the pages
+    // could overflow once it arrives. Lay them out again when it's in, if this placard is still open on its first page (Joe 10/16).
+    if (typeof document !== "undefined" && document.fonts && document.fonts.status === "loading") document.fonts.ready.then(() => { if (this.rd === rd && this.mode === "read" && rd.i === 0) this.read(spec, done); });
   }
   renderRead() {
     const r = this.rd, pg = r.pages[r.i], body = this.el.reader.querySelector(".gt-rd-body");
@@ -10677,7 +10688,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 86";
+const VERSION = "2026-11-18 cards 87";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
