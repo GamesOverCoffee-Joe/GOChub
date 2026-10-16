@@ -4150,8 +4150,10 @@ class Game {
 .gt-scr{position:absolute;overflow:hidden;pointer-events:none;background:#000}
 .gt-scr iframe{position:absolute;left:-12%;top:-12%;width:124%;height:124%;border:0;filter:saturate(.85) brightness(.88) contrast(1.06)}
 .gt-scr-fx{position:absolute;inset:0;background-image:linear-gradient(rgba(0,0,0,0) 50%,rgba(0,0,0,.32) 50%),linear-gradient(90deg,rgba(0,0,0,0) 50%,rgba(0,0,0,.12) 50%);background-size:100% calc(2px * var(--s)),calc(2px * var(--s)) 100%;box-shadow:inset 0 0 calc(5px * var(--s)) rgba(0,0,0,.65)}
-.gt-reader.clip{grid-template-columns:calc(68px * var(--s)) minmax(0,1fr);grid-template-rows:calc(38px * var(--s)) minmax(0,1fr) auto;grid-template-areas:"clip body" "head body" "foot foot";column-gap:calc(6px * var(--s));padding-top:calc(4px * var(--s))}
-.gt-rd-clip{grid-area:clip;position:relative;overflow:hidden;background:#000;outline:calc(1px * var(--s)) solid #181820}
+.gt-reader.clip{grid-template-columns:calc(68px * var(--s)) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"left top" "left body" "foot foot";column-gap:calc(6px * var(--s));padding-top:calc(4px * var(--s))}
+.gt-rd-left{grid-area:left;display:flex;flex-direction:column;gap:calc(3px * var(--s));min-width:0}
+.gt-rd-top{grid-area:top;border-bottom:calc(1px * var(--s)) solid #b0b0c0;padding-bottom:calc(2.5px * var(--s));margin-bottom:calc(3px * var(--s));min-width:0}
+.gt-rd-clip{height:calc(38px * var(--s));flex:none;position:relative;overflow:hidden;background:#000;outline:calc(1px * var(--s)) solid #181820}
 .gt-rd-clip > img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
 .gt-list-split{display:grid;grid-template-columns:minmax(0,1fr) calc(104px * var(--s));gap:calc(5px * var(--s));align-items:start}
 .gt-list-split .gt-shop-row .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -4159,18 +4161,19 @@ class Game {
 .gt-list-cap{font-size:calc(5.5px * var(--s));color:#505068;margin-top:calc(2px * var(--s));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gt-rd-clip video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s;pointer-events:none}
 .gt-rd-clip iframe{position:absolute;left:-12%;top:-12%;width:124%;height:124%;border:0;opacity:0;transition:opacity .5s;pointer-events:none}
-.gt-reader.clip .gt-rd-head{grid-area:head;flex-direction:column;align-items:stretch;gap:calc(2px * var(--s));border-bottom:0;padding:calc(3px * var(--s)) 0 0}
-.gt-reader.clip .gt-rd-t{flex:none;font-size:calc(5.5px * var(--s));line-height:1.25}
+.gt-reader.clip .gt-rd-head{flex-direction:column;align-items:stretch;gap:calc(3px * var(--s));border-bottom:0;padding:0}
+.gt-reader.clip .gt-pick{margin:0;white-space:nowrap;font-size:calc(4px * var(--s))} /* one line: CURATOR'S PICK */
+.gt-reader.clip .gt-rd-t{flex:none;font-size:calc(6px * var(--s));line-height:1.25}
 .gt-reader.clip .gt-rd-t > :first-child,.gt-reader.clip .gt-rd-t{overflow-wrap:anywhere}
-.gt-reader.clip .gt-rd-tt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden} /* the pixel font is wide: titles get two lines at most */
-.gt-reader.clip .gt-rd-t small{font-size:calc(4.5px * var(--s));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gt-reader.clip .gt-rd-tt{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden} /* the pixel font is wide: titles get two lines at most */
+.gt-reader.clip .gt-rd-t small{font-size:calc(4.5px * var(--s));display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden} /* room to show it all: up to two lines (the title, three) */
 .gt-reader.clip .gt-rd-links a,.gt-reader.clip .gt-rd-links button.note{font-size:calc(4.5px * var(--s));padding:calc(2px * var(--s)) calc(2px * var(--s))}
 .gt-reader.clip .gt-rd-links{gap:calc(2px * var(--s))}
 .gt-reader.clip .gt-rd-links{flex-direction:row;flex-wrap:wrap;margin-left:0}
 .gt-reader.clip .gt-rd-links > *{flex:1}
-.gt-reader.clip .gt-rd-body{grid-area:body;height:calc(106px * var(--s));margin-top:0;font-size:calc(6px * var(--s))}
+.gt-reader.clip .gt-rd-body{grid-area:body;height:100%;min-height:0;margin-top:0;font-size:calc(6px * var(--s))}
 .gt-reader.clip .gt-rd-foot{grid-area:foot;align-self:end} /* the divider and the keys stay together at the bottom */
-.gt-reader.clip.flip{grid-template-columns:minmax(0,1fr) calc(68px * var(--s));grid-template-areas:"body clip" "body head" "foot foot"}
+.gt-reader.clip.flip{grid-template-columns:minmax(0,1fr) calc(68px * var(--s));grid-template-areas:"top left" "body left" "foot foot"}
 .gt-rd-clip > img.photo{image-rendering:auto}
 .gt-rd-clip .gt-pick{position:absolute;left:calc(2px * var(--s));bottom:calc(2px * var(--s));z-index:2;margin:0;padding:calc(1px * var(--s)) calc(2px * var(--s));background:rgba(248,244,236,.92);border:calc(.5px * var(--s)) solid #181820}
 .gt-rd-body b.red{color:#a8322a}
@@ -4315,7 +4318,7 @@ class Game {
   read(spec, done) {
     this.holdToast(); // a toast showing now waits until the placard closes
     const box = this.el.reader, clip = spec.clip || null, framed = !!(spec.frame || clip); box.style.display = framed ? "grid" : "block"; this.mode = "read";
-    box.innerHTML = (framed ? '<div class="gt-rd-clip"></div>' : "") + '<div class="gt-rd-head"></div><div class="gt-rd-body"></div><div class="gt-rd-foot"><span class="gt-rd-n"></span><span class="gt-rd-k"></span></div>';
+    box.innerHTML = (framed ? '<div class="gt-rd-left"><div class="gt-rd-clip"></div><div class="gt-rd-head"></div></div><div class="gt-rd-top"></div>' : '<div class="gt-rd-head"></div>') + '<div class="gt-rd-body"></div><div class="gt-rd-foot"><span class="gt-rd-n"></span><span class="gt-rd-k"></span></div>'; // a piece (Joe 10/16): the picture, the pick tag and the link on the left; its title and developer over the text
     box.classList.toggle("gt-rd-pre", !!spec.pre); // line breaks and indents kept (the stats)
     box.classList.toggle("clip", framed); // a piece: its screen (gameplay, or its art until it has a clip) and title on one side, the placard on the other
     box.classList.toggle("flip", framed && !!spec.flip); // the developer's side: mirrored
@@ -4327,7 +4330,8 @@ class Game {
     }
     else if (spec.img) { const im = document.createElement("img"); im.src = spec.img; im.alt = ""; if (spec.imgClass) im.className = spec.imgClass; head.appendChild(im); }
     const t = document.createElement("div"); t.className = "gt-rd-t"; const tt = document.createElement("span"); tt.className = "gt-rd-tt"; tt.textContent = spec.title || ""; t.appendChild(tt); if (spec.sub) { const sm = document.createElement("small"); sm.textContent = spec.sub; t.appendChild(sm); }
-    if (spec.pick) (framed ? box.querySelector(".gt-rd-clip") : t).appendChild(this.pickTag()); head.appendChild(t); // on a framed placard, the pick tag sits on the screen's corner
+    if (framed) { box.querySelector(".gt-rd-top").appendChild(t); if (spec.pick) head.appendChild(this.pickTag()); } // a piece: the pick tag under the picture, one line, never over it
+    else { if (spec.pick) t.appendChild(this.pickTag()); head.appendChild(t); }
     const links = (spec.links || []).filter(l => l[0]);
     if (links.length || spec.note) {
       const lw = document.createElement("div"); lw.className = "gt-rd-links"; head.appendChild(lw);
@@ -4402,7 +4406,7 @@ class Game {
     const notes = bothRead && (this.online() || !!p.tut); // visitors' notes: only once you've read the other side too (so this is your second), or with the whole piece
     if (notes) { const ns = this.notesFor(p); secs.push(...ns); this.refreshNotes(); } // at the very end, after "Continues on other side"
     this.read({ img: img ? p.image : this.pieceArt(p).toDataURL(), imgClass: img && img.naturalWidth > 160 ? "photo" : "", title: p.title.toUpperCase(), sub: "By " + p.developer,
-      sections: secs, pick: p.pick, frame: true, clip: this.clipOf(p), flip: side === "back", note: notes && !this.curator ? p : null, links: [side !== "back" ? [p.episodeUrl, "Watch the episode", "WATCH"] : [], side !== "front" ? [p.gameUrl, "Play the game", "PLAY"] : []] }, () => {
+      sections: secs, pick: p.pick, frame: true, clip: this.clipOf(p), flip: side === "back", note: notes && !this.curator ? p : null, links: [side !== "front" ? [p.episodeUrl, "Watch the episode", "WATCH"] : [], side !== "back" ? [p.gameUrl, "Play the game", "PLAY"] : []] }, () => {
       if (!this.readEnded) return; // closed before the last page: not read yet
       if (onRead) onRead();
       if (side === undefined) { const k = (this.progress.sides || (this.progress.sides = {}))[p.id] || (this.progress.sides[p.id] = {}); if (gold) k.front = k.back = 1; else k.note = 1; this.saveProgress(); }
@@ -10673,7 +10677,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 85";
+const VERSION = "2026-11-18 cards 86";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
