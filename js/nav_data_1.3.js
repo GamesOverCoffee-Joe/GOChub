@@ -22,11 +22,10 @@ const navigationLinks = [
         classes: 'text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group'
     },
     {
-        name: 'Coming soon',
+        name: 'GOQ Museum',
         href: 'museum.html',
-        disabled: true,
-        titleSuffix: ' - Museum',
-        classes: 'text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group cursor-default'
+        titleSuffix: ' - GOQ Museum',
+        classes: 'text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group'
     },
     {
         name: 'Insights',
