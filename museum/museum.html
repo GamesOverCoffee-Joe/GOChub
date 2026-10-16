@@ -75,7 +75,7 @@ body.touch .gt-controls{display:flex}
 .gt-pad .l{left:0;border-right:0;border-radius:4px 0 0 4px}.gt-pad .r{right:0;border-left:0;border-radius:0 4px 4px 0}
 .gt-pad i{left:33.3%;top:33.3%;width:33.4%;height:33.4%;border:0;background:var(--surface-2)}
 .gt-pad[data-dir="up"] .u,.gt-pad[data-dir="down"] .d,.gt-pad[data-dir="left"] .l,.gt-pad[data-dir="right"] .r{background:var(--gold)}
-.gt-btns{display:flex;gap:calc(var(--btn) * .26);align-items:center;transform:rotate(-18deg);flex:none}
+.gt-btns{display:flex;gap:calc(var(--btn) * .26);align-items:center;transform:rotate(-18deg);flex:none;padding:calc(var(--btn) * .22) calc(var(--btn) * .2) 0} /* room for the tilt (and A's lift) inside its own box, so the edge never crops A */
 .gt-btn{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;outline:none;touch-action:none;width:var(--btn);height:var(--btn);border-radius:50%;
   border:2px solid var(--muted);background:var(--surface-2);color:var(--text);font-family:var(--pixel);font-size:calc(var(--btn) * .23);cursor:pointer;box-shadow:3px 3px 0 var(--shadow)}
 .gt-btn-a{color:var(--gold);margin-top:calc(var(--btn) * -.42)}
@@ -88,7 +88,9 @@ body.l-split-h .gt-start{align-self:center}
 
 /* Portrait (slab phones upright, folded cover screens, tablets upright): game on top, controls below */
 body.l-portrait .play{justify-content:flex-start;padding-top:6px}
-body.l-portrait .gt-controls{width:100%;max-width:560px;padding:0 6px;flex:1;align-items:center}
+body.l-portrait .gt-controls{width:100%;max-width:560px;padding:0 6px;flex:1;align-items:center;position:relative;gap:12px}
+body.l-portrait .gt-start,body.l-split-v .gt-start{position:absolute;left:50%;bottom:6px;margin:0;transform:translateX(-50%) rotate(-18deg)} /* under the middle, out of the row: the pad and A/B get the full width (Joe 10/16: A was cropped on narrow phones) */
+body.l-portrait .gt-start.down,body.l-split-v .gt-start.down{transform:translateX(-50%) rotate(-18deg) translate(1px,1px)}
 /* Landscape (phones sideways, unfolded foldables, tablets sideways): D-pad and buttons either side of the screen */
 body.l-landscape .play{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;justify-items:center;padding:4px 8px}
 body.l-landscape #controls{display:contents}
@@ -97,7 +99,7 @@ body.l-landscape .gt-pad{grid-column:1;grid-row:1}
 body.l-landscape .gt-btns{grid-column:3;grid-row:1}
 /* Half-folded with the hinge across the middle (tabletop): game above the fold, controls below it */
 body.l-split-v .play{justify-content:flex-start;padding-top:6px;gap:0}
-body.l-split-v .gt-controls{width:100%;max-width:560px;padding:0 6px;margin-top:var(--hinge);flex:1}
+body.l-split-v .gt-controls{width:100%;max-width:560px;padding:0 6px;margin-top:var(--hinge);flex:1;position:relative}
 /* Half-folded like a book (hinge down the middle): game on the left page, controls on the right page */
 body.l-split-h .play{display:grid;grid-template-columns:var(--seg0w) var(--hingew) 1fr;align-items:center;justify-items:center;padding:0}
 body.l-split-h #stage{grid-column:1}
@@ -267,7 +269,7 @@ dialog.news{max-width:min(520px,calc(100vw - 24px))}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 90";
+window.GOQ_WANT = "2026-11-18 cards 91";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -387,7 +389,9 @@ window.goqStart = function () {
     document.body.classList.toggle("touch", touchUI);
     document.body.classList.remove("l-portrait", "l-landscape", "l-split-v", "l-split-h");
     // clientWidth, not innerWidth: on phones innerWidth can grow to fit something wider than the screen.
-    const vw = document.documentElement.clientWidth, vh = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+    // Minus the notch areas (safe areas: the body pads itself by them), so nothing lands under a notch or off the edge.
+    const bs = getComputedStyle(document.body), inset = (parseFloat(bs.paddingLeft) || 0) + (parseFloat(bs.paddingRight) || 0);
+    const vw = document.documentElement.clientWidth - inset, vh = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
     const top = document.querySelector(".top").offsetHeight;
     if (!touchUI) { game.fit(area.clientWidth - 24, vh - top - 70); return; }
     // Control sizes follow the screen's short side: comfortable on phones, bigger on tablets, a bit slimmer at the sides in landscape.
@@ -396,7 +400,7 @@ window.goqStart = function () {
     const padL = Math.round(clamp(m * 0.26, 104, 180)), btnL = Math.round(clamp(m * 0.13, 52, 84));
     const sizes = (p, b) => { root.style.setProperty("--pad", p + "px"); root.style.setProperty("--btn", b + "px"); };
     sizes(pad, btn);
-    const ctlH = pad + 20, sideW = Math.max(padL, btnL * 2.3) + 24;
+    const ctlH = pad + 20, sideW = Math.max(padL, btnL * 2.3) + 24; // (the tilted A/B pair: its padding gives the tilt room)
     const seg = segments();
     if (seg) {
       const [a, b] = seg;
