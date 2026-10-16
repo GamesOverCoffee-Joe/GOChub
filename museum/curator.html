@@ -445,7 +445,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 84";
+window.GOQ_WANT = "2026-11-18 cards 85";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -523,7 +523,7 @@ function packOut() {
     if (p.rel) o.rel = p.rel;
     if (p.genre) o.genre = p.genre;
     if (p.blend) o.blend = p.blend;
-    if (p.unveil) o.unveil = p.unveil;
+    if (p.unveil && p.kind !== "community") o.unveil = p.unveil; // (community pieces are just up: no unveiling)
     if (p.aired) o.aired = p.aired;
     if (p.drink) { o.drink = p.drink; if (p.drinkColor) o.drinkColor = p.drinkColor; if (p.drinkLine && p.drinkLine.length) o.drinkLine = p.drinkLine; if (p.drinkPrice) o.drinkPrice = p.drinkPrice; if (p.drinkIced) o.drinkIced = true; if (p.drinkCaf === false) o.drinkCaf = false; }
     if (p.pick) o.pick = true;
@@ -3122,7 +3122,7 @@ function pieceRow(p, i, place, opts) {
   const move = (d) => { const j = i + d; if (j < 0 || j >= draft.pieces.length) return; const a = draft.pieces; [a[i], a[j]] = [a[j], a[i]]; changed({ now: true }); redraw(); };
   const fields = el("div", { class: "fields" }, [
     f("Title", text("title", "Game title")), f("Developer", text("developer", "Who made it")),
-    f("Frame", kind), p.kind === "episode" ? f("Aired on", aired, false, "The day the episode came out. The wings are a timeline: this decides which wing and case it's in. No date: it counts as one of the oldest.") : null, el("div", { class: "fieldset" }, [el("span", { class: "flabel", text: "Unveiling" }), el("small", { text: "Off: it hangs right away." }), unveilBox]),
+    f("Frame", kind), p.kind === "episode" ? f("Aired on", aired, false, "The day the episode came out. The wings are a timeline: this decides which wing and case it's in. No date: it counts as one of the oldest.") : null, p.kind === "community" ? null : el("div", { class: "fieldset" }, [el("span", { class: "flabel", text: "Unveiling" }), el("small", { text: "Off: it hangs right away." }), unveilBox]),
     el("div", { class: "fieldset wide" }, [el("span", { class: "flabel", text: "Curator's pick" }), el("small", { text: "Pins a medal to the piece and tags its placard." }), el("div", { class: "unveil" }, [el("label", { class: "check" }, [pickBox, document.createTextNode("This is one of my picks")])])]),
     ...placard,
     f("How a visitor would describe it", text("hint", "the one where the clock never ran out but I still rushed"), true, "Visitors say this when they come back to tell you how it went: \"I tried Lantern Keeper, the one where...\" Keep it to one line, in their words."),

@@ -1796,7 +1796,7 @@ function normalizePiece(p, i) {
     title: str(p.title, 80) || "Untitled", developer: str(p.developer, 80) || "Unknown developer",
     observation: str(p.observation), intention: str(p.intention), reaction: str(p.reaction), guestWriter: str(p.guestWriter, 80), guestNote: str(p.guestNote), // reaction: the developer's, after the episode (the back of the case)
     episodeUrl: safeUrl(p.episodeUrl), gameUrl: safeUrl(p.gameUrl), clipUrl: safeUrl(p.clipUrl) || (/^[\w.-]{1,80}\.(webm|mp4)$/i.test(String(p.clipUrl || "").trim()) ? String(p.clipUrl).trim() : ""), clipLoop: str(p.clipLoop, 30), image: str(p.image, 20000000) || null,
-    unveil: /^\d{4}-\d{2}-\d{2}$/.test(p.unveil || "") ? p.unveil : "",
+    unveil: p.kind !== "community" && /^\d{4}-\d{2}-\d{2}$/.test(p.unveil || "") ? p.unveil : "", // only episodes get an unveiling: a community piece is just up (Joe 10/16)
     aired: /^\d{4}-\d{2}-\d{2}$/.test(p.aired || "") ? p.aired : "", // the day its episode aired: the wings fill by it (Joe 10/15)
     drink: str(p.drink, 40), // unveiling: the drink of the week it brings (until the next unveil that brings one)
     drinkPrice: Math.max(0, Math.min(99, Math.round(+p.drinkPrice || 0))), drinkIced: !!p.drinkIced, drinkCaf: p.drinkCaf !== false, // the drink of the week (caffeinated unless unticked)'s price, and whether it's served iced
@@ -10673,7 +10673,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 84";
+const VERSION = "2026-11-18 cards 85";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
