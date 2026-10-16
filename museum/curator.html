@@ -445,7 +445,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 88";
+window.GOQ_WANT = "2026-11-18 cards 89";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -1008,6 +1008,15 @@ function renderStaff() {
   const main = $("#main"); main.innerHTML = "";
   const st = draft.settings.staff || (draft.settings.staff = { eotm: { name: "", note: "" }, corkboard: GOQ.DEFAULT_CORKBOARD.slice() });
   const wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
+  { // What's new: the briefing behind the museum page's button (Joe 10/16)
+    const n = draft.settings.news || (draft.settings.news = { date: "", text: "" });
+    const date = el("input", { type: "date", value: n.date || "" }); date.addEventListener("change", () => { n.date = date.value; changed({ now: true }); });
+    const txt = el("textarea", { rows: 12, maxlength: 12000, placeholder: "## New tutorial\n- Read a sign, open a chest...\n\nThanks for playing!" }); txt.value = n.text || ""; txt.addEventListener("input", () => { n.text = txt.value; changed(); });
+    const today = el("button", { type: "button", class: "btn small quiet", text: "Today", onclick: () => { date.value = GOQ.todayISO(); n.date = date.value; changed({ now: true }); } });
+    wrap.appendChild(el("h2", { class: "title", text: "What's new" }));
+    wrap.appendChild(el("p", { class: "note", text: "The latest update, behind a \u201cWhat's new\u201d button at the top of the museum page (it opens over the page, never the game). Empty: no button. A gold dot shows on it until someone opens it, and comes back whenever you change the date. Lines starting \u201c## \u201d are headings, \u201c- \u201d are bullets, and a blank line starts a new paragraph." }));
+    wrap.appendChild(el("div", { class: "fields" }, [el("label", {}, [document.createTextNode("Date"), el("div", { class: "row" }, [date, today])]), el("label", { class: "wide" }, [document.createTextNode("The update"), txt])]));
+  }
   wrap.appendChild(el("h2", { class: "title", text: "Staff" }));
   wrap.appendChild(el("p", { text: "Patreon members clock in at the staff door with a badge, wear the staff uniform, and their chores count toward a staff tally. Real badges live in Supabase (set it up below). The offline test badge, number 0001 and key QQQ-QQQ, works on your own computer and in this preview; its points stay in that browser." }));
 

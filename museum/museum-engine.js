@@ -1904,7 +1904,7 @@ function normalizePack(p) {
   // card in a pack is rare, and how often (percent of Saturdays) Bluu has a rare. on: false hides cards from the shop.
   const cdin = (p.settings && p.settings.cards) || {}, cn = (v, d, hi) => Math.max(0, Math.min(hi, Math.round(v === undefined ? d : +v || 0)));
   const cards = { on: cdin.on !== false, single: cn(cdin.single, 10, 999), pack: cn(cdin.pack, 25, 999), rare: cn(cdin.rare, 20, 999), bluuCommon: cn(cdin.bluuCommon, 3, 999), packRare: cn(cdin.packRare, 2, 100), bluuRare: cn(cdin.bluuRare, 15, 100) };
-  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, relations, curious, life, visit, litter, line, genres, office, friday, cards, rewards: normalizeRewards(p.settings && p.settings.rewards), tutorialRev: Math.max(1, Math.min(9999, Math.round(+(p.settings && p.settings.tutorialRev) || 1))) }, samples: !Array.isArray(p.pieces) };
+  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, relations, curious, life, visit, litter, line, genres, office, friday, cards, news: normalizeNews(p.settings && p.settings.news), rewards: normalizeRewards(p.settings && p.settings.rewards), tutorialRev: Math.max(1, Math.min(9999, Math.round(+(p.settings && p.settings.tutorialRev) || 1))) }, samples: !Array.isArray(p.pieces) };
 }
 /* The curator's "Skip to tomorrow" moves every daily system forward together. */
 let DAY_SHIFT = 0;
@@ -2981,6 +2981,9 @@ const NIGHT_DIM = { lobby: 0.2, museum: 0.12, staff: 0.08, storage: 0.05, outsid
 const DIRS_LIST = ["up", "down", "left", "right"];
 const LAYOUT_MAX_W = 120, LAYOUT_MAX_H = 100, LAYOUT_SIDES = ["top", "bottom", "left", "right"];
 const hexOr = c => (/^#[0-9a-f]{6}$/i.test(c || "") ? c.toLowerCase() : "");
+/* "What's new" on the museum page (Joe 10/16): a date and a short briefing, written in the curator (Staff tab). Lines starting
+   "## " are headings, "- " bullets; a blank line starts a new paragraph. */
+function normalizeNews(n) { n = n && typeof n === "object" ? n : {}; return { date: /^\d{4}-\d{2}-\d{2}$/.test(n.date || "") ? n.date : "", text: str(n.text, 12000) }; }
 /* The wings are named by their place in the timeline (Joe 10/15): Volume I holds the oldest episodes, then Volume II, and so on. */
 function roman(n) { let s = ""; for (const [v, r] of [[1000, "M"], [900, "CM"], [500, "D"], [400, "CD"], [100, "C"], [90, "XC"], [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]]) while (n >= v) { s += r; n -= v; } return s; }
 function volumeNames(rooms) { rooms.map((r, i) => [r, (r.order || 50) * 100 + i]).filter(x => x[0].genre).sort((a, b) => a[1] - b[1]).forEach((x, k) => { x[0].name = "Volume " + roman(k + 1); }); return rooms; }
@@ -10688,7 +10691,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 88";
+const VERSION = "2026-11-18 cards 89";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
