@@ -107,7 +107,7 @@ const PAL = {
   wdoor:   [null, "#3a2414", "#7a4e2a", "#9a6a3a", "#5a381c", "#e8b84a", "#fff0a0", "#a07020"],
   keypad:  [null, "#2a2a32", "#4a4a56", "#8a8a96", "#1a1a20", "#000000", "#ff3a30", "#40e070"],
   kid:     [null, "#e8c098", "#f0a020", "#181820"],
-  curatorp:[null, "#8a5a3a", "#34343e", "#141418"],
+  curatorp:[null, "#c89060", "#34343e", "#141418"],
   dayboard:[null, "#6a4428", "#26362c", "#34463a", "#e8e8d8", "#4a2e18"],
   supbox:  [null, "#c89858", "#9a6e38", "#181820", "#f0e8d8", "#c84838", "#5a3a20"], // cardboard, shade, outline, label, red (shop), brown (café)
   lbox:    [null, "#b8864a", "#8a5e2e", "#e0b878", "#5a3a1a", "#f4f0e0"],
