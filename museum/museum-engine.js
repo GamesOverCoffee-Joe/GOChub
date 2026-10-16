@@ -2857,7 +2857,8 @@ const TEXT = {
   "frame.done":        { g: "Staff", l: "After framing a photo", v: [["You slide the photo into the little frame."]] },
   "figure.photo":      { g: "Closing up", l: "Photo album description of the figure", v: [["Something in the dark, staring back.", "You got a picture of it!"]] },
   "photos.none":       { g: "Menu", l: "Photo album, empty", v: [["No photos yet.", "Press B to take a photo of whatever's in front of you."]] },
-  "menu.saved":        { g: "Menu", l: "After saving", v: [["Saved. You'll pick up right here next time."]] },
+  "menu.saved":        { g: "Menu", l: "After saving", v: [["Saved! Next time you'll come in through the front doors, with all your stuff."]] },
+  "menu.saveNote":     { g: "Menu", l: "After saving, the first time only: where the save lives (plain words, no tech talk)", by: "claude", v: [["Your museum is saved in this browser, on this device.", "If you clear your browsing history, or play on a different device or browser, you'll start fresh."]] },
 };
 /* Staff you can chat with. Each line has up to two conditions; a chat plays one matching line, taking turns.
    The curator's Words tab edits these. */
@@ -3536,11 +3537,9 @@ class Game {
     this.buildDom(); this.bindInput();
     this.pack = normalizePack(pack); this.buildWorld();
     this.ready = null;
-    // Pick up where you saved (Start, then Save), otherwise at the front doors.
-    const w = this.saveKey && this.progress.where;
+    // Like Animal Crossing (Joe 10/16): every visit starts out front and walks in at the lobby, with all your stuff (never where you last stood).
     const go = () => {
-      if (w && w.room !== "outside" && this.rooms[w.room] && this.rooms[w.room].solid[w.y] && this.rooms[w.room].solid[w.y][w.x] === false) this.enterRoom(w.room, w.x, w.y, w.dir, true);
-      else { const sp = ROOMS.lobby.spawn; this.enterRoom("lobby", sp[0], sp[1], sp[2], true); }
+      { const sp = ROOMS.lobby.spawn; this.enterRoom("lobby", sp[0], sp[1], sp[2], true); }
       if (this.staff && this.staff.curator && this.rooms.office && !this.curator) { const sp = ROOMS.office.spawn; this.enterRoom("office", sp[0], sp[1], sp[2], true); } // the curator starts in their office
     };
     if (this.outsideStart()) { this.entryFn = go; const sp = ROOMS.outside.spawn; this.enterRoom("outside", sp[0], sp[1], sp[2], true); } else go(); // every visit starts out front (Joe 10/12)
@@ -4480,7 +4479,7 @@ class Game {
       // For the stats on Someone's PC: days, streaks, time, steps, walls, the dark, favorite drink, plant and photo subject, verdicts by genre.
       stats: Object.assign({ days: 0, lastDay: "", streak: 0, best: 0, secs: 0, dark: 0, steps: 0, bumps: 0, drinks: {}, plants: {}, shots: {}, loved: {}, nope: 0 }, p.stats || {}), noteName: typeof p.noteName === "string" ? p.noteName : "", clientId: typeof p.clientId === "string" ? p.clientId : "" }); // (everything else saved comes back as it was: the day, curious visitors, Bluu's finds, the office...)                    // chores counted per badge while clocked in
   }
-  saveProgress() { this.checkAchievements(); try { if (this.saveKey) localStorage.setItem(this.saveKey, JSON.stringify(this.progress)); } catch (e) {} }
+  saveProgress() { if (this.wiped) return; this.checkAchievements(); try { if (this.saveKey) localStorage.setItem(this.saveKey, JSON.stringify(this.progress)); } catch (e) {} }
   /* ----- achievements ----- */
   stat(k) {
     const p = this.progress, t = p.tally || {};
@@ -4507,6 +4506,8 @@ class Game {
       : a.secret ? "\u2606 ???  (a secret)" : "\u2606 " + a.name + ": " + a.desc + " (" + Math.min(this.stat(a.stat), a.target) + "/" + a.target + ")");
     this.read({ title: "ACHIEVEMENTS", sub: n + " of " + list.length + " unlocked", sections: [{ label: "", text: lines.join("\n") }], menu: !!back }, back);
   }
+  /* Delete my save (Settings, two confirmations): every bit of progress gone, then a fresh start. Settings stay (they're kept apart). */
+  wipeSave() { this.wiped = true; try { if (this.saveKey) localStorage.removeItem(this.saveKey); } catch (e) {} if (typeof location !== "undefined") location.reload(); }
   resetProgress() { this.mugSeed = undefined; try { if (this.saveKey) localStorage.removeItem(this.saveKey); } catch (e) {} this.progress = this.loadProgress(); this.lightsOff.clear(); this.closing = false; this.closed = false; this.closingPaid = false; this.fol = null; this.dayStart = Object.assign({}, this.progress.tally); this.spook = null; this.figure = null; this.hideEnd(); this.restartLoop(); this.updateHud(); this.rebuild(); }
   /* A fresh visit for the living museum: the clock back to minute 0, the Janitor back at the staff door, new deliveries,
      empty bins, no litter, nobody in line. (Start the visit over, and the curator's preview.) */
@@ -4734,8 +4735,8 @@ class Game {
       n.leaving = false; n.gone = false; n.route = null; n.moving = false; n.prog = 0; J.room = "lobby"; const [x, y] = this.janStand("lobby", "staff"); n.x = x; n.y = y; n.alpha = 0; n.fadeIn = true; } }
     this.spook = null; this.figure = null; this.hideEnd(); this.trans = null; this.fade = 0; this.mode = "walk"; this.microwaved = false;
     this.rebuild();
-    const w = this.endKind === "brb" && this.progress.where;
-    const go = () => { if (this.curatorPlay() && this.rooms.office) { const sp = ROOMS.office.spawn; this.enterRoom("office", sp[0], sp[1], sp[2]); } else if (w && w.room !== "outside" && this.rooms[w.room]) this.enterRoom(w.room, w.x, w.y, w.dir); else { const sp = ROOMS.lobby.spawn; this.enterRoom("lobby", sp[0], sp[1], sp[2]); } };
+    this.dropHands(); // back from a break: whatever was in your hands goes back where it belongs (your drink stays)
+    const go = () => { if (this.curatorPlay() && this.rooms.office) { const sp = ROOMS.office.spawn; this.enterRoom("office", sp[0], sp[1], sp[2]); } else { const sp = ROOMS.lobby.spawn; this.enterRoom("lobby", sp[0], sp[1], sp[2]); } };
     if (this.outsideStart()) { this.entryFn = go; const sp = ROOMS.outside.spawn; this.enterRoom("outside", sp[0], sp[1], sp[2]); } else go(); // back out front, like any start
     this.wrap.focus({ preventScroll: true });
     if (this.needTutorial() && !this.outsideNow()) this.startTutorial(); // quit in the middle of it: it starts over
@@ -6407,13 +6408,15 @@ class Game {
   resumeLoop() { // the clock, the first time it's asked for this session (plus the bins and litter, and your trash bag)
     const L = this.loopSave(); if (!L) return 0;
     if (L.bins) this.bins = L.bins;
-    if (L.litter) { this.litter = {}; for (const id in L.litter) this.litter[id] = (L.litter[id] || []).filter(l => l && l.jam); } // only the jammed can's pile: litter saved before it (bins filling up) is swept away (Joe 10/12) if (typeof L.trashBag === "number") this.trashBag = L.trashBag;
+    if (L.litter) { this.litter = {}; for (const id in L.litter) this.litter[id] = (L.litter[id] || []).filter(l => l && l.jam); } // only the jammed can's pile: litter saved before it (bins filling up) is swept away (Joe 10/12)
+    if (typeof L.trashBag === "number") { this.trashBag = L.trashBag; this.dropHands(); L.trashBag = null; } // a bag you left with: back on the roll, or its litter counted (Joe 10/16)
+    if (L.drink && typeof L.drink === "object" && !this.drink) { this.drink = L.drink; this.sipClock = 240; } // your drink stays in your hand
     return Math.max(0, +L.t || 0);
   }
   saveLoop() {
     if (this.headless || !this.saveKey || this.tut || !this.dirClock || !this.progress) return;
     const S = this.sup, T = this.tour, I = this.side && this.side.item, J = this.jan;
-    this.dayState().loop = { t: this.dirClock.t, bins: this.bins || {}, litter: this.litter || {}, trashBag: this.trashBag == null ? null : this.trashBag,
+    this.dayState().loop = { t: this.dirClock.t, bins: this.bins || {}, litter: this.litter || {}, trashBag: this.trashBag == null ? null : this.trashBag, drink: this.drink && !this.drink.popcorn ? this.drink : null,
       sup: S ? { key: S.key, boxes: S.boxes, shopDone: S.shopDone, cafeDone: S.cafeDone, cafeNeeded: S.cafeNeeded, freeGiven: S.freeGiven, carryBox: this.carryBox === "tut" ? null : this.carryBox || null } : null,
       tour: T ? { key: T.key, kidDone: T.kidDone, asked: T.asked, explained: T.explained, mood: T.mood, coffee: T.coffee, usherBack: !!T.usherBack } : null,
       item: I ? { key: this.side.key, got: I.got, done: I.done, left: I.left, carry: this.carryItem || null } : null,
@@ -7927,7 +7930,8 @@ class Game {
   }
   saveAsk(resume) { // Save: saved (the tutorial starts over next time), then "Save and quit?" No: back to playing (or the conversation you paused)
     if (!this.tut) this.saveWhere();
-    this.say(this.tut ? ["The tutorial starts over next time."] : this.tx("menu.saved"), () => this.choose("Save and quit?", ["No", "Yes, quit"], i => { // (the question on its own: it was cut off after the saved line, Joe 10/12)
+    const first = !this.tut && !this.progress.saveNoted; if (first) { this.progress.saveNoted = todayISO(); this.saveProgress(); } // the first save: where it lives, in plain words
+    this.say(this.tut ? ["The tutorial starts over next time."] : [...this.tx("menu.saved"), ...(first ? this.tx("menu.saveNote") : [])], () => this.choose("Save and quit?", ["No", "Yes, quit"], i => { // (the question on its own: it was cut off after the saved line, Joe 10/12)
       if (i !== 1) { if (resume) resume(); return; }
       if (this.tut) this.cleanTutorial(); this.mode = "busy"; this.trans = { t: 0, dur: 24, switched: false, fn: () => this.showEnd("brb"), hold: true };
     }, 0));
@@ -8262,6 +8266,20 @@ class Game {
     this.reloading = true;
     try { if (this.progress && this.room && !this.tut && this.mode !== "ended") { this.saveLoop(); this.saveWhere(); } else if (this.progress) this.saveProgress(); } catch (e) {}
     location.reload();
+  }
+  /* Starting a visit (or back from a break): what was in your hands goes back (Joe 10/16). A delivery box: by the basement's
+     garage door again. A trash bag: an empty one back on the roll; a full one counted, as if the janitor took it. Your drink stays. */
+  dropHands() {
+    if (this.carryBox && this.carryBox !== "tut" && this.sup) {
+      const S = this.rooms && this.rooms.storage, g = S && (ROOMS.storage.wallArt || []).find(w => w.key === "garage_door"), gx = g ? g.x : 6, y = 3;
+      const free = [[gx, y], [gx + 2, y], [gx + 1, y + 1], [gx - 1, y], [gx + 3, y], [gx + 1, y + 2]].filter(([x, yy]) => S && S.solid[yy] && S.solid[yy][x] === false && !S.events[x + "," + yy] && !this.sup.boxes.some(b => b.room === "storage" && b.x === x && b.y === yy));
+      const [x, yy] = free[0] || [7, 4]; this.sup.boxes.push({ room: "storage", x, y: yy, kind: this.carryBox }); this.carryBox = null;
+    }
+    if (this.trashBag != null) {
+      const k = this.trashBag; this.trashBag = null;
+      if (k > 0) { const t = this.progress.tally; t.litter = (t.litter || 0) + k; this.progress.tokens = (this.progress.tokens || 0) + k * (this.pack.settings.rewards.litter !== undefined ? this.pack.settings.rewards.litter : 1); }
+    }
+    this.saveProgress();
   }
   saveWhere() { const p = this.player; this.progress.where = { room: this.room.id, x: p.x, y: p.y, dir: p.dir }; this.saveProgress(); }
   /* The usher talks to visitors like visitors and to staff like coworkers. */
@@ -9470,7 +9488,7 @@ class Game {
       if (d.problems.includes("line")) { const [x, y] = spot(boxes.length ? 1 : 0); boxes.push({ room: "storage", x, y, kind: "cafe" }); }
       this.sup = { key, boxes, shopDone: !d.problems.includes("stock"), cafeDone: false, cafeNeeded: d.problems.includes("line"), freeGiven: false };
       this.carryBox = null;
-      const L = this.loopSave(); if (L && L.sup && L.sup.key === key) { const { carryBox, ...st } = L.sup; Object.assign(this.sup, st); this.carryBox = carryBox || null; } // earlier today: as you left it
+      const L = this.loopSave(); if (L && L.sup && L.sup.key === key) { const { carryBox, ...st } = L.sup; Object.assign(this.sup, st); this.carryBox = carryBox || null; this.dropHands(); } // earlier today: as you left it (a box you were carrying back by the garage door)
     }
     return this.sup;
   }
@@ -10691,7 +10709,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 89";
+const VERSION = "2026-11-18 cards 90";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

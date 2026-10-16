@@ -107,6 +107,12 @@ body.l-split-h .gt-controls{grid-column:3;flex-direction:column;gap:28px}
 dialog.settings{border:2px solid var(--line);border-radius:6px;background:var(--surface);color:var(--text);padding:0;max-width:min(440px,calc(100vw - 24px));width:100%;
   max-height:calc(100dvh - 24px);overflow:auto}
 dialog.settings::backdrop{background:rgba(10,5,7,.7)}
+/* Your save: delete it, with two confirmations */
+.btn.danger{background:#a8322a;border-color:#a8322a;color:#fff8ec}.btn.danger:hover{background:#c03a30}
+.btn.danger-quiet{color:#e0817a;white-space:nowrap}
+.del-step{margin-top:10px;padding:10px 12px;border:1px solid #a8322a;border-radius:6px;background:rgba(168,50,42,.12)}
+.del-step p{margin:0 0 8px;font-size:14px}
+.del-acts{display:flex;gap:8px;flex-wrap:wrap}
 /* What's new: the latest update, written in the curator (Staff tab) */
 .news-btn{position:relative}
 .news-dot{position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 2px var(--surface)}
@@ -246,6 +252,13 @@ dialog.news{max-width:min(520px,calc(100vw - 24px))}
       <div class="txt"><b>Museum pack</b><small id="packStatus2">Built-in placeholder art</small></div>
       <label class="btn" for="packFile">Load</label>
     </div>
+    <div class="set-row save-row">
+      <div class="txt"><b>Your save</b><small>Your museum is saved in this browser, on this device. If you clear your browsing history, or play on a different device or browser, you'll start fresh.</small>
+        <div class="del-step" id="delStep1" hidden><p>Delete your save? Your tokens, cards, photos, achievements and all your progress will be gone.</p><div class="del-acts"><button class="btn" type="button" id="delKeep1">Keep my save</button><button class="btn danger" type="button" id="delNext">Delete</button></div></div>
+        <div class="del-step" id="delStep2" hidden><p><b>Are you sure?</b> This can't be undone.</p><div class="del-acts"><button class="btn" type="button" id="delKeep2">Keep my save</button><button class="btn danger" type="button" id="delYes">Yes, delete everything</button></div></div>
+      </div>
+      <button class="btn danger-quiet" type="button" id="delSave">Delete my save</button>
+    </div>
     <div class="set-acts"><button class="btn" value="close">Done</button></div>
   </form>
 </dialog>
@@ -254,7 +267,7 @@ dialog.news{max-width:min(520px,calc(100vw - 24px))}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 89";
+window.GOQ_WANT = "2026-11-18 cards 90";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -338,6 +351,14 @@ window.goqStart = function () {
   });
   newsDlg.addEventListener("click", e => { if (e.target === newsDlg) newsDlg.close ? newsDlg.close() : newsDlg.removeAttribute("open"); }); // a tap outside closes it
   newsDlg.addEventListener("close", () => stage.focus({ preventScroll: true }));
+  // Delete my save: two confirmations, then a fresh start (Settings choices are kept apart and stay)
+  { const s1 = document.getElementById("delStep1"), s2 = document.getElementById("delStep2"), b = document.getElementById("delSave");
+    const reset = () => { s1.hidden = s2.hidden = true; b.hidden = false; };
+    b.addEventListener("click", () => { b.hidden = true; s1.hidden = false; document.getElementById("delKeep1").focus(); });
+    document.getElementById("delNext").addEventListener("click", () => { s1.hidden = true; s2.hidden = false; document.getElementById("delKeep2").focus(); });
+    document.getElementById("delKeep1").addEventListener("click", reset); document.getElementById("delKeep2").addEventListener("click", reset);
+    document.getElementById("delYes").addEventListener("click", () => game.wipeSave());
+    document.getElementById("settings").addEventListener("close", reset); }
   function describe(p, from) {
     showNews(p.settings && p.settings.news);
     const n = Object.keys(p.assets).length, k = p.samples ? "sample pieces" : p.pieces.length + " piece" + (p.pieces.length === 1 ? "" : "s");
