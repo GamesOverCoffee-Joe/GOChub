@@ -396,3 +396,144 @@ Toys that play with the games themselves. Every piece on display has a card in a
 - **The card:** black, red and gold. The title, the art, a thin stripe in the category's color, a short blurb, the episode it came from, and the museum logo.
 
 - **Still to design:** the binder's look, and anything that rewards a full set.
+
+## **Later** *(Joe 10/14: pinned to build later)*
+
+### **Exhibits that showcase the developers**
+
+The museum showcases the developers, not the critique. Joe is still the curator: he chooses what goes on the walls and frames it, but the voices on the placards are the developers'. Each exhibit tells a short story in three beats.
+
+| Beat | What it is | Where it lives |
+|---|---|---|
+| Before | The developer's intentions: what they hoped players would feel, why, and what they built around it (the three questions Joe already asks) | Placard, side one (the answer cards already hold these) |
+| The episode | The middle of the story | On YouTube: the exhibit points to it, "Watch the episode" |
+| After | The developer's reaction to the episode: what landed, what didn't, what surprised them | Placard, side two (new) |
+
+- **The hook:** the gap between what they hoped and how they reacted makes people want to watch the episode, and play the game.
+- **The curator's voice:** a small wall label beside the piece. Title, developer, which episode and when, and one warm line on why it's in the collection. A welcome, not a review. The current "curator's observations" side goes, apart from that line.
+- **Filling in over time:** on unveiling day only the intentions are up, and the reaction side says it's on its way. When the developer replies, it's added and the exhibit is complete. That's a reason to come back, and a developer who never replies doesn't hold anything up. Older episodes may never get one, so the "on its way" state should read naturally.
+- **Play it:** a link at the exhibit to the game's page (each piece already has a game link).
+- **Curious visitors ask by title,** not by feeling: "I'm looking for Near the Fear, have you seen it?" You help them find it; no right or wrong. Once there, they react to the developer's words.
+- **Developer links:** a link that opens the museum at a developer's own exhibit, with a little welcome. The "oh, there's my game" moment, and something they'll share.
+- **Joe's side of it:** a second message to each developer after the episode airs ("Want to share your reaction for your exhibit?"), saying it'll be shown in the museum. Maybe a suggested length. Honest reactions ("he got this wrong") are fine, and make the exhibits more interesting.
+- **To build:** a "developer's reaction" field per piece in the curator, side two of the placard showing it, the wall label line, a Watch the episode link, and curious visitors switching from matching to asking by title.
+
+### **A new tutorial: learning the verbs** *(built, cards 76: the watering can is tutorial only, the three made-up games are gone, the duster comes later; the trainer is Fern and the trainee is Dale, both placeholders in Words. Cards 77, Joe 10/15: the chest only shows up after the sign and the doors are locked instead of roped off; Fern talks across her desk and unhooks a velvet rope; the day dial only appears once she points it out, and the corner plant gets thirsty only after the sad one is watered (optional); room 3 is the Supply Closet; at the end you make the closing announcement and turn off the lights in the three rooms, and the first time you finish you get 5 tokens.)*
+
+The tutorial teaches the museum's verbs instead of matching visitors to games. Each room teaches one thing the real museum uses, and it stays funny because the curator likes gamification (the usher's line at the front desk sets it up).
+
+- **Front desk (as now):** the usher signs you in, says the curator likes gamification, and points you through the first door.
+- **Room 1, The Sign:** an empty room with one sign in the middle and a barrier at the far side. Reading the sign is the whole task. Then a treasure chest opens, Zelda style: "You got the watering can!" The barrier opens. *Teaches: walk up to something and press A (placards work the same way).* Later on, someone jokes that the museum really did buy a treasure chest so volunteers would feel powerful.
+- **Room 2, The Sad Plant:** a trainer sits behind a desk staring at a wilted plant in the middle of the room (a "..." over her head). Two corner plants are healthy, so you can see what fine looks like. Talk to her: she's supposed to be running this room, but staff aren't allowed to water the plants, it has to be visitors, and nobody ever comes. Water it with your new can: it perks up, she's thrilled, the barrier opens. *Teaches: spot a problem from how someone's acting, talk to learn what's wrong, fix it with something you have, people react.*
+- **The timer, in room 2:** the day dial appears for the first time here ("I've been sitting here since the morning"). While you're in the room it ticks over and a corner plant starts to droop: you water that one too. Nothing to fail; it shows that time passes and new problems show up. *Teaches: the day's timeline.*
+- **Room 3, The Lost Trainee:** another trainee who's been in training for three weeks, still wandering because they lost the box with their stuff in it. You find the box (in room 1, say), carry it to them, then lead them back to the front door. On the way, the room 2 trainer thanks you again, and the room 1 sign has changed ("You've already read this sign"). At the front door they thank you and bolt out; the usher: "...Was that a trainee? They were supposed to finish today." *Teaches: carrying something to someone (the supply boxes, the staff item), leading someone (the lost kid, curious visitors), and that people remember what you did.*
+- **Back at the desk:** the usher wraps up and you get your volunteer tag (or your badge). The field notes show for the first time (and from then on they're in the pause menu: no notebook to find on the lobby desk, cards 79), with what you just did: "Watered a sad plant. Returned a lost trainee." *Teaches: the notebook lists what you helped with.*
+
+| Tutorial | In the museum |
+|---|---|
+| Reading the sign | Placards, and the developers' words |
+| Watering the plant for someone | Coffee for the usher, the café's and shop's supplies, the jammed trash can |
+| Spotting the staring trainer | Cues: the usher's empty mug, the bustling barista |
+| Carrying the trainee's box | The supply boxes, the staff room item |
+| Leading the lost trainee | The lost kid, curious visitors |
+| Being thanked again on the way back | People remembering you through the day |
+| The plant drooping as the dial moves | The day's timeline |
+
+- **Still to decide:** whether the watering can becomes the real way to water plants (now you water them just by interacting), names for the trainer and the lost trainee, and whether the three made-up games go (or one stays as an example of the developer-voice exhibit).
+
+### **The duster and the dust bunnies** *(Joe 10/14)*
+
+A second chest, and the museum's first (very gentle) fight. Dusty frames are already a chore; the dust bunnies are where the dust comes from.
+
+- **The pickup:** a second treasure chest, Zelda style: "You got the duster!", held up over your head. The treasure-chest joke gets a sequel: the museum bought two.
+- **Dust bunnies:** little bunnies of dust that hop around a room and head for the nearest clean frame. If one gets there, it rubs against it and the frame goes dusty (the dusty look frames already have).
+- **Fighting them:** swing the duster and a bunny bursts into a small puff of dust and is gone. Miss one and it leaves a dusty frame behind, which you dust the usual way.
+- **Harmless:** they never hurt you; at most they hop away when you get close. Cozy, with a silly Zelda energy.
+- **In the tutorial:** its own small room (or part of room 1, after the watering can): three frames on the wall and two or three bunnies hopping toward them. Get them before they dust anything, or dust whatever they got to. Either way you pass; nothing to fail. *Teaches: the duster, on the frames, which the real museum needs.*
+- **In the museum (optional):** now and then rather than every day, so it stays a surprise. The conservator could mention he keeps finding dust in the basement and it's getting worse. The janitor, if he sees you: "Did you just... fight the dust?" On shift, each bunny could count as a chore point toward Employee of the Month. Once in a while, a big one in the basement: the Dust Bunny King.
+- **What it takes:** the game's first swing-and-hit: a swing animation, a hit check in front of you, the bunnies' simple head-for-a-frame movement, and the puff. The dusty frames, the chest, the pickup line and the chore points build on what's already there.
+- **Still to decide:** tutorial only, or the museum too; and whether bunnies only dust frames (simplest, and it ties into the existing chore) or other things too, like the cases.
+
+### **More floors** *(Joe 10/15)*
+
+With about one episode a week, the 40 cases on the ground floor run out (33 episodes as of 10/15), so the museum grows upward. Each new floor reuses the building's shape with its own layout; floor 2 could have six wings (the five, plus the café's space laid out as a wing).
+
+- **Bulk:** very little. A floor is a compact layout and reuses the same art; the game only draws the room you're in. The real cost is Joe's setup per floor (wing names, colors, wallpapers).
+- **Visitors:** each floor has its own regulars, there when you arrive. They don't travel between floors; now and then someone appears at the stairs (or steps out of the elevator) and someone else walks to them and is gone, so it reads as coming and going.
+- **Loops get a home floor each,** instead of being copied onto every floor:
+
+| Floor | Feel | Loops that live there |
+|---|---|---|
+| Ground | The busy floor: lobby, café, gift shop, staff room, basement | The usher's coffee, café and shop supplies, the jammed trash can, the staff room item, the janitor's rounds, closing up |
+| Floor 2 | Quieter galleries | The lost kid (more room to get lost in), the conservator dreaming at closing |
+| Floor 3 and up | The quiet top floors | The dust bunnies; maybe the Dust Bunny King on the top floor |
+
+- **Things that follow the content:** the unveiling happens wherever the newest piece is (it pulls everyone up to the newest floor once a week); tours can make one stop upstairs (the dip to black makes the stairs a non-issue); curious visitors asking by title send you between floors ("That's upstairs").
+- **The split:** busy work below, calm galleries above. The loops are "keeping the museum running"; the exhibits are what you stop and enjoy.
+- **Stairs, then an elevator:** stairs for two floors, an elevator from three: a choose-a-floor menu, elevator music, a one-line chat with whoever's riding, and a floor sign listing each floor's wings.
+- **What needs changing:** about 80 places in the engine name "the museum" directly, so on a new floor they simply don't happen until taught. Nothing that works today breaks.
+- **A first step:** a "new floor from the museum" button in the curator, stairs up and down, cases filling onto the new floor once the ground floor is full, the unveiling working on any floor, a "New this week: second floor" pointer in the lobby, the floor's own visitors and stair arrivals, and curious visitors able to send you upstairs. The lost kid and the conservator move up later if it feels right.
+- **Maybe:** one floor per season (floor 1 is season 1; a new season opens a new floor), like the Games Over Coffee lore's seasons.
+
+## **Juice** *(Joe 10/15: a working list of ideas; nothing here is planned yet unless it says built)*
+
+Game juice: small touches that make things feel good. Each thing gets one size of moment, so the big ones stay special.
+
+| Size | For | Feel |
+|---|---|---|
+| Tiny | every step, every menu move | barely noticed, but it'd feel dead without it |
+| Small | chores, coin finds | a quick puff or sparkle right where it happened |
+| Medium | buying, opening a card pack | a short moment, under a second |
+| Big | one-off rewards (the token moment) | the screen stops for you |
+| Huge | a rare card | the biggest thing in the game |
+
+Everything follows reduced motion (still pictures, no shake), like the token moment.
+
+### **Walking** *(tried in cards 67, rolled back: Joe 10/15, didn't work well)*
+
+- A one-pixel squash each time a foot lands, and a slight stretch as you start moving.
+- A small puff of dust at your feet when you start, stop or change direction (not every step).
+- Walking into a wall: a one-pixel nudge into it and a tiny squish, instead of stopping dead.
+- Followers (curious visitors, the lost kid) do a tiny hop when they catch up to you after falling behind.
+
+### **Cards** *(built, cards 68, except Bluu's fakes)*
+
+- **Buying a card (Joe 10/15):** the screen dims and five card backs slide up from the bottom, one after another. Pick one (highlighted like the binder) and it flips over big. Backs: deep red, black at the edges like a lens vignette, gold trim, the gold GOQ letters.
+
+- **Buying a pack (medium):** the pack drops into the middle of the screen and lands with a squash and a wiggle. A: it tears along the top (a jagged rip line, paper bits). The cards slide out face down into a fan and flip one at a time with a squeeze and pop.
+- **A rare card (huge):** the build-up is the fun. A pack with a rare in it wiggles harder. At the rare card it hovers, trembles and glows at the edges, then flips with a white flash and the sunburst in its rarity's color (silver, gold, rainbow for the rarest), a shiny streak sweeping across, confetti, a big RARE! stamp and a little shake.
+- **Bluu's fakes:** the glow builds like a rare, then fizzles: the sunburst shrinks away with a sad little puff and a ...FAKE? stamp.
+
+### **Chores (small)**
+
+- Dusting: a dust cloud bursts off the frame, then a glint slides across it.
+- Straightening: the frame wobbles past level once and settles.
+- Watering: droplets, then the plant bounces up a pixel and stands a little taller.
+- Wiping a case: a shine sweeps across the glass.
+- Litter in the bin: the lid pops up and drops.
+
+### **Shopping (medium)** *(the wallet counting down is built, cards 68)*
+
+- What you buy hops off the shelf and arcs into a little bag in the corner; the wallet counts down number by number instead of jumping.
+
+### **Menus and text (tiny)**
+
+- The menu cursor bounces a pixel when it moves; the chosen row pops a little.
+- The text box pops open with a small overshoot instead of just appearing.
+
+### **Closing up (medium)**
+
+- Each light switch clicks off with a small flash. The last one: the museum dims room by room in a slow wave, then Lights out.
+
+### **Built in cards 70**
+
+- The card flip: the picked card flies to the middle face down, then turns over in 3D (lift, edge-on shading, a shine, a settle). Pack cards fly back into the fan.
+- Item get: anything bought that isn't a card pops up big with sparkles and its name, then drops into the bag.
+- The café hand-off: the drink is set on the counter (clink, steam), then hops into your hand.
+- Red lenses tint the screen red; a fake pair (one lens) darkens the right half. The red lens secret: later.
+
+### **Other**
+
+- Achievements: the toast slides in with an overshoot and the badge spins once.
+- A wrong case for a curious visitor: they shake their head (a quick left, right) before saying so.
+- Sound, if the game ever gets it: the coin, a card flip, the pack tearing and the wall bump first.

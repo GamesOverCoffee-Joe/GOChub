@@ -276,13 +276,13 @@ function buildCards() {
   const rf = { ask: ["What a visitor asks for", "Never the relationship's name: they describe it."], miss: ["When you show it to a visitor who wanted another", "{title} is the piece. Say what they read there, in plain words."] };
   (N.settings.relations || []).forEach((m, mi) => { for (const f in rf) cards.push({ id: "r:" + m.id + ":" + f, cat: "lines", area: "Relationships", title: m.name + ": " + rf[f][0].toLowerCase(), where: "Visitors · Relationships", preview: "dialog", note: rf[f][1],
     fields: [{ kind: "lines", label: "", get: () => (N.settings.relations[mi] || {})[f] || [], set: v => { own("relations")[mi][f] = v; } }] }); });
-  // Achievements, shop items, genres
+  // Achievements, shop items, categories
   (N.settings.achievements || []).forEach((a, i) => cards.push({ id: "a:" + a.id, cat: "lines", area: "Achievements", title: "Achievement: " + (a.secret ? "secret, " : "") + a.stat + " ×" + a.target, where: "Achievements", preview: "none",
     fields: [{ kind: "line", label: "Name", get: () => own_ro("achievements")[i].name, set: v => { own("achievements")[i].name = v; } }, { kind: "line", label: "What you do to earn it", get: () => own_ro("achievements")[i].desc, set: v => { own("achievements")[i].desc = v; } }] }));
   ((N.settings.shop || {}).items || []).forEach((it, i) => cards.push({ id: "s:" + it.id, cat: "lines", area: "Gift shop items", title: "Shop item (" + it.price + " tokens)", where: "Shop", preview: "none",
     fields: [{ kind: "line", label: "Name", get: () => own_ro("shop").items[i].name, set: v => { own("shop").items[i].name = v; } }, { kind: "para", label: "Description", get: () => own_ro("shop").items[i].description, set: v => { own("shop").items[i].description = v; } }] }));
-  (N.settings.genres || []).forEach((g, i) => cards.push({ id: "g:" + g.id, cat: "lines", area: "Genres", title: "A genre (wing theme)", where: "Pieces · Genres", preview: "none",
-    fields: [{ kind: "line", label: "Name", get: () => own_ro("genres")[i].name, set: v => { own("genres")[i].name = v; } }, { kind: "line", label: "Short name (signs and tags)", get: () => own_ro("genres")[i].short, set: v => { own("genres")[i].short = v; } }] }));
+  (N.settings.genres || []).forEach((g, i) => cards.push({ id: "g:" + g.id, cat: "lines", area: "Categories", title: "A category (episodes and wing colors)", where: "Visitors · Categories", preview: "none",
+    fields: [{ kind: "line", label: "Name", get: () => own_ro("genres")[i].name, set: v => { own("genres")[i].name = v; } }, { kind: "line", label: "Short name (where the name won't fit)", get: () => own_ro("genres")[i].short, set: v => { own("genres")[i].short = v; } }] }));
   // Odds and ends from the Staff tab
   cards.push({ id: "o:cat", cat: "lines", area: "Odds and ends", title: "The museum cat's name", where: "Staff", preview: "none",
     fields: [{ kind: "line", label: "Name", get: () => own_ro("staff").catName, set: v => { own("staff").catName = v; } }] });

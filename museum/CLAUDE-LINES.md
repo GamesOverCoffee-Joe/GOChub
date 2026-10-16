@@ -121,7 +121,6 @@ Not mine: "No refunds." and "You can't afford that." are Joe's.
 
 | Group | Line | What Claude wrote |
 | --- | --- | --- |
-| Supplies | Just chatting with the barista while she's stressed | Chat? Now? I'm down to my last sleeve of cups. ⏎ ... ⏎ Sorry. That came out wrong. I'm fine. Everything's fine. / I'd love to talk but the rush is coming and I have, like, four lids. ⏎ Ask me again when I'm not panicking. |
 | Tour | Tuesday: the teacher before the tour | Okay, friends, bottoms on the bench, please. ⏎ ... ⏎ Please. ⏎ *sigh* We're waiting for everyone to use the bathroom. / Field trip day. I've had three coffees and it's not enough. |
 | Tour | Tuesday: the teacher at a stop | Eyes up here, friends! Eyes on the glass, not ON the glass. ⏎ No fingerprints! / Who can tell me what this one is about? ⏎ ... ⏎ Anyone? |
 | Tour | Tuesday: a kid's question she fumbles | Teacher, what's {title} about? ⏎ ... ⏎ Well, um. It's about... feelings. And games. Game feelings. ⏎ *the kids stare* |
@@ -140,7 +139,8 @@ Not mine: "No refunds." and "You can't afford that." are Joe's.
 | --- | --- | --- |
 | Supplies | Looking at the gift shop's empty shelf | An empty shelf. Just dust and a price tag for something that isn't here. / Nothing on this shelf but a sticky note: "STOCK COMING. ALLEGEDLY." |
 | Supplies | Just chatting with the shopkeeper while a shelf's empty | Sorry, I can't stop looking at that empty shelf. ⏎ It's like a missing tooth. A missing merch tooth. / You know what sells really well? Things that are on the shelf. ⏎ ... ⏎ Not that I'd know today. |
-| Supplies | The barista once every order takes forever | I'm hand-washing mugs between orders. Mugs. In this economy. ⏎ Sorry for the wait. Truly. / Every order's taking forever. I'm using the backup grinder. ⏎ ... ⏎ The backup grinder is a hammer. |
+| Supplies | Just chatting with the barista while her supply box is still in the basement (stressed; she doesn't say where it is) | Chat? Now? My delivery box never came up. / I'm down to my last sleeve of cups. / ... / Sorry. That came out wrong. I'm fine. Everything's fine. |
+| Supplies | The barista once the rush hits and every order takes forever (her supply box never came up) | My supply box never showed, so I'm hand-washing mugs between orders. Mugs. In this economy. / Sorry for the wait. Truly. |
 | Tour | The tour's kid at the arcade, before anyone notices | Shh. I'm almost at the next level. / Did you know this one has a secret ending? I didn't either. I'm finding out. |
 
 (Removed: the teacher's head-count line at the rush, since nobody notices the kid's gone until they're back in the lobby.)
@@ -163,10 +163,8 @@ The trash bag replaced picking up three pieces by hand, so the "hands full", "in
 
 | Group | Line | What Claude wrote |
 | --- | --- | --- |
-| Litter | Litter without a trash bag | I'm not touching that with my bare hands. ⏎ The janitor must have a spare trash bag. |
 | Litter | The staff room can: take a bag? | A roll of trash bags under the can. Tear one off? |
 | Litter | Taking a bag | *rrrip* ⏎ One trash bag. I'm basically a professional now. |
-| Litter | Putting an unused bag back | You roll the bag back up and tuck it under the can. ⏎ Nobody saw that. |
 | Litter | An empty bag at another can: toss it? | It's empty. I haven't even used it yet. Toss it anyway? |
 | Litter | Tossing an empty bag | *fwip* ⏎ A perfectly good bag. Gone. You monster. |
 | Litter | The bag into an empty can | *fwump* ⏎ The whole bag goes in. Much better. / *fwump* ⏎ Out of sight, out of mind. |
@@ -271,10 +269,14 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Litter | The jammed trash can, hands free | There's a cup wedged in the flap. Nothing else is getting in there. Pull it out? |
 | Litter | The jammed trash can, with something in your hands | The flap won't budge. There's a cup wedged in it. ⏎ You'll need both hands free to work it loose. |
 | Litter | Pulling the cup out of the jammed trash can | *squeak* ...*pop* ⏎ Got it. The flap swings free again. ⏎ Now, where to put this cup... |
+| Litter | Trying to pick up litter without a trash bag (there's a roll in the staff room, or the janitor has spares) | I'm not touching that with my bare hands. / The janitor must have a spare trash bag. There's a roll of them in the staff room, too. |
+| Litter | The roll of trash bags in the staff room, hands empty: take one? (one page, Yes/No) | A roll of trash bags. Tear one off? |
+| Litter | The roll of trash bags, when there's no janitor today (nothing to pick up) | A roll of trash bags. The janitor's whole personality. |
+| Litter | The roll of trash bags, with your hands full (a drink, a box) | My hands are full. The bags can wait. |
+| Litter | Putting an unused trash bag back (the roll in the staff room, or the can there) | You roll the bag back up with the others. / Nobody saw that. |
 | Janitor | The Janitor at the jammed trash can | Who jams a cup in a trash can? ⏎ Every. Single. Day. / I was on my break. ⏎ I was ON. MY. BREAK. |
 | Janitor | Talking to the Janitor after you unjammed the trash can and cleaned up round it (once) | Somebody pulled a cup out of that jammed can. And picked up the mess. ⏎ ...That was you, wasn't it? ⏎ Thanks. Really. |
 | Chill museum | The curator: the conservator (stopped to talk with him at closing) | And you stopped to talk to the conservator at closing. He doesn't get a lot of that. ⏎ He won't say so, but it made his night. |
-| Field notes | Finding the curator's field notes on the front desk | A notebook, left on the end of the front desk. FIELD NOTES, in the curator's handwriting. ⏎ Inside: a list of everything that keeps going wrong around here. Some of it's crossed out. Most of it isn't. ⏎ A sticky note on the cover: "If you found this, keep it. Maybe you'll have better luck. -the curator" ⏎ (The field notes are in your pause menu now.) |
 | Field notes | The usher | The usher's coffee: Buried in schedules every morning. Never gets a coffee before the tour. |
 | Field notes | The shopkeeper | The shop's stock: Deliveries land in the basement. The shop can't open till its box comes up. |
 | Field notes | The jammed trash can | The jammed can: Somebody jams a cup in a trash can's flap every single day. People just leave their trash beside it. |
@@ -285,6 +287,7 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Field notes | The conservator | The conservator: Only comes upstairs at closing. Somebody should say hi. |
 | Gift shop | The Sell cards row | The shop buys trading cards back, at half what they cost. Real ones only. |
 | Days of the week | Saturday: Bluu's Sell cards row | Bluu buys cards back. Half price. He doesn't ask where they came from, and you don't ask where they're going. |
+| Days of the week | Thursday: the barista at the counter, before you've played, while she's stressed (her supply box is still downstairs; then the drink menu) | Trivia's tonight, and I can't even think about that right now. / What can I get you? |
 | Gift shop | Selling the only copy of a card | That's your only {title} card. Sell it anyway? |
 | Out front | The museum sign | GOQ MUSEUM / Games, framed. |
 | Out front | Left planter | A planter by the doors. Somebody waters it. Probably the Janitor. |
@@ -295,3 +298,87 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Unveiling | The usher by the covered piece, before the ceremony | Find a good spot. The curator's about to do the honors. |
 | Unveiling | Playing as the curator: the usher, waiting on you | Everyone's here, Curator. / Pull the cloth off {title} whenever you're ready. |
 | Unveiling | Playing as the curator: facing the covered piece | Pull the cloth off {title}? |
+| Tour | A happy tour group moving on to its second exhibit without the usher, a visitor leading | Visitor: The usher said the next exhibit is this way. I think. Follow me, everyone! |
+| Tour | The same (second version) | Visitor: Ok, I guess I'm the tour guide now. Next exhibit, let's go! |
+| Tour | A happy tour group heading back to the lobby at the end | Visitor: That's the tour! Back to the lobby, everyone. Is everybody here? ...Close enough. |
+| Tour | A bored tour group heading back to the lobby at the end | Visitor: Well, that was a tour. I guess. Let's head back to the lobby. |
+| Tour | Tuesday: the teacher taking the kids back to the lobby at the end | Teacher: Ok, class, back to the lobby! Single file. Let's count off... one, two, three... close enough. |
+| Curious visitors | After "Do you need help?" | Visitor: Actually, yes! My name is {name}, and I'm trying to find a game from the show. |
+| Curious visitors | What they're looking for, by its description | Visitor: It's {hint}. / Do you know where it is? |
+| Curious visitors | The same (second version) | Visitor: You know, {hint}? / I've been walking around forever. Do you know where it is? |
+| Curious visitors | After "Do you remember the name?" | Visitor: Hmm... I'm pretty sure it was called {title}. |
+| Curious visitors | The same (second version) | Visitor: Oh! Yeah, I think it's {title}. |
+| Curious visitors | Question after they tell you the name | Visitor: So, can you show me where it is? |
+| Curious visitors | You show them the wrong case | Visitor: Hmm, no, that's not the one. / It's {hint}. |
+| Curious visitors | The same (second version) | Visitor: Ooh, {title} looks cool, but it's not the one I'm looking for. |
+| Tokens | Looking at something turns up a token | Huh? There's a token wedged in here. / Finders keepers. |
+| Tokens | The same (second version) | Oh! Somebody dropped a token. / It's yours now. |
+| Tokens | The same (third version) | Wait... is that a token? / It is! Lucky. |
+| Café | Finishing a third caffeinated drink in a row (the coffee rush starts) | That's three in a row. / Your eye is twitching. You can hear colors. / Your legs feel... fast. |
+| Café | The same (second version) | Three coffees. Zero regrets. / Your heart is doing a drum solo. Time to move. |
+| Café | The coffee rush wears off | The coffee wears off. / You could really go for a nap. |
+| Café | The same (second version) | Your legs have stopped vibrating. / Was that a minute or an hour? |
+| The reader | Talking to or looking at her ({book}: today's book) | She's reading {book}. / She doesn't look up. |
+| The reader | The same (second version) | {book}. She turns a page. / You don't exist right now. |
+| The reader | The same (third version) | She's deep into {book}. / She looks incredibly comfy. |
+| The reader | The reading nook's bookshelf | A little shelf of video game strategy guides. / None of these are what she's reading. She must've brought her own books. |
+| The reader | Her side table | A cup of coffee, still warm. And a very small ashtray with a little leaf on it. / ...Is that allowed in here? |
+| The reader | Her armchair, once she's gone home | Her armchair. She left her plaid blanket on it. / She'll be back tomorrow. |
+| The reader | Visitors near the nook, about her | Is she... allowed to just read in here? / She looks so comfy. Nobody wants to be the one to ask. |
+| The reader | The same (second version) | She was already here when I got here. / I think she's always here. |
+| The reader | The same (third version) | I've never seen anyone that comfortable in a museum. |
+| The reader | The same (fourth version) | Do you think she knows this is a museum? |
+| Pack (museum room) | The reading nook's lamp | A fringed lamp, angled just right for reading. |
+| Tutorial | The trainer's name (Training Room B) | Fern |
+| Tutorial | The lost trainee's name (Training Room C) | Dale |
+| Tutorial | Training Room A: the sign in the middle (reading it is the whole task) | TRAINING ROOM A / Congratulations! You read the sign. / That's it. That's the lesson. Walk up to things and press A. The placards work the same way. |
+| Tutorial | Training Room A: the sign, once you're on your way back | You've already read this sign. / ...It says so, right there. |
+| Tutorial | Training Room A: after the sign, the chest shows up | *poof* / A treasure chest appeared in the corner. / ...Was that there before? |
+| Tutorial | The item you get from the chest (one line) | Watering can |
+| Tutorial | After the chest: the watering can | You got the watering can! / The museum really did buy a treasure chest. The curator says it makes volunteers feel powerful. |
+| Tutorial | The chest, before you've read the sign | A treasure chest. It's locked tight. / Maybe there's something to read first. |
+| Tutorial | The chest, after | It's empty. You already got the good stuff. |
+| Tutorial | A thirsty plant, with nothing to water it with | It needs water. You don't have anything to water it with. |
+| Tutorial | A plant that's fine ({name}) | The {name} looks happy. |
+| Tutorial | Training Room B: the trainer, the first time you talk to her across the desk | Oh! Hi. Sorry, I've been staring at this plant all day. / Staff aren't allowed to water the plants. It has to be a visitor. And nobody ever comes in here. / Wait, is that a watering can? Oh thank goodness. / Here, let me get the rope for you. |
+| Tutorial | The trainer, again, before the plant's watered | It's so sad. Look at it. |
+| Tutorial | Training Room B: the trainer unhooks a rope, after you first talk to her | She unhooks one of the velvet ropes for you. |
+| Tutorial | The trainer, after you water the sad plant | You watered it! Look at it perk up! / Thank you. The door to the closet's open now. |
+| Tutorial | The trainer, right after the thanks: then the view zooms in on the day dial | Oh, and see that little timer in the lower left corner? |
+| Tutorial | The trainer, once the view's back from the day dial | That's the day. It goes by while you're in here. / Plants get thirsty as the day goes on. Just so you know. |
+| Tutorial | The trainer, when the day dial ticks over and a corner plant droops | Oh no. Now that one in the corner's looking thirsty. / Time flies in here. |
+| Tutorial | The trainer, while the corner plant is still thirsty | The one in the corner's thirsty now too. If you've got a sec. |
+| Tutorial | The trainer, after you water the corner plant | You're a natural. Plants just get thirsty as the day goes on. |
+| Tutorial | The trainer, after everything's watered | This is the best day this room has ever had. |
+| Tutorial | The trainer, when you lead the trainee back through | Hey, thanks again for the plant! / ...Is that the trainee? I thought they left weeks ago. |
+| Tutorial | The Supply Closet: the lost trainee, before you bring their box | Oh, hi. I've been in training for three weeks. / I can't leave without my box. It's got all my stuff from training in it. / I think I left it in Room A. Can you grab it for me? |
+| Tutorial | The trainee, when you bring their box (the last page asks to follow) | My box! You found it! / Okay. This is embarrassing. Can you show me the way out? |
+| Tutorial | The trainee, if you say not yet | No rush. I've been here three weeks. What's another minute. |
+| Tutorial | The trainee, following you | Right behind you. |
+| Tutorial | The trainee, at the front desk, before they bolt out the glass door | Freedom! Thank you so much! |
+| Tutorial | The usher, after the trainee bolts (the closing instructions come right after) | ...Was that a trainee? / They were supposed to finish training weeks ago. / Anyway. |
+| Tutorial | The usher's closing instructions (and again if you ask before announcing) | Last thing. Let's close up for the night. / Make the closing announcement on the intercom over there. / Then turn off the lights in Room A, Room B and the closet. / Come see me when you're done. |
+| Tutorial | The usher, after the announcement, before the lights are off | Now the lights. Room A, Room B and the closet. Each room's got a switch on the wall. |
+| Tutorial | The office intercom, before it's time to close up | The intercom. Not yet. |
+| Tutorial | A light switch in training, before it's time to close up | A light switch. Leave it on for now. |
+| Tutorial | After the last of the three rooms goes dark | That's all three rooms. Go see the usher. |
+| Tutorial | The usher, after the wrap-up | Head on out through the glass door. The museum's all yours. |
+| Tutorial | The usher's wrap-up, for a volunteer | You did it! Here's your volunteer tag. |
+| Tutorial | The usher's wrap-up, signed in with a badge | You did it! Your badge is all set. |
+| Tutorial | The usher hands you tokens, the first time you finish (the big coin moment comes after) | Oh, and here. Five tokens, for finishing training. |
+| Tutorial | The usher, after the tokens (the ... is you asking about the exchange rate) | You can spend them in the gift shop and the café. / ... / The exchange rate? Don't think about it too hard. |
+| Tutorial | The usher, right before the field notes | Oh, and the curator keeps field notes on everything. They're in your menu now. / Here's what you did today. |
+| Tutorial | The field notes page in the wrap-up (one line under the title) | Today's training |
+| Tutorial | The usher, after the field notes | Not bad for a first day. Head out through the glass door when you're ready. |
+| Tutorial | Field notes: you read the sign | Read a sign. |
+| Tutorial | Field notes: the watering can | Got the watering can out of a treasure chest. |
+| Tutorial | Field notes: the sad plant | Watered a sad plant. |
+| Tutorial | Field notes: the corner plant | Watered a plant that got thirsty later on. |
+| Tutorial | Field notes: the trainee's box | Found a lost box. |
+| Tutorial | Field notes: the trainee | Returned a lost trainee. |
+| Tutorial | Field notes: the closing announcement | Made the closing announcement. |
+| Tutorial | Field notes: the lights | Turned off the lights. |
+| Tutorial | Picking up the trainee's box | A box of somebody's stuff. A stapler, a mug, three weeks of snacks. |
+| Tutorial | Your hands are full | Your hands are full. |
+
+| Pieces | The back of a case before the developer's reaction is in (one line) | The developer's reaction is on its way. Check back soon. |

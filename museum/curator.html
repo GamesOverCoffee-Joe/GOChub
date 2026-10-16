@@ -73,7 +73,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 @keyframes gtblink{50%{opacity:0}}
 .gt-loc{position:absolute;left:calc(4px * var(--s));top:calc(4px * var(--s));padding:calc(5px * var(--s)) calc(8px * var(--s));background:#181820;color:#f8f8f0;
   font-size:calc(8px * var(--s));line-height:1.4;border:calc(1px * var(--s)) solid #f8f8f0;opacity:0;transform:translateY(-120%);
-  transition:transform .25s steps(4),opacity .25s steps(4);pointer-events:none;max-width:70%;z-index:6}
+  transition:transform .25s steps(4),opacity .25s steps(4);pointer-events:none;max-width:70%;z-index:6;text-wrap:balance}
 .gt-loc.on{opacity:1;transform:none}
 .gt-closeup{position:absolute;left:0;right:0;top:0;height:calc(112px * var(--s));display:none;align-items:center;justify-content:center;background:rgba(24,24,32,.82);cursor:pointer;z-index:4}
 .gt-cu-frame{box-sizing:border-box;width:calc(112px * var(--s));border-style:solid;border-width:calc(8px * var(--s));border-image-slice:8;border-image-repeat:stretch;background:#000;image-rendering:pixelated}
@@ -279,6 +279,8 @@ nav.jumps a:hover,nav.jumps a:focus-visible{border-color:var(--gold)}
 #main .pvmenu{max-width:720px;padding:14px;gap:16px;color:#f3e9d2} /* the dark panel, as it looked under the preview */
 #main .pvmenu .pv-hint{color:#d8c8b8}
 #main .pvgrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+body.pv-max .preview{position:fixed;inset:0;z-index:50;border-left:0;justify-content:center;width:auto !important;max-width:none} /* Maximize: the preview fills the window (and the screen, where the browser allows) */
+body.pv-max .preview > :not(#stage):not(#controls):not(.jump):not(#pvHold){display:none}
 .preview > *{flex-shrink:0} /* the open menu scrolls the panel instead of squashing the preview */
 .pvsec{display:flex;flex-direction:column;gap:4px}
 .pvh{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted, #b8a8a0)}
@@ -387,6 +389,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
       <label class="sr-only" for="goRoom">Go to room</label>
       <select id="goRoom" class="btn" aria-label="Go to room"></select>
       <button class="btn" type="button" id="pvOpts" title="View as, time, day, the visit clock, make things happen">Options</button>
+      <button class="btn" type="button" id="pvMax" title="Fill the screen with the preview, like the game's full screen button" aria-pressed="false">Maximize</button>
     </div>
     <div id="pvHold" hidden>
         <div class="pvmenu" id="pvMenu">
@@ -413,6 +416,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
               <label class="btn" style="display:flex;gap:6px;align-items:center" title="Set how many tokens you have in this preview">Tokens <input id="walletIn" type="number" min="0" max="9999" style="width:70px"></label>
               <button class="btn" type="button" id="lineBtn" title="Eight people already queued up at the café counter (go to the café first)">A long line</button>
               <button class="btn" type="button" id="binsBtn" title="Today's jammed trash can jammed again, with a full pile of litter beside it">Jam the can</button>
+              <label class="btn" style="display:flex;gap:6px;align-items:center" title="Every card or pack you buy in this preview has a rare in it"><input id="rareIn" type="checkbox"> Rare cards</label>
             </div></div>
           <div class="pvsec"><span class="pvh">Force stock</span>
             <div class="note" style="font-size:.85rem;margin:0 0 6px">To test: what's on the gift shop's shelves, and on Bluu's table on Saturday (each real or fake). This preview only; Clear goes back to the day's own stock.</div>
@@ -441,7 +445,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 59";
+window.GOQ_WANT = "2026-11-18 cards 89";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -509,7 +513,7 @@ let draft = { assets: {}, pieces: [], guestbook: [], settings: { lighting: {} } 
 function packOut() {
   return { format: GOQ.PACK_FORMAT, version: 1, assets: draft.assets, settings: Object.assign({}, draft.settings, { mindsets: undefined }), /* mindsets: replaced by relationships */ guestbook: draft.guestbook, rooms: draft.rooms || {}, pieces: draft.pieces.map(p => {
     const o = { id: p.id, kind: p.kind, title: p.title, developer: p.developer };
-    if (p.kind === "episode") { o.observation = p.observation; o.intention = p.intention; }
+    if (p.kind === "episode") { o.observation = p.observation; o.intention = p.intention; if (p.reaction) o.reaction = p.reaction; }
     else { o.guestWriter = p.guestWriter; o.guestNote = p.guestNote; }
     if (p.episodeUrl) o.episodeUrl = p.episodeUrl;
     if (p.gameUrl) o.gameUrl = p.gameUrl;
@@ -519,8 +523,9 @@ function packOut() {
     if (p.rel) o.rel = p.rel;
     if (p.genre) o.genre = p.genre;
     if (p.blend) o.blend = p.blend;
-    if (p.unveil) o.unveil = p.unveil;
-    if (p.drink) { o.drink = p.drink; if (p.drinkColor) o.drinkColor = p.drinkColor; if (p.drinkLine && p.drinkLine.length) o.drinkLine = p.drinkLine; if (p.drinkPrice) o.drinkPrice = p.drinkPrice; if (p.drinkIced) o.drinkIced = true; }
+    if (p.unveil && p.kind !== "community") o.unveil = p.unveil; // (community pieces are just up: no unveiling)
+    if (p.aired) o.aired = p.aired;
+    if (p.drink) { o.drink = p.drink; if (p.drinkColor) o.drinkColor = p.drinkColor; if (p.drinkLine && p.drinkLine.length) o.drinkLine = p.drinkLine; if (p.drinkPrice) o.drinkPrice = p.drinkPrice; if (p.drinkIced) o.drinkIced = true; if (p.drinkCaf === false) o.drinkCaf = false; }
     if (p.pick) o.pick = true;
     if (p.answers && p.answers.some(x => x && String(x.a !== undefined ? x.a : x).trim())) o.answers = [0, 1, 2].map(i => { const x = p.answers[i]; return String((x && typeof x === "object" ? x.a : x) || ""); }); // the developer's answers to the three questions
     if (p.episodeTitle) o.episodeTitle = p.episodeTitle; if (p.cardBlurb) o.cardBlurb = p.cardBlurb; if (p.noCard) o.noCard = true; if (p.cardsFrom !== "on") o.cardsFrom = p.cardsFrom || ""; // its trading card (Cards tab); cardsFrom: missing = always (older packs), "" = not yet
@@ -665,9 +670,21 @@ const edWrap = el("div", { style: "position:absolute;left:-9999px;top:0;width:10
 const edGame = new GOQ.Game(edWrap, undefined, { curator: true, capture: "focus", saveKey: null, headless: true });
 function fitPreview() {
   const w = window.innerWidth;
+  if (document.body.classList.contains("pv-max")) { const hb = 130; game.fit(w - 40, window.innerHeight - hb); return; } // maximized: as big as fits, with room for the buttons under it
   game.fit(w > 1400 ? 480 : w > 980 ? 360 : Math.min(480, w - 60), 400);
 }
 window.addEventListener("resize", fitPreview); fitPreview();
+/* Maximize (Joe 10/15): the preview fills the window, and the screen too where the browser allows. Press it again (or leave full screen) to put it back. */
+function pvMax(on) {
+  document.body.classList.toggle("pv-max", on); $("#pvMax").textContent = on ? "Restore" : "Maximize"; $("#pvMax").setAttribute("aria-pressed", on ? "true" : "false");
+  const fs = document.fullscreenElement || document.webkitFullscreenElement, de = document.documentElement;
+  if (on && !fs && (de.requestFullscreen || de.webkitRequestFullscreen)) { const r = (de.requestFullscreen || de.webkitRequestFullscreen).call(de); if (r && r.catch) r.catch(() => {}); }
+  if (!on && fs) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  setTimeout(fitPreview, 80); stage.focus({ preventScroll: true });
+}
+$("#pvMax").addEventListener("click", () => pvMax(!document.body.classList.contains("pv-max")));
+document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && document.body.classList.contains("pv-max")) pvMax(false); else setTimeout(fitPreview, 80); });
+$("#rareIn").addEventListener("change", () => { game.forceRare = $("#rareIn").checked; status(game.forceRare ? "Every card and pack you buy in the preview has a rare." : "Cards back to their usual odds."); stage.focus({ preventScroll: true }); });
 fillRoomPicker();
 /* Preview options: each setting is a row of choices (the lit one is on); the one-off actions are buttons. */
 const seg = (id, val, pick) => { const box = $("#" + id), show = v => box.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === v)); show(val);
@@ -991,6 +1008,15 @@ function renderStaff() {
   const main = $("#main"); main.innerHTML = "";
   const st = draft.settings.staff || (draft.settings.staff = { eotm: { name: "", note: "" }, corkboard: GOQ.DEFAULT_CORKBOARD.slice() });
   const wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
+  { // What's new: the briefing behind the museum page's button (Joe 10/16)
+    const n = draft.settings.news || (draft.settings.news = { date: "", text: "" });
+    const date = el("input", { type: "date", value: n.date || "" }); date.addEventListener("change", () => { n.date = date.value; changed({ now: true }); });
+    const txt = el("textarea", { rows: 12, maxlength: 12000, placeholder: "## New tutorial\n- Read a sign, open a chest...\n\nThanks for playing!" }); txt.value = n.text || ""; txt.addEventListener("input", () => { n.text = txt.value; changed(); });
+    const today = el("button", { type: "button", class: "btn small quiet", text: "Today", onclick: () => { date.value = GOQ.todayISO(); n.date = date.value; changed({ now: true }); } });
+    wrap.appendChild(el("h2", { class: "title", text: "What's new" }));
+    wrap.appendChild(el("p", { class: "note", text: "The latest update, behind a \u201cWhat's new\u201d button at the top of the museum page (it opens over the page, never the game). Empty: no button. A gold dot shows on it until someone opens it, and comes back whenever you change the date. Lines starting \u201c## \u201d are headings, \u201c- \u201d are bullets, and a blank line starts a new paragraph." }));
+    wrap.appendChild(el("div", { class: "fields" }, [el("label", {}, [document.createTextNode("Date"), el("div", { class: "row" }, [date, today])]), el("label", { class: "wide" }, [document.createTextNode("The update"), txt])]));
+  }
   wrap.appendChild(el("h2", { class: "title", text: "Staff" }));
   wrap.appendChild(el("p", { text: "Patreon members clock in at the staff door with a badge, wear the staff uniform, and their chores count toward a staff tally. Real badges live in Supabase (set it up below). The offline test badge, number 0001 and key QQQ-QQQ, works on your own computer and in this preview; its points stay in that browser." }));
 
@@ -1159,15 +1185,15 @@ const TILE_BRUSHES = [
   { ch: ".", name: "Floor" }, { ch: "=", name: "Runner" }, { ch: "#", name: "Wall top" }, { ch: "^", name: "Wall, upper" }, { ch: "v", name: "Wall, lower" },
   { ch: "D", name: "Doorway", pair: "d", note: "Paint on the upper wall row; the lower half is added below." },
   { ch: "S", name: "Staff door", pair: "s", note: "Paint on the upper wall row; the lower half is added below." },
-  { ch: "B", name: "Door in a bottom wall" }, { ch: "H", name: "Door in a side wall", note: "Paint on the left or right wall." }, { ch: "E", name: "Front doors" },
+  { ch: "B", name: "Door in a bottom wall" }, { ch: "K", name: "Closed door in a bottom wall", note: "A shut wooden door, like the tutorial's." }, { ch: "H", name: "Door in a side wall", note: "Paint on the left or right wall." }, { ch: "E", name: "Front doors" },
 ];
 const PLACE_GROUPS = [
   { name: "Display", items: [
-    { kind: "case", name: "Episode case", key: "display_case", note: "Episodes fill cases in Pieces order. Stand it on the floor with room to walk all the way around." },
+    { kind: "case", name: "Episode case", key: "display_case", note: "Episodes fill the cases by air date, wing by wing along the timeline (each wing's place in it is in the Layout tool). Stand it on the floor with room to walk all the way around." },
     { kind: "spot", name: "Painting spot", key: "wall_frame_wood", note: "Community pieces hang here. Tap the wall; it takes two tiles across both wall rows." },
-    { kind: "prop", key: "overflow_screen", name: "Touch screen", note: "The room's extra pieces: episodes of its genre that don't fit in its cases. One per room is plenty." },
+    { kind: "prop", key: "overflow_screen", name: "Touch screen", note: "The oldest episodes that don't fit in the cases wait on the one in Volume I (the start of the timeline). The other wings' screens give their digit for the office door." },
   ] },
-  { name: "Furniture", items: ["bench", "bench_side", "plant", "planter_wide", "sign_stand", "sign_down", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board", "day_board"].map(k => ({ kind: "prop", key: k })) },
+  { name: "Furniture", items: ["bench", "bench_side", "plant", "planter_wide", "sign_stand", "sign_down", "front_desk", "break_table", "coffee_counter", "whiteboard", "collection_cabinet", "trash_can", "someones_pc", "fridge", "microwave_counter", "patron_board", "day_board", "reader_chair", "reader_table", "reader_shelf", "tut_chest", "velvet_rope", "velvet_rope_v", "trash_bag_roll"].map(k => ({ kind: "prop", key: k })) },
   { name: "Shop and café", items: ["shelf_unit", "magazine_rack", "item_rack", "shop_counter", "cafe_counter", "espresso_machine", "coffee_grinder", "cup_stacks", "bus_tub", "cafe_table", "cafe_stool", "floor_lamp", "postcard_spinner", "basket", "planter", "cat_bed"].map(k => ({ kind: "prop", key: k }))
     .concat([{ kind: "decal", key: "rug" }]) },
   { name: "Storage and floors", items: [{ kind: "stairs", key: "stair_up", name: "Stairs up", note: "Step on it to change floors. Select it to choose where it leads." },
@@ -1179,7 +1205,7 @@ const PLACE_GROUPS = [
     { kind: "mural", key: "mural_dusk", name: "Mural", note: "A landscape painted along the top row of a wall. Tap a wall: it fills that stretch of wall. Pick its art and which part of it shows after." },
     { kind: "arrow", key: "carpet_h", name: "Arrow sign", note: "A big arrow across the wall, four tiles long, pointing the way to a room. Tap a wall, then pick its room and direction." },
   ] },
-  { name: "On the wall", items: ["shop_shelves", "shop_posters", "mug_shelf", "cafe_menu"].map(k => ({ kind: "wallArt", key: k })) },
+  { name: "On the wall", items: ["shop_shelves", "shop_posters", "mug_shelf", "cafe_menu", "espresso_wall"].map(k => ({ kind: "wallArt", key: k })) },
   { name: "Spots", items: [
     { kind: "spawn", name: "Start spot", key: "player", note: "Where you appear when the preview jumps here." },
     { kind: "catSpot", name: "Cat nap spot", key: "cat" }, { kind: "mugSpot", name: "Mug spot", key: "mug" },
@@ -1255,7 +1281,7 @@ function roomMats(d) {
 }
 function ownMats(d) { if (!Array.isArray(d.mats)) d.mats = roomMats(d); return d.mats; } // the first change: the automatic mats become placed ones you can edit
 function itemAt(d, x, y) { return roomItems(d).find(it => x >= it.x && x < it.x + it.w && y >= it.y && y < it.y + it.h) || null; }
-const DOOR_CH = "DdSsBEH";
+const DOOR_CH = "DdSsBKEH";
 function doorTileAt(d, x, y) {
   const ch = getCh(d, x, y); if (!DOOR_CH.includes(ch)) return null;
   const ey = ch === "D" || ch === "S" ? y + 1 : y; // the event sits on the lower half
@@ -1372,9 +1398,9 @@ function slotSwatch(key, isChar) {
 }
 function brushSwatch(b) {
   const d = roomDef(R.id), art = d.art || {};
-  const key = { ".": art.floor, "=": art.runner || "lobby_runner", "#": art.top, "^": art.upper, "v": art.lower, D: "doorway_upper", S: "staff_door_upper", B: "doorway_bottom", H: "doorway_side", E: "exit_door" }[b.ch];
+  const key = { ".": art.floor, "=": art.runner || "lobby_runner", "#": art.top, "^": art.upper, "v": art.lower, D: "doorway_upper", S: "staff_door_upper", B: "doorway_bottom", K: "door_bottom", H: "doorway_side", E: "exit_door" }[b.ch];
   const c = slotSwatch(key || art.floor);
-  if ("DSBEH".includes(b.ch)) { const x = c.getContext("2d"), base = slotSwatch("BEH".includes(b.ch) ? art.top : art.upper); x.globalCompositeOperation = "destination-over"; x.drawImage(base, 0, 0); }
+  if ("DSBKEH".includes(b.ch)) { const x = c.getContext("2d"), base = slotSwatch("BKEH".includes(b.ch) ? art.top : art.upper); x.globalCompositeOperation = "destination-over"; x.drawImage(base, 0, 0); }
   return c;
 }
 async function openRoom(keepView) {
@@ -1385,10 +1411,18 @@ async function openRoom(keepView) {
 }
 
 /* ----- drawing the map ----- */
+/* Redraws are bundled into one per screen frame (Joe 10/15: dragging lagged on a phone, which fires many moves per frame),
+   the canvas is only resized when its box changes (resizing throws the whole canvas away), and it's at most 2x sharp. */
+let edDrawQ = 0;
 function drawEditor() {
+  if (edDrawQ) return;
+  edDrawQ = requestAnimationFrame(() => { edDrawQ = 0; drawEditorNow(); });
+}
+function drawEditorNow() {
   const cv = R.cv; if (!cv || !cv.isConnected) return;
-  const d = roomDef(R.id), box = cv.parentElement, bw = box.clientWidth, bh = box.clientHeight, dpr = window.devicePixelRatio || 1;
-  cv.width = Math.round(bw * dpr); cv.height = Math.round(bh * dpr); cv.style.width = bw + "px"; cv.style.height = bh + "px";
+  const d = roomDef(R.id), box = cv.parentElement, bw = box.clientWidth, bh = box.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+  const pw = Math.round(bw * dpr), ph = Math.round(bh * dpr);
+  if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; cv.style.width = bw + "px"; cv.style.height = bh + "px"; }
   const x = cv.getContext("2d"); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.imageSmoothingEnabled = false;
   x.fillStyle = "#120b0e"; x.fillRect(0, 0, bw, bh);
   const rw = W(d) * 16, rh = H(d) * 16;
@@ -1411,7 +1445,7 @@ function drawEditor() {
     else if (it.type === "case") outline(it, "#a8d0e8", true);
   });
   for (let ty = 0; ty < H(d); ty++) for (let tx = 0; tx < W(d); tx++) {
-    const ch = getCh(d, tx, ty); if (!"dsBEH".includes(ch)) continue;
+    const ch = getCh(d, tx, ty); if (!"dsBKEH".includes(ch)) continue;
     const ev = doorEvent(d, tx, ty); tag(tx, ty, ev ? "\u2192" : "!", ev ? "#e8b24a" : "#f08a6a");
   }
   if (drag && drag.it && R.sel) { // dragging: the map catches up on release, so shade where it was and draw it where it's going
@@ -1535,7 +1569,7 @@ function paintAt(t) {
   const d = editable(R.id), b = R.brush;
   if (t.x < 0 || t.y < 0 || t.x >= W(d) || t.y >= H(d)) return;
   setCh(d, t.x, t.y, b.ch); if (b.pair) setCh(d, t.x, t.y + 1, b.pair);
-  if ("DSBEH".includes(b.ch)) { R.sel = { type: "door", x: t.x, y: b.pair ? t.y + 1 : t.y, w: 1, h: 1, label: "Door" }; }
+  if ("DSBKEH".includes(b.ch)) { R.sel = { type: "door", x: t.x, y: b.pair ? t.y + 1 : t.y, w: 1, h: 1, label: "Door" }; }
   roomChanged();
 }
 function fillAt(t) {
@@ -1554,7 +1588,7 @@ function eraseAt(t) {
     const ch = getCh(d, t.x, t.y);
     if (ch === "D" || ch === "S") { setCh(d, t.x, t.y, "^"); setCh(d, t.x, t.y + 1, "v"); d.events = (d.events || []).filter(e => !(e.x === t.x && e.y === t.y + 1)); }
     else if (ch === "d" || ch === "s") { setCh(d, t.x, t.y - 1, "^"); setCh(d, t.x, t.y, "v"); d.events = (d.events || []).filter(e => !(e.x === t.x && e.y === t.y)); }
-    else if (ch === "B" || ch === "E" || ch === "H") { setCh(d, t.x, t.y, "#"); d.events = (d.events || []).filter(e => !(e.x === t.x && e.y === t.y)); }
+    else if (ch === "B" || ch === "K" || ch === "E" || ch === "H") { setCh(d, t.x, t.y, "#"); d.events = (d.events || []).filter(e => !(e.x === t.x && e.y === t.y)); }
     else if (t.x > 0 && t.y > 0 && t.x < W(d) - 1 && t.y < H(d) - 1) setCh(d, t.x, t.y, ".");
   }
   roomChanged(true);
@@ -1856,15 +1890,18 @@ function renderLayoutPanel(box, d) {
   if (r) {
     box.appendChild(el("h3", { text: r.name }));
     const name = el("input", { type: "text", value: r.name }); name.addEventListener("change", () => layEdit(L2 => { layRoom(L2, r.id).name = name.value.trim() || "Room"; }));
-    box.appendChild(field("Name", name, "Said when you walk in."));
+    if (r.genre) { name.disabled = true; name.value = (GOQ.volumeNames(L.rooms.map(q => ({ id: q.id, genre: q.genre, order: q.order }))).find(q => q.id === r.id) || r).name; } // a wing: named by its place in the timeline
+    box.appendChild(field("Name", name, r.genre ? "Wings are named by their place in the timeline: Volume I holds the oldest episodes, then Volume II, and so on. New wings carry on the count." : "Said when you walk in."));
     const w = el("input", { type: "number", min: 2, max: 60, value: r.w }), hh = el("input", { type: "number", min: 2, max: 60, value: r.h });
     const resize = () => { const L2 = layApply(L, { kind: "edge", id: r.id, r: true, b: true }, (+w.value || r.w) - r.w, (+hh.value || r.h) - r.h); if (!L2) { status("That would cut off a hallway. Move the hallway first.", true); return; } layEdit(L3 => Object.assign(L3, L2)); };
     w.addEventListener("change", resize); hh.addEventListener("change", resize);
     box.appendChild(el("div", { class: "rrow" }, [field("Width", w), field("Depth", hh)]));
     box.appendChild(el("p", { class: "note", text: "Floor tiles, not counting the walls. Or drag the room's walls on the map." }));
-    const genres = draft.settings.genres || GOQ.SAMPLE_GENRES, gs = el("select", {}, [el("option", { value: "", text: "None (for episodes with no genre)" })].concat(genres.map(g => el("option", { value: g.id, text: g.name }))));
+    const genres = draft.settings.genres || GOQ.SAMPLE_GENRES, gs = el("select", {}, [el("option", { value: "", text: "Not a wing (no episodes)" })].concat(genres.map(g => el("option", { value: g.id, text: g.name }))));
     gs.value = r.genre || ""; gs.addEventListener("change", () => layEdit(L2 => { layRoom(L2, r.id).genre = gs.value; }));
-    box.appendChild(field("Genre", gs, "Episodes of this genre go in this room's cases first. Edit the genres in the Visitors tab."));
+    box.appendChild(field("Wing", gs, "Pick a category to make this room a wing: a Volume in the timeline, with that category's color. Episodes go in the wings by air date. Edit the categories in the Visitors tab."));
+    if (r.genre) { const od = el("input", { type: "number", min: 1, max: 99, value: r.order || "", placeholder: "In the layout's order" }); od.addEventListener("change", () => layEdit(L2 => { const q = layRoom(L2, r.id), v = Math.round(+od.value || 0); if (v > 0) q.order = Math.min(99, v); else delete q.order; }));
+      box.appendChild(field("Place in the timeline", od, "1 holds the oldest episodes, then 2, and so on; the last holds the newest. Empty: after the numbered ones, in the layout's order.")); }
     if (r.edits && r.edits.length) box.appendChild(el("div", { class: "row" }, [el("span", { class: "note", text: r.edits.length + " shape tweak" + (r.edits.length === 1 ? "" : "s") + ". " }),
       el("button", { type: "button", class: "btn small quiet", text: "Back to a plain rectangle", onclick: () => layEdit(L2 => { layRoom(L2, r.id).edits = []; }) })]));
     box.appendChild(artRow(() => r.art || {}, (L2, a) => { const q = layRoom(L2, r.id); if (a) q.art = a; return q.art || {}; }));
@@ -1876,7 +1913,7 @@ function renderLayoutPanel(box, d) {
       return el("label", { class: "rfield" }, [el("span", { text: label }), el("small", { text: hint }), el("div", { class: "row", style: "gap:8px;align-items:center" }, [inp, clr])]);
     };
     box.appendChild(el("div", { class: "rrow" }, [
-      colorField("Theme color", r.color ? "Hallways blend from this room's theme to the next." : genreCol ? "Using its genre's color. Pick one to override it." : "Hallways blend from this room's theme to the next.", () => r.color || genreCol, (q, v) => { q.color = v; }),
+      colorField("Theme color", r.color ? "Hallways blend from this room's theme to the next." : genreCol ? "Using its category's color. Pick one to override it." : "Hallways blend from this room's theme to the next.", () => r.color || genreCol, (q, v) => { q.color = v; }),
       colorField("Floor color", "Tints the floor art. Clear for the art's own color.", () => (r.tint || {}).floor, (q, v) => { q.tint = Object.assign({}, q.tint, { floor: v }); }),
       colorField("Wall color", "Tints the walls, under any murals. Clear for the art's own color.", () => (r.tint || {}).wall, (q, v) => { q.tint = Object.assign({}, q.tint, { wall: v }); }),
     ]));
@@ -1987,11 +2024,11 @@ function renderInspector() {
     const ds = el("select", {}, [["left", "Pointing left"], ["right", "Pointing right"]].map(([v, l]) => el("option", { value: v, text: l }))); ds.value = a.dir === "left" ? "left" : "right";
     ds.addEventListener("change", () => ed(q => { q.dir = ds.value; }));
     const wd = el("input", { type: "number", min: 2, max: 8, value: a.w || 4 }); wd.addEventListener("change", () => ed(q => { q.w = Math.max(2, Math.min(8, +wd.value || 4)); }));
-    box.appendChild(el("div", { class: "rrow" }, [field("Room it points to", gs, "Its color comes from the room's genre (Visitors, Genres); its words are the room's name unless you set them below. What it says when you look at it is in Words, Signs."), field("Direction", ds), field("Length (tiles)", wd)]));
+    box.appendChild(el("div", { class: "rrow" }, [field("Room it points to", gs, "Its color comes from the wing's category (Visitors, Categories); its words are the room's name unless you set them below. What it says when you look at it is in Words, Signs."), field("Direction", ds), field("Length (tiles)", wd)]));
     const lb = el("input", { type: "text", value: a.label || "", placeholder: "(the room's name)", maxlength: 16 }); lb.addEventListener("change", () => ed(q => { if (lb.value.trim()) q.label = lb.value.trim(); else delete q.label; }));
     const cl = el("input", { type: "color", value: a.color || (genres.find(g => g.id === a.genre) || {}).color || "#c8a070" }); cl.addEventListener("change", () => ed(q => { q.color = cl.value; }));
     box.appendChild(el("div", { class: "rrow" }, [field("Words (optional)", lb), field("Own color (optional)", cl)]));
-    if (a.color) box.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small quiet", text: "Use the genre's color", onclick: () => ed(q => { delete q.color; }) })]));
+    if (a.color) box.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small quiet", text: "Use the wing's color", onclick: () => ed(q => { delete q.color; }) })]));
   }
   if (it.type === "decal" && d.decals[it.i].key === "rug") {
     const a = d.decals[it.i], ed = fn => { snapshot(); fn(editable(R.id).decals[it.i]); roomChanged(true); renderInspector(); };
@@ -2344,36 +2381,35 @@ function relBox(p) {
   show();
   return el("label", { class: "wide" }, [document.createTextNode("Relationship"), el("small", { text: "How your experience lined up with what the developer intended. Curious visitors ask for a relationship (never by name), so players have to read both sides. Edit the list in the Visitors tab." }), s, about]);
 }
-/* Genres: the museum's rooms for episodes. */
+/* Categories (internally "genres"): each wing has one, for its color; each episode has one too. */
 function renderGenres(wrap) {
   const st = draft.settings, list = st.genres = st.genres || clone(GOQ.SAMPLE_GENRES);
   const lay = GOQ.layoutOf(roomDef("museum")), roomsOf = id => lay ? lay.zones.filter(z => z.rect && z.rect.genre === id).map(z => z.name) : [];
-  wrap.appendChild(el("h3", { text: "Genres (the museum's rooms)", style: "margin:18px 0 4px" }));
-  wrap.appendChild(el("p", { class: "note", text: "Each genre is a room in the museum (pick a room's genre in Rooms, Museum, Layout). An episode is exhibited in the room for the genre you pick for it in Pieces (Exhibited in)." }));
+  wrap.appendChild(el("h3", { text: "Categories", style: "margin:18px 0 4px" }));
+  wrap.appendChild(el("p", { class: "note", text: "What kind of episode it is (pick one for each episode in Pieces). A wing gets a category too, for its color (Rooms, Museum, Layout). Episodes go in the wings by air date, not by category." }));
   list.forEach((g, i) => {
     const name = el("input", { type: "text", value: g.name, maxlength: 40 }); name.addEventListener("input", () => { g.name = name.value; changed(); });
     const sh = el("input", { type: "text", value: g.short || "", maxlength: 16, placeholder: "e.g. Dark" }); sh.addEventListener("input", () => { g.short = sh.value; changed(); });
     const col = el("input", { type: "color", value: g.color || "#a08868" }); col.addEventListener("input", () => { g.color = col.value; changed(); });
     const where = roomsOf(g.id);
     wrap.appendChild(el("article", { class: "prow", style: "display:block" }, [el("div", { class: "fields" }, [
-      el("label", {}, [document.createTextNode("Name"), name]), el("label", {}, [document.createTextNode("Short name"), el("small", { text: "On its touch screen." }), sh]), el("label", {}, [document.createTextNode("Color"), col]),
-      el("p", { class: "note wide", text: where.length ? "Room: " + where.join(", ") : "No room has this genre yet." }),
+      el("label", {}, [document.createTextNode("Name"), name]), el("label", {}, [document.createTextNode("Short name"), el("small", { text: "Where the name won't fit." }), sh]), el("label", {}, [document.createTextNode("Color"), col]),
+      el("p", { class: "note wide", text: where.length ? "Wing: " + where.join(", ") : "No wing uses this category's color." }),
       el("div", { class: "acts" }, [el("button", { type: "button", class: "btn small quiet", text: "Remove", onclick: () => {
-        if (!confirm("Remove the \u201c" + g.name + "\u201d genre? Pieces set to it go to rooms with no genre until you pick another.")) return;
+        if (!confirm("Remove the \u201c" + g.name + "\u201d category? Pieces set to it will have none until you pick another.")) return;
         list.splice(i, 1); draft.pieces.forEach(p => { if (p.genre === g.id) p.genre = ""; }); changed({ now: true }); renderVisitors(); } })]),
     ])]));
   });
-  wrap.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn primary", text: "Add a genre", onclick: () => { list.push({ id: "genre-" + Math.random().toString(36).slice(2, 7), name: "New genre", color: "#a08868" }); changed({ now: true }); renderVisitors(); } })]));
+  wrap.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn primary", text: "Add a category", onclick: () => { list.push({ id: "genre-" + Math.random().toString(36).slice(2, 7), name: "New category", color: "#a08868" }); changed({ now: true }); renderVisitors(); } })]));
 }
-/* Which room an episode is shown in: pick a genre by hand. */
-/* The museum room (wing) that shows a genre, by its current name. */
+/* The wing with a category's color, by its current name (Volume I...). */
 function wingOf(gid) { const lay = GOQ.layoutOf(roomDef("museum")), z = lay && lay.zones.find(q => q.rect && q.rect.genre === gid); return z ? z.name : ""; }
 /* The developer's answers to the three questions (answer cards, Joe 10/13): playing as the curator, the pause menu's Developer
    answers shows each question on a card, then its answer, split into as many cards as it takes, for the recording. */
 function answersBox(p) {
   p.answers = [0, 1, 2].map(i => { const x = (p.answers || [])[i]; return x && typeof x === "object" ? x.a || "" : x || ""; });
-  const box = el("div", { class: "fieldset wide" }, [el("span", { class: "flabel", text: "Developer answers" }), el("small", { text: "Their answers to your three questions. Playing as the curator: pause menu, Developer answers. Each question gets a card, then its answer, split into as many cards as it needs (A for the next, B to put them away). Leave one empty to skip it." })]);
-  GOQ.ANSWER_QS.forEach((q, i) => {
+  const box = el("div", { class: "fieldset wide" }, [el("span", { class: "flabel", text: "Developer answers" }), el("small", { text: "Their answers to your three questions (worded in Words, Pieces). They make up the front of the case: each question a heading, its answer under it (empty ones are left out). Also Playing as the curator: pause menu, Developer answers. Each question gets a card, then its answer, split into as many cards as it needs (A for the next, B to put them away). Leave one empty to skip it." })]);
+  GOQ.ANSWER_QS.map((q, i) => { const t = (draft.settings.text || {})["case.q" + (i + 1)]; return t && t[0] && t[0].join(" ") || q; }).forEach((q, i) => { // as worded in Words, Pieces
     const a = el("textarea", { rows: 4, maxlength: 6000, placeholder: "Their answer", "aria-label": "Answer to: " + q }); a.value = p.answers[i];
     a.addEventListener("input", () => { p.answers[i] = a.value; changed(); });
     box.appendChild(el("div", { style: "border-top:2px solid var(--line);padding:8px 0 4px;margin-top:6px;display:flex;flex-direction:column;gap:6px" }, [el("b", { text: (i + 1) + ". " + q, style: "font-size:.88rem" }), a,
@@ -2384,16 +2420,16 @@ function answersBox(p) {
 let pieceRedraw = null; // set by pieceRow: how a piece's own fields redraw the page they're on (the Pieces tab, or Episode day)
 function genreBox(p) {
   const genres = draft.settings.genres || GOQ.SAMPLE_GENRES;
-  const s = el("select", {}, [el("option", { value: "", text: "No genre (rooms without one)" })].concat(genres.map(g => el("option", { value: g.id, text: g.name }))));
+  const s = el("select", {}, [el("option", { value: "", text: "None" })].concat(genres.map(g => el("option", { value: g.id, text: g.name }))));
   s.value = p.genre || ""; s.addEventListener("change", () => { p.genre = s.value; changed({ now: true }); (pieceRedraw || renderPieces)(); });
-  return el("label", { class: "wide" }, [document.createTextNode("Exhibited in"), el("small", { text: "The room whose cases it goes in, and only that room. If its cases are full, the oldest of that genre wait on the room's touch screen until you add a case there." }), s]);
+  return el("label", { class: "wide" }, [document.createTextNode("Category"), el("small", { text: "What kind of episode it is: it colors its trading card and counts toward a player's best category. Which wing it's in goes by its air date." }), s]);
 }
 /* A second category it also belongs to (a blend). For the record; it's shown in the room it's exhibited in. */
 function blendBox(p) {
   const genres = draft.settings.genres || GOQ.SAMPLE_GENRES;
   const s = el("select", {}, [el("option", { value: "", text: "No blend" })].concat(genres.map(g => el("option", { value: g.id, text: g.name }))));
   s.value = p.blend || ""; s.addEventListener("change", () => { p.blend = s.value; changed({ now: true }); });
-  return el("label", { class: "wide" }, [document.createTextNode("Blends with"), el("small", { text: "A second category it also belongs to. It's still exhibited only in the room above." }), s]);
+  return el("label", { class: "wide" }, [document.createTextNode("Blends with"), el("small", { text: "A second category it also belongs to (for the record)." }), s]);
 }
 function renderVisitors() {
   const main = $("#main"); main.innerHTML = "";
@@ -2401,7 +2437,7 @@ function renderVisitors() {
   st.curious = st.curious || { perDay: 3 };
   const wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
   wrap.appendChild(el("h2", { class: "title", text: "Visitors" }));
-  wrap.appendChild(el("p", { text: "Curious visitors wait in the museum's wings with a \"?\" over their heads. Talk to one and they ask for a game with a certain relationship between your observation and the developer's intention (each piece has one, in Pieces), then follow you anywhere until you look at a piece and recommend it. The right one: they're thrilled and head off to play it (3 staff points), and from then on you can recommend that piece from memory (talk to whoever's following you: just the names, so remembering which fits is still up to you). The wrong one: they say what they read there and keep following; after three they give up for now. The next day the ones you helped come back to the lobby with a \"!\" and say what they made of your take, picked at random: they agree, they think you got it wrong, or they can't see where you got that." }));
+  wrap.appendChild(el("p", { text: "Curious visitors wait in the museum's wings with a \"?\" over their heads. Each is after one episode that's out in a case, and describes it by its hint (\"the one where...\", in Pieces), never by name. They follow you anywhere until you look at a case and show them. Ask \"Do you remember the name?\" and they'll tell you the title: that's the only hint, and finding it after asking earns fewer tokens (Tokens tab). The right one: they're thrilled and head off to play it (3 staff points). The wrong one: \"not that one\", and they keep following. The next day the ones you helped come back to the lobby with a \"!\" and say what they made of your take, picked at random: they agree, they think you got it wrong, or they can't see where you got that. The relationships below aren't used by anything right now (the new tutorial doesn't need them); they're kept in case they come back." }));
   const per = el("input", { type: "number", min: 0, max: 10, value: st.curious.perDay, style: "max-width:120px" });
   per.addEventListener("input", () => { st.curious.perDay = Math.max(0, Math.min(10, Math.round(+per.value || 0))); changed(); });
   wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:10px 0 14px" }, [el("label", {}, [document.createTextNode("Curious visitors a day"), el("small", { text: "Anyone you talked to but didn't get to show a game comes back the next day; the rest are new faces. 0 turns curious visitors off." }), per])]));
@@ -2530,7 +2566,7 @@ function renderTokens() {
   const num = (get, set, label, note) => { const i = el("input", { type: "number", min: 0, max: 999, value: get(), style: "max-width:110px", "aria-label": label }); i.addEventListener("input", () => { set(Math.max(0, Math.min(999, Math.round(+i.value || 0)))); changed(); }); return el("label", {}, [document.createTextNode(label), note ? el("small", { text: note }) : null, i]); };
   const k = (key, label, note) => num(() => r[key], v => { r[key] = v; }, label, note);
   const sec = (title, kids) => wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [el("h3", { text: title, style: "margin:0 0 8px" }), el("div", { class: "fields" }, kids)]));
-  sec("Recommending", [k("helped", "The right piece for a curious visitor", "Each time you recommend a visitor the piece they were looking for.")]);
+  sec("Curious visitors", [k("helped", "Finding their game from the description alone", "They describe it (its hint: \"the one where...\"). You find the case without asking the name."), k("helpedName", "Finding it after asking the name", "\"Do you remember the name?\" tells you the title: the one hint they give.")]);
   sec("Chores", [k("dusted", "Dusting a frame"), k("straightened", "Straightening a frame"), k("watered", "Watering a plant"), k("mugs", "Returning the curator's mug"), k("litter", "Picking up litter (each piece, once it's in a bin or the janitor's dustpan)"), k("supplies", "Bringing up a delivery box (the shop's stock or the café's supplies)"), k("tour", "Helping the tour (the usher's coffee, explaining a piece, bringing the lost kid back: each)"), k("item", "Bringing a staff member's item back (the break room mix-up)"), k("conservator", "Catching the conservator dreaming in a wing at closing (once a day)"), k("wiped", "Wiping a case"), k("closings", "Closing the museum")]);
   sec("Days of the week", [k("boxes", "Monday: all five boxes for the conservator"), k("kid", "Tuesday: the lost kid back to his mom"),
     ...["a common photo", "an uncommon photo", "a rare photo", "the rarest photos"].map((t, i) => num(() => r.artist[i], v => { r.artist[i] = v; }, "Wednesday: the artist, for " + t)),
@@ -2650,7 +2686,8 @@ function renderShop() {
     const nm = el("input", { type: "text", value: d.name, maxlength: 30, "aria-label": "Drink name" }); nm.addEventListener("input", () => { d.name = nm.value.trim() || d.name; changed(); });
     const pr = el("input", { type: "number", min: 0, max: 99, value: d.price, style: "max-width:90px", "aria-label": d.name + " price" }); pr.addEventListener("input", () => { d.price = Math.max(0, Math.min(99, Math.round(+pr.value || 0))); changed(); });
     const ic = el("input", { type: "checkbox", checked: !!d.iced }); ic.addEventListener("change", () => { d.iced = ic.checked; changed(); });
-    return el("div", { class: "fields", style: "border-top:2px solid var(--line);padding-top:8px;margin-top:8px" }, [el("label", {}, [document.createTextNode("Name"), nm]), el("label", {}, [document.createTextNode("Price (tokens)"), pr]), el("label", { class: "check", style: "align-self:end" }, [ic, document.createTextNode("Iced (a clear cup, no steam)")])]);
+    const cf = el("input", { type: "checkbox", checked: d.caf !== false }); cf.addEventListener("change", () => { d.caf = cf.checked; changed(); });
+    return el("div", { class: "fields", style: "border-top:2px solid var(--line);padding-top:8px;margin-top:8px" }, [el("label", {}, [document.createTextNode("Name"), nm]), el("label", {}, [document.createTextNode("Price (tokens)"), pr]), el("label", { class: "check", style: "align-self:end" }, [ic, document.createTextNode("Iced (a clear cup, no steam)")]), el("label", { class: "check", style: "align-self:end", title: "Three caffeinated drinks in a row (doing nothing else between) and you move fast for a minute" }, [cf, document.createTextNode("Has caffeine (the coffee rush)")])]);
   });
   wrap.appendChild(el("section", { class: "prow", style: "display:block;margin:10px 0 6px" }, [el("h3", { text: "Café drinks", style: "margin:0 0 4px" }), el("p", { class: "note", style: "margin:0", text: "Each drink has its own price (0 is free; Sundays are half off). Iced drinks come in a clear cup showing the drink's color, with no steam. Visitors' drinks follow the same menu." }), ...drinkRows]));
   // Drinks of the week: one per unveiled piece, on the café menu from its unveil until the next one with a drink.
@@ -2669,6 +2706,7 @@ function renderShop() {
       el("label", {}, [document.createTextNode("Drink name"), nm]), el("label", {}, [document.createTextNode("Cup color"), col]),
       (() => { const pr = el("input", { type: "number", min: 0, max: 99, value: p.drinkPrice || 0, "aria-label": "Price" }); pr.addEventListener("input", () => { p.drinkPrice = Math.max(0, Math.min(99, Math.round(+pr.value || 0))); changed(); }); return el("label", {}, [document.createTextNode("Price (tokens)"), pr]); })(),
       (() => { const ic = el("input", { type: "checkbox", checked: !!p.drinkIced }); ic.addEventListener("change", () => { p.drinkIced = ic.checked; changed(); }); return el("label", { class: "check", style: "align-self:end" }, [ic, document.createTextNode("Iced")]); })(),
+      (() => { const cf = el("input", { type: "checkbox", checked: p.drinkCaf !== false }); cf.addEventListener("change", () => { p.drinkCaf = cf.checked; changed(); }); return el("label", { class: "check", style: "align-self:end", title: "Counts toward the coffee rush" }, [cf, document.createTextNode("Has caffeine")]); })(),
       el("label", { class: "wide" }, [document.createTextNode("The barista's line"), line])]));
   });
   wrap.appendChild(drinks);
@@ -2850,7 +2888,7 @@ function paintRoomItems() {
   });
 }
 function newEpisode() {
-  const piece = GOQ.normalizePiece({ id: uid(), title: "", developer: "", kind: "episode", cardsFrom: "", unveil: GOQ.todayISO() }, draft.pieces.length);
+  const piece = GOQ.normalizePiece({ id: uid(), title: "", developer: "", kind: "episode", cardsFrom: "", unveil: GOQ.todayISO(), aired: GOQ.todayISO() }, draft.pieces.length);
   piece.title = ""; piece.developer = "";
   return { piece, gift: { name: "", price: 30, description: "", image: null } };
 }
@@ -2958,21 +2996,22 @@ function renderPieces() {
   const spots = GOQ.spotCount(), cases = GOQ.caseCount(), wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
   wrap.appendChild(el("h2", { class: "title", text: "Pieces" }));
   wrap.appendChild(el("p", { class: "note", text: "When a room has more episodes than cases, the oldest (highest in this list) move to that room's touch screen, and the newest stay in the cases. Community finds need a free wall spot to be shown. Add new pieces at the bottom." }));
-  wrap.appendChild(el("p", { text: "Episodes go in display cases (" + cases + " in the museum), in the room for their genre (set under Exhibited in): your observation on the front placard, the developer's intention on the back. Community finds hang on the walls as paintings (" + spots + " wall spots). Each kind fills its places in this order. Add more cases and wall spots in the Rooms tab." }));
+  wrap.appendChild(el("p", { text: "Episodes go in display cases (" + cases + " in the museum), wing by wing by air date, Volume I first: your observation on the front placard, the developer's intention on the back. Community finds hang on the walls as paintings (" + spots + " wall spots). Each kind fills its places in this order. Add more cases and wall spots in the Rooms tab." }));
   wrap.appendChild(el("p", { text: "Turn on \"Unveil on a date\" and visitors see the piece under a sheet until that day. In curator mode it waits in a crate, so you can hang it on camera. Links show as small buttons while someone is looking at the piece." }));
   if (!draft.pieces.length) wrap.appendChild(el("p", { class: "empty", text: "No pieces yet. Add the first one below." }));
   // Where each piece is: which gallery and case or wall spot, or on its room's touch screen (the oldest go first).
-  // Where each piece is. Episodes: the case in their genre's room (or a spare case elsewhere), newest first; community finds:
+  // Where each piece is. Episodes: by air date, along the wings' timeline (the oldest on the first wing's touch screen if they don't all fit); community finds:
   // the wall spots in order. Episodes that don't fit go on their room's touch screen.
   const nC = draft.pieces.filter(p => p.kind !== "episode").length, oldC = Math.max(0, nC - spots), walls = [];
   Object.keys(GOQ.ROOMS).forEach(id => (GOQ.ROOMS[id].spots || []).forEach((_, i) => walls.push("WALL " + (walls.length + 1))));
   const asg = GOQ.assignCases(draft.pieces, draft.settings.genres || GOQ.SAMPLE_GENRES), caseNo = {}, label = {};
   asg.slots.forEach(sl => { caseNo[sl.where] = (caseNo[sl.where] || 0) + 1; if (sl.p) label[sl.p.id] = sl.where.toUpperCase() + ", CASE " + caseNo[sl.where]; });
-  // Per genre: how many episodes, how many cases, how many wait in the archive.
-  const gl = (draft.settings.genres || GOQ.SAMPLE_GENRES).concat([{ id: "", name: "No genre" }]).map(g => {
-    const n = draft.pieces.filter(p => p.kind === "episode" && GOQ.genreOf(p, draft.settings.genres || GOQ.SAMPLE_GENRES) === g.id).length, c = asg.slots.filter(sl => sl.genre === g.id).length;
-    return n || c ? g.name + ": " + n + " episode" + (n === 1 ? "" : "s") + ", " + c + " case" + (c === 1 ? "" : "s") + (n > c ? " (" + (n - c) + " on the room's touch screen)" : "") : null;
-  }).filter(Boolean);
+  // Wing by wing along the timeline: how full, and the air dates it covers; then the archive and any episode without a date.
+  const mo = d => { const t = new Date(d + "T12:00:00"); return isNaN(t) ? d : t.toLocaleDateString(undefined, { month: "short", year: "numeric" }); };
+  const wings = []; asg.order.forEach(sl => { let w = wings.find(q => q.where === sl.where); if (!w) wings.push(w = { where: sl.where, n: 0, c: 0, dates: [] }); w.c++; if (sl.p) { w.n++; if (sl.p.aired) w.dates.push(sl.p.aired); } });
+  const gl = wings.map((w, k) => (k + 1) + ". " + w.where + ": " + w.n + " of " + w.c + " cases" + (w.dates.length ? ", aired " + (mo(w.dates[0]) === mo(w.dates[w.dates.length - 1]) ? mo(w.dates[0]) : mo(w.dates[0]) + " to " + mo(w.dates[w.dates.length - 1])) : ""));
+  if (asg.archived.length) gl.push(asg.archived.length + " of the oldest on the touch screen in " + (wings[0] ? wings[0].where : "the first wing") + " (more episodes than cases)");
+  const undated = draft.pieces.filter(p => p.kind === "episode" && !p.aired).length; if (undated) gl.push(undated + " episode" + (undated === 1 ? " has" : "s have") + " no air date yet: they count as the oldest, in this list's order");
   if (gl.length) wrap.appendChild(el("ul", { class: "laylist" }, gl.map(t => el("li", { text: t }))));
   // Find a piece, and open or close them all. Each piece folds to one line (title, developer, where it is) until you open it.
   const find = el("input", { type: "search", placeholder: "Find a piece by title or developer", "aria-label": "Find a piece", value: pieceFilter });
@@ -2982,7 +3021,7 @@ function renderPieces() {
   let ci = 0;
   draft.pieces.forEach((p, i) => {
     const g = p.kind === "episode" ? (draft.settings.genres || GOQ.SAMPLE_GENRES).find(x => x.id === GOQ.genreOf(p, draft.settings.genres || GOQ.SAMPLE_GENRES)) : null;
-    const place = p.kind === "episode" ? label[p.id] || (g ? "ON THE " + (wingOf(g.id) || g.short || g.name).toUpperCase() + " SCREEN" : "NOT SHOWN (NO GENRE)") : (ci++ < oldC ? "NOT SHOWN (NO WALL SPOT FREE)" : walls[ci - 1 - oldC]);
+    const place = p.kind === "episode" ? label[p.id] || "ON THE TOUCH SCREEN IN " + (wings[0] ? wings[0].where : "THE FIRST WING").toUpperCase() : (ci++ < oldC ? "NOT SHOWN (NO WALL SPOT FREE)" : walls[ci - 1 - oldC]);
     wrap.appendChild(foldPiece(pieceRow(p, i, place), p, place));
   });
   if (pieceFilter.trim()) find.dispatchEvent(new Event("input"));
@@ -3062,11 +3101,11 @@ function pieceRow(p, i, place, opts) {
   date.hidden = !p.unveil;
   const soon = () => { const d = new Date(); d.setDate(d.getDate() + 7); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
   dated.addEventListener("change", () => {
-    if (dated.checked) { if (!date.value) date.value = soon(); p.unveil = date.value; }
+    if (dated.checked) { if (!date.value) date.value = soon(); if (!p.aired) p.aired = date.value; p.unveil = date.value; }
     else { p._lastUnveil = p.unveil || date.value; p.unveil = ""; }
     date.hidden = extras.hidden = !dated.checked; changed({ now: true });
   });
-  date.addEventListener("change", () => { if (dated.checked && date.value) { p.unveil = date.value; changed({ now: true }); } });
+  date.addEventListener("change", () => { if (dated.checked && date.value) { if (!p.aired || p.aired === p.unveil) { p.aired = date.value; aired.value = date.value; } p.unveil = date.value; changed({ now: true }); } }); // (the air date follows, unless you've set it apart)
   /* What the unveil brings: the drink of the week (on the café menu until the next unveil brings one) and a gift (free for
      whoever is at the ceremony, then in the gift shop until the next gift, then one of the old gifts Bluu sells). */
   const xin = (label, ph, get, set, type) => { const inp = el("input", { type: type || "text", value: get() || "", placeholder: ph, "aria-label": label }); if (type === "number") { inp.min = 1; inp.max = 99; }
@@ -3075,20 +3114,24 @@ function pieceRow(p, i, place, opts) {
     el("small", { text: "The ceremony on that day hands these out. Leave blank for none." }),
     xin("Drink of the week", "Name on the café menu", () => p.drink, v => { p.drink = v; }),
     (() => { const pr = el("input", { type: "number", min: 0, max: 99, value: p.drinkPrice || 0, "aria-label": "Drink price" }); pr.addEventListener("input", () => { p.drinkPrice = Math.max(0, Math.min(99, Math.round(+pr.value || 0))); changed(); }); const ic = el("input", { type: "checkbox", checked: !!p.drinkIced }); ic.addEventListener("change", () => { p.drinkIced = ic.checked; changed(); });
-      return el("div", { class: "rrow" }, [el("label", { class: "rfield" }, [el("span", { text: "Drink price (tokens)" }), pr]), el("label", { class: "check" }, [ic, document.createTextNode("Iced")])]); })(),
+      const cf = el("input", { type: "checkbox", checked: p.drinkCaf !== false }); cf.addEventListener("change", () => { p.drinkCaf = cf.checked; changed(); });
+      return el("div", { class: "rrow" }, [el("label", { class: "rfield" }, [el("span", { text: "Drink price (tokens)" }), pr]), el("label", { class: "check" }, [ic, document.createTextNode("Iced")]), el("label", { class: "check", title: "Counts toward the coffee rush: three in a row and you move fast for a minute" }, [cf, document.createTextNode("Has caffeine")])]); })(),
     (() => { const inp = el("input", { type: "color", value: p.drinkColor || "#c89040", "aria-label": "Drink color" }); inp.addEventListener("input", () => { p.drinkColor = inp.value; changed(); }); return el("label", { class: "rfield" }, [el("span", { text: "Drink color (the cup in your hand)" }), inp]); })(),
     (() => { const t = el("textarea", { rows: 2, placeholder: "What the barista says when serving it (one page per line)", "aria-label": "Barista's line" }); t.value = (p.drinkLine || []).join("\n");
       t.addEventListener("input", () => { p.drinkLine = t.value.split("\n").map(x => x.trim()).filter(Boolean); changed(); }); return el("label", { class: "rfield" }, [el("span", { text: "The barista's line when serving it" }), t]); })(),
     (() => { const it = draft.settings.shop.items.find(q => q.gift === p.id); return el("p", { class: "note", style: "margin:0" }, [el("b", { text: "Gift: " }), document.createTextNode(it ? it.name + " (edit it in the Shop tab)." : "none. In the Shop tab, set an item's \"Unveil gift for\" to this piece.")]); })()]);
   extras.hidden = !p.unveil;
+  const aired = el("input", { type: "date", value: p.aired || "", "aria-label": "Aired on" });
+  aired.addEventListener("change", () => { p.aired = aired.value || ""; changed({ now: true }); (pieceRedraw || renderPieces)(); }); // the wings are a timeline: this decides its case
   const unveilBox = el("div", { class: "unveil" }, [el("label", { class: "check" }, [dated, document.createTextNode("Unveil on a date")]), date, extras]);
   const placard = p.kind === "episode"
-    ? [f("Observation (yours)", area("observation", "What you noticed while playing. Every placard frames this as your own view (Words, Pieces)."), true), f("Intention (the developer's)", area("intention", "What the developer was going for."), true)]
+    ? [f("Reaction (the developer's, back of the case)", area("reaction", "Their reaction to the episode: what landed, what didn't, what surprised them. Empty: the back says it's on its way (Words, Pieces)."), true), f("Intention (the developer's)", area("intention", "Only shown while the Developer answers below are empty: then it's the front of the case, under one heading."), true),
+       f("Curator's note (yours, not shown for now)", area("observation", "Kept with the piece, but no longer on the placards."), true)]
     : [f("Guest writer", text("guestWriter", "Name (Discord)")), el("span"), f("Guest note", area("guestNote", "The guest writer's note."), true)];
   const move = (d) => { const j = i + d; if (j < 0 || j >= draft.pieces.length) return; const a = draft.pieces; [a[i], a[j]] = [a[j], a[i]]; changed({ now: true }); redraw(); };
   const fields = el("div", { class: "fields" }, [
     f("Title", text("title", "Game title")), f("Developer", text("developer", "Who made it")),
-    f("Frame", kind), el("div", { class: "fieldset" }, [el("span", { class: "flabel", text: "Unveiling" }), el("small", { text: "Off: it hangs right away." }), unveilBox]),
+    f("Frame", kind), p.kind === "episode" ? f("Aired on", aired, false, "The day the episode came out. The wings are a timeline: this decides which wing and case it's in. No date: it counts as one of the oldest.") : null, p.kind === "community" ? null : el("div", { class: "fieldset" }, [el("span", { class: "flabel", text: "Unveiling" }), el("small", { text: "Off: it hangs right away." }), unveilBox]),
     el("div", { class: "fieldset wide" }, [el("span", { class: "flabel", text: "Curator's pick" }), el("small", { text: "Pins a medal to the piece and tags its placard." }), el("div", { class: "unveil" }, [el("label", { class: "check" }, [pickBox, document.createTextNode("This is one of my picks")])])]),
     ...placard,
     f("How a visitor would describe it", text("hint", "the one where the clock never ran out but I still rushed"), true, "Visitors say this when they come back to tell you how it went: \"I tried Lantern Keeper, the one where...\" Keep it to one line, in their words."),

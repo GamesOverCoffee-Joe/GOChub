@@ -107,6 +107,17 @@ body.l-split-h .gt-controls{grid-column:3;flex-direction:column;gap:28px}
 dialog.settings{border:2px solid var(--line);border-radius:6px;background:var(--surface);color:var(--text);padding:0;max-width:min(440px,calc(100vw - 24px));width:100%;
   max-height:calc(100dvh - 24px);overflow:auto}
 dialog.settings::backdrop{background:rgba(10,5,7,.7)}
+/* What's new: the latest update, written in the curator (Staff tab) */
+.news-btn{position:relative}
+.news-dot{position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 2px var(--surface)}
+dialog.news{max-width:min(520px,calc(100vw - 24px))}
+.news-date{margin:-8px 0 12px;color:var(--muted);font-size:13px}
+.news-body{line-height:1.55;font-size:15px}
+.news-body h3{font-family:var(--pixel);font-weight:400;font-size:10px;color:var(--gold);margin:18px 0 6px;line-height:1.6}
+.news-body h3:first-child{margin-top:0}
+.news-body p{margin:0 0 10px}
+.news-body ul{margin:0 0 10px;padding-left:1.2em}
+.news-body li{margin:3px 0}
 .set-in{padding:18px 18px 16px;position:relative}
 .set-row.set-sub{padding-left:18px;border-top:1px dashed var(--line)}
 .set-x{position:absolute;top:8px;right:8px;width:36px;height:36px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-size:18px;line-height:1;cursor:pointer}
@@ -139,8 +150,9 @@ dialog.settings::backdrop{background:rgba(10,5,7,.7)}
 @keyframes gtblink{50%{opacity:0}}
 .gt-loc{position:absolute;left:calc(4px * var(--s));top:calc(4px * var(--s));padding:calc(5px * var(--s)) calc(8px * var(--s));background:#181820;color:#f8f8f0;
   font-size:calc(8px * var(--s));line-height:1.4;border:calc(1px * var(--s)) solid #f8f8f0;box-shadow:0 0 0 calc(1px * var(--s)) #181820;opacity:0;transform:translateY(-120%);
-  transition:transform .25s steps(4),opacity .25s steps(4);pointer-events:none;max-width:70%;z-index:6}
+  transition:transform .25s steps(4),opacity .25s steps(4);pointer-events:none;max-width:70%;z-index:6;text-wrap:balance}
 .gt-loc.on{opacity:1;transform:none}
+.gt-loc-spark{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;image-rendering:pixelated}
 /* Close-up of a piece: the art fills the space above the text box. */
 .gt-closeup{position:absolute;left:0;right:0;top:0;height:calc(112px * var(--s));display:none;align-items:center;justify-content:center;
   background:rgba(24,24,32,.82);cursor:pointer;z-index:4}
@@ -165,6 +177,7 @@ dialog.settings::backdrop{background:rgba(10,5,7,.7)}
       <input id="packFile" class="sr-only" type="file" accept=".json,application/json">
       <button class="btn" id="resetPack" type="button" hidden>Use built-in art</button>
     </div>
+    <button class="btn news-btn" id="newsBtn" type="button" hidden aria-haspopup="dialog">What's new<span class="news-dot" id="newsDot" hidden aria-label="(new)"></span></button>
     <button class="btn icon" id="fsBtn" type="button" hidden aria-label="Fullscreen" title="Fullscreen">&#x26F6;</button>
     <button class="btn icon" id="setBtn" type="button" aria-haspopup="dialog" aria-label="Settings" title="Settings">&#x2699;&#xFE0E;</button>
   </div>
@@ -177,6 +190,14 @@ dialog.settings::backdrop{background:rgba(10,5,7,.7)}
 <p class="hint">Walk with <kbd>Arrow keys</kbd> or <kbd>WASD</kbd>, or click to walk if it's on in Settings. Look, talk and tidy with <kbd>Z</kbd> or <kbd>Space</kbd>. <kbd>X</kbd> goes back, or takes a photo of whatever's in front of you. <kbd>Enter</kbd> or <kbd>Esc</kbd> opens the menu (your stuff, controls, save). A game controller works too. Dust the frames, water the plants, find the curator's mug, and turn out the lights when you leave.</p>
 <p class="hint" id="ver"></p>
 
+<dialog class="settings news" id="news" aria-labelledby="newsTitle">
+  <form method="dialog" class="set-in">
+    <button class="set-x" type="submit" value="close" aria-label="Close" title="Close">&#x2715;&#xFE0E;</button>
+    <h2 id="newsTitle">WHAT'S NEW</h2>
+    <p class="news-date" id="newsDate"></p>
+    <div class="news-body" id="newsBody"></div>
+  </form>
+</dialog>
 <dialog class="settings" id="settings" aria-labelledby="setTitle">
   <form method="dialog" class="set-in">
     <button class="set-x" type="submit" value="close" aria-label="Close settings" title="Close">&#x2715;&#xFE0E;</button>
@@ -233,7 +254,7 @@ dialog.settings::backdrop{background:rgba(10,5,7,.7)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 59";
+window.GOQ_WANT = "2026-11-18 cards 89";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -291,7 +312,34 @@ window.goqStart = function () {
   game.sharp = sharp(); game.swapAB = !!set.swapAB; game.screenVideo = set.screenVideo !== false;
   window.goqMuseum = game;
 
+  /* What's new: the pack's briefing (settings.news), behind a button in the header. A dot shows until you've read this one. */
+  const newsBtn = document.getElementById("newsBtn"), newsDlg = document.getElementById("news"), NEWS_KEY = "goq-news-seen";
+  let newsDateSeen = ""; try { newsDateSeen = localStorage.getItem(NEWS_KEY) || ""; } catch (e) {}
+  function showNews(n) {
+    const body = document.getElementById("newsBody"); body.innerHTML = "";
+    const text = n && n.text ? n.text : ""; newsBtn.hidden = !text; if (!text) return;
+    let list = null, para = [];
+    const flush = () => { if (para.length) { const p = document.createElement("p"); p.textContent = para.join(" "); body.appendChild(p); para = []; } };
+    for (const raw of text.split(/\r?\n/)) {
+      const line = raw.trim();
+      if (!line) { flush(); list = null; continue; }
+      if (/^##\s+/.test(line)) { flush(); list = null; const h = document.createElement("h3"); h.textContent = line.replace(/^##\s+/, ""); body.appendChild(h); continue; }
+      if (/^[-*]\s+/.test(line)) { flush(); if (!list) { list = document.createElement("ul"); body.appendChild(list); } const li = document.createElement("li"); li.textContent = line.replace(/^[-*]\s+/, ""); list.appendChild(li); continue; }
+      list = null; para.push(line);
+    }
+    flush();
+    const d = n.date ? new Date(n.date + "T12:00:00") : null;
+    document.getElementById("newsDate").textContent = d ? d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }) : "";
+    newsBtn.dataset.date = n.date || text.length; document.getElementById("newsDot").hidden = newsDateSeen === String(newsBtn.dataset.date);
+  }
+  newsBtn.addEventListener("click", () => {
+    newsDateSeen = String(newsBtn.dataset.date || ""); try { localStorage.setItem(NEWS_KEY, newsDateSeen); } catch (e) {} document.getElementById("newsDot").hidden = true;
+    if (newsDlg.showModal) newsDlg.showModal(); else newsDlg.setAttribute("open", "");
+  });
+  newsDlg.addEventListener("click", e => { if (e.target === newsDlg) newsDlg.close ? newsDlg.close() : newsDlg.removeAttribute("open"); }); // a tap outside closes it
+  newsDlg.addEventListener("close", () => stage.focus({ preventScroll: true }));
   function describe(p, from) {
+    showNews(p.settings && p.settings.news);
     const n = Object.keys(p.assets).length, k = p.samples ? "sample pieces" : p.pieces.length + " piece" + (p.pieces.length === 1 ? "" : "s");
     status.className = "toast"; status.textContent = from + ": " + n + " custom art slot" + (n === 1 ? "" : "s") + ", " + k;
     status2.textContent = status.textContent; resetBtn.hidden = false;
