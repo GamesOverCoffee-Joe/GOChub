@@ -2821,7 +2821,7 @@ const TEXT = {
   "screen.empty":      { g: "Rooms", l: "A room's touch screen when every piece fits in the cases ({room})", v: [["The little screen glows.", "EVERY PIECE IN {room} IS ON DISPLAY. Nothing waiting here."]] },
   "mag.1":             { g: "Magazines", l: "Magazine 1 (first line is the title; each line after is a paragraph)", v: [["Pixel Monthly", "This month: why every menu in a cozy game should make a little sound when you open it. We asked twelve players. Eleven said yes. The twelfth asked what a menu was.", "Also inside: the case for walking slower. Games that let you stroll tend to get remembered as places, not as tasks. Something to think about next time a game hands you a sprint button."]] },
   "mag.2":             { g: "Magazines", l: "Magazine 2", v: [["Curator's Digest", "Ten things museum staff wish visitors knew. Number one: the backs of the display cases are not the boring side. Number four: the cat is not an exhibit, but she does accept compliments.", "Letters page: a reader asks whether there are bad mechanics. Our editor replies that there are only mechanics in the wrong game, and then goes back to wiping fingerprints off the glass."]] },
-  "mag.3":             { g: "Magazines", l: "Magazine 3 (holds the secret shirt riddle)", v: [["Thread Count Quarterly", "FASHION: THE SHIRT THAT GOT AWAY. Years ago the museum shop sold a GOQ shirt. Then, one day, it didn't. The shopkeeper won't say why. But the shopkeeper still has one, and rumor says it goes to whoever proves they've lived the full museum day, in order:", "First, something sweet and brown from the café. Drink it all, sitting on a stool, not a bench. Throw the cup out by the front doors, not in the tub. Give a plant a drink of its own. Photograph the cat. Take the lobby stairs all the way down, and wake up the old PC. Walk the {room:upper} from the {room:puzzle} to the {room:strategy}. Sleep on the bench in that hall. Then visit the shopkeeper and just chat. Three times. In a row.", "Do it out of order, and you'll have to start over. The shopkeeper notices everything."]] },
+  "mag.3":             { g: "Magazines", l: "Magazine 3 (holds the secret shirt riddle)", v: [["Thread Count Quarterly", "FASHION: THE SHIRT THAT GOT AWAY. Years ago the museum shop sold a GOQ shirt. Then, one day, it didn't. The shopkeeper won't say why. But the shopkeeper still has one, and rumor says it goes to whoever proves they've lived the full museum day, in order:", "First, something sweet and brown from the café. Drink it all, sitting on a stool, not a bench. Throw the cup out by the front doors, not in the tub. Give a plant a drink of its own. Photograph the cat. Take the lobby stairs all the way down, and wake up the old PC. Walk the {room:upper} from the {room:puzzle} to the {room:strategy}. Then find a bench and take a nap. Then visit the shopkeeper and just chat. Three times. In a row.", "Do it out of order, and you'll have to start over. The shopkeeper notices everything."]] },
   "mag.4":             { g: "Magazines", l: "Magazine 4", v: [["Café Society", "A field guide to museum café seating. The stool by the lamp is for people who are about to have an idea. The stool by the window is for people who already had one. The bench in the gallery is for people who need a nap first.", "Recipe corner: cocoa, but you stare at a painting while it cools."]] },
   "mag.intro":         { g: "Magazines", l: "Magazine stand question", v: [["A rack of magazines. Read one?"]] },
   "shirt.tease":       { g: "Secret shirt", l: "The discontinued shirt in the shop menu", v: [["DISCONTINUED. The GOQ shirt. We don't sell these anymore. Don't ask. (People ask.)"]] },
@@ -2925,7 +2925,7 @@ const RUG_PRESETS = {
   "Dusk purple": { field: "#4a3a6a", border: "#d8b8e0", accent: "#2a1e40", corner: "#f0a0b0" },
 };
 /* The secret shirt: the museum day from the third magazine, in order. */
-const SHIRT_STEPS = ["cocoa", "finishOnStool", "lobbyTrash", "water", "catPhoto", "stairsB1", "pc", "upperHall", "napUpper", "chat", "chat", "chat"];
+const SHIRT_STEPS = ["cocoa", "finishOnStool", "lobbyTrash", "water", "catPhoto", "stairsB1", "pc", "upperHall", "nap", "chat", "chat", "chat"];
 /* The office keypad's code is kept scrambled in the pack, so it isn't sitting there in plain sight. */
 const LOCK_ABC = "QWERTYUPASDFGHJKLZXCVBNM";
 function officeLock(code) { return "v1" + [...String(code)].map((d, i) => LOCK_ABC[(+d + strSeed("goq-office" + i) % 24) % 24]).join(""); }
@@ -7302,7 +7302,7 @@ class Game {
     if (this.drink && this.drink.empty) {
       const n = this.drink.name.toLowerCase();
       this.choose("Finished? Want a refill on that " + n + "?", ["Refill, please", "No thanks"], i => {
-        if (i === 0) { this.drink = { kind: this.drink.kind, name: this.drink.name, sips: 0, color: this.drink.color, iced: this.drink.iced }; this.say(this.tx("drink.refill")); }
+        if (i === 0) { this.drink = { kind: this.drink.kind, name: this.drink.name, sips: 0, color: this.drink.color, iced: this.drink.iced, caf: this.drink.caf }; this.say(this.tx("drink.refill")); } // a refill is still caffeinated (it was dropped, so refills broke a coffee run)
         else this.say(this.tx("drink.noRefill"));
       });
       return;
@@ -8740,7 +8740,7 @@ class Game {
       if (p.bench && !d && !pressA && !awake && !this.sip) {
         this.sitIdle++;
         if (this.sitIdle === 420) this.showLoc("You're getting comfortable...");
-        if (this.sitIdle > 720) { this.asleep = true; this.progress.tally.naps = (this.progress.tally.naps || 0) + 1; this.saveProgress(); this.showLoc("Zzz..."); if (this.zone && this.zone.id === "upper") this.quest("napUpper"); return; }
+        if (this.sitIdle > 720) { this.asleep = true; this.progress.tally.naps = (this.progress.tally.naps || 0) + 1; this.saveProgress(); this.showLoc("Zzz..."); if (SHIRT_STEPS[this.progress.quest || 0] === "nap") this.quest("nap"); return; } // the shirt: right after the hall walk, a nap on any bench (the hall's bench is gone, Joe 10/17); other naps don't break it
       }
       if (d || pressA) this.sitIdle = 0;
       if (!d) this.inputLock = false;
@@ -10720,7 +10720,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 92";
+const VERSION = "2026-11-18 cards 93";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

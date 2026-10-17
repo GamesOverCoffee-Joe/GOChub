@@ -399,6 +399,14 @@ Toys that play with the games themselves. Every piece on display has a card in a
 
 ## **Later** *(Joe 10/14: pinned to build later)*
 
+### **Exhibit pictures in a folder, and a readable pack** *(Joe 10/17: later)*
+
+- **Why:** of the pack's 2.0 MB, about 1.85 MB is the 34 exhibit pictures (about 54 KB each), stored as text inside the file. The curator keeps your work in the browser, which allows roughly 5 MB, so around 50 more exhibits and it stops saving there (only Export would keep changes). Players also download every picture on every visit.
+- **The folder:** pictures live in `museum/art/pieces/` as files named after the exhibit (`piece-yttv7ax.png`), and the pack just names the file. The game already loads pictures from file paths. A one-time move takes the 34 current pictures out (pack from about 2 MB to about 190 KB). Older packs with pictures inside still load.
+- **The curator:** you pick a picture as now; it shows from your browser until it's online. Export downloads the pack plus any new pictures, and you drag those into the folder on GitHub along with the pack.
+- **A readable pack:** Export writes the pack with line breaks (each field on its own line) instead of one long line, so git can merge edits to different exhibits by itself (one-line packs are why main and experiments-1 conflicted on 10/16). A few percent bigger; nothing else changes.
+
+
 ### **Exhibits that showcase the developers**
 
 The museum showcases the developers, not the critique. Joe is still the curator: he chooses what goes on the walls and frames it, but the voices on the placards are the developers'. Each exhibit tells a short story in three beats.
