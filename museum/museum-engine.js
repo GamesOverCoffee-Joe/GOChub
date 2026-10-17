@@ -2576,7 +2576,7 @@ const TEXT = {
   "badge.expired":     { g: "Staff", l: "Clocked out because the badge stopped working", v: [["The staff office didn't recognize your badge anymore, so you've been clocked out.", "Clock in again with your badge number and key."]] },
   "net.down":          { g: "Staff", l: "Notice: chores can't reach the staff office", v: [["Staff office unreachable: chores won't count for now"]] },
   "cork.empty":        { g: "Staff", l: "Corkboard with no notes", v: [["The corkboard is bare. Just pins."]] },
-  "rules":             { g: "Staff", l: "Staff rules whiteboard", v: [["STAFF RULES", "1. Clock in at the staff door or the time clock. The ON SHIFT tag means you're working.", "2. On shift, every chore is a point: watering plants, finding the mug, wiping cases. A visitor who loves your recommendation, and closing up, are worth 3.", "3. Chores earn tokens for the gift shop. Most points decide Employee of the Month.", "4. Clock out at the time clock: that's when your points go on the board. Leaving at closing clocks you out too.", "5. Do not touch anyone's yogurt."]] },
+  "rules":             { g: "Staff", l: "Staff rules whiteboard", v: [["STAFF RULES", "1. Clock in at the staff door or the time clock. The ON SHIFT tag means you're working.", "2. On shift, every chore is a point: watering plants, finding the mug, wiping cases. A visitor who loves your recommendation, and closing up, are worth 3.", "3. Chores earn tokens for the gift shop. Most points decide Employee of the Month.", "4. Clock out at the time clock when you're done. Leaving at closing clocks you out too.", "5. Do not touch anyone's yogurt."]] },
   "locker.mine":       { g: "Staff", l: "Your locker", v: [["Locker {locker}: {name}.", "If you're looking for your items, they're in the glass case. These are just for aesthetics."]] },
   "locker.others":     { g: "Staff", l: "Other lockers (one per locker, in order)", v: [["You just open people's lockers?", "That's a little weird."], ["That sure is a locker."], ["Oh look, it's a locker."], ["Empty. It smells like coffee."], ["A note in big letters: \"HE WANDERS AT IN DARKNESS\""], ["Locked.", "Why are you like this?"]] },
   "jan.start":         { g: "Janitor", l: "Just out of the staff door, starting his chores", by: "claude", v: [["Alright. Let's get this over with."], ["Morning. Don't track anything in."]] },
@@ -3589,6 +3589,7 @@ class Game {
     const sig = Object.keys(pack.assets).sort().map(k => k + ":" + pack.assets[k].src.length + pack.assets[k].src.slice(-24)).join("|");
     if (sig !== this.assetSig) { this.cache = {}; this.assetSig = sig; } else for (const k in this.cache) if (k.includes("|")) delete this.cache[k];
     this.pack = pack; this.overrides = ov; this.pieceImgs = pi;
+    if (p) this.newReactions(); // a real pack (not the built-in placeholder): a changed reaction makes that case's back unread again
     this.rebuild(); this.refreshBoard(true); this.refreshNotes(true);
     if (this.started && !this.tut && this.mode === "walk" && this.needTutorial() && !this.outsideNow()) this.startTutorial(); // the site's pack arrived with a newer tutorial than the saved one
     const tb = `url("${this.src("textbox")}")`;
@@ -4422,7 +4423,7 @@ class Game {
       sections: secs, pick: p.pick, frame: true, clip: this.clipOf(p), flip: side === "back", note: notes && !this.curator ? p : null, links: [side !== "front" ? [p.episodeUrl, "Watch the episode", "WATCH"] : [], side !== "back" ? [p.gameUrl, "Play the game", "PLAY"] : []] }, () => {
       if (!this.readEnded) return; // closed before the last page: not read yet
       if (onRead) onRead();
-      if (side === undefined) { const k = (this.progress.sides || (this.progress.sides = {}))[p.id] || (this.progress.sides[p.id] = {}); if (gold) k.front = k.back = 1; else k.note = 1; this.saveProgress(); }
+      if (side === undefined) { const k = (this.progress.sides || (this.progress.sides = {}))[p.id] || (this.progress.sides[p.id] = {}); if (gold) { k.front = k.back = 1; k.rv = this.reactRev(p); } else k.note = 1; this.saveProgress(); }
       if (!p.tut && !wasRead && this.isRead(p)) { const all = this.pack.pieces.filter(q => !q.tut); this.showLoc("Read " + all.filter(q => this.isRead(q)).length + " of " + all.length + " pieces"); } // fully read: how far through the museum you are (Joe 10/11)
     });
   }
@@ -4445,7 +4446,7 @@ class Game {
     if (!side) { this.say(this.tx("case.ends")); return; }
     // Reading a side marks it (after the placard closes). The tutorial's games keep their own record.
     const tp = !!c.piece.tut, seen = tp ? (this.tut ? this.tut.sides : {}) : this.progress.sides || (this.progress.sides = {}), k = seen[c.piece.id] || (seen[c.piece.id] = {});
-    this.viewPiece(c.piece, side, null, () => { k[side] = 1; if (!tp) this.saveProgress(); }); // marked once you've read that side to its last page
+    this.viewPiece(c.piece, side, null, () => { k[side] = 1; if (side === "back") k.rv = this.reactRev(c.piece); if (!tp) this.saveProgress(); }); // marked once you've read that side to its last page (the back: which reaction you read)
   }
   /* Curator mode: lift a new piece out of its crate onto the wall, with sparkles, then read its placard. */
   hang(spot) {
@@ -4817,7 +4818,7 @@ class Game {
     const t = this.progress.staffTally[s.badge] || (this.progress.staffTally[s.badge] = { name: s.name });
     t[kind] = (t[kind] || 0) + 1; t.name = s.name;
     this.shift[kind] = (this.shift[kind] || 0) + 1;
-    if (POINT_KINDS.includes(kind) && s.token) { (this.progress.shiftDuties || (this.progress.shiftDuties = [])).push({ t: s.token, k: kind, g: String(target || "").slice(0, 60) }); this.saveProgress(); } // held until you clock out (Joe 10/12)
+    if (POINT_KINDS.includes(kind) && s.token) { (this.progress.dutyOutbox || (this.progress.dutyOutbox = [])).push({ t: s.token, k: kind, g: String(target || "").slice(0, 60) }); this.saveProgress(); this.sendOutbox(); } // on the board right away again (Joe 10/17); the outbox holds it if you're offline
     this.updateHud();
   }
   /* Off shift, a chore is a favor: a coworker nearby notices (not every time). On shift it's just the job. */
@@ -6060,7 +6061,7 @@ class Game {
   /* The leaderboard and Employee of the Month: fetched on load and when you walk into the lobby or staff room (at most every 5 minutes). */
   refreshBoard(force) {
     if (!this.online()) { this.board = null; this.boardErr = false; return; }
-    this.sendOutbox(); // chores from a clock-out that couldn't get through last time
+    this.sendOutbox(); // chores that couldn't get through last time
     const now = Date.now(); if (this.boardBusy || (!force && now - this.boardAt < 300000)) return;
     this.boardBusy = true; this.boardAt = now;
     this.rpc("get_leaderboard").then(b => { this.board = b && Array.isArray(b.top) ? b : null; this.boardErr = !this.board; })
@@ -6080,15 +6081,16 @@ class Game {
     if (a && a.name) return (a.sofar ? "LEADING " + (a.month || "THIS MONTH") : "EMPLOYEE OF THE MONTH") + ": " + a.name + " - " + a.points + " PTS";
     return "EMPLOYEE OF THE MONTH: COULD BE YOU";
   }
-  /* Chores go to the staff office when you clock out (Joe 10/12: that's what clocking out is for), not as you do them.
-     Clocking out moves this shift's chores to the outbox and sends them; any that can't get through wait there for the next try (the next page load). */
+  /* Each chore goes to the staff office as you do it (Joe 10/17; from 10/12 they waited for the clock out). It goes in the outbox and is
+     sent; any that can't get through wait there for the next try (the next chore or page load). Clocking out only sends what older saves held back. */
   clockOutDuties() {
     const P = this.progress, list = P.shiftDuties || []; P.shiftDuties = [];
     if (list.length) P.dutyOutbox = [...(P.dutyOutbox || []), ...list];
     this.saveProgress(); this.sendOutbox();
   }
   async sendOutbox() {
-    const P = this.progress; if (this.outboxBusy || !(P.dutyOutbox || []).length || !this.online()) return;
+    const P = this.progress; if ((P.shiftDuties || []).length) { P.dutyOutbox = [...(P.dutyOutbox || []), ...P.shiftDuties]; P.shiftDuties = []; this.saveProgress(); } // an older save's held-back chores
+    if (this.outboxBusy || !(P.dutyOutbox || []).length || !this.online()) return;
     this.outboxBusy = true;
     try {
       while ((P.dutyOutbox || []).length) {
@@ -7462,6 +7464,15 @@ class Game {
      puzzled). */
   rel(id) { return this.pack.settings.relations.find(m => m.id === id) || null; }
   pickLine(list, key) { return list[strSeed(key) % list.length]; }
+  /* The back of a case remembers which reaction you read (Joe 10/17): when the curator adds or changes it, that back is unread again
+     (its border goes back to half green, half red). A back read before this came in counts as read for the reaction that's up now. */
+  reactRev(p) { return strSeed(String(p.reaction || "").trim()); }
+  newReactions() {
+    const S = this.progress.sides || {}; let n = 0;
+    for (const p of this.pack.pieces) { const k = !p.tut && p.kind === "episode" && S[p.id]; if (!k || !k.back) continue;
+      const rv = this.reactRev(p); if (k.rv === undefined) { k.rv = rv; n++; } else if (k.rv !== rv) { delete k.back; delete k.rv; n++; } }
+    if (n) this.saveProgress();
+  }
   isRead(p) { const k = (p.tut ? this.tut && this.tut.sides : this.progress.sides || {})[p.id] || {}; return p.kind === "episode" ? !!(k.front && k.back) : !!k.note; }
   /* What a visitor can ask for: an episode out in a case (not under a cloth), with a hint to describe it by. */
   wantable() {
@@ -10709,7 +10720,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 91";
+const VERSION = "2026-11-18 cards 92";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
