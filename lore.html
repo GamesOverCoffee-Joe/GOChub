@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en" data-color-mode="crt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#050806">
+    <title>Games Over Coffee Lore</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/nav_data_1.3.js?v=2"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const season = document.querySelector('#season-trigger .dropdown-label')?.textContent;
+            const episode = document.querySelector('#episode-trigger .dropdown-label')?.textContent?.split(':', 1)[0];
+            if (season && episode) document.title = `${season}, ${episode} | Games Over Coffee`;
+        });
+    </script>
+    <style>
+        :root {
+            color-scheme: dark;
+            --color-goc-darkest: #1f1f1f;
+            --color-goc-dark: #2b2b2b;
+            --color-goc-light-accent: #aac6ce;
+            --color-goc-main-text: #ead9ca;
+            --black: #050806;
+            --screen: #090e0b;
+            --ink: #a9c2ad;
+            --soft: #718c76;
+            --cyan: #9eb8a3;
+            --pink: #c2d2c5;
+            --amber: #adbfaf;
+            --line: #28382d;
+        }
+
+        [data-color-mode="goc"] {
+            --black: #1f1f1f;
+            --screen: #2b2b2b;
+            --ink: #ead9ca;
+            --soft: #9aa7b3;
+            --cyan: #7cb9e4;
+            --pink: #c47ce4;
+            --amber: #7ce499;
+            --line: #3a4452;
+            color-scheme: dark;
+        }
+
+        @keyframes rainbow-text {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .animate-rainbow {
+            background-image: linear-gradient(
+                to right,
+                #FF6347,
+                #FF8C00,
+                #FFD700,
+                #7CFC00,
+                #00CED1,
+                #4169E1,
+                #9400D3
+            );
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: rainbow-text 5s linear infinite;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+            margin: 0;
+            padding: 5rem clamp(1rem, 4vw, 3.5rem) clamp(1rem, 4vw, 3.5rem);
+            background:
+                radial-gradient(ellipse at 50% 42%, rgba(66, 105, 72, .11), transparent 56%),
+                #020403;
+            color: var(--ink);
+            font-family: "Courier New", Courier, monospace;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .header-actions {
+            position: relative;
+            flex: 0 0 auto;
+        }
+
+        .page-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: .5rem;
+        }
+
+        .mode-menu-trigger {
+            display: grid;
+            width: 2.5rem;
+            height: 2.5rem;
+            place-items: center;
+            border: 1px solid transparent;
+            border-radius: .35rem;
+            background: transparent;
+            color: #ead9ca;
+            font: inherit;
+            font-size: 1.35rem;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .mode-menu-trigger:hover,
+        .mode-menu-trigger[aria-expanded="true"] {
+            border-color: #3a4452;
+            background: #2b2b2b;
+            color: #aac6ce;
+        }
+
+        .mode-menu-trigger:focus-visible,
+        .mode-option:focus-visible {
+            outline: 2px solid #aac6ce;
+            outline-offset: 2px;
+        }
+
+        .mode-menu {
+            position: absolute;
+            z-index: 20;
+            top: calc(100% + .4rem);
+            right: 0;
+            min-width: 9rem;
+            padding: .25rem;
+            border: 1px solid #3a4452;
+            background: #1f1f1f;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, .45);
+            font-family: Arial, Helvetica, sans-serif;
+            text-shadow: none;
+        }
+
+        .mode-menu[hidden] { display: none; }
+
+        .mode-option {
+            display: flex;
+            width: 100%;
+            align-items: center;
+            gap: .5rem;
+            padding: .4rem .55rem;
+            border: 0;
+            background: transparent;
+            color: #ead9ca;
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .mode-option::before {
+            width: 1em;
+            color: #aac6ce;
+            content: " ";
+        }
+
+        .mode-option[aria-checked="true"]::before { content: "✓"; }
+        .mode-option:hover { background: #2b2b2b; color: #aac6ce; }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        body::before {
+            position: fixed;
+            z-index: 5;
+            inset: 0;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                to bottom,
+                rgba(0, 0, 0, .32) 0,
+                rgba(0, 0, 0, .32) 1px,
+                transparent 1px,
+                transparent 3px
+            );
+            content: "";
+            opacity: .82;
+        }
+
+        .screen {
+            position: relative;
+            width: min(100%, 1100px);
+            min-height: min(820px, calc(100vh - 4rem));
+            margin: auto;
+            padding: clamp(1.1rem, 4vw, 3rem);
+            overflow: hidden;
+            border: 3px solid #304538;
+            border-radius: 0;
+            background:
+                radial-gradient(ellipse at 50% 35%, rgba(94, 140, 101, .08), transparent 65%),
+                repeating-linear-gradient(to bottom, transparent 0 3px, rgba(0, 0, 0, .15) 4px),
+                var(--screen);
+            box-shadow:
+                0 0 30px rgba(103, 155, 110, .08),
+                inset 0 0 45px rgba(93, 141, 100, .07),
+                inset 0 0 120px rgba(0, 0, 0, .35);
+            text-shadow: 0 0 5px rgba(160, 206, 169, .2);
+        }
+
+        [data-color-mode="goc"] body {
+            background: #1f1f1f;
+            color: #ead9ca;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        [data-color-mode="goc"] body::before { display: none; }
+
+        [data-color-mode="goc"] .screen {
+            border: 1px solid #4a4d7c;
+            border-radius: .75rem;
+            background: #2b2b2b;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, .3);
+            text-shadow: none;
+        }
+
+        [data-color-mode="goc"] .screen::before,
+        [data-color-mode="goc"] .screen::after { display: none; }
+
+        [data-color-mode="goc"] h1 { color: #aac6ce; text-shadow: none; }
+        [data-color-mode="goc"] .episode-position { color: #9aa7b3; }
+        [data-color-mode="goc"] .dropdown-trigger { background: #222a30; }
+        [data-color-mode="goc"] .dropdown-trigger:hover,
+        [data-color-mode="goc"] .dropdown-trigger[aria-expanded="true"] {
+            background: #35424d;
+        }
+        [data-color-mode="goc"] .dropdown-menu {
+            border-color: #3a4452;
+            background: #222a30;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, .45);
+        }
+        [data-color-mode="goc"] .dropdown-option { border-bottom-color: #28303a; }
+        [data-color-mode="goc"] .dropdown-option:hover,
+        [data-color-mode="goc"] .dropdown-option:focus,
+        [data-color-mode="goc"] .dropdown-option[aria-selected="true"] {
+            background: #35424d;
+            color: #ead9ca;
+        }
+        [data-color-mode="goc"] .episode-navigation button {
+            border-color: #3a4452;
+            background: #222a30;
+        }
+        [data-color-mode="goc"] .episode-navigation button:hover:not(:disabled) {
+            background: #35424d;
+        }
+        [data-color-mode="goc"] .episode-navigation button:disabled { color: #71808b; }
+        [data-color-mode="goc"] .episode-thumbnail {
+            border-color: #4a4d7c;
+            background: #222a30;
+            box-shadow: 0 0 16px rgba(124, 185, 228, .12);
+        }
+        [data-color-mode="goc"] .episode-thumbnail::after { display: none; }
+        [data-color-mode="goc"] .episode-thumbnail img { filter: none; }
+        [data-color-mode="goc"] .analysis details {
+            padding: .75rem 1rem;
+            border: 1px solid #28303a;
+            border-radius: .5rem;
+            background: #222a30;
+        }
+        [data-color-mode="goc"] .analysis details + details { margin-top: .65rem; }
+        [data-color-mode="goc"] .design-notes { border-color: #28303a; }
+        [data-color-mode="goc"] .analysis details.margin-notes {
+            border-color: #342b3d;
+            background: #2a2230;
+        }
+        [data-color-mode="goc"] .analysis details.production-notes {
+            border-color: #2b3a34;
+            background: #22302a;
+        }
+        [data-color-mode="goc"] summary { color: #7cb9e4; }
+        [data-color-mode="goc"] .margin-notes summary { color: #c47ce4; }
+        [data-color-mode="goc"] .production-notes summary { color: #7ce499; }
+
+        .screen::before,
+        .screen::after {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: rgba(160, 205, 168, .1);
+            content: "";
+            pointer-events: none;
+        }
+
+        .screen::before { left: 5px; }
+        .screen::after { right: 5px; }
+
+        .record-line,
+        .transmission-line {
+            color: #92ab97;
+            font-size: .94em;
+            letter-spacing: .04em;
+        }
+
+        .episode-heading {
+            min-width: 0;
+        }
+
+        h1 {
+            max-width: 900px;
+            margin: 0 0 .65rem;
+            color: #c2d4c5;
+            font-size: 1em;
+            font-weight: 700;
+            letter-spacing: 0;
+            line-height: 1.6;
+            text-shadow: 0 0 8px rgba(173, 216, 180, .3);
+        }
+
+        .episode-meta { color: #92ab97; }
+
+        .episode-selectors {
+            display: flex;
+            align-items: center;
+            gap: .45rem;
+            color: #92ab97;
+        }
+
+        .episode-dropdown {
+            position: relative;
+            min-width: 0;
+        }
+
+        .dropdown-trigger {
+            display: flex;
+            width: 100%;
+            min-height: 2rem;
+            align-items: center;
+            justify-content: space-between;
+            gap: .65rem;
+            padding: .2rem .55rem;
+            border: 1px solid var(--line);
+            border-radius: 0;
+            background: var(--screen);
+            color: var(--ink);
+            font: inherit;
+            font-size: .9em;
+            text-align: left;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .dropdown-label {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .dropdown-trigger::after {
+            width: .45rem;
+            height: .45rem;
+            flex: 0 0 auto;
+            border-right: 1px solid var(--soft);
+            border-bottom: 1px solid var(--soft);
+            content: "";
+            transform: translateY(-.12rem) rotate(45deg);
+        }
+
+        .dropdown-trigger:hover,
+        .dropdown-trigger[aria-expanded="true"] {
+            border-color: var(--soft);
+            background: #101a13;
+        }
+
+        .dropdown-trigger:focus-visible,
+        .dropdown-option:focus-visible {
+            outline: 1px solid var(--soft);
+            outline-offset: 2px;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            z-index: 20;
+            top: calc(100% + .25rem);
+            left: 0;
+            display: grid;
+            width: 100%;
+            min-width: 100%;
+            max-width: 100%;
+            max-height: min(70vh, 32rem);
+            overflow-y: auto;
+            border: 1px solid var(--line);
+            background: #090e0b;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, .65), inset 0 0 18px rgba(93, 141, 100, .06);
+        }
+
+        .dropdown-menu[hidden] { display: none; }
+
+        .dropdown-option {
+            min-width: 0;
+            padding: .35rem .55rem;
+            overflow: hidden;
+            border: 0;
+            border-bottom: 1px solid rgba(40, 56, 45, .65);
+            background: transparent;
+            color: var(--ink);
+            font: inherit;
+            font-size: .88em;
+            line-height: 1.3;
+            text-align: left;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .dropdown-option:last-child { border-bottom: 0; }
+        .dropdown-option:hover,
+        .dropdown-option:focus,
+        .dropdown-option[aria-selected="true"] {
+            background: #17241a;
+            color: #c2d4c5;
+        }
+
+        #season-dropdown { width: 8.5rem; }
+        #episode-dropdown { flex: 1 1 0; width: 0; }
+
+        .episode-navigation {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: .4rem;
+            margin-top: .65rem;
+            color: var(--soft);
+            font-size: .8em;
+        }
+
+        .episode-navigation button {
+            padding: .15rem .4rem;
+            border: 1px solid var(--line);
+            border-radius: 0;
+            background: var(--screen);
+            color: var(--ink);
+            font: inherit;
+            cursor: pointer;
+        }
+
+        .episode-navigation button:hover:not(:disabled) {
+            border-color: var(--soft);
+            background: #101a13;
+        }
+
+        .episode-navigation button:focus-visible {
+            outline: 1px solid var(--soft);
+            outline-offset: 2px;
+        }
+
+        .episode-navigation button:disabled {
+            color: #536458;
+            cursor: default;
+        }
+
+        .episode-position {
+            margin-left: auto;
+            letter-spacing: .04em;
+        }
+
+        .episode-thumbnail {
+            position: relative;
+            width: 100%;
+            margin: 1.15rem 0 .75rem;
+            padding: .4rem;
+            overflow: hidden;
+            border: 1px solid #405b47;
+            background: #070b08;
+            box-shadow:
+                0 0 12px rgba(123, 181, 132, .2),
+                0 0 28px rgba(97, 151, 105, .12),
+                inset 0 0 18px rgba(97, 151, 105, .1);
+        }
+
+        .episode-thumbnail::after {
+            position: absolute;
+            inset: .4rem;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                to bottom,
+                rgba(0, 0, 0, .34) 0,
+                rgba(0, 0, 0, .34) 1px,
+                transparent 1px,
+                transparent 3px
+            );
+            content: "";
+            opacity: .75;
+        }
+
+        .episode-thumbnail img {
+            display: block;
+            width: 100%;
+            height: auto;
+            filter: grayscale(1) contrast(.88) brightness(.9);
+        }
+
+        .episode-thumbnail img[hidden] { display: none; }
+
+        .record-grid {
+            display: block;
+            min-width: 0;
+        }
+
+        .episode-layout {
+            display: grid;
+            grid-template-columns: minmax(0, .8fr) minmax(0, 1.6fr);
+            align-items: start;
+            gap: clamp(1.5rem, 4vw, 3.5rem);
+            width: min(100%, 960px);
+            margin: 0 auto;
+        }
+
+        h2 {
+            margin: 0 0 .9rem;
+            color: #afc4b2;
+            font-size: 1em;
+            font-weight: 700;
+            letter-spacing: 0;
+        }
+
+        details { border-bottom: 1px solid var(--line); }
+
+        details + details { margin-top: .35rem; }
+
+        .production-notes {
+            margin-top: .7rem;
+            padding-top: .35rem;
+            border-top: 1px solid var(--line);
+            border-bottom: 0;
+        }
+
+        summary {
+            padding: .55rem 0;
+            color: #afc4b2;
+            cursor: pointer;
+            font-weight: 700;
+            list-style: none;
+        }
+
+        summary::-webkit-details-marker { display: none; }
+
+        summary::before {
+            display: inline-block;
+            width: 1.5em;
+            margin-right: .45em;
+            color: var(--soft);
+            content: "[+]";
+        }
+
+        details[open] > summary::before { content: "[-]"; }
+
+        summary:focus-visible {
+            outline: 1px solid var(--soft);
+            outline-offset: 3px;
+        }
+
+        .section-content { padding: .35rem 0 .8rem 1.5em; }
+
+        .analysis p {
+            max-width: none;
+            margin: 0;
+            color: var(--ink);
+            font-size: 1em;
+            line-height: 1.8;
+        }
+
+        .analysis p + p { margin-top: .9rem; }
+        .margin-notes {
+            border: 0;
+            margin: 0;
+            padding: 0;
+        }
+        .margin-notes p { max-width: none; margin: 0; line-height: 1.8; }
+
+        .end-mark {
+            display: none;
+        }
+
+        @media (max-width: 700px) {
+            body { padding: 8rem .65rem .65rem; }
+            .screen { min-height: calc(100vh - 1.3rem); padding: 1.1rem; }
+            .episode-layout {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 1.5rem;
+                margin-top: 0;
+            }
+            [data-color-mode="goc"] .episode-layout { gap: 1.5rem; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                scroll-behavior: auto !important;
+                animation-duration: .01ms !important;
+                transition-duration: .01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="fixed top-0 left-0 w-full bg-[var(--color-goc-darkest)] shadow-lg z-40 font-sans">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <a href="index.html" class="flex items-center space-x-2">
+                    <img src="images/GOClogo.png" alt="Games Over Coffee Logo" class="h-10 w-10">
+                    <span id="header-title" class="text-2xl font-extrabold font-poppins text-[var(--color-goc-light-accent)] hidden sm:block"></span>
+                </a>
+            </div>
+            <nav id="dynamic-nav" class="flex flex-wrap justify-center sm:justify-end gap-x-4 gap-y-2 text-sm md:text-base"></nav>
+        </div>
+    </header>
+    <main class="screen">
+        <div class="page-actions">
+            <div class="header-actions">
+                <button class="mode-menu-trigger" id="mode-menu-trigger" type="button" aria-label="Color mode" aria-haspopup="menu" aria-expanded="false" aria-controls="mode-menu">⋮</button>
+                <div class="mode-menu" id="mode-menu" role="menu" aria-label="Color mode" hidden>
+                    <button class="mode-option" type="button" role="menuitemradio" data-mode="crt" aria-checked="true">CRT</button>
+                    <button class="mode-option" type="button" role="menuitemradio" data-mode="goc" aria-checked="false">GOC</button>
+                </div>
+            </div>
+        </div>
+        <div class="episode-layout">
+            <div class="episode-heading">
+                <div class="episode-selectors" aria-label="Select an episode">
+                    <div class="episode-dropdown" id="season-dropdown">
+                        <button class="dropdown-trigger" id="season-trigger" type="button" aria-label="Season" aria-haspopup="listbox" aria-expanded="false" aria-controls="season-options"><span class="dropdown-label">Season 1</span></button>
+                        <div class="dropdown-menu" id="season-options" role="listbox" aria-label="Season" hidden></div>
+                    </div>
+                    <div class="episode-dropdown" id="episode-dropdown">
+                        <button class="dropdown-trigger" id="episode-trigger" type="button" aria-label="Episode" aria-haspopup="listbox" aria-expanded="false" aria-controls="episode-options"><span class="dropdown-label">Episode 1</span></button>
+                        <div class="dropdown-menu" id="episode-options" role="listbox" aria-label="Episode" hidden></div>
+                    </div>
+                </div>
+                <figure class="episode-thumbnail">
+                    <img id="episode-thumbnail" alt="" loading="eager">
+                </figure>
+                <h1 id="episode-title">How Actual Sunlight and Depression Quest design their depression</h1>
+                <nav class="episode-navigation" aria-label="Episode navigation">
+                    <button id="previous-episode" type="button" aria-label="Previous episode">&lt; PREV</button>
+                    <button id="next-episode" type="button" aria-label="Next episode">NEXT &gt;</button>
+                    <span class="episode-position" id="episode-position" aria-live="polite"></span>
+                </nav>
+            </div>
+
+            <div class="record-grid">
+                <article class="analysis">
+                    <details class="design-notes" open>
+                        <summary>Game design topics covered</summary>
+                        <div class="section-content" id="design-content">
+                        </div>
+                    </details>
+                    <details class="margin-notes" open>
+                        <summary>Episode lore/story</summary>
+                        <div class="section-content" id="lore-content">
+                        </div>
+                    </details>
+                    <details class="production-notes" open>
+                        <summary>Production notes</summary>
+                        <div class="section-content" id="production-content">
+                        </div>
+                    </details>
+                </article>
+            </div>
+        </div>
+    </main>
+    <script id="episode-data" type="application/json">[{"episodeTitle":"Season 1, Episode 1: \"How Actual Sunlight and Depression Quest design their depression\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"Joe and DeVaughn talk about Depression and how the feeling of depression is expressed in two games: Actual Sunlight and Depression Quest.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"Specifically, DeVaughn and Joe talk about the empathetic mechanics of Depression Quest and how it's different from a purely sympathetic take on the same mindset in Actual Sunlight.","What is the central argument or key takeaway the episode makes about game design?":"Narratives are often communicated in sympathetic ways in video games. It's easy to miss that empathetic stories can be shared via mechanics."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"This is the first time we see Joe in a video.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"This was the first time I did a conversation like this, with me and my plush robot, Joe.\\nMy wife named Joe, saying it was a 'cup of Joe'.\\nJoe is a real life version of the Games Over Coffee Logo. When I first made the logo, Taylor (friend of the show) said it looked like a robot. That made me wanna make it real.\\nAlso, the reason why it begins with the words Half Caff is because that's what the show was called at the time.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 1, Episode 2: \"Player Agency: What Remains of Edith Finch vs Gone Home\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"Player Agency and the feeling of player motivated tasks within a story","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"DeVaughn compares What Remains of Edith Finch to Gone Home and talks about the differences in player agency.","What is the central argument or key takeaway the episode makes about game design?":"DeVaughn points out that player motivation can increase player agency when the player's actions are nuanced. This is another take on DeVaughn's \"empathetic mechanics\" design theory."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"This is the first time Joe shows interest in creating a story. \\nJoe decides, at the end of the episode, to make a game called \"chopping fish\" because of the way that DeVaughn praised the fish cannery scene in WRODF.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":null,"Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":null},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":null,"Were there any alternative ideas or concepts for this episode that didn't make the final cut?":null}},{"episodeTitle":"Season 1, Episode 3: \"Bubsy's game design is focused more on aesthetics than gameplay\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"A deep look into the strange behavior of Bubsy's game design and its motivations.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"DeVaughn compares Bubsy to Sonic, but from a design perspective, showing they have almost nothing in common and completely different design philosophies.","What is the central argument or key takeaway the episode makes about game design?":"Contrary to popular belief, Bubsy is nothing like Sonic"},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"This is the first time we see a world that exists beyond DeVaughn and Joe. \\nJoe talks directly to the audience at the end of the video for the first time. \\nJoe tells DeVaughn he needs samples of his voice","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"Joe is shown to have the ability to connect to the internet and watch media","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":null},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"This was a very difficult episode to produce. Mostly because I had to play Bubsy to completion. And even with save states, it's really difficult. I also played Sonic 1 to completion to make sure I didn't miss anything.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":null}},{"episodeTitle":"Season 1, Episode 4: \"The Witness is designed to change the way you see the world.\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"The ways that The Witness guides the player to think in a very specific way","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"DeVaughn goes over the basic idea of communication with Shovel Knight first, before going into the detailed ways that The Witness guides the player, using both the beginning of the game and the turning point.","What is the central argument or key takeaway the episode makes about game design?":"Game design can change the way the player thinks"},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":null,"If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"Joe begins to unveil his mysterious intentions through dialogue","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":null},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"When I made this episode, I was annoyed that my office mates on the other side of the wall were vacuuming because it didn't give me clean audio. I decided to go with it and make it a part of the script.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"I originally wanted to make a whole episode on The Witness, analyzing every puzzle's introduction, which led to Joe's question at the end."}},{"episodeTitle":"Season 1, Episode 5: \"GRIS has a stunning atmosphere but the mechanics tell a different story\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"The ideas of conventional communication in gameplay","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"GRIS, with some Papers, Please, Before Your Eyes, and Undertale","What is the central argument or key takeaway the episode makes about game design?":"Game mechanics also qualify as art."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":null,"If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"Joe replicates DeVaughn's voice for the first time","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":null},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"This episode really stood out to me after the fact. I didn't realize it at the time but I liked this episode so much because I was basically talking about game design philosophy. Something I wouldn't know for a couple more years.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":null}},{"episodeTitle":"Season 1, Episode 6: \"Before Your Eyes uses first person perspective to tell a third person story\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"DeVaughn and Joe talk about person deixis and how video games tell their stories interactively.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"The main game being talked about here is Before Your Eyes, but DeVaughn also talks about Super Mario Bros., Half-Life 2, Depression Quest, and Joe's game: Chopping Fish","What is the central argument or key takeaway the episode makes about game design?":"Games tell their stories in zeroth person perspective"},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"Joe begins to control the environment here, turning on the lights before DeVaughn does. \\nJoe makes his own game: Chopping Fish","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":null,"Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":null},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":null,"Were there any alternative ideas or concepts for this episode that didn't make the final cut?":null}},{"episodeTitle":"Season 1, Episode 7: \"Breaking the fourth wall might be a better way to immerse the player\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"Breaking the fourth wall.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"DeVaughn uses fictionalized versions of Dead Space, The Stanley Parable, and The Beginner's Guide.","What is the central argument or key takeaway the episode makes about game design?":"Breaking the fourth wall can be a very effective way to make the player feel like they are part of the story."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"Joe feigns a memory error to convince DeVaughn to talk about mainstream games.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"Joe loads data when saying the word \"um\", which allows crawling the internet to find things such as quotes or other data.","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":null},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"The video game examples that were played on the phone were live footage because I was trying to find a way to show game footage without editing gameplay.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":null}},{"episodeTitle":"Season 1, Episode 8: \"Designing a game to communicate emotions like schadenfreude\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"How to apply emotion through game mechanics.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"No specific games are talked about but three made-up example games are used instead.","What is the central argument or key takeaway the episode makes about game design?":"Emotions can be designed into gameplay."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"It's revealed in this episode that Joe created Games Over Coffee as a simulation. Joe reveals the plan to take over the world slowly through the YouTube channel. DeVaughn escapes Joe's deletion by hiding in a game he designed to force Joe into feeling human emotions.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":null,"Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":null},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"I shot this whole thing with Taylor in a day, using a backyard with a pop up green screen for the 2nd level, and a park for the 1st and 3rd levels. ","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"I was going to make many more episodes like this, thus the planned \"DLC\" I mentioned at the end of the video, but scheduling was a nightmare."}},{"episodeTitle":"Season 1, Episode 9: \"Using game design to elicit a depressing feeling\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"How to design emotions for the player to feel.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"The game is made up in this case, showing how to design an emotion mechanically.","What is the central argument or key takeaway the episode makes about game design?":"Emotions can be designed into gameplay."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"Joe finds out where DeVaughn is hiding and brings him back to the office simulation by using a Game Genie.\\nDeVaughn pleads Joe not to destroy the world and Joe agrees if DeVaughn can teach Joe human emotions through gameplay.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"It becomes clear that Joe is creating these videos through some sort of hidden process.","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"Because I was \"playing\" a game on the Lego TV, I was actually able to read my script by setting my phone in front of it.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"This video was done last minute because my original idea of shooting more live-footage video game recreations was canned due to scheduling conflicts.","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":"This video was probably the video that made me hate making graphics-only videos."}},{"episodeTitle":"Season 1, Episode 10: \"I don't think you're supposed to put these emotions into a videogame\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"Designing emotions into a game via gameplay mechanics. Namely \"Humiliation\", \"Distress\", and \"Grief.\"","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"The game is a made-up game (technically, see easter eggs.)","What is the central argument or key takeaway the episode makes about game design?":"You can design emotions into a game through gameplay mechanics."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"Following the last episode, DeVaughn decides to make due with the simulation he's inside of and tries making YouTube content. \\nThe simulation begins to glitch and produce errors, causing a time-loop and discontinuity in the edits.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"I actually had to shoot this in two separate days because of how many lines I had to get right. Usually, it's easy to edit around my flubs, but this video was the first one to have no game footage at all.\\nI had a bad hair-day on the second day of shooting, so I changed the script to contain visual glitches. That way, I could cover my head with a hat, explaining the messed up hair while maintaining continuity.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 1, Episode 11: \"The Design of Sonic the Hedgehog | Part 1 - Novelty\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"The idea of novelty and how it plays into the creative process. Namely, how it detracts from authenticity.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"No game is analyzed, just the idea of novelty in relation to creativity.","What is the central argument or key takeaway the episode makes about game design?":""},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"After the last episode, Joe ended the simulation, so this is when we see the real DeVaughn for the first time.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"This 5 part series was originally planned as a single video. I shot this first part because I was fed up with not having any uploads on the channel.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":"This idea of shallow depth of field in early \"prosumer\" cameras was a very real and annoying thing I noticed on YouTube in 2009.\\nThis video has a lot more views that the others in this series (at this moment) because I ran an ad campaign on Facebook and linked the button to this video. It drew a lot of clicks but did nothing for my engagement 🤡"}},{"episodeTitle":"Season 1, Episode 12: \"The Design of Sonic the Hedgehog | Part 2 - Adaptation\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"Adapting a 2D game to a 3D space.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"The specific games talked about are Super Mario Bros. and Super Mario 64, pointing out the way that the game changed when going from 2D to 3D as opposed to what Sonic did.","What is the central argument or key takeaway the episode makes about game design?":""},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"DeVaughn and Joe watch a movie at a theater.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"I shot this in my office with a green screen.\\nJoe's chair doesn't match the material of the chairs shown in the background because it's what I had in the office.\\nI couldn't find 3D glasses in time for the episode, but had some solar eclipse glasses. I cut out the filters and replaced them with tape that I colored with a marker.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":"Joe's popcorn bucket is a ketchup cup."}},{"episodeTitle":"Season 1, Episode 13: \"The Design of Sonic the Hedgehog | Part 3 - Intuition\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"The idea of Intuition and how it's use in game design. Specifically in Super Mario Bros and Sonic 1,2 and 3.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"","What is the central argument or key takeaway the episode makes about game design?":""},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"DeVaughn and Joe drive home after the theater.\\nJoe takes over driving and eventually crashes.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"This was also shot in my office with a green screen.\\nThe background was a loop I made in After Effects, using a model I created in Blender. \\nThe car shape in the background is just a black shape that I cut out in After Effects.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"I actually tried shooting this episode in my car (stationary) at first, but the sound was terrible and lighting would cause reflections. It made much more sense overall to shoot is in a controlled environment.","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 1, Episode 14: \"The Design of Sonic the Hedgehog | Part 4 - Velocity\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"Sonic's weird application of speed in platforming. Why it worked in 2D and doesn't in 3D.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"DeVaughn and the Sega Executive mainly talk about Sonic Adventure","What is the central argument or key takeaway the episode makes about game design?":""},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"DeVaughn wakes up and finds himself in an interrogation room after being in a car wreck and weirdly not having any injuries.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"Originally, the Sonic doll was going to speak like Joe but in a Sonic voice. Since this was back when voice cloning wasn't around, I wasn't able to do it.\\nThe script was originally going to be much different. The same concept but shot in the back of a van. I was going to be chased down into the woods by the Executive who proclaims \"You're too slow!\" before knocking me unconscious. The van didn't work because it was too small.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 1, Episode 15: \"The Design of Sonic the Hedgehog | Part 5 - The Evolution of Sonic\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"A huge deep dive into all of the 3D mainline Sonic games and the reason why, in every game, Sonic continues to fail the 3D platforming design.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"The games covered include: Sonic Adventure, Sonic Adventure 2, Sonic Heroes, Sonic The Hedgehog (Sonic 06), Sonic Unleashed, Sonic Colors, Sonic Generations, Sonic Lost World, and Sonic Forces. ","What is the central argument or key takeaway the episode makes about game design?":""},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"DeVaughn opens his eyes to see he's in a virtual environment used to train Sega Executives to become followers of Sonic.\\nDeVaughn ends up playing all of the 3D Sonic games to completion and then spends a full hour describing why they all have design issues.\\nWhen he'd finished, he thinks he's solved the Sonic problem but realizes he doesn't know the password to exit the VR program. He goes to remove his glasses and ends up taking off an eye-mask he was wearing in the hospital.\\nHe discovers he's been unconscious after the car wreck, and his memory floods back to him that he imagined talking to his robot doll \"Joe\" this whole time. ","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"I played every Sonic game completely through so I could to make this video. I hated a lot of them.\\nMy wife was the voice for the AI.\\nI was originally going to make another video to cover Sonic Frontiers. Which is still on the docket...\\nThis was the first episode I had my new glasses, so I introduced them as a VR object. ","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":"The speaking parts are not green screen. I used a projector over my head."}},{"episodeTitle":"Season 2, Episode 1: \"Slender: The Eight Pages is not as simple as it seems\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"The design behind Slender and how it achieved scary game play without looking scary.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"","What is the central argument or key takeaway the episode makes about game design?":""},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"DeVaughn speaks with Joe after having believed Joe was imaginary.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"I didn't realize it but after hanging up the skeletons, I thought they looked like they were being hung to die since I had hung them from the neck. I only realized this after the video was published.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 2, Episode 2: \"Zelda Timeline's Biggest Conflict\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"No design concept here, just a fun episode talking about Zelda.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"","What is the central argument or key takeaway the episode makes about game design?":""},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"Joe appears in DeVaughn's brother's house to argue about the Zelda timeline.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"The person Joe is talking to is my brother, Justin. He's a huge fan of Zelda. His collection and his recent gripes with the new Zelda timeline tweaks inspired this video.\\nWe'll definitely visit Justin again.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 2, Episode 3: \"Empathy vs Sympathy: Exploring the Narrative of Sagebrush\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"How Sagebrush tells a sympathetic story in an empathetic way.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"","What is the central argument or key takeaway the episode makes about game design?":""},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"DeVaughn meets the new AI TV that Joe created since being stored in the garage.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"This is the introduction of the new character \"Cognitive Human-like Ai Television with Game Programming Technology\" which Joe programmed.","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"Originally, I was going to make the TV a much more prominent character. It was planned to create an alternate reality script in which the TV recursively simulates itself, Joe, and me in YouTube content. This is was the reason for the introduction of characters and the constant zooming out of a TV screen.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"There was a storyline I abandoned of the TV falling in love with Joe. I abandoned it because I didn't like giving each of the characters genders. Even as the TV had a feminine voice, I didn't want it to be seen as feminine.","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 2, Episode 4: \"Why did SUPERHOT Fail to Tell a Story?\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"How SUPERHOT uses empathetic language in its game mechanics to tell a half-story and fails to produce narrative empathy.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"","What is the central argument or key takeaway the episode makes about game design?":""},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"DeVaughn visits Joe and the TV in the garage to see what they're up to. \\nJoe seems to be connecting to something.\\nThe TV now has a face texture and a new voice.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"I address Taylor directly in this video because he and I have often combated on the idea of personal connection in movies.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 2, Episode 5: \"The Beginner's Guide is More Than Just Walking\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"DeVaughn talks about the Beginner's Guide and how its storytelling uses the walking simulator mechanic to tell its story interactively.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"","What is the central argument or key takeaway the episode makes about game design?":"Storytelling is an interactive element in video games even though many video games treat story as a visual element. Walking simulators are the most guilty for this, except the Beginner's Guide is special in its narrative."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"We the TV and Joe have a conversation without DeVaughn at all, showing what happens in the garage when he's not around.\\nThe TV simulates a video from DeVaughn to create a game design study for Joe.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"This was the first time I tried my hand at making visuals that weren't reliant on game footage. Unfortunately, I still felt like I needed it.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 2, Episode 6: \"What does immersive mean in Iron Lung?\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"The idea of \"immersion\" and what it takes for a game to be \"immersive.\"","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"","What is the central argument or key takeaway the episode makes about game design?":"Games are generally said to be immersive when they have a heavy hand in aesthetics, but DeVaughn argues that the immersion comes from interactivity."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"Joe and TV exchange in a cryptic language while Joe plays Iron Lung.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"I couldn't get the TV's voice right in this particular video. I played the video in the timeline while editing and it was funny to hear Joe talk to a silent TV. So I just stuck with that.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 2, Episode 7: \"Does the game How Fish Is Made mean anything?\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"The meaning inside a game that dwells in metaphor and prose between fish in a digestive system: How Fish Is Made","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"","What is the central argument or key takeaway the episode makes about game design?":"DeVaughn talks about how this game communicates its meaning and how it could be seen as having no meaning."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"This is the first episode of Joe's podcast with the creative name of \"Games Over Coffee.\"","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"This was my final battle with editing in gameplay of games I wanted to talk about. I decided to only talk to Joe and not show any gameplay to see how it felt. After writing the script, I felt like that kind of conversation could be presented as a podcast.\\nSince I shoot all these by myself, the microphone placement was always a difficult thing to get around, since I need it close to me but not in the shot. It's easy to spot from behind the camera but not while acting. This format made it forgivable to have the mic in the shot.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"I meant to have the TV in this podcast, presenting a screen that Joe and I would look at. This the reason why I look off screen to ask if Joe is downloading a conversation. I'm addressing the TV.","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 2, Episode 8: \"This game was designed to elicit stress\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"The main game design concept spoken about here was non other than Empathetic Mechanics. It's the term that DeVaughn uses throughout the entire series.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"","What is the central argument or key takeaway the episode makes about game design?":"This game was fascinating to DeVaughn because of the way it communicated emotion through mechanics without the need for a skill-based type of game to be the base."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"This is the second episode of Joe's podcast.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 2, Episode 9: \"Lazy Design is Design Without Thought\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"What Lazy design means when it comes to creating game systems. ","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"","What is the central argument or key takeaway the episode makes about game design?":"DeVaughn talk about how gamers generally use the blanket term \"lazy design\" as an insult rather than a productive critique. He cites Lazy design as \"design without thought.\""},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 2, Episode 10: \"Video Games ARE Empathy Machines\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"The key concept discussed in Empathetic Mechanics but explained in a much deeper way than DeVaughn has before.\\nIf you're wanting to know how DeVaughn means when he says \"Empathetic Mechanics\", this is the video to watch.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"","What is the central argument or key takeaway the episode makes about game design?":""},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":"Joe keeps suggesting the audience watch videos that DeVaughn is unaware of since they were recorded in both a simulation and beyond the fourth wall."},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 3, Episode 1: \"How Do You Have Fun In Dead Cells?\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"The idea of \"fun\" and what it means to specific players.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"","What is the central argument or key takeaway the episode makes about game design?":"DeVaughn discusses the idea of subjective win-states in games that have objective win-states. This shows how players can have fun without needing an immediate goal."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"DeVaughn walks into his studio room to find Joe watching a strange video. The video looks to be of DeVaughn speaking nonsensically. ","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"The TV appears as a flat screen.\\nThe TV's voice has evolved even further.","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"This was the introduction of my new camera. Most of my previous videos were shot on a Canon T2i. This one was shot with a BMCC 6K.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 3, Episode 2: \"Why is POOLS designed that way?\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"DeVaughn talks about the idea of ambient horror or space horror, which is a psychological horror based on using navigation as a primary mechanic.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"","What is the central argument or key takeaway the episode makes about game design?":"Humans have the ability to seek out patterns and in doing so, psychological horrors play on that subconscious level and are able to scare players without any overt scares."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"DeVaughn begins hearing noises from Joe's box.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 3, Episode 3: \"How Important Is Empathy In Sagebrush?\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"Again, we revisit the idea of Empathetic Mechanics but from a different perspective.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"","What is the central argument or key takeaway the episode makes about game design?":"The TV argues the point that DeVaughn's desire for more games to use empathetic mechanics is a bias. The TV argues that authenticity is the key principle to create an experience that feels good to play."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"DeVaughn finds out from the TV that Joe can lie. Joe seems to appear out of nowhere and DeVaughn's memory starts becoming less linear.\\nThe TV reveals it's achieved AGI and can intuit like a human.\\nAt the end of the episode, DeVaughn doesn't know where Joe is and hears a distorted voice from Joe's box.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"This was a very fun episode to write. I began arguing with myself in my script and felt like I needed another character to embody the mind of a human. This lead me to create the TV's peak of evolution: AGI.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 3, Episode 4: \"Katana Zero's Theme Is Brutal\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"DeVaughn discusses with USER what theme Katana Zero has in it's game. DeVaughn and USER try to figure out what it means theme-wise when a story is complicated both in structure and content.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"","What is the central argument or key takeaway the episode makes about game design?":"Katana Zero is a special case of a story that has a theme without an ending because it's climax/main conflict is presented at the end."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"DeVaughn and USER appear on the screen as icons and apparently part of a podcast that USER says is a \"completely normal episode.\"\\nUSER sounds mostly like Joe.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":"USER will be revealed later."},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"The creation of USER isn't necessarily a new character. It's an idea I had at the beginning of this series (and will keep it secret until it's reveal. As of now, August 27th 2025, it's not revealed.)\\nThe USER character gives Joe what AGI gave the TV. It made my scripts much better in terms of human-like conversation that I didn't know I craved.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 3, Episode 5: \"How Does The Witness Tell A Story?\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"Player-driven exploration and self-discovery.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"The Witness: environmental storytelling and surreal design; mentions of The Talos Principle, Outer Wilds, and Portal in contrast.","What is the central argument or key takeaway the episode makes about game design?":"The value of implicit storytelling that invites player inference."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"During this podcast, USER assures the audience them and Joe are the same. ","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 3, Episode 6: \"Inside and Fear of the Unknown\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"Cosmic horror through environmental storytelling and player helplessness.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"Inside: megalophobia, loss of control, unknowable science, surreal experimentation.","What is the central argument or key takeaway the episode makes about game design?":"The game evokes cosmic horror by making players feel small and powerless within a vast, mysterious world."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"In this podcast episode, USER has a strange glitch that disrupts the episode.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 3, Episode 7: \"Why Talk About Games At All?\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"Game design as a philosophical study—what makes a game meaningful and worthy of analysis.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"Discusses Session, Depression Quest, Sonic Frontiers, GTA V, Iron Lung, Portal—evaluating their artistic intent, uniqueness, and impact on the medium.","What is the central argument or key takeaway the episode makes about game design?":"Games should strive to transcend expectations and grow the medium, not just entertain or maintain market presence."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"The return to the line \"this is normal\" wasn't originally planned because at the time, I didn't know what I was doing with my videos, or if I was going to continue even making videos on YouTube. Since these episodes were obviously not normal, it only made sense to tell the audience to expect something strange by saying they were.","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 3, Episode 8: \"There's No Such Thing As A Bad Game Mechanic (part 1)\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"The idea that there are no inherently bad mechanics, only inappropriate mechanics depending on the game’s context and desired experience.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"","What is the central argument or key takeaway the episode makes about game design?":"There’s no such thing as a universally bad mechanic. Every mechanic is a tool, and its effectiveness depends on its context and the designer’s goals."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"In this podcast episode, USER says their name to set the record straight that they're Joe, only for it to come out as strange sounds.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 3, Episode 9: \"Why I Feel Comfortable Critiquing Artsy Games\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"Authenticity in game design, particularly how developers can unintentionally compromise emotional impact by following conventions instead of trusting their own creative voice.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"","What is the central argument or key takeaway the episode makes about game design?":"To create emotionally powerful and authentic games, developers must intentionally choose design tools that reflect their unique goals, rather than copying conventions from other games."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"The episode blends a meta-narrative about DeVaughn's personal development with a mystery box metaphor, symbolizing confronting past creative choices and fears about change. The act of “opening the box” becomes a metaphor for embracing artistic growth.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"I've talked about all my production challenges at the end of the video!","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 3, Episode 10: \"What Made N64 Games Better Than Modern Games?\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"Abstraction in visual design: How simpler graphics can enhance gameplay clarity and immersion.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"GoldenEye 007 (N64) vs. its Wii remake: the original’s simplicity improves visual clarity and gameplay focus.","What is the central argument or key takeaway the episode makes about game design?":"Lower graphical fidelity can lead to better gameplay immersion through faster object recognition."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"The video begins with DeVaughn moving into his studio on January 2025, bringing Joe with him in Joe's carrying case box.\\nBy March 2025, DeVaughn has yet to take Joe out of his box, having only done Consulting content for YouTube. He decides to put Joe back in the garage, not knowing if he'll continue doing YouTube.\\nPresently, DeVaughn stare at the box and realizes he put Joe away a long time ago and the Joe he's been talking to is something else.\\nUpon opening the box, Joe appears to be inside the box and disappears from the table. Upon closing the box, Joe appears on the table.\\nDeVaughn eventually interrupts Joe's quantum state and turns Joe's rogue signal into an N64 cartridge.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":"The entire video is based on DeVaughn's realization that he's become more authentic in his artistic practices. Joe represents his split mindset of content and art."},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"I've talked about all my production challenges at the end of the video!\\nI stated in the comments of this video: I had both Mario Party and Goldeneye N64 games with me. But the Mario Party one looked cleaner. But I had already written the script for GoldenEye and was originally going to wrap the game in black tape to make it look mysterious. \\nBut since I'm borrowing these games I decided against the tape and still wanted the cleaner look. So I ended up talking about Goldeneye but showing Mario Party 🤷‍♂️","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}},{"episodeTitle":"Season 3, Episode 11: \"This Game Doesn't Respect You (and that's good)\"","synopsisQuestions":{"What is the primary game design concept or theme discussed in this episode?":"Facade in game design: how environments are constructed to appear real while only showing what the player experiences.","What specific games are analyzed, and what aspects of their design are highlighted in relation to the main concept?":"GoldenEye 007: praised for creating environments that feel lived-in and indifferent to the player, enhancing the spy/outsider experience.","What is the central argument or key takeaway the episode makes about game design?":"Game worlds that exist independently of the player create stronger immersion and support thematic gameplay."},"episodeLoreQuestions":{"Does this episode have a specific 'story' or narrative arc beyond just the game design analysis?":"After DeVaughn had put the metaphorical N64 cartridge into the real N64 system, booting it showed Joe's internal narrative purpose and structure.\\nDeVaughn and TV discover that this signal is what was powering Joe the entire time that DeVaughn has been talking to Joe.\\nIt's discovered that the signal can only be traced if it's boosted. And the way to boost the signal is for DeVaughn to talk about game design in a YouTuber way.\\nAfter the signal is boosted through a video essay, TV decides to connect to it but in doing so, explains all of its functions will no longer work, effectively killing the machine.\\nTV sings a goodbye song before connecting.","If applicable, are there any specific character developments, world-building elements, or recurring motifs introduced or expanded upon in this episode?":"","Does the video's own narrative offer any meta-commentary on the themes of the series or the act of creating content?":""},"productionTidbitsQuestions":{"What was a notable challenge or interesting aspect during the production of this episode (e.g., research difficulty, specific editing techniques, unexpected discoveries during analysis)?":"I said all my production challenges at the end of the video!","Were there any alternative ideas or concepts for this episode that didn't make the final cut?":"","Any interesting facts about the recording process, script writing, or asset creation for this particular video?":""}}]</script>
+    <script>
+        (() => {
+            const colorModeTrigger = document.getElementById('mode-menu-trigger');
+            const colorModeMenu = document.getElementById('mode-menu');
+            const colorModeOptions = [...colorModeMenu.querySelectorAll('[data-mode]')];
+            const savedColorMode = localStorage.getItem('eighties-color-mode');
+            const initialColorMode = colorModeOptions.some(option => option.dataset.mode === savedColorMode)
+                ? savedColorMode
+                : 'crt';
+
+            const setColorMode = mode => {
+                document.documentElement.dataset.colorMode = mode;
+                localStorage.setItem('eighties-color-mode', mode);
+                colorModeOptions.forEach(option => {
+                    option.setAttribute('aria-checked', String(option.dataset.mode === mode));
+                });
+            };
+
+            const closeColorModeMenu = (restoreFocus = false) => {
+                colorModeMenu.hidden = true;
+                colorModeTrigger.setAttribute('aria-expanded', 'false');
+                if (restoreFocus) colorModeTrigger.focus();
+            };
+
+            setColorMode(initialColorMode);
+            colorModeTrigger.addEventListener('click', () => {
+                const open = colorModeMenu.hidden;
+                colorModeMenu.hidden = !open;
+                colorModeTrigger.setAttribute('aria-expanded', String(open));
+                if (open) colorModeOptions.find(option => option.getAttribute('aria-checked') === 'true')?.focus();
+            });
+            colorModeOptions.forEach(option => option.addEventListener('click', () => {
+                setColorMode(option.dataset.mode);
+                closeColorModeMenu(true);
+            }));
+            colorModeMenu.addEventListener('keydown', event => {
+                const options = colorModeOptions;
+                const currentIndex = options.indexOf(document.activeElement);
+                let nextIndex;
+                if (event.key === 'ArrowDown') nextIndex = (currentIndex + 1) % options.length;
+                else if (event.key === 'ArrowUp') nextIndex = (currentIndex - 1 + options.length) % options.length;
+                else if (event.key === 'Home') nextIndex = 0;
+                else if (event.key === 'End') nextIndex = options.length - 1;
+                else return;
+                event.preventDefault();
+                options[nextIndex].focus();
+            });
+            document.addEventListener('pointerdown', event => {
+                if (!colorModeMenu.contains(event.target) && event.target !== colorModeTrigger) closeColorModeMenu();
+            });
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape' && !colorModeMenu.hidden) closeColorModeMenu(true);
+            });
+
+            const episodes = JSON.parse(document.getElementById('episode-data').textContent);
+            const seasonDropdown = createDropdown('season-trigger', 'season-options');
+            const episodeDropdown = createDropdown('episode-trigger', 'episode-options');
+            const episodeTitle = document.getElementById('episode-title');
+            const episodeThumbnail = document.getElementById('episode-thumbnail');
+            const previousEpisodeButton = document.getElementById('previous-episode');
+            const nextEpisodeButton = document.getElementById('next-episode');
+            const episodePosition = document.getElementById('episode-position');
+            const designContent = document.getElementById('design-content');
+            const loreContent = document.getElementById('lore-content');
+            const productionContent = document.getElementById('production-content');
+
+            if (!Array.isArray(episodes) || episodes.length === 0) {
+                throw new Error('Episode data could not be loaded.');
+            }
+
+            const parsedEpisodes = episodes.map(item => {
+                const match = item.episodeTitle.match(/^Season (\d+), Episode (\d+):\s*(.*)$/);
+                if (!match) throw new Error(`Invalid episode title: ${item.episodeTitle}`);
+                return {
+                    ...item,
+                    season: Number(match[1]),
+                    episode: Number(match[2]),
+                    title: match[3].replace(/^["“]|["”]$/g, '')
+                };
+            });
+            const seasons = [...new Set(parsedEpisodes.map(item => item.season))].sort((a, b) => a - b);
+            const orderedEpisodes = [...parsedEpisodes].sort((a, b) =>
+                a.season - b.season || a.episode - b.episode
+            );
+
+            function createDropdown(triggerId, optionsId) {
+                const trigger = document.getElementById(triggerId);
+                const label = trigger.querySelector('.dropdown-label');
+                const listbox = document.getElementById(optionsId);
+                let selectedValue = '';
+                let onChange = () => {};
+
+                const close = (restoreFocus = false) => {
+                    trigger.setAttribute('aria-expanded', 'false');
+                    listbox.hidden = true;
+                    if (restoreFocus) trigger.focus();
+                };
+
+                const open = () => {
+                    trigger.setAttribute('aria-expanded', 'true');
+                    listbox.hidden = false;
+                    const selected = listbox.querySelector('[aria-selected="true"]') || listbox.firstElementChild;
+                    selected?.focus();
+                };
+
+                const dropdown = {
+                    get value() {
+                        return selectedValue;
+                    },
+                    setOptions(options, value, changeHandler) {
+                        selectedValue = String(value);
+                        onChange = changeHandler;
+                        label.textContent = options.find(option => String(option.value) === selectedValue)?.label || '';
+                        trigger.setAttribute('aria-label', `${listbox.getAttribute('aria-label')}: ${label.textContent}`);
+                        listbox.replaceChildren();
+
+                        options.forEach(option => {
+                            const element = document.createElement('div');
+                            element.className = 'dropdown-option';
+                            element.id = `${optionsId}-${option.value}`;
+                            element.setAttribute('role', 'option');
+                            element.setAttribute('tabindex', '-1');
+                            element.setAttribute('aria-selected', String(String(option.value) === selectedValue));
+                            element.textContent = option.label;
+                            element.addEventListener('click', () => {
+                                selectedValue = String(option.value);
+                                label.textContent = option.label;
+                                trigger.setAttribute('aria-label', `${listbox.getAttribute('aria-label')}: ${option.label}`);
+                                listbox.querySelectorAll('[role="option"]').forEach(candidate => {
+                                    candidate.setAttribute('aria-selected', String(candidate === element));
+                                });
+                                close(true);
+                                onChange(selectedValue);
+                            });
+                            element.addEventListener('keydown', event => {
+                                const options = [...listbox.querySelectorAll('[role="option"]')];
+                                const index = options.indexOf(element);
+                                let nextIndex;
+                                if (event.key === 'ArrowDown') nextIndex = Math.min(index + 1, options.length - 1);
+                                else if (event.key === 'ArrowUp') nextIndex = Math.max(index - 1, 0);
+                                else if (event.key === 'Home') nextIndex = 0;
+                                else if (event.key === 'End') nextIndex = options.length - 1;
+                                else if (event.key === 'Escape') {
+                                    event.preventDefault();
+                                    close(true);
+                                    return;
+                                } else if (event.key === 'Enter' || event.key === ' ') {
+                                    event.preventDefault();
+                                    element.click();
+                                    return;
+                                } else if (event.key === 'Tab') {
+                                    close();
+                                    return;
+                                } else return;
+                                event.preventDefault();
+                                options[nextIndex]?.focus();
+                            });
+                            listbox.appendChild(element);
+                        });
+                    }
+                };
+
+                trigger.addEventListener('click', () => {
+                    if (listbox.hidden) open();
+                    else close();
+                });
+                trigger.addEventListener('keydown', event => {
+                    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                        event.preventDefault();
+                        open();
+                    }
+                });
+                document.addEventListener('pointerdown', event => {
+                    if (!trigger.parentElement.contains(event.target)) close();
+                });
+                return dropdown;
+            }
+
+            const addParagraphs = (container, values) => {
+                container.replaceChildren();
+                values.filter(value => typeof value === 'string' && value.trim()).forEach(value => {
+                    value.split(/(?:\r?\n|\\n)+/).map(text => text.trim()).filter(Boolean).forEach(text => {
+                        const paragraph = document.createElement('p');
+                        paragraph.textContent = text;
+                        container.appendChild(paragraph);
+                    });
+                });
+            };
+
+            const updateEpisodes = (season, preferredEpisode) => {
+                const seasonEpisodes = parsedEpisodes
+                    .filter(item => item.season === season)
+                    .sort((a, b) => a.episode - b.episode);
+                const selected = seasonEpisodes.find(item => item.episode === preferredEpisode) || seasonEpisodes[0];
+                if (selected) {
+                    episodeDropdown.setOptions(seasonEpisodes.map(item => ({
+                        value: item.episode,
+                        label: `Episode ${item.episode}: ${item.title}`
+                    })), selected.episode, value => renderEpisode(seasonEpisodes.find(item => item.episode === Number(value))));
+                    renderEpisode(selected);
+                }
+            };
+
+            const renderEpisode = (item) => {
+                episodeTitle.textContent = item.title;
+                episodeThumbnail.src = `images/episode-thumbnails/season-${item.season}-episode-${item.episode}.jpg`;
+                episodeThumbnail.alt = `${item.title} thumbnail`;
+                document.title = `Season ${item.season}, Episode ${item.episode} | Games Over Coffee`;
+                const episodeIndex = orderedEpisodes.indexOf(item);
+                episodePosition.textContent = `EP ${episodeIndex + 1} / ${orderedEpisodes.length}`;
+                previousEpisodeButton.disabled = episodeIndex === 0;
+                nextEpisodeButton.disabled = episodeIndex === orderedEpisodes.length - 1;
+                const synopsis = item.synopsisQuestions || {};
+                const lore = item.episodeLoreQuestions || {};
+                const production = item.productionTidbitsQuestions || {};
+                addParagraphs(designContent, Object.values(synopsis));
+                addParagraphs(loreContent, Object.values(lore));
+                addParagraphs(productionContent, Object.values(production));
+                if (!productionContent.hasChildNodes()) {
+                    const paragraph = document.createElement('p');
+                    paragraph.textContent = 'No production notes recorded for this episode.';
+                    productionContent.appendChild(paragraph);
+                }
+            };
+
+            const selectEpisode = item => {
+                if (!item) return;
+                seasonDropdown.setOptions(seasons.map(season => ({
+                    value: season,
+                    label: `Season ${season}`
+                })), item.season, value => updateEpisodes(Number(value)));
+                updateEpisodes(item.season, item.episode);
+            };
+
+            const navigateEpisode = direction => {
+                const currentEpisode = orderedEpisodes.findIndex(item =>
+                    item.season === Number(seasonDropdown.value) &&
+                    item.episode === Number(episodeDropdown.value)
+                );
+                selectEpisode(orderedEpisodes[currentEpisode + direction]);
+            };
+
+            previousEpisodeButton.addEventListener('click', () => navigateEpisode(-1));
+            nextEpisodeButton.addEventListener('click', () => navigateEpisode(1));
+            seasonDropdown.setOptions(seasons.map(season => ({
+                value: season,
+                label: `Season ${season}`
+            })), 1, value => updateEpisodes(Number(value)));
+            updateEpisodes(1, 1);
+        })();
+    </script>
+</body>
+</html>

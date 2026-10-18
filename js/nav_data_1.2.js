@@ -17,7 +17,7 @@ const navigationLinks = [
     },
     {
         name: 'Lore',
-        href: 'lore_1.1.html',
+        href: 'lore.html',
         titleSuffix: ' - Lore',
         classes: 'text-[var(--color-goc-main-text)] hover:text-[var(--color-goc-light-accent)] transition-colors duration-300 relative group'
     },
