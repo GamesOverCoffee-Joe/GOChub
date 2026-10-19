@@ -1577,7 +1577,7 @@ const SLOTS = [
   { key: "cafe_sign", label: "Café sign (today's special)", group: "Gift shop and café", w: 16, h: 32, pal: "cafesign", gen: GEN.cafe_sign, note: "A sandwich board by the café. Today's special's cup is drawn on the chalkboard (8×8, from 4,12). Two tiles tall." },
   { key: "magazine_rack", label: "Magazine stand", group: "Gift shop and café", w: 16, h: 32, pal: "mags", gen: GEN.magazine_rack, note: "In the café. Two tiles tall." },
   { key: "segway", label: "Segway (secret)", group: "People", w: 16, h: 16, pal: "segway", gen: GEN.segway, note: "Drawn under you when you've entered a certain famous code." },
-  { key: "player_goq_shirt", label: "Player in the GOQ shirt (secret)", group: "People", w: 16, h: 16, layout: "char", pal: "goqshirt", gen: GEN.staff_uniform, note: "Worn after unlocking the discontinued GOQ shirt. " + CHAR_NOTE },
+  { key: "player_goq_shirt", label: "Player in the GOQ shirt (secret)", group: "People", w: 16, h: 16, layout: "char", pal: "goqshirt", gen: GEN.staff_uniform, note: "The discontinued GOQ shirt's design: draw it on the plain player. Whatever you change from the plain player is the design, and it goes on the shirt of whoever wears it (the player or the curator, any skin tone). " + CHAR_NOTE },
   { key: "fridge", label: "Staff fridge", group: "Staff", w: 16, h: 32, pal: "kitchen", gen: GEN.fridge, note: "Two tiles tall." },
   { key: "microwave_counter", label: "Counter with microwave", group: "Staff", w: 32, h: 16, frames: 2, pal: "kitchen", gen: GEN.microwave_counter, note: "2 frames (64×16): clean, and after the incident." },
   { key: "patron_board", label: "Patron Board", group: "Lobby", w: 32, h: 32, pal: "plaque", gen: GEN.patron_board, note: "A standing board in the lobby that lists every Patreon member. Two tiles wide, two tall." },
@@ -3643,13 +3643,29 @@ class Game {
   }
   /* "goq_hat~bx-hat-purple": the art with one of Bluu's colorways swapped in (exact colors, from BLUU_GEAR). */
   swapped(key) {
-    const [base, id] = key.split("~"), src = this.sheet(base), w = src.naturalWidth || src.width, h = src.naturalHeight || src.height;
-    const g = /^look:/.test(id) ? { swap: Object.fromEntries(id.slice(5).split(",").map(pr => pr.split("-").map(c => "#" + c))) } : BLUU_GEAR.find(b => b.id === id); // your look, or a Bluu colorway
+    const [base, full] = key.split("~"), parts = full.split("+"), goq = parts.includes("goq"), id = parts.filter(p => p !== "goq").join("+"), src = this.sheet(base), w = src.naturalWidth || src.width, h = src.naturalHeight || src.height;
+    const g = !id ? { swap: {} } : /^look:/.test(id) ? { swap: Object.fromEntries(id.slice(5).split(",").map(pr => pr.split("-").map(c => "#" + c))) } : BLUU_GEAR.find(b => b.id === id); // your look, or a Bluu colorway
     if (!w || !h || !g) return src;
     const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(src, 0, 0);
     const d = x.getImageData(0, 0, w, h), px = d.data, rgb = hx => [1, 3, 5].map(i => parseInt(hx.slice(i, i + 2), 16)), map = Object.entries(g.swap).map(([a, b]) => [rgb(a), rgb(b)]);
+    if (goq) this.goqShirtOn(px, w, h, rgb(PAL[SLOT[base].pal][2] || "#000000")); // the GOQ shirt's design over this sheet's shirt, before your skin tone goes on
     for (let i = 0; i < px.length; i += 4) { if (!px[i + 3]) continue; const m = map.find(([a]) => Math.abs(a[0] - px[i]) < 6 && Math.abs(a[1] - px[i + 1]) < 6 && Math.abs(a[2] - px[i + 2]) < 6); if (m) { px[i] = m[1][0]; px[i + 1] = m[1][1]; px[i + 2] = m[1][2]; } }
     x.putImageData(d, 0, 0); return (this.cache[key] = c);
+  }
+  /* The GOQ shirt's design (Joe 10/19): the pixels where "Player in the GOQ shirt" (Art tab) differs from the plain player are the
+     design. They go on any character's shirt (pixels of its shirt color, shirt: [r,g,b]) at the same spot; where the design has
+     no pixel there (a different shape), its two most-used colors are laid down as a checkerboard. */
+  goqShirtOn(px, w, h, shirt) {
+    const a = this.sheet("player_goq_shirt"), b = this.sheet("player"), aw = a.naturalWidth || a.width, ah = a.naturalHeight || a.height;
+    if (!aw || !ah) return;
+    const read = im => { const c = document.createElement("canvas"); c.width = aw; c.height = ah; const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(im, 0, 0); return x.getImageData(0, 0, aw, ah).data; };
+    const A = read(a), B = read(b), pat = new Map(), counts = [{}, {}];
+    for (let y = 0; y < ah; y++) for (let x = 0; x < aw; x++) { const i = (y * aw + x) * 4; if (!A[i + 3] || (A[i] === B[i] && A[i + 1] === B[i + 1] && A[i + 2] === B[i + 2] && A[i + 3] === B[i + 3])) continue;
+      const col = [A[i], A[i + 1], A[i + 2]]; pat.set(x + "," + y, col); const k = col.join(","); counts[(x + y) % 2][k] = (counts[(x + y) % 2][k] || 0) + 1; }
+    if (!pat.size) return;
+    const top = m => { const e = Object.entries(m).sort((p, q) => q[1] - p[1])[0]; return e && e[0].split(",").map(Number); }, fill = [top(counts[0]) || top(counts[1]), top(counts[1]) || top(counts[0])];
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = (y * w + x) * 4; if (!px[i + 3] || Math.abs(px[i] - shirt[0]) > 5 || Math.abs(px[i + 1] - shirt[1]) > 5 || Math.abs(px[i + 2] - shirt[2]) > 5) continue;
+      const col = pat.get(x + "," + y) || fill[(x + y) % 2]; px[i] = col[0]; px[i + 1] = col[1]; px[i + 2] = col[2]; }
   }
   /* "lobby_wall_upper@#4a4a50": the art recolored to that color, keeping its light and shade (its average lands on the color). */
   tinted(key) {
@@ -5420,13 +5436,16 @@ class Game {
      order; and the keypad only works after closing (announcement made, lights out). One code for everyone (curator, Staff
      tab), so players can trade it. A curator badge always gets in, and starts there. */
   /* What you look like: the curator in person on a curator badge, the staff uniform on shift, the shirt if you wear it. */
-  playerSheet(base) { const k = this.isCurator() ? "curator" : this.staff ? "player_staff" : this.progress.wearShirt ? "player_goq_shirt" : base || "player"; return k + this.lookSuffix(k); }
+  playerSheet(base) { // the GOQ shirt (Joe 10/19): its design goes on your own clothes (the player or the curator), with your skin tone; not over the staff uniform
+    const k = this.isCurator() ? "curator" : this.staff ? "player_staff" : base || "player", goq = !!this.progress.wearShirt && k !== "player_staff" && !this.headless && !!SLOT[k] && !!PAL[SLOT[k].pal];
+    const look = this.lookSuffix(k, goq).slice(1); return look || goq ? k + "~" + [look, goq ? "goq" : ""].filter(Boolean).join("+") : k;
+  }
   canLook() { const P = this.progress, real = b => !!b && !b.volunteer && /^\d+$/.test(String(b.badge || "")); if (!P) return false; return P.staff ? real(P.staff) : real(P.lastBadge); } // a badge number (a Patreon member or the curator), not a volunteer: on shift, the badge you're on; off shift, the last one you signed in with (Joe 10/14)
-  lookSuffix(k) { // your skin tone everywhere; your shirt on your own clothes (the player, the curator), not on a uniform or the GOQ shirt
+  lookSuffix(k, goq) { // your skin tone everywhere; your shirt on your own clothes (the player, the curator), not on a uniform or the GOQ shirt
     const L = this.progress.look; if (!L || !this.canLook() || !SLOT[k] || this.headless) return "";
     const pal = PAL[SLOT[k].pal] || [], sw = [];
     if (L.skin && pal[1] && L.skin !== pal[1]) sw.push(pal[1].slice(1) + "-" + L.skin.slice(1));
-    if (L.shirt && pal[2] && (k === "player" || k === "curator") && L.shirt !== pal[2]) sw.push(pal[2].slice(1) + "-" + L.shirt.slice(1));
+    if (L.shirt && pal[2] && !goq && (k === "player" || k === "curator") && L.shirt !== pal[2]) sw.push(pal[2].slice(1) + "-" + L.shirt.slice(1));
     return sw.length ? "~look:" + sw.join(",") : "";
   }
   isCurator() { return !!(this.curator || (this.staff && this.staff.curator)); } // a curator badge, or the curator preview's curator view
@@ -10769,7 +10788,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 98";
+const VERSION = "2026-11-18 cards 99";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
