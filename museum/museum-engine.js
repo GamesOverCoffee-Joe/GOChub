@@ -6710,11 +6710,20 @@ class Game {
       g.forEach((t, k) => {
         const cxs = [9, 24, 39][k % 3], top = k < 3 ? 4 : 18;
         for (const [dx, dy] of [[-6, 2], [0, 0], [-3, 3], [3, 2]]) { // a little stack of the same thing
-          if (t.item) x.drawImage(this.itemIcon(t.item), cxs - 5 + dx, top + dy, 10, 10); else this.drawSlot("trinkets", t.trinket, 0, cxs - 4 + dx, top + 1 + dy);
+          if (t.item) x.drawImage(this.iconAt(t.item, 10), cxs - 5 + dx, top + dy); else this.drawSlot("trinkets", t.trinket, 0, cxs - 4 + dx, top + 1 + dy);
         }
       });
     } finally { this.ctx = ctx; }
     return (this.cache[ck] = c);
+  }
+  /* An item's icon at another size, made once with a fixed choice of pixels and drawn 1:1 (Joe 10/19: the browser shrank the
+     featured stand's 16px icon to 12px on every draw, and walking past it, it picked different rows each time, so the tank jumped). */
+  iconAt(it, n) {
+    const src = this.itemIcon(it), S = src._sized || (src._sized = {}); if (S[n]) return S[n];
+    const w = src.width, h = src.height, c = document.createElement("canvas"); c.width = n; c.height = n; if (!w || !h) return c;
+    const a = src.getContext("2d").getImageData(0, 0, w, h).data, x = c.getContext("2d"), out = x.createImageData(n, n);
+    for (let y = 0; y < n; y++) for (let xx = 0; xx < n; xx++) { const sx = Math.min(w - 1, Math.floor((xx + 0.5) * w / n)), sy = Math.min(h - 1, Math.floor((y + 0.5) * h / n)), i = (sy * w + sx) * 4, o = (y * n + xx) * 4; out.data[o] = a[i]; out.data[o + 1] = a[i + 1]; out.data[o + 2] = a[i + 2]; out.data[o + 3] = a[i + 3]; }
+    x.putImageData(out, 0, 0); return (S[n] = c);
   }
   itemIcon(it) {
     if (it.cardSlot) return this.cardIcon(it.cardSlot); if (it.base === "card") return this.cardIcon(it.cardKind === "r" ? "rare" : "single"); // trading cards
@@ -10327,7 +10336,7 @@ class Game {
     if (p.unit !== undefined && !(this.sup && this.sup.stocking && this.sup.emptyUnit === p.unit)) ctx.drawImage(this.unitLayer(p.unit), Math.round(px0), Math.round(py0)); // the stacks, drawn once and placed on whole pixels (no shimmer as you walk)
     if (p.rack !== undefined) {
       const it = this.rackItems(p.rack)[0];
-      if (it) ctx.drawImage(this.itemIcon(it), px0 + 4, py0 + 3, 24, 24); // one item, big enough to fill both shelves
+      if (it) ctx.drawImage(this.iconAt(it, 24), px0 + 4, py0 + 3); // one item, big enough to fill both shelves
       else { this.drawSlot("trinkets", hash(p.rack, 1) % 8, 0, px0 + 12, py0 + 5); this.drawSlot("trinkets", hash(p.rack, 2) % 8, 0, px0 + 12, py0 + 18); }
     }
     if (k === "front_desk" && this.usherMugOut()) this.drawSlot("usher_mug", 0, 0, px0 + 34, py0 - 3); // the cue: his mug's empty
@@ -10336,13 +10345,13 @@ class Game {
     if (k === "cafe_sign") { const sp = this.cafeSpecial(); if (sp) ctx.drawImage(this.cupCanvas(sp.d, sp.k), px0 + 4, py0 + 12); }
     // (Bluu's table: no item pictures on it any more, Joe 10/15. He sells four or five things, which never fit; the menu shows them.)
     if (p.collection) this.displayed().forEach((it, i) => {
-      ctx.drawImage(this.itemIcon(it), px0 + [4, 13, 27, 36][i % 4], py0 + [2, 11, 20][Math.floor(i / 4)], 8, 8);
+      ctx.drawImage(this.iconAt(it, 8), px0 + [4, 13, 27, 36][i % 4], py0 + [2, 11, 20][Math.floor(i / 4)]);
     });
   }
   drawFeatured(r, cx, cy) {
     const x = r.featuredAt.x * T - cx, y = r.featuredAt.y * T - T - cy, sh = this.pack.settings.shop, it = sh.items.find(i => i.id === this.featuredId());
     this.drawSlot("featured_stand", 0, 0, x, y);
-    if (it) this.ctx.drawImage(this.itemIcon(it), x + 2, y + 2, 12, 12);
+    if (it) this.ctx.drawImage(this.iconAt(it, 12), x + 2, y + 2); // shrunk once, the same pixels every frame
     return;
     this.drawSlot("featured_stand", 0, 0, x, y);
   }
@@ -10788,7 +10797,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 99";
+const VERSION = "2026-11-18 cards 100";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
