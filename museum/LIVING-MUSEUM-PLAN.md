@@ -332,7 +332,7 @@ First-pass grid:
 
 Claude's suggestion: 1 and 2 soon (after the supplies chain), 3 when we get to Phase 4.
 
-### **Thinking and recommending** *(Joe 10/19: planned, not built)*
+### **Thinking and recommending** *(Joe 10/19. Built, cards 101: steps 1 to 4; the later list is still to come)*
 
 Hold something in mind and recommend it to a visitor. They go to it and do something with it, unless their personality says otherwise. No dialogue anywhere: you see the answer in what they do. No rewards. Curious visitors stay exactly as they are; this sits beside them.
 

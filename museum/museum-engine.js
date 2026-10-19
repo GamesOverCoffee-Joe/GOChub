@@ -2976,7 +2976,8 @@ const PROBLEMS = [ // the living museum's problems (LIVING-MUSEUM-PLAN.md), each
   { id: "line", who: "Barista", beat: 2, chain: "supplies", label: "the line blocks the walkway", built: true }, { id: "item", who: "Staff on break", beat: 2, chain: "", label: "someone's item goes missing", built: true },
 ];
 const PROBLEM_DAYS = [["usher", "tour"], ["stock", "line"], ["litter"], ["item"]]; // Normal (Joe 10/19): one of these a day; the usher's coffee goes with the tour, the shop's box with the café's (the Janitor isn't a problem anymore)
-const MODES = ["normal", "busy", "chill"]; // how the museum plays (Joe 10/19): Normal, one problem a day (the default); Busy, all of them; Chill, none
+const MODES = ["normal", "busy", "chill"];
+const RECO_KINDS = ["exhibit", "seat", "cafe", "toss", "photo"]; // what a visitor's willingness covers (Joe 10/19), 0 to 4 each // how the museum plays (Joe 10/19): Normal, one problem a day (the default); Busy, all of them; Chill, none
 const FIXES = [...PROBLEMS, { id: "cons", who: "Conservator", label: "a chat at closing" }]; // what counts toward solving everything (Joe 10/12: catching the conservator at closing is one)
 const CROWD_LINES = [["What a nice museum."], ["I come here on my lunch break."], ["Have you seen the cat today?"], ["I always read both sides of the cases."],
   ["My friend told me about this place."], ["Honestly, I'm mostly here for the café."], ["Is it me, or is it busy today?"], ["I didn't know games could go in museums."],
@@ -3526,8 +3527,8 @@ const MENU_MODES = new Set(["choice", "shop", "cafe", "album", "items", "binder"
 
 /* Keyboard controls you can change (Joe 10/12): two keys per action. Esc (pause, and back out of anything) and Backspace (back
    in menus) always work and can't be taken, so nobody locks themselves out; picking a key another action has swaps the two. */
-const KEY_ACTIONS = [["up", "Move up"], ["down", "Move down"], ["left", "Move left"], ["right", "Move right"], ["a", "A: look, talk, read"], ["b", "B: photo, back"], ["start", "Pause"]];
-const DEFAULT_KEYS = { up: ["ArrowUp", "KeyW"], down: ["ArrowDown", "KeyS"], left: ["ArrowLeft", "KeyA"], right: ["ArrowRight", "KeyD"], a: ["KeyZ", "Space"], b: ["KeyX", "KeyK"], start: ["Enter", "KeyP"] };
+const KEY_ACTIONS = [["up", "Move up"], ["down", "Move down"], ["left", "Move left"], ["right", "Move right"], ["a", "A: look, talk, read"], ["b", "B: photo, back"], ["start", "Pause"], ["select", "Select: think"]];
+const DEFAULT_KEYS = { up: ["ArrowUp", "KeyW"], down: ["ArrowDown", "KeyS"], left: ["ArrowLeft", "KeyA"], right: ["ArrowRight", "KeyD"], a: ["KeyZ", "Space"], b: ["KeyX", "KeyK"], start: ["Enter", "KeyP"], select: ["KeyC", "ShiftLeft"] };
 const KEY_OK = c => /^(Key[A-Z]|Digit\d|Numpad\w+|Arrow(Up|Down|Left|Right)|Space|Enter|Shift(Left|Right)|Control(Left|Right)|Semicolon|Quote|Comma|Period|Slash|Backslash|BracketLeft|BracketRight|Minus|Equal|Backquote)$/.test(c);
 const keyName = c => ({ ArrowUp: "\u2191", ArrowDown: "\u2193", ArrowLeft: "\u2190", ArrowRight: "\u2192", Space: "Space", Enter: "Enter", ShiftLeft: "Left Shift", ShiftRight: "Right Shift", ControlLeft: "Left Ctrl", ControlRight: "Right Ctrl", Semicolon: ";", Quote: "'", Comma: ",", Period: ".", Slash: "/", Backslash: "\\", BracketLeft: "[", BracketRight: "]", Minus: "-", Equal: "=", Backquote: "`" })[c] || c.replace(/^Key|^Digit/, "").replace(/^Numpad/, "Num ");
 
@@ -3716,6 +3717,7 @@ class Game {
   keyBinds() { // yours, or the defaults (anything odd in the save falls back)
     const k = this.progress && this.progress.keys, out = {};
     for (const [a] of KEY_ACTIONS) out[a] = k && Array.isArray(k[a]) && k[a].length === 2 && k[a].every(KEY_OK) ? k[a].slice() : DEFAULT_KEYS[a].slice();
+    if (!(k && Array.isArray(k.select))) { const used = new Set(KEY_ACTIONS.filter(([a]) => a !== "select").flatMap(([a]) => out[a])); out.select = ["KeyC", "ShiftLeft", "ShiftRight", "KeyQ", "KeyE", "KeyV", "KeyF"].filter(c => !used.has(c)).slice(0, 2); } // Select came later (Joe 10/19): keys you'd bound before keep theirs
     const all = Object.values(out).flat(); if (new Set(all).size !== all.length) return JSON.parse(JSON.stringify(DEFAULT_KEYS)); // a key twice: start over
     return out;
   }
@@ -3840,9 +3842,9 @@ class Game {
     was.filter(d => !dirs.includes(d)).forEach(d => this.hold(d, false));
     dirs.filter(d => !was.includes(d)).forEach(d => this.hold(d, true, "pad"));
     this.padDirs = dirs;
-    const now = { a: b(this.swapAB ? 1 : 0), b: b(this.swapAB ? 0 : 1), start: b(9) || b(8) }, prev = this.padPrev || {};
+    const now = { a: b(this.swapAB ? 1 : 0), b: b(this.swapAB ? 0 : 1), start: b(9), select: b(8) }, prev = this.padPrev || {}; // Back/Select: think (Joe 10/19)
     for (const k in now) if (now[k] && !prev[k]) this.press(k, "pad");
-    if (!this.padSeen && (dirs.length || now.a || now.b || now.start)) { this.padSeen = true; this.showLoc("Controller connected"); }
+    if (!this.padSeen && (dirs.length || now.a || now.b || now.start || now.select)) { this.padSeen = true; this.showLoc("Controller connected"); }
     this.padPrev = now;
   }
   heldDir() { const all = this.held.concat(this.virt); return all.length ? all[all.length - 1] : null; }
@@ -6558,7 +6560,7 @@ class Game {
     return n;
   }
   crowdBody(x, y, zone) {
-    return { sheet: ["visitor_a", "visitor_b", "visitor_c"][Math.floor(Math.random() * 3)], x, y, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 60 + Math.random() * 120, lines: [CROWD_LINES[Math.floor(Math.random() * CROWD_LINES.length)]], lineI: -1, random: true, rhythm: true, zone };
+    return { sheet: ["visitor_a", "visitor_b", "visitor_c"][Math.floor(Math.random() * 3)], x, y, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 60 + Math.random() * 120, lines: [CROWD_LINES[Math.floor(Math.random() * CROWD_LINES.length)]], lineI: -1, random: true, rhythm: true, zone, will: this.newWill(), vno: this.nextVno() };
   }
 
   /* ----- evening -----
@@ -7933,10 +7935,11 @@ class Game {
       });
       return;
     }
-    const opts = ["My Stuff", ...(this.dialOn() ? ["Check time"] : []), ...(this.isCurator() && this.answerPieces().length ? ["Developer answers"] : []), ...(this.progress.fieldNotes && this.gameMode() === "busy" ? ["Field notes"] : []), "Settings", "Save", "Back"]; // (Joe 10/12: Recent notices, Controls and Respawn under Settings; Save asks if you're quitting)
+    const opts = ["My Stuff", "Think", ...(this.dialOn() ? ["Check time"] : []), ...(this.isCurator() && this.answerPieces().length ? ["Developer answers"] : []), ...(this.progress.fieldNotes && this.gameMode() === "busy" ? ["Field notes"] : []), "Settings", "Save", "Back"]; // (Joe 10/12: Recent notices, Controls and Respawn under Settings; Save asks if you're quitting)
     this.choose("PAUSED", opts, k => {
       const o = opts[k];
       if (o === "My Stuff") this.myStuff();
+      else if (o === "Think") { if (this.canThink()) this.enterThink(); } // the same as Select
       else if (o === "Field notes") this.fieldNotes(() => this.openMenu());
       else if (o === "Settings") this.settingsMenu();
       else if (o === "Save") this.saveAsk();
@@ -8119,9 +8122,9 @@ class Game {
   showControls(back) {
     const sw = this.swapAB, A = sw ? "B" : "A", B = sw ? "A" : "B", KB = this.keyBinds(), kn = a => KB[a].map(keyName).join(" or "); // your keys (Settings, Controls)
     const pages = {
-      keyboard: { label: "KEYBOARD", text: "Move: " + ["up", "down", "left", "right"].map(d => KB[d].map(keyName).join(" or ")).join(", ") + ". " + A + " (look, talk, read): " + kn("a") + ". " + B + " (photo, and back in menus): " + kn("b") + ". Back in menus: Backspace. Pause: " + kn("start") + " or Esc. In a menu, hold up or down to scroll; Esc closes it. Change the keys in Settings, Controls." + (sw ? " (A and B are swapped in Settings.)" : "") },
-      touch: { label: "TOUCH", text: "Move with the on-screen pad. A looks, talks and reads. B takes a photo, and goes back in menus. START pauses. With Tap to walk on (Settings), tap where you want to go, or tap something to walk over and use it." },
-      pad: { label: "CONTROLLER", text: "Move: D-pad or left stick. " + A + " (look, talk, read): the bottom button. " + B + " (photo, and back in menus): the right button. Pause: Start or Select. Writing a note shows a keyboard: the D-pad picks a key, A types it, B deletes, Start sends." + (sw ? " (A and B are swapped in Settings.)" : "") },
+      keyboard: { label: "KEYBOARD", text: "Move: " + ["up", "down", "left", "right"].map(d => KB[d].map(keyName).join(" or ")).join(", ") + ". " + A + " (look, talk, read): " + kn("a") + ". " + B + " (photo, and back in menus): " + kn("b") + ". Back in menus: Backspace. Pause: " + kn("start") + " or Esc. Think (hold something in mind to recommend): " + kn("select") + ". In a menu, hold up or down to scroll; Esc closes it. Change the keys in Settings, Controls." + (sw ? " (A and B are swapped in Settings.)" : "") },
+      touch: { label: "TOUCH", text: "Move with the on-screen pad. A looks, talks and reads. B takes a photo, and goes back in menus. START pauses. SELECT thinks: hold something in mind to recommend to a visitor. With Tap to walk on (Settings), tap where you want to go, or tap something to walk over and use it." },
+      pad: { label: "CONTROLLER", text: "Move: D-pad or left stick. " + A + " (look, talk, read): the bottom button. " + B + " (photo, and back in menus): the right button. Pause: Start. Think (hold something in mind to recommend): Select or Back. Writing a note shows a keyboard: the D-pad picks a key, A types it, B deletes, Start sends." + (sw ? " (A and B are swapped in Settings.)" : "") },
     };
     const first = this.lastInput === "pad" ? "pad" : this.lastInput === "touch" ? "touch" : "keyboard";
     this.read({ title: "CONTROLS", sections: [first, ...["keyboard", "touch", "pad"].filter(k => k !== first)].map(k => pages[k]), menu: true }, back || (() => this.openMenu()));
@@ -8377,11 +8380,13 @@ class Game {
     if (npc.follow) { this.followerTalk(npc); return; }
     if (npc.cur) { this.curiousTalk(npc); return; }
     if (npc.back) { this.backTalk(npc); return; }
-    if (npc.random && !npc.member && this.room.npcs.some(n => n.reader && Math.abs(n.x - npc.x) + Math.abs(n.y - npc.y) <= 14) && Math.random() < 0.35) { this.say(this.tx("reader.chatter")); return; } // near the reading nook: they're talking about her
+    const rec = this.canRecommend(npc);
+    if (!rec && npc.random && !npc.member && this.room.npcs.some(n => n.reader && Math.abs(n.x - npc.x) + Math.abs(n.y - npc.y) <= 14) && Math.random() < 0.35) { this.say(this.tx("reader.chatter")); return; } // near the reading nook: they're talking about her
     const named = pages => (npc.member ? pages.map((p, k) => (k === 0 ? npc.member + ": " + p : p)) : pages);
     const chat = () => { npc.lineI = (npc.lineI + 1) % npc.lines.length; this.say(named(npc.lines[npc.lineI])); };
-    if (npc.sitting) { chat(); return; }
-    this.choose(npc.member ? npc.member + " smiles." : "They glance over.", ["Say hi", "Could I get by?"], i => { if (i === 0) chat(); else if (i === 1) this.askToMove(npc, named); }, -1);
+    const opts = ["Say hi", ...(rec ? ["Recommend"] : []), ...(npc.sitting ? [] : ["Could I get by?"])];
+    if (opts.length === 1) { chat(); return; }
+    this.choose(npc.member ? npc.member + " smiles." : "They glance over.", opts, i => { const o = opts[i]; if (o === "Say hi") chat(); else if (o === "Recommend") this.recommend(npc); else if (o === "Could I get by?") this.askToMove(npc, named); }, -1); // Recommend: with something in mind (Joe 10/19)
   }
   /* Sitting: on a café stool or a bench. Any direction stands you back up. With a drink, you sip now and then. */
   sit(e) {
@@ -8447,6 +8452,7 @@ class Game {
     for (const id in this.rooms) this.rooms[id].fresh = true; // the director settles each room's crowd for this point in the visit
   }
   enterRoom(id, x, y, dir, quiet) {
+    if (this.idea && this.idea.room !== id) this.idea = null; // an idea fades when you leave its room (Joe 10/19)
     if (!this.rooms[id]) { id = "lobby"; [x, y, dir] = ROOMS.lobby.spawn; }
     if (typeof x === "string") { // a named doorway or stairs in the museum: ["museum", "@lobby"]
       const lay = layoutOf(ROOMS[id]), a = lay && lay.anchors[x.replace(/^@/, "")];
@@ -8788,6 +8794,7 @@ class Game {
         return;
       }
       if (this.konamiNow) { this.konamiNow = false; return; } // the code's last Start: no menu
+      if (has("select") && this.canThink()) { this.enterThink(); return; } // Select: think (Joe 10/19)
       if (has("start") && !this.player.moving) { this.openMenu(); return; }
       if (!this.player.moving && (this.using("shades") === "fake" && !this.progress.lensPopped || this.using("hat") === "fake")) { this.gearCheck(); return; }
       const codeB = this.kbuf && this.kbuf.slice(-9).join() === KONAMI.slice(0, 9).join(); // the B in the code isn't a photo
@@ -8795,8 +8802,101 @@ class Game {
       if (has("b") && !codeB && !this.player.moving && !this.asleep) { this.takePhoto(); return; }
       this.updatePlayer(has("a"));
     }
+    else if (this.mode === "think") this.updateThink(has);
     else if (this.mode === "ended" && (has("a") || has("start"))) this.reopen();
     if (this.mode === "walk" || this.mode === "busy") this.updateNpcs();
+  }
+  /* ----- Thinking and recommending (Joe 10/19; LIVING-MUSEUM-PLAN.md) -----
+     SELECT (or Think in the pause menu): time stops, the screen goes Game Boy green, and you step out of yourself as a ghost (your
+     sprite, half see-through) that walks through people but not walls, in this room only. A on something holds it in mind (the
+     thought bubble in the corner) and you snap back. Then talk to a regular visitor and pick Recommend: no words, they just go and
+     do something with it, or not, by their willingness (0 to 4 for each kind of thing, handed out silently when they come in).
+     The idea stays until you pick another, fades when you leave its room, and isn't saved. No rewards. */
+  newWill() { const w = {}; for (const k of RECO_KINDS) w[k] = Math.floor(Math.random() * 5); return w; } // exhibits, seats, the café, throwing a cup away, photos
+  nextVno() { return (this.vnoNext = (this.vnoNext || 0) + 1); } // a visitor number (the curator's Preview shows it)
+  canThink() { return this.mode === "walk" && !this.tut && !this.trans && !this.cine && !this.player.moving && !this.askingMode && !this.handoff && !this.curator && !!this.room; }
+  enterThink() {
+    const p = this.player, dc = this.dirClock;
+    this.think = { ghost: { ghost: true, x: p.x, y: p.y, dir: p.dir, moving: false, prog: 0, step: false, bumpT: 0, alpha: 0.5, sheet: p.sheet }, was: dc ? !!dc.paused : false };
+    if (dc) dc.paused = true; this.mode = "think"; this.inputLock = true; // the day waits; a held direction has to come up first
+  }
+  exitThink() { const T = this.think; if (!T) return; this.think = null; if (this.dirClock) this.dirClock.paused = T.was; this.mode = "walk"; this.inputLock = true; }
+  updateThink(has) {
+    const T = this.think, g = T && T.ghost, r = this.room; if (!g) { this.mode = "walk"; return; }
+    if (T.picked) { this.exitThink(); return; } // the frame that showed the pick is drawn (and the bubble's picture taken): back into your body
+    if (has("select") || has("b") || has("start")) { this.exitThink(); return; }
+    if (g.bumpT > 0) g.bumpT--;
+    if (g.moving) { g.prog += 2; if (g.prog >= 16) { const [dx, dy] = DIRS[g.dir]; g.x += dx; g.y += dy; g.prog = 0; g.moving = false; } return; }
+    if (has("a")) { const [dx, dy] = DIRS[g.dir], t = this.thinkTarget(r, g.x + dx, g.y + dy); if (t) T.pick = t; else g.bumpT = 8; return; }
+    const d = this.heldDir(); if (!d) { this.inputLock = false; return; } if (this.inputLock) return;
+    g.dir = d; const [dx, dy] = DIRS[d], nx = g.x + dx, ny = g.y + dy;
+    if (nx < 0 || ny < 0 || nx >= r.w || ny >= r.h || r.solid[ny][nx]) { g.bumpT = 8; return; } // through people, never walls
+    g.moving = true; g.prog = 0; g.step = !g.step;
+  }
+  thinkTarget(r, x, y) { // what's there to hold in mind: an exhibit, a seat, the café counter, a bin, or anything else (someone, a prop)
+    if (x < 0 || y < 0 || x >= r.w || y >= r.h) return null;
+    const e = r.events[x + "," + y] || {}, at = { room: r.id, x, y };
+    if (e.caseAt && e.caseAt.piece) return Object.assign(at, { kind: "exhibit" });
+    if (e.spot && e.spot.piece && e.spot.state === "wall") return Object.assign(at, { kind: "exhibit" });
+    if (e.sit) return Object.assign(at, { kind: "seat" });
+    if (e.cafe) return Object.assign(at, { kind: "cafe" });
+    if (e.trash) return Object.assign(at, { kind: "bin" });
+    if (r.npcs.some(n => n.x === x && n.y === y) || Object.keys(e).length || (r.solid[y][x] && !/wall/.test(String(r.tiles[y][x] || "wall")))) return Object.assign(at, { kind: "other" });
+    return null; // bare floor or wall: nothing to think about
+  }
+  canRecommend(n) { // a regular visitor in this room, with an idea from this room in mind
+    const I = this.idea, T = this.tour; if (!I || I.room !== this.room.id || !n || !n.random) return false;
+    if (n.cur || n.back || n.follow || n.reader || n.staff || n.role || n.patron || n.dayPerson || n.tourKid || n.schoolKid || n.kid || n.lost || n.teacher) return false;
+    if (T && (T.members.includes(n) || n === T.guide)) return false; // the tour group
+    return this.room.id !== "screening"; // not in the theater
+  }
+  recommend(n) {
+    const I = this.idea, r = this.room; if (!I) return;
+    if (!n.will) n.will = this.newWill(); if (!n.vno) n.vno = this.nextVno();
+    n.ideaFx = { t0: this.t, icon: I.icon }; // the thought goes over: a little bubble over their head
+    const no = kind => { n.pose = { kind: kind || "busy", t0: this.t, dur: 110 }; n.timer = Math.max(n.timer || 0, 130); n.route = null; }; // they think about it, then: no
+    if (n.queue || n.ordering || n.coffee || n.binAt || n.leaving || n.reco || n.snapT > 0 || n.aside) { no("busy"); return; } // in the middle of something
+    const drink = n.drink, full = drink && !drink.empty, roll = k => Math.random() < [0.05, 0.3, 0.55, 0.8, 0.97][n.will[k] || 0];
+    const go = (bad, kind, extra) => { // off they go (a sitter gets up first)
+      if (n.sitting) { if (n.sitFrom) [n.x, n.y] = n.sitFrom; n.sitting = false; n.seat = null; }
+      const near = extra && extra.goal || this.recoSpot(r, n, I.x, I.y); if (!near) { no("busy"); return; }
+      Object.assign(n, { goalT: near, route: null, timer: 30, retry: 0, viewing: false, stepWait: 0, arrived: false, coffee: false, reco: { bad, kind, x: I.x, y: I.y } });
+      if (extra && extra.seat) n.seat = extra.seat; else n.seat = null;
+      if (r.zoneAt) { const z = this.zoneAt(r, near[0], near[1]); if (z && z.kind === "room") n.zone = z.id; }
+    };
+    if (I.kind === "exhibit") { if (roll("exhibit")) go(false, "exhibit"); else no(); return; }
+    if (I.kind === "seat") {
+      const e = r.events[I.x + "," + I.y], taken = !e || r.npcs.some(m => m !== n && ((m.x === I.x && m.y === I.y) || m.seat === e)) || (this.player.x === I.x && this.player.y === I.y);
+      if (taken) { go(true, "seat"); return; } // someone's in it: they go and look anyway
+      if (roll("seat")) go(false, "seat", { seat: e }); else no(); return;
+    }
+    if (I.kind === "cafe") {
+      if (drink || !this.lineOpen(r)) { go(true, "cafe"); return; } // already holding something (or no line today): a puzzled trip
+      if (!roll("cafe")) { no(); return; }
+      if (n.sitting) { if (n.sitFrom) [n.x, n.y] = n.sitFrom; n.sitting = false; n.seat = null; }
+      n.queue = { phase: "join" }; n.seat = null; n.route = null; n.goalT = null; n.timer = 30; return; // into the café line, like anyone
+    }
+    if (I.kind === "bin") {
+      if (full) { no("annoyed"); return; } // not done with it
+      if (!drink) { go(true, "bin"); return; } // nothing to throw away
+      if (!roll("toss")) { no(); return; }
+      if (n.sitting) { if (n.sitFrom) [n.x, n.y] = n.sitFrom; n.sitting = false; n.seat = null; }
+      Object.assign(n, { binAt: [I.x, I.y], route: null, goalT: null, timer: 30 }); return; // the cup goes in that one
+    }
+    go(true, "other"); // anything else: they go and see, and react
+  }
+  recoSpot(r, n, x, y) { // where to stand by the thing: an open tile next to it, the one below first
+    const c = [[0, 1], [0, -1], [-1, 0], [1, 0]].map(([dx, dy]) => [x + dx, y + dy]).filter(([a, b]) => r.solid[b] && r.solid[b][a] === false && !(r.noWander && r.noWander.has(a + "," + b)) && !r.events[a + "," + b]);
+    return c.find(([a, b]) => this.npcPath(n, a, b, true)) || null;
+  }
+  recoArrive(n) { // they got there
+    const R = n.reco; n.reco = null; const face = R.x > n.x ? "right" : R.x < n.x ? "left" : R.y > n.y ? "down" : "up";
+    if (R.kind === "seat" && !R.bad) return false; // the usual: sit down (stroll does it)
+    n.dir = face; n.timer = 240 + Math.random() * 200;
+    if (!R.bad) { if (R.kind === "exhibit") { n.viewing = true; if ((n.will.photo || 0) >= 3) n.snapT = 70; } return true; } // a good look, and maybe a photo
+    if ((n.will.photo || 0) >= 3) n.snapT = 70; // a bad fit: a photo of it anyway...
+    else n.pose = { kind: ["startled", "annoyed", "busy"][(Math.random() * 3) | 0], t0: this.t, dur: 110 }; // ...or a reaction
+    return true;
   }
   updatePlayer(pressA) {
     const p = this.player;
@@ -8888,6 +8988,7 @@ class Game {
   updateNpcs() {
     const def = ROOMS[this.room.id];
     for (const n of this.room.npcs.slice()) {
+      if (n.random && !n.will) { n.will = this.newWill(); n.vno = n.vno || this.nextVno(); } // the visitors already there when the room's built get theirs here
       if (n.fadeIn) { n.alpha = Math.min(1, (n.alpha || 0) + 1 / 24); if (n.alpha >= 1) { n.fadeIn = false; delete n.alpha; } } // someone just came in through the doors
       if (n.serving) continue; // the barista making your drink: she stays put until it's done
       if (n.leaving) { this.walkOut(n, n.leaveTo || def.exitTo || ROOMS[this.room.id].spawn); continue; }
@@ -8964,6 +9065,7 @@ class Game {
     }
     if (n.arrived) { // just stepped onto the spot they were heading for
       n.arrived = false; { const ed = this.exhibitDir(r0, n.x, n.y); n.viewing = !!ed; if (ed) n.dir = ed; } // by a case or a painting: look at it
+      if (n.reco && this.recoArrive(n)) return; // there, because you recommended it
       if (n.coffee) { // at the café counter: order, and wait for it facing the barista
         if (this.counterSpots(r0).some(([x, y]) => x === n.x && y === n.y)) { n.dir = "up"; n.ordering = true; n.timer = 150 + Math.random() * 150; return; }
         n.coffee = false; // didn't make it to the counter: maybe next time
@@ -10348,6 +10450,32 @@ class Game {
       ctx.drawImage(this.iconAt(it, 8), px0 + [4, 13, 27, 36][i % 4], py0 + [2, 11, 20][Math.floor(i / 4)]);
     });
   }
+  /* Thinking (Joe 10/19): the visitor numbers in the curator's Preview; the thought going over to a visitor; while you think, the
+     pick's picture taken (before the green) and the Game Boy palette; otherwise the thought bubble in the corner. */
+  drawThinking(ctx, cx, cy) {
+    const r = this.room, TH = this.think, I = this.idea, BUB = (x, y, w, h) => { ctx.fillStyle = "#181820"; ctx.fillRect(x - 1, y, w + 2, h); ctx.fillRect(x, y - 1, w, h + 2); ctx.fillStyle = "#f8f8f0"; ctx.fillRect(x, y, w, h); };
+    if (this.showWill) for (const n of r.npcs) if (n.will && n.vno) { // preview only: visitor number, then exhibit / seat / café / toss / photo
+      const p = this.pos(n), txt = n.vno + " " + RECO_KINDS.map(k => n.will[k]).join(""), x = Math.round(p.x + 8 - cx - txt.length * 2), y = Math.round(p.y - cy - 12);
+      ctx.fillStyle = "rgba(0,0,0,.6)"; ctx.fillRect(x - 1, y - 1, txt.length * 4 + 1, 7); ctx.fillStyle = "#fff6cc";
+      let tx = x; for (const ch of txt) { (PIXEL_FONT[ch] || []).forEach((row, yy) => [...row].forEach((v, xx) => { if (v === "1") ctx.fillRect(tx + xx, y + yy, 1, 1); })); tx += 4; }
+    }
+    for (const n of r.npcs) { const F = n.ideaFx; if (!F) continue; const k = this.t - F.t0; if (k > 60) { n.ideaFx = null; continue; } // the thought, over their head for a moment
+      const p = this.pos(n), x = Math.round(p.x + 3 - cx), y = Math.round(p.y - cy - 16 - Math.min(4, k / 3)); BUB(x, y, 12, 11); ctx.fillStyle = "#f8f8f0"; ctx.fillRect(x + 2, y + 12, 2, 2);
+      if (F.icon) ctx.drawImage(F.icon, x + 1, y + 1, 10, 9); }
+    if (TH) {
+      if (TH.pick && !TH.picked) { // take the bubble's picture now, in color, then back to your body next frame
+        const ic = document.createElement("canvas"); ic.width = 24; ic.height = 24; const ix = ic.getContext("2d"); ix.imageSmoothingEnabled = false;
+        ix.drawImage(ctx.canvas, TH.pick.x * T + 8 - 12 - cx, TH.pick.y * T - 12 - cy, 24, 24, 0, 0, 24, 24); // centered on the thing's top edge: tall things (a case) show their best part
+        this.idea = Object.assign({}, TH.pick, { icon: ic }); TH.picked = true;
+      }
+      const img = ctx.getImageData(0, 0, SW, SH), d = img.data, G = [[15, 56, 15], [48, 98, 48], [139, 172, 15], [155, 188, 15]]; // the classic four greens
+      for (let i = 0; i < d.length; i += 4) { const l = 0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2], c = G[l < 52 ? 0 : l < 104 ? 1 : l < 168 ? 2 : 3]; d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; }
+      ctx.putImageData(img, 0, 0); return;
+    }
+    if (I && I.icon && I.room === r.id && this.mode !== "text" && this.mode !== "choice") { // what you're holding in mind
+      const x = SW - 34, y = 22; BUB(x, y, 26, 26); ctx.drawImage(I.icon, x + 1, y + 1); ctx.fillStyle = "#181820"; ctx.fillRect(x - 4, y + 27, 3, 3); ctx.fillRect(x - 7, y + 31, 2, 2); // top right, under your tokens (the room's name pops up top left, the day dial's bottom left)
+    }
+  }
   drawFeatured(r, cx, cy) {
     const x = r.featuredAt.x * T - cx, y = r.featuredAt.y * T - T - cy, sh = this.pack.settings.shop, it = sh.items.find(i => i.id === this.featuredId());
     this.drawSlot("featured_stand", 0, 0, x, y);
@@ -10551,7 +10679,7 @@ class Game {
     return c;
   }
   draw() {
-    const ctx = this.ctx, r = this.room, pp = this.pos(this.player), full = this.full;
+    const ctx = this.ctx, r = this.room, pp = this.pos(this.think ? this.think.ghost : this.player), full = this.full; // thinking: the view follows your ghost
     if (this.blackout && !full) { ctx.fillStyle = "#000"; ctx.fillRect(0, 0, SW, SH); return; } // picking a mode: just the usher's words on black
     if (!full && this.shakeT > 0 && !this.shaking && !REDUCED_MOTION) { this.shaking = true; ctx.save(); ctx.translate(this.shakeT % 4 < 2 ? 1 : -1, 0); this.draw(); ctx.restore(); this.shaking = false; return; }
     const VWp = full ? full.w : SW, VHp = full ? full.h : SH;
@@ -10664,12 +10792,12 @@ class Game {
     if (r.featuredAt) this.drawFeatured(r, cx, cy);
     const shelf = r.props.find(p => p.mugShelf);
     if (shelf && this.progress.mug === todayISO()) this.drawSlot("usher_mug", 0, 0, (shelf.x + 1) * T + 6 - cx, shelf.y * T - 3 - cy);
-    const chars = (full ? (full.noPeople ? [] : r.npcs.slice()) : [this.player, ...r.npcs]).sort((a, b) => this.pos(a).y - this.pos(b).y), bubbles = []; // the "?"/"!" and reaction bubbles: over everything, after the tops
+    const chars = (full ? (full.noPeople ? [] : r.npcs.slice()) : [this.player, ...r.npcs, ...(this.think ? [this.think.ghost] : [])]).sort((a, b) => this.pos(a).y - this.pos(b).y), bubbles = []; // the "?"/"!" and reaction bubbles: over everything, after the tops
     for (const c of chars) {
       const p = this.pos(c), prog = c.moving ? c.prog : c.bumpT > 0 ? 16 - c.bumpT : -1;
       const col = prog >= 0 && prog < 8 ? (c.step ? 1 : 2) : 0;
       if (c.alpha !== undefined) ctx.globalAlpha = Math.max(0, c.alpha);
-      const sheet = c === this.player ? this.playerSheet(c.sheet) : c.sheet;
+      const sheet = c === this.player || c.ghost ? this.playerSheet(this.player.sheet) : c.sheet; // your ghost looks like you
       if (c === this.player && this.segway && !c.sitting) { const pp3 = this.pos(c); this.drawSlot("segway", 0, 0, Math.round(pp3.x - cx), Math.round(pp3.y - cy - 1)); }
       const pk = c.pose ? this.t - c.pose.t0 : 999, jump = c.pose && /^(startled|guard|pose)$/.test(c.pose.kind) && pk < 14 ? Math.round(Math.sin(Math.PI * pk / 14) * 3) : 0; // a little jump when photographed
       const hop = (c.react && c.react.how === "loved" && this.t - c.react.t0 < 48 ? Math.round(Math.abs(Math.sin((this.t - c.react.t0) / 8)) * 4) : 0) + jump - (c.pose && c.pose.kind === "bow" && pk > 8 && pk < 50 ? 1 : 0); // a happy hop; the usher's bow dips
@@ -10762,6 +10890,7 @@ class Game {
       ctx.fillStyle = g; ctx.fillRect(x0 - 30, y0 - 30, 60, 60);
     }
     if (!full) { this.drawHandoff(ctx, cx, cy); this.drawCoins(ctx, cx, cy); this.drawLens(ctx); }
+    if (!full) this.drawThinking(ctx, cx, cy);
     if (this.fade > 0) { ctx.globalAlpha = Math.min(1, this.fade); ctx.fillStyle = "#000"; ctx.fillRect(0, 0, SW, SH); ctx.globalAlpha = 1; }
   }
 }
@@ -10770,7 +10899,7 @@ class Game {
 function mountControls(game, host) {
   host.classList.add("gt-controls");
   host.innerHTML = '<div class="gt-pad" role="group" aria-label="Directional pad"><span class="u"></span><span class="d"></span><span class="l"></span><span class="r"></span><i></i></div>' +
-    '<button type="button" class="gt-start" data-k="start" aria-label="Start: menu">START</button>' +
+    '<div class="gt-ss"><button type="button" class="gt-start gt-select" data-k="select" aria-label="Select: think">SELECT</button><button type="button" class="gt-start" data-k="start" aria-label="Start: menu">START</button></div>' +
     '<div class="gt-btns"><button type="button" class="gt-btn gt-btn-b" data-k="b" aria-label="B, go back or take a photo">B</button><button type="button" class="gt-btn gt-btn-a" data-k="a" aria-label="A, look or talk">A</button></div>';
   // iOS Safari double-tap zooms on quick taps here even though the pointer events below are cancelled; cancelling the touches stops it.
   ["touchstart", "touchend"].forEach(t => host.addEventListener(t, e => { if (e.cancelable) e.preventDefault(); }, { passive: false }));
@@ -10797,7 +10926,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 100";
+const VERSION = "2026-11-18 cards 101";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
