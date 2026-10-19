@@ -410,7 +410,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
           <div class="pvsec"><span class="pvh">Spooky moments</span>
             <div class="seg" id="segSpook" role="group" aria-label="Spooky moments"><button type="button" data-v="rare" title="About one closing in five, as players get it">Rare</button><button type="button" data-v="always" title="Every time the lights go out (handy for recording)">Every closing</button></div></div>
           <div class="pvsec"><span class="pvh">Visitor numbers</span>
-            <div class="seg" id="segWill" role="group" aria-label="Visitor numbers"><button type="button" data-v="off">Hidden</button><button type="button" data-v="on" title="Over each visitor: their number, then how willing they are (0 to 4) to take a recommendation for an exhibit, a seat, the café, throwing a cup away, and a photo">Show</button></div></div>
+            <div class="seg" id="segWill" role="group" aria-label="Visitor numbers"><button type="button" data-v="off">Hidden</button><button type="button" data-v="on" title="Over each visitor within 3 tiles of you: their number, and under it how willing they are (0 to 4), one digit each: exhibit, seat, café, throwing a cup away, photo, chatting (other visitors, the cat), shop, helping out (plants, litter, the jammed can), mischief (the lights, Joe)">Show</button></div></div>
           <div class="pvsec"><span class="pvh">Test pieces</span>
             <div class="seg" id="segTest" role="group" aria-label="Test pieces"><button type="button" data-v="off">Off</button><button type="button" data-v="on" title="60 placeholder pieces, so the oldest go to the rooms' touch screens. Never saved to the pack.">60 placeholders</button></div></div>
           <div class="pvsec"><span class="pvh">Make it happen</span>
@@ -447,7 +447,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 112";
+window.GOQ_WANT = "2026-11-18 cards 113";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -695,7 +695,7 @@ seg("segWho", game.curator ? "curator" : "visitor", v => game.setCurator(v === "
 seg("segTime", game.timeOverride || "", v => game.setTime(v || null)); // pin day, sunset or night to see (and record) the evening details
 seg("segDay", "", v => game.setDay(v === "" ? null : +v)); // try any day's event without waiting for it
 seg("segSpook", game.forceSpook ? "always" : "rare", v => { game.forceSpook = v === "always"; game.spook = null; });
-seg("segWill", game.showWill ? "on" : "off", v => { game.showWill = v === "on"; }); // recommending (Joe 10/19): number, then exhibit / seat / café / toss / photo
+seg("segWill", game.showWill ? "on" : "off", v => { game.showWill = v === "on"; }); // recommending (Joe 10/19): number, then one digit per RECO_KINDS
 seg("segTest", testPieces ? "on" : "off", async v => { testPieces = v === "on"; await refreshPreview(); status(testPieces ? "Preview has 60 test pieces; the oldest are on the rooms' touch screens" : "Test pieces removed from the preview"); });
 $("#recrate").addEventListener("click", () => { game.resetHangs(); stage.focus({ preventScroll: true }); });
 $("#rechore").addEventListener("click", () => { game.resetProgress(); status("The preview's visit starts over"); stage.focus({ preventScroll: true }); });

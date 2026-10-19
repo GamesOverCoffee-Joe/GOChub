@@ -1268,6 +1268,11 @@ const GEN = {
     G.forEach(([x, y, c]) => px(a, x, y, c));
     return outline(a, 2);
   },
+  leave_bubble: () => { // over someone on their way out: an arrow out the door
+    const a = rows(["........", ".000000.", "00000000", "00000000", "00000000", ".000000.", "...00...", "....0..."]);
+    [[2, 3], [3, 3], [4, 3], [5, 3], [4, 2], [4, 4], [6, 1], [6, 2], [6, 3], [6, 4], [6, 5]].forEach(([x, y]) => px(a, x, y, 3));
+    return outline(a, 3);
+  },
   bubble: f => {
     const a = rows(["........", ".000000.", "00000000", "00000000", "00000000", ".000000.", "...00...", "....0..."]);
     (f === 0 ? [[3, 1], [4, 1], [5, 2], [4, 3], [4, 5]] : [[4, 1], [4, 2], [4, 3], [4, 5]]).forEach(([x, y]) => px(a, x, y, 3));
@@ -1545,6 +1550,7 @@ const SLOTS = [
   { key: "trash_can", label: "Trash can", group: "Furniture", w: 16, h: 16, pal: "locker", gen: GEN.trash_can, note: "Takes empty cups too." },
   { key: "fingerprints", label: "Fingerprints on glass", group: "Pieces", w: 16, h: 16, frames: 3, pal: "glass", gen: GEN.fingerprints, note: "3 frames side by side (48×16): a few smudges, more, lots. Drawn over a case's glass." },
   { key: "emote", label: "Photo reactions", group: "People", w: 8, h: 8, frames: 8, pal: "emote", gen: GEN.emote, note: "8 frames (64×8), shown over someone you photograph: ! (startled), heart, peace sign, star (posing), ... (busy), wave, shy, annoyed." },
+  { key: "leave_bubble", label: "Visitor leaving", group: "People", w: 8, h: 8, pal: "ui", gen: GEN.leave_bubble, note: "8×8, over a visitor on their way out of the museum (you can't chat with them then)." },
   { key: "bubble", label: "Visitor's thought bubble", group: "People", w: 8, h: 8, frames: 2, pal: "ui", gen: GEN.bubble, note: "2 frames (16×8): \"?\" over a curious visitor, \"!\" over one who came back to tell you how a game went." },
   { key: "stairs_up", label: "Stairs going up", group: "Floors", w: 32, h: 32, pal: "staffrm", gen: GEN.stairs_up, note: "No longer used: stairs are one tile now." , retired: true },
   { key: "stairs_down", label: "Stairs going down", group: "Floors", w: 32, h: 32, pal: "staffrm", gen: GEN.stairs_down, note: "No longer used: stairs are one tile now.", retired: true },
@@ -2568,6 +2574,7 @@ const TEXT = {
   "door.lockUp":       { g: "Closing up", l: "Front doors with lights still on ({rooms} lists them)", v: [["The lights are still on in: {rooms}.", "Turn them off before you lock up."]] },
   "spooky.intercom":   { g: "Closing up", l: "The intercom crackles by itself", v: [["*krrsh*", "...ding......\n.........dong...", "*krrsh*"]] },
   "stairs.roof":       { g: "Floors", l: "Stairs to the roof (if a room has some)", v: [["That's the roof access."], ["I don't need to go to the roof."], ["I can't go to the roof because the door...yeah the door is locked."], ["Ok, seriously, there's nothing there."], ["The roof isn't made. It's not a part of the game."]] },
+  "visitor.leaving":   { g: "Visitors", l: "Talking to a visitor on their way out (a wave, no chat; one at random)", by: "claude", v: [["They give you a little wave. They're on their way out."], ["Heading home. They wave on the way past."]] },
   "move.ok":           { g: "Visitors", l: "A visitor stepping aside when you ask (one at random)", v: [["Oh! Sorry, go ahead."], ["My bad. All yours."], ["Oops, didn't see you there."]] },
   "move.stuck":        { g: "Visitors", l: "A boxed-in visitor, before they teleport (one at random)", v: [["Oh, I'd love to, but I'm a little stuck..."], ["Move? Where? There's nowhere to..."]] },
   "move.teleport":     { g: "Visitors", l: "You, after a boxed-in visitor teleports away (one at random)", v: [["...Did they just teleport?", "I'm going to pretend I didn't see that."], ["...they just disappeared.", "I should ask the curator what's in the coffee here."], ["*blink*", "Uh...where'd they go?"], ["...I guess that's a good solution."]] },
@@ -7772,7 +7779,6 @@ class Game {
   }
   updateLife(n) {
     const d = n.drink;
-    if (n.sipT > 0) n.sipT--;
     if (n.snapAt && this.t >= n.snapAt) { n.snapAt = 0; n.snapT = 34; } // a photo at the unveiling: the phone comes up and flashes
     if (!d || this.mode !== "walk") return;
     if (!d.empty && --d.t <= 0) { n.sipT = 40; d.t = 500 + Math.random() * 700; if (++d.sips >= 4) d.empty = true; }
@@ -8372,6 +8378,7 @@ class Game {
   usherTalk() { const u = this.room.npcs.find(n => n.usher); if (u && this.tour && this.tour.on && !this.tour.school) { this.usherTour(u); return; } this.staffTalk("usher"); } // Tuesdays the school brings its own guide // a tour today: about that
   talkTo(npc) {
     if (this.tutTalk(npc)) return;
+    if (npc.leaving && !npc.staff && !npc.role && !npc.janitor && !npc.usher) { npc.pose = { kind: "wave", t0: this.t, dur: 70 }; this.say(this.tx("visitor.leaving")); return; } // on their way out: a wave, no chat
     if (this.dayTalk(npc)) return; // the days of the week
     if (npc.usher) { this.usherTalk(); return; }
     if (npc.patron) { // now and then a member tells you about a game from the museum they enjoyed
@@ -8868,9 +8875,10 @@ class Game {
   }
   canRecommend(n) { const I = this.idea; return !!I && I.room === this.room.id && this.regularVisitor(n); } // a regular visitor in this room, with an idea from this room in mind
   regularVisitor(n) {
-    const T = this.tour; if (!n || !n.random) return false;
+    const T = this.tour; if (!n || !n.random) return false; // (the tour, once they've broken up to wander: random again)
     if (n.cur || n.back || n.follow || n.reader || n.staff || n.role || n.patron || n.dayPerson || n.tourKid || n.schoolKid || n.kid || n.lost || n.teacher) return false;
-    if (T && (T.members.includes(n) || n === T.guide)) return false; // the tour group
+    if (T && n === T.guide) return false;
+    if (T && T.members.includes(n) && (T.phase !== 2 || n.still || n === T.members.find(m => !m.tourKid && !m.schoolKid && !m.gone && !m.leaving))) return false; // the tour group, until they wander off on their own; never the grown-up the kid tags along with (Joe 10/19)
     return this.room.id !== "screening"; // not in the theater
   }
   recommend(n, from) { // a "?" while they think it over, then their answer (Joe 10/19: in sequence); from: an idea someone else is passing on
@@ -8919,7 +8927,9 @@ class Game {
       if (roll("seat")) go(false, "seat", { seat: e }); else no(); return;
     }
     if (I.kind === "cafe") {
-      if (drink || !this.lineOpen(r)) { go(true, "cafe"); return; } // already holding something (or no line today): a puzzled trip
+      if (full) { no("busy"); return; } // already holding one (Joe 10/19: off to the sign, drink in hand)
+      if (drink) n.drink = null; // an empty cup: set down
+      if (!this.lineOpen(r)) { go(true, "cafe"); return; } // no line today: a puzzled trip
       if (!roll("cafe")) { no(); return; }
       if (n.sitting) { if (n.sitFrom) [n.x, n.y] = n.sitFrom; n.sitting = false; n.seat = null; }
       n.queue = { phase: "join" }; n.seat = null; n.route = null; n.goalT = null; n.timer = 0; n.reco = { kind: "cafe", via: "queue", x: I.x, y: I.y }; n.recoIdea = I; n.wantSpecial = !!I.special; return; // into the café line, like anyone (the bubble rides along till they're in it)
@@ -8963,7 +8973,8 @@ class Game {
     const r = this.room, sparkle = (x, y) => { this.popFx = (this.popFx || []).concat([{ t0: this.t, x: x * T + 8, y: y * T - 4 }]); }, cup = () => { if (!n.drink) n.drink = { kind: 0, sips: 0, empty: true, t: 0, iced: false, color: "" }; }; // (a cup in hand: they'll find a bin for it, like anyone)
     n.dir = face; n.timer = 160;
     if (R.kind === "plant") { if (!this.isThirsty(R.plant)) { n.pose = { kind: "busy", t0: this.t, dur: 90 }; return true; } // someone beat them to it
-      this.progress.watered[R.plant] = todayISO(); this.saveProgress(); sparkle(R.x, R.y); n.pose = { kind: "smile", t0: this.t, dur: 80 }; n.hopT = this.t; return true; } // watered for the day (so that one's not yours to water)
+      this.waterFx = (this.waterFx || []).concat([{ t0: this.t, x: R.x, y: R.y, room: r.id }]); n.timer = 200; // water first (Joe 10/19: done the moment they got there, it didn't feel like anything)
+      n.cue = { at: this.t + 80, fn: () => { if (!this.isThirsty(R.plant)) return; this.progress.watered[R.plant] = todayISO(); this.saveProgress(); sparkle(R.x, R.y); n.pose = { kind: "smile", t0: this.t, dur: 80 }; n.hopT = this.t; } }; return true; } // watered for the day (so that one's not yours to water)
     if (R.kind === "litter") { const L = (this.litter && this.litter[r.id]) || [], i = L.findIndex(l => l.x === R.x && l.y === R.y); if (i < 0) { n.pose = { kind: "busy", t0: this.t, dur: 90 }; return true; }
       L.splice(i, 1); cup(); n.pose = { kind: "smile", t0: this.t, dur: 70 }; return true; }
     if (R.kind === "jam") { const J = this.jam; if (!this.isJammed(r.id, R.x, R.y)) { n.pose = { kind: "busy", t0: this.t, dur: 90 }; return true; }
@@ -9163,7 +9174,9 @@ class Game {
     for (const n of this.room.npcs.slice()) {
       if (n.random && !n.will) { n.will = this.newWill(); n.vno = n.vno || this.nextVno(); } // the visitors already there when the room's built get theirs here
       if (n.snapAt && this.t >= n.snapAt) { n.snapAt = null; if (!n.leaving && !n.moving) n.snapT = 70; } // the photo after the reaction
-      if (n.snapT > 0) n.snapT--; // a photo's phone comes down whatever they're doing (Joe 10/19: someone stuck mid-photo, busy with something that skipped this)
+      if (n.snapT > 0) n.snapT--;
+      if (n.sipT > 0) n.sipT--; // (here, not with the rest of their drink: someone leaving mid-sip walked out with the cup at their face, Joe 10/19)
+      if (n.cue && this.t >= n.cue.at) { const f = n.cue.fn; n.cue = null; f(); } // something they're in the middle of (watering a plant) // a photo's phone comes down whatever they're doing (Joe 10/19: someone stuck mid-photo, busy with something that skipped this)
       if (n.recoAt && this.t >= n.recoAt.t) { const f = n.recoAt.fn; n.recoAt = null; f(); } // a recommendation: their answer, once they've thought about it
       if (n.reco && n.reco.via === "queue" && (!n.queue || n.queue.phase !== "join")) { n.reco = null; n.recoDrink = true; } // in the line: the bubble's done; they'll tell someone once they've got the drink
       if (n.reco && n.reco.via === "bin" && !n.binAt) { n.reco = null; this.recoDone(n, 60); } // the cup's in
@@ -9480,6 +9493,7 @@ class Game {
         if (!moved && T.guide) this.tourPlace(T.guide, "lobby", desk[0].at, "down");
         else T.members.forEach(n => { if (n.tourKid) return; n.goal = null; n.walkTo = null; if (n.where === "museum") { n.still = false; n.random = true; const z = this.zoneAt(M, n.x, n.y); n.zone = z && z.kind === "room" ? z.id : T.stop1 && (this.zoneAt(M, T.stop1.x, T.stop1.y) || {}).id; } }); // scattered: they stroll on their own
       } else if (phase === 3) { // back to the lobby to leave; the kid goes missing
+        T.members.forEach(n => { if (n.reco || n.recoAt || n.tell || n.chat || n.askFx) this.dropReco(n); }); // whatever you recommended, they're off with the group now
         const home = [], lost = [];
         T.members.forEach((n, i) => { n.still = true; n.random = false; n.queue = null; n.seat = null; if (n.sitting) { n.sitting = false; if (n.sitFrom) [n.x, n.y] = n.sitFrom; } n.route = null;
           if (n.tourKid && !T.school && !T.kidDone) lost.push(T.lostSpot ? { n, room: T.lostSpot.room || "museum", at: T.lostSpot.at, dir: T.lostSpot.dir } : { n, room: "museum", at: this.freeSpot(M, null, T.lostZone) || this.freeSpot(M), dir: "down" }); // he goes missing in the dip
@@ -9657,7 +9671,8 @@ class Game {
     }
     const key = T.phase === 2 || (T.phase === 3 && !T.regrouped) ? (T.mood === "happy" ? "tour.happy" : "tour.bored") : T.phase === 3 ? (T.kidDone ? "tour.bye" : "tour.regroup") : "tour.bye"; // on the way back they haven't noticed yet
     if (n.sitting || n.tourKid) { this.tourSay(key); return; }
-    this.choose("They glance over.", ["Say hi", "Could I get by?"], i => { if (i === 0) this.tourSay(key); else if (i === 1) this.askToMove(n, p => p); }, -1); // after the tour, like any visitor
+    const rec = this.canRecommend(n), onIt = n.reco && !n.sitting, opts = ["Say hi", ...(onIt ? ["Forget it"] : rec ? ["Recommend"] : []), "Could I get by?"];
+    this.choose("They glance over.", opts, i => { const o = opts[i]; if (o === "Say hi") this.tourSay(key); else if (o === "Recommend") this.recommend(n); else if (o === "Forget it") this.forgetIt(n); else this.askToMove(n, p => p); }, -1); // after the tour, like any visitor (recommendable too, Joe 10/19)
   }
   /* ----- Staff on break (living museum, Step 6) -----
      3–6: two Patreon members on shift take their break at the staff room table, an item on it (headphones or a lunchbox).
@@ -10651,10 +10666,11 @@ class Game {
         if (k >= 8 && !F.switched) { F.switched = true; this.thinkFilter(F.on); }
         if (k > 24) this.thinkFx = null; else { ctx.globalAlpha = a; ctx.fillStyle = "#fffff4"; ctx.fillRect(0, 0, SW, SH); ctx.globalAlpha = 1; } } }
     const r = this.room, TH = this.think, I = this.idea, BUB = (x, y, w, h) => { ctx.fillStyle = "#181820"; ctx.fillRect(x - 1, y, w + 2, h); ctx.fillRect(x, y - 1, w, h + 2); ctx.fillStyle = "#f8f8f0"; ctx.fillRect(x, y, w, h); };
-    if (this.showWill) for (const n of r.npcs) if (n.will && n.vno) { // preview only: visitor number, then exhibit / seat / café / toss / photo
-      const p = this.pos(n), txt = n.vno + " " + RECO_KINDS.map(k => n.will[k]).join(""), x = Math.round(p.x + 8 - cx - txt.length * 2), y = Math.round(p.y - cy - 12);
-      ctx.fillStyle = "rgba(0,0,0,.6)"; ctx.fillRect(x - 1, y - 1, txt.length * 4 + 1, 7); ctx.fillStyle = "#fff6cc";
-      let tx = x; for (const ch of txt) { (PIXEL_FONT[ch] || []).forEach((row, yy) => [...row].forEach((v, xx) => { if (v === "1") ctx.fillRect(tx + xx, y + yy, 1, 1); })); tx += 4; }
+    if (this.showWill) for (const n of r.npcs) if (n.will && n.vno && Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) <= 3) { // preview only, for whoever's near you (Joe 10/19: nine digits each, overlapping): their number, then one digit per RECO_KINDS
+      const p = this.pos(n), lines = [String(n.vno), RECO_KINDS.map(k => n.will[k] || 0).join("")];
+      lines.forEach((txt, li) => { const x = Math.round(p.x + 8 - cx - txt.length * 2), y = Math.round(p.y - cy - 20 + li * 7);
+        ctx.fillStyle = "rgba(0,0,0,.65)"; ctx.fillRect(x - 1, y - 1, txt.length * 4 + 1, 7); ctx.fillStyle = li ? "#fff6cc" : "#9fe0ff";
+        let tx = x; for (const ch of txt) { (PIXEL_FONT[ch] || []).forEach((row, yy) => [...row].forEach((v, xx) => { if (v === "1") ctx.fillRect(tx + xx, y + yy, 1, 1); })); tx += 4; } });
     }
     for (const n of r.npcs) { const A = n.askFx; if (!A) continue; if (A.until && this.t >= A.until) { n.askFx = null; continue; } // "?": thinking it over, in a round bubble like the curious visitors' (Joe 10/19), a size up so the "?" reads
       const p = this.pos(n), x = Math.round(p.x + 3 - cx), y = Math.round(p.y - cy - 12 + (Math.floor(this.t / 20) % 2)); this.drawAskBubble(ctx, x, y); }
@@ -10662,6 +10678,8 @@ class Game {
       const g = Math.min(1, (k + 1) / 6); if (g < 1) { const p = this.pos(n), w = Math.max(2, Math.round(12 * g)), h = Math.max(2, Math.round(11 * g)); BUB(Math.round(p.x + 8 - w / 2 - cx), Math.round(p.y - cy - 6 - h), w, h); continue; } // it grows in
       const p = this.pos(n), x = Math.round(p.x + 2 - cx), y = Math.round(p.y - cy - 17 - Math.min(2, k / 4)); BUB(x, y, 12, 11); ctx.fillStyle = "#f8f8f0"; ctx.fillRect(x + 2, y + 12, 2, 2);
       if (F.icon) ctx.drawImage(this.iconSmall(F.icon), x + 1, y + 1); }
+    this.waterFx = (this.waterFx || []).filter(f => this.t - f.t0 < 80); // a visitor watering a plant: drops falling on it
+    for (const f of this.waterFx) if (f.room === r.id) { const k = this.t - f.t0; ctx.fillStyle = "#78b8f0"; for (let i = 0; i < 3; i++) { const dk = (k + i * 9) % 24, dx = f.x * T + 4 + i * 4 - cx, dy = f.y * T - 14 + dk - cy; if (k + i * 9 < 78) ctx.fillRect(Math.round(dx), Math.round(dy), 1, 2); } }
     this.popFx = (this.popFx || []).filter(f => this.t - f.t0 < 18); // the bubble popping: a ring of sparkles flying out
     for (const f of this.popFx) { const k = this.t - f.t0, rr = 3 + k * 0.9; ctx.fillStyle = k < 9 ? "#fffbe8" : "#f8e0a0";
       for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3 + 0.4, sx = Math.round(f.x + Math.cos(a) * rr - cx), sy = Math.round(f.y + Math.sin(a) * rr - cy); ctx.fillRect(sx, sy, 1, 1); if (k < 8) { ctx.fillRect(sx - 1, sy, 3, 1); ctx.fillRect(sx, sy - 1, 1, 3); } } }
@@ -11110,6 +11128,7 @@ class Game {
         ctx.font = "6px monospace"; const w = Math.ceil(ctx.measureText(c.member).width) + 4, nx = Math.round(sx + 8 - w / 2), ny = sy - (bub >= 0 ? 18 : 8);
         ctx.fillStyle = "rgba(24,24,32,.85)"; ctx.fillRect(nx, ny, w, 8); ctx.fillStyle = "#f8f0c0"; ctx.textBaseline = "top"; ctx.fillText(c.member, nx + 2, ny + 1);
       }
+      if (c.leaving && !c.staff && !c.janitor && !c.role && !this.full && !(c.pose && pk < c.pose.dur)) { const by = sy - 9 + (Math.floor(this.t / 20) % 2), ba = ctx.globalAlpha; bubbles.push(() => { ctx.globalAlpha = ba; this.drawSlot("leave_bubble", 0, 0, sx + 4, by); ctx.globalAlpha = 1; }); } // heading home (Joe 10/19)
       if (bub >= 0) { const by = sy - 9 + (Math.floor(this.t / 20) % 2), ba = ctx.globalAlpha; bubbles.push(() => { ctx.globalAlpha = ba; this.drawSlot("bubble", bub, 0, sx + 4, by); ctx.globalAlpha = 1; }); }
       ctx.globalAlpha = 1;
     }
@@ -11176,7 +11195,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 112";
+const VERSION = "2026-11-18 cards 113";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
