@@ -379,22 +379,22 @@ Hold something in mind and recommend it to a visitor. They go to it and do somet
 
 **Settled** *(Joe 10/19)*: the idea fades when you leave the room it's in, and it isn't kept when you save and come back.
 
-### **Recommending: more things to recommend** *(Joe 10/19: pinned while the mechanic's feel gets rethought)*
+### **Recommending: more things to recommend** *(Joe 10/19. The table: built, cards 106 to 112)*
 
 | You recommend | They… |
 | --- | --- |
 | Another visitor | Walk over, face each other and trade emotes by both their willingness: both social, hearts; one shy, an awkward "…" then shy; neither, an annoyed shrug-off. **Built (cards 106).** |
-| A thirsty plant | Water it (it counts for the day: that token's gone). |
-| The jammed can, or litter | Unjam it, or pick up the litter. |
-| A light switch | Lights off for a few seconds, everyone in the room startled, then back on. |
-| Joe | He glitches out of sight, like when you do it. |
-| The cat | Pet it, with a heart. |
-| The shop | Buy something, and walk around with a shop bag. |
+| A thirsty plant | Water it (it counts for the day: that token's gone). **Built (cards 112).** |
+| The jammed can, or litter | Unjam it (it counts as your fix), or pick up the litter (then bin it). **Built (cards 112).** |
+| A light switch | Lights off for a few seconds, everyone in the room startled, then back on (and a blush). **Built (cards 112).** |
+| Joe | He glitches out of sight, like when you do it. **Built (cards 112).** |
+| The cat | Pet it, with a heart. **Built (cards 112).** |
+| The shop | Buy something at the counter, then wear it (the GOQ hat, the shades) or carry it. **Built (cards 111).** |
 | The featured drink board | Get in line and come back with today's special (the café sign's drink), in its cup color. **Built (cards 109):** the counter or the menu still gets them something random. |
 
 Other ideas from what's already in the game: wipe a smudged case or dust a crooked frame; play the arcade for a bit; sit in the Thursday trivia seat; sit on a bench and nap ("Zzz"); stand at the guestbook or notes board "writing".
 
-Willingness would be grouped so a visitor still has a handful of numbers: exhibits, seats, café and shop (coffee, the special, merch), helping out (plants, trash, wiping, dusting), mischief (lights, Joe), social (chatting, the cat), photos.
+Willingness, as built: exhibit, seat, café, toss, photo, chat (other visitors, the cat), shop, help (plants, litter, the jammed can), mischief (the lights, Joe): nine digits in the curator's Visitor numbers.
 
 ### **One problem per day** *(Joe 10/16 to 10/19. Built, cards 97)*
 

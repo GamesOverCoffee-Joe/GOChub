@@ -2981,7 +2981,7 @@ const PROBLEMS = [ // the living museum's problems (LIVING-MUSEUM-PLAN.md), each
 ];
 const PROBLEM_DAYS = [["usher", "tour"], ["stock", "line"], ["litter"], ["item"]]; // Normal (Joe 10/19): one of these a day; the usher's coffee goes with the tour, the shop's box with the café's (the Janitor isn't a problem anymore)
 const MODES = ["normal", "busy", "chill"];
-const RECO_KINDS = ["exhibit", "seat", "cafe", "toss", "photo", "chat", "shop"]; // what a visitor's willingness covers (Joe 10/19), 0 to 4 each // how the museum plays (Joe 10/19): Normal, one problem a day (the default); Busy, all of them; Chill, none
+const RECO_KINDS = ["exhibit", "seat", "cafe", "toss", "photo", "chat", "shop", "help", "mischief"]; // help: plants, litter, the jammed can; mischief: the lights, Joe; chat covers the cat // what a visitor's willingness covers (Joe 10/19), 0 to 4 each // how the museum plays (Joe 10/19): Normal, one problem a day (the default); Busy, all of them; Chill, none
 const FIXES = [...PROBLEMS, { id: "cons", who: "Conservator", label: "a chat at closing" }]; // what counts toward solving everything (Joe 10/12: catching the conservator at closing is one)
 const CROWD_LINES = [["What a nice museum."], ["I come here on my lunch break."], ["Have you seen the cat today?"], ["I always read both sides of the cases."],
   ["My friend told me about this place."], ["Honestly, I'm mostly here for the café."], ["Is it me, or is it busy today?"], ["I didn't know games could go in museums."],
@@ -8852,6 +8852,12 @@ class Game {
     if (e.caseAt && e.caseAt.piece) return Object.assign(at, { kind: "exhibit" });
     if (e.spot && e.spot.piece && e.spot.state === "wall") return Object.assign(at, { kind: "exhibit" });
     if (e.sit) return Object.assign(at, { kind: "seat" });
+    if (e.plant && !/^tut-/.test(e.plant)) return Object.assign(at, { kind: "plant", plant: e.plant }); // things you'd do yourself (Joe 10/19: the interactions)
+    if (e.lights) return Object.assign(at, { kind: "lights", key: e.key });
+    if (e.joe) return Object.assign(at, { kind: "joe" });
+    if (e.cat) return Object.assign(at, { kind: "cat" });
+    if (e.trash && this.isJammed(r.id, x, y)) return Object.assign(at, { kind: "jam" });
+    if (((this.litter && this.litter[r.id]) || []).some(l => l.x === x && l.y === y)) return Object.assign(at, { kind: "litter" });
     { const it = e.unit !== undefined ? this.shopLineup()[e.unit] : e.featured ? this.pack.settings.shop.items.find(i => i.id === this.featuredId()) : null; if (it) return Object.assign(at, { kind: "shop", item: it.id }); } // a shelf or the featured stand: the thing on it (Joe 10/19)
     const cafeBit = e.cafe || e.cafeSign || r.npcs.some(n => n.role === "barista" && n.x === x && n.y === y) || (r.props || []).some(p => p.x === x && p.y === y && /espresso|coffee|cafe|pastry|cup/.test(p.key)) || (r.wallArt || []).some(w => w.cafe && x >= w.x && x < w.x + SLOT[w.key].w / T && (y === (w.y || 1) || y === (w.y || 1) + 1));
     if (cafeBit) return Object.assign(at, { kind: "cafe" }, (r.props || []).some(p => p.key === "cafe_sign" && p.x === x && p.y === y) || e.cafeSign ? { special: true } : {}); // the café sign: today's special // the counter, the barista, the machine, the menu: all the café (Joe 10/19: nobody went for coffee)
@@ -8891,6 +8897,12 @@ class Game {
       if (r.zoneAt) { const z = this.zoneAt(r, near[0], near[1]); if (z && z.kind === "room") n.zone = z.id; }
     };
     if (I.kind === "exhibit") { if (roll("exhibit")) go(false, "exhibit"); else no(); return; }
+    { const act = { plant: "help", litter: "help", jam: "help", lights: "mischief", joe: "mischief", cat: "chat" }[I.kind]; if (act) { // doing something you'd do (Joe 10/19)
+      if (I.kind === "plant" && !this.isThirsty(I.plant)) { go(true, "other"); return; } // already watered: a puzzled look at it
+      if (I.kind === "lights" && (this.closing || this.lightsOff.has(I.key || r.id) || this.visFlick)) { no("busy"); return; }
+      if (I.kind === "joe" && (!r.joe || r.joe.t)) { no("busy"); return; }
+      if (!roll(act)) { no(); return; }
+      go(false, I.kind); if (n.reco) Object.assign(n.reco, { plant: I.plant, key: I.key }); return; } }
     if (I.kind === "shop") { if (n.browsing ? true : roll("shop")) { go(false, "shop"); if (n.reco) n.reco.item = I.item; } else no(); return; } // something from the shop (the shopper who can't decide: always, Joe 10/19)
     if (I.kind === "person") { const m = I.who; // go and talk to someone (Joe 10/19)
       if (m === n) { no("shy"); return; } // "...me?"
@@ -8946,6 +8958,25 @@ class Game {
     const c = [[0, 1], [0, -1], [-1, 0], [1, 0]].map(([dx, dy]) => [x + dx, y + dy]).filter(([a, b]) => r.solid[b] && r.solid[b][a] === false && !(r.noWander && r.noWander.has(a + "," + b)) && !r.events[a + "," + b]);
     return c.find(([a, b]) => this.npcPath(n, a, b, true)) || null;
   }
+  /* A visitor doing one of your things, because you recommended it (Joe 10/19). False: not one of these. */
+  visitorDoes(n, R, face) {
+    const r = this.room, sparkle = (x, y) => { this.popFx = (this.popFx || []).concat([{ t0: this.t, x: x * T + 8, y: y * T - 4 }]); }, cup = () => { if (!n.drink) n.drink = { kind: 0, sips: 0, empty: true, t: 0, iced: false, color: "" }; }; // (a cup in hand: they'll find a bin for it, like anyone)
+    n.dir = face; n.timer = 160;
+    if (R.kind === "plant") { if (!this.isThirsty(R.plant)) { n.pose = { kind: "busy", t0: this.t, dur: 90 }; return true; } // someone beat them to it
+      this.progress.watered[R.plant] = todayISO(); this.saveProgress(); sparkle(R.x, R.y); n.pose = { kind: "smile", t0: this.t, dur: 80 }; n.hopT = this.t; return true; } // watered for the day (so that one's not yours to water)
+    if (R.kind === "litter") { const L = (this.litter && this.litter[r.id]) || [], i = L.findIndex(l => l.x === R.x && l.y === R.y); if (i < 0) { n.pose = { kind: "busy", t0: this.t, dur: 90 }; return true; }
+      L.splice(i, 1); cup(); n.pose = { kind: "smile", t0: this.t, dur: 70 }; return true; }
+    if (R.kind === "jam") { const J = this.jam; if (!this.isJammed(r.id, R.x, R.y)) { n.pose = { kind: "busy", t0: this.t, dur: 90 }; return true; }
+      J.jammed = false; J.fixedBy = "you"; this.markSolved("litter"); this.saveLoop(); cup(); sparkle(R.x, R.y); n.pose = { kind: "pose", t0: this.t, dur: 80 }; n.hopT = this.t; return true; } // you got it done: it counts as yours
+    if (R.kind === "lights") { const key = R.key || r.id; if (this.closing || this.lightsOff.has(key)) { n.pose = { kind: "busy", t0: this.t, dur: 90 }; return true; }
+      this.lightsOff.add(key); this.visFlick = { key, room: r.id, until: this.t + 110, who: n }; n.pose = { kind: "pose", t0: this.t, dur: 60 };
+      for (const m of r.npcs) if (m !== n && !m.janitor) { m.pose = { kind: "startled", t0: this.t + ((Math.random() * 12) | 0), dur: 60 }; } return true; } // click: everyone jumps
+    if (R.kind === "joe") { const j = r.joe; if (!j || j.t) { n.pose = { kind: "busy", t0: this.t, dur: 90 }; return true; }
+      j.t = 1; this.progress.tally.joe = (this.progress.tally.joe || 0) + 1; this.saveProgress(); n.pose = { kind: "startled", t0: this.t + 30, dur: 80 };
+      setTimeout(() => { if (r.joe !== j) return; r.solid[j.y][j.x] = false; delete r.events[j.x + "," + j.y]; r.joe = null; this.joeState.gone = true; }, 900); return true; } // he glitches away, like when you do it
+    if (R.kind === "cat") { if (!r.cat) { n.pose = { kind: "busy", t0: this.t, dur: 90 }; return true; } this.petT = 70; n.pose = { kind: "heart", t0: this.t, dur: 80 }; return true; }
+    n.timer = 0; return false;
+  }
   itemById(id) { if (!id) return null; return this.shopLineup().find(i => i.id === id) || this.pack.settings.shop.items.find(i => i.id === id) || this.giftItems().find(i => i.id === id) || this.cardItems().find(i => i.id === id) || null; }
   recoArrive(n) { // they got there
     let R = n.reco; n.reco = null; const face = R.x > n.x ? "right" : R.x < n.x ? "left" : R.y > n.y ? "down" : "up";
@@ -8967,6 +8998,7 @@ class Game {
       const it = this.itemById(R.item); if (it && it.use !== "hat" && it.use !== "shades" && n.drink) n.bag = true;
       if (n.wasBrowsing) { n.wasBrowsing = false; const t = this.progress.tally; t.decided = (t.decided || 0) + 1; this.saveProgress(); this.checkAchievements(); } // the shopper who couldn't decide: decided
       this.recoDone(n, 200); return true; }
+    if (!R.bad && this.visitorDoes(n, R, face)) { this.recoDone(n, 200); return true; } // a plant watered, litter picked up, the lights flicked...
     if (R.kind === "seat" && !R.bad) { n.pose = { kind: "smile", t0: this.t, dur: 70 }; this.recoDone(n, 300); return false; } // the usual: sit down (stroll does it), and after a bit, tell someone
     n.dir = face; n.timer = 240 + Math.random() * 200;
     if (!R.bad) { if (R.kind === "exhibit") { n.viewing = true; this.reactThenSnap(n, "pose"); n.hopT = this.t; } this.recoDone(n, 200); return true; } // there: sparkles and a hop (or a photo), then a good look (Joe 10/19: just staring read as nothing) // a good look, and maybe a photo; then maybe tell someone
@@ -9127,6 +9159,7 @@ class Game {
   }
   updateNpcs() {
     const def = ROOMS[this.room.id];
+    { const F = this.visFlick; if (F && this.t >= F.until) { this.visFlick = null; this.lightsOff.delete(F.key); if (F.who && F.who.pose !== undefined) F.who.pose = { kind: "shy", t0: this.t, dur: 70 }; } } // a visitor flicked the lights: back on, and a sheepish blush
     for (const n of this.room.npcs.slice()) {
       if (n.random && !n.will) { n.will = this.newWill(); n.vno = n.vno || this.nextVno(); } // the visitors already there when the room's built get theirs here
       if (n.snapAt && this.t >= n.snapAt) { n.snapAt = null; if (!n.leaving && !n.moving) n.snapT = 70; } // the photo after the reaction
@@ -9242,7 +9275,7 @@ class Game {
       if (st) { n.seat = st[0]; n.goalT = st[1]; } else n.timer = 30;
     }
     if (this.binRun(n) && n.timer > 0) return;
-    const r = this.room, noGo = (x, y) => !n.entering && r.noWander && r.noWander.has(x + "," + y);
+    const r = this.room, noGo = (x, y) => !n.entering && !n.reco && r.noWander && r.noWander.has(x + "," + y); // (sent somewhere: their way may cross a doorway, so they may step on it)
     // Just came in through the doors: they start on the doorway, where visitors usually don't walk, so they may cross it
     // to get going; once off it, the usual rules.
     if (n.entering && !(r.noWander && r.noWander.has(n.x + "," + n.y))) { n.entering = false; n.route = null; }
@@ -9264,7 +9297,7 @@ class Game {
       if (!t && n.random && !n.cur && Math.random() * 100 < this.pack.settings.life.sits) { const st = this.seatFor(n); if (st) { n.seat = st[0]; t = st[1]; } } // now and then, somewhere to sit
       if (!t) { n.seat = null; n.coffee = false; t = opts[(Math.random() * opts.length) | 0]; }
       n.goalT = t;
-      n.route = t ? this.npcPath(n, t[0], t[1], n.entering) : null;
+      n.route = t ? this.npcPath(n, t[0], t[1], n.entering || !!n.reco) : null; // (sent somewhere: the same way recoSpot found, doorways and all)
       if ((!n.route || !n.route.length) && n.reco && n.goalT) { n.route = null; this.recoAgain(n, n.reco); return; } // no way to where they were sent: another side of it, or they give up
       if (!n.route || !n.route.length) { n.timer = 60 + Math.random() * 120; n.route = null; n.goalT = null; n.retry = 0; return; }
     }
@@ -11143,7 +11176,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 111";
+const VERSION = "2026-11-18 cards 112";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
