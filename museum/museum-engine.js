@@ -8383,9 +8383,9 @@ class Game {
     if (!rec && npc.random && !npc.member && this.room.npcs.some(n => n.reader && Math.abs(n.x - npc.x) + Math.abs(n.y - npc.y) <= 14) && Math.random() < 0.35) { this.say(this.tx("reader.chatter")); return; } // near the reading nook: they're talking about her
     const named = pages => (npc.member ? pages.map((p, k) => (k === 0 ? npc.member + ": " + p : p)) : pages);
     const chat = () => { npc.lineI = (npc.lineI + 1) % npc.lines.length; this.say(named(npc.lines[npc.lineI])); };
-    const opts = ["Say hi", ...(rec ? ["Recommend"] : []), ...(npc.sitting ? [] : ["Could I get by?"])];
+    const onIt = npc.reco && !npc.sitting, opts = ["Say hi", ...(onIt ? ["Forget it"] : rec ? ["Recommend"] : []), ...(npc.sitting ? [] : ["Could I get by?"])];
     if (opts.length === 1) { chat(); return; }
-    this.choose(npc.member ? npc.member + " smiles." : "They glance over.", opts, i => { const o = opts[i]; if (o === "Say hi") chat(); else if (o === "Recommend") this.recommend(npc); else if (o === "Could I get by?") this.askToMove(npc, named); }, -1); // Recommend: with something in mind (Joe 10/19)
+    this.choose(npc.member ? npc.member + " smiles." : "They glance over.", opts, i => { const o = opts[i]; if (o === "Say hi") chat(); else if (o === "Recommend") this.recommend(npc); else if (o === "Forget it") this.forgetIt(npc); else if (o === "Could I get by?") this.askToMove(npc, named); }, -1); // Recommend: with something in mind (Joe 10/19)
   }
   /* Sitting: on a café stool or a bench. Any direction stands you back up. With a drink, you sip now and then. */
   sit(e) {
@@ -8642,7 +8642,7 @@ class Game {
     if (c.bumpT > 0) c.bumpT--;
     if (!c.moving) return false;
     if (c.slow && (this.t & 1)) return false; // the night guard strolls at half speed
-    if (c !== this.player && !c.slow && !c.follow && !(c.tagging && c.hurry)) { const ps = this.pack.settings.staff.patronSpeed, sp = c.leaving && !c.stroll ? Math.min(1, ps * 1.35) : ps; c.spd = (c.spd || 0) + sp; if (c.spd < 1) return false; c.spd -= 1; } // patrons: slower than you; heading out (the closing announcement) only a little brisker, not a stampede
+    if (c !== this.player && !c.slow && !c.follow && !(c.tagging && c.hurry)) { const ps = this.pack.settings.staff.patronSpeed, sp = c.reco ? 1 : c.leaving && !c.stroll ? Math.min(1, ps * 1.35) : ps; c.spd = (c.spd || 0) + sp; if (c.spd < 1) return false; c.spd -= 1; } // patrons: slower than you; heading out (the closing announcement) only a little brisker, not a stampede
     const behind = c.follow && c !== this.player && Math.abs(c.x - this.player.x) + Math.abs(c.y - this.player.y) > 1; // a follower who's dropped back catches up (they keep your pace)
     if ((c.prog += (c === this.player && (this.segway || this.zoomT > 0)) || behind ? 2 : 1) >= T) {
       c.x += DIRS[c.dir][0]; c.y += DIRS[c.dir][1]; c.prog = 0; c.moving = false;
@@ -8834,10 +8834,11 @@ class Game {
     if (g.bumpT > 0) g.bumpT--;
     g.alpha = Math.min(0.5, Math.max(0, (this.t - T.t0 - 6) / 30)); // fading in as it steps out of you
     if (g.moving) { g.prog += 1; if (g.prog >= 16) { const [dx, dy] = DIRS[g.dir]; g.x += dx; g.y += dy; g.prog = 0; g.moving = false; } return; }
-    if (has("a")) { const [dx, dy] = DIRS[g.dir], t = this.thinkTarget(r, g.x + dx, g.y + dy); if (t) T.pick = t; else g.bumpT = 8; return; }
+    const TS = 16, onScreen = (x, y) => x * TS >= this.camX && (x + 1) * TS <= this.camX + SW && y * TS >= this.camY && (y + 1) * TS <= this.camY + SH; // one screen (Joe 10/19; T here is the thinking, not the tile size)
+    if (has("a")) { const [dx, dy] = DIRS[g.dir], t = onScreen(g.x + dx, g.y + dy) && this.thinkTarget(r, g.x + dx, g.y + dy); if (t) T.pick = t; else g.bumpT = 8; return; }
     const d = this.heldDir(); if (!d) { this.inputLock = false; return; } if (this.inputLock) return;
     g.dir = d; const [dx, dy] = DIRS[d], nx = g.x + dx, ny = g.y + dy;
-    if (nx < 0 || ny < 0 || nx >= r.w || ny >= r.h || r.solid[ny][nx]) { g.bumpT = 8; return; } // through people, never walls
+    if (nx < 0 || ny < 0 || nx >= r.w || ny >= r.h || r.solid[ny][nx] || !onScreen(nx, ny)) { g.bumpT = 8; return; } // through people, never walls, never off the screen
     g.moving = true; g.prog = 0; g.step = !g.step;
   }
   thinkTarget(r, x, y) { // what's there to hold in mind: an exhibit, a seat, the café counter, a bin, or anything else (someone, a prop)
@@ -8861,8 +8862,8 @@ class Game {
   recommend(n) { // the thought goes over first (a little bubble over their head); their answer comes once it's gone (Joe 10/19: in sequence)
     const I = this.idea; if (!I) return;
     if (!n.will) n.will = this.newWill(); if (!n.vno) n.vno = this.nextVno();
-    n.ideaFx = { t0: this.t, icon: I.icon }; n.route = null; n.timer = Math.max(n.timer || 0, 60); n.stepWait = 60;
-    const idea = Object.assign({}, I); n.recoAt = { t: this.t + 56, fn: () => this.recoAnswer(n, idea) };
+    n.askFx = { t0: this.t }; n.route = null; n.timer = Math.max(n.timer || 0, 50); n.stepWait = 50; // a "?" over their head while they think about it
+    const idea = Object.assign({}, I); n.recoAt = { t: this.t + 40, fn: () => { n.askFx = null; this.recoAnswer(n, idea); if (n.reco) n.ideaFx = { t0: this.t, icon: idea.icon, keep: true }; } }; // a yes: the thought bubble, riding with them
   }
   recoAnswer(n, I) {
     const r = this.room; if (!r.npcs.includes(n)) return;
@@ -8874,7 +8875,7 @@ class Game {
       if (n.sitting && bad) { n.reco = { bad, kind, x: I.x, y: I.y }; this.recoArrive(n); n.timer = Math.max(n.timer || 0, 60); return; }
       if (n.sitting) { if (n.sitFrom) [n.x, n.y] = n.sitFrom; n.sitting = false; n.seat = null; }
       const near = extra && extra.goal || this.recoSpot(r, n, I.x, I.y); if (!near) { no("busy"); return; }
-      Object.assign(n, { goalT: near, route: null, timer: 30, retry: 0, viewing: false, stepWait: 0, arrived: false, coffee: false, reco: { bad, kind, x: I.x, y: I.y } });
+      Object.assign(n, { goalT: near, route: null, timer: 0, retry: 0, viewing: false, stepWait: 0, arrived: false, coffee: false, reco: { bad, kind, x: I.x, y: I.y } });
       if (extra && extra.seat) n.seat = extra.seat; else n.seat = null;
       if (r.zoneAt) { const z = this.zoneAt(r, near[0], near[1]); if (z && z.kind === "room") n.zone = z.id; }
     };
@@ -8888,16 +8889,21 @@ class Game {
       if (drink || !this.lineOpen(r)) { go(true, "cafe"); return; } // already holding something (or no line today): a puzzled trip
       if (!roll("cafe")) { no(); return; }
       if (n.sitting) { if (n.sitFrom) [n.x, n.y] = n.sitFrom; n.sitting = false; n.seat = null; }
-      n.queue = { phase: "join" }; n.seat = null; n.route = null; n.goalT = null; n.timer = 30; return; // into the café line, like anyone
+      n.queue = { phase: "join" }; n.seat = null; n.route = null; n.goalT = null; n.timer = 0; n.reco = { kind: "cafe", via: "queue", x: I.x, y: I.y }; return; // into the café line, like anyone (the bubble rides along till they're in it)
     }
     if (I.kind === "bin") {
       if (full) { no("annoyed"); return; } // not done with it
       if (!drink) { go(true, "bin"); return; } // nothing to throw away
       if (!roll("toss")) { no(); return; }
       if (n.sitting) { if (n.sitFrom) [n.x, n.y] = n.sitFrom; n.sitting = false; n.seat = null; }
-      Object.assign(n, { binAt: [I.x, I.y], route: null, goalT: null, timer: 30 }); return; // the cup goes in that one
+      Object.assign(n, { binAt: [I.x, I.y], route: null, goalT: null, timer: 0, reco: { kind: "bin", via: "bin", x: I.x, y: I.y } }); return; // the cup goes in that one
     }
     go(true, "other"); // anything else: they go and see, and react
+  }
+  forgetIt(n) { // on their way to something you recommended: call it off, and they go back to whatever
+    n.reco = null; n.ideaFx = null; n.goalT = null; n.route = null; n.binAt = null; n.seat = null; n.viewing = false; n.arrived = false;
+    if (n.queue && n.queue.phase === "join") n.queue = null;
+    n.pose = { kind: "busy", t0: this.t, dur: 80 }; n.timer = 90;
   }
   recoSpot(r, n, x, y) { // where to stand by the thing: an open tile next to it, the one below first
     const c = [[0, 1], [0, -1], [-1, 0], [1, 0]].map(([dx, dy]) => [x + dx, y + dy]).filter(([a, b]) => r.solid[b] && r.solid[b][a] === false && !(r.noWander && r.noWander.has(a + "," + b)) && !r.events[a + "," + b]);
@@ -9005,7 +9011,9 @@ class Game {
     for (const n of this.room.npcs.slice()) {
       if (n.random && !n.will) { n.will = this.newWill(); n.vno = n.vno || this.nextVno(); } // the visitors already there when the room's built get theirs here
       if (n.snapT > 0) n.snapT--; // a photo's phone comes down whatever they're doing (Joe 10/19: someone stuck mid-photo, busy with something that skipped this)
-      if (n.recoAt && this.t >= n.recoAt.t) { const f = n.recoAt.fn; n.recoAt = null; f(); } // a recommendation: the thought's been and gone, now their answer
+      if (n.recoAt && this.t >= n.recoAt.t) { const f = n.recoAt.fn; n.recoAt = null; f(); } // a recommendation: their answer, once they've thought about it
+      if (n.reco && ((n.reco.via === "queue" && (!n.queue || n.queue.phase !== "join")) || (n.reco.via === "bin" && !n.binAt))) n.reco = null; // there: in the line, or the cup's in
+      if (n.ideaFx && n.ideaFx.keep && !n.reco) n.ideaFx = null; // arrived (or forgot it): the bubble goes
       if (n.fadeIn) { n.alpha = Math.min(1, (n.alpha || 0) + 1 / 24); if (n.alpha >= 1) { n.fadeIn = false; delete n.alpha; } } // someone just came in through the doors
       if (n.serving) continue; // the barista making your drink: she stays put until it's done
       if (n.leaving) { this.walkOut(n, n.leaveTo || def.exitTo || ROOMS[this.room.id].spawn); continue; }
@@ -9139,7 +9147,7 @@ class Game {
       return;
     }
     n.route.shift();
-    if (n.route.length) { n.stepWait = this.strollWait(); return; }
+    if (n.route.length) { n.stepWait = this.strollWait(n); return; }
     // A long walk (another room) comes in stretches: keep going toward the same spot.
     if (n.goalT && (n.x + dx !== n.goalT[0] || n.y + dy !== n.goalT[1])) { n.timer = 6; return; }
     n.timer = 180 + Math.random() * 300; n.goalT = null; n.retry = 0; n.arrived = true; // arrived (once this last step lands): stay a while
@@ -9148,7 +9156,7 @@ class Game {
     const near = this.room.cases.find(c => c.piece && c.state === "wall" && Math.abs(c.x - ax) + Math.abs(c.y - ay) === 1);
     if (near && amt > 0 && Math.random() < amt * 0.5) { const xp = this.extraPrints || (this.extraPrints = {}); xp[near.piece.id] = Math.min(3, (xp[near.piece.id] || 0) + 1); }
   }
-  strollWait() { const sp = this.pack.settings.staff.patronSpeed; return Math.round(8 * (1 - sp) / sp); }
+  strollWait(n) { if (n && n.reco) return 0; const sp = this.pack.settings.staff.patronSpeed; return Math.round(8 * (1 - sp) / sp); } // on a recommendation: no dawdling (Joe 10/19)
   /* Sitting down on their own: a free bench or stool near where they're strolling (Joe 10/9). Not seats kept for you
      (Thursday's trivia seat, Sunday's coffee). */
   seatFor(n, zone) {
@@ -9821,7 +9829,7 @@ class Game {
       if (occ(Q[to][0], Q[to][1]) && Math.abs(Q[to][0] - n.x) + Math.abs(Q[to][1] - n.y) <= 1) { n.stepWait = 20; return; } // someone's standing in the spot: wait for them to move on
       if (!n.route || !n.route.length || n.queue.goal !== to) { n.queue.goal = to; n.route = this.npcPath(n, Q[to][0], Q[to][1], true); }
       if (!n.route || !n.route.length) { if ((n.queue.stuck = (n.queue.stuck || 0) + 1) > 12) n.queue = null; n.stepWait = 20; return; }
-      const d = n.route[0]; if (this.tryMove(n, d)) { n.route.shift(); n.stepWait = this.strollWait(); } else { n.route = null; n.stepWait = 15; }
+      const d = n.route[0]; if (this.tryMove(n, d)) { n.route.shift(); n.stepWait = this.strollWait(n); } else { n.route = null; n.stepWait = 15; }
       return;
     }
     n.queue.to = idx;
@@ -10481,8 +10489,10 @@ class Game {
       ctx.fillStyle = "rgba(0,0,0,.6)"; ctx.fillRect(x - 1, y - 1, txt.length * 4 + 1, 7); ctx.fillStyle = "#fff6cc";
       let tx = x; for (const ch of txt) { (PIXEL_FONT[ch] || []).forEach((row, yy) => [...row].forEach((v, xx) => { if (v === "1") ctx.fillRect(tx + xx, y + yy, 1, 1); })); tx += 4; }
     }
-    for (const n of r.npcs) { const F = n.ideaFx; if (!F) continue; const k = this.t - F.t0; if (k > 60) { n.ideaFx = null; continue; } // the thought, over their head for a moment
-      const p = this.pos(n), x = Math.round(p.x + 3 - cx), y = Math.round(p.y - cy - 16 - Math.min(4, k / 3)); BUB(x, y, 12, 11); ctx.fillStyle = "#f8f8f0"; ctx.fillRect(x + 2, y + 12, 2, 2);
+    for (const n of r.npcs) { const A = n.askFx; if (!A) continue; const p = this.pos(n), x = Math.round(p.x + 4 - cx), y = Math.round(p.y - cy - 15); BUB(x, y, 8, 9); // "?": thinking it over
+      ctx.fillStyle = "#181820"; ["01110", "10001", "00001", "00110", "00100", "00000", "00100"].forEach((row, yy) => [...row].forEach((v, xx) => { if (v === "1") ctx.fillRect(x + 2 + xx * 1, y + 1 + yy, 1, 1); })); }
+    for (const n of r.npcs) { const F = n.ideaFx; if (!F) continue; const k = this.t - F.t0; if (!F.keep && k > 60) { n.ideaFx = null; continue; } // the thought: over their head till they get there
+      const p = this.pos(n), x = Math.round(p.x + 2 - cx), y = Math.round(p.y - cy - 17 - Math.min(2, k / 4)); BUB(x, y, 12, 11); ctx.fillStyle = "#f8f8f0"; ctx.fillRect(x + 2, y + 12, 2, 2);
       if (F.icon) ctx.drawImage(F.icon, x + 1, y + 1, 10, 9); }
     if (TH) {
       if (TH.pick && !TH.picked) { // take the bubble's picture now, in color, then back to your body next frame
@@ -10699,7 +10709,7 @@ class Game {
     return c;
   }
   draw() {
-    const ctx = this.ctx, r = this.room, pp = this.pos(this.think ? this.think.ghost : this.player), full = this.full; // thinking: the view follows your ghost
+    const ctx = this.ctx, r = this.room, pp = this.pos(this.player), full = this.full; // thinking: the view stays on you, and your ghost keeps to what's on screen (Joe 10/19)
     if (this.blackout && !full) { ctx.fillStyle = "#000"; ctx.fillRect(0, 0, SW, SH); return; } // picking a mode: just the usher's words on black
     if (!full && this.shakeT > 0 && !this.shaking && !REDUCED_MOTION) { this.shaking = true; ctx.save(); ctx.translate(this.shakeT % 4 < 2 ? 1 : -1, 0); this.draw(); ctx.restore(); this.shaking = false; return; }
     const VWp = full ? full.w : SW, VHp = full ? full.h : SH;
@@ -10946,7 +10956,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 103";
+const VERSION = "2026-11-18 cards 104";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
