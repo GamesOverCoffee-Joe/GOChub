@@ -383,14 +383,14 @@ Hold something in mind and recommend it to a visitor. They go to it and do somet
 
 | You recommend | They… |
 | --- | --- |
-| Another visitor | Walk over, face each other and trade emotes by both their willingness: both social, hearts; one shy, an awkward "…" then shy; neither, an annoyed shrug-off. |
+| Another visitor | Walk over, face each other and trade emotes by both their willingness: both social, hearts; one shy, an awkward "…" then shy; neither, an annoyed shrug-off. **Built (cards 106).** |
 | A thirsty plant | Water it (it counts for the day: that token's gone). |
 | The jammed can, or litter | Unjam it, or pick up the litter. |
 | A light switch | Lights off for a few seconds, everyone in the room startled, then back on. |
 | Joe | He glitches out of sight, like when you do it. |
 | The cat | Pet it, with a heart. |
 | The shop | Buy something, and walk around with a shop bag. |
-| The featured drink board | Get in line and come back with the week's drink, in its cup color. |
+| The featured drink board | Get in line and come back with today's special (the café sign's drink), in its cup color. **Built (cards 109):** the counter or the menu still gets them something random. |
 
 Other ideas from what's already in the game: wipe a smudged case or dust a crooked frame; play the arcade for a bit; sit in the Thursday trivia seat; sit on a bench and nap ("Zzz"); stand at the guestbook or notes board "writing".
 
