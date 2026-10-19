@@ -379,6 +379,23 @@ Hold something in mind and recommend it to a visitor. They go to it and do somet
 
 **Settled** *(Joe 10/19)*: the idea fades when you leave the room it's in, and it isn't kept when you save and come back.
 
+### **Recommending: more things to recommend** *(Joe 10/19: pinned while the mechanic's feel gets rethought)*
+
+| You recommend | They… |
+| --- | --- |
+| Another visitor | Walk over, face each other and trade emotes by both their willingness: both social, hearts; one shy, an awkward "…" then shy; neither, an annoyed shrug-off. |
+| A thirsty plant | Water it (it counts for the day: that token's gone). |
+| The jammed can, or litter | Unjam it, or pick up the litter. |
+| A light switch | Lights off for a few seconds, everyone in the room startled, then back on. |
+| Joe | He glitches out of sight, like when you do it. |
+| The cat | Pet it, with a heart. |
+| The shop | Buy something, and walk around with a shop bag. |
+| The featured drink board | Get in line and come back with the week's drink, in its cup color. |
+
+Other ideas from what's already in the game: wipe a smudged case or dust a crooked frame; play the arcade for a bit; sit in the Thursday trivia seat; sit on a bench and nap ("Zzz"); stand at the guestbook or notes board "writing".
+
+Willingness would be grouped so a visitor still has a handful of numbers: exhibits, seats, café and shop (coffee, the special, merch), helping out (plants, trash, wiping, dusting), mischief (lights, Joe), social (chatting, the cat), photos.
+
 ### **One problem per day** *(Joe 10/16 to 10/19. Built, cards 97)*
 
 The 12-minute loop stays exactly as it is: the same four beats, the same timing per problem, the same crowd ebb and flow. What changes is how many problems play out in it.
