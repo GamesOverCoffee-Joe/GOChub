@@ -7750,8 +7750,8 @@ class Game {
     const thanks = () => this.cheer(n, () => this.say(named(this.tx("cur.thanks", { title: piece.title, name: v.name })), () => { n.leaving = true; n.leaveT = 0; n.alpha = 1; if (far) this.farBack(); }), far);
     const q = this.pos(n), far = !n.follow && !(q.x + 16 > this.camX && q.x < this.camX + SW && q.y + 16 > this.camY && q.y < this.camY + SH); // off where you can't see them (Joe 10/19)
     if (!far) { thanks(); return; }
-    this.el.text.style.display = "none"; this.txt = null; this.mode = "busy"; this.player.moving = false; // the game waits; the camera lifts and glides over to them
-    this.cine = { fx: q.x + 8, fy: q.y, blend: 0, goal: 1, dur: 200, wait: 230, then: thanks, arc: true, soft: true, t0: performance.now(), ms: 200 / 60 * 1000 }; // a slow glide, over 3⅓ seconds (Joe 10/19: way too fast)
+    this.el.text.style.display = "none"; this.txt = null; this.mode = "busy"; this.player.moving = false; // the game waits: a dip to black, and you're watching them (Joe 10/19: simpler than a glide)
+    this.trans = { t: 0, dur: 20, switched: false, fn: () => { const p = this.pos(n); this.cine = { fx: p.x + 8, fy: p.y, blend: 1, goal: 1 }; }, after: () => { this.mode = "busy"; setTimeout(thanks, 250); } }; // a slow glide, over 3⅓ seconds (Joe 10/19: way too fast)
   }
   farBack() { // after a moment somewhere else: your tokens come in there, then a dip to black and you're back
     const back = () => { this.mode = "busy"; this.trans = { t: 0, dur: 20, switched: false, fn: () => { this.cine = null; } }; };
@@ -11070,13 +11070,10 @@ class Game {
     const VWp = full ? full.w : SW, VHp = full ? full.h : SH;
     ctx.fillStyle = "#000"; ctx.fillRect(0, 0, VWp, VHp);
     const rw = r.w * T, rh = r.h * T;
-    const cn = this.cine && !full ? this.cine : null, kb = !cn ? 0 : cn.soft && cn.t0 !== undefined ? Math.min(1, (performance.now() - cn.t0) / cn.ms) : cn.blend, ke = !cn ? 0 : cn.soft ? kb * kb * kb * (kb * (kb * 6 - 15) + 10) : kb * kb * (3 - 2 * kb); // soft: an even gentler start and finish // the ceremony's camera: eased from you to the piece // soft: by the clock, so every frame drawn is exactly where it should be (not stepped at 60 a second)
-    const fx = cn ? pp.x + (cn.fx - 8 - pp.x) * ke : pp.x, fy = cn ? pp.y + (cn.fy - pp.y) * ke - (cn.arc ? Math.sin(Math.PI * ke) * 20 : 0) : pp.y; // arc: it floats up a little on the way
-    const rcx = full ? 0 : rw <= SW ? (rw - SW) / 2 : Math.max(0, Math.min(rw - SW, fx + 8 - SW / 2)), rcy = full ? 0 : rh <= SH ? (rh - SH) / 2 : Math.max(0, Math.min(rh - SH, fy + 8 - SH * (ROOMS[r.id].camAt || 0.5)));
-    const glide = cn && cn.soft && kb > 0 && kb < 1 && this.canvas && !REDUCED_MOTION, cx = glide ? Math.floor(rcx) : Math.round(rcx), cy = glide ? Math.floor(rcy) : Math.round(rcy);
-    if (glide) { const k = (this.canvas.clientWidth || SW) / SW, sc = 1 + 0.03 * Math.sqrt(Math.sin(Math.PI * kb)); // a soft glide: whole pixels here, the rest by sliding the picture itself, so it drifts instead of stepping (Joe 10/19: chunky); a touch of zoom hides the edge
-      this.canvas.style.transform = "scale(" + sc.toFixed(4) + ") translate(" + (-(rcx - cx) * k).toFixed(2) + "px," + (-(rcy - cy) * k).toFixed(2) + "px)"; this.glided = true; }
-    else if (this.glided) { this.glided = false; this.canvas.style.transform = ""; }
+    const cn = this.cine && !full ? this.cine : null, ke = cn ? cn.blend * cn.blend * (3 - 2 * cn.blend) : 0; // the ceremony's camera: eased from you to the piece
+    const fx = cn ? pp.x + (cn.fx - 8 - pp.x) * ke : pp.x, fy = cn ? pp.y + (cn.fy - pp.y) * ke : pp.y;
+    const cx = full ? 0 : Math.round(rw <= SW ? (rw - SW) / 2 : Math.max(0, Math.min(rw - SW, fx + 8 - SW / 2)));
+    const cy = full ? 0 : Math.round(rh <= SH ? (rh - SH) / 2 : Math.max(0, Math.min(rh - SH, fy + 8 - SH * (ROOMS[r.id].camAt || 0.5))));
     if (!full) { this.camX = cx; this.camY = cy; }
     const tx0 = Math.max(0, Math.floor(cx / T)), ty0 = Math.max(0, Math.floor(cy / T)), tx1 = Math.min(r.w - 1, Math.floor((cx + VWp) / T)), ty1 = Math.min(r.h - 1, Math.floor((cy + VHp) / T));
     for (let y = ty0; y <= ty1; y++) for (let x = tx0; x <= tx1; x++) {
@@ -11319,7 +11316,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 121";
+const VERSION = "2026-11-18 cards 122";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
