@@ -389,3 +389,5 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Chill museum | The curator (Busy only), after going over what you fixed: the other modes are in Settings | So... you fixed my whole museum. / Everything. In one day. Who does that? / If you ever want a quieter day, the other modes are in Settings. Normal has one problem a day. Chill has none. |
 | Chill museum | The curator's reward for fixing everything: the Konami code | Anyway. You earned this. A little staff secret: / Up, Up, Down, Down, Left, Right, Left, Right, B, A, Start. / Try it somewhere with some room. You'll see. |
 | Visitors | Talking to a visitor on their way out (a wave, no chat; one at random) | They give you a little wave. They're on their way out. / Heading home. They wave on the way past. |
+| Gift shop | The shopkeeper, while a visitor's paying at the counter | One sec! Just ringing someone up. / Be right with you. Somebody finally made up their mind. |
+| Curious visitors | Talking to them on their way to the game you recommended | That's the one! I'm on my way! |

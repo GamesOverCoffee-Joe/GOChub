@@ -2804,6 +2804,7 @@ const TEXT = {
   "cur.name":         { g: "Curious visitors", l: "After \"Do you remember the name?\" ({title}: what they're after). Finding it after this is worth fewer tokens", by: "claude", v: [["Hmm... I'm pretty sure it was called {title}."], ["Oh! Yeah, I think it's {title}."]] },
   "cur.lead2":        { g: "Curious visitors", l: "Question, after they tell you the name: can you take them there?", by: "claude", v: [["So, can you show me where it is?"]] },
   "cur.nope":         { g: "Curious visitors", l: "You show them the wrong case ({title}: the one you showed; {hint}: what they're after). They keep following you", by: "claude", v: [["Hmm, no, that's not the one.", "It's {hint}."], ["Ooh, {title} looks cool, but it's not the one I'm looking for."]] },
+  "cur.onTheWay":      { g: "Curious visitors", l: "Talking to them on their way to the game you recommended", by: "claude", v: [["That's the one! I'm on my way!"]] },
   "cur.busy":          { g: "Curious visitors", l: "After \"Sorry, I'm busy.\"", v: [["Oh, no worries! I'll keep looking around."]] },
   "cur.follow":        { g: "Curious visitors", l: "They start following you", v: [["Lead the way! I'm right behind you."]] },
   "cur.lead":          { g: "Curious visitors", l: "Talking to them while they follow you", v: [["Where are we headed?"]] },
@@ -7628,20 +7629,28 @@ class Game {
     const v = n.cur, p = this.pieceById(v.want); v.asked = true; this.saveProgress();
     this.say(this.tx("cur.name", { title: p ? p.title : "", name: v.name }).map((pg, k) => (k ? pg : v.name + ": " + pg)), then);
   }
-  curiousTalk(n) {
+  curiousTalk(n) { // (Joe 10/19) they think about the game they're after (its art in their bubble); help tells you what it is, and that's all; then Recommend (think about it first) or Follow me
     const v = n.cur; v.met = true;
+    if (n.reco || n.recoAt) { this.choose(v.name + ": " + this.tx("cur.onTheWay", { name: v.name }).join(" "), ["Forget it", "Never mind"], i => { if (i === 0) this.forgetIt(n); }, 1); return; } // on their way to what you recommended
     const named = ps => ps.map(p => v.name + ": " + p), hello = named(this.tx("cur.hello", { name: v.name })), q = hello.pop();
-    this.say(hello, () => this.choose(q, ["Do you need help?", "Can I get by you?", "Never mind"], i => {
-      if (i === 1) { this.askToMove(n, named); return; }
-      if (i !== 0) return;
-      const pages = named([...this.tx("cur.helpFind", { name: v.name }), ...this.wantLines(v)]), last = pages.pop();
-      const offer = q2 => this.ask(q2, ["Follow me!", ...(v.asked ? [] : ["Do you remember the name?"]), "Sorry, I'm busy."], k => {
-        if (k === 0) this.startFollow(n);
-        else if (k === 1 && !v.asked) this.tellName(n, () => offer(v.name + ": " + this.tx("cur.lead2", { name: v.name }).join(" ")));
-        else this.say(named(this.tx("cur.busy", { name: v.name })));
-      }, v.asked ? 1 : 2);
-      this.say(pages, () => offer(last));
-    }, 2));
+    const I = this.idea, rec = !!I && I.room === this.room.id, opts = [...(v.heard ? [] : ["Do you need help?"]), ...(rec ? ["Recommend"] : []), ...(v.heard ? ["Follow me"] : []), ...(v.heard && !v.asked ? ["Do you remember the name?"] : []), "Could I get by?", "Never mind"];
+    this.say(hello, () => this.choose(q, opts, i => {
+      const o = opts[i];
+      if (o === "Do you need help?") { v.heard = true; this.saveProgress(); this.say(named([...this.tx("cur.helpFind", { name: v.name }), ...this.wantLines(v)])); } // what they're after; that's all for now
+      else if (o === "Recommend") this.curRecommend(n);
+      else if (o === "Follow me") this.startFollow(n);
+      else if (o === "Do you remember the name?") this.tellName(n);
+      else if (o === "Could I get by?") this.askToMove(n, named);
+    }, opts.length - 1));
+  }
+  curRecommend(n) { // what you're thinking about, for the game they're thinking about: a "?", then the right one is off they go (briskly), the wrong one's a no
+    const v = n.cur, I = Object.assign({}, this.idea);
+    n.askFx = { t0: this.t }; n.route = null; n.timer = Math.max(n.timer || 0, 50); n.stepWait = 50;
+    n.recoAt = { t: this.t + 40, fn: () => { n.askFx = null; if (!n.cur) return;
+      const r = this.room, near = I.kind === "exhibit" && I.piece === v.want && this.recoSpot(r, n, I.x, I.y);
+      if (!near) { if (I.piece !== v.want) this.progress.stats.nope++; this.saveProgress(); n.pose = { kind: I.piece === v.want ? "busy" : "annoyed", t0: this.t, dur: 110 }; n.timer = 130; return; } // not the one (or no way to it from here: try Follow me)
+      Object.assign(n, { goalT: near, route: null, timer: 0, retry: 0, viewing: false, stepWait: 0, arrived: false, reco: { kind: "cur", x: I.x, y: I.y, piece: I.piece, icon: I.icon } });
+      n.ideaFx = { t0: this.t, icon: I.icon, keep: true }; n.hopT = this.t; } }; // yes! that's it
   }
   startFollow(n) {
     n.cur.state = "following"; n.follow = true; n.still = false; n.route = null; n.aside = null; n.lost = 0; this.fol = n; this.saveProgress();
@@ -7719,12 +7728,12 @@ class Game {
   }
   recommendPiece(n, piece) { // (its own name: the thinking one, recommend(n, from), had taken it over, Joe 10/19: a "..." from the curious visitor)
     const v = n.cur, cv = this.curiousPlan(), named = ps => ps.map((p, k) => (k ? p : v.name + ": " + p));
-    this.progress.tally.recs = (this.progress.tally.recs || 0) + 1; n.dir = OPP[this.player.dir];
+    this.progress.tally.recs = (this.progress.tally.recs || 0) + 1; if (n.follow) n.dir = OPP[this.player.dir]; // (sent there by a recommendation: they keep facing the case)
     if (piece.id !== v.want) { // not the one: they say so, and keep following you
       this.progress.stats.nope++; this.saveProgress();
       const p = this.pieceById(v.want); this.say(named(this.tx("cur.nope", { title: piece.title, name: v.name, hint: p ? p.hint : "" }))); return;
     }
-    this.fol = null; n.follow = false; n.cur = null;
+    if (this.fol === n) this.fol = null; n.follow = false; n.cur = null;
     cv.list = cv.list.filter(x => x !== v); Object.assign(v, { state: "recommended", piece: piece.id, day: todayISO(), room: null, take: ["agree", "disagree", "puzzled"][Math.floor(Math.random() * 3)] }); cv.back.push(v);
     this.count("helped", v.id, v.asked ? this.pack.settings.rewards.helpedName : undefined); this.bump(this.progress.stats.loved, genreOf(piece, this.pack.settings.genres)); this.saveProgress(); // found from the description alone: helped; after asking the name: helpedName
     this.cheer(n, () => this.say(named(this.tx("cur.thanks", { title: piece.title, name: v.name })), () => { n.leaving = true; n.leaveT = 0; n.alpha = 1; }));
@@ -8859,8 +8868,8 @@ class Game {
     if (x < 0 || y < 0 || x >= r.w || y >= r.h) return null;
     const e = r.events[x + "," + y] || {}, at = { room: r.id, x, y };
     { const ar = (r.props || []).find(p => p.key === "arcade_cabinet" && p.x === x && p.y - 1 === y); if (ar) at.y = ar.y; } // the arcade's top half: the arcade (its lower tile, where you stand beside it)
-    if (e.caseAt && e.caseAt.piece) return Object.assign(at, { kind: "exhibit" });
-    if (e.spot && e.spot.piece && e.spot.state === "wall") return Object.assign(at, { kind: "exhibit" });
+    if (e.caseAt && e.caseAt.piece) return Object.assign(at, { kind: "exhibit", piece: e.caseAt.piece.id, episode: e.caseAt.piece.kind === "episode" });
+    if (e.spot && e.spot.piece && e.spot.state === "wall") return Object.assign(at, { kind: "exhibit", piece: e.spot.piece.id });
     if (e.sit) return Object.assign(at, { kind: "seat" });
     if (e.plant && !/^tut-/.test(e.plant)) return Object.assign(at, { kind: "plant", plant: e.plant }); // things you'd do yourself (Joe 10/19: the interactions)
     if (e.lights) return Object.assign(at, { kind: "lights", key: e.key });
@@ -9033,6 +9042,7 @@ class Game {
   recoArrive(n) { // they got there
     let R = n.reco; n.reco = null; const face = R.x > n.x ? "right" : R.x < n.x ? "left" : R.y > n.y ? "down" : "up";
     if (n.sitting) { this.reactThenSnap(n, (n.will.photo || 0) >= 3 ? "startled" : ["startled", "annoyed", "busy"][(Math.random() * 3) | 0]); return true; } // in their seat: they stay put, react, maybe a photo (Joe 10/19: just a photo read as nothing)
+    if (R.kind === "cur") { const p = this.pieceById(R.piece); n.dir = face; if (p && n.cur) { n.ideaFx = null; this.recommendPiece(n, p); } return true; } // at the game they wanted: the big heart, and they head home to play it
     if (R.kind === "tell" || R.kind === "person") { const m = R.to; // over to someone: right up next to them (Joe 10/19: a tile apart didn't look like talking), then their exchange
       if (!m || !this.room.npcs.includes(m) || m.leaving || m.chat) { this.recoGiveUp(n); return true; }
       if (Math.abs(m.x - n.x) + Math.abs(m.y - n.y) > 1) return this.recoAgain(n, R);
@@ -10715,6 +10725,9 @@ class Game {
     }
     for (const n of r.npcs) { const A = n.askFx; if (!A) continue; if (A.until && this.t >= A.until) { n.askFx = null; continue; } // "?": thinking it over, in a round bubble like the curious visitors' (Joe 10/19), a size up so the "?" reads
       const p = this.pos(n), x = Math.round(p.x + 3 - cx), y = Math.round(p.y - cy - 12 + (Math.floor(this.t / 20) % 2)); this.drawAskBubble(ctx, x, y); }
+    for (const n of r.npcs) { if (!n.cur || n.follow || n.reco || n.recoAt || n.askFx || n.ideaFx || n.leaving || this.full) continue; // a curious visitor: the game they're after, in a thought bubble (Joe 10/19: instead of a "?")
+      const ic = this.wantIcon(n.cur.want); if (!ic) continue; const p = this.pos(n), x = Math.round(p.x + 2 - cx), y = Math.round(p.y - cy - 17 + (Math.floor(this.t / 20) % 2));
+      BUB(x, y, 12, 11); ctx.fillStyle = "#f8f8f0"; ctx.fillRect(x + 2, y + 12, 2, 2); ctx.drawImage(ic, x + 1, y + 1); }
     for (const n of r.npcs) { const F = n.ideaFx; if (!F) continue; const k = this.t - F.t0; if (!F.keep && k > (F.dur || 60)) { n.ideaFx = null; continue; } // the thought: over their head till they get there
       const g = Math.min(1, (k + 1) / 6); if (g < 1) { const p = this.pos(n), w = Math.max(2, Math.round(12 * g)), h = Math.max(2, Math.round(11 * g)); BUB(Math.round(p.x + 8 - w / 2 - cx), Math.round(p.y - cy - 6 - h), w, h); continue; } // it grows in
       const p = this.pos(n), x = Math.round(p.x + 2 - cx), y = Math.round(p.y - cy - 17 - Math.min(2, k / 4)); BUB(x, y, 12, 11); ctx.fillStyle = "#f8f8f0"; ctx.fillRect(x + 2, y + 12, 2, 2);
@@ -10768,6 +10781,9 @@ class Game {
     if (wa) { const s = SLOT[wa.key]; return { x: wa.x * T, y: (wa.y || 1) * T, w: s.w, h: s.h, draw: swap((ox, oy) => this.drawSlot(wa.key, 0, 0, ox, oy)) }; }
     return null;
   }
+  wantIcon(id) { const C = this.wantIcons || (this.wantIcons = {}); if (C[id]) return C[id]; const p = this.pieceById(id); if (!p) return null; // the game's art at bubble size, made once (no shimmer)
+    const art = this.pieceArt(p), iw = art.naturalWidth || art.width, ih = art.naturalHeight || art.height; if (!iw || !ih || art.complete === false) return null; // (not loaded yet: next frame)
+    const c = document.createElement("canvas"); c.width = 10; c.height = 9; const x = c.getContext("2d"); x.imageSmoothingEnabled = iw > 48; x.drawImage(art, 0, 0, iw, ih, 0, 0, 10, 9); return (C[id] = c); }
   iconSmall(ic) { if (ic._s) return ic._s; const c = document.createElement("canvas"); c.width = 10; c.height = 9; const x = c.getContext("2d"); x.imageSmoothingEnabled = false; x.drawImage(ic, 0, 0, ic.width, ic.height, 0, 0, 10, 9); return (ic._s = c); } // the thought's picture at bubble size, made once: scaled every frame, it shimmered as they walked
   thoughtStripes() { // the corner bubble's inside: the developer answers' gray stripes, scrolling the same (Joe 10/19), at 24 by 24
     const off = Math.floor(this.t * 16 / 156) % 16, C = this.stripeCv || (this.stripeCv = []); if (C[off]) return C[off];
@@ -11155,7 +11171,7 @@ class Game {
       }
       if (c === this.player && this.asleep && c.sitting && this.t % 120 < 90) { const zy = Math.floor((this.t % 120) / 30); ctx.fillStyle = "#f8f8f0"; ctx.font = "6px monospace"; ctx.fillText("z", sx + 12 + zy, sy - zy * 3); }
       if (c.tutId === "trainer" && this.tut && !this.tut.watered && !this.full) { ctx.fillStyle = "#fffbe8"; const dy = Math.floor(this.t / 30) % 2; for (let i = 0; i < 3; i++) if ((this.t / 20 | 0) % 4 > i) ctx.fillRect(sx + 4 + i * 3, sy - 4 - dy, 2, 2); } // "..." over her head, staring at the plant
-      const bub = c.leaving || this.full ? -1 : c.tutId ? (c.tutAsk && !c.follow ? 0 : -1) : c.back ? 1 : c.cur && !c.follow ? 0 : -1; // "?" curious, "!" back to tell you how it went
+      const bub = c.leaving || this.full ? -1 : c.tutId ? (c.tutAsk && !c.follow ? 0 : -1) : c.back ? 1 : -1; // (curious visitors: their thought bubble, drawThinking) // "?" curious, "!" back to tell you how it went
       if (c.react && !this.full) this.drawReaction(c, sx, sy);
       if (c.pose && !this.full) { // the photo reaction's bubble, fading out at the end
         if (pk >= c.pose.dur) c.pose = null;
@@ -11166,7 +11182,7 @@ class Game {
         }
       }
       if (c.member && !c.dayPerson && !c.leaving && !this.full && Math.abs(c.x - this.player.x) + Math.abs(c.y - this.player.y) <= 2) { // name tags: Patreon members (not the day-of-the-week people)
-        ctx.font = "6px monospace"; const w = Math.ceil(ctx.measureText(c.member).width) + 4, nx = Math.round(sx + 8 - w / 2), ny = sy - (bub >= 0 ? 18 : 8);
+        ctx.font = "6px monospace"; const w = Math.ceil(ctx.measureText(c.member).width) + 4, nx = Math.round(sx + 8 - w / 2), ny = sy - (bub >= 0 ? 18 : c.cur && !c.follow ? 28 : 8);
         ctx.fillStyle = "rgba(24,24,32,.85)"; ctx.fillRect(nx, ny, w, 8); ctx.fillStyle = "#f8f0c0"; ctx.textBaseline = "top"; ctx.fillText(c.member, nx + 2, ny + 1);
       }
       if (c.leaving && !c.staff && !c.janitor && !c.role && !this.full && !(c.pose && pk < c.pose.dur)) { const by = sy - 9 + (Math.floor(this.t / 20) % 2), ba = ctx.globalAlpha; bubbles.push(() => { ctx.globalAlpha = ba; this.drawSlot("leave_bubble", 0, 0, sx + 4, by); ctx.globalAlpha = 1; }); } // heading home (Joe 10/19)
@@ -11236,7 +11252,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 113";
+const VERSION = "2026-11-18 cards 114";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
