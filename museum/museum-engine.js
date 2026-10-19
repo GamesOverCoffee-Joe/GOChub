@@ -7837,6 +7837,39 @@ class Game {
     r.npcs = r.npcs.filter(n => !n.patron || names.has(n.member));
     today.forEach((m, i) => { if (me(m) || r.npcs.some(n => n.patron && n.member === m.name)) return; this.addVisitor("staff", { name: m.name, sheet: ["visitor_a", "visitor_b", "visitor_c"][(seed + i) % 3] }, Object.assign({ patron: true, staff: true }, m.shirts && m.shirts.length ? { shirt: m.shirts[(seed + i) % m.shirts.length] } : {})); }); // a member's own shirt colors (Staff tab), a different one day to day
     this.lastStaffKey = this.staff ? this.staff.badge + "|" + this.staff.name : "";
+    this.staffActs();
+    // The members not on shift today: one or two of them visit the museum, like anyone (Joe 10/19: you never saw a member out there), with their name over them when you're close
+    const M = this.rooms.museum; if (M && !this.closing) { M.npcs = M.npcs.filter(n => !n.memberVisit);
+      const off = all.filter(m => !today.includes(m) && !me(m)).map((m, i) => ({ m, k: hash(seed + 7, i) })).sort((a, b) => a.k - b.k).map(x => x.m).slice(0, 1 + ((seed >>> 3) % 2));
+      off.forEach((m, i) => { const n = this.addVisitor("museum", { name: m.name, sheet: ["visitor_a", "visitor_b", "visitor_c"][(seed + i + 1) % 3] }, Object.assign({ random: true, memberVisit: true, zone: this.galleryZone(), lines: [CROWD_LINES[hash(seed, i + 3) % CROWD_LINES.length]] }, m.shirts && m.shirts.length ? { shirt: m.shirts[(seed + i) % m.shirts.length] } : {})); }); }
+  }
+  /* The members on shift, each time you walk into the staff room (Joe 10/19): each doing something (a locker, the fridge, the
+     microwave, the coffee maker, sitting at the table, the whiteboard), picked at random, never where the Janitor needs to get to. */
+  staffActs() {
+    const r = this.rooms && this.rooms.staff; if (!r) return; const P = r.npcs.filter(n => n.patron); if (!P.length) return;
+    const free = (x, y) => r.solid[y] && r.solid[y][x] === false && !r.events[x + "," + y] && !r.npcs.some(m => !m.patron && m.x === x && m.y === y);
+    const front = (p, prefer) => { const s = SLOT[p.key], w = s ? s.w / T : 1, out = []; for (let i = 0; i < w; i++) out.push([p.x + i, p.y + 1, "up"]); out.push([p.x - 1, p.y, "right"], [p.x + w, p.y, "left"]); if (p.tall) out.push([p.x - 1, p.y - 1, "right"], [p.x + w, p.y - 1, "left"]); return (prefer ? out.filter(o => o[2] === prefer).concat(out) : out).filter(([x, y]) => free(x, y)); };
+    const prop = k => r.props.find(p => p.key === k), acts = [];
+    (ROOMS.staff.lockers || []).forEach(x => { if (free(x, 3)) acts.push({ spots: [[x, 3, "up"]], pose: "busy", what: "locker" }); }); // (the lockers stand on the wall rows; you open them from the floor below)
+    for (const [k, pose, prefer] of [["fridge", "busy", "right"], ["microwave_counter", "busy"], ["coffee_counter", "busy"], ["whiteboard", "busy"]]) { const p = prop(k); if (p) { const sp = front(p, prefer); if (sp.length) acts.push({ spots: sp, pose, what: k }); } }
+    const stool = r.props.find(p => p.key === "cafe_stool" && p.sit); if (stool && !r.npcs.some(m => !m.patron && m.x === stool.x && m.y === stool.y)) acts.push({ seat: stool, pose: "smile", what: "table" });
+    // shuffle, keeping one locker at most (six lockers would crowd out the rest)
+    let lk = 0; const pool = acts.map(a => [Math.random(), a]).sort((a, b) => a[0] - b[0]).map(x => x[1]).filter(a => a.what !== "locker" || lk++ < 1);
+    const J = this.jan, need = [ROOMS.staff.spawn.slice(0, 2), this.janBreakSpot().at, ...((J && J.stops) || []).filter(st => st.room === "staff" && st.at).map(st => st.at)].filter(Boolean);
+    const clear = taken => { const W = r.w, seen = new Set([need[0][1] * W + need[0][0]]), q = [need[0]], blocked = (x, y) => !r.solid[y] || r.solid[y][x] !== false || taken.some(t => t[0] === x && t[1] === y); // can the Janitor still get everywhere he goes in here?
+      while (q.length) { const [x, y] = q.shift(); for (const [dx, dy] of Object.values(DIRS)) { const nx = x + dx, ny = y + dy, k = ny * W + nx; if (seen.has(k) || blocked(nx, ny)) continue; seen.add(k); q.push([nx, ny]); } }
+      return need.every(([x, y]) => seen.has(y * W + x)); };
+    const taken = [];
+    for (const n of P) {
+      Object.assign(n, { still: true, route: null, goalT: null, moving: false, prog: 0, sitting: false, seat: null, act: null });
+      let placed = false;
+      while (pool.length && !placed) { const a = pool.shift();
+        if (a.seat) { const at = [a.seat.x, a.seat.y]; if (taken.some(t => t[0] === at[0] && t[1] === at[1])) continue; Object.assign(n, { x: at[0], y: at[1], sitting: true, dir: a.seat.sit }); taken.push(at); n.act = a; placed = true; continue; }
+        const sp = a.spots.find(([x, y]) => !taken.some(t => t[0] === x && t[1] === y) && clear([...taken, [x, y]])); if (!sp) continue;
+        n.x = sp[0]; n.y = sp[1]; n.dir = sp[2]; taken.push(sp); n.act = a; placed = true; }
+      if (!placed) { const sp = this.freeSpot(r); if (sp && clear([...taken, sp])) { n.x = sp[0]; n.y = sp[1]; taken.push(sp); } } // nothing left to do: somewhere out of the way
+      n.homeDir = undefined; n.actT = this.t + 60 + Math.random() * 240;
+    }
   }
   /* The Patron Board: every member, always, and who's on shift in the staff room today. */
   readPatronBoard() {
@@ -8485,6 +8518,7 @@ class Game {
     const prev = this.room; this.room = this.rooms[id]; const p = this.player;
     if (prev && prev !== this.room) this.room.npcs = this.room.npcs.filter(n => { if (!n.leaving || n === this.fol) return true; if (n.onGone) n.onGone(); return false; }); // people on their way out when you left (closing, say): gone by the time you're back (Joe 10/12)
     if (id === "lobby" || id === "staff") this.refreshBoard();
+    if (id === "staff" && prev && prev !== this.room) this.staffActs(); // the members on shift: something new each time you come in
     p.x = x; p.y = y; p.dir = dir; p.moving = false; p.prog = 0; p.sitting = false; this.asleep = false; this.sitIdle = 0; this.sip = null; this.path = null; this.pathAct = null;
     this.updateHud();
     this.zone = null; if (this.room.zoneAt) { this.zoneCheck(quiet); quiet = true; }
@@ -9245,6 +9279,7 @@ class Game {
       if (n.moving) { this.advance(n); continue; }
       if (n.aside) { this.stepAside(n); continue; }
       if (n.pace) { this.paceStep(n); continue; } // the barista, rushed off her feet
+      if (n.act && n.patron && this.t >= n.actT && !(n.pose && this.t - n.pose.t0 < n.pose.dur)) { n.actT = this.t + 300 + Math.random() * 420; n.pose = { kind: n.act.pose, t0: this.t, dur: 70 }; } // doing their thing (staffActs)
       if (n.still) { if (n.faceT > 0 && this.mode === "walk" && --n.faceT <= 0 && n.homeDir !== undefined) { n.dir = n.homeDir; n.homeDir = undefined; } continue; }
       if (n.patrol) { this.patrol(n); continue; }
       if (n.bumpT > 0) n.bumpT--;
@@ -11252,7 +11287,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 116";
+const VERSION = "2026-11-18 cards 117";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
