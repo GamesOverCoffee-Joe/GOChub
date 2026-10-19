@@ -8814,24 +8814,25 @@ class Game {
   newWill() { const w = {}; for (const k of RECO_KINDS) w[k] = Math.floor(Math.random() * 5); return w; } // exhibits, seats, the café, throwing a cup away, photos
   nextVno() { return (this.vnoNext = (this.vnoNext || 0) + 1); } // a visitor number (the curator's Preview shows it)
   canThink() { return this.mode === "walk" && !this.tut && !this.trans && !this.cine && !this.player.moving && !this.askingMode && !this.handoff && !this.curator && !!this.room; }
-  thinkFilter(on) { // the classic four Game Boy greens, as an SVG filter on the game screen: no pixels read back, nothing per frame
+  thinkFilter(on) { // the four Game Boy greens (the darkest milked up a little, Joe 10/19), as an SVG filter on the game screen: no pixels read back, nothing per frame
     if (typeof document === "undefined" || !this.canvas) return;
     if (on && !document.getElementById("goq-gb")) { const d = document.createElement("div"); d.style.cssText = "position:absolute;width:0;height:0;overflow:hidden";
-      d.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0"><filter id="goq-gb" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.3 0.59 0.11 0 0  0.3 0.59 0.11 0 0  0.3 0.59 0.11 0 0  0 0 0 1 0"/><feComponentTransfer><feFuncR type="discrete" tableValues="0.059 0.188 0.545 0.608"/><feFuncG type="discrete" tableValues="0.22 0.384 0.675 0.737"/><feFuncB type="discrete" tableValues="0.059 0.188 0.059 0.059"/></feComponentTransfer></filter></svg>';
+      d.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0"><filter id="goq-gb" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.3 0.59 0.11 0 0  0.3 0.59 0.11 0 0  0.3 0.59 0.11 0 0  0 0 0 1 0"/><feComponentTransfer><feFuncR type="discrete" tableValues="0.2 0.33 0.56 0.63"/><feFuncG type="discrete" tableValues="0.32 0.47 0.69 0.76"/><feFuncB type="discrete" tableValues="0.17 0.26 0.13 0.13"/></feComponentTransfer></filter></svg>';
       document.body.appendChild(d); }
     this.canvas.style.filter = on ? "url(#goq-gb)" : "";
   }
-  enterThink() {
-    const p = this.player, dc = this.dirClock; this.thinkFilter(true);
-    this.think = { ghost: { ghost: true, x: p.x, y: p.y, dir: p.dir, moving: false, prog: 0, step: false, bumpT: 0, alpha: 0.5, sheet: p.sheet }, was: dc ? !!dc.paused : false };
+  enterThink() { // a quick dip to white; at its brightest the screen turns green, and your ghost eases out of you (Joe 10/19)
+    const p = this.player, dc = this.dirClock; this.thinkFx = { t0: this.t, on: true };
+    this.think = { t0: this.t, ghost: { ghost: true, x: p.x, y: p.y, dir: p.dir, moving: false, prog: 0, step: false, bumpT: 0, alpha: 0, sheet: p.sheet }, was: dc ? !!dc.paused : false };
     if (dc) dc.paused = true; this.mode = "think"; this.inputLock = true; // the day waits; a held direction has to come up first
   }
-  exitThink() { const T = this.think; if (!T) return; this.think = null; this.thinkFilter(false); if (this.dirClock) this.dirClock.paused = T.was; this.mode = "walk"; this.inputLock = true; }
+  exitThink() { const T = this.think; if (!T) return; this.think = null; this.thinkFx = { t0: this.t, on: false }; if (this.dirClock) this.dirClock.paused = T.was; this.mode = "walk"; this.inputLock = true; } // the same dip back to colour
   updateThink(has) {
     const T = this.think, g = T && T.ghost, r = this.room; if (!g) { this.mode = "walk"; return; }
     if (T.picked) { this.exitThink(); return; } // the frame that showed the pick is drawn (and the bubble's picture taken): back into your body
     if (has("select") || has("b") || has("start")) { this.exitThink(); return; }
     if (g.bumpT > 0) g.bumpT--;
+    g.alpha = Math.min(0.5, Math.max(0, (this.t - T.t0 - 6) / 30)); // fading in as it steps out of you
     if (g.moving) { g.prog += 1; if (g.prog >= 16) { const [dx, dy] = DIRS[g.dir]; g.x += dx; g.y += dy; g.prog = 0; g.moving = false; } return; }
     if (has("a")) { const [dx, dy] = DIRS[g.dir], t = this.thinkTarget(r, g.x + dx, g.y + dy); if (t) T.pick = t; else g.bumpT = 8; return; }
     const d = this.heldDir(); if (!d) { this.inputLock = false; return; } if (this.inputLock) return;
@@ -8866,7 +8867,8 @@ class Game {
   recoAnswer(n, I) {
     const r = this.room; if (!r.npcs.includes(n)) return;
     const no = kind => { n.pose = { kind: kind || "busy", t0: this.t, dur: 110 }; n.timer = Math.max(n.timer || 0, 130); n.route = null; }; // they think about it, then: no
-    if (n.queue || n.ordering || n.coffee || n.binAt || n.leaving || n.reco || n.snapT > 0 || n.aside) { no("busy"); return; } // in the middle of something
+    if ((n.queue && n.queue.phase !== "join") || n.ordering || n.leaving || n.reco || n.snapT > 0) { no("busy"); return; } // standing in line or ordering, leaving, on another recommendation, mid-photo
+    if (n.queue) { n.queue = null; n.route = null; n.goalT = null; } if (n.coffee) n.coffee = false; if (n.binAt) { n.binAt = null; n.route = null; } n.aside = null; // just on their way somewhere: they'll hear you out (Joe 10/19)
     const drink = n.drink, full = drink && !drink.empty, roll = k => Math.random() < [0.05, 0.3, 0.55, 0.8, 0.97][n.will[k] || 0];
     const go = (bad, kind, extra) => { // off they go (a sitter gets up first, but only for a yes: a bad fit, they react from their seat)
       if (n.sitting && bad) { n.reco = { bad, kind, x: I.x, y: I.y }; this.recoArrive(n); n.timer = Math.max(n.timer || 0, 60); return; }
@@ -9316,7 +9318,9 @@ class Game {
         else lost.forEach(o => { if (o.at) this.lineJump(o.n, o.room, o.at[0], o.at[1]); o.n.dir = o.dir; });
       } else if (phase === 4) { // out the front doors (the kid too, found or not)
         this.tourLineEnd(T);
-        T.members.forEach(n => { this.tourStand(n); if (this.fol === n) { this.fol = null; n.follow = false; } n.goal = null; n.walkTo = null; n.still = true; if (n.where === this.room.id && this.room.id === "lobby") { n.leaving = true; n.leaveT = 0; n.alpha = 1; } else this.tourDrop(n); });
+        T.members.forEach(n => { this.tourStand(n); if (this.fol === n) { this.fol = null; n.follow = false; } n.goal = null; n.walkTo = null; n.still = true; });
+        const seen = T.members.some(n => !n.gone && n.where === this.room.id), drop = () => T.members.forEach(n => this.tourDrop(n)); // gone like their other moves (Joe 10/19: they used to walk out, and you couldn't talk to them on the way)
+        if (seen && this.mode === "walk" && !this.trans) { this.mode = "busy"; this.trans = { t: 0, dur: 16, switched: false, fn: drop }; } else drop();
         if (T.guide) this.tourDrop(T.guide); T.guide = null; this.restoreUsher();
       }
     }
@@ -10468,6 +10472,9 @@ class Game {
   /* Thinking (Joe 10/19): the visitor numbers in the curator's Preview; the thought going over to a visitor; while you think, the
      pick's picture taken (before the green) and the Game Boy palette; otherwise the thought bubble in the corner. */
   drawThinking(ctx, cx, cy) {
+    { const F = this.thinkFx; if (F) { const k = this.t - F.t0, a = k < 8 ? k / 8 : Math.max(0, 1 - (k - 8) / 16); // the dip to white
+        if (k >= 8 && !F.switched) { F.switched = true; this.thinkFilter(F.on); }
+        if (k > 24) this.thinkFx = null; else { ctx.globalAlpha = a; ctx.fillStyle = "#fffff4"; ctx.fillRect(0, 0, SW, SH); ctx.globalAlpha = 1; } } }
     const r = this.room, TH = this.think, I = this.idea, BUB = (x, y, w, h) => { ctx.fillStyle = "#181820"; ctx.fillRect(x - 1, y, w + 2, h); ctx.fillRect(x, y - 1, w, h + 2); ctx.fillStyle = "#f8f8f0"; ctx.fillRect(x, y, w, h); };
     if (this.showWill) for (const n of r.npcs) if (n.will && n.vno) { // preview only: visitor number, then exhibit / seat / café / toss / photo
       const p = this.pos(n), txt = n.vno + " " + RECO_KINDS.map(k => n.will[k]).join(""), x = Math.round(p.x + 8 - cx - txt.length * 2), y = Math.round(p.y - cy - 12);
@@ -10939,7 +10946,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 102";
+const VERSION = "2026-11-18 cards 103";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
