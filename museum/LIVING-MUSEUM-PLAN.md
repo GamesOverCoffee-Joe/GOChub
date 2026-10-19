@@ -397,11 +397,13 @@ The 12-minute loop stays exactly as it is: the same four beats, the same timing 
 | | Chill | Normal (the default) | Busy |
 | --- | --- | --- | --- |
 | Problems | none | one a day | all four, every loop |
-| The curator's chill offer | — | never | after fixing them all, as now |
+| The curator's moment | — | never | after fixing them all: the other modes, and the Konami code |
 | Field notes | — | none | the checklist, as now |
 
 - **The day's problem** (Normal): random each day, never the same as yesterday's. The same all day and across reloads.
-- **Settings:** the Chill museum switch becomes Chill / Normal / Busy. Players who turned chill on stay in Chill; everyone else starts in Normal.
+- **Picking a mode** *(Joe 10/19)*: right after the tutorial (finished or skipped), on a black screen, the usher asks once: Normal (one thing goes wrong each day), Busy (everything, every day) or Chill (nothing goes wrong). Normal is highlighted. Then he says you can change it any time in Settings (the gear, outside the game window). Players already past the tutorial get asked once on their next visit, with their current mode highlighted (Chill if they had it on, else Normal). Curator badges skip it (they always play chill). New lines are Claude's, in Joe's style, editable in the Writers' Room.
+- **Settings:** the Chill museum switch becomes Chill / Normal / Busy. Chill's own options (Janitor off, tours off) stay, under Chill.
+- **The curator's moment** (Busy only, the first time you fix everything in one loop): he goes over what you fixed, as now; then, instead of offering chill, he mentions the other modes are in Settings if you ever want to relax, and gives you the Konami code as a reward (Up, Up, Down, Down, Left, Right, Left, Right, B, A, Start: the segway). "Every problem solved. Again. Show-off." stays for later Busy loops.
 - **No announcement:** you find the day's problem by walking around. Closing stays optional, the intercom stays as it is, and nothing new marks the end of a day.
 - Thinking and recommending work in every mode.
 
