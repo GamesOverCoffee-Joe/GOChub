@@ -134,6 +134,7 @@ const PAL = {
   emote:   ["#f8f8f0", "#e05a6a", "#181820", "#e8b030", "#7a7a90", "#f29ab0"],
   bag:     [null, "#8a2a3a", "#5a1824", "#181820", "#e8b24a"],
   player:  [null, "#f8e0c0", "#3878c8", "#181820"],
+  ghost:   [null, "#f4f8ff", "#dfe8f8", "#a8b8d8"], // your thinking ghost: pale all over
   visitorA:[null, "#e8c098", "#c83838", "#181820"],
   visitorB:[null, "#c89060", "#8850c0", "#181820"],
   visitorC:[null, "#f8e0c0", "#58a048", "#181820"],
@@ -1381,6 +1382,7 @@ const CHAR_NOTE = "48×64 sheet of 16×16 frames: 3 columns (standing, left step
 const OVER_NOTE = "Drawn on top of the wall, so leave everything outside the door transparent.";
 const SLOTS = [
   { key: "player", label: "Player", group: "Characters", w: 16, h: 16, layout: "char", pal: "player", gen: GEN.character, note: CHAR_NOTE },
+  { key: "player_ghost", label: "Player's thinking ghost", group: "Characters", w: 16, h: 16, layout: "char", pal: "ghost", gen: GEN.character, note: "You, stepped out of yourself while thinking (Select). Drawn at 80% over the Game Boy green, which turns everything into four shades by brightness: keep it light so it stands out. " + CHAR_NOTE },
   { key: "visitor_a", label: "Visitor A", group: "Characters", w: 16, h: 16, layout: "char", pal: "visitorA", gen: GEN.character, note: CHAR_NOTE },
   { key: "visitor_b", label: "Visitor B", group: "Characters", w: 16, h: 16, layout: "char", pal: "visitorB", gen: GEN.character, note: CHAR_NOTE },
   { key: "visitor_shirt", label: "Visitor shirt (placeholder)", group: "Characters", w: 16, h: 16, layout: "char", pal: "shirt", gen: GEN.character, note: "Drawn over Visitors A, B and C in each visitor's shirt color (Visitors tab, Shirt colors). Only the shirt; gray, so it tints. Skipped for a visitor sheet you've replaced with your own art. " + CHAR_NOTE },
@@ -3631,18 +3633,9 @@ class Game {
   closeAll() { this.el.text.style.display = "none"; this.el.cu.style.display = "none"; this.txt = null; this.mode = "walk"; if (this.el.ans) this.el.ans.style.display = "none"; this.ans = null; }
   sheet(key) {
     if (key.endsWith("@rainbow")) return this.cache[key] || this.rainbow(key);
-    if (key.endsWith("@ghost")) return this.cache[key] || this.ghostly(key);
     if (key.includes("~")) return this.cache[key] || this.swapped(key);
     if (key.includes("@")) return this.cache[key] || this.tinted(key);
     return this.overrides[key] || this.cache[key] || (this.cache[key] = placeholder(key));
-  }
-  /* "...@ghost": the art turned pale, its light and shade kept, the outline brightest (your thinking ghost: lit from inside). */
-  ghostly(key) {
-    const base = key.slice(0, -6), src = this.sheet(base), w = src.naturalWidth || src.width, h = src.naturalHeight || src.height; if (!w || !h) return src;
-    const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(src, 0, 0);
-    const d = x.getImageData(0, 0, w, h), px = d.data;
-    for (let i = 0; i < px.length; i += 4) { if (!px[i + 3]) continue; const l = (px[i] + px[i + 1] + px[i + 2]) / 765; if (l < 0.18) { px[i] = 250; px[i + 1] = 252; px[i + 2] = 255; } else { const v = Math.round(140 + l * 60); px[i] = v; px[i + 1] = v; px[i + 2] = Math.min(255, v + 10); } }
-    x.putImageData(d, 0, 0); return (this.cache[key] = c);
   }
   /* "visitor_shirt@rainbow": rainbow stripes down the art, keeping its light and shade (the artist's shirt, Joe 10/11). */
   rainbow(key) {
@@ -10987,7 +10980,7 @@ class Game {
       const p = this.pos(c), prog = c.moving ? c.prog : c.bumpT > 0 ? 16 - c.bumpT : -1;
       const col = prog >= 0 && prog < 8 ? (c.step ? 1 : 2) : 0;
       if (c.alpha !== undefined) ctx.globalAlpha = Math.max(0, c.alpha);
-      const sheet = c === this.player ? this.playerSheet(this.player.sheet) : c.ghost ? this.playerSheet(this.player.sheet) + "@ghost" : c.sheet; // your ghost: you, in white (Joe 10/19: hard to see)
+      const sheet = c === this.player ? this.playerSheet(this.player.sheet) : c.ghost ? "player_ghost" : c.sheet; // your ghost: its own art (Art, Characters; Joe 10/19)
       if (c === this.player && this.segway && !c.sitting) { const pp3 = this.pos(c); this.drawSlot("segway", 0, 0, Math.round(pp3.x - cx), Math.round(pp3.y - cy - 1)); }
       const pk = c.pose ? this.t - c.pose.t0 : 999, jump = c.pose && /^(startled|guard|pose)$/.test(c.pose.kind) && pk < 14 ? Math.round(Math.sin(Math.PI * pk / 14) * 3) : 0; // a little jump when photographed
  const yes = c.hopT !== undefined && this.t - c.hopT < 14 ? Math.round(Math.sin(Math.PI * (this.t - c.hopT) / 14) * 3) : 0; // a little hop: yes! (Joe 10/19)
@@ -11117,7 +11110,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 109";
+const VERSION = "2026-11-18 cards 110";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
