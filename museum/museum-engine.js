@@ -7302,7 +7302,7 @@ class Game {
     if (this.drink && this.drink.empty) {
       const n = this.drink.name.toLowerCase();
       this.choose("Finished? Want a refill on that " + n + "?", ["Refill, please", "No thanks"], i => {
-        if (i === 0) { this.drink = { kind: this.drink.kind, name: this.drink.name, sips: 0, color: this.drink.color, iced: this.drink.iced, caf: this.drink.caf }; this.say(this.tx("drink.refill")); } // a refill is still caffeinated (it was dropped, so refills broke a coffee run)
+        if (i === 0) { this.drink = { kind: this.drink.kind, name: this.drink.name, sips: 0, color: this.drink.color, iced: this.drink.iced, caf: this.drink.caf, id: this.drink.id }; this.say(this.tx("drink.refill")); } // a refill is still caffeinated (it was dropped, so refills broke a coffee run)
         else this.say(this.tx("drink.noRefill"));
       });
       return;
@@ -7377,7 +7377,7 @@ class Game {
     this.closeCafe();
     const serve = mug => {
       if (price) { this.progress.tokens -= price; this.countDown(this.progress.tokens + price); this.saveProgress(); this.updateHud(); }
-      this.drink = { kind: d.id === "week" ? 3 : i, name: d.name, sips: 0, color: d.color || "", iced: !!d.iced, mug }; this.sipClock = 240; // the first sip a few seconds after you get it // mug: "real" or "fake" (your travel mug), "" (a cup)
+      this.drink = { kind: d.id === "week" ? 3 : i, id: d.id, name: d.name, sips: 0, color: d.color || "", iced: !!d.iced, mug }; this.sipClock = 240; // the first sip a few seconds after you get it // mug: "real" or "fake" (your travel mug), "" (a cup)
       if (d.id === "cocoa") this.quest("cocoa");
       this.progress.tally.drinks = (this.progress.tally.drinks || 0) + 1; this.bump(this.progress.stats.drinks, d.id); this.saveProgress();
       const said = () => this.say(d.line && d.line.length ? d.line : this.tx("drink.served")); // the drink of the week can come with its own line
@@ -8348,7 +8348,7 @@ class Game {
     if (this.sip) {
       if (++this.sip.t >= 44) {
         this.sip = null;
-        if (this.drink && ++this.drink.sips >= 4) { const n = this.drink.name.toLowerCase(); if (this.drink.kind === 2 && this.player.sitting && !this.player.bench) this.quest("finishOnStool");
+        if (this.drink && ++this.drink.sips >= 4) { const n = this.drink.name.toLowerCase(); if ((this.drink.id ? this.drink.id === "cocoa" : this.drink.kind === 2) && this.player.sitting && !this.player.bench) this.quest("finishOnStool"); // the cocoa, wherever it is on the menu
           if (this.drink.mug) { const rush = this.coffeeDone(); this.drink = null; if (!rush) this.say(this.tx("gear.mugDone", { drink: n })); } // the empty mug goes back in your bag
           else { this.drink.empty = true; if (!this.coffeeDone()) this.say(this.tx(this.drink.staffBrew ? "brew.bad" : this.drink.popcorn ? "popcorn.finished" : "drink.finished", { drink: n })); } }
       }
@@ -8404,9 +8404,10 @@ class Game {
   zoneCheck(quiet) {
     const z = this.zoneAt(this.room, this.player.x, this.player.y); if (!z || z === this.zone) return;
     const was = this.zone; this.zone = z; this.updateHud();
-    // The shirt quest: walk the upper hall (zone "upper") from the puzzle room to the strategy room (whatever they're called now).
-    if (z.id === "upper") this.upperWalk = !!(was && (was.id === "puzzle" || (was.id === "upper" && this.upperWalk)));
-    else { if (z.id === "strategy" && was && was.id === "upper" && this.upperWalk) this.quest("upperHall"); this.upperWalk = false; }
+    // The shirt quest: walk from the puzzle room to the strategy room (whatever they're called now) through the halls, the upper one's the way.
+    // Any hall counts along the way (the upper hall's corners are other hall zones, Joe 10/17); stepping into any other room breaks it.
+    if (z.kind === "hall") this.upperWalk = !!(was && (was.id === "puzzle" || (was.kind === "hall" && this.upperWalk)));
+    else { if (z.id === "strategy" && was && was.kind === "hall" && this.upperWalk) this.quest("upperHall"); this.upperWalk = false; }
     if (z.kind !== "room") return;
     const cer = (this.ceremonies || []).find(q => q.zone === z && !q.done);
     if (cer && this.room.id === "museum" && !this.isCurator()) { if (this.mode === "walk" && !this.trans) this.startCeremony(cer); else { const a = this.afterTrans; this.afterTrans = () => { if (a) a(); this.startCeremony(cer); }; } }
@@ -10720,7 +10721,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 93";
+const VERSION = "2026-11-18 cards 94";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
