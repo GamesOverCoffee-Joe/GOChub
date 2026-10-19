@@ -303,6 +303,39 @@ body.pv-max .preview > :not(#stage):not(#controls):not(.jump):not(#pvHold){displ
 .cboard .cbar span{background:#3a282e;border-radius:2px;font-size:.7rem;line-height:22px;text-align:center;color:#b8a8a0;overflow:hidden;white-space:nowrap}
 .cboard .cbar span.on{background:#5a3f2a;color:#f6eedd}
 .cboard .cbar i{position:absolute;top:-3px;bottom:-3px;width:3px;background:#fff;border-radius:2px;left:0}
+#main .pvmenu{max-width:760px;padding:0;gap:14px;background:transparent;border:0} /* (the redesign: cards on the page, not one dark box) */
+.pvcard{background:#281a1f;border:2px solid #4b343b;border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;color:#f3e9d2}
+.pvscene{flex-direction:row;flex-wrap:wrap;align-items:flex-end;gap:12px 16px}
+.pvf{display:flex;flex-direction:column;gap:4px;min-width:0}
+.pvl{font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:#b8a8a0}
+.pvcard select,.pvcard input[type=number]{font:inherit;font-size:.9rem;background:#1e1317;color:#f6eedd;border:2px solid #4b343b;border-radius:4px;padding:.3em .5em;min-height:34px}
+.pvcard select:focus-visible,.pvcard input:focus-visible{outline:2px solid #e8b24a;outline-offset:1px}
+.seg.sm button{padding:.3em .8em;flex:0 0 auto}
+.pvhead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.pvt{margin:0;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:#e8b24a}
+.pvbtns,.pvrow{display:flex;gap:6px;align-items:center}
+.pvrow.wrap{flex-wrap:wrap}
+.pvrow .grow{flex:1;min-width:0}
+.pvcard .btn{--surface:#34232a;--surface-2:#3e2a32;--text:#f3e5d0;--line:#5a4048;--shadow:#0a0507}
+.pvtip{margin:0;font-size:.82rem;color:#b8a8a0}
+.pvmsg{font-size:.88rem;color:#d8c8b8;min-height:1.3em}
+.pverr{font-size:.85rem;color:#f08a6a;border-left:3px solid #f08a6a;padding-left:8px}
+.pvreport{font-size:.82rem;max-height:160px;overflow:auto;color:#d8c8b8}
+.pvchecks{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.9rem}
+.pvchecks label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.pvinline{display:flex;gap:6px;align-items:center;font-size:.9rem}
+.pvinline input{width:5.5em}
+.pvstock{display:grid;gap:4px;margin:6px 0}
+.pvd{border-top:1px solid #4b343b;padding-top:8px}
+.pvd > summary{cursor:pointer;font-size:.88rem;font-weight:700;color:#d8c8b8;list-style-position:inside}
+.pvd > summary:hover{color:#f6eedd}
+.pvd[open] > summary{margin-bottom:8px}
+.crows{display:grid;grid-template-columns:7.5em 1fr;gap:6px 14px;font-size:.92rem;line-height:1.4}
+.crows .ck{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#e8b24a;padding-top:.2em}
+.crows .cv{overflow-wrap:anywhere}
+.cboard{margin-top:0}
+.cboard .cbar span{cursor:pointer}
+.cboard .cbar span:hover{background:#4a3238;color:#f6eedd}
 .pvgrid .btn{justify-content:center;font-size:.78rem;padding:.35em .3em;min-height:32px}
 .trig{grid-template-columns:repeat(auto-fill,minmax(170px,1fr)) !important}
 .trig .btn{white-space:normal;line-height:1.25;text-align:left;justify-content:flex-start;height:auto;padding:.45em .6em;overflow-wrap:anywhere}
@@ -388,66 +421,65 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
       <button class="btn applyb" type="button" id="applyBtn" title="Load your latest changes into the preview">Apply to preview<span class="dot" id="applyDot" hidden></span></button>
       <label class="sr-only" for="goRoom">Go to room</label>
       <select id="goRoom" class="btn" aria-label="Go to room"></select>
-      <button class="btn" type="button" id="pvOpts" title="View as, time, day, the visit clock, make things happen">Options</button>
+      <button class="btn" type="button" id="pvOpts" title="The Preview tab: the day, the visit clock, jumping to events, test helpers">Options</button>
       <button class="btn" type="button" id="pvMax" title="Fill the screen with the preview, like the game's full screen button" aria-pressed="false">Maximize</button>
     </div>
     <div id="pvHold" hidden>
         <div class="pvmenu" id="pvMenu">
-          <div class="pvsec"><span class="pvh">View as</span>
-            <div class="seg" id="segWho" role="group" aria-label="View the preview as"><button type="button" data-v="curator" title="Hang crates, see everything, notes off">Curator</button><button type="button" data-v="visitor" title="What a player sees">Visitor</button></div></div>
-          <div class="pvsec"><span class="pvh">Time of day</span>
-            <div class="seg" id="segTime" role="group" aria-label="Time of day"><button type="button" data-v="" title="Follow the real clock">Clock</button><button type="button" data-v="day">Day</button><button type="button" data-v="sunset">Sunset</button><button type="button" data-v="night">Night</button></div></div>
-          <div class="pvsec"><span class="pvh">Day of the week</span>
-            <div class="seg" id="segDay" role="group" aria-label="Day of the week"><button type="button" data-v="" title="Follow the real calendar">Auto</button><button type="button" data-v="1">Mon</button><button type="button" data-v="2">Tue</button><button type="button" data-v="3">Wed</button><button type="button" data-v="4">Thu</button><button type="button" data-v="5">Fri</button><button type="button" data-v="6">Sat</button><button type="button" data-v="0">Sun</button></div>
-            <div style="display:flex;gap:6px;margin-top:4px"><button class="btn" type="button" id="dayBtn" title="The next day: a new loop, curious visitors come back, the museum opens again">Tomorrow</button></div></div>
-          <div class="pvsec"><span class="pvh">Test triggers</span>
-            <p class="note" style="margin:0 0 4px;font-size:.85rem">Every day's event, the loop's problems, closing and the finds. A stop sets the day and the quarter it needs, then puts you beside it. Next and Back hop through them in order; Check everything visits every stop on every day and lists anything that went wrong.</p>
-            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button class="btn" type="button" id="trigPrev" title="The stop before">&#9664; Back</button><button class="btn" type="button" id="trigNext" title="The next stop">Next &#9654;</button><button class="btn" type="button" id="trigAll" title="Visit every stop on every day of the week (about a minute) and list anything that went wrong">Check everything</button></div>
-            <div id="trigMsg" class="note" style="margin:4px 0;min-height:1.4em;font-size:.88rem"></div>
-            <div id="trigReport" class="note" style="font-size:.82rem;max-height:160px;overflow:auto"></div>
-            <div id="trigList"></div>
-            <div id="errBox" class="note" style="margin-top:6px;font-size:.85rem"></div></div>
-          <div class="pvsec"><span class="pvh">Spooky moments</span>
-            <div class="seg" id="segSpook" role="group" aria-label="Spooky moments"><button type="button" data-v="rare" title="About one closing in five, as players get it">Rare</button><button type="button" data-v="always" title="Every time the lights go out (handy for recording)">Every closing</button></div></div>
-          <div class="pvsec"><span class="pvh">Visitor numbers</span>
-            <div class="seg" id="segWill" role="group" aria-label="Visitor numbers"><button type="button" data-v="off">Hidden</button><button type="button" data-v="on" title="Over each visitor within 3 tiles of you: their number, and under it how willing they are (0 to 4), one digit each: exhibit, seat, café, throwing a cup away, photo, chatting (other visitors, the cat), shop, helping out (plants, litter, the jammed can), mischief (the lights, Joe)">Show</button></div></div>
-          <div class="pvsec"><span class="pvh">Test pieces</span>
-            <div class="seg" id="segTest" role="group" aria-label="Test pieces"><button type="button" data-v="off">Off</button><button type="button" data-v="on" title="60 placeholder pieces, so the oldest go to the rooms' touch screens. Never saved to the pack.">60 placeholders</button></div></div>
-          <div class="pvsec"><span class="pvh">Make it happen</span>
-            <div class="pvgrid">
-              <label class="btn" style="display:flex;gap:6px;align-items:center" title="Set how many tokens you have in this preview">Tokens <input id="walletIn" type="number" min="0" max="9999" style="width:70px"></label>
-              <button class="btn" type="button" id="lineBtn" title="Eight people already queued up at the café counter (go to the café first)">A long line</button>
-              <button class="btn" type="button" id="binsBtn" title="Today's jammed trash can jammed again, with a full pile of litter beside it">Jam the can</button>
-              <label class="btn" style="display:flex;gap:6px;align-items:center" title="Every card or pack you buy in this preview has a rare in it"><input id="rareIn" type="checkbox"> Rare cards</label>
-            </div></div>
-          <div class="pvsec"><span class="pvh">Force stock</span>
-            <div class="note" style="font-size:.85rem;margin:0 0 6px">To test: what's on the gift shop's shelves, and on Bluu's table on Saturday (each real or fake). This preview only; Clear goes back to the day's own stock.</div>
-            <div id="forceGift" style="display:grid;gap:4px;margin-bottom:8px"></div>
-            <div id="forceBluu" style="display:grid;gap:4px"></div>
-            <div style="display:flex;gap:6px;margin-top:6px"><button class="btn" type="button" id="forceApply">Stock it</button><button class="btn" type="button" id="forceClear">Clear</button></div></div>
-          <div class="pvsec"><span class="pvh">Visit clock</span>
-            <div class="seg" id="segBeat" role="group" aria-label="Jump to a beat"><button type="button" data-v="0" title="Jump to this quarter of the visit">Settling in</button><button type="button" data-v="1" title="Jump to this quarter of the visit">Getting busy</button><button type="button" data-v="2" title="Jump to this quarter of the visit">Rush</button><button type="button" data-v="3" title="Jump to this quarter of the visit">Winding down</button></div>
-            <div id="probPick" style="display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font-size:.92rem" title="Every problem runs every loop. Untick Auto to turn some off and try others on their own (the preview only)"></div>
-            <div style="display:flex;gap:6px;align-items:center;margin-top:6px"><button class="btn" type="button" id="clockPause" title="Stop or start the visit clock in this preview">Pause</button><button class="btn" type="button" id="clockFwd" title="Skip ahead one minute">+1 min</button><button class="btn" type="button" id="clockReplay" title="The loop starts over at 0:00: fresh deliveries, bins, tour and janitor (chores, tokens and photos stay)">Replay the loop</button></div>
-            <div id="clockBoard" class="cboard" aria-live="off"></div>
+          <!-- The Preview tab, redesigned (Joe 10/19: everything fighting for attention). Four cards; the details fold away. -->
+          <div class="pvcard pvscene" aria-label="The scene">
+            <div class="pvf"><span class="pvl">View as</span><div class="seg sm" id="segWho" role="group" aria-label="View the preview as"><button type="button" data-v="curator" title="Hang crates, see everything">Curator</button><button type="button" data-v="visitor" title="What a player sees">Player</button></div></div>
+            <label class="pvf"><span class="pvl">Mode</span><select id="selMode" title="How the museum plays: Normal, one problem a day; Busy, all of them; Chill, none"><option value="normal">Normal</option><option value="busy">Busy</option><option value="chill">Chill</option></select></label>
+            <label class="pvf"><span class="pvl">Day</span><select id="selDay"><option value="">Today</option><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select></label>
+            <label class="pvf"><span class="pvl">Time</span><select id="selTime"><option value="">Real clock</option><option value="day">Day</option><option value="sunset">Sunset</option><option value="night">Night</option></select></label>
+            <div class="pvf"><span class="pvl">&nbsp;</span><button class="btn" type="button" id="dayBtn" title="The next day: a new loop, curious visitors come back, the museum opens again">Tomorrow</button></div>
           </div>
-          <div class="pvsec"><span class="pvh">Start fresh</span>
-            <div class="pvgrid">
-              <button class="btn" type="button" id="recrate" title="Pieces with a future unveil date go back in their crates, so you can hang them again">Re-crate upcoming</button>
-              <button class="btn" type="button" id="reread" title="Forget which placards you've read, so every border goes back to red">Unread everything</button>
-              <button class="btn" type="button" id="rechore" title="Forget everything done in this preview: chores, tokens, photos, achievements, the office; the visit clock, the Janitor, deliveries, bins and the café line start over too. The lights come back on and visitors return. (The preview never saves; players' saves aren't touched.)">Start the visit over</button>
-            </div></div>
+          <div class="pvcard">
+            <div class="pvhead"><h3 class="pvt">Visit clock</h3><div class="pvbtns"><button class="btn small" type="button" id="clockPause" title="Stop or start the visit clock in this preview">Pause</button><button class="btn small" type="button" id="clockFwd" title="Skip ahead one minute">+1 min</button><button class="btn small" type="button" id="clockReplay" title="The loop starts over at 0:00: fresh deliveries, bins, tour and janitor (chores, tokens and photos stay)">Replay</button></div></div>
+            <div id="clockBoard" class="cboard" aria-live="off"></div>
+            <p class="pvtip">Click a quarter to jump to it.</p>
+            <details class="pvd"><summary>What's going on</summary><div id="clockRows" class="crows"></div></details>
+            <details class="pvd"><summary>Pick today's problems</summary><div id="probPick" class="pvchecks" title="Leave Auto on to get what the mode picks. Untick it to choose the problems yourself (the preview only)"></div></details>
+          </div>
+          <div class="pvcard">
+            <div class="pvhead"><h3 class="pvt">Jump to</h3></div>
+            <div class="pvrow"><label class="sr-only" for="trigSel">Event</label><select id="trigSel" class="grow" title="Every day's event, the loop's problems, closing and the finds: it sets the day and the quarter it needs, then puts you beside it"></select><button class="btn" type="button" id="trigPrev" title="The one before" aria-label="Previous">&#9664;</button><button class="btn" type="button" id="trigNext" title="The next one" aria-label="Next">&#9654;</button></div>
+            <div id="trigMsg" class="pvmsg"></div>
+            <div id="errBox" class="pverr" hidden></div>
+            <details class="pvd"><summary>Check everything</summary><p class="pvtip">Visits every stop on every day (about a minute) and lists anything that broke.</p><button class="btn small" type="button" id="trigAll">Run the check</button><div id="trigReport" class="pvreport"></div></details>
+          </div>
+          <div class="pvcard">
+            <div class="pvhead"><h3 class="pvt">Test helpers</h3></div>
+            <div class="pvrow wrap">
+              <label class="pvinline" title="Set how many tokens you have in this preview">Tokens <input id="walletIn" type="number" min="0" max="9999"></label>
+              <button class="btn small" type="button" id="lineBtn" title="Eight people already queued up at the café counter (go to the café first)">Fill the café line</button>
+              <button class="btn small" type="button" id="binsBtn" title="Today's jammed trash can jammed again, with a full pile of litter beside it">Jam the trash can</button>
+            </div>
+            <div class="pvchecks">
+              <label title="Over each visitor within 3 tiles: their number, then how willing they are (0 to 4) for an exhibit, a seat, the café, throwing a cup away, a photo, chatting, the shop, helping out and mischief"><input type="checkbox" id="chkWill"> Visitor numbers</label>
+              <label title="Every card or pack you buy in this preview has a rare in it"><input id="rareIn" type="checkbox"> Rare cards</label>
+              <label title="The spooky moment every time the lights go out, not one closing in five (handy for recording)"><input type="checkbox" id="chkSpook"> Spooky every closing</label>
+              <label title="60 placeholder pieces, so the oldest go to the rooms' touch screens. Never saved to the pack."><input type="checkbox" id="chkTest"> 60 test pieces</label>
+            </div>
+            <details class="pvd"><summary>Force the shop's stock</summary><p class="pvtip">What's on the gift shop's shelves, and Bluu's table on Saturday. Clear goes back to the day's own.</p>
+              <div id="forceGift" class="pvstock"></div><div id="forceBluu" class="pvstock"></div>
+              <div class="pvrow"><button class="btn small" type="button" id="forceApply">Stock it</button><button class="btn small" type="button" id="forceClear">Clear</button></div></details>
+            <details class="pvd"><summary>Start over</summary>
+              <div class="pvrow wrap"><button class="btn small" type="button" id="rechore" title="Forget everything done in this preview: chores, tokens, photos, achievements, the office; the visit clock, the Janitor, deliveries, bins and the café line start over too">The whole visit</button>
+              <button class="btn small" type="button" id="reread" title="Forget which placards you've read, so every border goes back to red">Unread every placard</button>
+              <button class="btn small" type="button" id="recrate" title="Pieces with a future unveil date go back in their crates, so you can hang them again">Re-crate upcoming pieces</button></div></details>
+          </div>
         </div>
     </div>
     <p class="pv-hint" id="ver" style="font-size:.75rem"></p>
-    <p class="pv-hint" id="pvHint">Click the preview, then walk with the arrow keys or WASD. Z or Space to look and hang, X to go back or take a photo, Enter for the menu. Hold up or down in a menu to scroll.</p>
+    <p class="pv-hint" id="pvHint" title="Arrow keys or WASD to walk. Z or Space: look, talk, hang. X: back or photo. Enter: menu. C or Shift: think.">Click the preview to play.</p>
   </aside>
 </div>
 <script>
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 114";
+window.GOQ_WANT = "2026-11-18 cards 115";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -692,11 +724,14 @@ fillRoomPicker();
 const seg = (id, val, pick) => { const box = $("#" + id), show = v => box.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === v)); show(val);
   box.addEventListener("click", async e => { const b = e.target.closest("button"); if (!b) return; show(b.dataset.v); await pick(b.dataset.v); stage.focus({ preventScroll: true }); }); };
 seg("segWho", game.curator ? "curator" : "visitor", v => game.setCurator(v === "curator"));
-seg("segTime", game.timeOverride || "", v => game.setTime(v || null)); // pin day, sunset or night to see (and record) the evening details
-seg("segDay", "", v => game.setDay(v === "" ? null : +v)); // try any day's event without waiting for it
-seg("segSpook", game.forceSpook ? "always" : "rare", v => { game.forceSpook = v === "always"; game.spook = null; });
-seg("segWill", game.showWill ? "on" : "off", v => { game.showWill = v === "on"; }); // recommending (Joe 10/19): number, then one digit per RECO_KINDS
-seg("segTest", testPieces ? "on" : "off", async v => { testPieces = v === "on"; await refreshPreview(); status(testPieces ? "Preview has 60 test pieces; the oldest are on the rooms' touch screens" : "Test pieces removed from the preview"); });
+const pick = (id, fn) => $("#" + id).addEventListener("change", async e => { await fn(e.target.value); stage.focus({ preventScroll: true }); });
+pick("selTime", v => game.setTime(v || null)); $("#selTime").value = game.timeOverride || ""; // pin day, sunset or night to see (and record) the evening details
+pick("selDay", v => game.setDay(v === "" ? null : +v)); // try any day's event without waiting for it
+pick("selMode", v => { game.setMode(v); showClock(); }); game.ready.then(() => { $("#selMode").value = game.gameMode ? game.gameMode() : "normal"; });
+const tick = (id, on, fn) => { const c = $("#" + id); c.checked = !!on; c.addEventListener("change", async () => { await fn(c.checked); stage.focus({ preventScroll: true }); }); };
+tick("chkSpook", game.forceSpook, v => { game.forceSpook = v; game.spook = null; });
+tick("chkWill", game.showWill, v => { game.showWill = v; }); // recommending (Joe 10/19): number, then one digit per RECO_KINDS
+tick("chkTest", testPieces, async v => { testPieces = v; await refreshPreview(); status(testPieces ? "Preview has 60 test pieces; the oldest are on the rooms' touch screens" : "Test pieces removed from the preview"); });
 $("#recrate").addEventListener("click", () => { game.resetHangs(); stage.focus({ preventScroll: true }); });
 $("#rechore").addEventListener("click", () => { game.resetProgress(); status("The preview's visit starts over"); stage.focus({ preventScroll: true }); });
 $("#reread").addEventListener("click", () => { game.resetRead(); stage.focus({ preventScroll: true }); });
@@ -761,8 +796,8 @@ function render() { $("#pvHold").appendChild($("#pvMenu")); renderTab(); tidyTab
 function renderPreviewTab() {
   const main = $("#main"); main.innerHTML = "";
   const wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
-  wrap.appendChild(el("h2", { class: "title", text: "Preview options" }));
-  wrap.appendChild(el("p", { class: "note", text: "These change only the live preview on the right, never the pack or anyone's save. Each row is a setting (the lit one is on); the buttons make something happen right away." }));
+  wrap.appendChild(el("h2", { class: "title", text: "Preview" }));
+  wrap.appendChild(el("p", { class: "note", text: "Only the preview on the right changes. Nothing here is saved to the pack." }));
   wrap.appendChild($("#pvMenu")); showClock(); drawTriggers(); showErrors(); showDaySeg();
 }
 function renderTab() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "visitors") renderVisitors(); else if (tab === "shop") renderShop(); else if (tab === "cards") renderCards(); else if (tab === "tokens") renderTokens(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else if (tab === "notes") renderNotes(); else if (tab === "episode") renderEpisode(); else if (tab === "preview") { renderPreviewTab(); forceFill(); } else renderPieces(); }
@@ -3167,7 +3202,6 @@ function pieceRow(p, i, place, opts) {
 }
 
 /* ---------- Visit clock: the director's 12-minute loop (living museum). Jump to a beat, pause, skip ahead; see what's active. ---------- */
-document.querySelectorAll("#segBeat button").forEach(b => b.addEventListener("click", () => { game.setVisitClock(+b.dataset.v * game.director().minutes / 4); showClock(); stage.focus({ preventScroll: true }); }));
 $("#clockPause").addEventListener("click", () => { const d = game.director(); game.setVisitClock(null, !d.paused); showClock(); });
 $("#clockFwd").addEventListener("click", () => { const d = game.director(); game.setVisitClock(Math.min(d.minutes - 0.01, d.min + 1)); showClock(); });
 $("#clockReplay").addEventListener("click", () => { game.replayLoop(); showClock(); stage.focus({ preventScroll: true }); });
@@ -3176,8 +3210,8 @@ function showClock() {
   if (!B.firstChild) { // built once; after this only the words change, so the panel keeps its size
     const row = (k, id, cls) => [el("div", { class: "ck", text: k }), el("div", { class: "cv" + (cls ? " " + cls : ""), id })];
     B.append(el("div", { class: "ctime" }, [el("span", { class: "cbig", id: "ckTime" }), el("span", { class: "cbeat", id: "ckBeat" }), el("span", { class: "cstate", id: "ckState" })]),
-      el("div", { class: "cbar", id: "ckBar" }, ["Settling in", "Getting busy", "Rush", "Winding down"].map(t => el("span", { text: t })).concat([el("i", { id: "ckMark" })])),
-      ...row("This room", "ckRoom"), ...row("Janitor", "ckJan"), ...row("Litter", "ckLit", "l3"), ...row("Supplies", "ckSup"), ...row("Tour", "ckTour"), ...row("Conservator", "ckCons"), ...row("Break room", "ckItem"), ...row("Solved", "ckSolved"));
+      el("div", { class: "cbar", id: "ckBar" }, ["Settling in", "Getting busy", "Rush", "Winding down"].map((t, q) => el("span", { text: t, title: "Jump to " + t.toLowerCase(), onclick: () => { game.setVisitClock(q * game.director().minutes / 4); showClock(); stage.focus({ preventScroll: true }); } })).concat([el("i", { id: "ckMark" })])));
+    $("#clockRows").append(...row("This room", "ckRoom"), ...row("Janitor", "ckJan"), ...row("Litter", "ckLit", "l3"), ...row("Supplies", "ckSup"), ...row("Tour", "ckTour"), ...row("Conservator", "ckCons"), ...row("Break room", "ckItem"), ...row("Solved", "ckSolved"));
   }
   const d = game.director(), m = Math.floor(d.min), sec = Math.floor((d.min - m) * 60), set = (id, t) => { const e = $("#" + id); if (e.textContent !== t) e.textContent = t; };
   const tail = (s, k) => (s || "").replace(new RegExp("^" + k + ":\\s*"), "") || "—"; // the label's already in the left column
@@ -3195,7 +3229,6 @@ function showClock() {
   set("ckItem", (game.sideInfo && game.sideInfo("item")) || (d.problems.includes("item") ? "Not today (the tutorial's on)." : "Off this loop."));
   set("ckSolved", (game.solvedInfo && game.solvedInfo()) || "—");
   $("#clockPause").textContent = d.paused ? "Resume" : "Pause";
-  document.querySelectorAll("#segBeat button").forEach(b => b.setAttribute("aria-pressed", String(!d.over && +b.dataset.v === d.beat)));
   probSync();
 }
 setInterval(() => { if (tab === "preview") showClock(); }, 1000);
@@ -3203,21 +3236,23 @@ setInterval(() => { if (tab === "preview") showClock(); }, 1000);
 let trigI = -1, trigBusy = false;
 const wait = ms => new Promise(r => setTimeout(r, ms));
 const DAYN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-function showDaySeg() { const v = game.dayOverride === null || game.dayOverride === undefined ? "" : String(game.dayOverride); document.querySelectorAll("#segDay button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === v)); }
+function showDaySeg() { const v = game.dayOverride === null || game.dayOverride === undefined ? "" : String(game.dayOverride); $("#selDay").value = v; if (game.gameMode) $("#selMode").value = game.gameMode(); }
 async function goTrigger(i, quiet) {
   const L = game.testTriggers(), t = L[(i + L.length) % L.length]; trigI = L.indexOf(t);
   let r; try { game.testPrep(t); showDaySeg(); await wait(450); r = game.testGo(t); } catch (e) { r = "It broke: " + e.message; game.crash(e, "test: " + t.label); }
   if (!quiet) { $("#trigMsg").textContent = (trigI + 1) + "/" + L.length + " · " + t.label + (t.day !== undefined ? " (" + DAYN[t.day] + ")" : "") + ": " + (r === true ? "you're beside it." : r); drawTriggers(); showErrors(); showClock(); stage.focus({ preventScroll: true }); }
   return r;
 }
-function drawTriggers() {
-  const box = $("#trigList"); if (!box) return; box.innerHTML = ""; const L = game.testTriggers(), groups = [...new Set(L.map(t => t.group))];
-  groups.forEach(g => { box.appendChild(el("div", { class: "pvh", style: "margin:6px 0 2px", text: g }));
-    box.appendChild(el("div", { class: "pvgrid trig" }, L.map((t, i) => t.group !== g ? null : el("button", { type: "button", class: "btn" + (i === trigI ? " primary" : ""), text: t.label, title: (t.day !== undefined ? DAYN[t.day] + ". " : "") + (t.beat !== undefined ? "Jumps the clock to " + ["0:00", "3:00", "6:00", "9:00"][t.beat] + ". " : ""), onclick: () => goTrigger(i) })).filter(Boolean))); });
+function drawTriggers() { // one list, grouped (it was a wall of buttons, Joe 10/19)
+  const sel = $("#trigSel"); if (!sel) return; const L = game.testTriggers(), groups = [...new Set(L.map(t => t.group))];
+  if (sel.options.length !== L.length + 1) { sel.innerHTML = ""; sel.appendChild(el("option", { value: "", text: "Pick an event..." }));
+    groups.forEach(g => sel.appendChild(el("optgroup", { label: g }, L.map((t, i) => t.group !== g ? null : el("option", { value: String(i), text: t.label })).filter(Boolean)))); }
+  sel.value = trigI >= 0 ? String(trigI) : "";
 }
+$("#trigSel").addEventListener("change", e => { if (e.target.value !== "") goTrigger(+e.target.value); });
 function showErrors() {
   const box = $("#errBox"); if (!box) return; const E = game.errors || [], off = Object.keys(game.livingOff || {}); box.innerHTML = "";
-  if (!E.length && !off.length) { box.textContent = "No errors this session."; return; }
+  box.hidden = !E.length && !off.length; if (box.hidden) return; // only when something's gone wrong
   box.appendChild(el("b", { text: E.length + " error" + (E.length === 1 ? "" : "s") + " this session" + (off.length ? " · stopped: " + off.join(", ") : "") + " " }));
   box.appendChild(el("button", { type: "button", class: "btn small quiet", text: "Clear", onclick: () => { game.errors = []; game.livingOff = {}; showErrors(); } }));
   E.slice(-8).forEach(x => box.appendChild(el("div", { text: "[" + x.at + "] " + x.where + (x.room ? " (in " + x.room + ")" : "") + ": " + x.msg + (x.n > 1 ? " ×" + x.n : "") })));
