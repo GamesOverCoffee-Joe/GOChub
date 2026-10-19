@@ -7751,7 +7751,7 @@ class Game {
     const q = this.pos(n), far = !n.follow && !(q.x + 16 > this.camX && q.x < this.camX + SW && q.y + 16 > this.camY && q.y < this.camY + SH); // off where you can't see them (Joe 10/19)
     if (!far) { thanks(); return; }
     this.el.text.style.display = "none"; this.txt = null; this.mode = "busy"; this.player.moving = false; // the game waits; the camera lifts and glides over to them
-    this.cine = { fx: q.x + 8, fy: q.y, blend: 0, goal: 1, wait: 64, then: thanks, arc: true };
+    this.cine = { fx: q.x + 8, fy: q.y, blend: 0, goal: 1, dur: 200, wait: 230, then: thanks, arc: true, soft: true }; // a slow glide, over 3⅓ seconds (Joe 10/19: way too fast)
   }
   farBack() { // after a moment somewhere else: your tokens come in there, then a dip to black and you're back
     const back = () => { this.mode = "busy"; this.trans = { t: 0, dur: 20, switched: false, fn: () => { this.cine = null; } }; };
@@ -8756,7 +8756,7 @@ class Game {
       else if (tr.t >= tr.dur * 2) { this.trans = null; this.fade = 0; this.mode = "walk"; if (tr.after) tr.after(); if (this.afterTrans) { const fn = this.afterTrans; this.afterTrans = null; fn(); } }
     }
     if (this.cine) {
-      const c = this.cine; c.blend = Math.abs(c.goal - c.blend) <= 1 / 40 ? c.goal : c.blend + (c.goal > c.blend ? 1 : -1) / 40; c.blend = Math.max(0, Math.min(1, c.blend)); // (there: it stays put, no pixel back and forth)
+      const c = this.cine, st = 1 / (c.dur || 40); c.blend = Math.abs(c.goal - c.blend) <= st ? c.goal : c.blend + (c.goal > c.blend ? 1 : -1) * st; // dur: frames for the whole move c.blend = Math.max(0, Math.min(1, c.blend)); // (there: it stays put, no pixel back and forth)
       if (this.mode === "busy" && c.wait > 0 && --c.wait === 0 && c.then) { const fn = c.then; c.then = null; fn(); }
     }
     if (this.started && this.mode === "walk" && !this.trans && !this.askingMode && this.needMode()) this.askMode(); // past the tutorial before there were modes: asked once
@@ -11070,8 +11070,8 @@ class Game {
     const VWp = full ? full.w : SW, VHp = full ? full.h : SH;
     ctx.fillStyle = "#000"; ctx.fillRect(0, 0, VWp, VHp);
     const rw = r.w * T, rh = r.h * T;
-    const cn = this.cine && !full ? this.cine : null, ke = cn ? cn.blend * cn.blend * (3 - 2 * cn.blend) : 0; // the ceremony's camera: eased from you to the piece
-    const fx = cn ? pp.x + (cn.fx - 8 - pp.x) * ke : pp.x, fy = cn ? pp.y + (cn.fy - pp.y) * ke - (cn.arc ? Math.sin(Math.PI * ke) * 28 : 0) : pp.y; // arc: it floats up a little on the way
+    const cn = this.cine && !full ? this.cine : null, kb = cn ? cn.blend : 0, ke = !cn ? 0 : cn.soft ? kb * kb * kb * (kb * (kb * 6 - 15) + 10) : kb * kb * (3 - 2 * kb); // soft: an even gentler start and finish // the ceremony's camera: eased from you to the piece
+    const fx = cn ? pp.x + (cn.fx - 8 - pp.x) * ke : pp.x, fy = cn ? pp.y + (cn.fy - pp.y) * ke - (cn.arc ? Math.sin(Math.PI * ke) * 20 : 0) : pp.y; // arc: it floats up a little on the way
     const cx = full ? 0 : Math.round(rw <= SW ? (rw - SW) / 2 : Math.max(0, Math.min(rw - SW, fx + 8 - SW / 2)));
     const cy = full ? 0 : Math.round(rh <= SH ? (rh - SH) / 2 : Math.max(0, Math.min(rh - SH, fy + 8 - SH * (ROOMS[r.id].camAt || 0.5))));
     if (!full) { this.camX = cx; this.camY = cy; }
@@ -11316,7 +11316,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 119";
+const VERSION = "2026-11-18 cards 120";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
