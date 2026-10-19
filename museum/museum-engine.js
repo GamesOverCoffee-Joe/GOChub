@@ -95,6 +95,7 @@ const PAL = {
   ship:    [null, "#232a38", "#36405a", "#56627c", "#151a24", "#e04040", "#5a1c1c", "#40d8a8", "#163a30", "#8a96ac"],
   odesk:   [null, "#6a4a30", "#4a3220", "#2a1c12", "#141418", "#2e2e38", "#c8c8d0", "#e8dcc0", "#8a5a30", "#f0d020", "#f4f4f8"],
   tower:   [null, "#ececf2", "#c4c4d0", "#8a8a98", "#9a5cff", "#d4b8ff", "#4a4a56", "#141418"],
+  stv:     [null, "#181820", "#2e2e38", "#f0c8a0", "#c84868", "#4868b8", "#e8d8b8", "#7a5a9a"], // the staff room TV: bezel, skin, her, him, the set, the dramatic purple
   otv:     [null, "#121216", "#26262e", "#3c3c48", "#1c2a3a", "#4a88b8", "#a0d8f0", "#e05050"],
   oshelf:  [null, "#5a3a24", "#3a2414", "#24160c", "#c84a3a", "#3a6ac8", "#e0b040", "#4a9a5a", "#9a5ac8", "#e8e0d0"],
   ochair:  [null, "#24242c", "#3c3c48", "#5a5a68", "#141418"],
@@ -1273,6 +1274,13 @@ const GEN = {
     [[2, 3], [3, 3], [4, 3], [5, 3], [4, 2], [4, 4], [6, 1], [6, 2], [6, 3], [6, 4], [6, 5]].forEach(([x, y]) => px(a, x, y, 3));
     return outline(a, 3);
   },
+  staff_tv: f => { // the staff room's wall TV, always on a soap opera: two of them, then her close-up, then his
+    const a = mk(16, 16); rect(a, 1, 1, 14, 11, 2); rect(a, 2, 2, 12, 9, f === 1 ? 7 : 6);
+    if (f === 0) { rect(a, 4, 5, 2, 2, 3); rect(a, 4, 7, 2, 4, 4); rect(a, 10, 5, 2, 2, 3); rect(a, 10, 7, 2, 4, 5); }
+    else if (f === 1) { rect(a, 6, 3, 4, 4, 3); rect(a, 5, 7, 6, 4, 4); px(a, 7, 5, 1); px(a, 8, 5, 1); }
+    else { rect(a, 6, 3, 4, 4, 3); rect(a, 5, 7, 6, 4, 5); px(a, 7, 5, 1); px(a, 8, 5, 1); rect(a, 6, 3, 4, 1, 1); }
+    rect(a, 7, 12, 2, 2, 2); return outline(a, 1);
+  },
   bubble: f => {
     const a = rows(["........", ".000000.", "00000000", "00000000", "00000000", ".000000.", "...00...", "....0..."]);
     (f === 0 ? [[3, 1], [4, 1], [5, 2], [4, 3], [4, 5]] : [[4, 1], [4, 2], [4, 3], [4, 5]]).forEach(([x, y]) => px(a, x, y, 3));
@@ -1499,6 +1507,7 @@ const SLOTS = [
   { key: "ship_wall_lower", label: "Office wall, lower row", group: "Curator's office", w: 16, h: 16, frames: 2, fps: 1, pal: "ship", gen: GEN.ship_wall_lower, note: "2 frames (32×16): the control strip blinks a little." },
   { key: "office_desk", label: "Curator's desk", group: "Curator's office", w: 48, h: 32, pal: "odesk", gen: GEN.office_desk, note: "Three tiles wide, two tall: two monitors (off), keyboard, iced coffees, a can of yerba mate." },
   { key: "pc_tower", label: "White PC tower", group: "Curator's office", w: 16, h: 32, pal: "tower", gen: GEN.pc_tower, note: "Two tiles tall. A soft purple glow is added around it in the dark." },
+  { key: "staff_tv", label: "Staff room TV", group: "Staff", w: 16, h: 16, frames: 3, fps: 0.5, pal: "stv", gen: GEN.staff_tv, note: "3 frames (48×16), on the staff room's upper wall row, always on a soap opera: the scene, her close-up, his. A new frame every 2 seconds." },
   { key: "office_tv", label: "Office TV", group: "Curator's office", w: 32, h: 32, frames: 2, pal: "otv", gen: GEN.office_tv, note: "2 frames (64×32): off, on. When it's on, gameplay clips play over the picture area, 26×15 at (3, 4)." },
   { key: "office_shelf", label: "Bookshelf", group: "Curator's office", w: 32, h: 32, pal: "oshelf", gen: GEN.office_shelf, note: "Two tiles wide and tall. The books on it are in Words, Curator's office." },
   { key: "office_chair", label: "Office chair", group: "Curator's office", w: 16, h: 16, pal: "ochair", gen: GEN.office_chair, note: "Seen from behind, facing the desk." },
@@ -2576,6 +2585,8 @@ const TEXT = {
   "stairs.roof":       { g: "Floors", l: "Stairs to the roof (if a room has some)", v: [["That's the roof access."], ["I don't need to go to the roof."], ["I can't go to the roof because the door...yeah the door is locked."], ["Ok, seriously, there's nothing there."], ["The roof isn't made. It's not a part of the game."]] },
   "visitor.leaving":   { g: "Visitors", l: "Talking to a visitor on their way out (a wave, no chat; one at random)", by: "claude", v: [["They give you a little wave. They're on their way out."], ["Heading home. They wave on the way past."]] },
   "shop.ringing":      { g: "Gift shop", l: "The shopkeeper, while a visitor's paying at the counter", by: "claude", v: [["One sec! Just ringing someone up."], ["Be right with you. Somebody finally made up their mind."]] },
+  "tv.ask":            { g: "Staff", l: "The staff room TV (then Watch for a bit / Not now)", by: "claude", v: [["The staff room TV. A soap opera's on. Watch for a bit?"]] },
+  "tv.soap":           { g: "Staff", l: "Watching the soap opera on the staff room TV (picks one at random)", by: "claude", v: [["A man in a lab coat grabs a woman by the shoulders.", "\"Brenda. The baby... isn't mine.\"", "\"It's not yours, Chad. It's your twin brother's.\"", "\"I don't HAVE a twin brother!\"", "Dramatic music. Commercial break."], ["A woman throws a glass of wine across a fancy restaurant.", "\"You were dead, Rodrigo! I went to your funeral!\"", "\"Amnesia, Valentina. Six years of amnesia.\"", "...", "Nobody else in the restaurant reacts."], ["Two people whisper in a hospital hallway.", "\"If Doctor Steele finds out about the will...\"", "\"He won't. Not unless the evil twin talks.\"", "Thunder. Indoors. In the hallway.", "...You're kind of invested now."], ["It's a commercial for a mattress store.", "\"Everything must go! Again!\"", "...", "The soap comes back on. Someone's slapping someone. You missed why."]] },
   "move.ok":           { g: "Visitors", l: "A visitor stepping aside when you ask (one at random)", v: [["Oh! Sorry, go ahead."], ["My bad. All yours."], ["Oops, didn't see you there."]] },
   "move.stuck":        { g: "Visitors", l: "A boxed-in visitor, before they teleport (one at random)", v: [["Oh, I'd love to, but I'm a little stuck..."], ["Move? Where? There's nowhere to..."]] },
   "move.teleport":     { g: "Visitors", l: "You, after a boxed-in visitor teleports away (one at random)", v: [["...Did they just teleport?", "I'm going to pretend I didn't see that."], ["...they just disappeared.", "I should ask the curator what's in the coffee here."], ["*blink*", "Uh...where'd they go?"], ["...I guess that's a good solution."]] },
@@ -3406,7 +3417,7 @@ function buildRoom(id, pieces, o) {
   if (def.intercom) { const [x, y] = def.intercom; r.intercomAt = { x, y }; r.events[x + "," + y] = { announce: true }; }
   if (def.wallArt) {
     r.wallArt = def.wallArt;
-    def.wallArt.forEach(w => { for (let i = 0; i < SLOT[w.key].w / T; i++) r.events[(w.x + i) + "," + ((w.y || 1) + 1)] = w.cafe && w.key !== "cafe_menu" ? { cafe: true } : { say: w.say || ["The café menu."] }; });
+    def.wallArt.forEach(w => { for (let i = 0; i < SLOT[w.key].w / T; i++) r.events[(w.x + i) + "," + ((w.y || 1) + 1)] = w.key === "staff_tv" ? { staffTv: true } : w.cafe && w.key !== "cafe_menu" ? { cafe: true } : { say: w.say || ["The café menu."] }; });
   }
   r.decals = def.decals || []; r.glows = def.glows || []; r.bunting = !!def.bunting;
   r.wallpaper = SLOT[def.wallpaper] && SLOT[def.wallpaper].group === "Wallpaper" ? def.wallpaper : null; // every wall in the room papered with it
@@ -7852,6 +7863,7 @@ class Game {
     const prop = k => r.props.find(p => p.key === k), acts = [];
     (ROOMS.staff.lockers || []).forEach(x => { if (free(x, 3)) acts.push({ spots: [[x, 3, "up"]], pose: "busy", what: "locker" }); }); // (the lockers stand on the wall rows; you open them from the floor below)
     for (const [k, pose, prefer] of [["fridge", "busy", "right"], ["microwave_counter", "busy"], ["coffee_counter", "busy"], ["whiteboard", "busy"]]) { const p = prop(k); if (p) { const sp = front(p, prefer); if (sp.length) acts.push({ spots: sp, pose, what: k }); } }
+    const tv = (r.wallArt || []).find(w => w.key === "staff_tv"); if (tv && free(tv.x, (tv.y || 1) + 2)) acts.push({ spots: [[tv.x, (tv.y || 1) + 2, "up"]], pose: "startled", what: "tv" }); // glued to the soap opera (a "!" now and then)
     const stool = r.props.find(p => p.key === "cafe_stool" && p.sit); if (stool && !r.npcs.some(m => !m.patron && m.x === stool.x && m.y === stool.y)) acts.push({ seat: stool, pose: "smile", what: "table" });
     // shuffle, keeping one locker at most (six lockers would crowd out the rest)
     let lk = 0; const pool = acts.map(a => [Math.random(), a]).sort((a, b) => a[0] - b[0]).map(x => x[1]).filter(a => a.what !== "locker" || lk++ < 1);
@@ -8584,6 +8596,7 @@ class Game {
     else if (e.usher) { const u = this.room.npcs.find(n => n.usher); if (u) this.usherTalk(); else this.readGuestbook(); }
     else if (e.window) this.lookOutWindow();
     else if (e.shopCounter) this.shopCounter();
+    else if (e.staffTv) this.ask(this.tx("tv.ask").join(" "), ["Watch for a bit", "Not now"], i => { if (i !== 0) return; this.progress.tally.soap = (this.progress.tally.soap || 0) + 1; this.saveProgress(); this.say(this.tx("tv.soap")); }, 1); // the soap opera (Joe 10/19)
     else if (e.cafeSign) this.readCafeSign();
     else if (e.cafe) this.cafe();
     else if (e.staffCoffee) this.staffCoffee();
@@ -8911,7 +8924,8 @@ class Game {
     if (e.cat) return Object.assign(at, { kind: "cat" });
     if (e.trash && this.isJammed(r.id, x, y)) return Object.assign(at, { kind: "jam" });
     if (((this.litter && this.litter[r.id]) || []).some(l => l.x === x && l.y === y)) return Object.assign(at, { kind: "litter" });
-    { const wsh = (r.wallArt || []).find(w => w.key === "shop_shelves" && x >= w.x && x < w.x + SLOT[w.key].w / T && (y === (w.y || 1) || y === (w.y || 1) + 1)), merch = wsh ? this.shopLineup().filter(i => !i.cardSlot) : []; // the wall shelves the shopper stares at (Joe 10/19: they were "something else"): one of today's merch
+    { const wsh = (r.wallArt || []).find(w => w.key === "shop_shelves" && x >= w.x && x < w.x + SLOT[w.key].w / T && (y === (w.y || 1) || y === (w.y || 1) + 1)), merch = wsh ? this.shopLineup().filter((i, u) => !i.cardSlot && !(this.sup && this.sup.stocking && this.sup.emptyUnit === u)) : []; // the wall shelves the shopper stares at (Joe 10/19: they were "something else"): one of today's merch
+      if (e.unit !== undefined && this.sup && this.sup.stocking && this.sup.emptyUnit === e.unit) return Object.assign(at, { kind: "shop", empty: true }); // the empty shelf (Joe 10/19: it was a trading card)
       const it = e.unit !== undefined ? this.shopLineup()[e.unit] : e.featured ? this.pack.settings.shop.items.find(i => i.id === this.featuredId()) : merch.length ? merch[(x - wsh.x) % merch.length] : null; if (it) return Object.assign(at, { kind: "shop", item: it.id }); } // a shelf or the featured stand: the thing on it (Joe 10/19)
     const cafeBit = e.cafe || e.cafeSign || r.npcs.some(n => n.role === "barista" && n.x === x && n.y === y) || (r.props || []).some(p => p.x === x && p.y === y && /espresso|coffee|cafe|pastry|cup/.test(p.key)) || (r.wallArt || []).some(w => w.cafe && x >= w.x && x < w.x + SLOT[w.key].w / T && (y === (w.y || 1) || y === (w.y || 1) + 1));
     if (cafeBit) return Object.assign(at, { kind: "cafe" }, (r.props || []).some(p => p.key === "cafe_sign" && p.x === x && p.y === y) || e.cafeSign ? { special: true } : {}); // the café sign: today's special // the counter, the barista, the machine, the menu: all the café (Joe 10/19: nobody went for coffee)
@@ -8922,7 +8936,7 @@ class Game {
   }
   canRecommend(n) { const I = this.idea; return !!I && I.room === this.room.id && this.regularVisitor(n); } // a regular visitor in this room, with an idea from this room in mind
   regularVisitor(n) {
-    const T = this.tour; if (!n || (!n.random && !/^visitor_[abc]$/.test(n.sheet || ""))) return false; // the crowd, and anyone else who's just a visitor (placed in the room, a member out in the museum: Joe 10/19, no number, no Recommend); (the tour, once they've broken up to wander: random again)
+    const T = this.tour; if (!n || n.sheet === "kid" || (!n.random && !/^visitor_[abc]$/.test(n.sheet || ""))) return false; // (never a kid, Joe 10/19) // the crowd, and anyone else who's just a visitor (placed in the room, a member out in the museum: Joe 10/19, no number, no Recommend); (the tour, once they've broken up to wander: random again)
     if (n.cur || n.back || n.follow || n.reader || n.staff || n.role || n.patron || n.dayPerson || n.tourKid || n.schoolKid || n.kid || n.lost || n.teacher || n.consDream || n.janitor || n.usher || n.patrol) return false;
     if (T && n === T.guide) return false;
     if (T && T.members.includes(n) && (T.phase !== 2 || n.still || n === T.members.find(m => !m.tourKid && !m.schoolKid && !m.gone && !m.leaving))) return false; // the tour group, until they wander off on their own; never the grown-up the kid tags along with (Joe 10/19)
@@ -8944,7 +8958,7 @@ class Game {
     if (n.queue) { n.queue = null; n.route = null; n.goalT = null; } if (n.coffee) n.coffee = false; if (n.binAt) { n.binAt = null; n.route = null; } n.aside = null; // just on their way somewhere: they'll hear you out (Joe 10/19)
     const drink = n.drink, full = drink && !drink.empty, roll = k => Math.random() < [0.05, 0.3, 0.55, 0.8, 0.97][n.will[k] || 0];
     const go = (bad, kind, extra) => { // off they go (a sitter gets up first, but only for a yes: a bad fit, they react from their seat)
-      if (n.sitting && bad) { n.reco = { bad, kind, x: I.x, y: I.y, icon: I.icon }; this.recoArrive(n); n.timer = Math.max(n.timer || 0, 60); return; }
+      if (n.sitting && bad) { no("busy"); return; } // sitting, and it's not their thing: a "..." from their seat (Joe 10/19: a reaction and a photo from where they sat made no sense)
       if (n.sitting) { if (n.sitFrom) [n.x, n.y] = n.sitFrom; n.sitting = false; n.seat = null; }
       const near = extra && extra.goal || this.recoSpot(r, n, I.x, I.y); if (!near) { no("busy"); return; }
       Object.assign(n, { goalT: near, route: null, timer: 0, retry: 0, viewing: false, stepWait: 0, arrived: false, coffee: false, reco: { bad, kind, x: I.x, y: I.y, icon: I.icon }, recoIdea: bad ? null : I });
@@ -8958,6 +8972,7 @@ class Game {
       if (I.kind === "joe" && (!r.joe || r.joe.t)) { no("busy"); return; }
       if (!roll(act)) { no(); return; }
       go(false, I.kind); if (n.reco) Object.assign(n.reco, { plant: I.plant, key: I.key }); return; } }
+    if (I.kind === "shop" && (I.empty || !I.item)) { no("busy"); return; } // an empty shelf: nothing to want
     if (I.kind === "shop") { if (n.browsing ? true : roll("shop")) { go(false, "shop"); if (n.reco) n.reco.item = I.item; } else no(); return; } // something from the shop (the shopper who can't decide: always, Joe 10/19)
     if (I.kind === "person") { const m = I.who; // go and talk to someone (Joe 10/19)
       if (m === n) { no("shy"); return; } // "...me?"
@@ -8996,6 +9011,7 @@ class Game {
   }
   tellSomeone(n) {
     const T = n.tell, I = T.idea, r = this.room, key = I.kind + ":" + I.x + "," + I.y; n.tell = null;
+    if (n.sitting) { n.tell = { at: this.t + 240, idea: I }; return; } // still sitting (a seat you recommended: Joe 10/19, they got up after a few seconds): once they're up
     if (n.queue || n.ordering || n.leaving || n.reco || n.recoAt || n.chat || n.snapT > 0) return;
     const cands = r.npcs.filter(m => m !== n && this.regularVisitor(m) && m.gotIdea !== key && !m.reco && !m.recoAt && !m.askFx && !m.chat && !m.hold && !m.leaving && !(m.queue && m.queue.phase !== "join") && !m.ordering && Math.abs(m.x - n.x) + Math.abs(m.y - n.y) <= 9)
       .sort((a, b) => (Math.abs(a.x - n.x) + Math.abs(a.y - n.y)) - (Math.abs(b.x - n.x) + Math.abs(b.y - n.y)));
@@ -9051,6 +9067,7 @@ class Game {
     while (out.length < 5) { const [x, y] = out[out.length - 1], nx = [[0, side], [-1, 0], [1, 0]].map(([dx, dy]) => [x + dx, y + dy]).find(([a, b]) => ok(a, b) && !out.some(q => q[0] === a && q[1] === b)); if (!nx) break; out.push(nx); }
     return out;
   }
+  shopOpen() { const M = this.rooms && this.rooms.museum; return !this.closing && this.onBreak !== "shopkeeper" && !!M && M.npcs.some(n => n.role === "shopkeeper" && !n.stocking); } // someone at the till to pay
   shopQStep(n) {
     const r = this.room, Q = this.shopLine(r), S = n.shopQ;
     if (!Q.length || !n.reco) { n.shopQ = null; if (n.reco) this.payDone(n); return; }
@@ -9068,7 +9085,9 @@ class Game {
       if (this.tryMove(n, n.route[0])) { n.route.shift(); n.stepWait = this.strollWait(n); } else { n.route = null; n.stepWait = 15; }
       return;
     }
-    if (idx === 0) { n.dir = Q.length > 1 && Q[1][1] < Q[0][1] ? "down" : "up"; if (S.pay === undefined) S.pay = 100; if (--S.pay > 0) return; this.payDone(n); return; } // at the counter: paying
+    if (idx === 0) { n.dir = Q.length > 1 && Q[1][1] < Q[0][1] ? "down" : "up";
+      if (!this.shopOpen()) { if ((S.closedT = (S.closedT || 0) + 1) > 3600) { n.shopQ = null; this.recoGiveUp(n); return; } if (S.closedT % 480 === 240) n.pose = { kind: "busy", t0: this.t, dur: 70 }; return; } // the shopkeeper's off stocking (or on a break): they wait, up to a minute (time to bring the stock up), then give up
+      if (S.pay === undefined) S.pay = 100; if (--S.pay > 0) return; this.payDone(n); return; } // at the counter: paying
     const [px, py] = Q[idx - 1], dir = px > n.x ? "right" : px < n.x ? "left" : py > n.y ? "down" : "up";
     if (!occ(px, py)) { if (this.tryMove(n, dir)) n.stepWait = 8; } else n.dir = dir; // step up when the spot ahead frees
   }
@@ -9983,7 +10002,7 @@ class Game {
     const seen = this.room === M;
     S.stocking = !S.shopDone && !this.closing; // the cue: one shelf stands empty until the stock comes up (all loop, even once he opens anyway)
     const units = M.props.filter(p => p.unit !== undefined).map(u => ({ u, at: this.janBeside(M, u.x, u.y) })).filter(o => o.at);
-    if (S.emptyUnit === undefined && units.length) S.emptyUnit = units[units.length - 1].u.unit;
+    if (S.emptyUnit === undefined && units.length) S.emptyUnit = units[strSeed(todayISO() + ":empty:" + d.loop + ":" + this.daySeed()) % units.length].u.unit; // a different shelf each day (Joe 10/19: it was always the cards)
     if (sk && stocking && !sk.stocking && units.length) { sk.home = sk.home || [sk.x, sk.y, sk.dir]; sk.stocking = true; sk.shelfI = -1; sk.inspT = 0; }
     if (sk && stocking && sk.stocking && !sk.walkTo && --sk.inspT <= 0 && units.length) { // from shelf to shelf, a look at each (Joe 10/11)
       sk.shelfI = (sk.shelfI + 1) % units.length; const { u, at } = units[sk.shelfI], dir = this.janFace(at, u.x, u.y); sk.inspT = 150 + ((Math.random() * 120) | 0);
@@ -11109,7 +11128,7 @@ class Game {
       const x = r.windowAt.x * T - cx, y = r.windowAt.y * T - cy;
       this.drawSlot("sky_" + tod, 0, 0, x + 2, y + 2); this.drawSlot("window_frame", 0, 0, x, y);
     }
-    if (r.wallArt) r.wallArt.forEach(w => this.drawSlot(w.key, 0, 0, w.x * T - cx, (w.y || 1) * T - cy));
+    if (r.wallArt) r.wallArt.forEach(w => this.drawSlot(w.key, this.frame(w.key), 0, w.x * T - cx, (w.y || 1) * T - cy)); // (frames: the staff room TV)
     if (r.bunting) for (let x = 1; x < r.w - 1; x++) this.drawSlot("bunting", 0, 0, x * T - cx, T - cy);
     (r.unveilZones || []).forEach(z => { const R = z.rect; if (!R) return; const y = R.y - 2; for (let x = R.x; x < R.x + R.w; x++) if (r.tiles[y] && /upper/.test(String(r.tiles[y][x] || ""))) this.drawSlot("bunting", 0, 0, x * T - cx, y * T - cy); }); // an unveil day's bunting (a hallway has no bunting: a painting can unveil in one, Joe 10/16)
     if (r.switchAt) this.drawSlot("light_switch", 0, 0, r.switchAt.x * T - cx, r.switchAt.y * T - cy);
@@ -11287,7 +11306,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 117";
+const VERSION = "2026-11-18 cards 118";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
