@@ -8888,8 +8888,8 @@ class Game {
   }
   canRecommend(n) { const I = this.idea; return !!I && I.room === this.room.id && this.regularVisitor(n); } // a regular visitor in this room, with an idea from this room in mind
   regularVisitor(n) {
-    const T = this.tour; if (!n || !n.random) return false; // (the tour, once they've broken up to wander: random again)
-    if (n.cur || n.back || n.follow || n.reader || n.staff || n.role || n.patron || n.dayPerson || n.tourKid || n.schoolKid || n.kid || n.lost || n.teacher) return false;
+    const T = this.tour; if (!n || (!n.random && !/^visitor_[abc]$/.test(n.sheet || ""))) return false; // the crowd, and anyone else who's just a visitor (placed in the room, a member out in the museum: Joe 10/19, no number, no Recommend); (the tour, once they've broken up to wander: random again)
+    if (n.cur || n.back || n.follow || n.reader || n.staff || n.role || n.patron || n.dayPerson || n.tourKid || n.schoolKid || n.kid || n.lost || n.teacher || n.consDream || n.janitor || n.usher || n.patrol) return false;
     if (T && n === T.guide) return false;
     if (T && T.members.includes(n) && (T.phase !== 2 || n.still || n === T.members.find(m => !m.tourKid && !m.schoolKid && !m.gone && !m.leaving))) return false; // the tour group, until they wander off on their own; never the grown-up the kid tags along with (Joe 10/19)
     return this.room.id !== "screening"; // not in the theater
@@ -9218,7 +9218,7 @@ class Game {
     const def = ROOMS[this.room.id];
     { const F = this.visFlick; if (F && this.t >= F.until) { this.visFlick = null; this.lightsOff.delete(F.key); if (F.who && F.who.pose !== undefined) F.who.pose = { kind: "shy", t0: this.t, dur: 70 }; } } // a visitor flicked the lights: back on, and a sheepish blush
     for (const n of this.room.npcs.slice()) {
-      if (n.random && !n.will) { n.will = this.newWill(); n.vno = n.vno || this.nextVno(); } // the visitors already there when the room's built get theirs here
+      if (!n.will && !n.willChecked) { n.willChecked = true; if (this.regularVisitor(n)) { n.will = this.newWill(); n.vno = n.vno || this.nextVno(); } } // anyone who's a visitor gets theirs (once) // the visitors already there when the room's built get theirs here
       if (n.snapAt && this.t >= n.snapAt) { n.snapAt = null; if (!n.leaving && !n.moving) n.snapT = 70; } // the photo after the reaction
       if (n.snapT > 0) n.snapT--;
       if (n.sipT > 0) n.sipT--; // (here, not with the rest of their drink: someone leaving mid-sip walked out with the cup at their face, Joe 10/19)
@@ -11252,7 +11252,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 115";
+const VERSION = "2026-11-18 cards 116";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
