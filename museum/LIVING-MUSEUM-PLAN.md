@@ -266,6 +266,8 @@ Built one step at a time, each playable on its own:
 
 ### **Visitor personalities**
 
+*(Dropped, Joe 10/19: replaced by the willingness numbers in Thinking and recommending below. Kept here for the record.)*
+
 *(Joe's idea 10/10; Claude's plan below, with Joe's answers folded in.)*
 
 Each visitor gets a personality when they come in, and personalities play off each other when they meet. Every personality has the same four attributes, each scored 0 to 4 (0 = never, 4 = as much as possible; walking speed only runs 1 to 3).
@@ -347,7 +349,7 @@ Hold something in mind and recommend it to a visitor. They go to it and do somet
 - **Who:** the regular crowd only. Not curious visitors, staff, the usher, the conservator, tour groups, school kids or the lost kid.
 - **Sitting visitors:** yes, and they may get up if their personality likes the idea. Not someone reading a placard, and not anyone in the screening room.
 - **Not in the café line**, and **anyone mid-task turns you down automatically** (an emote, and they carry on).
-- The idea goes over as a little bubble from you to them, then their personality decides.
+- The idea goes over as a little bubble from you to them, then their willingness decides.
 
 **What they do (first version: things visitors already know how to do)**
 
@@ -359,45 +361,33 @@ Hold something in mind and recommend it to a visitor. They go to it and do somet
 | A trash can or the bus tub, holding an empty cup | Throw it away |
 | A trash can, holding a full drink | Turn you down: not done with it |
 
-**Bad fits still get a trip:** they walk over and do something funny instead of nothing. Ideas, from the emotes we have and a few small new ones:
+**Bad fits still get a trip:** they walk over and do something with it anyway, using only what visitors already do *(Joe 10/19: no new animations)*: the annoyed emote and walk off, a "…" and walk off, the "!" startle, or a photo with the flash, like it's an exhibit.
 
-- Stare at it with a "?" (a new emote frame), then walk off.
-- The annoyed emote, then walk off.
-- Pat their pockets (turning side to side) at a trash can with nothing to throw away.
-- Peek into the trash can (a little hop), then a shrug.
-- Take a photo of it anyway (the flash), like it's an exhibit.
+**Willingness, not personalities** *(Joe 10/19)*: each visitor is silently given a random willingness from 0 to 4 for each thing you can recommend, the moment they come into the museum. To start: exhibits, seats, the café, throwing a cup away, taking a photo. A recommendation goes by that number plus a little luck: 0 almost always says no, 4 almost always says yes. Willingness only decides recommendations; it never changes how they walk around or act on their own. Each new action added later gets its own number automatically. No names: in the curator's Preview, each visitor shows their visitor number and their numbers above their head (preview only; players never see it).
 
-New emote frames go in a new Art slot at the end of SLOTS, so the current emote sheet keeps its size and custom art isn't lost.
-
-**Personality:** this runs on the visitor personalities above (Enthusiast, Casual, People Person, Introvert), so those get built first: steps 1 and 2 of their build order. For example, an Introvert sitting down rarely gets up, and a People Person goes for almost anything.
-
-**Fits with one problem per day:** on days with only one problem, there's time to play with this.
+**Every mode:** thinking and recommending work in Chill, Normal and Busy *(Joe 10/19: try it in Busy and see)*.
 
 **Later:** the shop (buying a recommended item), the cat, plants, loose items, other visitors (visitor to visitor), and ideas spreading: a visitor who enjoyed it may pass it on to someone nearby, with a daily cap.
 
 **Build order**
 
-1. Visitor personalities, steps 1 and 2 (handed out on arrival, wired into walking, looking and sitting).
+1. Willingness: given on arrival, plus the visitor numbers in the curator's Preview.
 2. Thinking mode: the button, freeze, green palette, ghost, picking, the thought bubble.
 3. Recommend: the menu option, who can be asked, turn-downs, and the five actions above.
-4. Bad fits: the funny trips and the new emotes.
+4. Bad fits: the trips, with the emotes and photo we already have.
 5. The later list, one at a time.
 
-**Still to decide**
-
-- **Leaving the room:** does the idea fade when you leave the room it's in? Visitors elsewhere couldn't act on it.
-- **Saving:** is the idea kept when you save and come back? (Claude: no, it's a moment.)
-- **How willing:** should each personality get a fifth number, "open to suggestions" (0 to 4), or should it come from Interacting?
+**Settled** *(Joe 10/19)*: the idea fades when you leave the room it's in, and it isn't kept when you save and come back.
 
 ### **One problem per day** *(Joe 10/16: planned, not built)*
 
 The 12-minute timer goes. Instead, one of the problems (usher, stock, litter, tour, line, item, janitor, conservator) plays out each day, picked at random, so a week has variety.
 
-- **Easy (Chill):** no problems (today's chill mode).
-- **Normal:** one problem a day.
-- **Hard:** all of them, as now.
+- **Chill:** no problems (today's chill mode).
+- **Normal** (the default): one problem a day.
+- **Busy:** all of them, as now.
 
-**Still to decide** (Claude's questions from 10/16): are the names Chill, Normal and Busy? Is Normal the default? Does the day end with an intercom announcement?
+*(Joe 10/19)* You find the day's problem by walking around: no announcement. Closing stays optional, as always, and the intercom stays as it is. Nothing new marks the end of a day.
 
 ### **Later**
 
