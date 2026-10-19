@@ -447,7 +447,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 106";
+window.GOQ_WANT = "2026-11-18 cards 107";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -2444,6 +2444,13 @@ function renderVisitors() {
   const per = el("input", { type: "number", min: 0, max: 10, value: st.curious.perDay, style: "max-width:120px" });
   per.addEventListener("input", () => { st.curious.perDay = Math.max(0, Math.min(10, Math.round(+per.value || 0))); changed(); });
   wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:10px 0 14px" }, [el("label", {}, [document.createTextNode("Curious visitors a day"), el("small", { text: "Anyone you talked to but didn't get to show a game comes back the next day; the rest are new faces. 0 turns curious visitors off." }), per])]));
+  // Their names (Joe 10/19): one a line. Each day's new faces are picked from these at random, never one who's already around.
+  const names = st.curious.names && st.curious.names.length ? st.curious.names : GOQ.VISITOR_NAMES.slice();
+  const nBox = el("textarea", { rows: 10, style: "max-width:260px;font-family:inherit" }); nBox.value = names.join("\n");
+  const nCount = el("small", {}), nCountSet = () => { const k = new Set(nBox.value.split("\n").map(x => x.trim().slice(0, 20)).filter(Boolean)).size; nCount.textContent = k + (k === 1 ? " name" : " names") + (k && k < st.curious.perDay * 2 ? ". A few more would help: they don't repeat while someone's still around." : ""); }; nCountSet();
+  nBox.addEventListener("input", () => { const nm = nBox.value.split("\n").map(x => x.trim().slice(0, 20)).filter((x, i, a) => x && a.indexOf(x) === i); st.curious.names = nm.length ? nm : undefined; nCountSet(); changed(); });
+  const nReset = el("button", { type: "button", class: "btn small quiet", text: "Back to the original 40", style: "margin-top:4px" }); nReset.addEventListener("click", () => { nBox.value = GOQ.VISITOR_NAMES.join("\n"); delete st.curious.names; nCountSet(); changed(); });
+  wrap.appendChild(el("div", { class: "fields", style: "max-width:420px;margin:0 0 14px" }, [el("label", {}, [document.createTextNode("Curious visitors' names"), el("small", { text: "One a line, up to 20 letters each. Each day's new faces get one of these at random. Leave it empty for the original 40. The ones already waiting today keep their names." }), nBox, nCount]), el("div", {}, [nReset])]));
   // Museum life: how often visitors have a drink, carry a shop bag, or photograph a piece.
   st.life = st.life || { drinks: 30, bags: 20, photos: 8 };
   const pctIn = (k, label, hint) => {
