@@ -6439,7 +6439,11 @@ class Game {
      the janitor's got, what's in your hands) is saved with the day (progress.day.loop, every 5 seconds and as you leave).
      Come back the same day and it carries on where you left it: a loop that's over stays over, and whatever wasn't fixed
      is still there. The next day starts a fresh one. Its random picks come from daySeed(), so a resumed loop plans the same. */
-  loopSave() { if (this.headless || !this.saveKey || this.tut) return null; const d = this.progress && this.progress.day; return d && d.key === todayISO() + ":" + this.weekday() && d.loop || null; }
+  loopSave() {
+    if (this.headless || !this.saveKey || this.tut) return null; const d = this.progress && this.progress.day, L = d && d.key === todayISO() + ":" + this.weekday() && d.loop || null;
+    const P = this.dirClock && this.dirClock.picks; if (!L || !P || String(L.picks) === String(P.ids)) return L;
+    const { sup, tour, item, jam, ...rest } = L; return rest; // saved under other problems (another mode, or before modes, Joe 10/19): the clock, bins and your drink carry on; the problems start fresh
+  }
   resumeLoop() { // the clock, the first time it's asked for this session (plus the bins and litter, and your trash bag)
     const L = this.loopSave(); if (!L) return 0;
     if (L.bins) this.bins = L.bins;
@@ -6451,7 +6455,7 @@ class Game {
   saveLoop() {
     if (this.headless || !this.saveKey || this.tut || !this.dirClock || !this.progress) return;
     const S = this.sup, T = this.tour, I = this.side && this.side.item, J = this.jan;
-    this.dayState().loop = { t: this.dirClock.t, bins: this.bins || {}, litter: this.litter || {}, trashBag: this.trashBag == null ? null : this.trashBag, drink: this.drink && !this.drink.popcorn ? this.drink : null,
+    this.dayState().loop = { t: this.dirClock.t, picks: this.dirClock.picks ? this.dirClock.picks.ids.slice() : null, bins: this.bins || {}, litter: this.litter || {}, trashBag: this.trashBag == null ? null : this.trashBag, drink: this.drink && !this.drink.popcorn ? this.drink : null,
       sup: S ? { key: S.key, boxes: S.boxes, shopDone: S.shopDone, cafeDone: S.cafeDone, cafeNeeded: S.cafeNeeded, freeGiven: S.freeGiven, carryBox: this.carryBox === "tut" ? null : this.carryBox || null } : null,
       tour: T ? { key: T.key, kidDone: T.kidDone, asked: T.asked, explained: T.explained, mood: T.mood, coffee: T.coffee, usherBack: !!T.usherBack } : null,
       item: I ? { key: this.side.key, got: I.got, done: I.done, left: I.left, carry: this.carryItem || null } : null,
@@ -10765,7 +10769,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 97";
+const VERSION = "2026-11-18 cards 98";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
