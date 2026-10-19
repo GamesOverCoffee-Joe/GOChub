@@ -7747,11 +7747,19 @@ class Game {
     if (this.fol === n) this.fol = null; n.follow = false; n.cur = null;
     cv.list = cv.list.filter(x => x !== v); Object.assign(v, { state: "recommended", piece: piece.id, day: todayISO(), room: null, take: ["agree", "disagree", "puzzled"][Math.floor(Math.random() * 3)] }); cv.back.push(v);
     this.count("helped", v.id, v.asked ? this.pack.settings.rewards.helpedName : undefined); this.bump(this.progress.stats.loved, genreOf(piece, this.pack.settings.genres)); this.saveProgress(); // found from the description alone: helped; after asking the name: helpedName
-    this.cheer(n, () => this.say(named(this.tx("cur.thanks", { title: piece.title, name: v.name })), () => { n.leaving = true; n.leaveT = 0; n.alpha = 1; }));
+    const thanks = () => this.cheer(n, () => this.say(named(this.tx("cur.thanks", { title: piece.title, name: v.name })), () => { n.leaving = true; n.leaveT = 0; n.alpha = 1; if (far) this.farBack(); }), far);
+    const q = this.pos(n), far = !n.follow && !(q.x + 16 > this.camX && q.x < this.camX + SW && q.y + 16 > this.camY && q.y < this.camY + SH); // off where you can't see them (Joe 10/19)
+    if (!far) { thanks(); return; }
+    this.el.text.style.display = "none"; this.txt = null; this.mode = "busy"; this.player.moving = false; // the game waits; the camera lifts and glides over to them
+    this.cine = { fx: q.x + 8, fy: q.y, blend: 0, goal: 1, wait: 64, then: thanks, arc: true };
+  }
+  farBack() { // after a moment somewhere else: your tokens come in there, then a dip to black and you're back
+    const back = () => { this.mode = "busy"; this.trans = { t: 0, dur: 20, switched: false, fn: () => { this.cine = null; } }; };
+    if (this.coinQ && this.coinQ.length) this.afterCoin = back; else back(); // (the coins play as soon as the text's gone, over there)
   }
   /* The right recommendation: they're thrilled (a big heart, sparkles, a hop), you see it for a moment, then they talk. */
-  cheer(n, then) { // a little moment: your controls wait, the text box clears, the view eases in on them while the heart floats up, then back out
-    this.el.text.style.display = "none"; this.txt = null; this.mode = "busy"; n.dir = OPP[this.player.dir];
+  cheer(n, then, away) { // a little moment: your controls wait, the text box clears, the view eases in on them while the heart floats up, then back out (away: you're not there, they keep facing the case)
+    this.el.text.style.display = "none"; this.txt = null; this.mode = "busy"; if (!away) n.dir = OPP[this.player.dir];
     n.react = { how: "thrilled", t0: this.t };
     const cv = this.canvas, q = this.pos(n), zoom = !REDUCED_MOTION && cv;
     if (zoom) {
@@ -8748,7 +8756,7 @@ class Game {
       else if (tr.t >= tr.dur * 2) { this.trans = null; this.fade = 0; this.mode = "walk"; if (tr.after) tr.after(); if (this.afterTrans) { const fn = this.afterTrans; this.afterTrans = null; fn(); } }
     }
     if (this.cine) {
-      const c = this.cine; c.blend += (c.goal > c.blend ? 1 : -1) / 40; c.blend = Math.max(0, Math.min(1, c.blend));
+      const c = this.cine; c.blend = Math.abs(c.goal - c.blend) <= 1 / 40 ? c.goal : c.blend + (c.goal > c.blend ? 1 : -1) / 40; c.blend = Math.max(0, Math.min(1, c.blend)); // (there: it stays put, no pixel back and forth)
       if (this.mode === "busy" && c.wait > 0 && --c.wait === 0 && c.then) { const fn = c.then; c.then = null; fn(); }
     }
     if (this.started && this.mode === "walk" && !this.trans && !this.askingMode && this.needMode()) this.askMode(); // past the tutorial before there were modes: asked once
@@ -8930,7 +8938,8 @@ class Game {
     const cafeBit = e.cafe || e.cafeSign || r.npcs.some(n => n.role === "barista" && n.x === x && n.y === y) || (r.props || []).some(p => p.x === x && p.y === y && /espresso|coffee|cafe|pastry|cup/.test(p.key)) || (r.wallArt || []).some(w => w.cafe && x >= w.x && x < w.x + SLOT[w.key].w / T && (y === (w.y || 1) || y === (w.y || 1) + 1));
     if (cafeBit) return Object.assign(at, { kind: "cafe" }, (r.props || []).some(p => p.key === "cafe_sign" && p.x === x && p.y === y) || e.cafeSign ? { special: true } : {}); // the café sign: today's special // the counter, the barista, the machine, the menu: all the café (Joe 10/19: nobody went for coffee)
     if (e.trash) return Object.assign(at, { kind: "bin" });
-    const who = r.npcs.find(n => n.x === x && n.y === y); if (who && this.regularVisitor(who)) return Object.assign(at, { kind: "person", who }); // a visitor: someone to go and talk to
+    const who = r.npcs.find(n => n.x === x && n.y === y); if (who && (who.sheet === "kid" || who.tourKid || who.schoolKid || who.kid || who.lost)) return null; // a kid: not something to pick (Joe 10/19)
+    if (who && this.regularVisitor(who)) return Object.assign(at, { kind: "person", who }); // a visitor: someone to go and talk to
     if (who || Object.keys(e).length || (r.solid[y][x] && !/wall/.test(String(r.tiles[y][x] || "wall")))) return Object.assign(at, { kind: "other" });
     return null; // bare floor or wall: nothing to think about
   }
@@ -9364,6 +9373,7 @@ class Game {
     }
     if (n.arrived) { // just stepped onto the spot they were heading for
       n.arrived = false; { const ed = this.exhibitDir(r0, n.x, n.y); n.viewing = !!ed; if (ed) n.dir = ed; } // by a case or a painting: look at it
+      if (n.reco && n.reco.via === "bin") { this.binRun(n); return; } // at the bin you sent them to: in goes the cup, then it's done (Joe 10/19: they stood by it and went to tell someone, cup still in hand)
       if (n.reco && this.recoArrive(n)) return; // there, because you recommended it
       if (n.coffee) { // at the café counter: order, and wait for it facing the barista
         if (this.counterSpots(r0).some(([x, y]) => x === n.x && y === n.y)) { n.dir = "up"; n.ordering = true; n.timer = 150 + Math.random() * 150; return; }
@@ -11061,7 +11071,7 @@ class Game {
     ctx.fillStyle = "#000"; ctx.fillRect(0, 0, VWp, VHp);
     const rw = r.w * T, rh = r.h * T;
     const cn = this.cine && !full ? this.cine : null, ke = cn ? cn.blend * cn.blend * (3 - 2 * cn.blend) : 0; // the ceremony's camera: eased from you to the piece
-    const fx = cn ? pp.x + (cn.fx - 8 - pp.x) * ke : pp.x, fy = cn ? pp.y + (cn.fy - pp.y) * ke : pp.y;
+    const fx = cn ? pp.x + (cn.fx - 8 - pp.x) * ke : pp.x, fy = cn ? pp.y + (cn.fy - pp.y) * ke - (cn.arc ? Math.sin(Math.PI * ke) * 28 : 0) : pp.y; // arc: it floats up a little on the way
     const cx = full ? 0 : Math.round(rw <= SW ? (rw - SW) / 2 : Math.max(0, Math.min(rw - SW, fx + 8 - SW / 2)));
     const cy = full ? 0 : Math.round(rh <= SH ? (rh - SH) / 2 : Math.max(0, Math.min(rh - SH, fy + 8 - SH * (ROOMS[r.id].camAt || 0.5))));
     if (!full) { this.camX = cx; this.camY = cy; }
@@ -11306,7 +11316,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 118";
+const VERSION = "2026-11-18 cards 119";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
