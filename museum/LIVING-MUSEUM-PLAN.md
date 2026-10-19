@@ -379,15 +379,31 @@ Hold something in mind and recommend it to a visitor. They go to it and do somet
 
 **Settled** *(Joe 10/19)*: the idea fades when you leave the room it's in, and it isn't kept when you save and come back.
 
-### **One problem per day** *(Joe 10/16: planned, not built)*
+### **One problem per day** *(Joe 10/16 to 10/19: settled, not built yet)*
 
-The 12-minute timer goes. Instead, one of the problems (usher, stock, litter, tour, line, item, janitor, conservator) plays out each day, picked at random, so a week has variety.
+The 12-minute loop stays exactly as it is: the same four beats, the same timing per problem, the same crowd ebb and flow. What changes is how many problems play out in it.
 
-- **Chill:** no problems (today's chill mode).
-- **Normal** (the default): one problem a day.
-- **Busy:** all of them, as now.
+**The problems become four** *(Joe 10/19)*:
 
-*(Joe 10/19)* You find the day's problem by walking around: no announcement. Closing stays optional, as always, and the intercom stays as it is. Nothing new marks the end of a day.
+1. **The tour:** the usher's coffee and the guide fumbling, as one problem.
+2. **Supplies:** the shop's stock box and the café box, as one problem.
+3. **The jammed trash can:** just unjamming it.
+4. **The missing item** in the staff room.
+
+**The Janitor isn't a problem anymore, in any mode.** He keeps his rounds and sweeps litter. When the loop runs out (the moon on the dial), he comes out, sweeps the pile and unjams the can if you haven't, then waters the plants nobody got to. Before that he leaves the plants alone, so you get the first chance at those tokens. No more overtime (that grumbling line goes); he still gets his early-break line if every plant's already watered.
+
+**The conservator** stays a closing thing, any day, in every mode.
+
+| | Chill | Normal (the default) | Busy |
+| --- | --- | --- | --- |
+| Problems | none | one a day | all four, every loop |
+| The curator's chill offer | — | never | after fixing them all, as now |
+| Field notes | — | none | the checklist, as now |
+
+- **The day's problem** (Normal): random each day, never the same as yesterday's. The same all day and across reloads.
+- **Settings:** the Chill museum switch becomes Chill / Normal / Busy. Players who turned chill on stay in Chill; everyone else starts in Normal.
+- **No announcement:** you find the day's problem by walking around. Closing stays optional, the intercom stays as it is, and nothing new marks the end of a day.
+- Thinking and recommending work in every mode.
 
 ### **Later**
 
