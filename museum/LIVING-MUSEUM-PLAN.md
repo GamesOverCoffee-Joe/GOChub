@@ -399,7 +399,7 @@ Toys that play with the games themselves. Every piece on display has a card in a
 
 ## **Later** *(Joe 10/14: pinned to build later)*
 
-### **Exhibit pictures in a folder, and a readable pack** *(Joe 10/17: later)*
+### **Exhibit pictures in a folder, and a readable pack** *(Joe 10/17: later. Built, cards 95, Joe 10/19: the folder is `museum/pieces/`, file names end in a code from the picture; one new picture exports as its own file, several as pieces.zip; see UPDATING.md)*
 
 - **Why:** of the pack's 2.0 MB, about 1.85 MB is the 34 exhibit pictures (about 54 KB each), stored as text inside the file. The curator keeps your work in the browser, which allows roughly 5 MB, so around 50 more exhibits and it stops saving there (only Export would keep changes). Players also download every picture on every visit.
 - **The folder:** pictures live in `museum/art/pieces/` as files named after the exhibit (`piece-yttv7ax.png`), and the pack just names the file. The game already loads pictures from file paths. A one-time move takes the 34 current pictures out (pack from about 2 MB to about 190 KB). Older packs with pictures inside still load.

@@ -1809,6 +1809,21 @@ function normalizePiece(p, i) {
     style: STYLES.includes(p.style) ? p.style : STYLES[strSeed(str(p.title, 80) || String(i)) % STYLES.length],
   };
 }
+/* The pack as text (Joe 10/19): one line per piece, room, art slot, setting and Words line, instead of one long line, so git can
+   merge edits to different ones by itself. Same JSON either way; the game reads both. */
+const PACK_LINES = new Set(["", "assets", "pieces", "rooms", "settings", "settings.text", "settings.talk"]);
+function packText(j, path) {
+  path = path || ""; const J = v => JSON.stringify(v);
+  if (!PACK_LINES.has(path) || !j || typeof j !== "object") return J(j);
+  const kid = k => (path ? path + "." : "") + k;
+  if (Array.isArray(j)) return j.length ? "[\n" + j.map(v => J(v === undefined ? null : v)).join(",\n") + "\n]" : "[]";
+  const ks = Object.keys(j).filter(k => j[k] !== undefined && typeof j[k] !== "function");
+  return ks.length ? "{\n" + ks.map(k => J(k) + ":" + packText(j[k], kid(k))).join(",\n") + "\n}" + (path ? "" : "\n") : "{}";
+}
+/* Piece pictures live in museum/pieces/ (Joe 10/19), named after the piece and the picture (a new picture is a new name, so
+   nobody sees an old one from their browser's cache); the pack just names the file. A picture still in the pack (a data: URL) works too. */
+const PIECE_DIR = "pieces/";
+function piecePicName(p, hash) { const m = /^data:image\/(png|jpeg|jpg|webp|gif);base64,/i.exec(String(p.image || "")); if (!m) return ""; const ext = m[1].toLowerCase() === "jpeg" ? "jpg" : m[1].toLowerCase(); return PIECE_DIR + String(p.id).replace(/[^\w-]/g, "") + "-" + hash.toLowerCase() + "." + ext; }
 function normalizePack(p) {
   p = p && typeof p === "object" ? p : {};
   const assets = {};
@@ -10721,7 +10736,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 94";
+const VERSION = "2026-11-18 cards 95";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
@@ -10730,7 +10745,7 @@ const CLAUDE_SHOP = { "goq-tote": "A sturdy canvas tote with the GOQ logo. Holds
   "goq-mousepad": "An extra-wide mousepad with the GOQ logo. Your desk has never looked this cozy.", "goq-lanyard": "A GOQ lanyard. Now you look like you work here. Do you?" }; // shop descriptions Claude wrote (Joe 10/11)
 const CLAUDE_QUOTES = {"piece-g3at9r2": "No yellow paint, no hand-holding. Just me, a dragon and the whole sky. I got it completely.", "piece-45lxgqh": "Deep, clever, and built for someone who isn't me. I respect it from a safe distance.", "piece-8ybe96c": "A glowing dot gave me cosmic dread. What it was really about, I never felt.", "piece-rn49jj6": "I had a blast pushing drunks around. The warning about drinking went right past me.", "piece-wr2s44o": "It kept me at arm's length, until the wizard I'd built started to feel like mine.", "piece-e6304vj": "It wouldn't tell me a thing. Then termites ate my bow, and I was hooked.", "piece-3qn8otm": "It wanted me sweating in the shadows. I just memorized the guards like homework.", "piece-iewg971": "Touch everything, for no reason at all. The first game I ever found myself in.", "piece-110bezd": "Make the thing you fear the thing you control. I felt every bit of that turn.", "piece-34ub7ui": "Built to unsettle me. Instead it became my favorite place to sit and fish.", "piece-ngafqv9": "I felt the shadow on my heels. What it was saying about anxiety, I missed.", "piece-okfuqok": "It wanted pinball fever. I found my calm in the snake mode instead.", "piece-wd37bxb": "An unfinished game, finished by its own jokes. I was in on every one.", "piece-qql6aew": "A hard story in a world that never asked me to care. I kept looking for the stakes.", "piece-wn546o7": "Made for the obsessed flash-game kid. I never got the chance to become him.", "piece-6akkzg9": "The synergies sang. Why I was buying beach balls on credit, I'll never know.", "piece-wpusqmb": "It reached for grief and despair. I kept laughing, and I'm still not sure why.", "piece-p0gsjux": "I played it like Tetris and lost. Once I chased the gems, it finally clicked.", "piece-v4zp9gn": "The maze vanishes when you move. I never quite needed to remember it.", "piece-dpq1d5y": "It wanted me to feel cool finding its secrets. I just kept looking for the exit.", "piece-vx7436f": "A tiny root in a giant world. I loved the root. The world felt smaller than promised.", "piece-uw8z1nn": "I fought the game instead of learning it. It's fair. It just isn't for me.", "piece-ct78svp": "Big numbers, big dopamine. I chased the categories and forgot the totals.", "piece-0x8bbhf": "Beautiful dream puzzles. I warmed the whole world without noticing I had.", "piece-xc2ez00": "No grind, just tinkering. Every level felt like my own little invention.", "piece-50vrtaq": "A whole galaxy on a lunch break. Fun rhythm, but I'm a long-campaign kind of person.", "piece-7oesrvl": "Two halves of one screen, aching to meet. I felt every reunion.", "piece-4wnzood": "It wanted me to feel persuaded. I just felt quizzed, hunting for the right answer.", "piece-8e4ay05": "Stop defending, start hunting. That's when it became my game.", "piece-fv1px6m": "Meant to spark wonder. I wandered a ship where everything mattered the same.", "piece-um9vhkk": "It taught me everything without a word. The darkness in its caves only flickered.", "piece-hvr5h0t": "Every shot shoves you backward. Pure joy, until I couldn't tell which way to grow.", "piece-sp4cec4t": "Cats, missions, meteors. The game I loved was the plain deal underneath."}; // the curator's quotes on the trading cards Claude wrote (by piece id), for the Writers' Room's claude tag
 const CLAUDE_ACH = { skimmer: { name: "TL;DR", desc: "Read at least one side of every piece in the museum." } }; // achievements Claude wrote (Joe 10/11)
-window.GOQ = { ANSWER_QS, ytVideoId, CLAUDE_QUOTES, CLAUDE_ACH, CLAUDE_LINES, CLAUDE_SHOP, BLUU_GEAR, PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
+window.GOQ = { packText, piecePicName, PIECE_DIR, ANSWER_QS, ytVideoId, CLAUDE_QUOTES, CLAUDE_ACH, CLAUDE_LINES, CLAUDE_SHOP, BLUU_GEAR, PROBLEMS, BEATS, REWARD_DEFAULTS, officeLock, officeUnlock, ACH_STATS, SHIRT_COLORS, RUG_BORDERS, RUG_CORNERS, RUG_PRESETS, SAMPLE_ACH, archiveSplit, VERSION, TEXT, TALK_ROLES, TALK_WHEN, TALK_DEFAULTS, DEFAULT_CORKBOARD, daysBetween, PACK_FORMAT, SLOTS, SLOT, sheetGrid, placeholder, normalizePack, normalizePiece, normalizeRelations, SAMPLE_RELATIONS, SAMPLE_PIECES, ROOMS, Game, mountControls, todayISO, niceDate,
   spotCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.spots || []).length, 0),
   caseCount: () => Object.values(ROOMS).reduce((a, r) => a + (r.cases || []).length, 0),
   spotRooms: () => Object.keys(ROOMS).filter(id => (ROOMS[id].spots || []).length).map(id => ({ id, name: ROOMS[id].name, n: ROOMS[id].spots.length })),

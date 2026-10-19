@@ -26,6 +26,18 @@ Merge into **main** (the branch gamesover.coffee is served from). Returning play
 
 New players always start in the tutorial. After you change it, open the curator's **Staff** tab, **Tutorial**, and press **Require it again**. Export the pack and get it onto main: the next time each returning player loads the game, they're put into the tutorial once (they can still skip it). Players who haven't loaded since won't miss it; it waits for their next visit.
 
+## Exhibit pictures (Pieces tab)
+
+Exhibit pictures live in `museum/pieces/` as their own files, and the pack only names them (`pieces/piece-abc1234-xyz98765.jpg`). Each name ends with a code made from the picture itself, so a new picture always gets a new name, and nobody sees an old one from their browser's cache.
+
+1. In the curator, pick a picture for a piece as usual. Until it's on the site, it's kept inside your draft, so the preview still shows it.
+2. Press **Export pack**. You get `museum-pack.json` plus the pictures the site doesn't have yet: one picture comes as its own file, several as `pieces.zip` (unzip it to get a `pieces` folder).
+3. On GitHub, upload the pack to `museum/` as usual, and the picture(s) into `museum/pieces/` (or drag the unzipped `pieces` folder into `museum/`). Commit both together.
+
+Next time the curator opens on the site, it sees the pictures are there and your draft just names them too, which keeps it small. Old pictures you replaced stay in the folder; they're harmless, and you can delete them whenever. A pack with pictures still inside it (an older export) works fine too.
+
+The pack is also written one line per exhibit, room, setting and Words line now, so GitHub can merge edits to different exhibits by itself.
+
 ## Custom art from the curator (Art tab)
 
 When you upload a PNG on a slot's own page (Joe, a wall, a prop) or through the Photoshop atlas, it's saved **inside your curator draft in that browser**, not as a separate file. Players don't see it until it's in the repo's pack:

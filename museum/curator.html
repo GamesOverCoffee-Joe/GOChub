@@ -445,7 +445,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 94";
+window.GOQ_WANT = "2026-11-18 cards 95";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -3255,10 +3255,32 @@ let probSync = () => {};
 $("#exportBtn").addEventListener("click", async () => {
   const f = await folderPack(); // exporting a draft that's behind the site would undo the site's newer changes once pushed
   if (packSync(f, getBase()) === "ask" && !confirm("Heads up: the site's museum-pack.json has newer changes that this draft doesn't have. If you push this export, those changes are undone.\n\nExport anyway? (Cancel, then reload the page, to pick between them.)")) return;
-  const savedAt = new Date().toISOString(), text = JSON.stringify(Object.assign(packOut(), { savedAt })); // the export date, shown by Check version
+  const savedAt = new Date().toISOString(), out = Object.assign(packOut(), { savedAt }); // the export date, shown by Check version
+  const pics = await picturesOut(out), text = GOQ.packText(out);
   download("museum-pack.json", new Blob([text], { type: "application/json" })); setBase(text, "export", savedAt);
-  status("Exported museum-pack.json. Put it next to museum.html on your site, or load it in the museum.");
+  if (!pics.length) { status("Exported museum-pack.json. Put it next to museum.html on your site, or load it in the museum."); return; }
+  const one = pics.length === 1;
+  setTimeout(() => download(one ? pics[0].name.slice(GOQ.PIECE_DIR.length) : "pieces.zip", one ? pics[0].blob : makeZip(pics.map(f => ({ name: f.name, data: f.data })))), 400); // (a moment after the pack, so the browser takes both)
+  status("Exported museum-pack.json and " + (one ? "the new picture " + pics[0].name.slice(GOQ.PIECE_DIR.length) + ". Upload it into the museum/pieces folder" : pics.length + " new pictures (pieces.zip). Unzip it and upload the pieces folder into museum") + ", next to museum-pack.json.");
 });
+/* Piece pictures (Joe 10/19): in your draft a new picture stays inside it (so the preview shows it); the exported pack names a file in
+   museum/pieces/ instead, and Export hands you the files the site doesn't have yet. Once a picture is on the site, the draft just
+   names it too (settlePictures, when the curator opens), which keeps the draft small enough to save in the browser. */
+function picName(p) { return GOQ.piecePicName(p, fingerprint(p.image)); }
+async function onSite(name) { if (!/^https?:$/.test(location.protocol)) return false; try { const r = await fetch(name + "?t=" + Date.now(), { method: "HEAD", cache: "no-store" }); return r.ok && /^image\//.test(r.headers.get("content-type") || "image/"); } catch (e) { return false; } }
+function dataBytes(src) { const b = atob(src.slice(src.indexOf(",") + 1)), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; }
+async function picturesOut(out) { // out: the pack being exported (its pieces are copies): each picture becomes its file name; returns the files to upload
+  const files = [];
+  for (const o of out.pieces) { const name = o.image && picName(o); if (!name) continue;
+    if (!(await onSite(name))) { const data = dataBytes(o.image); files.push({ name, data, blob: new Blob([data], { type: o.image.slice(5, o.image.indexOf(";")) }) }); }
+    o.image = name; }
+  return files;
+}
+async function settlePictures() {
+  let n = 0;
+  for (const p of draft.pieces) { const name = p.image && picName(p); if (name && (await onSite(name))) { p.image = name; n++; } }
+  if (n) { changed({ now: true, keepBase: true }); render(); }
+}
 $("#importFile").addEventListener("change", async e => {
   const f = e.target.files[0]; e.target.value = ""; if (!f) return;
   try {
@@ -3365,7 +3387,7 @@ function askPack(f, b, raw) {
   if (!raw) { raw = { pieces: GOQ.SAMPLE_PIECES }; setBase("", "sample"); status("Started with the sample pieces"); }
   const moved = migrateFloors(raw);
   useDraft(raw); if (moved) { changed({ now: true, keepBase: true }); status("Switched your draft to the one-building layout"); }
-  await game.setPack(packOut());
+  await game.setPack(packOut()); settlePictures(); // pictures already on the site: the draft names their files
   fillRoomPicker(); // the pack's own room names
   render();
 } finally { if (window.goqReady) window.goqReady(); } })();
