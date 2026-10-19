@@ -7754,7 +7754,7 @@ class Game {
     this.trans = { t: 0, dur: 20, switched: false, fn: () => { const p = this.pos(n); this.cine = { fx: p.x + 8, fy: p.y, blend: 1, goal: 1 }; }, after: () => { this.mode = "busy"; setTimeout(thanks, 250); } }; // a slow glide, over 3⅓ seconds (Joe 10/19: way too fast)
   }
   farBack() { // after a moment somewhere else: your tokens come in there, then a dip to black and you're back
-    const back = () => { this.mode = "busy"; this.trans = { t: 0, dur: 20, switched: false, fn: () => { this.cine = null; } }; };
+    const back = () => { this.mode = "busy"; this.trans = { t: 0, dur: 20, switched: false, fn: () => { this.cine = null; this.mode = "walk"; this.inputLock = false; } }; }; // back on you: yours to walk as it fades in, a held direction too (Joe 10/19: a judder coming back)
     if (this.coinQ && this.coinQ.length) this.afterCoin = back; else back(); // (the coins play as soon as the text's gone, over there)
   }
   /* The right recommendation: they're thrilled (a big heart, sparkles, a hop), you see it for a moment, then they talk. */
@@ -11316,7 +11316,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 122";
+const VERSION = "2026-11-18 cards 123";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
