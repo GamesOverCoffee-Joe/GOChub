@@ -2575,6 +2575,7 @@ const TEXT = {
   "spooky.intercom":   { g: "Closing up", l: "The intercom crackles by itself", v: [["*krrsh*", "...ding......\n.........dong...", "*krrsh*"]] },
   "stairs.roof":       { g: "Floors", l: "Stairs to the roof (if a room has some)", v: [["That's the roof access."], ["I don't need to go to the roof."], ["I can't go to the roof because the door...yeah the door is locked."], ["Ok, seriously, there's nothing there."], ["The roof isn't made. It's not a part of the game."]] },
   "visitor.leaving":   { g: "Visitors", l: "Talking to a visitor on their way out (a wave, no chat; one at random)", by: "claude", v: [["They give you a little wave. They're on their way out."], ["Heading home. They wave on the way past."]] },
+  "shop.ringing":      { g: "Gift shop", l: "The shopkeeper, while a visitor's paying at the counter", by: "claude", v: [["One sec! Just ringing someone up."], ["Be right with you. Somebody finally made up their mind."]] },
   "move.ok":           { g: "Visitors", l: "A visitor stepping aside when you ask (one at random)", v: [["Oh! Sorry, go ahead."], ["My bad. All yours."], ["Oops, didn't see you there."]] },
   "move.stuck":        { g: "Visitors", l: "A boxed-in visitor, before they teleport (one at random)", v: [["Oh, I'd love to, but I'm a little stuck..."], ["Move? Where? There's nowhere to..."]] },
   "move.teleport":     { g: "Visitors", l: "You, after a boxed-in visitor teleports away (one at random)", v: [["...Did they just teleport?", "I'm going to pretend I didn't see that."], ["...they just disappeared.", "I should ask the curator what's in the coffee here."], ["*blink*", "Uh...where'd they go?"], ["...I guess that's a good solution."]] },
@@ -6698,6 +6699,7 @@ class Game {
     if (this.onBreak === "shopkeeper") { this.say(this.tx("sun.break")); return; }
     if (this.carryBox) { this.deliver("shopkeeper"); return; }
     if (this.room.npcs.some(n => n.role === "shopkeeper" && n.stocking)) { this.say(this.tx("shop.stocking")); return; } // still stocking the shelves
+    { const Q = this.shopLine(this.room), q0 = Q[0]; if (q0 && this.room.npcs.some(n => n.shopQ && n.shopQ.phase === "in" && n.x === q0[0] && n.y === q0[1])) { this.say(this.tx("shop.ringing")); return; } } // someone's paying
     if (this.room.npcs.some(n => n.role === "shopkeeper")) {
       this.choose("Welcome in! What can I do for you?", ["Browse the shop", "Just chatting", "Never mind"], i => {
         if (i === 0) this.openShop();
@@ -8856,6 +8858,7 @@ class Game {
   thinkTarget(r, x, y) { // what's there to hold in mind: an exhibit, a seat, the café counter, a bin, or anything else (someone, a prop)
     if (x < 0 || y < 0 || x >= r.w || y >= r.h) return null;
     const e = r.events[x + "," + y] || {}, at = { room: r.id, x, y };
+    { const ar = (r.props || []).find(p => p.key === "arcade_cabinet" && p.x === x && p.y - 1 === y); if (ar) at.y = ar.y; } // the arcade's top half: the arcade (its lower tile, where you stand beside it)
     if (e.caseAt && e.caseAt.piece) return Object.assign(at, { kind: "exhibit" });
     if (e.spot && e.spot.piece && e.spot.state === "wall") return Object.assign(at, { kind: "exhibit" });
     if (e.sit) return Object.assign(at, { kind: "seat" });
@@ -8865,7 +8868,8 @@ class Game {
     if (e.cat) return Object.assign(at, { kind: "cat" });
     if (e.trash && this.isJammed(r.id, x, y)) return Object.assign(at, { kind: "jam" });
     if (((this.litter && this.litter[r.id]) || []).some(l => l.x === x && l.y === y)) return Object.assign(at, { kind: "litter" });
-    { const it = e.unit !== undefined ? this.shopLineup()[e.unit] : e.featured ? this.pack.settings.shop.items.find(i => i.id === this.featuredId()) : null; if (it) return Object.assign(at, { kind: "shop", item: it.id }); } // a shelf or the featured stand: the thing on it (Joe 10/19)
+    { const wsh = (r.wallArt || []).find(w => w.key === "shop_shelves" && x >= w.x && x < w.x + SLOT[w.key].w / T && (y === (w.y || 1) || y === (w.y || 1) + 1)), merch = wsh ? this.shopLineup().filter(i => !i.cardSlot) : []; // the wall shelves the shopper stares at (Joe 10/19: they were "something else"): one of today's merch
+      const it = e.unit !== undefined ? this.shopLineup()[e.unit] : e.featured ? this.pack.settings.shop.items.find(i => i.id === this.featuredId()) : merch.length ? merch[(x - wsh.x) % merch.length] : null; if (it) return Object.assign(at, { kind: "shop", item: it.id }); } // a shelf or the featured stand: the thing on it (Joe 10/19)
     const cafeBit = e.cafe || e.cafeSign || r.npcs.some(n => n.role === "barista" && n.x === x && n.y === y) || (r.props || []).some(p => p.x === x && p.y === y && /espresso|coffee|cafe|pastry|cup/.test(p.key)) || (r.wallArt || []).some(w => w.cafe && x >= w.x && x < w.x + SLOT[w.key].w / T && (y === (w.y || 1) || y === (w.y || 1) + 1));
     if (cafeBit) return Object.assign(at, { kind: "cafe" }, (r.props || []).some(p => p.key === "cafe_sign" && p.x === x && p.y === y) || e.cafeSign ? { special: true } : {}); // the café sign: today's special // the counter, the barista, the machine, the menu: all the café (Joe 10/19: nobody went for coffee)
     if (e.trash) return Object.assign(at, { kind: "bin" });
@@ -8959,13 +8963,14 @@ class Game {
     n.ideaFx = { t0: this.t, icon: I.icon, keep: true }; who.hold = { by: n, until: this.t + 900 }; who.route = null; // the one they're going to tell waits for them
   }
   forgetIt(n) { // on their way to something you recommended: call it off, and they go back to whatever
-    n.tell = null; n.recall = null; n.wantSpecial = false; n.recoIdea = null; n.recoDrink = false;
+    n.tell = null; n.recall = null; n.wantSpecial = false; n.shopQ = null; n.recoIdea = null; n.recoDrink = false;
     n.reco = null; n.ideaFx = null; n.goalT = null; n.route = null; n.binAt = null; n.seat = null; n.viewing = false; n.arrived = false;
     if (n.queue && n.queue.phase === "join") n.queue = null;
     n.pose = { kind: "busy", t0: this.t, dur: 80 }; n.timer = 90;
   }
   recoSpot(r, n, x, y) { // where to stand by the thing: an open tile next to it, the one below first
-    const c = [[0, 1], [0, -1], [-1, 0], [1, 0]].map(([dx, dy]) => [x + dx, y + dy]).filter(([a, b]) => r.solid[b] && r.solid[b][a] === false && !(r.noWander && r.noWander.has(a + "," + b)) && !r.events[a + "," + b]);
+    const ar = (r.props || []).find(p => p.key === "arcade_cabinet" && p.x === x && (p.y === y || p.y - 1 === y)); if (ar) { x = ar.x; y = ar.y; } // the arcade faces left: play it from its side (Joe 10/19: they stood above it)
+    const c = (ar ? [[-1, 0], [0, 1], [1, 0], [0, -1]] : [[0, 1], [0, -1], [-1, 0], [1, 0]]).map(([dx, dy]) => [x + dx, y + dy]).filter(([a, b]) => r.solid[b] && r.solid[b][a] === false && !(r.noWander && r.noWander.has(a + "," + b)) && !r.events[a + "," + b]);
     return c.find(([a, b]) => this.npcPath(n, a, b, true)) || null;
   }
   /* A visitor doing one of your things, because you recommended it (Joe 10/19). False: not one of these. */
@@ -8988,6 +8993,42 @@ class Game {
     if (R.kind === "cat") { if (!r.cat) { n.pose = { kind: "busy", t0: this.t, dur: 90 }; return true; } this.petT = 70; n.pose = { kind: "heart", t0: this.t, dur: 80 }; return true; }
     n.timer = 0; return false;
   }
+  payDone(n) { // paid: theirs to wear or carry around
+    const R = n.reco || {}; n.reco = null; n.shopQ = null; n.owns = R.item; n.pose = { kind: "smile", t0: this.t, dur: 50 }; n.hopT = this.t; n.timer = 10; n.goalT = null; n.route = null;
+    const it = this.itemById(R.item); if (it && it.use !== "hat" && it.use !== "shades" && n.drink) n.bag = true;
+    if (n.wasBrowsing) { n.wasBrowsing = false; const t = this.progress.tally; t.decided = (t.decided || 0) + 1; this.saveProgress(); this.checkAchievements(); } // the shopper who couldn't decide: decided
+    this.recoDone(n, 200);
+  }
+  /* The gift shop's line: the customer side of the counter's middle, then back away from it (or along, round a shelf), five long. */
+  shopLine(r) {
+    const ctr = Object.keys(r.events).filter(k => r.events[k].shopCounter).map(k => k.split(",").map(Number)).sort((a, b) => a[0] - b[0]); if (!ctr.length) return [];
+    const mid = ctr[Math.floor(ctr.length / 2)], sk = r.npcs.find(m => m.role === "shopkeeper"), side = sk && sk.y < mid[1] ? 1 : -1; // the customers' side: away from the shopkeeper
+    const ok = (x, y) => r.solid[y] && r.solid[y][x] === false && !r.events[x + "," + y] && !(r.noWander && r.noWander.has(x + "," + y));
+    const out = []; let at = [mid[0], mid[1] + side]; if (!ok(at[0], at[1])) return []; out.push(at);
+    while (out.length < 5) { const [x, y] = out[out.length - 1], nx = [[0, side], [-1, 0], [1, 0]].map(([dx, dy]) => [x + dx, y + dy]).find(([a, b]) => ok(a, b) && !out.some(q => q[0] === a && q[1] === b)); if (!nx) break; out.push(nx); }
+    return out;
+  }
+  shopQStep(n) {
+    const r = this.room, Q = this.shopLine(r), S = n.shopQ;
+    if (!Q.length || !n.reco) { n.shopQ = null; if (n.reco) this.payDone(n); return; }
+    if (n.stepWait > 0) { n.stepWait--; return; }
+    if (this.t < S.t0) return; // the sparkle at the shelf first
+    const occ = (x, y) => (this.player.x === x && this.player.y === y) || r.npcs.some(m => m !== n && m.x === x && m.y === y);
+    const idx = Q.findIndex(([x, y]) => x === n.x && y === n.y);
+    if (S.phase !== "in" || idx < 0) { // joining: behind whoever's in line (or you, standing in it)
+      let last = -1; Q.forEach(([x, y], i) => { if ((this.player.x === x && this.player.y === y) || r.npcs.some(m => m !== n && m.x === x && m.y === y && m.shopQ && m.shopQ.phase === "in")) last = i; });
+      const to = last + 1;
+      if (to >= Q.length || (occ(Q[to][0], Q[to][1]) && Math.abs(Q[to][0] - n.x) + Math.abs(Q[to][1] - n.y) <= 1)) { if ((S.blocked = (S.blocked || 0) + 1) > 15) { n.shopQ = null; this.recoGiveUp(n); return; } n.stepWait = 20; return; } // full, or someone standing there: a moment, then they give up
+      if (idx === to) { S.phase = "in"; n.route = null; return; }
+      if (!n.route || !n.route.length || S.goal !== to) { S.goal = to; n.route = this.npcPath(n, Q[to][0], Q[to][1], true); }
+      if (!n.route || !n.route.length) { if ((S.blocked = (S.blocked || 0) + 1) > 15) { n.shopQ = null; this.recoGiveUp(n); return; } n.stepWait = 20; return; }
+      if (this.tryMove(n, n.route[0])) { n.route.shift(); n.stepWait = this.strollWait(n); } else { n.route = null; n.stepWait = 15; }
+      return;
+    }
+    if (idx === 0) { n.dir = Q.length > 1 && Q[1][1] < Q[0][1] ? "down" : "up"; if (S.pay === undefined) S.pay = 100; if (--S.pay > 0) return; this.payDone(n); return; } // at the counter: paying
+    const [px, py] = Q[idx - 1], dir = px > n.x ? "right" : px < n.x ? "left" : py > n.y ? "down" : "up";
+    if (!occ(px, py)) { if (this.tryMove(n, dir)) n.stepWait = 8; } else n.dir = dir; // step up when the spot ahead frees
+  }
   itemById(id) { if (!id) return null; return this.shopLineup().find(i => i.id === id) || this.pack.settings.shop.items.find(i => i.id === id) || this.giftItems().find(i => i.id === id) || this.cardItems().find(i => i.id === id) || null; }
   recoArrive(n) { // they got there
     let R = n.reco; n.reco = null; const face = R.x > n.x ? "right" : R.x < n.x ? "left" : R.y > n.y ? "down" : "up";
@@ -9000,15 +9041,10 @@ class Game {
     if (!this.thinkTarget(this.room, R.x, R.y)) { n.dir = face; n.pose = { kind: "busy", t0: this.t, dur: 100 }; n.timer = 140; n.recoIdea = null; return true; } // it's gone (you picked it up, or it moved): "..." (Joe 10/19) (a way round that ended somewhere else, Joe 10/19: a photo of nothing): try again, or give up
     if (R.kind === "shop" && !R.bad) { // at the shelf: that's the one; then to the counter to pay
       n.dir = face; n.pose = { kind: "pose", t0: this.t, dur: 70 }; n.hopT = this.t;
-      const ctr = Object.keys(this.room.events).filter(k => this.room.events[k].shopCounter).map(k => k.split(",").map(Number)).sort((a, b) => Math.abs(a[0] - n.x) + Math.abs(a[1] - n.y) - (Math.abs(b[0] - n.x) + Math.abs(b[1] - n.y)));
-      const c = ctr[Math.floor(ctr.length / 2)] || ctr[0], spot = c && this.recoSpot(this.room, n, c[0], c[1]);
-      if (spot) { n.reco = { kind: "pay", x: c[0], y: c[1], item: R.item, icon: R.icon }; Object.assign(n, { goalT: spot, route: null, timer: 0, retry: 0, arrived: false, viewing: false }); return true; }
-      R = Object.assign({}, R, { kind: "pay" }); // no counter to be found: it's theirs anyway
+      const Q = this.shopLine(this.room);
+      if (Q.length) { n.reco = { kind: "pay", x: Q[0][0], y: Q[0][1], item: R.item, icon: R.icon }; n.shopQ = { phase: "join", t0: this.t + 70 }; Object.assign(n, { goalT: null, route: null, timer: 0, retry: 0, arrived: false, viewing: false }); return true; } // into the line at the counter (Joe 10/19: some went round to the shopkeeper)
+      n.reco = { kind: "pay", item: R.item, icon: R.icon }; this.payDone(n); return true; // no counter to be found: it's theirs anyway
     }
-    if (R.kind === "pay") { n.dir = face; n.owns = R.item; n.pose = { kind: "smile", t0: this.t, dur: 80 }; n.hopT = this.t; n.timer = 120; // paid: theirs to wear or carry around
-      const it = this.itemById(R.item); if (it && it.use !== "hat" && it.use !== "shades" && n.drink) n.bag = true;
-      if (n.wasBrowsing) { n.wasBrowsing = false; const t = this.progress.tally; t.decided = (t.decided || 0) + 1; this.saveProgress(); this.checkAchievements(); } // the shopper who couldn't decide: decided
-      this.recoDone(n, 200); return true; }
     if (!R.bad && this.visitorDoes(n, R, face)) { this.recoDone(n, 200); return true; } // a plant watered, litter picked up, the lights flicked...
     if (R.kind === "seat" && !R.bad) { n.pose = { kind: "smile", t0: this.t, dur: 70 }; this.recoDone(n, 300); return false; } // the usual: sit down (stroll does it), and after a bit, tell someone
     n.dir = face; n.timer = 240 + Math.random() * 200;
@@ -9025,7 +9061,7 @@ class Game {
     n.reco = R; Object.assign(n, { goalT: near, route: null, timer: 8, retry: 0, arrived: false, viewing: false }); return true;
   }
   recoGiveUp(n) { n.reco = null; n.ideaFx = null; n.recoIdea = null; n.tell = null; n.goalT = null; n.route = null; n.seat = null; n.pose = { kind: "busy", t0: this.t, dur: 90 }; n.timer = 100; } // couldn't get there: a "...", no sparkle, and back to wandering
-  dropReco(n) { if (n.chat) this.endChat(n.chat); if (n.reco || n.recoAt || n.tell || n.chat || n.askFx || (n.ideaFx && n.ideaFx.keep)) n.pose = { kind: "wave", t0: this.t, dur: 90 }; Object.assign(n, { reco: null, recoAt: null, askFx: null, tell: null, recoIdea: null, recoDrink: false, hold: null, recall: null, ideaFx: null }); } // heading home: whatever they had in mind goes (Joe 10/19: walking out with the bubble up)
+  dropReco(n) { if (n.chat) this.endChat(n.chat); if (n.reco || n.recoAt || n.tell || n.chat || n.askFx || (n.ideaFx && n.ideaFx.keep)) n.pose = { kind: "wave", t0: this.t, dur: 90 }; Object.assign(n, { reco: null, recoAt: null, askFx: null, tell: null, recoIdea: null, recoDrink: false, hold: null, recall: null, ideaFx: null, shopQ: null }); } // heading home: whatever they had in mind goes (Joe 10/19: walking out with the bubble up)
   forgetThought() { if (!this.idea) return; this.popFx = (this.popFx || []).concat([{ t0: this.t, x: this.camX + SW - 21, y: this.camY + 35 }]); this.idea = null; } // let it go: the corner bubble pops
   recallLater(n, icon, how) { n.recall = { at: this.t + 1500 + Math.random() * 2100, icon, how }; } // 25 to 60 seconds on, they think back on it (Joe 10/19: a nod to what you did)
   recallStep(n) {
@@ -9192,6 +9228,7 @@ class Game {
       if (n.hold) { const H = n.hold; if (this.t > H.until || !H.by.reco || H.by.reco.to !== n || !this.room.npcs.includes(H.by)) n.hold = null; else { if (n.moving) this.advance(n); continue; } } // someone's coming over to talk: they wait
       if (n.janitor) { if (n.moving) this.advance(n); continue; } // the janitor goes by his routine (updateJanitor)
       if (n.queue && !n.moving && this.mode === "walk") { this.queueStep(n); continue; } // in (or joining) the café line
+      if (n.shopQ && !n.moving && this.mode === "walk") { this.shopQStep(n); continue; } // in (or joining) the gift shop's line
       if (n.walkTo && !n.moving) { if (this.mode === "walk") this.walkToStep(n); continue; } // staff walking somewhere (the shopkeeper to his shelves and back)
       this.updateLife(n);
       if (n.follow) { this.followStep(n); continue; } // a curious visitor following you around
@@ -9311,6 +9348,7 @@ class Game {
       if (!t) { n.seat = null; n.coffee = false; t = opts[(Math.random() * opts.length) | 0]; }
       n.goalT = t;
       n.route = t ? this.npcPath(n, t[0], t[1], n.entering || !!n.reco) : null; // (sent somewhere: the same way recoSpot found, doorways and all)
+      if ((!n.route || !n.route.length) && n.reco && n.goalT && n.x === n.goalT[0] && n.y === n.goalT[1]) { n.route = null; n.goalT = null; n.arrived = true; return; } // already standing there (the shopper, at their shelf: Joe 10/19, they never responded)
       if ((!n.route || !n.route.length) && n.reco && n.goalT) { n.route = null; this.recoAgain(n, n.reco); return; } // no way to where they were sent: another side of it, or they give up
       if (!n.route || !n.route.length) { n.timer = 60 + Math.random() * 120; n.route = null; n.goalT = null; n.retry = 0; return; }
     }
@@ -9631,7 +9669,10 @@ class Game {
     this.staffTalk("usher");
   }
   tourTalk(n) {
-    const T = this.tour; if (!T) return;
+    const T = this.tour;
+    if (n.tour && !n.tourUsher && (!T || !T.members.includes(n))) { // left over from a tour that's over (Joe 10/19: after hours, wandering, but only "Say hi"): just a visitor now
+      Object.assign(n, { tour: false, random: true, still: false, goal: null, walkTo: null, inLine: false }); if (!n.lines || !n.lines.length) n.lines = [CROWD_LINES[(Math.random() * CROWD_LINES.length) | 0]]; this.talkTo(n); return; }
+    if (!T) return;
     if (T.school && (n.teacher || n.schoolKid) && !(this.fol && this.fol.tourKid && !T.kidDone)) { // Tuesday's school group (bringing the kid back is handled below)
       const k = n.teacher ? (T.phase <= 0 ? "school.teacherWait" : T.phase === 1 && (n.goal || (T.guide && T.guide.goal)) ? "school.teacherWalk" : T.phase === 1 ? (T.explained ? "school.teacherThanks" : "school.teacherStop") : T.phase === 2 ? "school.teacherStop" : T.phase === 3 ? (T.kidDone ? "school.teacherBye" : T.regrouped ? "school.teacherPanic" : "school.teacherStop") : "school.teacherBye") : "school.kid";
       if (n.teacher && T.phase === 1 && !n.goal && !T.explained && T.stop1.piece) { const title = T.stop1.piece.title; this.say(this.tx("school.question", { title }), () => {
