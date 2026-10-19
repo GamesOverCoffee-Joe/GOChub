@@ -330,6 +330,75 @@ First-pass grid:
 
 Claude's suggestion: 1 and 2 soon (after the supplies chain), 3 when we get to Phase 4.
 
+### **Thinking and recommending** *(Joe 10/19: planned, not built)*
+
+Hold something in mind and recommend it to a visitor. They go to it and do something with it, unless their personality says otherwise. No dialogue anywhere: you see the answer in what they do. No rewards. Curious visitors stay exactly as they are; this sits beside them.
+
+**Thinking mode**
+
+- **The button:** a new SELECT button on the touch controls, beside START and tilted the same way. Keyboard: C and Shift. Gamepad: the Back/Select button. It's rebindable, on the Controls page, and there's a "Think" entry in the pause menu.
+- **What happens:** time freezes (people, the visit clock, drinks), the screen goes to the classic four-shade Game Boy green, and you become a ghost: your own sprite at 50% opacity. Your body stays where you were standing. The ghost walks through people, not walls, and only in the room you're in.
+- **Picking:** walk the ghost to anything and press A. It flashes, you snap back into your body, and time starts again. A small thought bubble on screen shows what you're holding in mind. B or SELECT backs out without picking. You can't pick yourself.
+- **Keeping it:** the idea stays until you pick something else, so you can recommend it to as many visitors as you like.
+
+**Recommending**
+
+- Talking to a visitor with an idea in mind adds a new option to their menu: **Recommend**. Normal chatting stays as it is.
+- **Who:** the regular crowd only. Not curious visitors, staff, the usher, the conservator, tour groups, school kids or the lost kid.
+- **Sitting visitors:** yes, and they may get up if their personality likes the idea. Not someone reading a placard, and not anyone in the screening room.
+- **Not in the café line**, and **anyone mid-task turns you down automatically** (an emote, and they carry on).
+- The idea goes over as a little bubble from you to them, then their personality decides.
+
+**What they do (first version: things visitors already know how to do)**
+
+| You recommend | They… |
+| --- | --- |
+| An exhibit | Walk over, look at it, maybe take a photo |
+| A seat | Walk over and sit down |
+| The café counter | Get in line and order |
+| A trash can or the bus tub, holding an empty cup | Throw it away |
+| A trash can, holding a full drink | Turn you down: not done with it |
+
+**Bad fits still get a trip:** they walk over and do something funny instead of nothing. Ideas, from the emotes we have and a few small new ones:
+
+- Stare at it with a "?" (a new emote frame), then walk off.
+- The annoyed emote, then walk off.
+- Pat their pockets (turning side to side) at a trash can with nothing to throw away.
+- Peek into the trash can (a little hop), then a shrug.
+- Take a photo of it anyway (the flash), like it's an exhibit.
+
+New emote frames go in a new Art slot at the end of SLOTS, so the current emote sheet keeps its size and custom art isn't lost.
+
+**Personality:** this runs on the visitor personalities above (Enthusiast, Casual, People Person, Introvert), so those get built first: steps 1 and 2 of their build order. For example, an Introvert sitting down rarely gets up, and a People Person goes for almost anything.
+
+**Fits with one problem per day:** on days with only one problem, there's time to play with this.
+
+**Later:** the shop (buying a recommended item), the cat, plants, loose items, other visitors (visitor to visitor), and ideas spreading: a visitor who enjoyed it may pass it on to someone nearby, with a daily cap.
+
+**Build order**
+
+1. Visitor personalities, steps 1 and 2 (handed out on arrival, wired into walking, looking and sitting).
+2. Thinking mode: the button, freeze, green palette, ghost, picking, the thought bubble.
+3. Recommend: the menu option, who can be asked, turn-downs, and the five actions above.
+4. Bad fits: the funny trips and the new emotes.
+5. The later list, one at a time.
+
+**Still to decide**
+
+- **Leaving the room:** does the idea fade when you leave the room it's in? Visitors elsewhere couldn't act on it.
+- **Saving:** is the idea kept when you save and come back? (Claude: no, it's a moment.)
+- **How willing:** should each personality get a fifth number, "open to suggestions" (0 to 4), or should it come from Interacting?
+
+### **One problem per day** *(Joe 10/16: planned, not built)*
+
+The 12-minute timer goes. Instead, one of the problems (usher, stock, litter, tour, line, item, janitor, conservator) plays out each day, picked at random, so a week has variety.
+
+- **Easy (Chill):** no problems (today's chill mode).
+- **Normal:** one problem a day.
+- **Hard:** all of them, as now.
+
+**Still to decide** (Claude's questions from 10/16): are the names Chill, Normal and Busy? Is Normal the default? Does the day end with an intercom announcement?
+
 ### **Later**
 
 Built on all this:
