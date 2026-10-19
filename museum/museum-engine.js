@@ -2910,7 +2910,7 @@ const ACH_STATS = {
   helped: "Visitors who got the right piece", recs: "Games recommended to visitors", pets: "Times petting the cat", closings: "Times closing the museum", photos: "Photos taken",
   bothSides: "Cases read on both sides", oneSideAll: "Read at least one side of every piece (1 = yes)", items: "Gift shop items owned",
   drinks: "Drinks ordered", naps: "Bench naps", rooms: "Different rooms visited", microwave: "Microwave incidents", segway: "Segway rides",
-  reactions: "Different photo reactions caught", episodes: "Episodes watched in the screening nook", arcade: "Games started at the café arcade", office: "Got into the curator's office (1 = yes)", shirt: "Has the GOQ shirt (1 = yes)", shifts: "Times clocking in", figure: "Photographed the figure in the dark (1 = yes)",
+  decided: "Indecisive shoppers who finally bought something", reactions: "Different photo reactions caught", episodes: "Episodes watched in the screening nook", arcade: "Games started at the café arcade", office: "Got into the curator's office (1 = yes)", shirt: "Has the GOQ shirt (1 = yes)", shifts: "Times clocking in", figure: "Photographed the figure in the dark (1 = yes)",
 };
 const SAMPLE_ACH = [
   { id: "first-dust", name: "Elbow Grease", desc: "Dust a frame for the first time.", stat: "dusted", target: 1 },
@@ -2928,6 +2928,7 @@ const SAMPLE_ACH = [
   { id: "paparazzi", name: "Paparazzi", desc: "Catch 10 different reactions on camera.", stat: "reactions", target: 10 },
   { id: "couch", name: "Couch Critic", desc: "Watch 5 episodes in the screening nook.", stat: "episodes", target: 5 },
   { id: "quarters", name: "Quarter Muncher", desc: "Start 3 games at the café arcade.", stat: "arcade", target: 3 },
+  { id: "decided", name: "Just Get the Mug", desc: "Help the shopper who can't decide pick something.", stat: "decided", target: 1, by: "claude" },
   { id: "office", name: "Behind the Scenes", desc: "Get into the curator's office.", stat: "office", target: 1, secret: true },
 ];
 /* Rugs you can size: a border band and corner designs around a plain middle, in any colors (Rooms, select a rug).
@@ -2980,7 +2981,7 @@ const PROBLEMS = [ // the living museum's problems (LIVING-MUSEUM-PLAN.md), each
 ];
 const PROBLEM_DAYS = [["usher", "tour"], ["stock", "line"], ["litter"], ["item"]]; // Normal (Joe 10/19): one of these a day; the usher's coffee goes with the tour, the shop's box with the café's (the Janitor isn't a problem anymore)
 const MODES = ["normal", "busy", "chill"];
-const RECO_KINDS = ["exhibit", "seat", "cafe", "toss", "photo", "chat"]; // what a visitor's willingness covers (Joe 10/19), 0 to 4 each // how the museum plays (Joe 10/19): Normal, one problem a day (the default); Busy, all of them; Chill, none
+const RECO_KINDS = ["exhibit", "seat", "cafe", "toss", "photo", "chat", "shop"]; // what a visitor's willingness covers (Joe 10/19), 0 to 4 each // how the museum plays (Joe 10/19): Normal, one problem a day (the default); Busy, all of them; Chill, none
 const FIXES = [...PROBLEMS, { id: "cons", who: "Conservator", label: "a chat at closing" }]; // what counts toward solving everything (Joe 10/12: catching the conservator at closing is one)
 const CROWD_LINES = [["What a nice museum."], ["I come here on my lunch break."], ["Have you seen the cat today?"], ["I always read both sides of the cases."],
   ["My friend told me about this place."], ["Honestly, I'm mostly here for the café."], ["Is it me, or is it busy today?"], ["I didn't know games could go in museums."],
@@ -8851,6 +8852,7 @@ class Game {
     if (e.caseAt && e.caseAt.piece) return Object.assign(at, { kind: "exhibit" });
     if (e.spot && e.spot.piece && e.spot.state === "wall") return Object.assign(at, { kind: "exhibit" });
     if (e.sit) return Object.assign(at, { kind: "seat" });
+    { const it = e.unit !== undefined ? this.shopLineup()[e.unit] : e.featured ? this.pack.settings.shop.items.find(i => i.id === this.featuredId()) : null; if (it) return Object.assign(at, { kind: "shop", item: it.id }); } // a shelf or the featured stand: the thing on it (Joe 10/19)
     const cafeBit = e.cafe || e.cafeSign || r.npcs.some(n => n.role === "barista" && n.x === x && n.y === y) || (r.props || []).some(p => p.x === x && p.y === y && /espresso|coffee|cafe|pastry|cup/.test(p.key)) || (r.wallArt || []).some(w => w.cafe && x >= w.x && x < w.x + SLOT[w.key].w / T && (y === (w.y || 1) || y === (w.y || 1) + 1));
     if (cafeBit) return Object.assign(at, { kind: "cafe" }, (r.props || []).some(p => p.key === "cafe_sign" && p.x === x && p.y === y) || e.cafeSign ? { special: true } : {}); // the café sign: today's special // the counter, the barista, the machine, the menu: all the café (Joe 10/19: nobody went for coffee)
     if (e.trash) return Object.assign(at, { kind: "bin" });
@@ -8872,7 +8874,8 @@ class Game {
     n.askFx = { t0: this.t }; n.route = null; n.timer = Math.max(n.timer || 0, 50); n.stepWait = 50; // a "?" over their head while they think about it
     const idea = Object.assign({}, I); n.recoAt = { t: this.t + 40, fn: () => this.recoReply(n, idea) };
   }
-  recoReply(n, I) { n.askFx = null; this.recoAnswer(n, I); if (n.reco) { n.ideaFx = { t0: this.t, icon: I.icon, keep: true }; if (!n.reco.bad) n.hopT = this.t; } return !!(n.reco && !n.reco.bad); } // a yes: a little hop, and the thought bubble rides with them
+  recoReply(n, I) { n.askFx = null; this.recoAnswer(n, I); if ((n.reco || n.queue) && n.still) { n.wasBrowsing = !!n.browsing; n.still = false; n.browsing = false; n.lines = [CROWD_LINES[(Math.random() * CROWD_LINES.length) | 0]]; } // (Joe 10/19: the shopper went, then froze there) // the shopper who can't decide is off
+    if (n.reco) { n.ideaFx = { t0: this.t, icon: I.icon, keep: true }; if (!n.reco.bad) n.hopT = this.t; } return !!(n.reco && !n.reco.bad); } // a yes: a little hop, and the thought bubble rides with them
   recoAnswer(n, I) {
     const r = this.room; if (!r.npcs.includes(n)) return;
     const no = kind => { n.pose = { kind: kind || "busy", t0: this.t, dur: 110 }; n.timer = Math.max(n.timer || 0, 130); n.route = null; }; // they think about it, then: no
@@ -8888,6 +8891,7 @@ class Game {
       if (r.zoneAt) { const z = this.zoneAt(r, near[0], near[1]); if (z && z.kind === "room") n.zone = z.id; }
     };
     if (I.kind === "exhibit") { if (roll("exhibit")) go(false, "exhibit"); else no(); return; }
+    if (I.kind === "shop") { if (n.browsing ? true : roll("shop")) { go(false, "shop"); if (n.reco) n.reco.item = I.item; } else no(); return; } // something from the shop (the shopper who can't decide: always, Joe 10/19)
     if (I.kind === "person") { const m = I.who; // go and talk to someone (Joe 10/19)
       if (m === n) { no("shy"); return; } // "...me?"
       if (!m || !r.npcs.includes(m) || m.leaving || m.chat || m.reco) { no("busy"); return; }
@@ -8942,8 +8946,9 @@ class Game {
     const c = [[0, 1], [0, -1], [-1, 0], [1, 0]].map(([dx, dy]) => [x + dx, y + dy]).filter(([a, b]) => r.solid[b] && r.solid[b][a] === false && !(r.noWander && r.noWander.has(a + "," + b)) && !r.events[a + "," + b]);
     return c.find(([a, b]) => this.npcPath(n, a, b, true)) || null;
   }
+  itemById(id) { if (!id) return null; return this.shopLineup().find(i => i.id === id) || this.pack.settings.shop.items.find(i => i.id === id) || this.giftItems().find(i => i.id === id) || this.cardItems().find(i => i.id === id) || null; }
   recoArrive(n) { // they got there
-    const R = n.reco; n.reco = null; const face = R.x > n.x ? "right" : R.x < n.x ? "left" : R.y > n.y ? "down" : "up";
+    let R = n.reco; n.reco = null; const face = R.x > n.x ? "right" : R.x < n.x ? "left" : R.y > n.y ? "down" : "up";
     if (n.sitting) { this.reactThenSnap(n, (n.will.photo || 0) >= 3 ? "startled" : ["startled", "annoyed", "busy"][(Math.random() * 3) | 0]); return true; } // in their seat: they stay put, react, maybe a photo (Joe 10/19: just a photo read as nothing)
     if (R.kind === "tell" || R.kind === "person") { const m = R.to; // over to someone: right up next to them (Joe 10/19: a tile apart didn't look like talking), then their exchange
       if (!m || !this.room.npcs.includes(m) || m.leaving || m.chat) { this.recoGiveUp(n); return true; }
@@ -8951,6 +8956,17 @@ class Game {
       this.startChat(n, m, R.kind === "tell" ? this.tellBeats(n, m, R.idea) : this.chatBeats(n, m, R.icon)); return true; }
     if (Math.abs(R.x - n.x) + Math.abs(R.y - n.y) > 1) return this.recoAgain(n, R); // not by it
     if (!this.thinkTarget(this.room, R.x, R.y)) { n.dir = face; n.pose = { kind: "busy", t0: this.t, dur: 100 }; n.timer = 140; n.recoIdea = null; return true; } // it's gone (you picked it up, or it moved): "..." (Joe 10/19) (a way round that ended somewhere else, Joe 10/19: a photo of nothing): try again, or give up
+    if (R.kind === "shop" && !R.bad) { // at the shelf: that's the one; then to the counter to pay
+      n.dir = face; n.pose = { kind: "pose", t0: this.t, dur: 70 }; n.hopT = this.t;
+      const ctr = Object.keys(this.room.events).filter(k => this.room.events[k].shopCounter).map(k => k.split(",").map(Number)).sort((a, b) => Math.abs(a[0] - n.x) + Math.abs(a[1] - n.y) - (Math.abs(b[0] - n.x) + Math.abs(b[1] - n.y)));
+      const c = ctr[Math.floor(ctr.length / 2)] || ctr[0], spot = c && this.recoSpot(this.room, n, c[0], c[1]);
+      if (spot) { n.reco = { kind: "pay", x: c[0], y: c[1], item: R.item, icon: R.icon }; Object.assign(n, { goalT: spot, route: null, timer: 0, retry: 0, arrived: false, viewing: false }); return true; }
+      R = Object.assign({}, R, { kind: "pay" }); // no counter to be found: it's theirs anyway
+    }
+    if (R.kind === "pay") { n.dir = face; n.owns = R.item; n.pose = { kind: "smile", t0: this.t, dur: 80 }; n.hopT = this.t; n.timer = 120; // paid: theirs to wear or carry around
+      const it = this.itemById(R.item); if (it && it.use !== "hat" && it.use !== "shades" && n.drink) n.bag = true;
+      if (n.wasBrowsing) { n.wasBrowsing = false; const t = this.progress.tally; t.decided = (t.decided || 0) + 1; this.saveProgress(); this.checkAchievements(); } // the shopper who couldn't decide: decided
+      this.recoDone(n, 200); return true; }
     if (R.kind === "seat" && !R.bad) { n.pose = { kind: "smile", t0: this.t, dur: 70 }; this.recoDone(n, 300); return false; } // the usual: sit down (stroll does it), and after a bit, tell someone
     n.dir = face; n.timer = 240 + Math.random() * 200;
     if (!R.bad) { if (R.kind === "exhibit") { n.viewing = true; this.reactThenSnap(n, "pose"); n.hopT = this.t; } this.recoDone(n, 200); return true; } // there: sparkles and a hop (or a photo), then a good look (Joe 10/19: just staring read as nothing) // a good look, and maybe a photo; then maybe tell someone
@@ -9941,7 +9957,9 @@ class Game {
       if (to >= Q.length || to >= L.max) { n.queue = null; n.timer = 60; return; } // the line's too long: maybe later
       const near = Math.abs(Q[to][0] - n.x) + Math.abs(Q[to][1] - n.y) <= 6; n.queue.to = near ? to : undefined; // a place is only kept for you once you're close (not from across the museum)
       if (idx === to) { n.queue.phase = "in"; n.route = null; return; }
-      if (occ(Q[to][0], Q[to][1]) && Math.abs(Q[to][0] - n.x) + Math.abs(Q[to][1] - n.y) <= 1) { n.stepWait = 20; return; } // someone's standing in the spot: wait for them to move on
+      if (occ(Q[to][0], Q[to][1]) && Math.abs(Q[to][0] - n.x) + Math.abs(Q[to][1] - n.y) <= 1) { // someone's standing in the spot: wait for them to move on, but not forever (Joe 10/19: frozen in front of the line)
+        if ((n.queue.blocked = (n.queue.blocked || 0) + 1) > 15) { const rc = n.reco && n.reco.via === "queue"; n.queue = null; n.route = null; if (rc) this.recoGiveUp(n); else n.timer = 60; return; }
+        n.stepWait = 20; return; }
       if (!n.route || !n.route.length || n.queue.goal !== to) { n.queue.goal = to; n.route = this.npcPath(n, Q[to][0], Q[to][1], true); }
       if (!n.route || !n.route.length) { if ((n.queue.stuck = (n.queue.stuck || 0) + 1) > 12) n.queue = null; n.stepWait = 20; return; }
       const d = n.route[0]; if (this.tryMove(n, d)) { n.route.shift(); n.stepWait = this.strollWait(n); } else { n.route = null; n.stepWait = 15; }
@@ -10623,6 +10641,7 @@ class Game {
         else ix.drawImage(ctx.canvas, TH.pick.x * T + 8 - 12 - cx, TH.pick.y * T - 12 - cy, 24, 24, 0, 0, 24, 24); // nothing with a sprite of its own (a wall tile, a door): that bit of the screen
         this.idea = Object.assign({}, TH.pick, { icon: ic }); TH.picked = true;
       }
+      if (TH.ghost && !TH.picked) this.drawThinkPick(ctx, cx, cy, TH.ghost);
       { const txt = "Thinking...", dots = 1 + (Math.floor(this.t / 20) % 3); ctx.font = "bold 8px monospace"; ctx.textBaseline = "alphabetic"; ctx.textAlign = "left"; // along the bottom (Joe 10/19); the dots tick over
         const w = Math.ceil(ctx.measureText(txt).width), x = Math.round(SW / 2 - w / 2), y = SH - 7, show = txt.slice(0, txt.length - 3 + dots);
         ctx.fillStyle = "#181820"; for (const [ox, oy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) ctx.fillText(show, x + ox, y + oy); ctx.fillStyle = "#fffbe8"; ctx.fillText(show, x, y); }
@@ -10632,7 +10651,18 @@ class Game {
       const x = SW - 34, y = 22; BUB(x, y, 26, 26); ctx.drawImage(this.thoughtStripes(), x + 1, y + 1); ctx.drawImage(I.icon, x + 1, y + 1); ctx.fillStyle = "#181820"; ctx.fillRect(x - 4, y + 27, 3, 3); ctx.fillRect(x - 7, y + 31, 2, 2); // top right, under your tokens (the room's name pops up top left, the day dial's bottom left)
     }
   }
-  /* What's on (x, y) as it's drawn: its sprite and where it sits (world pixels). For the thought's picture. */
+  /* While thinking: corners around whatever the ghost is facing that you could pick (Joe 10/19: keep these; not on yourself). */
+  drawThinkPick(ctx, cx, cy, g) {
+    if (g.moving) return;
+    const r = this.room, [dx, dy] = DIRS[g.dir], tx = g.x + dx, ty = g.y + dy, TS = 16;
+    if (!(tx * TS >= this.camX && (tx + 1) * TS <= this.camX + SW && ty * TS >= this.camY && (ty + 1) * TS <= this.camY + SH)) return; // (the same one screen as updateThink)
+    if ((tx === this.player.x && ty === this.player.y) || !this.thinkTarget(r, tx, ty)) return;
+    const sp = this.thingSprite(r, tx, ty) || { x: tx * T, y: ty * T, w: 16, h: 16 };
+    const o = Math.floor(this.t / 14) % 2, x0 = Math.round(sp.x - cx) - 2 - o, y0 = Math.round(sp.y - cy) - 2 - o, x1 = Math.round(sp.x - cx) + sp.w + 1 + o, y1 = Math.round(sp.y - cy) + sp.h + 1 + o, L = 4;
+    const corners = (c, d) => { ctx.fillStyle = c; for (const [x, y, sx, sy] of [[x0, y0, 1, 1], [x1, y0, -1, 1], [x0, y1, 1, -1], [x1, y1, -1, -1]]) { ctx.fillRect(Math.min(x, x + sx * (L - 1)) + d, y + d, L, 1); ctx.fillRect(x + d, Math.min(y, y + sy * (L - 1)) + d, 1, L); } };
+    corners("#181820", 1); corners("#fffbe8", 0); // a dark edge under them, so they show on anything
+  }
+  /* What's on (x, y) as it's drawn: its sprite and where it sits (world pixels). For the thinking corners and the thought's picture. */
   thingSprite(r, x, y) {
     const e = r.events[x + "," + y] || {}, me = this, swap = fn => (X, ox, oy) => { const was = me.ctx; me.ctx = X; try { fn(ox, oy); } finally { me.ctx = was; } };
     const n = r.npcs.find(m => m.x === x && m.y === y), ns = n && n.sheet && SLOT[n.sheet.split(/[@~]/)[0]];
@@ -11014,6 +11044,9 @@ class Game {
         const L = this.pack.settings.life, hex = c.shirt || (L.shirtsOn && L.shirts.length ? (c.shirt = this.shirtFor(sheet, L.shirts, Math.random())) : null);
         if (hex) this.drawSlot("visitor_shirt@" + hex, c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
       }
+      if (c.owns && c !== this.player && !this.full) { const it = this.itemById(c.owns); // something they bought (Joe 10/19): a hat or shades on, anything else in hand
+        if (it && (it.use === "hat" || it.use === "shades")) this.drawSlot(it.use === "hat" ? "goq_hat" : "goq_shades", c.sitting ? 0 : col, DIR_ROW[c.dir], sx, sy);
+        else if (it && !c.bag && c.dir !== "up" && !c.sitting) ctx.drawImage(this.iconAt(it, 8), sx + { down: 9, left: 1, right: 9 }[c.dir], sy + 8); }
       if (cup && !cupFirst) this.drawCup(sx, sy, c);
       if (c.reader && c.sitting && !c.leaving) { const b = this.readerBook(), bx = sx + (c.dir === "right" ? 11 : c.dir === "left" ? -3 : 4), by = sy + 8; this.drawSlot("reader_book@" + b.c, 1, 0, bx, by); this.drawSlot("reader_book", 0, 0, bx, by); } // her book, open in front of her
       if (bagAt && !bagFirst) this.drawSlot("shop_bag", 0, 0, ...bagAt);
@@ -11110,7 +11143,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 110";
+const VERSION = "2026-11-18 cards 111";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

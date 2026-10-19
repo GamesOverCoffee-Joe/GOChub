@@ -132,6 +132,7 @@ Not mine: "No refunds." and "You can't afford that." are Joe's.
 | Tour | Tuesday: the teacher on the way out | Okay friends, line up! Holding hands! Everybody's here! ⏎ ... ⏎ Everybody's here. |
 | Tour | Tuesday: one of the school kids | Is this a real museum or a pretend one? / My mom says games rot your brain. My brain feels fine. / Are you the boss of the museum? / *whispers* I touched the glass. |
 | Achievements | Read at least one side of every piece | TL;DR — Read at least one side of every piece in the museum. |
+| Achievements | Recommend the indecisive shopper ("Hmm. Hmm hmm hmm.") something from the shop | Just Get the Mug — Help the shopper who can't decide pick something. |
 
 ## Added later (10/11, version "2026-11-18 tuesday 2")
 
