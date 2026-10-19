@@ -379,7 +379,7 @@ Hold something in mind and recommend it to a visitor. They go to it and do somet
 
 **Settled** *(Joe 10/19)*: the idea fades when you leave the room it's in, and it isn't kept when you save and come back.
 
-### **One problem per day** *(Joe 10/16 to 10/19: settled, not built yet)*
+### **One problem per day** *(Joe 10/16 to 10/19. Built, cards 97)*
 
 The 12-minute loop stays exactly as it is: the same four beats, the same timing per problem, the same crowd ebb and flow. What changes is how many problems play out in it.
 

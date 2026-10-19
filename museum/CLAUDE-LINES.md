@@ -382,4 +382,8 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Tutorial | Your hands are full | Your hands are full. |
 
 | Pieces | The back of a case before the developer's reaction is in (one line) | The developer's reaction is on its way. Check back soon. |
-| Menu | After saving, the first time only: where the save lives (plain words, no tech talk) | Your museum is saved in this browser, on this device. / If you clear your browsing history, or play on a different device or browser, you'll start fresh. |
+| Menu | After saving, the first time only: where the save lives (plain words, no tech talk) | Your museum is saved in this browser, on this device. / If you clear your browsing history, or play on a different device or browser, you'll start fresh. || Picking a mode | The usher, on a black screen after the tutorial (once): the three modes | Oh hey, before you head in. / How do you like your museum days? / Normal: one thing goes wrong each day. Keeps you on your toes. / Busy: everything goes wrong. Every day. You asked for it. / Chill: nothing goes wrong. Just you and the museum. |
+| Picking a mode | The usher's question (the answers: Normal / Busy / Chill) | So, how do you want to play? |
+| Picking a mode | The usher, after you pick: where the setting lives | Got it. / If you change your mind, it's in Settings. That's the gear button at the top right, outside the game window. |
+| Chill museum | The curator (Busy only), after going over what you fixed: the other modes are in Settings | So... you fixed my whole museum. / Everything. In one day. Who does that? / If you ever want a quieter day, the other modes are in Settings. Normal has one problem a day. Chill has none. |
+| Chill museum | The curator's reward for fixing everything: the Konami code | Anyway. You earned this. A little staff secret: / Up, Up, Down, Down, Left, Right, Left, Right, B, A, Start. / Try it somewhere with some room. You'll see. |

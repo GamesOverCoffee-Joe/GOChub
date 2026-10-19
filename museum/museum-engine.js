@@ -2599,7 +2599,6 @@ const TEXT = {
   "jan.trash":         { g: "Janitor", l: "Taking the trash out of the bins", by: "claude", v: [["Who throws a full coffee in the trash?", "Every day. Every single day."], ["Trash day. Every day is trash day."]] },
   "jan.wait":          { g: "Janitor", l: "Between chores, waiting for the next one", by: "claude", v: [["Waiting on the next thing.", "There's always a next thing."], ["Don't tell anyone I'm standing still."]] },
   "jan.plants":        { g: "Janitor", l: "Watering the plants nobody got to", by: "claude", v: [["Plants don't water themselves.", "...apparently nobody else does either."], ["Hang in there, buddy. Water's coming."]] },
-  "jan.overtime":      { g: "Janitor", l: "Still watering after the visit's loop is over (overtime)", by: "claude", v: [["Overtime. Again.", "If someone had watered these earlier, I'd be on my couch right now."], ["*grumbles about plants*"]] },
   "jan.home":          { g: "Janitor", l: "The Janitor at closing, done for the day and heading home", by: "claude", v: [["That's me done. Night.", "Don't let the lights hit you on the way out."], ["Clocking out. The floors are spotless. You're welcome."]] },
   "jan.break":         { g: "Janitor", l: "On his break in the staff room", by: "claude", v: [["Break time. I'm not here.", "...", "You can't see me."], ["Shh. Five minutes."]] },
   "jan.early":         { g: "Janitor", l: "On an early break, because the plants were already watered", by: "claude", v: [["Somebody watered all the plants already.", "Whoever you are, I owe you one.", "Early break, baby."]] },
@@ -2609,20 +2608,20 @@ const TEXT = {
   "notes.tour":        { g: "Field notes", l: "Field notes: the tour group", by: "claude", v: [["The tour group", "Without coffee the guide can't answer a thing. And somebody always loses a kid."]] },
   "notes.line":        { g: "Field notes", l: "Field notes: the barista", by: "claude", v: [["The café's supplies", "Same basement, same problem. No cups, no lids, and by the rush the line's out the door."]] },
   "notes.item":        { g: "Field notes", l: "Field notes: the staff on break", by: "claude", v: [["The break room", "Somebody always walks out with the wrong headphones. Or lunchbox."]] },
-  "notes.janitor":     { g: "Field notes", l: "Field notes: the Janitor (the pile by the jammed can)", by: "claude", v: [["The mess by the can", "If nobody picks it up, the Janitor spends his break sweeping."]] },
   "notes.cons":        { g: "Field notes", l: "Field notes: the conservator", by: "claude", v: [["The conservator", "Only comes upstairs at closing. Somebody should say hi."]] },
-  "chill.intro":       { g: "Chill museum", l: "The curator, when you've solved every problem in one loop (first time only; the game pauses)", by: "claude", v: [["Hey. Got a second?", "I've been watching the cameras. Not in a creepy way. In a curator way.", "Everything went right today. Like... everything."]] },
+  "chill.intro":       { g: "Chill museum", l: "The curator, when you've solved every problem in one loop (Busy only, first time only; the game pauses)", by: "claude", v: [["Hey. Got a second?", "I've been watching the cameras. Not in a creepy way. In a curator way.", "Everything went right today. Like... everything."]] },
   "chill.usher":       { g: "Chill museum", l: "The curator: what you did for the usher", by: "claude", v: [["You got the usher a coffee before the tour. He actually knew what he was talking about for once."]] },
   "chill.tour":        { g: "Chill museum", l: "The curator: what you did for the tour group (a happy tour, the lost kid walked back)", by: "claude", v: [["The tour group left happy. And you walked that kid back before anybody had to panic."]] },
   "chill.stock":       { g: "Chill museum", l: "The curator: what you did for the shopkeeper", by: "claude", v: [["You hauled the shop's stock up from the basement, so the shop opened on time."]] },
   "chill.line":        { g: "Chill museum", l: "The curator: what you did for the barista", by: "claude", v: [["You got the café its supplies early, so the line never made it into the hallway."]] },
   "chill.litter":      { g: "Chill museum", l: "The curator: what you did about the jammed trash can", by: "claude", v: [["You pulled the cup out of that jammed trash can. People could actually throw stuff away again."]] },
   "chill.item":        { g: "Chill museum", l: "The curator: what you did for the staff on break ({who} took {owner}'s {item})", by: "claude", v: [["You caught {who} heading out the door with {owner}'s {item}.", "Back to {owner} it went. Crisis averted."]] },
-  "chill.janitor":     { g: "Chill museum", l: "The curator: what you did for the Janitor (the pile by the jammed can, cleaned before he had to)", by: "claude", v: [["And the Janitor never had to sweep up around it. He got his whole break.", "He'll never admit it, but he was thrilled."]] },
   "chill.cons":        { g: "Chill museum", l: "The curator: what you did for the conservator (stopped to talk with him at closing)", by: "claude", v: [["And you stopped to talk to the conservator at closing. He doesn't get a lot of that.", "He won't say so, but it made his night."]] },
-  "chill.outro":       { g: "Chill museum", l: "The curator, before asking if you want to keep it chill", by: "claude", v: [["So... you fixed my whole museum.", "If you want, I can keep it like this. No more problems. Just a chill day at the museum, every day.", "Or you can keep things the way they've been. I won't judge. Much."]] },
-  "chill.ask":         { g: "Chill museum", l: "The curator's question (the answers: Keep it chill / Keep it as is)", by: "claude", v: [["So what'll it be?"]] },
-  "chill.settings":    { g: "Chill museum", l: "The curator, after you answer: where the setting lives", by: "claude", v: [["You can change your mind any time. It's the Chill museum switch in Settings.", "That's the gear button at the top right, outside the game window."]] },
+  "chill.outro":       { g: "Chill museum", l: "The curator (Busy only), after going over what you fixed: the other modes are in Settings", by: "claude", v: [["So... you fixed my whole museum.", "Everything. In one day. Who does that?", "If you ever want a quieter day, the other modes are in Settings. Normal has one problem a day. Chill has none."]] },
+  "chill.reward":      { g: "Chill museum", l: "The curator's reward for fixing everything: the Konami code (it puts you on a segway)", by: "claude", v: [["Anyway. You earned this. A little staff secret:", "Up, Up, Down, Down, Left, Right, Left, Right, B, A, Start.", "Try it somewhere with some room. You'll see."]] },
+  "mode.ask":          { g: "Picking a mode", l: "The usher, on a black screen after the tutorial (once): the three modes", by: "claude", v: [["Oh hey, before you head in.", "How do you like your museum days?", "Normal: one thing goes wrong each day. Keeps you on your toes.", "Busy: everything goes wrong. Every day. You asked for it.", "Chill: nothing goes wrong. Just you and the museum."]] },
+  "mode.q":            { g: "Picking a mode", l: "The usher's question (the answers: Normal / Busy / Chill)", by: "claude", v: [["So, how do you want to play?"]] },
+  "mode.settings":     { g: "Picking a mode", l: "The usher, after you pick: where the setting lives", by: "claude", v: [["Got it.", "If you change your mind, it's in Settings. That's the gear button at the top right, outside the game window."]] },
   "chill.again":       { g: "Chill museum", l: "Notice: every problem solved again, in a later loop", by: "claude", v: [["Every problem solved. Again. Show-off."]] },
   "supply.pickShop":   { g: "Supplies", l: "Picking up the shop's stock box in the basement", by: "claude", v: [["A box labeled SHOP STOCK. It rattles.", "Sounds like souvenirs."]] },
   "supply.pickCafe":   { g: "Supplies", l: "Picking up the café's supply box in the basement", by: "claude", v: [["A box of cups, lids and coffee beans.", "It smells amazing. I could just eat the beans."]] },
@@ -2971,12 +2970,13 @@ const REDUCED_MOTION = typeof matchMedia === "function" && matchMedia("(prefers-
 const BROWSE_LINES = [["Hmm. Hmm hmm hmm."], ["Should I get the mug? I should get the mug.", "...Or the tote."], ["I've been standing here a while.", "I'm very close to deciding."], ["Don't rush me. This is a big decision."]];
 const SIT_LINES = [["Best seat in the house."], ["I come here for the café. The art is a bonus."], ["Shh. I'm people-watching."]];
 const BEATS = ["Settling in", "Getting busy", "Rush", "Winding down"]; // the visit clock's four 3-minute beats
-const PROBLEMS = [ // the living museum's problems (LIVING-MUSEUM-PLAN.md): all of them every loop, each in its own quarter
+const PROBLEMS = [ // the living museum's problems (LIVING-MUSEUM-PLAN.md), each in its own quarter: all of them every loop in Busy, one of PROBLEM_DAYS a day in Normal
   { id: "usher", who: "Usher", beat: 0, chain: "tour", label: "needs coffee", built: true }, { id: "stock", who: "Shopkeeper", beat: 0, chain: "supplies", label: "busy stocking", built: true },
   { id: "litter", who: "Visitors", beat: 1, chain: "litter", label: "a jammed trash can", built: true }, { id: "tour", who: "Tour group", beat: 1, chain: "tour", label: "the guide fumbles", built: true },
   { id: "line", who: "Barista", beat: 2, chain: "supplies", label: "the line blocks the walkway", built: true }, { id: "item", who: "Staff on break", beat: 2, chain: "", label: "someone's item goes missing", built: true },
-  { id: "janitor", who: "Janitor", beat: 3, chain: "litter", label: "sweeping up round the jammed can", built: true },
 ];
+const PROBLEM_DAYS = [["usher", "tour"], ["stock", "line"], ["litter"], ["item"]]; // Normal (Joe 10/19): one of these a day; the usher's coffee goes with the tour, the shop's box with the café's (the Janitor isn't a problem anymore)
+const MODES = ["normal", "busy", "chill"]; // how the museum plays (Joe 10/19): Normal, one problem a day (the default); Busy, all of them; Chill, none
 const FIXES = [...PROBLEMS, { id: "cons", who: "Conservator", label: "a chat at closing" }]; // what counts toward solving everything (Joe 10/12: catching the conservator at closing is one)
 const CROWD_LINES = [["What a nice museum."], ["I come here on my lunch break."], ["Have you seen the cat today?"], ["I always read both sides of the cases."],
   ["My friend told me about this place."], ["Honestly, I'm mostly here for the café."], ["Is it me, or is it busy today?"], ["I didn't know games could go in museums."],
@@ -5723,13 +5723,30 @@ class Game {
     this.endDialZoom(); this.tut = null; if (this.fol && this.fol.tutId) this.fol = null; if (this.carryBox === "tut") this.carryBox = null;
     TUT_ROOMS.forEach(k => { if (this.rooms[k]) this.rooms[k].npcs = this.rooms[k].npcs.filter(n => !n.tutId); });
   }
+  /* Picking a mode (Joe 10/19): once, right after the tutorial (finished or skipped), on a black screen, the usher asks how
+     you'd like to play. Players already past the tutorial are asked once on their next visit, their mode highlighted. Never
+     for a curator badge (it always plays chill), the curator's preview, or recording. */
+  needMode() { return !this.progress.modeAsked && !this.curator && !this.curatorPlay() && !this.recording() && !!this.saveKey && !this.headless && !this.full && !this.tut && !this.needTutorial(); }
+  askMode(then) {
+    if (this.askingMode || !this.needMode()) { if (then) then(); return; }
+    this.askingMode = true; this.blackout = true;
+    const dc = this.dirClock, was = dc && dc.paused; if (dc) dc.paused = true; // the day waits while you choose
+    const U = pages => pages.map((pg, i) => (i === 0 ? "Usher: " : "") + pg), opts = ["Normal", "Busy", "Chill"], i0 = Math.max(0, opts.indexOf({ normal: "Normal", busy: "Busy", chill: "Chill" }[this.gameMode()]));
+    this.say(U(this.tx("mode.ask")), () => {
+      this.choose("Usher: " + this.tx("mode.q").join(" "), opts, i => {
+        this.progress.modeAsked = todayISO(); this.setMode(opts[i].toLowerCase());
+        this.say(U(this.tx("mode.settings")), () => { this.blackout = false; this.askingMode = false; if (dc) dc.paused = was; if (then) then(); });
+      }, i0);
+      this.ch.i = i0; this.renderChoice(); // your mode now, highlighted (B picks it too)
+    });
+  }
   endTutorial(skipped) {
     const t = this.tut; if (!t) return; this.giveNotes();
     this.cleanTutorial();
     if (!this.progress.tutorial || (this.progress.tutorialRev || 1) < this.pack.settings.tutorialRev) { this.progress.tutorial = todayISO(); this.progress.tutorialRev = this.pack.settings.tutorialRev; this.saveProgress(); }
     const L = this.rooms.lobby, back = t.replay && L && L.solid[6] && L.solid[6][1] === false ? [1, 6, "right"] : ROOMS.lobby.spawn;
     this.closeAll();
-    this.warp("lobby", ...back, () => { if (skipped) this.showLoc("Tutorial skipped"); else this.say(this.tx("tut.welcome")); });
+    this.askMode(() => this.warp("lobby", ...back, () => { if (skipped) this.showLoc("Tutorial skipped"); else this.say(this.tx("tut.welcome")); })); // the first time: the usher asks how you'd like to play
   }
   /* The usher at the desk: sign in with your badge, or train as a volunteer, then off you go. At the end: your tag and the field notes. */
   tutUsher() {
@@ -6411,7 +6428,7 @@ class Game {
     const key = today + ":" + day + ":" + loop;
     // Every problem, every loop (Joe 10/10: like Majora's Mask, the day changes their shape, not whether they happen;
     // the timeline spaces them out so a player can learn the rhythm and prevent them all).
-    if (!d.picks || d.picks.key !== key) d.picks = { key, ids: this.chillOn() ? [] : PROBLEMS.map(pr => pr.id) }; // the chill museum (Settings): nothing goes wrong
+    if (!d.picks || d.picks.key !== key) { const m = this.gameMode(); d.picks = { key, ids: m === "chill" ? [] : m === "busy" ? PROBLEMS.map(pr => pr.id) : this.dayProblem() }; } // Chill: nothing goes wrong; Busy: everything; Normal: the day's one
     if (this.forceProblems) d.picks.ids = this.forceProblems.slice(); // the curator's preview: this loop's problems, picked by hand
     const r = this.room, plan = r && r.base ? Object.values(this.crowdPlan(r, beat)) : null, sum = k => plan.reduce((a, p) => a + (k === "now" ? p.now.length : p[k]), 0);
     const here = plan ? { now: sum("now"), want: sum("want"), base: sum("base"), room: r.id } : null;
@@ -6913,7 +6930,7 @@ class Game {
       { id: "line", group: "The loop", beat: 2, label: "6:00 The café line", run: () => { const c = counter(); if (!c) return "No café counter."; const r = this.goBeside("museum", c[0], c[1]); this.fillLine(6); return r; } },
       { id: "item", group: "The loop", beat: 2, label: "6:00 The break room mix-up", run: () => this.findSide("item") },
       { id: "kid", group: "The loop", beat: 3, label: "9:00 The lost kid", run: () => this.findTour() },
-      { id: "janitor", group: "The loop", beat: 3, label: "9:00 The Janitor gets to the jammed can", run: () => { const J = this.jamState(); if (!J.on) return "No jammed can this loop."; J.jammed = true; J.fixedBy = null; for (let i = 0; i < 4; i++) this.dropLitter(J.room, J.x, J.y); return this.goBeside(J.room, J.x, J.y); } },
+      { id: "janitor", group: "The loop", label: "The Janitor gets to the jammed can (once the loop's run out)", run: () => { const J = this.jamState(); if (!J.on) return "No jammed can this loop."; J.jammed = true; J.fixedBy = null; this.setVisitClock(0); if (this.dirClock) this.dirClock.t += this.visitSet().minutes * 3600; for (let i = 0; i < 4; i++) this.dropLitter(J.room, J.x, J.y); return this.goBeside(J.room, J.x, J.y); } }, // jumps to the moon: he comes for it
       { id: "intercom", group: "Closing", label: "The intercom (make the announcement)", find: () => { const a = this.rooms.lobby && this.rooms.lobby.intercomAt; return a ? at("lobby", a.x, a.y) : "No intercom."; } },
       { id: "cons", group: "Closing", label: "The conservator (after the announcement)", run: () => this.findSide("cons") },
       { id: "mug", group: "Finds", label: "The curator's mug", find: () => { for (const id in this.rooms) if (this.rooms[id].mug) return at(id, this.rooms[id].mug.x, this.rooms[id].mug.y); return "Already found today."; } },
@@ -7884,7 +7901,7 @@ class Game {
       });
       return;
     }
-    const opts = ["My Stuff", ...(this.dialOn() ? ["Check time"] : []), ...(this.isCurator() && this.answerPieces().length ? ["Developer answers"] : []), ...(this.progress.fieldNotes ? ["Field notes"] : []), "Settings", "Save", "Back"]; // (Joe 10/12: Recent notices, Controls and Respawn under Settings; Save asks if you're quitting)
+    const opts = ["My Stuff", ...(this.dialOn() ? ["Check time"] : []), ...(this.isCurator() && this.answerPieces().length ? ["Developer answers"] : []), ...(this.progress.fieldNotes && this.gameMode() === "busy" ? ["Field notes"] : []), "Settings", "Save", "Back"]; // (Joe 10/12: Recent notices, Controls and Respawn under Settings; Save asks if you're quitting)
     this.choose("PAUSED", opts, k => {
       const o = opts[k];
       if (o === "My Stuff") this.myStuff();
@@ -8627,6 +8644,7 @@ class Game {
       const c = this.cine; c.blend += (c.goal > c.blend ? 1 : -1) / 40; c.blend = Math.max(0, Math.min(1, c.blend));
       if (this.mode === "busy" && c.wait > 0 && --c.wait === 0 && c.then) { const fn = c.then; c.then = null; fn(); }
     }
+    if (this.started && this.mode === "walk" && !this.trans && !this.askingMode && this.needMode()) this.askMode(); // past the tutorial before there were modes: asked once
     this.updateCoins(has); this.updateDialZoom(has); if (this.tut) this.tutTick(); this.updateHang(); this.updateChore(); this.updateSpooks(); this.updateSipping(); this.living("director", () => this.updateDirector()); this.living("litter", () => this.updateLitter()); this.living("supplies", () => this.updateSupplies()); this.living("tour", () => this.updateTour()); this.living("side", () => this.updateSide()); this.living("cons", () => this.updateCons()); this.living("hold", () => this.updateLineHold()); this.living("rush", () => this.updateRush()); this.living("brew", () => this.updateBrew()); this.living("janitor", () => this.updateJanitor()); if (this.t % 30 === 0) this.living("solved", () => this.checkSolved());
     if (this.petT > 0) this.petT--;
     if (this.t % 20 === 0) this.flushToasts();
@@ -9018,10 +9036,10 @@ class Game {
     const d = this.director(), key = todayISO() + ":" + d.loop;
     if (this.tour && this.tour.key === key) { if (this.tour.on && this.tour.gen !== this.worldGen) this.tourPlan(this.tour); return this.tour; } // the museum was rebuilt (the pack loading): plan its stops again
     if (this.tour) this.endTour(true);
-    const on = !this.noTours() && (d.problems.includes("tour") || this.chillOn()) && !!this.rooms.lobby && !!this.rooms.museum; // chill: the tour still comes through, happy, and nobody gets lost
+    const calm = !d.problems.includes("tour"), on = !this.noTours() && !!this.rooms.lobby && !!this.rooms.museum; // the tour comes through every day; when it isn't the day's problem (Chill, or another problem's day in Normal) it goes well and nobody gets lost
     let sd = strSeed(todayISO() + ":tour:" + d.loop + ":" + this.daySeed()); const rnd = () => (sd = (Math.imul(sd, 1103515245) + 12345) >>> 0) / 4294967296;
     const school = this.weekday() === 2; // Tuesdays: a school group, a teacher leading four kids (Joe 10/11)
-    const T = this.tour = { key, on, school, coffee: school || !d.problems.includes("usher"), asked: false, explained: this.chillOn(), mood: null, kidDone: this.chillOn(), members: [], phase: -1, rnd };
+    const T = this.tour = { key, on, school, coffee: school || !d.problems.includes("usher"), asked: false, explained: calm, mood: null, kidDone: calm, members: [], phase: -1, rnd };
     { const L = this.loopSave(); if (L && L.tour && L.tour.key === key) { const { key: _k, ...st } = L.tour; Object.assign(T, st); } } // earlier today: how it went so far
     if (!on) return T;
     this.tourPlan(T);
@@ -9677,11 +9695,19 @@ class Game {
     for (let i = 0; i < Q.length && n < k; i++) { const [x, y] = Q[i]; if (!this.tileFree(r, x, y) || (this.player.x === x && this.player.y === y)) continue; r.npcs.push(Object.assign(this.crowdPerson(x, y, this.cafeZone(r)), { queue: { phase: "in" }, drink: null, bag: false, dir: "up" })); n++; }
     return n;
   }
-  /* ----- The chill museum (Joe 10/12) -----
-     Play without any of the problems: a switch in Settings (there from the start), or the curator offers it the first time you
-     solve every problem in one loop. Solved ones are kept for the loop as they happen (some states reset later on). */
+  /* ----- Modes (Joe 10/19; the chill museum, Joe 10/12) -----
+     Normal (the default): one problem a day (PROBLEM_DAYS). Busy: all of them, every loop; the first time you solve every one in
+     a loop, the curator goes over it, points you to the other modes and gives you the Konami code. Chill: no problems. The usher
+     asks once after the tutorial (askMode); Settings changes it. Solved ones are kept for the loop as they happen. */
   curatorPlay() { return !!(this.progress && this.staff && this.staff.curator && !this.curator && !this.headless); } // playing on a curator badge (not the curator page's preview)
-  chillOn() { return this.curatorPlay() || !!(this.progress && this.progress.chill); } // a curator badge always plays chill, without changing your own setting (Joe 10/13)
+  gameMode() { const P = this.progress || {}; return this.curatorPlay() ? "chill" : MODES.includes(P.mode) ? P.mode : P.chill ? "chill" : "normal"; } // a curator badge always plays chill, without changing your own setting (Joe 10/13); saves from before modes: chill if it was on, else Normal
+  chillOn() { return this.gameMode() === "chill"; }
+  dayProblem() { // Normal: the day's one problem, at random, never yesterday's; kept in your save, so it's the same all day and after a reload
+    const P = this.progress, t = todayISO(), D = P.dayPick;
+    if (D && D.day === t && PROBLEM_DAYS.some(g => g[0] === D.id)) return PROBLEM_DAYS.find(g => g[0] === D.id).slice();
+    const prev = D && D.day !== t ? D.id : D && D.prev, pool = PROBLEM_DAYS.filter(g => g[0] !== prev), g = pool[Math.floor(Math.random() * pool.length)];
+    P.dayPick = { day: t, id: g[0], prev: prev || "" }; this.saveProgress(); return g.slice();
+  }
   noJanitor() { return this.curatorPlay() || (this.chillOn() && this.progress.chillJan === false); } // chill, Janitor off: no litter at all, the bins never fill (Joe 10/12)
   noTours() { return this.curatorPlay() || (this.chillOn() && this.progress.chillTour === false); } // chill, Tours off: no tour group, no school group
   setChillPart(part, on) { // the two switches under Chill museum
@@ -9694,20 +9720,23 @@ class Game {
     const J = this.jan; if (J) for (const id in this.rooms || {}) this.rooms[id].npcs = this.rooms[id].npcs.filter(n => n !== J.npc);
     this.jan = null; this.litter = {}; this.bins = {}; this.trashBag = null;
   }
-  setChill(on, keep) { // keep: leave this loop as it is (everything's already solved)
-    this.progress.chill = !!on; this.saveProgress(); this.janOff();
+  setChill(on, keep) { this.setMode(on ? "chill" : "normal", keep); } // (older callers)
+  setMode(m, keep) { // keep: leave this loop as it is
+    if (!MODES.includes(m)) return;
+    this.progress.mode = m; this.progress.chill = m === "chill"; this.saveProgress(); this.janOff();
     if (!keep && !this.forceProblems) { if (this.dirClock) this.dirClock.picks = null; this.sup = null; if (this.tour) this.endTour(true); this.endSide(); }
   }
   solvedInfo() { // the curator's preview: what counts as fixed so far this loop
     if (this.chillOn()) return "Chill museum is on: no problems.";
-    const S = this.solvedNow(), what = { usher: "usher's coffee", tour: "happy tour + kid back", stock: "shop stock", line: "café supplies", litter: "the jammed can unjammed", item: "item returned", janitor: "the pile by it cleaned up before the Janitor's last quarter", cons: "a chat with the conservator at closing" };
+    if (this.gameMode() === "normal") return "Normal: today's problem is " + this.director().problems.join(" + ") + ". (The curator's moment is Busy only.)";
+    const S = this.solvedNow(), what = { usher: "usher's coffee", tour: "happy tour + kid back", stock: "shop stock", line: "café supplies", litter: "the jammed can unjammed", item: "item returned", cons: "a chat with the conservator at closing" };
     const left = FIXES.filter(p => !S.ids.includes(p.id)).map(p => what[p.id]);
     return S.ids.length + " of " + FIXES.length + " solved" + (left.length ? ". Still to do: " + left.join(", ") + "." : S.shown ? ". The curator's already said so." : ". The curator's on the way (when you're free).");
   }
   solvedNow() { const d = this.director(), key = todayISO() + ":" + d.loop, P = this.progress; if (!P.solved || P.solved.key !== key) P.solved = { key, ids: [], vars: {} }; return P.solved; }
   markSolved(id, vars) { const S = this.solvedNow(); if (S.ids.includes(id)) return; S.ids.push(id); if (vars) Object.assign(S.vars, vars); this.saveProgress(); }
   checkSolved() {
-    if (this.headless || this.tut || this.forceProblems || this.chillOn() || !this.rooms || !this.rooms.museum || !this.pack) return;
+    if (this.headless || this.tut || this.forceProblems || this.gameMode() !== "busy" || !this.rooms || !this.rooms.museum || !this.pack) return; // the curator's moment: Busy only (Joe 10/19)
     const dc = this.dirClock; if (!dc || !dc.picks || dc.picks.ids.length < PROBLEMS.length) return; // every problem in this loop (still counts after the loop's over: the lost kid, say)
     const T = this.tour, Su = this.sup, I = this.side && this.side.item, J = this.jan;
     if (T && (!T.on || T.coffee)) this.markSolved("usher"); // (Tuesday's teacher leads instead: nothing to fix there)
@@ -9716,7 +9745,6 @@ class Game {
     if (Su && (Su.cafeDone || !Su.cafeNeeded)) this.markSolved("line");
     if (I && (!I.on || I.done)) this.markSolved("item", I.on ? { who: I.taker.member, owner: I.owner.member, item: I.item } : {});
     const Jm = this.jamState(); if (!Jm.on || Jm.fixedBy === "you") this.markSolved("litter"); // the jammed can: you pulled the cup out
-    if (!Jm.on || (!Jm.jammed && !Jm.janSwept && !this.jamLitter().length)) this.markSolved("janitor"); // and he never had to sweep round it
     const S = this.solvedNow(); if (S.shown || !FIXES.every(p => S.ids.includes(p.id))) return;
     if (this.mode !== "walk" || this.trans || this.inputLock) return; // when you're free: not mid-conversation
     S.shown = true; this.saveProgress();
@@ -9724,12 +9752,8 @@ class Game {
     this.progress.chillOffered = true; this.saveProgress();
     const was = dc.paused; dc.paused = true; // the game stops while the curator talks
     const C = pages => pages.map((pg, i) => (i === 0 ? "Curator: " : "") + pg);
-    const pages = [...C(this.tx("chill.intro")), ...FIXES.flatMap(p => (S.ids.includes(p.id) && TEXT["chill." + p.id] ? C(this.tx("chill." + p.id, p.id === "item" ? S.vars : {})) : [])), ...C(this.tx("chill.outro"))];
-    const done = () => { dc.paused = was; };
-    this.say(pages, () => this.choose("Curator: " + this.tx("chill.ask").join(" "), ["Keep it chill", "Keep it as is"], i => {
-      if (i === 0) this.setChill(true, true);
-      this.say(C(this.tx("chill.settings")), done);
-    }, 1));
+    const pages = [...C(this.tx("chill.intro")), ...FIXES.flatMap(p => (S.ids.includes(p.id) && TEXT["chill." + p.id] ? C(this.tx("chill." + p.id, p.id === "item" ? S.vars : {})) : [])), ...C(this.tx("chill.outro")), ...this.tx("chill.reward")];
+    this.say(pages, () => { dc.paused = was; }); // the other modes are in Settings; your reward: the Konami code (the segway)
   }
   setProblems(ids) { this.forceProblems = ids; if (this.dirClock) this.dirClock.picks = null; this.sup = null; if (this.tour) this.endTour(true); this.endSide(); }
   /* ----- Litter (living museum, Step 3: the litter chain) -----
@@ -9768,7 +9792,7 @@ class Game {
   }
   isJammed(room, x, y) { if (!this.rooms || !this.pack || this.tut) return false; const J = this.jamState(); return J.on && J.jammed && J.room === room && J.x === x && J.y === y; }
   jamLitter() { const J = this.jam; if (!J || !J.on) return []; return ((this.litter && this.litter[J.room]) || []).filter(l => { const b = this.litterBin(J.room, l); return b && b[0] === J.x && b[1] === J.y; }); }
-  jamDue() { const d = this.director(); return d.over || this.closing || d.beat >= 3; } // the Janitor's last quarter: he gets to it now
+  jamDue() { const d = this.director(); return d.over || this.closing; } // once the loop's run out (the moon) he gets to it, then waters (Joe 10/19: the whole day is yours to fix it)
   isJamBin(room, bin) { const J = this.jam; return !!(J && J.on && bin && J.room === room && J.x === bin[0] && J.y === bin[1]); }
   jamTalk() { // you, at the jammed can
     const J = this.jam, busy = (this.drink && !this.drink.empty) || this.carryBox || this.carryItem || this.trashBag != null || (this.drink && this.drink.empty);
@@ -9838,8 +9862,8 @@ class Game {
   /* ----- The janitor (living museum, Step 2; LIVING-MUSEUM-PLAN.md, Phase 2) -----
      When the visit starts he comes out of the staff door and does three chores picked at random (sweeping a part of the
      museum, broom and dustpan, or a trash round, bin to bin, with a trash bag he leaves in the staff room at the end), starting no more than one a
-     quarter. From the last quarter he waters any plant nobody has watered yet, which crosses it off the shift sheet.
-     Then his break in the staff room: early if nobody left him any plants, overtime if the loop ended first.
+     quarter. Once the loop's run out (the moon) he sees to the jammed can if nobody has, then waters any plant nobody has
+     watered yet, which crosses it off the shift sheet. Then his break in the staff room (early if nobody left him any plants).
      He goes between the lobby, the museum and the staff room through their doors. Out of sight he keeps to the same
      schedule: he simply turns up at his next stop once he'd have got there. */
   janHop(from, to) { // the next room on his way: the lobby joins the museum and the staff room; the theater is off the museum
@@ -9929,7 +9953,7 @@ class Game {
     for (const id in this.rooms) { const R = this.rooms[id], has = R.npcs.includes(n); if (id === J.room && !has) R.npcs.push(n); else if (id !== J.room && has) R.npcs = R.npcs.filter(m => m !== n); }
     // What he says depends on what he's doing.
     let stop = J.phase === "chores" ? J.stops[J.i] : J.phase === "plants" ? J.cur : J.brk;
-    const say = J.lit && J.lit.jam ? "jam.janitor" : J.phase === "break" ? (J.brk && J.brk.act === "home" ? "jan.home" : J.early ? "jan.early" : "jan.break") : J.phase === "plants" ? (d.over ? "jan.overtime" : "jan.plants") : J.mode === "wait" ? "jan.wait" : J.i === 0 && J.mode === "go" ? "jan.start" : stop && stop.act === "empty" ? "jan.trash" : "jan.sweep";
+    const say = J.lit && J.lit.jam ? "jam.janitor" : J.phase === "break" ? (J.brk && J.brk.act === "home" ? "jan.home" : J.early ? "jan.early" : "jan.break") : J.phase === "plants" ? "jan.plants" : J.mode === "wait" ? "jan.wait" : J.i === 0 && J.mode === "go" ? "jan.start" : stop && stop.act === "empty" ? "jan.trash" : "jan.sweep";
     if (J.say !== say) { J.say = say; n.lines = this.pack.settings.text[say] || (TEXT[say] && TEXT[say].v) || [[say]]; n.lineI = -1; }
     const vis = J.room === this.room.id;
     if (!vis) { // out of sight: finish any step or fade-in at once (only the room you're in moves people along)
@@ -9947,7 +9971,7 @@ class Game {
     }
     // Which stop is next.
     if (J.phase === "chores" && J.mode !== "act") {
-      if (!stop) { if (d.beat >= 3 || late) { J.phase = "plants"; J.cur = null; } else J.mode = "wait"; }
+      if (!stop) { if (late) { J.phase = "plants"; J.cur = null; } else J.mode = "wait"; } // the plants wait till the loop's run out (Joe 10/19: yours to water first, for the tokens)
       else if (stop.notBefore > d.beat && !late) J.mode = "wait";
       else if (J.mode === "wait") J.mode = "go";
     }
@@ -10496,6 +10520,7 @@ class Game {
   }
   draw() {
     const ctx = this.ctx, r = this.room, pp = this.pos(this.player), full = this.full;
+    if (this.blackout && !full) { ctx.fillStyle = "#000"; ctx.fillRect(0, 0, SW, SH); return; } // picking a mode: just the usher's words on black
     if (!full && this.shakeT > 0 && !this.shaking && !REDUCED_MOTION) { this.shaking = true; ctx.save(); ctx.translate(this.shakeT % 4 < 2 ? 1 : -1, 0); this.draw(); ctx.restore(); this.shaking = false; return; }
     const VWp = full ? full.w : SW, VHp = full ? full.h : SH;
     ctx.fillStyle = "#000"; ctx.fillRect(0, 0, VWp, VHp);
@@ -10740,7 +10765,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 96";
+const VERSION = "2026-11-18 cards 97";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
