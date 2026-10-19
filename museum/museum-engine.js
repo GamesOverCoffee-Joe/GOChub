@@ -7935,17 +7935,15 @@ class Game {
       });
       return;
     }
-    const opts = ["My Stuff", "Think", ...(this.idea ? ["Forget thought"] : []), ...(this.dialOn() ? ["Check time"] : []), ...(this.isCurator() && this.answerPieces().length ? ["Developer answers"] : []), ...(this.progress.fieldNotes && this.gameMode() === "busy" ? ["Field notes"] : []), "Settings", "Save", "Back"]; // (Joe 10/12: Recent notices, Controls and Respawn under Settings; Save asks if you're quitting)
+    const opts = ["My Stuff", "Think", ...(this.idea ? ["Forget thought"] : []), ...(this.isCurator() && this.answerPieces().length ? ["Developer answers"] : []), "Settings", "Save", "Back"]; // (Joe 10/12: Recent notices, Controls and Respawn under Settings; Save asks if you're quitting)
     this.choose("PAUSED", opts, k => {
       const o = opts[k];
       if (o === "My Stuff") this.myStuff();
       else if (o === "Think") { if (this.canThink()) this.enterThink(); } // the same as Select
       else if (o === "Forget thought") this.forgetThought();
-      else if (o === "Field notes") this.fieldNotes(() => this.openMenu());
       else if (o === "Settings") this.settingsMenu();
       else if (o === "Save") this.saveAsk();
       else if (o === "Developer answers") this.answersMenu();
-      else if (o === "Check time") this.dialShow = this.t; // the menu closes and the dial's label slides in again (Joe 10/12)
     });
   }
   answerQ(k) { return this.tx("case.q" + (k + 1)).join(" ") || ANSWER_QS[k]; } // your three questions, as worded in Words, Pieces
@@ -7999,9 +7997,10 @@ class Game {
   answerStep(d) { const A = this.ans; if (!A) return; const j = A.i + d; if (j < 0) return; if (j >= A.cards.length) { this.closeAnswers(); return; } A.i = j; this.renderAnswer(); }
   closeAnswers() { if (this.el.ans) this.el.ans.style.display = "none"; this.ans = null; if (this.mode === "answer") this.mode = "walk"; }
   settingsMenu() {
-    const opts = ["Recent notices", "Controls", "Respawn", "Back"];
+    const opts = [...(this.dialOn() ? ["Check time"] : []), "Recent notices", "Controls", "Respawn", "Back"]; // (Check time moved here, Joe 10/19: room for Think)
     this.choose("SETTINGS", opts, k => {
       const o = opts[k], back = () => this.settingsMenu();
+      if (o === "Check time") { this.dialShow = this.t; return; } // the menu closes and the dial's label slides in again (Joe 10/12)
       if (o === "Recent notices") this.recentNotices(back);
       else if (o === "Controls") this.controlsMenu(back);
       else if (o === "Respawn") this.respawn();
@@ -8050,7 +8049,7 @@ class Game {
     const n = (this.progress.photos || []).length;
     const an = Object.keys(this.progress.ach || {}).length + "/" + this.pack.settings.achievements.length;
     const sv = this.ownedItems().length, cl = this.cardList(), co = cl.filter(p => { const o = this.cardsOwned()[p.id]; return o && (o.c || o.r || o.f); }).length;
-    const opts = ["Photos (" + n + ")", "Souvenirs (" + sv + ")", ...(cl.length ? ["Cards (" + co + "/" + cl.length + ")"] : []), "Achievements (" + an + ")", ...(this.progress.shirt || this.canLook() || ["shades", "hat", "case"].some(u => this.gear(u)) ? ["Wardrobe"] : []), "Back"];
+    const opts = ["Photos (" + n + ")", "Souvenirs (" + sv + ")", ...(cl.length ? ["Cards (" + co + "/" + cl.length + ")"] : []), "Achievements (" + an + ")", ...(this.progress.fieldNotes && this.gameMode() === "busy" ? ["Field notes"] : []), ...(this.progress.shirt || this.canLook() || ["shades", "hat", "case"].some(u => this.gear(u)) ? ["Wardrobe"] : []), "Back"];
     this.choose("MY STUFF", opts, k => {
       const o = opts[k];
       const back = () => this.myStuff();
@@ -8058,6 +8057,7 @@ class Game {
       else if (o.startsWith("Souvenirs")) { if (!sv) this.say(this.tx("cabinet.empty"), back); else { this.menuRet = back; this.openItems(); } }
       else if (o.startsWith("Cards")) { if (!co) this.say(this.tx("card.none"), back); else { this.menuRet = back; this.openBinder(); } }
       else if (o.startsWith("Achievements")) this.showAchievements(back);
+      else if (o === "Field notes") this.fieldNotes(back); // (moved here from the pause menu, Joe 10/19)
       else if (o === "Wardrobe") this.wardrobe();
       else this.openMenu();
     }, opts.length - 1);
@@ -8949,9 +8949,9 @@ class Game {
       if (Math.abs(m.x - n.x) + Math.abs(m.y - n.y) > 1) return this.recoAgain(n, R);
       this.startChat(n, m, R.kind === "tell" ? this.tellBeats(n, m, R.idea) : this.chatBeats(n, m, R.icon)); return true; }
     if (Math.abs(R.x - n.x) + Math.abs(R.y - n.y) > 1) return this.recoAgain(n, R); // not by it (a way round that ended somewhere else, Joe 10/19: a photo of nothing): try again, or give up
-    if (R.kind === "seat" && !R.bad) { this.recoDone(n, 300); return false; } // the usual: sit down (stroll does it), and after a bit, tell someone
+    if (R.kind === "seat" && !R.bad) { n.pose = { kind: "smile", t0: this.t, dur: 70 }; this.recoDone(n, 300); return false; } // the usual: sit down (stroll does it), and after a bit, tell someone
     n.dir = face; n.timer = 240 + Math.random() * 200;
-    if (!R.bad) { if (R.kind === "exhibit") { n.viewing = true; if ((n.will.photo || 0) >= 3) n.snapT = 70; } this.recoDone(n, 200); return true; } // a good look, and maybe a photo; then maybe tell someone
+    if (!R.bad) { if (R.kind === "exhibit") { n.viewing = true; if ((n.will.photo || 0) >= 3) n.snapT = 70; else { n.pose = { kind: "pose", t0: this.t, dur: 80 }; n.hopT = this.t; } } this.recoDone(n, 200); return true; } // there: sparkles and a hop (or a photo), then a good look (Joe 10/19: just staring read as nothing) // a good look, and maybe a photo; then maybe tell someone
     this.recallLater(n, R.icon, Math.random() < 0.6 ? "annoyed" : "busy"); // and later, a grumble about it
     if ((n.will.photo || 0) >= 3) n.snapT = 70; // a bad fit: a photo of it anyway...
     else n.pose = { kind: ["startled", "annoyed", "busy"][(Math.random() * 3) | 0], t0: this.t, dur: 110 }; // ...or a reaction
@@ -10613,14 +10613,47 @@ class Game {
     if (TH) {
       if (TH.pick && !TH.picked) { // take the bubble's picture now, in color, then back to your body next frame
         const ic = document.createElement("canvas"); ic.width = 24; ic.height = 24; const ix = ic.getContext("2d"); ix.imageSmoothingEnabled = false;
-        ix.drawImage(ctx.canvas, TH.pick.x * T + 8 - 12 - cx, TH.pick.y * T - 12 - cy, 24, 24, 0, 0, 24, 24); // centered on the thing's top edge: tall things (a case) show their best part
+        const sp = this.thingSprite(r, TH.pick.x, TH.pick.y);
+        if (sp) { const sc = document.createElement("canvas"); sc.width = sp.w; sc.height = sp.h; const sx = sc.getContext("2d"); sx.imageSmoothingEnabled = false; sp.draw(sx, 0, 0); // the thing itself, drawn on its own (Joe 10/19: its sprite, not a screenshot)
+          const k = Math.min(1, 24 / sp.w, 24 / sp.h), w = Math.max(1, Math.round(sp.w * k)), h = Math.max(1, Math.round(sp.h * k)); ix.drawImage(sc, 0, 0, sp.w, sp.h, Math.floor((24 - w) / 2), Math.floor((24 - h) / 2), w, h); }
+        else ix.drawImage(ctx.canvas, TH.pick.x * T + 8 - 12 - cx, TH.pick.y * T - 12 - cy, 24, 24, 0, 0, 24, 24); // nothing with a sprite of its own (a wall tile, a door): that bit of the screen
         this.idea = Object.assign({}, TH.pick, { icon: ic }); TH.picked = true;
       }
+      const g = TH.ghost; if (g && !TH.picked) this.drawThinkPick(ctx, cx, cy, g);
+      { const txt = "Thinking...", dots = 1 + (Math.floor(this.t / 20) % 3); ctx.font = "bold 8px monospace"; ctx.textBaseline = "alphabetic"; ctx.textAlign = "left"; // along the bottom (Joe 10/19); the dots tick over
+        const w = Math.ceil(ctx.measureText(txt).width), x = Math.round(SW / 2 - w / 2), y = SH - 7, show = txt.slice(0, txt.length - 3 + dots);
+        ctx.fillStyle = "#181820"; for (const [ox, oy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) ctx.fillText(show, x + ox, y + oy); ctx.fillStyle = "#fffbe8"; ctx.fillText(show, x, y); }
       return; // the green is a filter on the screen itself (thinkFilter): reading the picture back every frame made Chrome draw the whole game more slowly afterwards (Joe 10/19: choppy)
     }
     if (I && I.icon && I.room === r.id) { // what you're holding in mind (it stays up through dialogue too, Joe 10/19)
       const x = SW - 34, y = 22; BUB(x, y, 26, 26); ctx.drawImage(I.icon, x + 1, y + 1); ctx.fillStyle = "#181820"; ctx.fillRect(x - 4, y + 27, 3, 3); ctx.fillRect(x - 7, y + 31, 2, 2); // top right, under your tokens (the room's name pops up top left, the day dial's bottom left)
     }
+  }
+  /* While thinking: corners around whatever the ghost is facing that you could pick (yourself too: A there lets the thought go). */
+  drawThinkPick(ctx, cx, cy, g) {
+    if (g.moving) return;
+    const r = this.room, [dx, dy] = DIRS[g.dir], tx = g.x + dx, ty = g.y + dy, TS = 16;
+    if (!(tx * TS >= this.camX && (tx + 1) * TS <= this.camX + SW && ty * TS >= this.camY && (ty + 1) * TS <= this.camY + SH)) return; // (the same one screen as updateThink)
+    const self = tx === this.player.x && ty === this.player.y;
+    if (!self && !this.thinkTarget(r, tx, ty)) return;
+    const sp = self ? { x: tx * T, y: ty * T - 4, w: 16, h: 16 } : this.thingSprite(r, tx, ty) || { x: tx * T, y: ty * T, w: 16, h: 16 };
+    const o = Math.floor(this.t / 14) % 2, x0 = Math.round(sp.x - cx) - 2 - o, y0 = Math.round(sp.y - cy) - 2 - o, x1 = Math.round(sp.x - cx) + sp.w + 1 + o, y1 = Math.round(sp.y - cy) + sp.h + 1 + o, L = 4;
+    const corners = (c, d) => { ctx.fillStyle = c; for (const [x, y, sx, sy] of [[x0, y0, 1, 1], [x1, y0, -1, 1], [x0, y1, 1, -1], [x1, y1, -1, -1]]) { ctx.fillRect(Math.min(x, x + sx * (L - 1)) + d, y + d, L, 1); ctx.fillRect(x + d, Math.min(y, y + sy * (L - 1)) + d, 1, L); } };
+    corners("#181820", 1); corners("#fffbe8", 0); // a dark edge under them, so they show on anything
+  }
+  /* What's on (x, y) as it's drawn: its sprite and where it sits (world pixels). For the thinking corners and the thought's picture. */
+  thingSprite(r, x, y) {
+    const e = r.events[x + "," + y] || {}, me = this, swap = fn => (X, ox, oy) => { const was = me.ctx; me.ctx = X; try { fn(ox, oy); } finally { me.ctx = was; } };
+    const n = r.npcs.find(m => m.x === x && m.y === y), ns = n && n.sheet && SLOT[n.sheet.split(/[@~]/)[0]];
+    if (n && ns) { const row = DIR_ROW[n.dir] || 0, shirt = /^visitor_[abc]$/.test(n.sheet) && !this.overrides[n.sheet] && n.shirt;
+      return { x: x * T, y: y * T - 4, w: 16, h: 16, draw: swap((ox, oy) => { this.drawSlot(n.sheet, 0, row, ox, oy); if (shirt) this.drawSlot("visitor_shirt@" + shirt, 0, row, ox, oy); }) }; }
+    const c = e.caseAt; if (c) return { x: c.x * T, y: c.y * T - T, w: 16, h: 32, draw: swap((ox, oy) => this.drawCase(c, c.x * T - ox, c.y * T - T - oy)) };
+    const h = e.spot; if (h && h.piece) { const im = this.pieceOnWall(h.piece); return { x: h.x * T, y: h.y * T, w: im.width, h: im.height, draw: (X, ox, oy) => X.drawImage(im, ox, oy) }; }
+    const q = (r.props || []).find(q => { const s = SLOT[q.key]; return s && !q.hidden && x >= q.x && x < q.x + s.w / T && (y === q.y || (q.tall && y === q.y - 1)); });
+    if (q) { const s = SLOT[q.key]; return { x: q.x * T, y: q.y * T - (s.h - T), w: s.w, h: s.h, draw: swap((ox, oy) => this.drawProp(q, q.x * T - ox, q.y * T - (s.h - T) - oy)) }; }
+    const wa = (r.wallArt || []).find(w => SLOT[w.key] && x >= w.x && x < w.x + SLOT[w.key].w / T && (y === (w.y || 1) || y === (w.y || 1) + 1));
+    if (wa) { const s = SLOT[wa.key]; return { x: wa.x * T, y: (wa.y || 1) * T, w: s.w, h: s.h, draw: swap((ox, oy) => this.drawSlot(wa.key, 0, 0, ox, oy)) }; }
+    return null;
   }
   drawAskBubble(ctx, x, y) { // 10 by 10, round, with the "?" ink-dark
     const rows = ["...####...", ".##oooo##.", ".#oooooo#.", "#oooooooo#", "#oooooooo#", "#oooooooo#", "#oooooooo#", ".#oooooo#.", ".##oooo##.", "...####..."];
@@ -11079,7 +11112,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 107";
+const VERSION = "2026-11-18 cards 108";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
