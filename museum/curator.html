@@ -56,8 +56,12 @@ button,input,select,textarea{font:inherit;color:inherit}
 .gt-btns{display:flex;gap:16px;align-items:center;transform:rotate(-18deg)}
 .gt-btn{-webkit-tap-highlight-color:transparent;outline:none;touch-action:none;width:62px;height:62px;border-radius:50%;border:2px solid var(--text);background:var(--surface-2);color:#f3e5d0;font-family:var(--pixel);font-size:14px;cursor:pointer;box-shadow:3px 3px 0 var(--shadow)}
 .gt-btn-a{color:var(--gold);margin-top:-26px}
-.gt-start{align-self:flex-end;font-family:var(--pixel);font-size:8px;padding:6px 10px;border-radius:12px;border:2px solid var(--text);background:var(--surface-2);color:var(--text);transform:rotate(-18deg);touch-action:none}
-.gt-start.down{background:var(--gold);color:var(--on-gold)}
+.gt-ss{align-self:flex-end;display:flex;gap:14px;align-items:flex-start} /* SELECT and START like a Game Boy: two tilted pills, the words under them */
+.gt-ssb{display:flex;flex-direction:column;align-items:center;gap:5px;transform:rotate(-25deg)}
+.gt-ssb span{font-family:var(--pixel);font-size:7px;letter-spacing:.08em;color:var(--text);opacity:.75;pointer-events:none}
+.gt-start{position:relative;width:40px;height:13px;padding:0;border-radius:8px;border:2px solid var(--text);background:var(--surface-2);touch-action:none;cursor:pointer}
+.gt-start::after{content:"";position:absolute;inset:-10px -6px}
+.gt-start.down{background:var(--gold)}
 .gt-btn.down{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow);background:var(--gold);color:var(--on-gold)}
 
 /* Game screen (same as museum.html) */
@@ -479,7 +483,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 123";
+window.GOQ_WANT = "2026-11-18 cards 124";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new

@@ -79,10 +79,13 @@ body.touch .gt-controls{display:flex}
 .gt-btn{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;outline:none;touch-action:none;width:var(--btn);height:var(--btn);border-radius:50%;
   border:2px solid var(--muted);background:var(--surface-2);color:var(--text);font-family:var(--pixel);font-size:calc(var(--btn) * .23);cursor:pointer;box-shadow:3px 3px 0 var(--shadow)}
 .gt-btn-a{color:var(--gold);margin-top:calc(var(--btn) * -.42)}
-.gt-ss{align-self:flex-end;margin-bottom:6px;flex:none;display:flex;gap:8px;transform:rotate(-18deg)} /* SELECT and START, side by side and tilted together, like a Game Boy (Joe 10/19) */
-.gt-start{flex:none;-webkit-tap-highlight-color:transparent;touch-action:none;font-family:var(--pixel);font-size:9px;letter-spacing:.06em;
-  padding:7px 10px;border-radius:12px;border:2px solid var(--muted);background:var(--surface-2);color:var(--muted);cursor:pointer}
-.gt-start.down{background:var(--gold);color:var(--on-gold)}
+.gt-ss{align-self:flex-end;margin-bottom:6px;flex:none;display:flex;gap:16px;align-items:flex-start} /* SELECT and START like a Game Boy (Joe 10/19): two pills side by side, each tilted on its own, the words printed under them */
+.gt-ssb{display:flex;flex-direction:column;align-items:center;gap:6px;transform:rotate(-25deg)}
+.gt-ssb span{font-family:var(--pixel);font-size:8px;letter-spacing:.08em;color:var(--muted);pointer-events:none}
+.gt-start{position:relative;flex:none;-webkit-tap-highlight-color:transparent;touch-action:none;width:44px;height:14px;padding:0;border-radius:8px;
+  border:2px solid var(--muted);background:var(--surface-2);box-shadow:0 0 0 3px color-mix(in srgb,var(--muted) 22%,transparent);cursor:pointer}
+.gt-start::after{content:"";position:absolute;inset:-12px -8px} /* a bigger target than the pill */
+.gt-start.down{background:var(--gold)}
 body.l-landscape .gt-ss{grid-column:3;grid-row:1;align-self:end;margin-bottom:14px}
 body.l-split-h .gt-ss{align-self:center}
 .gt-btn.down{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow);background:var(--gold);color:var(--on-gold)}
@@ -90,7 +93,7 @@ body.l-split-h .gt-ss{align-self:center}
 /* Portrait (slab phones upright, folded cover screens, tablets upright): game on top, controls below */
 body.l-portrait .play{justify-content:flex-start;padding-top:6px}
 body.l-portrait .gt-controls{width:100%;max-width:560px;padding:0 6px;flex:1;align-items:center;position:relative;gap:12px}
-body.l-portrait .gt-ss,body.l-split-v .gt-ss{position:absolute;left:50%;bottom:6px;margin:0;transform:translateX(-50%) rotate(-18deg)} /* under the middle, out of the row: the pad and A/B get the full width (Joe 10/16: A was cropped on narrow phones) */
+body.l-portrait .gt-ss,body.l-split-v .gt-ss{position:absolute;left:50%;bottom:6px;margin:0;transform:translateX(-50%)} /* under the middle, out of the row: the pad and A/B get the full width (Joe 10/16: A was cropped on narrow phones) */
 .gt-start.down{transform:translate(1px,1px)}
 /* Landscape (phones sideways, unfolded foldables, tablets sideways): D-pad and buttons either side of the screen */
 body.l-landscape .play{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;justify-items:center;padding:4px 8px}
@@ -270,7 +273,7 @@ dialog.news{max-width:min(520px,calc(100vw - 24px))}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 123";
+window.GOQ_WANT = "2026-11-18 cards 124";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */

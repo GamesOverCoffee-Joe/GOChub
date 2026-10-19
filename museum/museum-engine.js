@@ -95,6 +95,7 @@ const PAL = {
   ship:    [null, "#232a38", "#36405a", "#56627c", "#151a24", "#e04040", "#5a1c1c", "#40d8a8", "#163a30", "#8a96ac"],
   odesk:   [null, "#6a4a30", "#4a3220", "#2a1c12", "#141418", "#2e2e38", "#c8c8d0", "#e8dcc0", "#8a5a30", "#f0d020", "#f4f4f8"],
   tower:   [null, "#ececf2", "#c4c4d0", "#8a8a98", "#9a5cff", "#d4b8ff", "#4a4a56", "#141418"],
+  micons:  [null, "#181820", "#3fa03f", "#a8e098", "#f8f8f0", "#c83838", "#e8b24a", "#8a8aa0", "#5a78c8", "#f0c8a0"], // the menu icons: outline, green, light green, white, red, gold, gray, blue, skin
   stv:     [null, "#181820", "#2e2e38", "#f0c8a0", "#c84868", "#4868b8", "#e8d8b8", "#7a5a9a"], // the staff room TV: bezel, skin, her, him, the set, the dramatic purple
   otv:     [null, "#121216", "#26262e", "#3c3c48", "#1c2a3a", "#4a88b8", "#a0d8f0", "#e05050"],
   oshelf:  [null, "#5a3a24", "#3a2414", "#24160c", "#c84a3a", "#3a6ac8", "#e0b040", "#4a9a5a", "#9a5ac8", "#e8e0d0"],
@@ -1281,6 +1282,20 @@ const GEN = {
     else { rect(a, 6, 3, 4, 4, 3); rect(a, 5, 7, 6, 4, 5); px(a, 7, 5, 1); px(a, 8, 5, 1); rect(a, 6, 3, 4, 1, 1); }
     rect(a, 7, 12, 2, 2, 2); return outline(a, 1);
   },
+  menu_icons: f => { // beside menu options: recommend, follow me, help, the game's name, say hi, forget it, could I get by, buy, read, watch
+    const a = mk(16, 16);
+    if (f === 0) { rect(a, 6, 2, 4, 12, 2); rect(a, 2, 6, 12, 4, 2); rect(a, 7, 3, 1, 3, 3); rect(a, 3, 7, 3, 1, 3); }
+    else if (f === 1) { rect(a, 1, 6, 8, 4, 2); for (let i = 0; i < 6; i++) rect(a, 8 + i, 2 + i, 1, 12 - 2 * i, 2); rect(a, 2, 7, 5, 1, 3); }
+    else if (f === 2) { rect(a, 1, 2, 14, 10, 4); rect(a, 3, 12, 2, 2, 4); px(a, 4, 14, 4); [[6, 4], [7, 4], [8, 4], [9, 5], [9, 6], [8, 7], [7, 8], [7, 10]].forEach(([x, y]) => px(a, x, y, 1)); }
+    else if (f === 3) { rect(a, 1, 4, 14, 9, 6); px(a, 3, 8, 1); rect(a, 5, 6, 8, 1, 1); rect(a, 5, 8, 6, 1, 1); rect(a, 5, 10, 7, 1, 1); }
+    else if (f === 4) { rect(a, 4, 7, 7, 6, 9); rect(a, 4, 3, 1, 5, 9); rect(a, 6, 2, 1, 6, 9); rect(a, 8, 2, 1, 6, 9); rect(a, 10, 4, 1, 4, 9); rect(a, 11, 8, 2, 2, 9); px(a, 2, 3, 7); px(a, 1, 5, 7); px(a, 13, 2, 7); px(a, 14, 4, 7); }
+    else if (f === 5) { for (let i = 0; i < 10; i++) { rect(a, 3 + i, 3 + i, 2, 1, 5); rect(a, 11 - i, 3 + i, 2, 1, 5); } }
+    else if (f === 6) { rect(a, 7, 1, 3, 3, 9); rect(a, 7, 5, 3, 5, 8); px(a, 6, 6, 9); px(a, 5, 7, 9); px(a, 10, 6, 9); px(a, 11, 8, 9); rect(a, 6, 10, 2, 2, 8); rect(a, 5, 12, 2, 2, 8); rect(a, 9, 10, 2, 3, 8); rect(a, 10, 13, 2, 1, 8); }
+    else if (f === 7) { rect(a, 4, 2, 8, 12, 6); rect(a, 3, 4, 10, 8, 6); rect(a, 7, 5, 2, 6, 1); rect(a, 5, 3, 2, 1, 4); }
+    else if (f === 8) { rect(a, 3, 1, 10, 14, 4); for (const y of [4, 6, 8, 10]) rect(a, 5, y, y === 10 ? 4 : 6, 1, 7); }
+    else if (f === 9) { rect(a, 1, 2, 14, 10, 7); rect(a, 2, 3, 12, 8, 8); rect(a, 3, 4, 3, 2, 4); rect(a, 6, 12, 4, 2, 7); }
+    return outline(a, 1);
+  },
   bubble: f => {
     const a = rows(["........", ".000000.", "00000000", "00000000", "00000000", ".000000.", "...00...", "....0..."]);
     (f === 0 ? [[3, 1], [4, 1], [5, 2], [4, 3], [4, 5]] : [[4, 1], [4, 2], [4, 3], [4, 5]]).forEach(([x, y]) => px(a, x, y, 3));
@@ -1507,6 +1522,7 @@ const SLOTS = [
   { key: "ship_wall_lower", label: "Office wall, lower row", group: "Curator's office", w: 16, h: 16, frames: 2, fps: 1, pal: "ship", gen: GEN.ship_wall_lower, note: "2 frames (32×16): the control strip blinks a little." },
   { key: "office_desk", label: "Curator's desk", group: "Curator's office", w: 48, h: 32, pal: "odesk", gen: GEN.office_desk, note: "Three tiles wide, two tall: two monitors (off), keyboard, iced coffees, a can of yerba mate." },
   { key: "pc_tower", label: "White PC tower", group: "Curator's office", w: 16, h: 32, pal: "tower", gen: GEN.pc_tower, note: "Two tiles tall. A soft purple glow is added around it in the dark." },
+  { key: "menu_icons", label: "Menu icons", group: "UI", w: 16, h: 16, frames: 10, pal: "micons", gen: GEN.menu_icons, note: "10 frames (160×16), beside menu options: Recommend, Follow me, Do you need help?, What's the game name?, Say hi, Forget it, Could I get by?, Browse the shop (a coin), Read the placard, Watch for a bit. Options without one get the same space." },
   { key: "staff_tv", label: "Staff room TV", group: "Staff", w: 16, h: 16, frames: 3, fps: 0.5, pal: "stv", gen: GEN.staff_tv, note: "3 frames (48×16), on the staff room's upper wall row, always on a soap opera: the scene, her close-up, his. A new frame every 2 seconds." },
   { key: "office_tv", label: "Office TV", group: "Curator's office", w: 32, h: 32, frames: 2, pal: "otv", gen: GEN.office_tv, note: "2 frames (64×32): off, on. When it's on, gameplay clips play over the picture area, 26×15 at (3, 4)." },
   { key: "office_shelf", label: "Bookshelf", group: "Curator's office", w: 32, h: 32, pal: "oshelf", gen: GEN.office_shelf, note: "Two tiles wide and tall. The books on it are in Words, Curator's office." },
@@ -2587,6 +2603,16 @@ const TEXT = {
   "shop.ringing":      { g: "Gift shop", l: "The shopkeeper, while a visitor's paying at the counter", by: "claude", v: [["One sec! Just ringing someone up."], ["Be right with you. Somebody finally made up their mind."]] },
   "tv.ask":            { g: "Staff", l: "The staff room TV (then Watch for a bit / Not now)", by: "claude", v: [["The staff room TV. A soap opera's on. Watch for a bit?"]] },
   "tv.soap":           { g: "Staff", l: "Watching the soap opera on the staff room TV (picks one at random)", by: "claude", v: [["A man in a lab coat grabs a woman by the shoulders.", "\"Brenda. The baby... isn't mine.\"", "\"It's not yours, Chad. It's your twin brother's.\"", "\"I don't HAVE a twin brother!\"", "Dramatic music. Commercial break."], ["A woman throws a glass of wine across a fancy restaurant.", "\"You were dead, Rodrigo! I went to your funeral!\"", "\"Amnesia, Valentina. Six years of amnesia.\"", "...", "Nobody else in the restaurant reacts."], ["Two people whisper in a hospital hallway.", "\"If Doctor Steele finds out about the will...\"", "\"He won't. Not unless the evil twin talks.\"", "Thunder. Indoors. In the hallway.", "...You're kind of invested now."], ["It's a commercial for a mattress store.", "\"Everything must go! Again!\"", "...", "The soap comes back on. Someone's slapping someone. You missed why."]] },
+  "opt.hi":            { g: "Menu options", l: "Talking to a visitor: chat", v: [["Say hi"]] },
+  "opt.recommend":     { g: "Menu options", l: "Talking to a visitor (or a curious visitor): recommend what you're thinking of", v: [["Recommend"]] },
+  "opt.forget":        { g: "Menu options", l: "Talking to someone on their way to what you recommended: call it off", v: [["Forget it"]] },
+  "opt.getBy":         { g: "Menu options", l: "Talking to someone: ask them to step aside", v: [["Could I get by?"]] },
+  "opt.help":          { g: "Menu options", l: "A curious visitor, the first time: what they're after", v: [["Do you need help?"]] },
+  "opt.follow":        { g: "Menu options", l: "A curious visitor, once they've told you: lead them there", v: [["Follow me"]] },
+  "opt.gameName":      { g: "Menu options", l: "A curious visitor (or your follower): the game's name, the one hint (worth fewer tokens)", v: [["What's the game name?"]] },
+  "opt.keepGoing":     { g: "Menu options", l: "Your follower: carry on", v: [["Keep going"]] },
+  "opt.lookingFor":    { g: "Menu options", l: "Your follower: what they wanted again", v: [["What were you looking for?"]] },
+  "opt.never":         { g: "Menu options", l: "Leaving a conversation (always last, in red, under a line)", v: [["Never mind"]] },
   "move.ok":           { g: "Visitors", l: "A visitor stepping aside when you ask (one at random)", v: [["Oh! Sorry, go ahead."], ["My bad. All yours."], ["Oops, didn't see you there."]] },
   "move.stuck":        { g: "Visitors", l: "A boxed-in visitor, before they teleport (one at random)", v: [["Oh, I'd love to, but I'm a little stuck..."], ["Move? Where? There's nowhere to..."]] },
   "move.teleport":     { g: "Visitors", l: "You, after a boxed-in visitor teleports away (one at random)", v: [["...Did they just teleport?", "I'm going to pretend I didn't see that."], ["...they just disappeared.", "I should ask the curator what's in the coffee here."], ["*blink*", "Uh...where'd they go?"], ["...I guess that's a good solution."]] },
@@ -4185,7 +4211,10 @@ class Game {
 .gt-items .gt-polaroid.shown{background:#fff0b8;border-color:#c89020}
 .gt-shop-detail{margin:calc(3px * var(--s)) 0 0;padding-top:calc(3px * var(--s));border-top:calc(1px * var(--s)) solid #b0b0c0;color:#303048;min-height:3em}
 .gt-choice{right:0;bottom:calc(48px * var(--s));min-width:calc(80px * var(--s));max-width:calc(236px * var(--s));max-height:calc(110px * var(--s));overflow:auto;padding:0 calc(6px * var(--s));z-index:6}
-.gt-choice-item{position:relative;padding-left:calc(9px * var(--s));cursor:pointer;white-space:normal;line-height:1.5}
+.gt-choice-item{position:relative;padding-left:calc(9px * var(--s));cursor:pointer;white-space:normal;line-height:1.5;display:flex;align-items:center;gap:calc(3px * var(--s));min-height:calc(17px * var(--s))}
+.gt-ci{flex:none;width:calc(16px * var(--s));height:calc(16px * var(--s))}
+.gt-ci img{display:block;width:100%;height:100%;image-rendering:pixelated}
+.gt-choice-item.never{color:#a02828;border-top:calc(1px * var(--s)) solid #b0b0c0;margin-top:calc(2px * var(--s));padding-top:calc(2px * var(--s))}
 @media (pointer:coarse){.gt-choice-item{padding-top:calc(2px * var(--s));padding-bottom:calc(2px * var(--s))}.gt-shop-row{min-height:calc(15px * var(--s))}}
 .gt-shift .chip{font-size:max(calc(5px * var(--s)), 8px) !important}
 .gt-badge,.gt-shop{font-size:max(calc(6px * var(--s)), 9px) !important}
@@ -4193,7 +4222,7 @@ class Game {
 /* On small game screens the badge form breaks out to fill the phone screen, so it's easy to read and type in. */
 .gt-badgewrap.big{position:fixed;inset:0;z-index:30;align-items:flex-start;padding-top:max(16px, env(safe-area-inset-top, 0px))}
 .gt-badgewrap.big .gt-badge{--s:1.6;width:min(94vw,360px);max-height:calc(100dvh - 32px);font-size:10px !important}
-.gt-choice-item.on::before{content:"";position:absolute;left:0;top:calc(4px * var(--s));border-top:calc(4px * var(--s)) solid transparent;border-bottom:calc(4px * var(--s)) solid transparent;border-left:calc(5px * var(--s)) solid #181820}
+.gt-choice-item.on::before{content:"";position:absolute;left:0;top:calc(50% - 4px * var(--s));border-top:calc(4px * var(--s)) solid transparent;border-bottom:calc(4px * var(--s)) solid transparent;border-left:calc(5px * var(--s)) solid #181820}
 .gt-badgewrap{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(10,8,24,.7);z-index:7}
 .gt-badge.kp:not(.big){width:calc(228px * var(--s))}
 .gt-badge{position:relative;display:block;width:calc(212px * var(--s));max-height:calc(154px * var(--s));overflow:auto;padding:0 calc(4px * var(--s));line-height:1.4;font-size:calc(6px * var(--s))}
@@ -6390,10 +6419,21 @@ class Game {
     this.el.text.style.display = "block"; this.el.textBody.textContent = question; this.el.more.style.display = "none";
     this.el.choice.style.display = "block"; this.renderChoice();
   }
+  optL(id) { return (this.tx("opt." + id)[0] || TEXT["opt." + id].v[0][0]); } // a menu option's words (Words, Menu options)
+  optIcon(label) { // which of the Menu icons goes with an option (-1: none, just the space)
+    const m = { recommend: 0, follow: 1, help: 2, gameName: 3, hi: 4, forget: 5, getBy: 6, keepGoing: 1, lookingFor: 2 };
+    for (const id in m) if (label === this.optL(id)) return m[id];
+    const more = { "Recommend it": 0, "Follow me!": 1, "Read the placard": 8, "Watch for a bit": 9, "Can I get by you?": 6, "Browse the shop": 7, "Just chatting": 4 };
+    return more[label] !== undefined ? more[label] : -1;
+  }
+  menuIcon(f) { const k = "micon|" + f; if (this.cache[k]) return this.cache[k]; const c = document.createElement("canvas"); c.width = c.height = 16; const x = c.getContext("2d"); x.imageSmoothingEnabled = false; x.drawImage(this.sheet("menu_icons"), f * 16, 0, 16, 16, 0, 0, 16, 16); return (this.cache[k] = c.toDataURL()); }
   renderChoice() {
     const c = this.ch, box = this.el.choice, top = box.scrollTop; box.innerHTML = "";
+    const never = this.optL("never");
     c.options.forEach((o, i) => {
-      const d = document.createElement("div"); d.className = "gt-choice-item" + (i === c.i ? " on" : ""); d.textContent = o;
+      const d = document.createElement("div"); d.className = "gt-choice-item" + (i === c.i ? " on" : "") + (o === never ? " never" : ""); // (Joe 10/19: every menu the same: an icon, the words; Never mind last, red, under a line)
+      const ic = document.createElement("span"); ic.className = "gt-ci"; const f = this.optIcon(o); if (f >= 0) { const im = document.createElement("img"); im.src = this.menuIcon(f); im.alt = ""; ic.appendChild(im); }
+      const tx = document.createElement("span"); tx.textContent = o; d.appendChild(ic); d.appendChild(tx);
       d.addEventListener("click", e => { e.stopPropagation(); c.i = i; this.endChoice(); });
       box.appendChild(d);
     });
@@ -6713,7 +6753,7 @@ class Game {
     if (this.room.npcs.some(n => n.role === "shopkeeper" && n.stocking)) { this.say(this.tx("shop.stocking")); return; } // still stocking the shelves
     { const Q = this.shopLine(this.room), q0 = Q[0]; if (q0 && this.room.npcs.some(n => n.shopQ && n.shopQ.phase === "in" && n.x === q0[0] && n.y === q0[1])) { this.say(this.tx("shop.ringing")); return; } } // someone's paying
     if (this.room.npcs.some(n => n.role === "shopkeeper")) {
-      this.choose("Welcome in! What can I do for you?", ["Browse the shop", "Just chatting", "Never mind"], i => {
+      this.choose("Welcome in! What can I do for you?", ["Browse the shop", "Just chatting", this.optL("never")], i => {
         if (i === 0) this.openShop();
         else if (i === 1) {
           this.quest("chat");
@@ -7642,16 +7682,16 @@ class Game {
   }
   curiousTalk(n) { // (Joe 10/19) they think about the game they're after (its art in their bubble); help tells you what it is, and that's all; then Recommend (think about it first) or Follow me
     const v = n.cur; v.met = true;
-    if (n.reco || n.recoAt) { this.choose(v.name + ": " + this.tx("cur.onTheWay", { name: v.name }).join(" "), ["Forget it", "Never mind"], i => { if (i === 0) this.forgetIt(n); }, 1); return; } // on their way to what you recommended
+    if (n.reco || n.recoAt) { this.choose(v.name + ": " + this.tx("cur.onTheWay", { name: v.name }).join(" "), [this.optL("forget"), this.optL("never")], i => { if (i === 0) this.forgetIt(n); }, 1); return; } // on their way to what you recommended
     const named = ps => ps.map(p => v.name + ": " + p), hello = named(this.tx("cur.hello", { name: v.name })), q = hello.pop();
-    const I = this.idea, rec = !!I && I.room === this.room.id, opts = [...(v.heard ? [] : ["Do you need help?"]), ...(rec ? ["Recommend"] : []), ...(v.heard ? ["Follow me"] : []), ...(v.heard && !v.asked ? ["Do you remember the name?"] : []), "Could I get by?", "Never mind"];
+    const I = this.idea, rec = !!I && I.room === this.room.id, ids = [...(v.heard ? [] : ["help"]), ...(rec ? ["recommend"] : []), ...(v.heard ? ["follow"] : []), ...(v.heard && !v.asked ? ["gameName"] : []), "getBy", "never"], opts = ids.map(id => this.optL(id));
     this.say(hello, () => this.choose(q, opts, i => {
-      const o = opts[i];
-      if (o === "Do you need help?") { v.heard = true; this.saveProgress(); this.say(named([...this.tx("cur.helpFind", { name: v.name }), ...this.wantLines(v)])); } // what they're after; that's all for now
-      else if (o === "Recommend") this.curRecommend(n);
-      else if (o === "Follow me") this.startFollow(n);
-      else if (o === "Do you remember the name?") this.tellName(n);
-      else if (o === "Could I get by?") this.askToMove(n, named);
+      const o = ids[i];
+      if (o === "help") { v.heard = true; this.saveProgress(); this.say(named([...this.tx("cur.helpFind", { name: v.name }), ...this.wantLines(v)])); } // what they're after; that's all for now
+      else if (o === "recommend") this.curRecommend(n);
+      else if (o === "follow") this.startFollow(n);
+      else if (o === "gameName") this.tellName(n);
+      else if (o === "getBy") this.askToMove(n, named);
     }, opts.length - 1));
   }
   curRecommend(n) { // what you're thinking about, for the game they're thinking about: a "?", then the right one is off they go (briskly), the wrong one's a no
@@ -7669,7 +7709,7 @@ class Game {
   }
   /* Talking to whoever's following you: what they wanted again, the name (if you haven't asked), or let them go. */
   followerTalk(n) {
-    const v = n.cur, opts = ["Keep going", "What were you looking for?", ...(v.asked ? [] : ["Do you remember the name?"]), "Never mind"], last = opts.length - 1;
+    const v = n.cur, opts = [this.optL("keepGoing"), this.optL("lookingFor"), ...(v.asked ? [] : [this.optL("gameName")]), this.optL("never")], last = opts.length - 1;
     this.choose(n.member + ": " + this.tx("cur.lead", { name: n.member }).join(" "), opts, i => {
       if (i === 1) { // a reminder of what they asked for, in their words (and the name, if they told you), then back to walking
         const p = this.pieceById(v.want), pages = [...this.tx("cur.remind", { name: v.name }), ...this.wantLines(v), ...(v.asked && p ? this.tx("cur.name", { title: p.title, name: v.name }) : [])];
@@ -8459,9 +8499,10 @@ class Game {
     if (!rec && npc.random && !npc.member && this.room.npcs.some(n => n.reader && Math.abs(n.x - npc.x) + Math.abs(n.y - npc.y) <= 14) && Math.random() < 0.35) { this.say(this.tx("reader.chatter")); return; } // near the reading nook: they're talking about her
     const named = pages => (npc.member ? pages.map((p, k) => (k === 0 ? npc.member + ": " + p : p)) : pages);
     const chat = () => { npc.lineI = (npc.lineI + 1) % npc.lines.length; this.say(named(npc.lines[npc.lineI])); };
-    const onIt = npc.reco && !npc.sitting, opts = ["Say hi", ...(onIt ? ["Forget it"] : rec ? ["Recommend"] : []), ...(npc.sitting ? [] : ["Could I get by?"])];
-    if (opts.length === 1) { chat(); return; }
-    this.choose(npc.member ? npc.member + " smiles." : "They glance over.", opts, i => { const o = opts[i]; if (o === "Say hi") chat(); else if (o === "Recommend") this.recommend(npc); else if (o === "Forget it") this.forgetIt(npc); else if (o === "Could I get by?") this.askToMove(npc, named); }, -1); // Recommend: with something in mind (Joe 10/19)
+    const onIt = npc.reco && !npc.sitting, ids = ["hi", ...(onIt ? ["forget"] : rec ? ["recommend"] : []), ...(npc.sitting ? [] : ["getBy"])];
+    if (ids.length === 1) { chat(); return; }
+    ids.push("never"); const opts = ids.map(id => this.optL(id));
+    this.choose(npc.member ? npc.member + " smiles." : "They glance over.", opts, i => { const o = ids[i]; if (o === "hi") chat(); else if (o === "recommend") this.recommend(npc); else if (o === "forget") this.forgetIt(npc); else if (o === "getBy") this.askToMove(npc, named); }, ids.length - 1); // Recommend: with something in mind (Joe 10/19)
   }
   /* Sitting: on a café stool or a bench. Any direction stands you back up. With a drink, you sip now and then. */
   sit(e) {
@@ -9786,8 +9827,8 @@ class Game {
     }
     const key = T.phase === 2 || (T.phase === 3 && !T.regrouped) ? (T.mood === "happy" ? "tour.happy" : "tour.bored") : T.phase === 3 ? (T.kidDone ? "tour.bye" : "tour.regroup") : "tour.bye"; // on the way back they haven't noticed yet
     if (n.sitting || n.tourKid) { this.tourSay(key); return; }
-    const rec = this.canRecommend(n), onIt = n.reco && !n.sitting, opts = ["Say hi", ...(onIt ? ["Forget it"] : rec ? ["Recommend"] : []), "Could I get by?"];
-    this.choose("They glance over.", opts, i => { const o = opts[i]; if (o === "Say hi") this.tourSay(key); else if (o === "Recommend") this.recommend(n); else if (o === "Forget it") this.forgetIt(n); else this.askToMove(n, p => p); }, -1); // after the tour, like any visitor (recommendable too, Joe 10/19)
+    const rec = this.canRecommend(n), onIt = n.reco && !n.sitting, ids = ["hi", ...(onIt ? ["forget"] : rec ? ["recommend"] : []), "getBy", "never"], opts = ids.map(id => this.optL(id));
+    this.choose("They glance over.", opts, i => { const o = ids[i]; if (o === "hi") this.tourSay(key); else if (o === "recommend") this.recommend(n); else if (o === "forget") this.forgetIt(n); else if (o === "getBy") this.askToMove(n, p => p); }, ids.length - 1); // after the tour, like any visitor (recommendable too, Joe 10/19)
   }
   /* ----- Staff on break (living museum, Step 6) -----
      3–6: two Patreon members on shift take their break at the staff room table, an item on it (headphones or a lunchbox).
@@ -10051,7 +10092,7 @@ class Game {
     const hands = this.carryBox || this.carryItem || this.trashBag != null || (this.drink && !this.drink.empty);
     if (B) { if (hands) { this.say(this.tx("brew.hands")); return; } this.brew = null; this.drink = { kind: 0, name: "Staff coffee", sips: 0, color: "#3a2418", iced: false, staffBrew: true }; this.sipClock = 240; this.say(this.tx("brew.done")); return; }
     if (hands) { this.say(this.tx("brew.hands")); return; }
-    this.ask(this.tx("brew.ask").join(" "), ["Make a cup", "Never mind"], i => { if (i !== 0) return; this.brew = { t: 0 }; this.say(this.tx("brew.start")); }, 1);
+    this.ask(this.tx("brew.ask").join(" "), ["Make a cup", this.optL("never")], i => { if (i !== 0) return; this.brew = { t: 0 }; this.say(this.tx("brew.start")); }, 1);
   }
   updateBrew() {
     const B = this.brew; if (!B || B.t >= 1800) return;
@@ -11289,7 +11330,7 @@ class Game {
 function mountControls(game, host) {
   host.classList.add("gt-controls");
   host.innerHTML = '<div class="gt-pad" role="group" aria-label="Directional pad"><span class="u"></span><span class="d"></span><span class="l"></span><span class="r"></span><i></i></div>' +
-    '<div class="gt-ss"><button type="button" class="gt-start gt-select" data-k="select" aria-label="Select: think">SELECT</button><button type="button" class="gt-start" data-k="start" aria-label="Start: menu">START</button></div>' +
+    '<div class="gt-ss"><div class="gt-ssb"><button type="button" class="gt-start gt-select" data-k="select" aria-label="Select: think"></button><span>SELECT</span></div><div class="gt-ssb"><button type="button" class="gt-start" data-k="start" aria-label="Start: menu"></button><span>START</span></div></div>' +
     '<div class="gt-btns"><button type="button" class="gt-btn gt-btn-b" data-k="b" aria-label="B, go back or take a photo">B</button><button type="button" class="gt-btn gt-btn-a" data-k="a" aria-label="A, look or talk">A</button></div>';
   // iOS Safari double-tap zooms on quick taps here even though the pointer events below are cancelled; cancelling the touches stops it.
   ["touchstart", "touchend"].forEach(t => host.addEventListener(t, e => { if (e.cancelable) e.preventDefault(); }, { passive: false }));
@@ -11316,7 +11357,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 123";
+const VERSION = "2026-11-18 cards 124";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
