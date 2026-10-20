@@ -389,6 +389,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
       <button role="tab" id="tab-shop" aria-selected="false" aria-controls="main">Shop</button>
       <button role="tab" id="tab-cards" aria-selected="false" aria-controls="main">Cards</button>
       <button role="tab" id="tab-tokens" aria-selected="false" aria-controls="main">Tokens</button>
+      <button role="tab" id="tab-quiz" aria-selected="false" aria-controls="main">Quizzes</button>
       <button role="tab" id="tab-rooms" aria-selected="false" aria-controls="main">Rooms</button>
       <button role="tab" id="tab-words" aria-selected="false" aria-controls="main">Words</button>
       <button role="tab" id="tab-ach" aria-selected="false" aria-controls="main">Achievements</button>
@@ -483,7 +484,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 126";
+window.GOQ_WANT = "2026-11-18 cards 127";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -558,7 +559,7 @@ function packOut() {
     if (p.clipUrl) o.clipUrl = p.clipUrl;
     if (p.clipLoop) o.clipLoop = p.clipLoop;
     if (p.hint) o.hint = p.hint;
-    if (p.quiz && p.quiz.length) o.quiz = p.quiz; // its quiz (Joe 10/20)
+    { const qz = GOQ.normalizePiece({ title: "x", quiz: p.quiz }, 0).quiz; if (qz.length) o.quiz = qz; } // its quiz pool (Joe 10/20), the half-written ones left out
     if (p.rel) o.rel = p.rel;
     if (p.genre) o.genre = p.genre;
     if (p.blend) o.blend = p.blend;
@@ -763,7 +764,7 @@ $("#dayBtn").addEventListener("click", () => { game.closeAll(); game.skipDay(); 
 let tab = "art", current = "atlas";
 function setTab(t) {
   tab = t;
-  ["art", "episode", "pieces", "staff", "visitors", "shop", "cards", "tokens", "rooms", "words", "ach", "notes", "preview"].forEach(k => $("#tab-" + k).setAttribute("aria-selected", t === k));
+  ["art", "episode", "pieces", "staff", "visitors", "shop", "cards", "tokens", "quiz", "rooms", "words", "ach", "notes", "preview"].forEach(k => $("#tab-" + k).setAttribute("aria-selected", t === k));
   $("#app").classList.toggle("no-side", t !== "art");
   render();
 }
@@ -778,6 +779,7 @@ $("#tab-rooms").addEventListener("click", () => setTab("rooms"));
 $("#tab-words").addEventListener("click", () => setTab("words"));
 $("#tab-ach").addEventListener("click", () => setTab("ach"));
 $("#tab-tokens").addEventListener("click", () => setTab("tokens"));
+$("#tab-quiz").addEventListener("click", () => setTab("quiz"));
 $("#tab-notes").addEventListener("click", () => setTab("notes"));
 $("#tab-preview").addEventListener("click", () => setTab("preview"));
 $("#pvOpts").addEventListener("click", () => { setTab("preview"); $("#main").scrollIntoView({ behavior: "smooth", block: "start" }); });
@@ -805,7 +807,7 @@ function renderPreviewTab() {
   wrap.appendChild(el("p", { class: "note", text: "Only the preview on the right changes. Nothing here is saved to the pack." }));
   wrap.appendChild($("#pvMenu")); showClock(); drawTriggers(); showErrors(); showDaySeg();
 }
-function renderTab() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "visitors") renderVisitors(); else if (tab === "shop") renderShop(); else if (tab === "cards") renderCards(); else if (tab === "tokens") renderTokens(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else if (tab === "notes") renderNotes(); else if (tab === "episode") renderEpisode(); else if (tab === "preview") { renderPreviewTab(); forceFill(); } else renderPieces(); }
+function renderTab() { if (tab === "art") { renderSlotList(); renderSlot(); } else if (tab === "staff") renderStaff(); else if (tab === "visitors") renderVisitors(); else if (tab === "shop") renderShop(); else if (tab === "cards") renderCards(); else if (tab === "tokens") renderTokens(); else if (tab === "quiz") renderQuizzes(); else if (tab === "rooms") renderRooms(); else if (tab === "words") renderWords(); else if (tab === "ach") renderAchievements(); else if (tab === "notes") renderNotes(); else if (tab === "episode") renderEpisode(); else if (tab === "preview") { renderPreviewTab(); forceFill(); } else renderPieces(); }
 
 /* ---------- Image helpers ---------- */
 function readFile(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error("That file couldn't be read.")); r.readAsDataURL(file); }); }
@@ -2460,17 +2462,6 @@ function answersBox(p) {
   });
   return box;
 }
-/* A piece's quiz (Joe 10/20): questions about the developer's answers. In the game, its WIN TOKENS! button sits under Play and
-   Note on the placard: a token for each question the first time it's right, and a bonus for all of them (Tokens tab). */
-function quizBox(p) {
-  const toText = q => (q || []).map(e => "Q: " + e[0] + "\n+ " + e[1] + e.slice(2).map(w => "\n- " + w).join("")).join("\n\n");
-  const parse = t => t.split(/\n\s*\n/).map(b => { const ls = b.split("\n").map(l => l.trim()).filter(Boolean); const q = ls.find(l => /^q:/i.test(l)), r = ls.find(l => l[0] === "+"), w = ls.filter(l => l[0] === "-");
-    return q && r && w.length ? [q.replace(/^q:\s*/i, ""), r.slice(1).trim(), ...w.slice(0, 2).map(l => l.slice(1).trim())] : null; }).filter(Boolean).slice(0, 5);
-  const a = el("textarea", { rows: 9, placeholder: "Q: What did they want you to feel?\n+ The right answer\n- A wrong one\n- Another wrong one", "aria-label": "Quiz questions" }); a.value = toText(p.quiz);
-  const info = el("small", {}); const count = () => { const n = parse(a.value).length; info.textContent = n ? n + " question" + (n === 1 ? "" : "s") + " (up to 5)" : "No quiz: the button stays hidden."; };
-  a.addEventListener("input", () => { p.quiz = parse(a.value); count(); changed(); }); count();
-  return el("div", { class: "fieldset wide" }, [el("span", { class: "flabel", text: "Quiz" }), el("small", { text: "Questions about what the developer told us (the answers above). One per block, a blank line between: Q: the question, + the right answer, - one or two wrong ones. The game shuffles the answers." }), a, info]);
-}
 let pieceRedraw = null; // set by pieceRow: how a piece's own fields redraw the page they're on (the Pieces tab, or Episode day)
 function genreBox(p) {
   const genres = draft.settings.genres || GOQ.SAMPLE_GENRES;
@@ -2634,6 +2625,85 @@ function renderTokens() {
     k("trivia", "Thursday: each right trivia answer"), k("triviaPerfect", "Thursday: bonus for all five")]);
   sec("Piece quizzes", [k("quiz", "Each question right (the first time only)", "The WIN TOKENS! button on a placard. Missed ones keep their tokens for another try."), k("quizPerfect", "Bonus for getting a whole quiz right (once per piece)")]);
   wrap.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small quiet", text: "Back to the defaults", onclick: () => { draft.settings.rewards = JSON.parse(JSON.stringify(D)); changed({ now: true }); renderTokens(); } })]));
+}
+/* ---------- Quizzes (Joe 10/20) ----------
+   Each piece has a pool of questions; a round in the game picks a few at random (Questions per round), the four answers in a
+   new order every time, and shows "From the developer" after each answer. Import reads the QUIZ-FORMAT.md text (or JSON). */
+let quizSel = null;
+const quizEmpty = () => ({ q: "", right: "", wrong: ["", "", ""], from: "" });
+function quizToText(pieces) {
+  return pieces.map(p => "=== " + p.title + " | " + p.id + "\n" + (p.quiz || []).map(q => "Q: " + q.q + "\n+ " + q.right + "\n" + (q.wrong || []).map(w => "- " + w + "\n").join("") + (q.from ? "> " + q.from + "\n" : "")).join("\n")).join("\n");
+}
+function quizParse(text) { // { byPiece: {id: [questions]}, unknown: [headers no piece matched], bad: n questions missing a part }
+  const out = { byPiece: {}, unknown: [], bad: 0 }, pcs = draft.pieces, find = h => { const m = h.match(/piece-[a-z0-9]+/i); if (m) { const p = pcs.find(x => x.id === m[0]); if (p) return p; } const t = h.split("|")[0].trim().toLowerCase(); return pcs.find(x => (x.title || "").trim().toLowerCase() === t); };
+  const t = String(text || "").trim();
+  if (/^[\[{]/.test(t)) { // JSON: { "piece-id": [...] } or [{ id or title, questions: [...] }]
+    let j; try { j = JSON.parse(t); } catch (e) { out.error = "That JSON didn't read: " + e.message; return out; }
+    const add = (key, list) => { const p = find(String(key || "")); if (!p) { out.unknown.push(String(key)); return; } const qs = GOQ.normalizePiece({ title: "x", quiz: (list || []).map(q => q && (q.question || q.q) ? { q: q.question || q.q, right: q.right || q.answer, wrong: q.wrong || q.wrongs, from: q.from || q.quote } : q) }, 0).quiz; out.bad += (list || []).length - qs.length; (out.byPiece[p.id] = out.byPiece[p.id] || []).push(...qs); };
+    if (Array.isArray(j)) j.forEach(g => add(g && (g.id || g.title), g && (g.questions || g.quiz))); else Object.keys(j).forEach(k => add(k, j[k]));
+    return out;
+  }
+  let p = null, cur = null; const flush = () => { if (!cur) return; if (p && cur.q && cur.right && cur.wrong.length) (out.byPiece[p.id] = out.byPiece[p.id] || []).push({ q: cur.q, right: cur.right, wrong: cur.wrong.slice(0, 3), from: cur.from }); else if (p) out.bad++; cur = null; };
+  for (const raw of t.split(/\r?\n/)) { const l = raw.trim().replace(/\*\*/g, "").replace(/^`+|`+$/g, "").trim(); if (!l || /^[-=*_`]{3,}$/.test(l)) continue; // (bold, code marks and rules an AI might add)
+    let m;
+    if ((m = l.match(/^(?:={2,}|#{1,4})\s*(.+?)\s*(?:={2,})?$/))) { flush(); p = find(m[1]); if (!p) out.unknown.push(m[1]); continue; }
+    if ((m = l.match(/^Q\d*\s*[:.)]\s*(.*)$/i))) { flush(); cur = { q: m[1], right: "", wrong: [], from: "" }; continue; }
+    if (!cur) continue;
+    if ((m = l.match(/^\+\s*(.*)$/))) cur.right = m[1];
+    else if ((m = l.match(/^[-*]\s*(.*)$/))) cur.wrong.push(m[1]);
+    else if ((m = l.match(/^>\s*(.*)$/))) cur.from = (cur.from ? cur.from + " " : "") + m[1];
+    else if (!cur.right && !cur.wrong.length) cur.q += " " + l; // a question carried onto the next line
+  }
+  flush(); return out;
+}
+function renderQuizzes() {
+  const main = $("#main"); main.innerHTML = "";
+  const S = draft.settings.quizzes = Object.assign({ perRound: 3 }, draft.settings.quizzes || {}), R = draft.settings.rewards = Object.assign(JSON.parse(JSON.stringify(GOQ.REWARD_DEFAULTS)), draft.settings.rewards || {});
+  const pcs = draft.pieces.filter(p => !p.tut); if (!quizSel || !pcs.some(p => p.id === quizSel)) quizSel = pcs[0] && pcs[0].id;
+  const wrap = el("section", { class: "pieces" }); main.appendChild(wrap);
+  wrap.appendChild(el("h2", { class: "title", text: "Quizzes" }));
+  wrap.appendChild(el("p", { text: "Each piece's WIN TOKENS! button opens a quiz laid out like its placard. A round picks a few questions from the piece's pool at random, shows the four answers in a new order every time, and after each answer shows the developer's own words it came from. Changes show in the preview after Apply to preview." }));
+  const num = (get, set, label, note, max) => { const i = el("input", { type: "number", min: 0, max: max || 999, value: get(), style: "max-width:110px", "aria-label": label }); i.addEventListener("input", () => { set(Math.max(0, Math.min(max || 999, Math.round(+i.value || 0)))); changed(); }); return el("label", {}, [document.createTextNode(label), note ? el("small", { text: note }) : null, i]); };
+  wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [el("h3", { text: "Rounds and tokens", style: "margin:0 0 8px" }), el("div", { class: "fields" }, [
+    num(() => S.perRound, v => { S.perRound = Math.max(1, v); }, "Questions per round", "Picked at random from the pool (fewer if the pool is smaller). The ones with tokens still in them come first.", 10),
+    num(() => R.quiz, v => { R.quiz = v; }, "Tokens for each question right", "The first time only. Same as the Tokens tab."),
+    num(() => R.quizPerfect, v => { R.quizPerfect = v; }, "Bonus for a whole round right", "Once per piece.")])]));
+  // import / export
+  const ta = el("textarea", { rows: 8, placeholder: "=== Comets Have Feathers | piece-g3at9r2\nQ: What did the developer do before working in games?\n+ Flew helicopters\n- Drove race cars\n- Taught music\n- Built theme park rides\n> I used to fly Helicopters...", "aria-label": "Questions to import" });
+  const file = el("input", { type: "file", accept: ".txt,.md,.json,text/plain,application/json", "aria-label": "Upload a questions file" });
+  file.addEventListener("change", async () => { const f = file.files[0]; if (f) ta.value = await f.text(); });
+  const how = el("select", { "aria-label": "How to import" }, [el("option", { value: "add", text: "Add to each game's pool" }), el("option", { value: "replace", text: "Replace each game's pool" })]);
+  const res = el("p", { class: "note" });
+  const doImport = () => { const r = quizParse(ta.value); if (r.error) { res.textContent = r.error; return; }
+    const ids = Object.keys(r.byPiece); if (!ids.length) { res.textContent = "No questions found. Check the format: a === line naming the game, then Q:, +, three - lines and >."; return; }
+    let n = 0; ids.forEach(id => { const p = draft.pieces.find(x => x.id === id), qs = r.byPiece[id]; n += qs.length; if (how.value === "replace") p.quiz = qs; else { const have = new Set((p.quiz || []).map(q => q.q.trim().toLowerCase())); p.quiz = (p.quiz || []).concat(qs.filter(q => !have.has(q.q.trim().toLowerCase()))); } p.quiz = p.quiz.slice(0, 60); });
+    changed({ now: true }); renderQuizzes(); status("Imported " + n + " question" + (n === 1 ? "" : "s") + " for " + ids.length + " game" + (ids.length === 1 ? "" : "s") + "." + (r.bad ? " Skipped " + r.bad + " missing a part." : "") + (r.unknown.length ? " No game matched: " + r.unknown.slice(0, 5).join(", ") + (r.unknown.length > 5 ? "..." : "") : ""), !!(r.bad || r.unknown.length)); };
+  wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [el("h3", { text: "Import and export", style: "margin:0 0 8px" }),
+    el("p", { class: "note", text: "Paste questions (or upload a .txt, .md or .json file) in the format from QUIZ-FORMAT.md. Games are matched by their piece ID, or by title. Add skips questions a game already has (same wording)." }),
+    ta, el("div", { class: "row", style: "gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px" }, [file, how, el("button", { type: "button", class: "btn small", text: "Import", onclick: doImport }),
+      el("button", { type: "button", class: "btn small quiet", text: "Export all questions", onclick: () => download("goq-quizzes.txt", new Blob([quizToText(pcs)], { type: "text/plain" })) }),
+      el("button", { type: "button", class: "btn small quiet", text: "Blank template (every game)", onclick: () => download("goq-quiz-template.txt", new Blob([pcs.map(p => "=== " + p.title + " | " + p.id + "\n").join("\n")], { type: "text/plain" })) })]), res]));
+  // one game's pool
+  const sel = el("select", { "aria-label": "Game" }, pcs.map(p => el("option", { value: p.id, text: p.title + " (" + ((p.quiz || []).length) + ")" }))); sel.value = quizSel;
+  sel.addEventListener("change", () => { quizSel = sel.value; renderQuizzes(); });
+  const p = pcs.find(x => x.id === quizSel); if (!p) return; p.quiz = p.quiz || [];
+  const box = el("section", { class: "prow", style: "display:block" }, [el("h3", { text: "Questions", style: "margin:0 0 8px" }), el("div", { class: "row", style: "gap:8px;align-items:center;flex-wrap:wrap" }, [sel,
+    el("button", { type: "button", class: "btn small quiet", text: "Try it in the preview", onclick: async () => { if (!GOQ.normalizePiece(p, 0).quiz.length) { status("Add a full question first.", true); return; } await refreshPreview(); game.closeAll && game.closeAll(); game.mode = "walk"; game.pieceQuiz(GOQ.normalizePiece(p, 0), () => {}); status("The quiz is open in the preview."); } })]),
+    el("p", { class: "note", text: p.quiz.length + " question" + (p.quiz.length === 1 ? "" : "s") + " in the pool. Each needs the question, the right answer and three wrong ones; \"From the developer\" is shown after the player answers." })]);
+  wrap.appendChild(box);
+  const line = (val, set, label, opts) => { const i = el(opts && opts.area ? "textarea" : "input", Object.assign({ "aria-label": label, placeholder: label }, opts && opts.area ? { rows: opts.rows || 2 } : { type: "text" })); i.value = val || ""; i.addEventListener("input", () => { set(i.value); changed(); }); return el("label", { class: "rfield" }, [el("span", { text: label, style: opts && opts.color ? "color:" + opts.color : "" }), i]); };
+  p.quiz.forEach((q, i) => { q.wrong = [0, 1, 2].map(k => (q.wrong || [])[k] || "");
+    const move = d => { const j = i + d; if (j < 0 || j >= p.quiz.length) return; [p.quiz[i], p.quiz[j]] = [p.quiz[j], p.quiz[i]]; changed({ now: true }); renderQuizzes(); };
+    box.appendChild(el("div", { style: "border-top:2px solid var(--line);padding:10px 0 6px;margin-top:8px;display:flex;flex-direction:column;gap:6px" }, [
+      el("b", { text: "Question " + (i + 1), style: "font-size:.88rem" }),
+      line(q.q, v => { q.q = v; }, "Question", { area: true }),
+      line(q.right, v => { q.right = v; }, "Right answer", { color: "#3f9a4f" }),
+      ...[0, 1, 2].map(k => line(q.wrong[k], v => { q.wrong[k] = v; }, "Wrong answer " + (k + 1), { color: "#c0584c" })),
+      line(q.from, v => { q.from = v; }, "From the developer (their words, shown after answering)", { area: true, rows: 3 }),
+      el("div", { class: "row", style: "gap:6px" }, [el("button", { type: "button", class: "btn small quiet", text: "Move up", onclick: () => move(-1) }), el("button", { type: "button", class: "btn small quiet", text: "Move down", onclick: () => move(1) }),
+        el("button", { type: "button", class: "btn small quiet", text: "Delete", onclick: () => { p.quiz.splice(i, 1); changed({ now: true }); renderQuizzes(); } })])]));
+  });
+  box.appendChild(el("div", { class: "row", style: "margin-top:8px" }, [el("button", { type: "button", class: "btn small", text: "Add a question", onclick: () => { p.quiz.push(quizEmpty()); changed({ now: true }); renderQuizzes(); } })]));
 }
 /* ---------- Cards (Joe 10/11) ----------
    Every piece on display has a trading card, common and rare. Prices and odds, and each card's episode title (looked up on
@@ -3198,7 +3268,6 @@ function pieceRow(p, i, place, opts) {
     ...placard,
     f("How a visitor would describe it", text("hint", "the one where the clock never ran out but I still rushed"), true, "Visitors say this when they come back to tell you how it went: \"I tried Lantern Keeper, the one where...\" Keep it to one line, in their words."),
     p.kind === "episode" ? answersBox(p) : null,
-    p.kind === "episode" ? quizBox(p) : null,
     p.kind === "episode" ? relBox(p) : null,
     p.kind === "episode" ? genreBox(p) : null,
     p.kind === "episode" ? blendBox(p) : null,

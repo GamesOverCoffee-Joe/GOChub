@@ -170,6 +170,18 @@ function misspell(name, seed) {
 function hash(x, y) { let h = (x * 374761393 + y * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return (h ^ (h >>> 16)) >>> 0; }
 function ytVideoId(url) { const m = String(url || "").match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/); return m ? m[1] : ""; } // a YouTube link's video id
 function strSeed(s) { let h = 7; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; }
+/* A piece's quiz pool (Joe 10/20): each question is { q, right, wrong: up to three, from: the developer's words it came from }.
+   Older packs kept [question, right, wrong, wrong]; both read the same. */
+function normQuiz(list) {
+  const t = (x, n) => typeof x === "string" ? x.trim().slice(0, n) : "";
+  return (Array.isArray(list) ? list : []).map(e => {
+    const o = Array.isArray(e) ? { q: e[0], right: e[1], wrong: e.slice(2) } : e && typeof e === "object" ? e : null; if (!o) return null;
+    const q = { q: t(o.q, 300), right: t(o.right, 160), wrong: (Array.isArray(o.wrong) ? o.wrong : []).map(w => t(w, 160)).filter(Boolean).slice(0, 3) };
+    if (t(o.from, 600)) q.from = t(o.from, 600);
+    return q.q && q.right && q.wrong.length ? q : null;
+  }).filter(Boolean).slice(0, 60);
+}
+const quizKey = q => strSeed(q.q).toString(36); // which question it is, by its words (so reordering the pool keeps what you've won)
 function hexRgb(h) { h = h.replace("#", ""); return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]; }
 const isHex = c => typeof c === "string" && /^#[0-9a-f]{6}$/i.test(c);
 
@@ -1821,7 +1833,7 @@ function normalizePiece(p, i) {
     gift: p.gift && str(p.gift.name, 50) ? { name: str(p.gift.name, 50), description: str(p.gift.description, 160), price: Math.max(1, Math.min(99, Math.round(+p.gift.price || 5))) } : null, // and its gift
     episodeTitle: str(p.episodeTitle, 140), cardBlurb: str(p.cardBlurb, 140), noCard: !!p.noCard, cardsFrom: p.cardsFrom === undefined ? "on" : p.cardsFrom === "on" || /^\d{4}-\d{2}-\d{2}$/.test(p.cardsFrom || "") ? p.cardsFrom : "", // its trading card: the episode's title (Cards tab fetches it), a blurb (else the hint), or no card at all
     answers: Array.isArray(p.answers) ? [0, 1, 2].map(i => { const x = p.answers[i]; return str(x && typeof x === "object" ? x.a : x, 6000); }) : ["", "", ""], // the developer's answers to the three questions (ANSWER_QS), for the answer cards (Joe 10/13)
-    quiz: Array.isArray(p.quiz) ? p.quiz.filter(e => Array.isArray(e) && e.length >= 3 && e.slice(0, 3).every(x => str(x, 200))).map(e => e.slice(0, 4).map(x => str(x, 200)).filter(Boolean)).slice(0, 5) : [], // its quiz (Joe 10/20): [question, right answer, wrong, wrong?] each
+    quiz: normQuiz(p.quiz), // its quiz pool (Joe 10/20): { q, right, wrong: [three], from: the developer quote shown after you answer }
     hint: str(p.hint, 160), pick: !!p.pick, rel: str(p.rel, 30), genre: str(p.genre, 30), blend: str(p.blend, 30), // blend: a second category it also belongs to
     colors: colors.length >= 2 ? colors : ["#f0ecf8", "#a898d0", "#584a88", "#1a1430"],
     style: STYLES.includes(p.style) ? p.style : STYLES[strSeed(str(p.title, 80) || String(i)) % STYLES.length],
@@ -1938,7 +1950,7 @@ function normalizePack(p) {
   // card in a pack is rare, and how often (percent of Saturdays) Bluu has a rare. on: false hides cards from the shop.
   const cdin = (p.settings && p.settings.cards) || {}, cn = (v, d, hi) => Math.max(0, Math.min(hi, Math.round(v === undefined ? d : +v || 0)));
   const cards = { on: cdin.on !== false, single: cn(cdin.single, 10, 999), pack: cn(cdin.pack, 25, 999), rare: cn(cdin.rare, 20, 999), bluuCommon: cn(cdin.bluuCommon, 3, 999), packRare: cn(cdin.packRare, 2, 100), bluuRare: cn(cdin.bluuRare, 15, 100) };
-  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, relations, curious, life, visit, litter, line, genres, office, friday, cards, news: normalizeNews(p.settings && p.settings.news), rewards: normalizeRewards(p.settings && p.settings.rewards), tutorialRev: Math.max(1, Math.min(9999, Math.round(+(p.settings && p.settings.tutorialRev) || 1))) }, samples: !Array.isArray(p.pieces) };
+  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, relations, curious, life, visit, litter, line, genres, office, friday, cards, news: normalizeNews(p.settings && p.settings.news), rewards: normalizeRewards(p.settings && p.settings.rewards), quizzes: { perRound: Math.max(1, Math.min(10, Math.round(+(p.settings && p.settings.quizzes && p.settings.quizzes.perRound) || 3))) }, tutorialRev: Math.max(1, Math.min(9999, Math.round(+(p.settings && p.settings.tutorialRev) || 1))) }, samples: !Array.isArray(p.pieces) };
 }
 /* The curator's "Skip to tomorrow" moves every daily system forward together. */
 let DAY_SHIFT = 0;
@@ -2497,14 +2509,20 @@ const TEXT = {
   "thu.seat":          { g: "Days of the week", l: "Thursday: sitting down in the empty seat at the trivia tables (then Play / Not now)", v: [["Okay! Who's ready for some GOQ trivia?", "5 questions. 10 seconds per question. Ready?", "Go!"]] },
   "quiz.btn":          { g: "Quizzes", l: "A piece's quiz button, while it still has tokens to win (one line, short)", by: "claude", v: [["WIN TOKENS!"]] },
   "quiz.btnDone":      { g: "Quizzes", l: "A piece's quiz button once you've won everything it has (one line, short)", by: "claude", v: [["QUIZ \u2713"]] },
-  "quiz.intro":        { g: "Quizzes", l: "Starting a piece's quiz ({title}, {n}: how many questions)", by: "claude", v: [["Pop quiz! {n} questions about what the developers of {title} told us.", "Get them right for tokens."]] },
-  "quiz.introDone":    { g: "Quizzes", l: "Starting a quiz you've already aced ({title}, {n})", by: "claude", v: [["You already aced this one. No tokens left in it, but go for it."]] },
+  "quiz.title":        { g: "Quizzes", l: "The quiz page's heading (one line)", by: "claude", v: [["POP QUIZ"]] },
+  "quiz.of":           { g: "Quizzes", l: "Under the heading: which question ({i}, {n})", by: "claude", v: [["Question {i} of {n}"]] },
+  "quiz.over":         { g: "Quizzes", l: "Under the heading, at the end", by: "claude", v: [["All done"]] },
+  "quiz.left":         { g: "Quizzes", l: "Under the piece's name: tokens still to win here ({n}: \"3 tokens\")", by: "claude", v: [["{n} left to win"]] },
+  "quiz.leftNone":     { g: "Quizzes", l: "Under the piece's name: nothing left to win", by: "claude", v: [["All tokens won!"]] },
+  "quiz.fromLabel":    { g: "Quizzes", l: "Heading over the developer's words after you answer (one line)", by: "claude", v: [["FROM THE DEVELOPER"]] },
+  "quiz.again":        { g: "Quizzes", l: "At the end: back to the placard", by: "claude", v: [["Read the placard"]] },
+  "quiz.close":        { g: "Quizzes", l: "At the end: close the quiz", by: "claude", v: [["Done"]] },
   "quiz.right":        { g: "Quizzes", l: "A right answer ({answer})", by: "claude", v: [["That's right!"]] },
-  "quiz.wrong":        { g: "Quizzes", l: "A wrong answer ({answer}: the right one)", by: "claude", v: [["Not quite. It was \"{answer}.\""]] },
+  "quiz.wrong":        { g: "Quizzes", l: "A wrong answer ({answer}: the right one)", by: "claude", v: [["Not quite."]] },
   "quiz.perfect":      { g: "Quizzes", l: "The end, all right ({n}, {total})", by: "claude", v: [["{n} for {total}! You really read that placard."]] },
   "quiz.done":         { g: "Quizzes", l: "The end, some wrong ({n}: right answers, {total})", by: "claude", v: [["{n} out of {total}."]] },
-  "quiz.won":          { g: "Quizzes", l: "Tokens won ({tokens})", by: "claude", v: [["You won {tokens} tokens!"]] },
-  "quiz.retry":        { g: "Quizzes", l: "Missed some, with tokens still to win", by: "claude", v: [["Give the developer's side another read and try again. The ones you missed still have tokens in them."]] },
+  "quiz.won":          { g: "Quizzes", l: "Tokens won ({tokens}: \"3 tokens\")", by: "claude", v: [["You won {tokens}!"]] },
+  "quiz.retry":        { g: "Quizzes", l: "Missed some, with tokens still to win", by: "claude", v: [["Give the placard another read and try again. The ones you missed still have tokens in them."]] },
   "thu.right":         { g: "Days of the week", l: "Thursday: a right answer", v: [["Correct!"]] },
   "thu.wrong":         { g: "Days of the week", l: "Thursday: a wrong answer (someone at a café table answers next; {answer}: the right one)", v: [["Wrong! Who else?"]] },
   "thu.time":          { g: "Days of the week", l: "Thursday: out of time (someone at a café table answers next; {answer})", v: [["Time's up!"]] },
@@ -3913,7 +3931,7 @@ class Game {
     el.cfx = h("gt-cfx"); el.cfx.addEventListener("click", e => { e.stopPropagation(); this.press("a"); }); // buying cards: pick one of five, or open a pack (cardFx)
     el.cardView = h("gt-cardview"); el.cardView.addEventListener("click", e => { e.stopPropagation(); this.press("a"); });
     el.reader = h("gt-box gt-reader");
-    el.reader.addEventListener("click", e => { if (e.target.tagName === "A" || e.target.tagName === "BUTTON") return; e.stopPropagation(); if (this.rd && this.rd.sel >= 0) this.rdUse(); else this.press("a"); });
+    el.reader.addEventListener("click", e => { if (e.target.tagName === "A" || e.target.tagName === "BUTTON") return; e.stopPropagation(); if (this.mode === "pquiz" && this.pq && this.pq.phase !== "shown") return; if (this.rd && this.rd.sel >= 0) this.rdUse(); else this.press("a"); }); // the quiz: tap an answer itself (Joe 10/20)
     el.badgeWrap = h("gt-badgewrap");
     el.badgeForm = h("gt-box gt-badge", el.badgeWrap, "form");
     el.badgeForm.innerHTML = '<div class="gt-badge-main"><p class="gt-badge-title">STAFF ENTRANCE</p>' +
@@ -4185,6 +4203,21 @@ class Game {
 .gt-rd-links.three a,.gt-rd-links.three button.note,.gt-rd-links.three button.quiz{padding:calc(2px * var(--s)) calc(4px * var(--s))} /* three buttons fit beside the picture */
 .gt-rd-links .sel{outline:calc(1px * var(--s)) solid #181820;outline-offset:calc(1px * var(--s));filter:brightness(1.15)}
 .gt-rd-links button.quiz{display:block;text-align:center;font-family:var(--pixel, monospace);font-size:calc(5px * var(--s));line-height:1;color:#fff8ec;background:#5a3c9a;padding:calc(3px * var(--s)) calc(4px * var(--s));border:calc(1px * var(--s)) solid #181820;border-radius:calc(1px * var(--s));box-shadow:0 calc(1px * var(--s)) 0 #181820;white-space:nowrap;cursor:pointer;margin:0} /* the quiz: purple, so it reads apart from Watch, Play and Note */
+.gt-reader.gt-qz .gt-rd-body{overflow-y:auto;scrollbar-width:thin;white-space:normal}
+.gt-qz-left{font-size:calc(4.5px * var(--s));line-height:1.3;color:#5a3c9a}
+.gt-qz-pips{display:flex;gap:calc(2px * var(--s));margin-top:calc(2px * var(--s))}
+.gt-qz-pips i{width:calc(5px * var(--s));height:calc(5px * var(--s));border:calc(1px * var(--s)) solid #181820;background:#fff}
+.gt-qz-pips i.now{background:#e8b24a}.gt-qz-pips i.ok{background:#2f8a3a}.gt-qz-pips i.no{background:#b8382c}
+.gt-reader.gt-qz .gt-rd-body b.gt-qz-q{font-family:inherit;font-weight:bold;font-size:calc(6.5px * var(--s));line-height:1.35;letter-spacing:0;margin:0 0 calc(3px * var(--s))}
+.gt-qz-a{position:relative;display:flex;gap:calc(4px * var(--s));align-items:flex-start;padding:calc(2px * var(--s)) calc(3px * var(--s));margin-bottom:calc(2px * var(--s));border:calc(1px * var(--s)) solid #c8c8d4;background:#fff;cursor:pointer;line-height:1.3}
+.gt-qz-a.on{border-color:#181820;background:#fff6d8;box-shadow:0 calc(1px * var(--s)) 0 #181820}
+.gt-qz-a.right{border-color:#2f8a3a;background:#e2f4e0}.gt-qz-a.wrong{border-color:#b8382c;background:#f8e0dc}.gt-qz-a.dim{opacity:.55}
+.gt-qz-l{flex:none;font-family:var(--pixel, monospace);font-size:calc(4.5px * var(--s));line-height:1;color:#fff8ec;background:#5a3c9a;padding:calc(1.5px * var(--s)) calc(2px * var(--s));margin-top:calc(1px * var(--s))}
+.gt-qz-a.right .gt-qz-l{background:#2f8a3a}.gt-qz-a.wrong .gt-qz-l{background:#b8382c}
+.gt-qz-verdict{margin:calc(3px * var(--s)) 0 calc(2px * var(--s));font-weight:bold}.gt-qz-verdict.ok{color:#2f8a3a}.gt-qz-verdict.no{color:#b8382c}
+.gt-qz-from{border-left:calc(2px * var(--s)) solid #a8322a;padding-left:calc(4px * var(--s));margin-bottom:calc(3px * var(--s));font-style:italic;color:#303048}
+.gt-reader.gt-qz .gt-qz-from b{font-style:normal;margin-top:0}
+.gt-qz-msg{margin:0 0 calc(4px * var(--s))}
 .gt-rd-links button.quiz:hover,.gt-rd-links button.quiz:focus-visible{filter:brightness(1.15);outline:calc(1px * var(--s)) solid #181820}
 .gt-rd-links button.note:hover,.gt-rd-links button.note:focus-visible{filter:brightness(1.1);outline:calc(1px * var(--s)) solid #181820}
 .gt-rd-links a:hover,.gt-rd-links a:focus-visible{filter:brightness(1.15);outline:calc(1px * var(--s)) solid #fff8ec}
@@ -4486,36 +4519,88 @@ class Game {
     const w = window.open(b.href, "_blank", "noopener"); if (!w && !this.rdOpened) this.showLoc("The browser blocked the new tab. Click " + b.textContent + " to open it.");
   }
   /* The placard's yellow NOTE button: put the placard away and open the note card; whatever came after the placard waits. */
-  /* A piece's quiz (Joe 10/20): questions about what its developers told us, a token for each one you get right the first time,
-     and a bonus for getting them all. Missed ones keep their tokens for another try. */
-  quizRec(p) { const Q = this.progress.quiz || (this.progress.quiz = {}); return Q[p.id] || (Q[p.id] = { m: 0 }); }
-  quizLeft(p) { const r = (this.progress.quiz || {})[p.id] || { m: 0 }; return !r.p || p.quiz.some((q, i) => !(r.m & (1 << i))); }
+  /* A piece's quiz (Joe 10/20): a page laid out like the placard. Each round picks a few questions from the piece's pool (Quiz tab),
+     the four answers in a new order every time; after each answer, the developer's own words it came from. A token for each
+     question the first time it's right (by its words, so the pool can grow), and a bonus the first time a whole round is right. */
+  quizRec(p) {
+    const Q = this.progress.quiz || (this.progress.quiz = {}), r = Q[p.id] || (Q[p.id] = { ok: [] });
+    if (!r.ok) { r.ok = (p.quiz || []).filter((q, i) => r.m & (1 << i)).map(quizKey); delete r.m; } // saved before pools: by position
+    return r;
+  }
+  quizLeft(p) { const r = this.quizRec(p); return !r.p || p.quiz.some(q => !r.ok.includes(quizKey(q))); }
+  quizTokensLeft(p) { const r = this.quizRec(p), R = this.pack.settings.rewards; return p.quiz.filter(q => !r.ok.includes(quizKey(q))).length * (R.quiz || 0) + (r.p ? 0 : R.quizPerfect || 0); }
   quizFromReader() {
     const r = this.rd; if (!r || !r.quiz) return;
     const d = r.done; r.done = null; this.closeRead();
     this.pieceQuiz(r.quiz, () => { if (d) d(); });
   }
   pieceQuiz(p, done) {
-    const qs = p.quiz, rec = this.quizRec(p), R = this.pack.settings.rewards, n = qs.length, left = this.quizLeft(p);
-    const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
-    let i = 0, score = 0, won = 0;
-    const finish = () => {
-      if (score === n && !rec.p) { rec.p = 1; won += R.quizPerfect || 0; }
-      this.progress.tally.quizzes = (this.progress.tally.quizzes || 0) + 1; this.saveProgress();
-      const lines = [...this.tx(score === n ? "quiz.perfect" : "quiz.done", { n: score, total: n })];
-      if (won) lines.push(...this.tx("quiz.won", { tokens: won })); else if (this.quizLeft(p)) lines.push(...this.tx("quiz.retry"));
-      this.say(lines, () => { if (won) this.earn(won, true); if (done) done(); });
-    };
-    const next = () => {
-      const q = qs[i]; if (!q) { finish(); return; }
-      const opts = shuffle(q.slice(1)), right = q[1];
-      this.choose((i + 1) + "/" + n + "  " + q[0], opts, k => {
-        const ok = opts[k] === right;
-        if (ok) { score++; if (!(rec.m & (1 << i))) { rec.m |= 1 << i; won += R.quiz || 0; } }
-        i++; this.say(this.tx(ok ? "quiz.right" : "quiz.wrong", { answer: right }), next);
-      }, -1);
-    };
-    this.say(this.tx(left ? "quiz.intro" : "quiz.introDone", { title: p.title, n }), next);
+    const rec = this.quizRec(p), shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
+    const per = Math.min(p.quiz.length, this.pack.settings.quizzes ? this.pack.settings.quizzes.perRound : 3);
+    const fresh = shuffle(p.quiz.filter(q => !rec.ok.includes(quizKey(q)))), old = shuffle(p.quiz.filter(q => rec.ok.includes(quizKey(q))));
+    const qs = shuffle([...fresh, ...old].slice(0, per)); // the ones with tokens still in them first, in a random order
+    this.pq = { p, qs, i: 0, score: 0, won: 0, marks: [], phase: "ask", sel: 0, opts: null, done };
+    const box = this.el.reader; this.holdToast(); this.mode = "pquiz";
+    box.style.display = "grid"; box.className = box.className.replace(/\s*(flip|gt-rd-pre)\b/g, ""); box.classList.add("clip", "gt-qz");
+    box.innerHTML = '<div class="gt-rd-left"><div class="gt-rd-clip"></div><div class="gt-rd-head"></div></div><div class="gt-rd-top"></div><div class="gt-rd-body"></div><div class="gt-rd-foot"><span class="gt-rd-n"></span><span class="gt-rd-k"></span></div>';
+    const img = this.pieceImgs[p.id], fr = box.querySelector(".gt-rd-clip"), clip = this.clipOf(p);
+    const im = document.createElement("img"); im.src = img ? p.image : this.pieceArt(p).toDataURL(); im.alt = ""; if (img && img.naturalWidth > 160) im.className = "photo"; fr.appendChild(im);
+    if (clip) this.makeClip(fr, clip);
+    const t = document.createElement("div"); t.className = "gt-rd-t"; t.innerHTML = '<span class="gt-rd-tt"></span><small></small>'; t.firstChild.textContent = p.title.toUpperCase(); t.lastChild.textContent = "By " + p.developer;
+    box.querySelector(".gt-rd-head").appendChild(t);
+    const left = document.createElement("div"); left.className = "gt-qz-left"; box.querySelector(".gt-rd-head").appendChild(left);
+    const top = document.createElement("div"); top.className = "gt-rd-t"; top.innerHTML = '<span class="gt-rd-tt"></span><small></small><div class="gt-qz-pips"></div>'; top.firstChild.textContent = this.tx("quiz.title").join(" ");
+    box.querySelector(".gt-rd-top").appendChild(top);
+    this.pqAsk();
+  }
+  pqAsk() { const Q = this.pq, q = Q.qs[Q.i]; Q.phase = "ask"; Q.sel = 0; Q.opts = q.wrong.map(w => [w, false]).concat([[q.right, true]]).map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]); this.pqRender(); }
+  pqRender() {
+    const Q = this.pq, box = this.el.reader, body = box.querySelector(".gt-rd-body"), q = Q.qs[Q.i], end = Q.phase === "end";
+    box.querySelector(".gt-rd-top small").textContent = end ? this.tx("quiz.over").join(" ") : this.tx("quiz.of", { i: Q.i + 1, n: Q.qs.length }).join(" ");
+    const pips = box.querySelector(".gt-qz-pips"); pips.innerHTML = ""; Q.qs.forEach((_, k) => { const d = document.createElement("i"); d.className = Q.marks[k] === true ? "ok" : Q.marks[k] === false ? "no" : k === Q.i && !end ? "now" : ""; pips.appendChild(d); });
+    const tl = this.quizTokensLeft(Q.p) - Q.won; box.querySelector(".gt-qz-left").textContent = tl > 0 ? this.tx("quiz.left", { n: tl + (tl === 1 ? " token" : " tokens") }).join(" ") : this.tx("quiz.leftNone").join(" ");
+    body.innerHTML = "";
+    const row = (text, cls, letter, onClick) => { const d = document.createElement("div"); d.className = "gt-qz-a" + (cls ? " " + cls : ""); if (letter) { const l = document.createElement("span"); l.className = "gt-qz-l"; l.textContent = letter; d.appendChild(l); } const tx = document.createElement("span"); tx.textContent = text; d.appendChild(tx); d.addEventListener("click", e => { e.stopPropagation(); onClick(); }); body.appendChild(d); return d; };
+    if (end) {
+      const all = Q.score === Q.qs.length, h = document.createElement("b"); h.className = "red gt-qz-q"; h.textContent = this.tx(all ? "quiz.perfect" : "quiz.done", { n: Q.score, total: Q.qs.length }).join(" "); body.appendChild(h);
+      const msg = Q.won ? this.tx("quiz.won", { tokens: Q.won + (Q.won === 1 ? " token" : " tokens") }) : this.quizLeft(Q.p) ? this.tx("quiz.retry") : []; if (msg.length) { const pp = document.createElement("p"); pp.className = "gt-qz-msg"; pp.textContent = msg.join(" "); body.appendChild(pp); }
+      [this.tx("quiz.again").join(" "), this.tx("quiz.close").join(" ")].forEach((o, k) => row(o, k === Q.sel ? "on" : "", "", () => { Q.sel = k; this.pqEnd(k === 0); }));
+    } else {
+      const h = document.createElement("b"); h.className = "red gt-qz-q"; h.textContent = q.q; body.appendChild(h);
+      Q.opts.forEach(([o, ok], k) => { if (Q.phase === "shown" && !ok && k !== Q.sel) return; const cls = Q.phase === "ask" ? (k === Q.sel ? "on" : "") : ok ? "right" : "wrong"; row(o, cls, "ABCD"[k], () => { if (Q.phase !== "ask") { this.pqNext(); return; } Q.sel = k; this.pqAnswer(); }); });
+      if (Q.phase === "shown") {
+        const ok = Q.marks[Q.i], v = document.createElement("p"); v.className = "gt-qz-verdict " + (ok ? "ok" : "no"); v.textContent = this.tx(ok ? "quiz.right" : "quiz.wrong", { answer: q.right }).join(" "); body.appendChild(v);
+        if (q.from) { const f = document.createElement("div"); f.className = "gt-qz-from"; const l = document.createElement("b"); l.textContent = this.tx("quiz.fromLabel").join(" "); f.appendChild(l); f.appendChild(document.createTextNode(q.from)); body.appendChild(f); }
+      }
+    }
+    box.querySelector(".gt-rd-k").textContent = (Q.phase === "ask" ? ["\u2191\u2193 pick", "A answer", "B stop"] : Q.phase === "shown" ? ["\u2191\u2193 scroll", "A next", "B stop"] : ["\u2191\u2193 pick", "A choose"]).join("  \u00b7  ");
+    const on = body.querySelector(".on"); if (Q.phase === "shown") { const a = body.querySelector(".gt-qz-a"); body.scrollTop = a && body.scrollHeight > body.clientHeight ? a.offsetTop - body.offsetTop : 0; } else if (on && on.scrollIntoView) on.scrollIntoView({ block: "nearest" });
+  }
+  pqAnswer() {
+    const Q = this.pq, q = Q.qs[Q.i], ok = Q.opts[Q.sel][1], R = this.pack.settings.rewards, rec = this.quizRec(Q.p);
+    Q.marks[Q.i] = ok; if (ok) { Q.score++; const k = quizKey(q); if (!rec.ok.includes(k)) { rec.ok.push(k); Q.won += R.quiz || 0; } }
+    Q.phase = "shown"; this.pqRender();
+  }
+  pqNext() {
+    const Q = this.pq; if (++Q.i < Q.qs.length) { this.pqAsk(); return; }
+    const rec = this.quizRec(Q.p); if (Q.score === Q.qs.length && !rec.p) { rec.p = 1; Q.won += this.pack.settings.rewards.quizPerfect || 0; }
+    this.progress.tally.quizzes = (this.progress.tally.quizzes || 0) + 1; this.saveProgress();
+    Q.i = Q.qs.length - 1; Q.phase = "end"; Q.sel = 0; this.pqRender();
+  }
+  pqEnd(again) { // stopping halfway keeps what you've won
+    const Q = this.pq; if (!Q) return; this.pq = null; this.saveProgress();
+    this.dropClip(); const box = this.el.reader; box.style.display = "none"; box.classList.remove("gt-qz"); this.mode = "walk"; this.inputLock = true;
+    if (Q.won) this.earn(Q.won, true);
+    if (Q.done) Q.done();
+    if (again) this.viewPiece(Q.p, "front");
+  }
+  pqKeys(has) {
+    const Q = this.pq; if (!Q) { this.mode = "walk"; return; }
+    const n = Q.phase === "end" ? 2 : Q.opts.length;
+    if (Q.phase === "shown" && (has("up") || has("down"))) { const b = this.el.reader.querySelector(".gt-rd-body"); if (b) b.scrollTop += (has("up") ? -1 : 1) * b.clientHeight * 0.6; }
+    else if (Q.phase !== "shown" && (has("up") || has("down"))) { Q.sel = (Q.sel + (has("up") ? n - 1 : 1)) % n; this.pqRender(); }
+    else if (has("a") || (Q.phase === "shown" && has("right"))) { if (Q.phase === "ask") this.pqAnswer(); else if (Q.phase === "shown") this.pqNext(); else this.pqEnd(Q.sel === 0); }
+    else if (has("b") || has("start")) this.pqEnd(false);
   }
   noteFromReader() {
     const r = this.rd; if (!r || !r.note) return;
@@ -8844,6 +8929,7 @@ class Game {
       if (has("a") || has("right")) this.answerStep(1); else if (has("left")) this.answerStep(-1); else if (has("b") || has("start")) this.closeAnswers();
       return;
     }
+    if (this.mode === "pquiz") { this.pqKeys(has); return; }
     if (this.mode === "read") {
       const r = this.rd;
       if (has("left") && r.i > 0) { r.i--; this.renderRead(); }
@@ -11383,7 +11469,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 126";
+const VERSION = "2026-11-18 cards 127";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
