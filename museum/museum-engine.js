@@ -4208,7 +4208,9 @@ class Game {
 .gt-qz-pips{display:flex;gap:calc(2px * var(--s));margin-top:calc(2px * var(--s))}
 .gt-qz-pips i{width:calc(5px * var(--s));height:calc(5px * var(--s));border:calc(1px * var(--s)) solid #181820;background:#fff}
 .gt-qz-pips i.now{background:#e8b24a}.gt-qz-pips i.ok{background:#2f8a3a}.gt-qz-pips i.no{background:#b8382c}
-.gt-reader.gt-qz .gt-rd-body b.gt-qz-q{font-family:inherit;font-weight:bold;font-size:calc(6.5px * var(--s));line-height:1.35;letter-spacing:0;margin:0 0 calc(3px * var(--s))}
+.gt-reader.gt-qz .gt-rd-body{position:relative}
+.gt-reader.gt-qz .gt-rd-body b.gt-qz-q.long{font-size:calc(5.5px * var(--s))} /* a long question leaves room for the answers */
+.gt-reader.gt-qz .gt-rd-body b.gt-qz-q{position:sticky;top:0;z-index:1;background:#f8f8f0;padding-bottom:calc(2px * var(--s));font-family:inherit;font-weight:bold;font-size:calc(6.5px * var(--s));line-height:1.35;letter-spacing:0;margin:0 0 calc(3px * var(--s))}
 .gt-qz-a{position:relative;display:flex;gap:calc(4px * var(--s));align-items:flex-start;padding:calc(2px * var(--s)) calc(3px * var(--s));margin-bottom:calc(2px * var(--s));border:calc(1px * var(--s)) solid #c8c8d4;background:#fff;cursor:pointer;line-height:1.3}
 .gt-qz-a.on{border-color:#181820;background:#fff6d8;box-shadow:0 calc(1px * var(--s)) 0 #181820}
 .gt-qz-a.right{border-color:#2f8a3a;background:#e2f4e0}.gt-qz-a.wrong{border-color:#b8382c;background:#f8e0dc}.gt-qz-a.dim{opacity:.55}
@@ -4566,7 +4568,7 @@ class Game {
       const msg = Q.won ? this.tx("quiz.won", { tokens: Q.won + (Q.won === 1 ? " token" : " tokens") }) : this.quizLeft(Q.p) ? this.tx("quiz.retry") : []; if (msg.length) { const pp = document.createElement("p"); pp.className = "gt-qz-msg"; pp.textContent = msg.join(" "); body.appendChild(pp); }
       [this.tx("quiz.again").join(" "), this.tx("quiz.close").join(" ")].forEach((o, k) => row(o, k === Q.sel ? "on" : "", "", () => { Q.sel = k; this.pqEnd(k === 0); }));
     } else {
-      const h = document.createElement("b"); h.className = "red gt-qz-q"; h.textContent = q.q; body.appendChild(h);
+      const h = document.createElement("b"); h.className = "red gt-qz-q" + (q.q.length > 110 ? " long" : ""); h.textContent = q.q; body.appendChild(h);
       Q.opts.forEach(([o, ok], k) => { if (Q.phase === "shown" && !ok && k !== Q.sel) return; const cls = Q.phase === "ask" ? (k === Q.sel ? "on" : "") : ok ? "right" : "wrong"; row(o, cls, "ABCD"[k], () => { if (Q.phase !== "ask") { this.pqNext(); return; } Q.sel = k; this.pqAnswer(); }); });
       if (Q.phase === "shown") {
         const ok = Q.marks[Q.i], v = document.createElement("p"); v.className = "gt-qz-verdict " + (ok ? "ok" : "no"); v.textContent = this.tx(ok ? "quiz.right" : "quiz.wrong", { answer: q.right }).join(" "); body.appendChild(v);
@@ -4574,7 +4576,9 @@ class Game {
       }
     }
     box.querySelector(".gt-rd-k").textContent = (Q.phase === "ask" ? ["\u2191\u2193 pick", "A answer", "B stop"] : Q.phase === "shown" ? ["\u2191\u2193 scroll", "A next", "B stop"] : ["\u2191\u2193 pick", "A choose"]).join("  \u00b7  ");
-    const on = body.querySelector(".on"); if (Q.phase === "shown") { const a = body.querySelector(".gt-qz-a"); body.scrollTop = a && body.scrollHeight > body.clientHeight ? a.offsetTop - body.offsetTop : 0; } else if (on && on.scrollIntoView) on.scrollIntoView({ block: "nearest" });
+    const key = Q.i + Q.phase; if (Q.shownKey !== key) { Q.shownKey = key; body.scrollTop = 0; } // a new question, or just answered: from the top (the question stays pinned there)
+    const on = body.querySelector(".on"), qh = body.querySelector(".gt-qz-q"), pin = qh && Q.phase !== "end" ? qh.offsetHeight + 4 : 0;
+    if (on && Q.phase !== "shown") { const top = on.offsetTop, bot = top + on.offsetHeight; if (top - pin < body.scrollTop) body.scrollTop = Math.max(0, top - pin); else if (bot > body.scrollTop + body.clientHeight) body.scrollTop = bot - body.clientHeight; } // keep the picked answer in view, below the question
   }
   pqAnswer() {
     const Q = this.pq, q = Q.qs[Q.i], ok = Q.opts[Q.sel][1], R = this.pack.settings.rewards, rec = this.quizRec(Q.p);
@@ -11469,7 +11473,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 128";
+const VERSION = "2026-11-18 cards 129";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
