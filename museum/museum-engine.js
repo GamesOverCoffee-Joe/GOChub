@@ -2526,8 +2526,8 @@ const TEXT = {
   "tut.notesSub":    { g: "Tutorial", l: "The field notes page in the wrap-up (one line under the title)", by: "claude", v: [["Today's training"]] },
   "tut.wrapEnd":     { g: "Tutorial", l: "The usher, after the field notes", by: "claude", v: [["Not bad for a first day. Head out through the glass door when you're ready."]] },
   "tut.did.recommend": { g: "Tutorial", l: "Field notes: the Thinking Room", by: "claude", v: [["Recommended a game to a visitor."]] },
-  "tut.signs.broke":  { g: "Tutorial", l: "The usher, as the door signs scramble (then his remote clicks)", by: "claude", v: [["Oh, hang on. The door signs are doing the thing again."]] },
-  "tut.signs.click":  { g: "Tutorial", l: "The usher's remote (a toast, each click)", by: "claude", v: [["*click*"]] },
+  "tut.signs.broke":  { g: "Tutorial", l: "The usher, with the door signs scrambled (then his remote clicks)", by: "claude", v: [["Oh, hang on. The door signs are doing the thing again."]] },
+  "tut.signs.click":  { g: "Tutorial", l: "The usher's remote (a toast)", by: "claude", v: [["*click*"]] },
   "tut.signs.fixed":  { g: "Tutorial", l: "The usher, once the signs come on properly", by: "claude", v: [["There we go.", "We've been having a door problem for a while."]] },
   "tut.usher.other":  { g: "Tutorial", l: "The usher, back from one room with the other still to go", by: "claude", v: [["Nice work!", "Now head through the other door."]] },
   "tut.thinkLocked":  { g: "Tutorial", l: "The Thinking Room's door, before he's found something to read", by: "claude", v: [["It's locked.", "Maybe help him find something to read first."]] },
@@ -2720,7 +2720,7 @@ const TEXT = {
   "visitor.leaving":   { g: "Visitors", l: "Talking to a visitor on their way out (a wave, no chat; one at random)", by: "claude", v: [["They give you a little wave. They're on their way out."], ["Heading home. They wave on the way past."]] },
   "shop.ringing":      { g: "Gift shop", l: "The shopkeeper, while a visitor's paying at the counter", by: "claude", v: [["One sec! Just ringing someone up."], ["Be right with you. Somebody finally made up their mind."]] },
   "tv.ask":            { g: "Staff", l: "The staff room TV (then Watch for a bit / Not now)", by: "claude", v: [["The staff room TV. A soap opera's on. Watch for a bit?"]] },
-  "tv.soap":           { g: "Staff", l: "Watching the soap opera on the staff room TV (picks one at random)", by: "claude", v: [["A man in a lab coat grabs a woman by the shoulders.", "\"Brenda. The baby... isn't mine.\"", "\"It's not yours, Chad. It's your twin brother's.\"", "\"I don't HAVE a twin brother!\"", "Dramatic music. Commercial break."], ["A woman throws a glass of wine across a fancy restaurant.", "\"You were dead, Rodrigo! I went to your funeral!\"", "\"Amnesia, Valentina. Six years of amnesia.\"", "...", "Nobody else in the restaurant reacts."], ["Two people whisper in a hospital hallway.", "\"If Doctor Steele finds out about the will...\"", "\"He won't. Not unless the evil twin talks.\"", "Thunder. Indoors. In the hallway.", "...You're kind of invested now."], ["It's a commercial for a mattress store.", "\"Everything must go! Again!\"", "...", "The soap comes back on. Someone's slapping someone. You missed why."]] },
+  "tv.soap":           { g: "Staff", l: "Watching the soap opera on the staff room TV (picks one at random)", by: "claude", v: [["A man in a lab coat grabs a woman by the shoulders.", "\"Brenda. The baby... isn't mine.\"", "\"It's not yours, Chad. It's your twin brother's.\"", "\"I don't HAVE a twin brother!\"", "Dramatic music. Commercial break."], ["A woman throws a glass of wine across a fancy restaurant.", "\"You were dead, Rodrigo! I went to your funeral!\"", "\"Amnesia, Valentina. Six years of amnesia.\"", "...", "Nobody else in the restaurant reacts."], ["Two people whisper in a hospital hallway.", "\"If Doctor Steele finds out about the will...\"", "\"He won't. Not unless the evil twin talks.\"", "Thunder. Indoors. In the hallway.", "...You're kind of invested now."], ["The soap cuts to a news anchor at a desk.", "\"Breaking news. An inmate has escaped from the jail at the top of Mount Grimley.\"", "\"He is currently skiing down the mountain, dodging police at every turn.\"", "\"He is also streaming the whole thing live. He has gained four hundred thousand followers in the last ten minutes.\"", "\"...Police are asking the public to stop sending him tips.\"", "The soap comes back on. Someone's slapping someone. You missed why."]] },
   "tv.watcher":        { g: "Staff", l: "Talking to the member watching the staff room TV (they don't look away; one at random)", by: "claude", v: [["Shh shh shh. Chad just found out about the twin.", "...There's a twin."], ["Okay, so Valentina was dead, but she had amnesia. Six years of it.", "Don't ask me how that works. Just go with it."], ["Doctor Steele is EVIL. I've known since episode one.", "Well. Since Tuesday. But still."], ["This is the best part of my week and I will not be taking questions.", "...Okay, one question.", "No, I don't know why it's raining indoors."]] },
   "opt.hi":            { g: "Menu options", l: "Talking to a visitor: chat", v: [["Say hi"]] },
   "opt.recommend":     { g: "Menu options", l: "Talking to a visitor (or a curious visitor): recommend what you're thinking of", v: [["Recommend"]] },
@@ -6092,7 +6092,7 @@ class Game {
     this.say(U(this.tx("tut.signs.broke")), () => {
       const u = this.room.npcs.find(n => n.usher); this.mode = "busy"; let k = 0;
       const click = () => { if (!this.tut) return; k++; if (u) u.pose = { kind: "busy", t0: this.t, dur: 30 }; this.showLoc(this.tx("tut.signs.click")[0]); t.signT = this.t;
-        if (k < 3) { setTimeout(click, 750); return; } t.signs = "on"; setTimeout(() => { if (!this.tut) return; if (this.mode === "busy") this.mode = "walk"; this.say(U(this.tx("tut.signs.fixed")), go); }, 900); };
+        t.signs = "on"; setTimeout(() => { if (!this.tut) return; if (this.mode === "busy") this.mode = "walk"; this.say(U(this.tx("tut.signs.fixed")), go); }, 900); }; // one click does it (Joe 10/20)
       setTimeout(click, 500);
     });
   }
@@ -6229,7 +6229,7 @@ class Game {
     if (e.announce) { // the last part: the closing announcement, from the office
       if (t.step === "lights" || t.step === "wrap" || t.step === "done") say("intercom.again");
       else if (t.step !== "closing") say("tut.intercomEarly");
-      else this.choose(this.tx("intercom.ask").join(" "), ["Yes", "Not yet"], i => { if (i !== 0) return; this.say(this.tx("intercom.announce"), () => { t.step = "lights"; this.tutDid("announce"); const f = t.people.trainer, B = this.rooms.tut_room2; if (f) { f.gone = true; if (B) B.npcs = B.npcs.filter(n => n !== f); } }); }); // and Fern goes home after the announcement
+      else this.choose(this.tx("intercom.ask").join(" "), ["Yes", "Not yet"], i => { if (i !== 0) return; this.say(this.tx("intercom.announce"), () => { t.step = "lights"; this.tutDid("announce"); const f = t.people.trainer, B = this.rooms.tut_room2; if (f) { f.gone = true; if (B) B.npcs = B.npcs.filter(n => n !== f); } const w = t.people.anxious, K = this.rooms.tut_think; if (w) { w.gone = true; if (K) K.npcs = K.npcs.filter(n => n !== w); } }); }); // and Fern and Wes go home after the announcement (Joe 10/20)
       return true;
     }
     if (e.lights) { // then the lights in the three back rooms
@@ -9213,7 +9213,7 @@ class Game {
      The idea stays until you pick another, fades when you leave its room, and isn't saved. No rewards. */
   newWill() { const w = {}; for (const k of RECO_KINDS) w[k] = Math.floor(Math.random() * 5); return w; } // exhibits, seats, the café, throwing a cup away, photos
   nextVno() { return (this.vnoNext = (this.vnoNext || 0) + 1); } // a visitor number (the curator's Preview shows it)
-  canThink() { return this.mode === "walk" && (!this.tut || !!this.tut.thinkOn) && !this.trans && !this.cine && !this.player.moving && !this.askingMode && !this.handoff && !this.curator && !!this.room; }
+  canThink() { return this.mode === "walk" && (!this.tut || (!!this.tut.thinkOn && !!this.room && this.room.id === "tut_think")) && !this.trans && !this.cine && !this.player.moving && !this.askingMode && !this.handoff && !this.curator && !!this.room; }
   thinkFilter(on) { // the four Game Boy greens (the darkest milked up a little, Joe 10/19), as an SVG filter on the game screen: no pixels read back, nothing per frame
     if (typeof document === "undefined" || !this.canvas) return;
     if (on && !document.getElementById("goq-gb")) { const d = document.createElement("div"); d.style.cssText = "position:absolute;width:0;height:0;overflow:hidden";
@@ -11016,10 +11016,10 @@ class Game {
   /* The lit bits out front of the screening nook, drawn over the room's lighting so they glow: the marquee bulbs and the
      red letters on the NOW PLAYING sign (the title scrolls when it's too long for the board). */
   /* The tutorial office's door signs (Joe 10/20): red LEDs on black, like the NOW PLAYING board but still. Scrambled (random
-     LEDs, flickering) until the usher's remote sorts them out; each click shakes them up again first. */
+     LEDs, stuck) until one click of the usher's remote sorts them out. */
   drawDoorSigns(r, cx, cy) {
     const D = ROOMS[r.id] && ROOMS[r.id].doorSigns; if (!D || !D.length) return;
-    const ctx = this.ctx, t = this.tut, broken = t && t.signs !== "on", seed = Math.floor(this.t / 6);
+    const ctx = this.ctx, t = this.tut, broken = t && t.signs !== "on", seed = 7; // scrambled: one stuck frame, not flickering (Joe 10/20)
     for (const d of D) {
       const txt = String(d.text || "").toUpperCase(), cols = txt.length * 4 - 1, w = cols + 4, h = 9, x0 = Math.round(d.x * T + 8 - w / 2 - cx), y0 = Math.round(T - 5 - cy);
       ctx.fillStyle = "#3a3440"; ctx.fillRect(x0 - 1, y0 - 1, w + 2, h + 2); ctx.fillStyle = "#0a080c"; ctx.fillRect(x0, y0, w, h);
@@ -11663,7 +11663,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 136";
+const VERSION = "2026-11-18 cards 137";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
