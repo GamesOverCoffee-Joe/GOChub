@@ -407,5 +407,3 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Tutorial | Last Bus Home / Grandpa's Garage Sale: the developer's reaction (back) | You noticed the last passenger. I spent more time on that one line than on the whole bus. / You called it entrepreneurial. Honestly? Grandpa would have loved that. |
 | Tutorial | Field notes: the Thinking Room | Recommended a game to a visitor. |
 | Tutorial | The vending machine: ask / not enough tokens / bought / hands full | A coffee vending machine. One coffee, {n} tokens. / You don't have {n} tokens. ⏎ The machine hums at you anyway. / *clunk* ...*whirrr* ...*drip* ⏎ A coffee. It's hot, technically. / Your hands are full. |
-| Tutorial | The full trash: a cup's out / cup's in / tossing a cup / holding a coffee | The trash can's packed full. A cup popped out of the top and landed on the floor. / The trash can's packed full. The cup's back in. For now. / You push the cup back into the trash. It stays. ⏎ ...For now. / You're not done with that yet. |
-| Tutorial | Picking up the popped cup / it pops out again | You pick up the cup. It's empty, at least. / *pop* |

@@ -2536,13 +2536,7 @@ const TEXT = {
   "tut.vend.ask":     { g: "Tutorial", l: "The Thinking Room's coffee vending machine ({n}: its price in tokens; then Buy one / Not now)", by: "claude", v: [["A coffee vending machine. One coffee, {n} tokens."]] },
   "tut.vend.broke":   { g: "Tutorial", l: "The vending machine, without enough tokens ({n})", by: "claude", v: [["You don't have {n} tokens.", "The machine hums at you anyway."]] },
   "tut.vend.got":     { g: "Tutorial", l: "Buying a vending machine coffee", by: "claude", v: [["*clunk* ...*whirrr* ...*drip*", "A coffee. It's hot, technically."]] },
-  "tut.vend.hands":   { g: "Tutorial", l: "The vending machine or the popped-out cup, with your hands full", by: "claude", v: [["Your hands are full."]] },
-  "tut.bin.look":     { g: "Tutorial", l: "The Thinking Room's full trash can, with a cup popped out of it", by: "claude", v: [["The trash can's packed full. A cup popped out of the top and landed on the floor."]] },
-  "tut.bin.lookIn":   { g: "Tutorial", l: "The full trash can, with the cup back in", by: "claude", v: [["The trash can's packed full. The cup's back in. For now."]] },
-  "tut.bin.toss":     { g: "Tutorial", l: "Pushing an empty cup into the full trash can", by: "claude", v: [["You push the cup back into the trash. It stays.", "...For now."]] },
-  "tut.bin.full":     { g: "Tutorial", l: "The full trash can, holding a coffee that isn't finished", by: "claude", v: [["You're not done with that yet."]] },
-  "tut.cup.pick":     { g: "Tutorial", l: "Picking up the cup that popped out of the trash", by: "claude", v: [["You pick up the cup. It's empty, at least."]] },
-  "tut.cup.pop":      { g: "Tutorial", l: "The cup popping out of the full trash again (a toast)", by: "claude", v: [["*pop*"]] },
+  "tut.vend.hands":   { g: "Tutorial", l: "The vending machine, with your hands full", by: "claude", v: [["Your hands are full."]] },
   "tut.anx.again":    { g: "Tutorial", l: "The anxious visitor, before you've got something in mind", by: "claude", v: [["Picture yourself walking over to something with Select.", "Then come tell me about it."]] },
   "tut.anx.thanks":   { g: "Tutorial", l: "The anxious visitor, at the game you recommended (the door unlocks)", by: "claude", v: [["Oh, this one looks perfect.", "Thank you. I really just needed someone to pick.", "I think I heard the door unlock, by the way."]] },
   "tut.anx.after":    { g: "Tutorial", l: "The anxious visitor, after that", by: "claude", v: [["I'm going to read this one twice. Just in case."]] },
@@ -6031,7 +6025,7 @@ class Game {
     this.tut = { step: "intro", sides: {}, replay: !!replay, did: [], people: {
       trainer: this.tutPerson("trainer", "visitor_b", "#3a9a98", "tut_room2", tx, ty),
       trainee: this.tutPerson("trainee", "visitor_c", "#e8c040", "tut_room3", nx, ny, { tutAsk: true }),
-      anxious: this.tutPerson("anxious", "visitor_a", "#7a5ab8", "tut_think", ...TUT_THINK.anxious, { will: Object.fromEntries(RECO_KINDS.map(k => [k, 4])), vno: 1, thinkBubble: true }) }, signs: "scramble", cup: true }; // cup: one's popped out of the Thinking Room's trash // (Joe 10/20) he's game for anything you suggest
+      anxious: this.tutPerson("anxious", "visitor_a", "#7a5ab8", "tut_think", ...TUT_THINK.anxious, { will: Object.fromEntries(RECO_KINDS.map(k => [k, 4])), vno: 1, thinkBubble: true }) }, signs: "scramble" }; // (Joe 10/20) he's game for anything you suggest
     for (const k of TUT_ROOMS) if (this.rooms[k]) this.rooms[k].npcs = this.rooms[k].npcs.filter(n => !n.tutId);
     this.tutDress(); this.closeAll();
     this.warp("tut_office", ...ROOMS.tut_office.spawn, () => { if (!this.tut) return; this.path = ["up", "up", "up"]; this.pathAct = null; this.tut.cut = () => this.tutUsher(); });
@@ -6115,11 +6109,7 @@ class Game {
       this.say(U(this.tx("tut.tokens")), () => { this.earn(TUT_TOKENS, true); this.afterCoin = () => this.say(U([...this.tx("tut.exchange"), ...this.tx("tut.notesIntro")]), notes); });
     });
   }
-  tutBinAt() { const K = this.rooms.tut_think, k = K && Object.keys(K.events).find(k => K.events[k].tutBin || K.events[k].trash); return k ? k.split(",").map(Number) : [0, 0]; } // the Thinking Room's trash can (wherever it's been put)
-  tutCupAt() { const K = this.rooms.tut_think, [bx, by] = this.tutBinAt(); if (!K) return [-1, -1]; // the floor tile the cup pops out onto: below the can, else beside it
-    for (const [dx, dy] of [[0, 1], [1, 0], [-1, 0], [0, -1]]) { const x = bx + dx, y = by + dy; if (K.solid[y] && K.solid[y][x] === false && !K.events[x + "," + y]) return [x, y]; } return [-1, -1]; }
-  /* The Thinking Room's vending machine and full trash, for you (Joe 10/20): a coffee costs tokens; the cup that keeps popping out
-     goes back in the trash, by you or by Wes, and pops out again a little later. */
+  /* The Thinking Room's vending machine, for you (Joe 10/20): a coffee costs tokens. (Its trash can is a regular one.) */
   tutThinkThing(e) {
     const t = this.tut;
     if (e.tutVend) {
@@ -6131,17 +6121,7 @@ class Game {
         this.drink = { kind: 0, name: "Vending machine coffee", sips: 0, color: "", iced: false }; this.sipClock = 240; this.say(this.tx("tut.vend.got")); }, 1);
       return true;
     }
-    if (e.tutBin) {
-      if (this.drink && this.drink.empty) { this.drink = null; if (t && !t.cupT) t.cupT = this.t; this.say(this.tx("tut.bin.toss")); return true; }
-      if (this.drink) { this.say(this.tx("tut.bin.full")); return true; }
-      this.say(this.tx(t && t.cup ? "tut.bin.look" : "tut.bin.lookIn")); return true;
-    }
     return false;
-  }
-  tutCupPick() { // A on the popped-out cup
-    const t = this.tut; if (!t || !t.cup) return false;
-    if (this.drink || this.carryBox || this.carryItem || this.trashBag != null) { this.say(this.tx("tut.vend.hands")); return true; }
-    t.cup = false; t.cupT = this.t; this.drink = { kind: 0, name: "Empty cup", sips: 4, empty: true, color: "", iced: false }; this.say(this.tx("tut.cup.pick")); return true;
   }
   tutThinkDone(n) { // the Thinking Room's done: he found something to read, and the door unlocks
     const t = this.tut; if (!t || t.thinkDone) return; t.thinkDone = true; this.tutDid("recommend"); n.tell = null; n.still = true; n.recoIdea = null;
@@ -6156,7 +6136,6 @@ class Game {
       this.say(this.tutSaid(tr.member, this.tx("tut.trainer.droop")));
     }
     const n = t.people.trainee; if (n && !n.follow && !n.gone && this.t % 150 === 0) n.dir = ["down", "left", "right", "up"][(this.t / 150) % 4];
-    if (!t.cup && t.cupT && this.t - t.cupT > 900) { t.cup = true; t.cupT = 0; if (this.room.id === "tut_think") { const [bx, by] = this.tutBinAt(); this.popFx = (this.popFx || []).concat([{ t0: this.t, x: bx * T + 8, y: by * T - 4 }]); this.showLoc(this.tx("tut.cup.pop")[0]); } } // the cup pops out again
     const a = t.people.anxious; // the anxious visitor paces a small patch (Joe 10/20), and comes back to it after a recommendation
     if (a && this.room.id === "tut_think" && this.room.npcs.includes(a) && !t.thinkDone && !a.reco && !a.recoAt && !a.askFx && !a.chat && !a.moving && !(a.pose && this.t - a.pose.t0 < a.pose.dur)) {
       if (a.sitting) { if (!a.sitT) a.sitT = this.t; if (this.t - a.sitT < 360) return; a.sitT = 0; if (a.sitFrom) [a.x, a.y] = a.sitFrom; a.sitting = false; a.seat = null; } // a seat you recommended: a little sit, then back up
@@ -6215,7 +6194,7 @@ class Game {
       }
       return true;
     }
-    if (e.tutVend || e.tutBin) return this.tutThinkThing(e);
+    if (e.tutVend) return this.tutThinkThing(e);
     if (e.usher || e.guestbook) { if (t) { const u = this.room.npcs.find(n => n.usher); if (u) u.dir = "down"; this.tutUsher(); } else this.say(["The training desk."]); return true; }
     if (!t) return false;
     if (e.tutSign) { // room A: reading it is the whole task; the chest opens, and the barrier with it
@@ -9266,8 +9245,7 @@ class Game {
     if (x < 0 || y < 0 || x >= r.w || y >= r.h) return null;
     const e = r.events[x + "," + y] || {}, at = { room: r.id, x, y };
     { const ar = (r.props || []).find(p => p.key === "arcade_cabinet" && p.x === x && p.y - 1 === y); if (ar) at.y = ar.y; } // the arcade's top half: the arcade (its lower tile, where you stand beside it)
-    if (e.tutVend) return Object.assign(at, { kind: "vend" }); // the Thinking Room (Joe 10/20): the vending machine, the full trash and the cup that pops out of it
-    if (e.tutBin || (r.id === "tut_think" && (e.trash || (this.tut && this.tut.cup && x === this.tutCupAt()[0] && y === this.tutCupAt()[1])))) return Object.assign(at, { kind: "tutcup" });
+    if (e.tutVend) return Object.assign(at, { kind: "vend" }); // the Thinking Room's vending machine (Joe 10/20)
     if (e.caseAt && e.caseAt.piece) return Object.assign(at, { kind: "exhibit", piece: e.caseAt.piece.id, episode: e.caseAt.piece.kind === "episode" });
     if (e.spot && e.spot.piece && e.spot.state === "wall") return Object.assign(at, { kind: "exhibit", piece: e.spot.piece.id });
     if (e.sit) return Object.assign(at, { kind: "seat" });
@@ -9321,7 +9299,6 @@ class Game {
     };
     if (I.kind === "exhibit") { if (roll("exhibit")) go(false, "exhibit"); else no(); return; }
     if (I.kind === "vend") { if (full) { no("busy"); return; } if (drink) n.drink = null; go(false, "vend"); return; } // a coffee from the machine
-    if (I.kind === "tutcup") { if (full || !(drink || (this.tut && this.tut.cup))) { no("busy"); return; } go(false, "tutcup"); return; } // the popped-out cup (or his own empty one) back in the trash
     { const act = { plant: "help", litter: "help", jam: "help", lights: "mischief", joe: "mischief", cat: "chat" }[I.kind]; if (act) { // doing something you'd do (Joe 10/19)
       if (I.kind === "plant" && !this.isThirsty(I.plant)) { go(true, "other"); return; } // already watered: a puzzled look at it
       if (I.kind === "lights" && (this.closing || this.lightsOff.has(I.key || r.id) || this.visFlick)) { no("busy"); return; }
@@ -9397,8 +9374,6 @@ class Game {
       n.cue = { at: this.t + 80, fn: () => { if (!this.isThirsty(R.plant)) return; this.progress.watered[R.plant] = todayISO(); this.saveProgress(); sparkle(R.x, R.y); n.pose = { kind: "smile", t0: this.t, dur: 80 }; n.hopT = this.t; } }; return true; } // watered for the day (so that one's not yours to water)
     if (R.kind === "vend") { if (n.drink && !n.drink.empty) { n.pose = { kind: "busy", t0: this.t, dur: 90 }; return true; } // the Thinking Room: he buys a coffee
       n.timer = 160; n.cue = { at: this.t + 50, fn: () => { n.drink = { kind: 0, sips: 0, empty: false, t: 240, iced: false, color: "" }; sparkle(R.x, R.y); n.pose = { kind: "smile", t0: this.t, dur: 80 }; n.hopT = this.t; } }; return true; }
-    if (R.kind === "tutcup") { const T0 = this.tut, had = !!n.drink; if (!had && !(T0 && T0.cup)) { n.pose = { kind: "busy", t0: this.t, dur: 90 }; return true; } // the cup back in the trash (and his own, if he's holding an empty one)
-      n.drink = null; if (T0 && T0.cup) { T0.cup = false; T0.cupT = this.t; } const [bx, by] = this.tutBinAt(); sparkle(bx, by); n.pose = { kind: "pose", t0: this.t, dur: 80 }; n.hopT = this.t; return true; }
     if (R.kind === "litter") { const L = (this.litter && this.litter[r.id]) || [], i = L.findIndex(l => l.x === R.x && l.y === R.y); if (i < 0) { n.pose = { kind: "busy", t0: this.t, dur: 90 }; return true; }
       L.splice(i, 1); cup(); n.pose = { kind: "smile", t0: this.t, dur: 70 }; return true; }
     if (R.kind === "jam") { const J = this.jam; if (!this.isJammed(r.id, R.x, R.y)) { n.pose = { kind: "busy", t0: this.t, dur: 90 }; return true; }
@@ -9609,7 +9584,6 @@ class Game {
     const e = this.room.events[fx + "," + fy]; if (e) { this.runEvent(e); return; }
     const bx = this.sup && this.sup.boxes.find(b => b.room === this.room.id && b.x === fx && b.y === fy); // a delivery box by the garage door
     if (bx) { if (this.carryBox) { this.say(this.tx("supply.hands")); return; } if (this.trashBag != null) { this.say(this.tx("bag.hands")); return; } this.sup.boxes.splice(this.sup.boxes.indexOf(bx), 1); this.carryBox = bx.kind; this.say(this.tx(bx.kind === "cafe" ? "supply.pickCafe" : "supply.pickShop")); return; }
-    if (this.room.id === "tut_think" && this.tut && this.tut.cup && fx === this.tutCupAt()[0] && fy === this.tutCupAt()[1] && this.tutCupPick()) return; // the Thinking Room's popped-out cup
     const L = this.litter && this.litter[this.room.id], li = L ? L.findIndex(l => l.x === fx && l.y === fy) : -1; // litter on the floor in front of you
     if (li >= 0) {
       if (this.trashBag == null) { this.say(this.tx("litter.noBag")); return; } // not with your bare hands
@@ -11529,7 +11503,6 @@ class Game {
     for (const st of r.stairs) this.drawSlot(st.kind === "up" ? "stair_up" : "stair_down", 0, 0, st.x * T - cx, st.y * T - cy);
     this.drawReadBorders(r, cx, cy); // on the floor, under the cases and people
     for (const l of (this.litter && this.litter[r.id]) || []) this.drawSlot("litter", l.k, 0, l.x * T - cx + l.ox, l.y * T - cy + l.oy); // on the floor, under everyone
-    if (r.id === "tut_think" && this.tut && this.tut.cup) this.drawSlot("litter", 0, 0, this.tutCupAt()[0] * T - cx + 1, this.tutCupAt()[1] * T - cy - 3); // the cup that popped out of the full trash
     { const I = this.side && this.side.item; if (I && I.on && I.phase === 1 && I.table && r.id === "staff") this.drawSlot("break_items", I.kind, 0, I.table.x * T - cx, I.table.y * T - 8 - cy); } // the item on the break table
     for (const b of (this.sup && this.sup.boxes) || []) if (b.room === r.id) this.drawSlot("supply_box", b.kind === "cafe" ? 1 : 0, 0, b.x * T - cx, b.y * T - cy); // deliveries waiting by the garage door
     for (const c of r.cases) this.drawCase(c, cx, cy);
@@ -11690,7 +11663,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 135";
+const VERSION = "2026-11-18 cards 136";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
