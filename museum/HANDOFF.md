@@ -2,6 +2,18 @@
 
 Written 2026-10-05. Branch: `experiments-1` (PR #5).
 
+## Mission
+
+> **Joe (10/20):** To create a deeper connection with Games Over Qualia - feeling like you've stepped into a part of GOQ.
+
+The museum is the way in, not the point. Before adding or changing anything, ask whether it does at least one of these:
+
+1. **Teaches the player GOQ:** the games, the episodes, Joe's takes, the in-jokes.
+2. **Lets them pass GOQ on:** recommending, helping curious visitors, trivia.
+3. **Shows them the ripple:** people changing because of what they did.
+
+Recommending is the center: it's what the show does, made into something you can do. Chores and the rest are texture that should feed it. Something with no GOQ flavor (it could be in any museum game) usually needs flavor, not cutting.
+
 ## Pinned for later
 
 Ideas and chores parked on purpose. Nothing here is built yet.

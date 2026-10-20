@@ -6,7 +6,21 @@ A daily rhythm, a volunteer role, and NPCs with their own intentions (and proble
 
 Saved 2026-10-09 so we can pick it up later word for word. Edit freely; mark changes with your initials or a date. Joe's notes are the quoted blocks marked **Joe**. Last edited: Note 09-10-2026 12:20 PM.
 
-**Contents:** Where this came from · Decisions · Phase 1 · Phase 2 · Phase 3 · Phase 4 · Later · In the curator · Joe's notes · Parked ideas
+## **Mission**
+
+> **Joe (10/20):** To create a deeper connection with Games Over Qualia - feeling like you've stepped into a part of GOQ.
+
+The museum is the way in, not the point. Before adding or changing anything, ask whether it does at least one of these:
+
+1. **Teaches the player GOQ:** the games, the episodes, Joe's takes, the in-jokes.
+2. **Lets them pass GOQ on:** recommending, helping curious visitors, trivia.
+3. **Shows them the ripple:** people changing because of what they did.
+
+Recommending is the center: it's what the show does, made into something you can do. Chores and the rest are texture that should feed it. Something with no GOQ flavor (it could be in any museum game) usually needs flavor, not cutting.
+
+---
+
+**Contents:** Mission · Where this came from · Decisions · Phase 1 · Phase 2 · Phase 3 · Phase 4 · Later · In the curator · Joe's notes · Parked ideas
 
 ---
 
