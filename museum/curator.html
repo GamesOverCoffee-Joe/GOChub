@@ -483,7 +483,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 125";
+window.GOQ_WANT = "2026-11-18 cards 126";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -558,6 +558,7 @@ function packOut() {
     if (p.clipUrl) o.clipUrl = p.clipUrl;
     if (p.clipLoop) o.clipLoop = p.clipLoop;
     if (p.hint) o.hint = p.hint;
+    if (p.quiz && p.quiz.length) o.quiz = p.quiz; // its quiz (Joe 10/20)
     if (p.rel) o.rel = p.rel;
     if (p.genre) o.genre = p.genre;
     if (p.blend) o.blend = p.blend;
@@ -2459,6 +2460,17 @@ function answersBox(p) {
   });
   return box;
 }
+/* A piece's quiz (Joe 10/20): questions about the developer's answers. In the game, its WIN TOKENS! button sits under Play and
+   Note on the placard: a token for each question the first time it's right, and a bonus for all of them (Tokens tab). */
+function quizBox(p) {
+  const toText = q => (q || []).map(e => "Q: " + e[0] + "\n+ " + e[1] + e.slice(2).map(w => "\n- " + w).join("")).join("\n\n");
+  const parse = t => t.split(/\n\s*\n/).map(b => { const ls = b.split("\n").map(l => l.trim()).filter(Boolean); const q = ls.find(l => /^q:/i.test(l)), r = ls.find(l => l[0] === "+"), w = ls.filter(l => l[0] === "-");
+    return q && r && w.length ? [q.replace(/^q:\s*/i, ""), r.slice(1).trim(), ...w.slice(0, 2).map(l => l.slice(1).trim())] : null; }).filter(Boolean).slice(0, 5);
+  const a = el("textarea", { rows: 9, placeholder: "Q: What did they want you to feel?\n+ The right answer\n- A wrong one\n- Another wrong one", "aria-label": "Quiz questions" }); a.value = toText(p.quiz);
+  const info = el("small", {}); const count = () => { const n = parse(a.value).length; info.textContent = n ? n + " question" + (n === 1 ? "" : "s") + " (up to 5)" : "No quiz: the button stays hidden."; };
+  a.addEventListener("input", () => { p.quiz = parse(a.value); count(); changed(); }); count();
+  return el("div", { class: "fieldset wide" }, [el("span", { class: "flabel", text: "Quiz" }), el("small", { text: "Questions about what the developer told us (the answers above). One per block, a blank line between: Q: the question, + the right answer, - one or two wrong ones. The game shuffles the answers." }), a, info]);
+}
 let pieceRedraw = null; // set by pieceRow: how a piece's own fields redraw the page they're on (the Pieces tab, or Episode day)
 function genreBox(p) {
   const genres = draft.settings.genres || GOQ.SAMPLE_GENRES;
@@ -2620,6 +2632,7 @@ function renderTokens() {
   sec("Days of the week", [k("boxes", "Monday: all five boxes for the conservator"), k("kid", "Tuesday: the lost kid back to his mom"),
     ...["a common photo", "an uncommon photo", "a rare photo", "the rarest photos"].map((t, i) => num(() => r.artist[i], v => { r.artist[i] = v; }, "Wednesday: the artist, for " + t)),
     k("trivia", "Thursday: each right trivia answer"), k("triviaPerfect", "Thursday: bonus for all five")]);
+  sec("Piece quizzes", [k("quiz", "Each question right (the first time only)", "The WIN TOKENS! button on a placard. Missed ones keep their tokens for another try."), k("quizPerfect", "Bonus for getting a whole quiz right (once per piece)")]);
   wrap.appendChild(el("div", { class: "row" }, [el("button", { type: "button", class: "btn small quiet", text: "Back to the defaults", onclick: () => { draft.settings.rewards = JSON.parse(JSON.stringify(D)); changed({ now: true }); renderTokens(); } })]));
 }
 /* ---------- Cards (Joe 10/11) ----------
@@ -3185,6 +3198,7 @@ function pieceRow(p, i, place, opts) {
     ...placard,
     f("How a visitor would describe it", text("hint", "the one where the clock never ran out but I still rushed"), true, "Visitors say this when they come back to tell you how it went: \"I tried Lantern Keeper, the one where...\" Keep it to one line, in their words."),
     p.kind === "episode" ? answersBox(p) : null,
+    p.kind === "episode" ? quizBox(p) : null,
     p.kind === "episode" ? relBox(p) : null,
     p.kind === "episode" ? genreBox(p) : null,
     p.kind === "episode" ? blendBox(p) : null,

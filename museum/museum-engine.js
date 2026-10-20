@@ -1736,7 +1736,7 @@ const VISITOR_NAMES = ["Ada", "Bea", "Cal", "Dot", "Eli", "Fern", "Gus", "Hana",
 /* Chores that count toward staff points (recommending a visitor the right piece, and closing up, are worth 3). */
 const pts = n => n + " point" + (n === 1 ? "" : "s");
 /* Tokens each thing earns (curator, Tokens tab). Staff points (POINT_KINDS) are separate and don't change. */
-const REWARD_DEFAULTS = { dusted: 1, straightened: 1, watered: 1, mugs: 1, wiped: 1, litter: 1, supplies: 3, tour: 3, item: 3, conservator: 2, helped: 5, helpedName: 3, closings: 3, boxes: 5, kid: 3, artist: [1, 3, 6, 12], trivia: 1, triviaPerfect: 2 };
+const REWARD_DEFAULTS = { dusted: 1, straightened: 1, watered: 1, mugs: 1, wiped: 1, litter: 1, supplies: 3, tour: 3, item: 3, conservator: 2, helped: 5, helpedName: 3, closings: 3, boxes: 5, kid: 3, artist: [1, 3, 6, 12], trivia: 1, triviaPerfect: 2, quiz: 1, quizPerfect: 2 };
 const POINT_KINDS = ["dusted", "straightened", "watered", "mugs", "wiped", "helped", "closings"];
 const chorePoints = k => (k === "helped" || k === "closings" ? 3 : 1);
 const TEST_BADGES = [{ badge: "0001", key: "QQQQQQ", name: "Test Staff" }];
@@ -1821,6 +1821,7 @@ function normalizePiece(p, i) {
     gift: p.gift && str(p.gift.name, 50) ? { name: str(p.gift.name, 50), description: str(p.gift.description, 160), price: Math.max(1, Math.min(99, Math.round(+p.gift.price || 5))) } : null, // and its gift
     episodeTitle: str(p.episodeTitle, 140), cardBlurb: str(p.cardBlurb, 140), noCard: !!p.noCard, cardsFrom: p.cardsFrom === undefined ? "on" : p.cardsFrom === "on" || /^\d{4}-\d{2}-\d{2}$/.test(p.cardsFrom || "") ? p.cardsFrom : "", // its trading card: the episode's title (Cards tab fetches it), a blurb (else the hint), or no card at all
     answers: Array.isArray(p.answers) ? [0, 1, 2].map(i => { const x = p.answers[i]; return str(x && typeof x === "object" ? x.a : x, 6000); }) : ["", "", ""], // the developer's answers to the three questions (ANSWER_QS), for the answer cards (Joe 10/13)
+    quiz: Array.isArray(p.quiz) ? p.quiz.filter(e => Array.isArray(e) && e.length >= 3 && e.slice(0, 3).every(x => str(x, 200))).map(e => e.slice(0, 4).map(x => str(x, 200)).filter(Boolean)).slice(0, 5) : [], // its quiz (Joe 10/20): [question, right answer, wrong, wrong?] each
     hint: str(p.hint, 160), pick: !!p.pick, rel: str(p.rel, 30), genre: str(p.genre, 30), blend: str(p.blend, 30), // blend: a second category it also belongs to
     colors: colors.length >= 2 ? colors : ["#f0ecf8", "#a898d0", "#584a88", "#1a1430"],
     style: STYLES.includes(p.style) ? p.style : STYLES[strSeed(str(p.title, 80) || String(i)) % STYLES.length],
@@ -2494,6 +2495,16 @@ const TEXT = {
   "thu.ask":           { g: "Days of the week", l: "Thursday: the barista at the counter, before you've played (then the drink menu)", v: [["Yo! It's trivia night! If You wanna play, grab a seat. What can I get you?"]] },
   "thu.askRushed":    { g: "Days of the week", l: "Thursday: the barista at the counter, before you've played, while she's stressed (her supply box is still downstairs; then the drink menu)", by: "claude", v: [["Trivia's tonight, and I can't even think about that right now.", "What can I get you?"]] },
   "thu.seat":          { g: "Days of the week", l: "Thursday: sitting down in the empty seat at the trivia tables (then Play / Not now)", v: [["Okay! Who's ready for some GOQ trivia?", "5 questions. 10 seconds per question. Ready?", "Go!"]] },
+  "quiz.btn":          { g: "Quizzes", l: "A piece's quiz button, while it still has tokens to win (one line, short)", by: "claude", v: [["WIN TOKENS!"]] },
+  "quiz.btnDone":      { g: "Quizzes", l: "A piece's quiz button once you've won everything it has (one line, short)", by: "claude", v: [["QUIZ \u2713"]] },
+  "quiz.intro":        { g: "Quizzes", l: "Starting a piece's quiz ({title}, {n}: how many questions)", by: "claude", v: [["Pop quiz! {n} questions about what the developers of {title} told us.", "Get them right for tokens."]] },
+  "quiz.introDone":    { g: "Quizzes", l: "Starting a quiz you've already aced ({title}, {n})", by: "claude", v: [["You already aced this one. No tokens left in it, but go for it."]] },
+  "quiz.right":        { g: "Quizzes", l: "A right answer ({answer})", by: "claude", v: [["That's right!"]] },
+  "quiz.wrong":        { g: "Quizzes", l: "A wrong answer ({answer}: the right one)", by: "claude", v: [["Not quite. It was \"{answer}.\""]] },
+  "quiz.perfect":      { g: "Quizzes", l: "The end, all right ({n}, {total})", by: "claude", v: [["{n} for {total}! You really read that placard."]] },
+  "quiz.done":         { g: "Quizzes", l: "The end, some wrong ({n}: right answers, {total})", by: "claude", v: [["{n} out of {total}."]] },
+  "quiz.won":          { g: "Quizzes", l: "Tokens won ({tokens})", by: "claude", v: [["You won {tokens} tokens!"]] },
+  "quiz.retry":        { g: "Quizzes", l: "Missed some, with tokens still to win", by: "claude", v: [["Give the developer's side another read and try again. The ones you missed still have tokens in them."]] },
   "thu.right":         { g: "Days of the week", l: "Thursday: a right answer", v: [["Correct!"]] },
   "thu.wrong":         { g: "Days of the week", l: "Thursday: a wrong answer (someone at a café table answers next; {answer}: the right one)", v: [["Wrong! Who else?"]] },
   "thu.time":          { g: "Days of the week", l: "Thursday: out of time (someone at a café table answers next; {answer})", v: [["Time's up!"]] },
@@ -2587,6 +2598,7 @@ const TEXT = {
   "shop.ringing":      { g: "Gift shop", l: "The shopkeeper, while a visitor's paying at the counter", by: "claude", v: [["One sec! Just ringing someone up."], ["Be right with you. Somebody finally made up their mind."]] },
   "tv.ask":            { g: "Staff", l: "The staff room TV (then Watch for a bit / Not now)", by: "claude", v: [["The staff room TV. A soap opera's on. Watch for a bit?"]] },
   "tv.soap":           { g: "Staff", l: "Watching the soap opera on the staff room TV (picks one at random)", by: "claude", v: [["A man in a lab coat grabs a woman by the shoulders.", "\"Brenda. The baby... isn't mine.\"", "\"It's not yours, Chad. It's your twin brother's.\"", "\"I don't HAVE a twin brother!\"", "Dramatic music. Commercial break."], ["A woman throws a glass of wine across a fancy restaurant.", "\"You were dead, Rodrigo! I went to your funeral!\"", "\"Amnesia, Valentina. Six years of amnesia.\"", "...", "Nobody else in the restaurant reacts."], ["Two people whisper in a hospital hallway.", "\"If Doctor Steele finds out about the will...\"", "\"He won't. Not unless the evil twin talks.\"", "Thunder. Indoors. In the hallway.", "...You're kind of invested now."], ["It's a commercial for a mattress store.", "\"Everything must go! Again!\"", "...", "The soap comes back on. Someone's slapping someone. You missed why."]] },
+  "tv.watcher":        { g: "Staff", l: "Talking to the member watching the staff room TV (they don't look away; one at random)", by: "claude", v: [["Shh shh shh. Chad just found out about the twin.", "...There's a twin."], ["Okay, so Valentina was dead, but she had amnesia. Six years of it.", "Don't ask me how that works. Just go with it."], ["Doctor Steele is EVIL. I've known since episode one.", "Well. Since Tuesday. But still."], ["This is the best part of my week and I will not be taking questions.", "...Okay, one question.", "No, I don't know why it's raining indoors."]] },
   "opt.hi":            { g: "Menu options", l: "Talking to a visitor: chat", v: [["Say hi"]] },
   "opt.recommend":     { g: "Menu options", l: "Talking to a visitor (or a curious visitor): recommend what you're thinking of", v: [["Recommend"]] },
   "opt.forget":        { g: "Menu options", l: "Talking to someone on their way to what you recommended: call it off", v: [["Forget it"]] },
@@ -4170,8 +4182,10 @@ class Game {
 .gt-rd-pre .gt-rd-body{white-space:pre-wrap}
 .gt-rd-links button.note{display:block;text-align:center;font-family:var(--pixel, monospace);font-size:calc(5px * var(--s));line-height:1;color:#181820;background:#f0c040;padding:calc(3px * var(--s)) calc(4px * var(--s));border:calc(1px * var(--s)) solid #181820;border-radius:calc(1px * var(--s));box-shadow:0 calc(1px * var(--s)) 0 #181820;white-space:nowrap;cursor:pointer;margin:0}
 .gt-rd-links.three{gap:calc(1px * var(--s))}
-.gt-rd-links.three a,.gt-rd-links.three button.note{padding:calc(2px * var(--s)) calc(4px * var(--s))} /* three buttons fit beside the picture */
+.gt-rd-links.three a,.gt-rd-links.three button.note,.gt-rd-links.three button.quiz{padding:calc(2px * var(--s)) calc(4px * var(--s))} /* three buttons fit beside the picture */
 .gt-rd-links .sel{outline:calc(1px * var(--s)) solid #181820;outline-offset:calc(1px * var(--s));filter:brightness(1.15)}
+.gt-rd-links button.quiz{display:block;text-align:center;font-family:var(--pixel, monospace);font-size:calc(5px * var(--s));line-height:1;color:#fff8ec;background:#5a3c9a;padding:calc(3px * var(--s)) calc(4px * var(--s));border:calc(1px * var(--s)) solid #181820;border-radius:calc(1px * var(--s));box-shadow:0 calc(1px * var(--s)) 0 #181820;white-space:nowrap;cursor:pointer;margin:0} /* the quiz: purple, so it reads apart from Watch, Play and Note */
+.gt-rd-links button.quiz:hover,.gt-rd-links button.quiz:focus-visible{filter:brightness(1.15);outline:calc(1px * var(--s)) solid #181820}
 .gt-rd-links button.note:hover,.gt-rd-links button.note:focus-visible{filter:brightness(1.1);outline:calc(1px * var(--s)) solid #181820}
 .gt-rd-links a:hover,.gt-rd-links a:focus-visible{filter:brightness(1.15);outline:calc(1px * var(--s)) solid #fff8ec}
 .gt-rd-t{flex:1;min-width:0;font-size:calc(7px * var(--s));line-height:1.35;color:#181820}
@@ -4196,6 +4210,7 @@ class Game {
 .gt-shop-detail{margin:calc(3px * var(--s)) 0 0;padding-top:calc(3px * var(--s));border-top:calc(1px * var(--s)) solid #b0b0c0;color:#303048;min-height:3em}
 .gt-choice{right:0;bottom:calc(48px * var(--s));min-width:calc(80px * var(--s));max-width:calc(236px * var(--s));max-height:calc(110px * var(--s));overflow:auto;padding:0 calc(6px * var(--s));z-index:6}
 .gt-choice-item{position:relative;padding-left:calc(9px * var(--s));cursor:pointer;white-space:normal;line-height:1.5}
+.gt-choice-item.reco{color:#1f7a32}
 .gt-choice-item.never{color:#a02828;border-top:calc(1px * var(--s)) solid #b0b0c0;margin-top:calc(2px * var(--s));padding-top:calc(2px * var(--s))}
 @media (pointer:coarse){.gt-choice-item{padding-top:calc(2px * var(--s));padding-bottom:calc(2px * var(--s))}.gt-shop-row{min-height:calc(15px * var(--s))}}
 .gt-shift .chip{font-size:max(calc(5px * var(--s)), 8px) !important}
@@ -4240,7 +4255,7 @@ class Game {
 .gt-reader.clip .gt-rd-t > :first-child,.gt-reader.clip .gt-rd-t{overflow-wrap:anywhere}
 .gt-reader.clip .gt-rd-tt{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden} /* the pixel font is wide: titles get two lines at most */
 .gt-reader.clip .gt-rd-t small{font-size:calc(4.5px * var(--s));display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden} /* room to show it all: up to two lines (the title, three) */
-.gt-reader.clip .gt-rd-links a,.gt-reader.clip .gt-rd-links button.note{font-size:calc(4.5px * var(--s));padding:calc(2px * var(--s)) calc(2px * var(--s))}
+.gt-reader.clip .gt-rd-links a,.gt-reader.clip .gt-rd-links button.note,.gt-reader.clip .gt-rd-links button.quiz{font-size:calc(4.5px * var(--s));padding:calc(2px * var(--s)) calc(2px * var(--s))}
 .gt-reader.clip .gt-rd-links{gap:calc(2px * var(--s))}
 .gt-reader.clip .gt-rd-links{flex-direction:row;flex-wrap:wrap;margin-left:0}
 .gt-reader.clip .gt-rd-links > *{flex:1}
@@ -4254,7 +4269,7 @@ class Game {
    device's pixel density; older browsers keep the sizes above). */
 .gt-rd-body b{font-size:round(calc(4.5px * var(--s)), var(--pxstep, 8px))}
 .gt-reader.clip .gt-rd-t{font-size:round(calc(6px * var(--s)), var(--pxstep, 8px))}
-.gt-reader.clip .gt-rd-t small,.gt-reader.clip .gt-rd-links a,.gt-reader.clip .gt-rd-links button.note{font-size:round(calc(4.5px * var(--s)), var(--pxstep, 8px))}
+.gt-reader.clip .gt-rd-t small,.gt-reader.clip .gt-rd-links a,.gt-reader.clip .gt-rd-links button.note,.gt-reader.clip .gt-rd-links button.quiz{font-size:round(calc(4.5px * var(--s)), var(--pxstep, 8px))}
 .gt-reader.clip .gt-pick,.gt-rd-foot{font-size:round(down, calc(4.5px * var(--s)), var(--pxstep, 8px))}
 .gt-rd-body b.red{color:#a8322a}
 .gt-closeup img.sketch{filter:grayscale(1) contrast(1.5) brightness(1.15) sepia(.25)}
@@ -4414,13 +4429,17 @@ class Game {
     if (framed) { box.querySelector(".gt-rd-top").appendChild(t); if (spec.pick) head.appendChild(this.pickTag()); } // a piece: the pick tag under the picture, one line, never over it
     else { if (spec.pick) t.appendChild(this.pickTag()); head.appendChild(t); }
     const links = (spec.links || []).filter(l => l[0]);
-    if (links.length || spec.note) {
+    if (links.length || spec.note || spec.quiz) {
       const lw = document.createElement("div"); lw.className = "gt-rd-links"; head.appendChild(lw);
       links.forEach(([href, label, short]) => { const a = document.createElement("a"); a.href = href; a.target = "_blank"; a.rel = "noopener"; a.textContent = (short || label) + " \u2197"; a.setAttribute("aria-label", label + " (opens in a new tab)"); a.title = label + " (opens in a new tab)"; a.className = /watch/i.test(label) ? "watch" : "play"; a.addEventListener("click", e => e.stopPropagation()); lw.appendChild(a); });
       if (spec.note) { // a yellow button under Watch and Play: leave a note on this piece (Up does it too)
         const nb = document.createElement("button"); nb.type = "button"; nb.className = "note"; nb.textContent = spec.frame || spec.clip ? "ADD NOTE +" : "NOTE +";
         nb.setAttribute("aria-label", "Leave a note"); nb.title = "Leave a note for other visitors";
         nb.addEventListener("click", e => { e.stopPropagation(); this.noteFromReader(); }); lw.appendChild(nb);
+      }
+      if (spec.quiz) { // under Note (or Play, before Note is there): the piece's quiz (Joe 10/20)
+        const qb = document.createElement("button"); qb.type = "button"; qb.className = "quiz"; qb.textContent = this.tx(this.quizLeft(spec.quiz) ? "quiz.btn" : "quiz.btnDone").join(" ");
+        qb.setAttribute("aria-label", "Take this piece's quiz"); qb.addEventListener("click", e => { e.stopPropagation(); this.quizFromReader(); }); lw.appendChild(qb);
       }
       if (lw.children.length > 2) lw.classList.add("three");
     }
@@ -4439,7 +4458,7 @@ class Game {
       pages.forEach(p => { if (p.tone === undefined) p.tone = sec.tone || ""; });
     }
     if (!pages.length) pages.push({ label: "", text: "" });
-    const rd = this.rd = { pages, i: 0, done, note: spec.note || null, sel: -1, menu: !!spec.menu }; // note: a piece you can leave a note on (its NOTE button); sel: the highlighted button
+    const rd = this.rd = { pages, i: 0, done, note: spec.note || null, quiz: spec.quiz || null, sel: -1, menu: !!spec.menu }; // note: a piece you can leave a note on (its NOTE button); sel: the highlighted button
     this.renderRead();
     // A font still loading (the pixel font loads the first time it's used: maybe right now): measured with a stand-in, the pages
     // could overflow once it arrives. Lay them out again when it's in, if this placard is still open on its first page (Joe 10/16).
@@ -4467,6 +4486,37 @@ class Game {
     const w = window.open(b.href, "_blank", "noopener"); if (!w && !this.rdOpened) this.showLoc("The browser blocked the new tab. Click " + b.textContent + " to open it.");
   }
   /* The placard's yellow NOTE button: put the placard away and open the note card; whatever came after the placard waits. */
+  /* A piece's quiz (Joe 10/20): questions about what its developers told us, a token for each one you get right the first time,
+     and a bonus for getting them all. Missed ones keep their tokens for another try. */
+  quizRec(p) { const Q = this.progress.quiz || (this.progress.quiz = {}); return Q[p.id] || (Q[p.id] = { m: 0 }); }
+  quizLeft(p) { const r = (this.progress.quiz || {})[p.id] || { m: 0 }; return !r.p || p.quiz.some((q, i) => !(r.m & (1 << i))); }
+  quizFromReader() {
+    const r = this.rd; if (!r || !r.quiz) return;
+    const d = r.done; r.done = null; this.closeRead();
+    this.pieceQuiz(r.quiz, () => { if (d) d(); });
+  }
+  pieceQuiz(p, done) {
+    const qs = p.quiz, rec = this.quizRec(p), R = this.pack.settings.rewards, n = qs.length, left = this.quizLeft(p);
+    const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
+    let i = 0, score = 0, won = 0;
+    const finish = () => {
+      if (score === n && !rec.p) { rec.p = 1; won += R.quizPerfect || 0; }
+      this.progress.tally.quizzes = (this.progress.tally.quizzes || 0) + 1; this.saveProgress();
+      const lines = [...this.tx(score === n ? "quiz.perfect" : "quiz.done", { n: score, total: n })];
+      if (won) lines.push(...this.tx("quiz.won", { tokens: won })); else if (this.quizLeft(p)) lines.push(...this.tx("quiz.retry"));
+      this.say(lines, () => { if (won) this.earn(won, true); if (done) done(); });
+    };
+    const next = () => {
+      const q = qs[i]; if (!q) { finish(); return; }
+      const opts = shuffle(q.slice(1)), right = q[1];
+      this.choose((i + 1) + "/" + n + "  " + q[0], opts, k => {
+        const ok = opts[k] === right;
+        if (ok) { score++; if (!(rec.m & (1 << i))) { rec.m |= 1 << i; won += R.quiz || 0; } }
+        i++; this.say(this.tx(ok ? "quiz.right" : "quiz.wrong", { answer: right }), next);
+      }, -1);
+    };
+    this.say(this.tx(left ? "quiz.intro" : "quiz.introDone", { title: p.title, n }), next);
+  }
   noteFromReader() {
     const r = this.rd; if (!r || !r.note) return;
     const d = r.done; r.done = null; this.closeRead();
@@ -4490,7 +4540,7 @@ class Game {
     const notes = bothRead && (this.online() || !!p.tut); // visitors' notes: only once you've read the other side too (so this is your second), or with the whole piece
     if (notes) { const ns = this.notesFor(p); secs.push(...ns); this.refreshNotes(); } // at the very end, after "Continues on other side"
     this.read({ img: img ? p.image : this.pieceArt(p).toDataURL(), imgClass: img && img.naturalWidth > 160 ? "photo" : "", title: p.title.toUpperCase(), sub: "By " + p.developer,
-      sections: secs, pick: p.pick, frame: true, clip: this.clipOf(p), flip: side === "back", note: notes && !this.curator ? p : null, links: [side !== "front" ? [p.episodeUrl, "Watch the episode", "WATCH"] : [], side !== "back" ? [p.gameUrl, "Play the game", "PLAY"] : []] }, () => {
+      sections: secs, pick: p.pick, frame: true, clip: this.clipOf(p), flip: side === "back", note: notes && !this.curator ? p : null, quiz: !p.tut && p.quiz && p.quiz.length ? p : null, links: [side !== "front" ? [p.episodeUrl, "Watch the episode", "WATCH"] : [], side !== "back" ? [p.gameUrl, "Play the game", "PLAY"] : []] }, () => {
       if (!this.readEnded) return; // closed before the last page: not read yet
       if (onRead) onRead();
       if (side === undefined) { const k = (this.progress.sides || (this.progress.sides = {}))[p.id] || (this.progress.sides[p.id] = {}); if (gold) { k.front = k.back = 1; k.rv = this.reactRev(p); } else k.note = 1; this.saveProgress(); }
@@ -6405,9 +6455,9 @@ class Game {
   optL(id) { return (this.tx("opt." + id)[0] || TEXT["opt." + id].v[0][0]); } // a menu option's words (Words, Menu options)
   renderChoice() {
     const c = this.ch, box = this.el.choice, top = box.scrollTop; box.innerHTML = "";
-    const never = this.optL("never");
+    const never = this.optL("never"), reco = [this.optL("recommend"), "Recommend it"];
     c.options.forEach((o, i) => {
-      const d = document.createElement("div"); d.className = "gt-choice-item" + (i === c.i ? " on" : "") + (o === never ? " never" : ""); // (Joe 10/19: every menu the same; Never mind last, red, under a line)
+      const d = document.createElement("div"); d.className = "gt-choice-item" + (i === c.i ? " on" : "") + (o === never ? " never" : "") + (reco.includes(o) ? " reco" : ""); // (Joe 10/19: every menu the same; Never mind last, red, under a line) (Joe 10/20: Recommend in green)
       d.textContent = o;
       d.addEventListener("click", e => { e.stopPropagation(); c.i = i; this.endChoice(); });
       box.appendChild(d);
@@ -7896,12 +7946,12 @@ class Game {
       return need.every(([x, y]) => seen.has(y * W + x)); };
     const taken = [];
     for (const n of P) {
-      Object.assign(n, { still: true, route: null, goalT: null, moving: false, prog: 0, sitting: false, seat: null, act: null });
+      Object.assign(n, { still: true, route: null, goalT: null, moving: false, prog: 0, sitting: false, seat: null, act: null, actDir: undefined });
       let placed = false;
       while (pool.length && !placed) { const a = pool.shift();
-        if (a.seat) { const at = [a.seat.x, a.seat.y]; if (taken.some(t => t[0] === at[0] && t[1] === at[1])) continue; Object.assign(n, { x: at[0], y: at[1], sitting: true, dir: a.seat.sit }); taken.push(at); n.act = a; placed = true; continue; }
+        if (a.seat) { const at = [a.seat.x, a.seat.y]; if (taken.some(t => t[0] === at[0] && t[1] === at[1])) continue; Object.assign(n, { x: at[0], y: at[1], sitting: true, dir: a.seat.sit, actDir: a.seat.sit }); taken.push(at); n.act = a; placed = true; continue; }
         const sp = a.spots.find(([x, y]) => !taken.some(t => t[0] === x && t[1] === y) && clear([...taken, [x, y]])); if (!sp) continue;
-        n.x = sp[0]; n.y = sp[1]; n.dir = sp[2]; taken.push(sp); n.act = a; placed = true; }
+        n.x = sp[0]; n.y = sp[1]; n.dir = n.actDir = sp[2]; taken.push(sp); n.act = a; placed = true; }
       if (!placed) { const sp = this.freeSpot(r); if (sp && clear([...taken, sp])) { n.x = sp[0]; n.y = sp[1]; taken.push(sp); } } // nothing left to do: somewhere out of the way
       n.homeDir = undefined; n.actT = this.t + 60 + Math.random() * 240;
     }
@@ -8408,9 +8458,9 @@ class Game {
   }
   listPick() { const L = this.list; this.menuRet = null; this.closeList(); L.pick(L.i); }
   /* The microwave runs once per opened museum. It does not go well. */
-  microwaveReact() { // everyone in the room jumps and turns to look; one of them says something; they'll bring it up when you talk to them (Joe 10/12)
+  microwaveReact() { // everyone in the room jumps and turns to look; one of them says something; they'll bring it up when you talk to them (Joe 10/12); the ones standing still turn back after (Joe 10/20)
     const who = this.room.npcs.filter(n => !n.gone && !n.leaving && n !== this.player), m = this.room.props.find(p => p.key === "microwave_counter");
-    who.forEach((n, i) => { n.pose = { kind: "startled", t0: this.t + i * 4, dur: 110 }; n.mwSeen = true; n.mwTold = false; if (m && !n.sitting && !n.moving) n.dir = this.janFace([n.x, n.y], m.x + 1, m.y); n.timer = Math.max(n.timer || 0, 180); });
+    who.forEach((n, i) => { n.pose = { kind: "startled", t0: this.t + i * 4, dur: 110 }; n.mwSeen = true; n.mwTold = false; if (m && !n.sitting && !n.moving) { if (n.still && n.homeDir === undefined) n.homeDir = n.dir; n.dir = this.janFace([n.x, n.y], m.x + 1, m.y); if (n.still) n.faceT = 260; } n.timer = Math.max(n.timer || 0, 180); });
     const sayer = who.find(n => n.member || n.role || n.janitor);
     if (sayer) setTimeout(() => { if (this.room.npcs.includes(sayer)) this.showLoc((sayer.member || (sayer.janitor ? "Janitor" : "")) ? (sayer.member || "Janitor") + ": " + this.tx("microwave.react", null, true).join(" ") : this.tx("microwave.react", null, true).join(" ")); }, 2600);
   }
@@ -9269,6 +9319,7 @@ class Game {
     }
     if (npc && npc.janitor && this.trashBag) { this.faceYou(npc, 240); const k = this.trashBag; this.trashBag = null; for (let i = 0; i < k; i++) this.count("litter"); this.say(this.tx("jan.takes", { n: k })); return; } // your bag, for him to deal with
     if (npc && npc.mwSeen && !npc.mwTold) { npc.mwTold = true; this.faceYou(npc, 240); this.say(this.tx("microwave.chat").map(pg => (npc.member ? npc.member + ": " : npc.janitor ? "Janitor: " : "") + pg)); return; } // they were there when it went off
+    if (npc && npc.patron && npc.act && npc.act.what === "tv") { this.say(this.tx("tv.watcher").map((pg, i) => (i === 0 && npc.member ? npc.member + ": " : "") + pg)); return; } // glued to the soap: talks about it without looking away (Joe 10/20)
     if (npc) { npc.timer = 180; if (!this.deskStaff(npc) && !npc.sitting && !this.facingWall(npc)) this.faceYou(npc, 240); if (npc.patrol) npc.pause = 120; this.talkTo(npc); return; }
     const e = this.room.events[fx + "," + fy]; if (e) { this.runEvent(e); return; }
     const bx = this.sup && this.sup.boxes.find(b => b.room === this.room.id && b.x === fx && b.y === fy); // a delivery box by the garage door
@@ -9323,7 +9374,7 @@ class Game {
       if (n.moving) { this.advance(n); continue; }
       if (n.aside) { this.stepAside(n); continue; }
       if (n.pace) { this.paceStep(n); continue; } // the barista, rushed off her feet
-      if (n.act && n.patron && this.t >= n.actT && !(n.pose && this.t - n.pose.t0 < n.pose.dur)) { n.actT = this.t + 300 + Math.random() * 420; n.pose = { kind: n.act.pose, t0: this.t, dur: 70 }; } // doing their thing (staffActs)
+      if (n.act && n.patron && this.t >= n.actT && !(n.pose && this.t - n.pose.t0 < n.pose.dur) && (n.actDir === undefined || n.dir === n.actDir)) { n.actT = this.t + 300 + Math.random() * 420; n.pose = { kind: n.act.pose, t0: this.t, dur: 70 }; } // doing their thing (staffActs), only while facing it (Joe 10/20)
       if (n.still) { if (n.faceT > 0 && this.mode === "walk" && --n.faceT <= 0 && n.homeDir !== undefined) { n.dir = n.homeDir; n.homeDir = undefined; } continue; }
       if (n.patrol) { this.patrol(n); continue; }
       if (n.bumpT > 0) n.bumpT--;
@@ -11252,7 +11303,7 @@ class Game {
       if (c === this.player && this.asleep && c.sitting && this.t % 120 < 90) { const zy = Math.floor((this.t % 120) / 30); ctx.fillStyle = "#f8f8f0"; ctx.font = "6px monospace"; ctx.fillText("z", sx + 12 + zy, sy - zy * 3); }
       if (c.tutId === "trainer" && this.tut && !this.tut.watered && !this.full) { ctx.fillStyle = "#fffbe8"; const dy = Math.floor(this.t / 30) % 2; for (let i = 0; i < 3; i++) if ((this.t / 20 | 0) % 4 > i) ctx.fillRect(sx + 4 + i * 3, sy - 4 - dy, 2, 2); } // "..." over her head, staring at the plant
       const bub = c.leaving || this.full ? -1 : c.tutId ? (c.tutAsk && !c.follow ? 0 : -1) : c.back ? 1 : -1; // (curious visitors: their thought bubble, drawThinking) // "?" curious, "!" back to tell you how it went
-      if (c.react && !this.full) this.drawReaction(c, sx, sy);
+      if (c.react && !this.full) bubbles.push(() => { if (c.react) this.drawReaction(c, sx, sy); }); // over the cases' tops too (Joe 10/20: the heart went under the exhibit)
       if (c.pose && !this.full) { // the photo reaction's bubble, fading out at the end
         if (pk >= c.pose.dur) c.pose = null;
         else if (c.pose.kind !== "snapback") {
@@ -11332,7 +11383,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 125";
+const VERSION = "2026-11-18 cards 126";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
