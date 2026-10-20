@@ -1,0 +1,542 @@
+=== Cave Escape | piece-um9vhkk
+Q: How did the developer want the game to teach its mechanics?
++ Through gameplay, without explicit tutorials
+- Through narrated cutscenes and pop-up instructions
+- Through a mandatory training room before every level
+- By asking players to read a printed manual
+> Mechanics are taught organically through gameplay, without explicit tutorials.
+
+Q: What was the purpose of the final rising-lava sequence?
++ To test learned skills and create urgency
+- To introduce a new story character
+- To let players freely explore a safe area
+- To replace platforming with a dialogue test
+> In the final sequence, the player’s skills are fully tested as they race to escape the cave while rising lava adds pressure and urgency.
+
+
+=== Stella Incus | piece-fv1px6m
+Q: What kind of experience did the developer want to encourage?
++ Non-violent science, exploration, and fun
+- Military conquest through increasingly lethal weapons
+- Competitive racing with strict time trials
+- A grim survival story with no experimentation
+> It's about non violence, science, fun, exploration, cool abilities, and my take on what a game can be.
+
+Q: What sort of player mistakes were meant to create silliness?
++ Losing tools, kicking important things, and misplacing items
+- Failing to memorize long dialogue trees
+- Accidentally deleting a saved campaign
+- Choosing the wrong sports team to support
+> You should feel some silliness, such as losing a tool, or kicking something important, misplacing things.
+
+
+=== Survivor TD | piece-8e4ay05
+Q: What hidden tactic can reward experimentation?
++ Knocking enemies into walls to damage them
+- Keeping every enemy alive until the timer expires
+- Selling towers to heal the final boss
+- Teaching enemies to build their own maze
+> There's also a "hidden" way of doing damage, if he pushes ennemies on walls, they will receive damage
+
+Q: How should the run's playstyle evolve as the maze improves?
++ From running and evading toward being able to stand still
+- From tower defense into a dialogue adventure
+- From careful building into avoiding all upgrades
+- From controlling one enemy to controlling the moon
+> the player shall start by running around evading ennemies, but the more his maze is efficient the more he can just stay still
+
+
+=== AI'm Domingo | piece-4wnzood
+Q: What was the developer primarily testing with AI'm Domingo?
++ Whether people might enjoy a simple AI-video yes/no game
+- Whether players could win a real-time strategy tournament
+- Whether procedural music could replace every sound effect
+- Whether a game could run entirely inside a toaster
+> Is a experiment with AI videos where you have to choose yes or no, and some mysteries.
+
+Q: What did the developer say about the game's emotional goal and mechanics?
++ They were unsure and wanted to experiment first
+- They had fully mapped every emotional beat in advance
+- They wanted to teach advanced economic theory
+- They intended to simulate professional underwater welding
+> I wanted to do an experiment
+
+
+=== Seeing Double | piece-7oesrvl
+Q: What experience did the developers want to offer?
++ A platformer that challenges players to see multiple perspectives
+- A platformer focused on one fixed viewpoint
+- A city builder about managing camera equipment
+- A documentary about identical twins
+> I wanted to give the player a unique platforming experience and challenge them to see things from multiple perspectives.
+
+Q: Why did the team begin making this type of platformer?
++ The idea occurred to them and they ran with it
+- They were commissioned to recreate a famous racing game
+- They wanted to make a historically accurate farming sim
+- They were ordered to build a game about tax audits
+> I just had an idea for this type of platformer one day and ran with it.
+
+
+=== Orion Wars | piece-50vrtaq
+Q: What was the intended length of a 4X experience?
++ About 20–30 minutes
+- A single campaign lasting roughly 12 hours
+- A five-minute tutorial followed by endless play
+- A real-time simulation lasting an entire calendar year
+> I want the 4x experience in 20-30 minutes.
+
+Q: Why did the developer want to make a shorter 4X game?
++ To fit gaming into smaller chunks such as a lunch break
+- To make players spend more time reading lore between turns
+- To prevent players from ever researching technology
+- To recreate the experience of waiting in a very long queue
+> As I get older, I want to play games in smaller chunks, not in massive 12 hour campaigns.
+
+
+=== Minicraft TD | piece-xc2ez00
+Q: What should players feel as they develop strategies?
++ Like smart tacticians discovering their own playstyle
+- Like spectators watching the towers choose everything
+- Like accountants completing a fixed sequence of paperwork
+- Like professional chefs managing a restaurant kitchen
+> I want them to feel like they’ve discovered new strategies and figured out their own playstyle
+
+Q: What makes tower placement especially important?
++ Most towers do not automatically lock onto enemies
+- Towers can only be placed after the final wave
+- Every tower moves away from enemies on its own
+- Towers are decorative and never affect combat
+> placing towers had way more importance since most of them do not lock-on to enemies
+
+
+=== Hope Timbre | piece-0x8bbhf
+Q: What did the developer hope players would feel toward the siblings?
++ Empathy and an urge to help them
+- Suspicion that the siblings are secretly villains
+- Indifference to whether their world changes
+- A desire to recruit them into a professional orchestra
+> I wanted players to feel empathy for the little ones and the urge to help them.
+
+Q: What idea does collecting items in dreams and using them in reality express?
++ Dreams and music can offer hope and strength to change things
+- Dreams should replace every practical action in life
+- Only instruments found in reality can have value
+- The siblings should abandon music and become astronauts
+> I wanted the player to realize that even in dreams and music, you can find hope and strength to change things.
+
+
+=== Diecast | piece-ct78svp
+Q: What emotional reward did the developer emphasize alongside strategic building?
++ Dopamine hits from big numbers and overpowered builds
+- A sense of calm from never changing a strategy
+- The satisfaction of completing a fixed, identical run
+- The thrill of maintaining a perfectly empty inventory
+> Dopamine hits from big numbers, but also from finding an overpowered build.
+
+Q: How did the developer describe Diecast's core appeal?
++ A mechanical puzzle of dice, items, and scoring working together
+- A narrative adventure where dice are only decorative
+- A traditional Yahtzee clone with no added strategic depth
+- A wildlife simulator about training dice to migrate
+> It's like a mechanical puzzle, finding which dice, items, and score work together
+
+
+=== Warlord's Penance | piece-uw8z1nn
+Q: What emotional rhythm did the developer want combat to create?
++ Ongoing pressure followed by relief after defeating an enemy
+- Total safety followed by sudden unavoidable failure
+- A constant relaxed mood with no sense of danger
+- A cycle of paperwork followed by tax refunds
+> I want the player to feel constantly pressured... I want the player to feel a slight relief after every enemy encounter they overcome.
+
+Q: What problem with classic dungeon crawlers did the team want to avoid?
++ Excessive complexity, grinding, and dependence on wikis
+- Too much emphasis on simple, readable combat
+- Too few statistics and too little equipment
+- The absence of realistic horse-riding lessons
+> I think they're too difficult to approach/enjoy (stats, complexity, grindy, need wiki, etc).
+
+
+=== Spring Escape Deep Down | piece-vx7436f
+Q: What perspective did the developer want the player to share?
++ A small creature slowly discovering a much larger world
+- A giant exploring a world scaled down to a toy
+- A tour guide who already knows every secret
+- A satellite observing the world from orbit
+> I wanted to create an experience of slowly discovering little bits of a small part of a much bigger world through the perspective of a character that knows just as much as you do about it.
+
+Q: How were the environments designed to support discovery?
++ Locations dwarf the character and contain carefully varied details
+- Every location uses the same scale and repeated scenery
+- The world is hidden behind menus instead of explored
+- Every room is an identical white box with no details
+> many locations way bigger in scale than the player character but there is plenty of care on environmental details and variety
+
+
+=== Monster Freaks! | piece-dpq1d5y
+Q: What kind of game feeling was the developer nostalgic for?
++ Older games that let players discover things without handholding
+- Modern games that explain every secret immediately
+- Games built around frequent microtransactions
+- Games where the player must follow a tutorial forever
+> Nostalgia for how games 'used to feel'. Before everything became too convoluted... and handholding.
+
+Q: What did the developer add to reward independent discovery?
++ Features, environmental storytelling, and Easter eggs
+- A mandatory narrator explaining every room
+- A map that automatically reveals every secret
+- A subscription service for unlocking basic movement
+> I also have tons of things in the game for the player to discover (features, environmental storytelling, and easter-eggs)
+
+
+=== Tangled Crisis | piece-v4zp9gn
+Q: What is the central design idea behind the maze?
++ The full maze is visible initially, but movement limits vision
+- The maze remains fully visible throughout movement
+- Players navigate only by following spoken directions
+- The maze rearranges itself into a giant sandwich
+> The vision mechanic, the idea of trying to complete the maze... but without being able to see it all the time.
+
+Q: Which skills did the developer want the limited-vision mechanic to emphasize?
++ Memory and reflexes
+- Long-form dialogue analysis and negotiation
+- Resource trading and city planning
+- Cooking, gardening, and bird identification
+> Tried to focus on some memory and reflexes skills.
+
+
+=== Ominoflux | piece-p0gsjux
+Q: What did the developer hope players would experience after mastering the game?
++ A flow state and pride in mastering layered mechanics
+- A slow, cozy puzzle with no pressure
+- A story that requires no mechanical understanding
+- The serenity of alphabetizing an entire galaxy
+> I want the player to feel pride in mastering the layered mechanics
+
+Q: What is the real path to winning, beyond merely clearing lines?
++ Optimizing gem placement
+- Avoiding every gem until the board is empty
+- Clearing lines alone without considering other systems
+- Collecting decorative hats for every block
+> Clearing lines is just survival. The key is really in optimizing how you place the gems in order to win faster.
+
+
+=== Enemies Within | piece-wpusqmb
+Q: What emotional journey did the developer want the game loop to evoke?
++ Confronting and overcoming trauma
+- Becoming a famous athlete through training
+- Escaping all conflict without facing difficulty
+- Managing a peaceful theme park for ghosts
+> By the end of the established game loop, I want the player to feel like they have gone through the process of confronting and overcoming trauma.
+
+Q: How does the combat design aim to empower the player?
++ By emphasizing freedom of movement to gain an advantage
+- By requiring perfectly timed dodges as the only defense
+- By removing movement during every boss fight
+- By asking players to negotiate with enemies over email
+> I am designing boss fights and levels around fully utilizing the player's movement capabilities to gain the upper hand against enemies.
+
+
+=== Credit Farm/Debtician | piece-6akkzg9
+Q: What emotional swing did the developer want within a level?
++ Feeling close to losing, then finding items that turn things around
+- Starting overwhelmingly powerful and staying that way
+- Knowing the exact optimal solution before entering
+- Gradually losing all items without any chance to recover
+> I wanted the player to feel like they're losing... then manage to find a bunch of nice items that makes them get to 3 coins.
+
+Q: Why did the developer avoid tutorial levels that restrict available items?
++ They felt restrictions would undermine the fun of experimenting with a build
+- They wanted every mechanic to remain permanently secret
+- They believed players should never learn any rules
+- They wanted to teach players how to bake a debt-shaped cake
+> I find that teaching the player a certain mechanic by locking them down to only a couple of items would ruin the fun.
+
+
+=== Hovershot | piece-hvr5h0t
+Q: What combination of feelings did the developer aim for?
++ Curiosity, tension, and satisfaction
+- Boredom, certainty, and indifference
+- Comfort, predictability, and routine
+- Confusion about how to operate a microwave
+> I wanted players to feel a mix of curiosity, tension, and satisfaction.
+
+Q: How were players meant to learn the game's unusual mechanics?
++ By experimenting with random weapons, abilities, and unique enemies
+- By following a fixed build that never changes
+- By reading a complete strategy guide before moving
+- By asking enemies to explain their attack patterns in song
+> The game has random weapons and abilities that players need to figure out, and different enemies that behave in unique ways.
+
+
+=== Spacecat Solitaire | piece-sp4cec4t
+Q: What kind of experience did the developer want from simply having the game open?
++ Delight and calm enjoyment, with a meditative quality
+- Constant urgency and fear of being attacked
+- A competitive social experience requiring a large team
+- A frantic exercise in filing tax returns
+> I want the player to feel a sense of delight, calm enjoyment by simply having the game open. The experience is meant to be meditative
+
+Q: What did the developer want to change about traditional solitaire?
++ Give players more agency and make each deal a fresh challenge
+- Make outcomes depend entirely on luck
+- Remove all variation between deals
+- Replace cards with an intergalactic plumbing simulator
+> I wanted to create an experience where the player has agency, and that every deal felt like a fresh new challenge.
+
+
+=== Acrobatic Car | piece-wn546o7
+Q: What childhood gaming experience inspired the developer?
++ Classic Elasto Mania and monster-truck Flash games
+- Massive online role-playing games with long campaigns
+- Realistic military flight simulators
+- A competitive spreadsheet about household budgets
+> I was having fun in my childhood playing the classic game Elasto Mania and many other monster trucks flash games
+
+Q: What should players feel after beating a difficult track?
++ A dopamine rush from overcoming a hard challenge
+- Relief that no challenge was present
+- Regret that the track was too easy to notice
+- The solemn pride of completing a tax return
+> Challenge (make them get a dopamine rush upon beating a hard track)
+
+
+=== Cyber Volley | piece-qql6aew
+Q: What did the developer want players to focus their mental energy on?
++ Positioning the ball correctly
+- Deciphering complicated puzzle rules
+- Managing a large inventory of equipment
+- Memorizing the ball's family tree
+> I created obstacles that are easily understood, so people spend more mental energy on positioning the ball correctly instead of figuring out "the puzzle".
+
+Q: Why did the developer choose the unusual platformer mechanic?
++ It was a novel twist they could build with their programming skills
+- It required recreating a complex existing sports simulation
+- It let them avoid programming physics altogether
+- It was designed to simulate the daily work of a dentist
+> I came up with a platformer mechanic twist that I never seen before, and that I could apply with my coding skills.
+
+
+=== Depth Complaint | piece-wd37bxb
+Q: What feeling was the developer deliberately trying to create?
++ That the game is unfinished and something feels off
+- That the game is perfectly polished and conventional
+- That every element is balanced for competitive fairness
+- That the player has entered a cheerful cooking show
+> The number one thing I'm going for is a sense that the game isn't finished, and that there's something just off about it.
+
+Q: Why did the developer embrace the unfinished quality?
++ Making it part of the concept let them release after learning enough
+- They wanted to hide a complete game behind a paywall
+- They believed games should never contain any art
+- They were attempting to recreate a museum gift shop
+> Having it "unfinished" became a deliberate choice very early in development, and meant I could simply release it once I felt like I had learned enough.
+
+
+=== Polariball | piece-okfuqok
+Q: What reaction did the developer most want at the game-over screen?
++ Thinking, 'Just one more game'
+- Deciding never to play another round
+- Wanting to stop and read a long manual
+- Wondering whether the ball needs a passport
+> the big moment I was aiming for is when looking at the game over screen you tell yourself "Just one more game..."
+
+Q: What helped create the intended flow state?
++ Responsive audio and a sense of nearly nonstop motion
+- Long pauses between every movement
+- Music that ignores what happens during play
+- A narrator reading the entire dictionary
+> The audio in the game was very meticulously designed... with the music being responsive to the moment-to-moment gameplay.
+
+
+=== Near The Fear | piece-ngafqv9
+Q: What trade-off distinguishes dark abilities from light abilities?
++ Dark abilities are free in the short term but worsen the world balance
+- Dark abilities cost more energy but make the world brighter
+- Light abilities are free but permanently increase hazards
+- Both types have identical costs and effects
+> Dark abilities are on the other hand "free" (no energy cost) and can be used often. But there is a short term gain/long term loss trade-off.
+
+Q: What does the changing World Balance represent?
++ Avoiding problems can make them grow, while confronting them helps long-term
+- The player should always avoid every challenge
+- The world changes randomly with no link to player choices
+- The player is secretly managing a chain of weather-themed restaurants
+> when you're always avoiding the problems, they tend to only grow bigger. And vice versa - that confronting them is harder in short term, but you make it easier for yourself in the long run.
+
+
+=== ESiON | piece-34ub7ui
+Q: What kind of horror did the developer want to create?
++ Quiet horror built around unease, emptiness, and small hope
+- Fast-paced horror built around constant jump scares
+- A comedic monster hunt with triumphant music
+- A cheerful fishing vacation on a tropical island
+> This is why I intended to make this style of an atmospheric horror game, I specifically wanted to go for a "quiet horror" vibe.
+
+Q: How was the fishing strike meant to feel?
++ Anxiety-inducing, using a striking sound and red indicator
+- Like a fun splash with a celebratory jingle
+- Like a silent, invisible event with no feedback
+- Like receiving a phone call from a singing refrigerator
+> a striking sound combined with red indicator on the fishing-rod string to make it feel like the player is catching something and it's a more anxiety inducing sound rather than a fun splash
+
+
+=== Zenomatrix | piece-110bezd
+Q: How did the developer want fear to change over the course of play?
++ Fear gradually gives way to understanding and control, before a new curveball
+- Fear steadily increases without players learning anything
+- Players begin omnipotent and lose all understanding
+- The mannequin eventually becomes a licensed accountant
+> I want the player to start out scared, then gradually learn to take control of things as they play more and more levels, and the fear is replaced with understanding...until the game throws them another curve-ball
+
+Q: What design problem was Zenomatrix experimenting with?
++ Combining horror and puzzles into one seamless experience
+- Removing all puzzles from every horror game
+- Making a puzzle game with no information to solve anything
+- Teaching mannequins to operate a commercial airline
+> ZENOMATRIX is a game design experiment, to see if it was possible to marry the two into a more seamless experience.
+
+
+=== Manboobs The Mini Game | piece-iewg971
+Q: What two feelings did the developer want to combine?
++ Confusion and extreme freedom
+- Strict order and constant obedience
+- Nostalgia and competitive discipline
+- Certainty about taxes and dread of spreadsheets
+> I wanted the player to feel confused... but also extreme freedom, freedom I wish I had in the real world.
+
+Q: What kinds of interactions did the developer want to prioritize?
++ As much interaction, movement, and jiggle as possible
+- Only interactions needed to finish a linear quest
+- A few carefully restricted interactions with no physics
+- A mandatory lecture before touching any object
+> As much interaction with everything as possible. The more jiggles, movements, freedom - the better
+
+
+=== Sneaky - The Game | piece-3qn8otm
+Q: What emotional shift was the alarm meant to create?
++ A surprising turn from dread toward excitement and adrenaline
+- A shift from excitement into total relaxation
+- A change from stealth into a farming simulation
+- A sudden announcement that the guards are all penguins
+> The sudden turn of situation when the alarm starts aimed to be a surprising and exciting turn around upon which the feeling should rather be one of excitement and adrenaline.
+
+Q: What did the calm exterior at the end aim to provide?
++ A calming, satisfying release as the alarm fades
+- A second, louder alarm that restarts the chase
+- A new tutorial about hiding in shadows
+- A surprise boss fight against a giant sandwich
+> when you get out in the well-lit and calm exterior, with the alarm sound getting lower and lower, calming and satisfying end.
+
+
+=== Zeroth | piece-e6304vj
+Q: What should players feel when systems interact in unexpected ways?
++ Surprise and wonder at the depth of the interactions
+- Certainty that every run will play out identically
+- Frustration that items never affect one another
+- The joy of watching a potato run for mayor
+> We want the player to feel surprise and wonder by the depth of how different systems in the game interact.
+
+Q: Why include humorous avatar reactions in a punishing game?
++ To relieve pressure while giving feedback about what happened
+- To conceal all information about the mechanics
+- To make every negative outcome impossible
+- To turn every item into a stand-up comedian
+> we hope the humour of the avatar responding to what is being inflicted upon it helps to relieve that, while also providing tangible feedback and gameplay information.
+
+
+=== Sonak | piece-wr2s44o
+Q: How should a character's power and player attachment change over time?
++ Gear and levels make the character stronger and more personally meaningful
+- The character becomes weaker as equipment accumulates
+- The character stays identical throughout every run
+- The character gradually turns into a parking meter
+> excitement and joy as they find gear and gain levels that cause them to dramatically progress. You should feel a sense of attachment to your character as you define your build
+
+Q: How did the developer want players with different skill levels to approach difficulty?
++ Use build tools to tune challenge to their playstyle
+- Play one fixed build with the same difficulty for everyone
+- Avoid gear so every character stays equally weak
+- Choose difficulty by asking a random fish
+> I have provided all sorts of systems for tuning the difficulty both up and down, so that players can find the correct level, for that specific character that they are playing.
+
+
+=== Club Soko | piece-rn49jj6
+Q: What deeper social commentary did the developer hope attentive players would notice?
++ How the alcohol industry can negatively affect society
+- How museums should replace every nightclub
+- How competitive gaming improves public transport
+- How drinking alcohol turns people into actual crocodiles
+> At a deeper level I wanted players who might be paying closer attention to pick up on the social commentary on how alcohol industry can have a negative impact on society.
+
+Q: What does the graffiti artist's journey through the nightclub suggest?
++ Pursuing art may be healthier than pursuing drinking
+- The best way to succeed is to become the nightclub owner
+- Art should be abandoned in favor of collecting drinks
+- The protagonist is searching for a lost intergalactic toaster
+> It's intending to communicate to players that maybe the pursuit of making art is a healthier than the pursuit of drinking booze
+
+
+=== Hyperbaric | piece-8ybe96c
+Q: What real-life experience inspired Hyperbaric's looming stress?
++ Being an essential worker during the pandemic in Los Angeles
+- Working as a professional deep-space tourist
+- Managing a quiet countryside bakery
+- Training dolphins to perform synchronized swimming
+> my desire to embody the experience of being an essential worker during peak pandemic LA
+
+Q: What kind of horror did the programmer want the mechanics to create?
++ The feeling of being one mistake away from failure
+- A feeling of complete safety during every task
+- Fear created only through cutscenes, not play
+- A relaxing tour of an underwater gift shop
+> i wanted to keep the player feeling like they were one flub away from fail state.
+
+
+=== Absorber | piece-45lxgqh
+Q: What central feeling did the developer want every decision to carry?
++ That every decision has consequences
+- That decisions never affect the outcome
+- That the safest choice is always automatically best
+- That every decision should be made by a committee of ducks
+> I wanted the player to feel that every decision has consequences.
+
+Q: What strategic dilemma did the developer want players to face?
++ Whether to play it safe or push for growth
+- Whether to stop playing or turn off the monitor
+- Whether to ignore all abilities or unlock them all instantly
+- Whether to ask a mannequin to write the strategy guide
+> Do I play it safe or push for growth? I need to think three moves ahead.
+
+
+=== Comets Have Feathers | piece-g3at9r2
+Q: What should flying make the player feel?
++ Exhilaration or joy
+- Claustrophobia from never leaving a small room
+- Indifference to movement and exploration
+- A sudden urge to file aviation taxes
+> Exhilaration (maybe that's too strong a term? Joy maybe?) - at being able to fly anywhere
+
+Q: What mechanic became central after the team began experimenting with it?
++ Ball slam, which became the character's version of a jump
+- A fishing rod used to pull the player along
+- A dialogue wheel that replaces movement
+- A dance contest judged by the moon
+> I really just started scrapping everything else in favor of using that as our 'jump'.
+
+
+=== Cognitanks | piece-yttv7ax
+Q: What should players feel after refining their tank AI and winning?
++ Like a mastermind whose planning helped the team win efficiently
+- Like a spectator with no influence over the outcome
+- Like they succeeded only because of random chance
+- Like a tank that has completed medical school
+> if you go through that process and keep refining it then finally come out on top you should get that excitement from success that you played a large part in.
+
+Q: What process from the developer's inspirations was especially satisfying?
++ Building systems, testing them, seeing what works, and iterating
+- Following a fixed solution without testing it
+- Watching battles without changing any system
+- Teaching every tank to bake a birthday cake
+> Both of these examples the people involved develop systems and employ them in a test to see what works, what doesn't, and iterate upon it.

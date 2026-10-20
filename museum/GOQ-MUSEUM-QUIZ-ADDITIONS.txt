@@ -1,0 +1,509 @@
+=== Cave Escape | piece-um9vhkk
+Q: Which inspirations did the developer name for Cave Escape?
++ Celeste, Hollow Knight, and The Messenger
+- Super Meat Boy, Braid, and Limbo
+- Shovel Knight, Ori, and Rayman
+- A documentary about competitive cave knitting
+> I was inspired by platformers such as Celeste, HK and Messenger...
+
+Q: What visual detail helps communicate the player’s progression?
++ Subtle changes in background color
+- A new narrator after every checkpoint
+- A map that fills with written tutorials
+- The cave gradually turns into a shopping mall
+> Unlockable abilities and sword upgrades strengthen the sense of progression...
+
+=== Stella Incus | piece-fv1px6m
+Q: What does Stella Incus hope to teach through its simulation?
++ Real-life skills through planning and problem-solving
+- How to optimize military campaigns through conquest
+- How to follow a fixed sequence without making choices
+- How to become a professional sandwich architect
+> It's about non violence, science, fun, exploration, cool abilities, and my take on what a game can be.
+
+Q: What kind of dialogue did the developer mention as part of the intended tone?
++ Unexpected, out-of-pocket dialogue
+- Formal lectures explaining every mechanic
+- Only silent dialogue presented as legal contracts
+- Conversations conducted entirely by sentient potatoes
+> Out of pocket dialogue. A lot of problems are self inflected or from poor planning.
+
+=== Survivor TD | piece-8e4ay05
+Q: Why did the developer combine survivor gameplay with tower defense?
++ To offer a different take on a genre they enjoyed
+- To make a conventional survivor game with no pathing
+- To recreate a classic tower-defense game without player movement
+- To simulate the tax obligations of every tower
+> I would like the player to feel the excitement of discovering a new build path by experimenting mechanics that aren't explicitly said.
+
+Q: What did the developer say still needed work to improve the run’s progression?
++ Balancing the game so power grows more consistently during a run
+- Adding a branching romance story between towers
+- Removing all upgrades after the first wave
+- Replacing the enemies with an orchestra
+> I need to work more on the balancing to have a feeling of progression throughout the same run.
+
+=== AI'm Domingo | piece-4wnzood
+Q: What would the developer consider doing if the experiment received positive feedback?
++ Adding more complexity to the game
+- Turning it into a twelve-hour strategy campaign
+- Removing the yes-or-no choices entirely
+- Replacing the videos with live llama auditions
+> If has positive feedback I will add more complexity later.
+
+Q: What would make the developer consider expanding the experiment?
++ Positive feedback from players
+- A request to remove all mystery from the game
+- A requirement to turn it into a long strategy campaign
+- A committee of llamas approving the video budget
+> If has positive feedback I will add more complexity later.
+
+=== Seeing Double | piece-7oesrvl
+Q: What did the developers say about specific moments or mechanics built around the intended experience?
++ They were unsure; the idea had simply come to them
+- They had mapped every mechanic in a detailed design document
+- They said each mechanic was based on a historical event
+- They consulted a committee of dancing pigeons
+> Not sure, the idea just came to me one day.
+
+Q: How did the team plan to keep the split-screen platforming from becoming one-note?
++ By introducing a new mechanic with each screen
+- By repeating the same puzzle mechanic in every screen
+- By removing puzzles after the first level
+- By having every screen judged by a panel of penguins
+> I wanted to give the player a unique platforming experience and challenge them to see things from multiple perspectives.
+
+=== Orion Wars | piece-50vrtaq
+Q: What strategic outcome did the developer want to make feel especially impactful?
++ Dominating opponents or researching the singularity
+- Maintaining peace through diplomatic dialogue alone
+- Building the largest collection of decorative planets
+- Winning an intergalactic bake-off judged by black holes
+> I really want that feeling of dominating your opponents or researching the singularity to be impactful.
+
+Q: What major change did the game undergo to fit its short playtime?
++ It shifted from turn-based play toward real-time strategy
+- It shifted from real-time combat to a 12-hour turn-based campaign
+- It removed resource allocation in favor of scripted battles
+- It became a cooking game about preparing cosmic soup
+> The game evolved from turn based to more RTS to accommodate the timeframe.
+
+=== Minicraft TD | piece-xc2ez00
+Q: Which game inspired the developer to make Minicraft TD?
++ CrafDefense on itch.io
+- A turn-based political simulator
+- A realistic flight-training program
+- A documentary about medieval sandwich guilds
+> Hmm… honestly I just played a game similar to this (CrafDefense on itch.io) and loved it.
+
+Q: What part of Minicraft TD did the developer specifically say they found fun?
++ Mixing and matching elements into different slots
+- Watching towers automatically lock onto every enemy
+- Winning without changing tower placement
+- Serving soup to a council of castle bricks
+> The mixing and matching of elements into different slots is what I found fun...
+
+=== Hope Timbre | piece-0x8bbhf
+Q: What personal experience helped inspire Hope Timbre?
++ The developer observing his son’s experience with music therapy
+- The developer training for a professional boxing career
+- A trip to a military research station
+- A failed attempt to teach tap-dancing to a whale
+> Music was always a very entertaining and soothing thing for him.
+
+Q: What inspired the developer’s rotation mechanic?
++ Watching insects move through foliage
+- Observing planets orbit a black hole
+- Studying traffic circles during rush hour
+- Watching a colony of ants play pinball
+> I got the idea for main mechanic (rotating on flower icons to open new path) when I was observing how insect travels through the foliage...
+
+=== Diecast | piece-ct78svp
+Q: What existing game did the developer use as a comparison for Diecast’s basic structure?
++ Yahtzee
+- Chess
+- Myst
+- A competitive sport played with sentient cucumbers
+> It supposed to be an engaging solitaire-style experience with added depth.
+
+Q: How does Diecast differ from a deck-builder where probability converges as the deck changes?
++ Probability resets with each roll
+- The player permanently removes all random outcomes
+- Every roll is predetermined by a story choice
+- Dice are replaced by a committee of accountants
+> Dopamine hits from big numbers, but also from finding an overpowered build.
+
+=== Warlord's Penance | piece-uw8z1nn
+Q: What kind of decision-making did the developers want combat to encourage?
++ Strategic thinking rather than pure reaction speed
+- Memorizing long dialogue trees during every attack
+- Avoiding all combat until the credits roll
+- Negotiating labor contracts with dungeon furniture
+> I want the player to feel constantly pressured, while feeling engaged with the continuous progress (unlocked doors, getting a new ally, getting close to the exit).
+
+Q: How did the team want the combat to feel despite its simple rules?
++ Easy to understand but still able to keep players on their toes
+- So forgiving that enemies never create pressure
+- So complex that players must memorize a wiki
+- Like negotiating a peace treaty with a sentient shield
+> The combat system that is easy, but that keep you at your toes.
+
+=== Spring Escape Deep Down | piece-vx7436f
+Q: What kind of project was Spring Escape Deep Down for its developer?
++ Their first real, commercial game with a larger scope and ongoing narrative
+- A small prototype made only to test one combat mechanic
+- A remake of a game they had already shipped several times
+- A short experiment in competitive online racing
+> This game in many aspect is my first "real" game, the first commercial one, the one to really introduce a bigger scope and ongoing narrative...
+
+Q: What did the developer say the game was not aiming to provide?
++ A high-challenge or epic-adventure experience
+- A simple adventure with a larger world to uncover
+- A world whose characters know no more than the player
+- A world with carefully designed environmental details
+> You're not here for a high challenge or an epic adventure, the game wants to be simple but really well done.
+
+=== Monster Freaks! | piece-dpq1d5y
+Q: How did the developer describe the project in relation to their own history with games?
++ Their first game and a love letter to games they grew up with
+- A remake of their most recent commercial release
+- A project designed to teach modern monetization techniques
+- A parody of games that avoid nostalgia entirely
+> This is my first game, but also a love-letter to games I loved growing up.
+
+Q: How did the developer want the player to feel as the main character?
++ Cool and capable
+- Confused about every control for the entire game
+- Like a passive observer with no agency
+- Like a tax auditor for a monster-run bakery
+> I want the player to feel cool as the main character.
+
+=== Tangled Crisis | piece-v4zp9gn
+Q: What feelings did the developer want players to have as they continued through the levels?
++ Fun, excitement for the next level, and interest in exploring
+- Fear, grief, and dread at every new room
+- Boredom with familiar challenges and no desire to continue
+- The confidence to open a moon-based accounting firm
+> I wanted the player to feel fun, excitement for the next level and interest in exploring the game.
+
+Q: How did the developer describe the way Tangled Crisis developed?
++ The idea evolved organically from a limited-vision maze
+- It followed a complete plan written before development
+- It began as a racing game and never changed
+- It was designed by a committee of underground turnips
+> The game just evolved organically to what it is today.
+
+=== Ominoflux | piece-p0gsjux
+Q: What did the developer prioritize instead of making another Tetris clone?
++ Creating something genre-pushing and unique
+- Reproducing a familiar formula without changes
+- Removing all interconnected mechanics
+- Making a realistic simulator of office staplers
+> I want the player to feel that the game is hectic, difficult and nuanced at first, but once mastered becomes really fun - even easy!
+
+Q: What should the player learn to do with the game’s systems to reach a flow state?
++ Understand how the layered mechanics work together
+- Ignore every mechanic except clearing lines
+- Follow a fixed sequence that never changes
+- Ask a wizard to rearrange the blocks alphabetically
+> I felt that this genre could do with another title that pushed the limits.
+
+=== Enemies Within | piece-wpusqmb
+Q: What broader connection did the developer want to make through the story?
++ The connection between inner turmoil and people exploiting those who struggle
+- The connection between weather patterns and dungeon architecture
+- The idea that emotional struggles should be kept separate from society
+- The importance of winning fights without considering their meaning
+> I feel like we often decouple mental health issues from those in power attempting to take advantage of people who are struggling...
+
+Q: What question does the game’s emotional premise explore?
++ How we help others while carrying our own struggles
+- How to eliminate all sadness through a single upgrade
+- How to become a professional cave accountant
+- How to train ghosts to run a bakery
+> I hope to build levels and boss fights around inner turmoil such as despair, anxiety, and grief.
+
+=== Credit Farm/Debtician | piece-6akkzg9
+Q: What fantasy sits at the center of Credit Farm’s deck-building?
++ Spending without limits
+- Saving every resource and never buying anything
+- Running a strictly balanced household budget
+- Financing a rocket-powered cheese factory
+> I wanted the player to feel like they're losing and that they won't manage to pull though in a level, then manage to find a bunch of nice items that makes them get to 3 coins.
+
+Q: What kind of pleasure did the developer want players to find in the card system?
++ Discovering synergies between different items
+- Following a fixed card order every run
+- Avoiding combinations in favor of single cards
+- Filing a credit application with a dragon
+> The lack of "tutorial levels" also hints to this, since I find that teaching the player a certain mechanic by locking them down to only a couple of items would ruin the fun.
+
+=== Hovershot | piece-hvr5h0t
+Q: Which three feelings did the Hovershot developer want to combine?
++ Curiosity, tension, and satisfaction
+- Nostalgia, sadness, and triumph
+- Calm, boredom, and confusion
+- The urge to open a bakery on the moon
+> I wanted players to feel a mix of curiosity, tension, and satisfaction.
+
+Q: What kind of discovery did the Hovershot developer want players to experience?
++ Making progress by understanding the game a little better
+- Learning every mechanic from a complete manual before playing
+- Winning through random outcomes without learning
+- Discovering the secret parliamentary system of flying potatoes
+> I enjoy the feeling of discovery, where each small step forward comes from understanding the game a little better.
+
+=== Spacecat Solitaire | piece-sp4cec4t
+Q: What did the developer want each deal to feel like?
++ A unique challenge for the player’s wits
+- A predictable sequence with the same solution every time
+- A luck-only experience with no player agency
+- A job interview conducted by a deck of cats
+> I want the player to feel like each deal is a unique challenge for their wits.
+
+Q: What should the story-mode tutorials help players realize?
++ That this is not ordinary solitaire
+- That every round is identical to classic solitaire
+- That strategy has been removed in favor of luck
+- That the cards are secretly applying for astronaut jobs
+> The tutorials were where I hoped a lot of those moments of "oh, this isn't your usual solitaire game" come from.
+
+=== Acrobatic Car | piece-wn546o7
+Q: What did simplicity mean to the developer beyond easy controls?
++ Not demanding grinding or lots of time to understand complex systems
+- Removing every challenge from the tracks
+- Making players follow long tutorials before driving
+- Requiring players to manage a realistic vehicle insurance plan
+> Simplicity (make them feel that they play the game, not the game playing them by demanding grinding and consuming their time to understand so complex systems)
+
+Q: What creative activity did the developer want players to be able to do?
++ Make their own tracks with a built-in level editor
+- Write dialogue for every vehicle
+- Design new insurance policies for opponents
+- Build a rocket-powered garage for elephants
+> Creative (like old days when games were having level editors to unleash player's creativity and imagination, I want them to feel creative making their own tracks via built-in level editor)
+
+=== Cyber Volley | piece-qql6aew
+Q: What did the developer want dialogue to provide?
++ Optional, non-intrusive plot points
+- Mandatory explanations before every obstacle
+- A replacement for the platforming mechanics
+- A way to make every character speak in legal jargon
+> Also, I wanted to make non-intrusive, optional plot points through dialogue.
+
+Q: Why did the developer keep the controls simple?
++ Regular bumps on the ball required no extra buttons
+- Players had to memorize a long list of button combinations
+- Every jump required a separate dialogue choice
+- The ball could only be moved by completing a rhythm minigame
+> I made the controls as simple as I could, since no extra buttons are required for regular bumps on the ball.
+
+=== Depth Complaint | piece-wd37bxb
+Q: What kind of creative work did the developer enjoy using in the project?
++ Collage in both visual and sound work
+- Photorealistic motion capture and orchestral recording
+- Traditional hand-painted backgrounds only
+- A full orchestra of underwater accountants
+> I really enjoy working with collage, whether visual or sound.
+
+Q: What would the developer change about the use of default RPGMaker assets?
++ Avoid using them until later in the game
+- Replace every asset with photorealistic scans
+- Use them for every character and environment
+- Remove all visual assets from the opening area
+> If I could change anything, I would've not used any of the default RPGMaker assets until later in the game.
+
+=== Polariball | piece-okfuqok
+Q: What kinds of games helped inspire Polariball’s arcade flow?
++ Crazy Taxi and Tetris
+- Civilization and Football Manager
+- Myst and The Sims
+- A chess tournament held inside a washing machine
+> From the very beginning, I really wanted to make an experience that makes players say to themselves "Just one more game..."
+
+Q: What did the developer want repeated play to build in the player?
++ Skill and a nearly meditative state
+- Dependence on long tutorials before every session
+- A preference for stopping after one attempt
+- The ability to communicate exclusively through pinball sounds
+> I hope that players feel a sense of satisfaction through growing their skills and beating their (or their friends) high scores!
+
+=== Near The Fear | piece-ngafqv9
+Q: What did the developer use to make uncertainty tangible during a run?
++ Randomly generated tracks that leave the next obstacle unknown
+- A fixed track that never changes between attempts
+- A narrator that announces every hazard in advance
+- A weather forecast delivered by a nervous walrus
+> The random generation of the track should convey the uncertainty, and create discomfort of not knowing what comes next.
+
+Q: What led the developer to use a moving shadow instead of only a time counter?
++ A moving object felt more impactful than a number on a timer
+- A moving object was easier to ignore than a number
+- A shadow could remove all pressure from the race
+- A shadow was needed to deliver mail to the moon
+> But I realized time limit is the same as a moving object, and that is much more impactful than a number counter.
+
+=== ESiON | piece-34ub7ui
+Q: What did the developer want players to feel as they learned the fishing loop?
++ Less tension, then curiosity about what the next fish might look like
+- More panic with every successful catch
+- Complete certainty about every future catch
+- The urge to apply for a deep-sea fishing license on Mars
+> After a couple of fishing strikes I want it to still feel tense but at the same time more relaxed as the player understand the main game-loop of fishing and selling fish.
+
+Q: What helped make the game’s environment feel vast and lonely?
++ The huge scale of the world compared with the player, with only two companions
+- A crowded city full of friendly characters
+- A small arena where every object is close at hand
+- A marching band of lighthouse-owning penguins
+> A sense of scaleness of the big environment compared to the player, as well as a feeling of void or emptiness with only a sense of small hope when seeing your only two companions.
+
+=== Zenomatrix | piece-110bezd
+Q: What unusual role do the statues play in Zenomatrix’s puzzles?
++ They move when the player is not looking at them
+- They freeze permanently as soon as the level begins
+- They solve the puzzles automatically when watched
+- They run a customer-service desk for haunted sofas
+> I want the player to start out scared, then gradually learn to take control of things as they play more and more levels, and the fear is replaced with understanding...
+
+Q: What did the developer dislike about how horror games often use puzzles?
++ The puzzles can feel arbitrary and barely connected to the surrounding horror
+- The puzzles are always too tightly integrated with the monster
+- The puzzles remove all thinking from the player
+- The puzzles require players to operate a moon-based bakery
+> It's usually some variation of: "Get chased by a monster" then "do some arbitrary puzzle that barely connects to anything else" then repeat Ad nauseam.
+
+=== Manboobs The Mini Game | piece-iewg971
+Q: What work environment did the developer leave to pursue creative freedom?
++ The bureaucracy of the AAA industry
+- A small independent game jam team
+- A music therapy practice
+- A professional pinball league
+> Quitting the bureaucracy of AAA industry to make something truly free and creative.
+
+Q: What was the developer trying to make after leaving AAA work?
++ Something truly free and creative
+- A tightly controlled game with a single correct route
+- A realistic corporate management simulator
+- A conventional sequel built around strict genre rules
+> Quitting the bureaucracy of AAA industry to make something truly free and creative.
+
+=== Sneaky - The Game | piece-3qn8otm
+Q: What role did the game’s minimalist use of light and shadow play in its design?
++ It naturally suggested stealth gameplay
+- It was intended to hide all gameplay from the player
+- It was used only to indicate collectible currency
+- It helped the protagonist identify invisible accountants
+> The art style used plays on light and shadows with simple shapes, which allowed me to not have to actually do art (which I'm bad at).
+
+Q: What kind of tension did the developer want gunfire to create?
++ A sudden shock that heightens dread and stress
+- A reassuring signal that the level is safe
+- A comedic cue that ends the mission
+- A musical announcement that the toaster has won
+> ...when the player kills the golden enemy, turning on the red alarm.
+
+=== Zeroth | piece-e6304vj
+Q: Which older games inspired the feeling the developers wanted to capture?
++ Hack and NetHack
+- The Sims and SimCity
+- Mario Kart and Gran Turismo
+- A competitive game of hide-and-seek with sentient filing cabinets
+> We loved the experience of playing Nethack and other traditional roguelikes: the tension of difficult choices and risk-reward equations...
+
+Q: What did the developers want to update while preserving the roguelike essence?
++ Accessibility and animation
+- A fixed sequence of levels with no procedural variation
+- The removal of item interactions and physics
+- The addition of a mandatory wizard tax return
+> The core principle of our game is that mechanics should all interplay with each other in as many ways as possible...
+
+=== Sonak | piece-wr2s44o
+Q: What challenge does procedural generation create for the developer of Sonak?
++ Balancing the game for players with different skill levels
+- Making sure every run uses the exact same encounters
+- Removing all gear and level progression
+- Ensuring the player never has to make a build choice
+> Sonak is a procedurally generated ARPG, which means beyond just the technical implementation challenges, there is also very complicated balance challenges that I face as the developer.
+
+Q: Why did the developer want more people to see the Sonak demo?
++ For marketing and for feedback about design and confusion
+- To avoid receiving any criticism of the game
+- To turn the demo into a competitive sports broadcast
+- To replace the game with a documentary about raccoons
+> Right now I am in the stages of launching the demo for my game, and really would love as many eyes as possible on it. Both from a marketing perspective, but also from a design and confusion perspective...
+
+=== Club Soko | piece-rn49jj6
+Q: What existing puzzle genre did the developer want Club Soko to celebrate?
++ Sokoban
+- First-person military shooters
+- Real-time grand strategy
+- A puzzle genre about balancing a nightclub’s cheese budget
+> At a surface, I wanted the player to feel like they're navigating their way through rooms in a nightclub and going deeper into it.
+
+Q: What visual style helps communicate the game’s countercultural themes?
++ Punk aesthetics and graffiti
+- Polished corporate branding and luxury advertising
+- A bright pastel look modeled on children’s cereal boxes
+- A medieval royal dress code for disco balls
+> I love the Sokoban subgenre, it was a throw back to my first ever game in 2012 made for GGJ which was also a Sokoban.
+
+=== Hyperbaric | piece-8ybe96c
+Q: How did the team want stress and failure to be balanced during play?
++ Players should feel intense stress without dying so often that it disappears
+- Players should fail constantly until the stress becomes routine
+- Players should never be close to failing a task
+- Players should be judged by a council of underwater clowns
+> People sweat bullets while playing but you don't die so often that the stress completely vanishes.
+
+Q: Why did the team choose a setting that fit a short game jam?
++ It let the artists show their skills without exceeding the three-week scope
+- It required building a huge world with hundreds of locations
+- It avoided giving the artists anything to work on
+- It let them simulate a three-week underwater tax audit
+> ...to pick a concept/setting where our artists could flex without us going out of scope for a 3 week jam.
+
+=== Absorber | piece-45lxgqh
+Q: Which game did the developer name as a major inspiration?
++ 868-HACK
+- Stardew Valley
+- Mario Party
+- A flight simulator for sentient credit cards
+> I’m a huge fan of 868 HACK, and I’ve wanted to make a game like it for a long time.
+
+Q: What did the developer want players to do with program-like abilities over time?
++ Buy them, unlock them, and build around them
+- Collect them only for decoration and never use them
+- Lose every ability whenever they defeat an enemy
+- Exchange them for a lifetime supply of moon-shaped cheese
+> I especially love the idea of program like abilities, and in my game I want players to be able to buy them, unlock them, and build around them over time...
+
+=== Comets Have Feathers | piece-g3at9r2
+Q: What personal experience did the developer draw on when making a flying game?
++ They used to fly helicopters but had not made a game centered on flying before
+- They trained as a competitive balloon racer
+- They spent years captaining a submarine
+- They learned to fly from a committee of comets
+> I used to fly Helicopters... but I've never gotten the chance to work on any kind of flying game...
+
+Q: What design challenge does the “Ammo is Health” idea address?
++ Combining several resource bars into one resource
+- Giving health and ammo completely unrelated meters
+- Removing consequences from most player actions
+- Using the player’s lunch order as ammunition
+> ...what I wanted to try here was condensing all the bars you see in many games down to just one resource
+
+=== Cognitanks | piece-yttv7ax
+Q: Which older game was the original inspiration for Cognitanks?
++ Bot Arena III
+- Advance Wars
+- Into the Breach
+- A tank-based cooking show hosted by a squid
+> An old flash game called Bot Arena III is the original inspiration for this game.
+
+Q: What connection did the developer hope players would form with their tanks?
++ They would care about the empty vessels they programmed and cheer for them
+- They would treat tanks as disposable decorations
+- They would avoid giving tanks any intelligence
+- They would adopt every tank as a professional opera singer
+> I want them to feel a little bit of connection to the empty vessels that they create and fill with intelligence (even if artificial) and cheer for them on the battlefield.
