@@ -121,6 +121,8 @@ const PAL = {
   rtable:  [null, "#7a4a2a", "#a86a3a", "#1a1418", "#f0ece4", "#5a3420", "#8a8c94", "#4a9a3a"], // her side table: wood, a white cup, coffee, the ashtray, its little leaf
   rshelf:  [null, "#5a3a22", "#7a4a2a", "#1a1418", "#c83a3a", "#3a68c8", "#e8c040", "#58a048", "#8850c0"], // the nook's bookshelf: wood, and the guides' spines
   rbook:   [null, "#c8c8c8", "#f4efe0", "#1a1418", "#b0a890"], // her book: the cover (tinted to the book), the pages, the lines of text
+  cpack: ["#141012", "#7a0e18", "#c8202e", "#e8c070", "#fbe7a8", "#8e8ca8", "#c8c6dc", "#f4f4ff", "#3a0408", "#a87a30"], // the card pack: outline, reds, golds, foil silvers
+  cpackicon: ["#141012", "#9a3040", "#e8c070", "#fff4c8", "#6a8ad8", "#1a0c10"], // the small card pack icon
   coin: ["#fff2a0", "#f0c038", "#b87818", "#1a1008", "#fffbe8"], // the token: gold, its rim, a black Q (index 3) and a glint
   eotmled: [null, "#0a080c", "#2a2630", "#7a5a20", "#1c0808", "#e8b24a"], // a gold frame
   arcade:  [null, "#1a1424", "#3a2a5a", "#5a48a0", "#101018", "#40d0c0", "#f0c040", "#e05050", "#5878c8"],
@@ -375,6 +377,24 @@ const GEN = {
       if (d > 5.6) return x + y < 12 ? 0 : 2; // the rim: lit at the top left
       return (x - 4) * (x - 4) + (y - 3.5) * (y - 3.5) < 3 && !q ? 4 : x + y > 19 ? 2 : 1;
     });
+  },
+  card_pack: () => { // the card pack you open (Joe 10/20): crimped foil ends, a red band with the gold GOQ, foil down the sides
+    const W = 48, H = 70, a = mk(W, H);
+    const G = { G: [".###.", "#...#", "#....", "#.###", "#...#", "#...#", ".###."], O: [".###.", "#...#", "#...#", "#...#", "#...#", "#...#", ".###."], Q: [".###.", "#...#", "#...#", "#...#", "#.#.#", "#..#.", ".##.#"] };
+    fillFn(a, (x, y) => {
+      if (y < 7 || y >= H - 7) { const e = y < 7 ? y : H - 1 - y; if (e === 0) return x % 4 < 2 ? 0 : undefined; if (e === 1) return x % 4 < 2 ? ((x >> 1) % 2 ? 5 : 6) : 0; return x === 0 || x === W - 1 ? 0 : e === 6 ? 0 : (x >> 1) % 2 ? 5 : (x % 6 === 1 ? 7 : 6); } // the crimped ends
+      if (x === 0 || x === W - 1) return 0;
+      if (y >= 17 && y <= 52) { if (y === 17 || y === 52) return 3; const dx = (x - 23.5) / 24, dy = (y - 34.5) / 18, d = dx * dx + dy * dy; return d > 0.9 ? 8 : d > 0.45 ? 1 : 2; } // the red band, gold-edged
+      const t = (x + (y - 7) * 0.6) % 24; return t < 3 ? 7 : t < 9 ? 6 : t < 14 ? 5 : t < 17 ? 6 : 5; // foil
+    });
+    "GOQ".split("").forEach((ch, i) => G[ch].forEach((row, j) => [...row].forEach((c, k) => { if (c !== "#") return; const x = 7 + i * 12 + k * 2, y = 26 + j * 2; rect(a, x + 1, y + 1, 2, 2, 9); rect(a, x, y, 2, 2, j < 3 ? 4 : 3); })));
+    for (let x = 12; x < 36; x += 4) rect(a, x, 45, 2, 2, 3); // a row of gold dots under the letters
+    return a;
+  },
+  card_pack_icon: () => { // the little pack in the shop list and on the stands
+    const a = mk(16, 16);
+    rect(a, 3, 1, 10, 14, 1); for (let x = 3; x < 13; x += 2) { px(a, x, 1, 2); px(a, x + 1, 14, 2); } rect(a, 4, 3, 8, 1, 2); rect(a, 5, 5, 6, 6, 0); rect(a, 6, 6, 4, 4, 2); px(a, 7, 7, 3); rect(a, 4, 12, 8, 1, 2);
+    return outline(a, 5);
   },
   token_coin_small: () => { // the same coin, small: the HUD and words about tokens
     const Q = [".XX.", "X..X", "X..X", ".XX.", "..XX"];
@@ -1641,6 +1661,8 @@ const SLOTS = [
   { key: "reader_table", label: "Reading nook side table", group: "Furniture", w: 16, h: 16, pal: "rtable", gen: GEN.reader_table, note: "Beside her chair: a cup of coffee and a very small ashtray with a leaf on it." },
   { key: "reader_shelf", label: "Reading nook bookshelf", group: "Furniture", w: 16, h: 32, pal: "rshelf", gen: GEN.reader_shelf, note: "A small bookshelf of video game strategy guides. Two tiles tall." },
   { key: "velvet_rope_v", label: "Velvet rope (up and down)", group: "Furniture", w: 16, h: 16, pal: "tbarrier", gen: GEN.velvet_rope_v, note: "A velvet rope running up and down. It's drawn from the Velvet rope's art (this is just its picture in the curator)." },
+  { key: "card_pack", label: "Card pack", group: "Gift shop and café", w: 48, h: 70, pal: "cpack", gen: GEN.card_pack, note: "The pack you tear open after buying one (shown twice as big). The top 7 rows are the strip that tears off; leave them looking like a crimped edge." },
+  { key: "card_pack_icon", label: "Card pack (small)", group: "Gift shop and café", w: 16, h: 16, pal: "cpackicon", gen: GEN.card_pack_icon, note: "The card pack in the shop list and on the stands." },
   { key: "token_coin_small", label: "Token (small)", group: "Gift shop and café", w: 8, h: 8, pal: "coin", gen: GEN.token_coin_small, note: "The little token in the corner count and next to prices." },
   { key: "door_bottom", label: "Closed door in a bottom wall", group: "Doors", w: 16, h: 16, pal: "wdoor", gen: GEN.door_bottom, note: "A wooden door in a bottom wall, shut (map letter K in the Rooms editor's brushes). The tutorial's rooms use it." },
   { key: "trash_bag_roll", label: "Roll of trash bags", group: "Furniture", w: 16, h: 16, pal: "bagroll", gen: GEN.trash_bag_roll, note: "On the floor by the staff room's trash can: A on it takes a trash bag (or puts an unused one back)." },
@@ -4086,6 +4108,9 @@ class Game {
 .gt-pack .pk-top,.gt-pack .pk-bot{position:absolute;left:0;right:0;height:calc(10px * var(--k));background:repeating-linear-gradient(90deg,#c8c6dc 0 calc(2px * var(--k)),#8e8ca8 calc(2px * var(--k)) calc(4px * var(--k)))}
 .gt-pack .pk-top{top:0;clip-path:polygon(0 0,100% 0,100% 80%,95% 100%,88% 70%,80% 100%,72% 75%,64% 100%,55% 70%,47% 100%,40% 75%,32% 100%,24% 70%,16% 100%,8% 75%,0 100%)}
 .gt-pack .pk-bot{bottom:0}
+.gt-pack.art{background:none}
+.gt-pack .pk-art{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;clip-path:inset(calc(14px * var(--k)) 0 0 0)}
+.gt-pack.art .pk-top{height:calc(14px * var(--k));background-size:100% calc(140px * var(--k));background-position:top;background-repeat:no-repeat;image-rendering:pixelated}
 .gt-pack.drop{animation:gtDrop .55s linear both}
 @keyframes gtDrop{0%{transform:translateY(calc(-170px * var(--s)))}60%{transform:translateY(0) scale(1,1);animation-timing-function:ease-out}72%{transform:translateY(calc(2px * var(--s))) scale(1.12,.86)}86%{transform:scale(.95,1.06)}100%{transform:none}}
 .gt-pack.wig{animation:gtWig 1.3s ease-in-out infinite}
@@ -7206,11 +7231,11 @@ class Game {
   }
   buyCards(slot) { const out = []; for (let i = 0; i < (slot === "pack" ? 3 : 1); i++) { const c = this.randomCard(slot === "pack" ? this.pack.settings.cards.packRare : 0); if (c) out.push(c); } if (this.forceRare && out.length && !out.some(c => c.kind === "r")) out[(Math.random() * out.length) | 0].kind = "r"; // the curator's preview: Rare cards
     out.forEach(c => { this.addCard(c.p.id, c.kind); c.had = this.lastHad; }); return out; }
-  cardIcon(kind) { // 16×16 for the shop list and the stands: a card (red, or gold for a rare), or a foil pack
+  cardIcon(kind) { // 16×16 for the shop list and the stands: a card (red, or gold for a rare), or a foil pack (its Art slot)
+    if (kind === "pack") { const src = this.sheet("card_pack_icon"); if (src.getContext) return src; if (this._packIco && this._packIco.src === src) return this._packIco.c; const c = document.createElement("canvas"); c.width = c.height = 16; c.getContext("2d").drawImage(src, 0, 0, 16, 16); this._packIco = { src, c }; return c; }
     const ck = "cardicon|" + kind; if (this.cache[ck]) return this.cache[ck];
     const a = mk(16, 16);
-    if (kind === "pack") { rect(a, 3, 1, 10, 14, 1); for (let x = 3; x < 13; x += 2) { px(a, x, 1, 2); px(a, x + 1, 14, 2); } rect(a, 4, 3, 8, 1, 2); rect(a, 5, 5, 6, 6, 0); rect(a, 6, 6, 4, 4, 2); px(a, 7, 7, 3); rect(a, 4, 12, 8, 1, 2); }
-    else { rect(a, 3, 1, 10, 14, kind === "rare" ? 2 : 1); rect(a, 4, 2, 8, 12, 0); rect(a, 5, 3, 6, 5, 4); rect(a, 5, 9, 6, 1, 2); rect(a, 5, 11, 4, 1, 3); rect(a, 5, 12, 5, 1, 3); if (kind === "rare") { px(a, 12, 1, 3); px(a, 3, 14, 3); } }
+    { rect(a, 3, 1, 10, 14, kind === "rare" ? 2 : 1); rect(a, 4, 2, 8, 12, 0); rect(a, 5, 3, 6, 5, 4); rect(a, 5, 9, 6, 1, 2); rect(a, 5, 11, 4, 1, 3); rect(a, 5, 12, 5, 1, 3); if (kind === "rare") { px(a, 12, 1, 3); px(a, 3, 14, 3); } }
     return (this.cache[ck] = paint([outline(a, 5)], 16, 16, 1, ["#141012", "#9a3040", "#e8c070", "#fff4c8", "#6a8ad8", "#1a0c10"]));
   }
   museumLogo(fake) { // GOQ (after the banner's letters) in gold, MUSEUM in red under it. A fake: yellow marker, and spelled wrong
@@ -7294,8 +7319,8 @@ class Game {
       return;
     }
     F.phase = "pack"; const pk = F.packEl = document.createElement("div"); pk.className = "gt-pack drop"; pk.style.setProperty("--k", S * 0.62);
-    pk.innerHTML = '<div class="pk-top"></div><div class="pk-band">' + this.goqMark() + '<b>CARD PACK</b></div><div class="pk-bot"></div>'; v.appendChild(pk);
-    this.cfxLater(600, () => { pk.className = "gt-pack wig"; F.busy = false; this.cfxHint("A: open it"); }); // the same with or without a rare inside: no giving it away (Joe 10/20)
+    { const src = this.sheet("card_pack"), url = src.toDataURL ? src.toDataURL() : src.src; pk.classList.add("art"); pk.innerHTML = '<img class="pk-art" alt="" src="' + url + '"><div class="pk-top"></div>'; pk.querySelector(".pk-top").style.backgroundImage = "url(" + url + ")"; v.appendChild(pk); } // its Art slot (Joe 10/20); the top strip tears off
+    this.cfxLater(600, () => { pk.className = "gt-pack art wig"; F.busy = false; this.cfxHint("A: open it"); }); // the same with or without a rare inside: no giving it away (Joe 10/20)
   }
   /* Item get (Joe 10/15): something you buy (not a card) pops up big over a dim, with a burst of sparkles and its name,
      then drops into your bag and you're back at the counter. */
@@ -7328,7 +7353,7 @@ class Game {
     this.cfxBig(F.list[0], F.slots[F.sel]);
   }
   cfxTear() { // rip the top off, paper bits fly, the pack drops away and its cards fan out face down
-    const F = this.cfx, pk = F.packEl; F.busy = true; this.cfxHint(""); pk.className = "gt-pack"; pk.querySelector(".pk-top").classList.add("tear");
+    const F = this.cfx, pk = F.packEl; F.busy = true; this.cfxHint(""); pk.className = "gt-pack art"; pk.querySelector(".pk-top").classList.add("tear");
     for (let i = 0; i < 7; i++) { const b = document.createElement("i"); b.className = "pk-bit"; b.style.left = (10 + i * 12) + "%"; b.style.setProperty("--dx", "calc(" + ((i - 3) * 9) + "px * var(--s))"); b.style.setProperty("--dy", "calc(" + (-18 - (i % 3) * 8) + "px * var(--s))"); b.style.setProperty("--r", (i * 70) + "deg"); pk.appendChild(b); }
     this.cfxLater(380, () => {
       pk.classList.add("gone"); F.slots = [];
@@ -11471,7 +11496,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 131";
+const VERSION = "2026-11-18 cards 132";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
