@@ -4089,9 +4089,7 @@ class Game {
 .gt-pack.drop{animation:gtDrop .55s linear both}
 @keyframes gtDrop{0%{transform:translateY(calc(-170px * var(--s)))}60%{transform:translateY(0) scale(1,1);animation-timing-function:ease-out}72%{transform:translateY(calc(2px * var(--s))) scale(1.12,.86)}86%{transform:scale(.95,1.06)}100%{transform:none}}
 .gt-pack.wig{animation:gtWig 1.3s ease-in-out infinite}
-.gt-pack.wig.hot{animation:gtWigHot .45s ease-in-out infinite;box-shadow:0 0 calc(10px * var(--k)) calc(2px * var(--k)) #ffd860,0 calc(4px * var(--k)) calc(10px * var(--k)) rgba(0,0,0,.6)}
 @keyframes gtWig{0%,100%{transform:rotate(0)}25%{transform:rotate(-2deg)}75%{transform:rotate(2deg)}}
-@keyframes gtWigHot{0%,100%{transform:rotate(0) scale(1)}20%{transform:rotate(-5deg) scale(1.03)}40%{transform:rotate(4deg)}60%{transform:rotate(-4deg) scale(1.03)}80%{transform:rotate(5deg)}}
 .gt-pack .pk-top.tear{animation:gtTear .45s ease-in forwards}
 @keyframes gtTear{to{transform:translate(calc(40px * var(--s)),calc(-50px * var(--s))) rotate(28deg);opacity:0}}
 .gt-pack .pk-bit{position:absolute;top:calc(8px * var(--k));width:calc(2px * var(--s));height:calc(2px * var(--s));background:#e8e8f8;animation:gtConf .7s ease-out forwards}
@@ -7261,7 +7259,7 @@ class Game {
   }
   /* ----- buying cards, with juice (Joe 10/15) -----
      A card: the screen dims and five card backs slide up from the bottom, one after another. Pick one (left and right, A)
-     and it flips over big. A pack: it drops in and wiggles (harder, and glowing, with a rare inside); A tears it open and
+     and it flips over big. A pack: it drops in and wiggles (the same whatever is inside); A tears it open and
      its cards fan out face down, then each flips over big in turn. A rare one builds up first (it trembles and glows),
      then flips with a flash, a spinning sunburst, confetti, a RARE! stamp and a shake. Then back to the shop. */
   /* What the reader is reading today (Joe 10/15): one of the A Court of Thorns and Roses books, Jane Eyre, or a Sailor Moon volume. */
@@ -7295,9 +7293,9 @@ class Game {
       this.cfxHint("Pick a card"); this.cfxLater(650, () => { F.busy = false; this.cfxSel(); });
       return;
     }
-    F.phase = "pack"; const hot = list.some(c => c.kind === "r"), pk = F.packEl = document.createElement("div"); pk.className = "gt-pack drop"; pk.style.setProperty("--k", S * 0.62);
+    F.phase = "pack"; const pk = F.packEl = document.createElement("div"); pk.className = "gt-pack drop"; pk.style.setProperty("--k", S * 0.62);
     pk.innerHTML = '<div class="pk-top"></div><div class="pk-band">' + this.goqMark() + '<b>CARD PACK</b></div><div class="pk-bot"></div>'; v.appendChild(pk);
-    this.cfxLater(600, () => { pk.className = "gt-pack wig" + (hot ? " hot" : ""); F.busy = false; this.cfxHint("A: open it"); });
+    this.cfxLater(600, () => { pk.className = "gt-pack wig"; F.busy = false; this.cfxHint("A: open it"); }); // the same with or without a rare inside: no giving it away (Joe 10/20)
   }
   /* Item get (Joe 10/15): something you buy (not a card) pops up big over a dim, with a burst of sparkles and its name,
      then drops into your bag and you're back at the counter. */
@@ -11473,7 +11471,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 130";
+const VERSION = "2026-11-18 cards 131";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
