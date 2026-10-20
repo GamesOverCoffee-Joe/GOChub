@@ -121,6 +121,7 @@ const PAL = {
   rtable:  [null, "#7a4a2a", "#a86a3a", "#1a1418", "#f0ece4", "#5a3420", "#8a8c94", "#4a9a3a"], // her side table: wood, a white cup, coffee, the ashtray, its little leaf
   rshelf:  [null, "#5a3a22", "#7a4a2a", "#1a1418", "#c83a3a", "#3a68c8", "#e8c040", "#58a048", "#8850c0"], // the nook's bookshelf: wood, and the guides' spines
   rbook:   [null, "#c8c8c8", "#f4efe0", "#1a1418", "#b0a890"], // her book: the cover (tinted to the book), the pages, the lines of text
+  vend: ["#141012", "#8a2a2a", "#5a1818", "#1e2a38", "#f0e8d8", "#6a4028", "#e8c070", "#e86050", "#0a0a0a", "#b84a3a"], // the coffee vending machine
   cpack: ["#141012", "#7a0e18", "#c8202e", "#e8c070", "#fbe7a8", "#8e8ca8", "#c8c6dc", "#f4f4ff", "#3a0408", "#a87a30"], // the card pack: outline, reds, golds, foil silvers
   cpackicon: ["#141012", "#9a3040", "#e8c070", "#fff4c8", "#6a8ad8", "#1a0c10"], // the small card pack icon
   coin: ["#fff2a0", "#f0c038", "#b87818", "#1a1008", "#fffbe8"], // the token: gold, its rim, a black Q (index 3) and a glint
@@ -1336,6 +1337,15 @@ const GEN = {
     for (let x = 3; x < 45; x += 6) rect(a, x, 30, 3, 2, 5); // hazard stripes along the bottom
     return outline(a);
   },
+  vending_machine: () => { // the tutorial's coffee vending machine (Joe 10/20): two tiles tall, cups behind the glass, a column of buttons
+    const a = mk(16, 32);
+    rect(a, 1, 1, 14, 30, 1); rect(a, 1, 1, 14, 3, 9); rect(a, 2, 2, 12, 1, 6); // the body, a lit header
+    rect(a, 2, 5, 8, 14, 3); for (const y of [7, 12, 17]) { for (const x of [3, 6]) { rect(a, x, y - 1, 2, 2, 4); px(a, x, y - 1, 5); } rect(a, 2, y + 1, 8, 1, 2); } // the window: rows of cups
+    for (let y = 6; y < 18; y += 3) { rect(a, 11, y, 3, 2, 6); } px(a, 12, 20, 7); // buttons, a light
+    rect(a, 11, 22, 3, 2, 8); rect(a, 3, 22, 6, 5, 8); rect(a, 4, 23, 4, 3, 2); // the coin slot, the cup hatch
+    rect(a, 1, 28, 14, 3, 2);
+    return outline(a);
+  },
   box_stack: () => {
     const a = mk(16, 32);
     rect(a, 2, 18, 12, 13, 1); rect(a, 3, 8, 10, 10, 1); rect(a, 4, 1, 8, 7, 1);
@@ -1597,6 +1607,7 @@ const SLOTS = [
   { key: "stairs_down", label: "Stairs going down", group: "Floors", w: 32, h: 32, pal: "staffrm", gen: GEN.stairs_down, note: "No longer used: stairs are one tile now.", retired: true },
   { key: "storage_shelves", label: "Storage shelves", group: "Floors", w: 32, h: 32, pal: "wood", gen: GEN.storage_shelves, note: "Two tiles tall." },
   { key: "garage_door", label: "Garage door (basement)", group: "Floors", w: 48, h: 32, pal: "garage", gen: GEN.garage_door, note: "On the basement's north wall, across both wall rows. Deliveries come in here." },
+  { key: "vending_machine", label: "Coffee vending machine", group: "Furniture", w: 16, h: 32, pal: "vend", gen: GEN.vending_machine, note: "In the tutorial's Thinking Room. Two tiles tall." },
   { key: "box_stack", label: "Stack of boxes", group: "Floors", w: 16, h: 32, pal: "wood", gen: GEN.box_stack, note: "Two tiles tall; you can walk behind the top." },
   { key: "workbench", label: "Workbench", group: "Floors", w: 48, h: 16, pal: "wood", gen: GEN.workbench, note: "In the storage room. Lists the crates for upcoming pieces." },
   { key: "stair_up", label: "Stairs up (one tile)", group: "Floors", w: 16, h: 16, pal: "staffrm", gen: GEN.stair_up, note: "Step on it to go up a floor." },
@@ -2276,8 +2287,8 @@ const ROOMS = {
     art: { top: "staff_wall_top", upper: "staff_wall_upper", lower: "staff_wall_lower", floor: "staff_floor" },
     map: [
       "#############",
-      "#^^^^^^^^^S^#",
-      "#vvvvvvvvvsv#",
+      "#^S^^^^^^^S^#",
+      "#vsvvvvvvvsv#",
       "#...........#",
       "#...........#",
       "#...........#",
@@ -2287,12 +2298,13 @@ const ROOMS = {
       "######E######",
     ],
     spawn: [6, 8, "up"],
+    doorSigns: [{ x: 2, text: "THINKING" }, { x: 10, text: "INSPECTING" }], // red LED signs over the two doors (Joe 10/20)
     props: [
       { key: "front_desk", x: 5, y: 4 },
       { key: "plant", plant: "tut-office-fern", name: "office fern", x: 1, y: 3 },
       { key: "plant", plant: "tut-office-palm", name: "office palm", x: 11, y: 8 },
     ],
-    events: [{ x: 10, y: 2, tutDoor: "office-r1", bump: true }, { x: 6, y: 9, tutDoor: "glass", bump: true }],
+    events: [{ x: 2, y: 2, tutDoor: "office-think", bump: true }, { x: 10, y: 2, tutDoor: "office-r1", bump: true }, { x: 6, y: 9, tutDoor: "glass", bump: true }],
     light: { dim: 0, spots: 0 },
     visitors: [{ sheet: "usher", x: 6, y: 3, still: true, usher: true, lines: [["Welcome!"]] }],
   },
@@ -2364,9 +2376,37 @@ const ROOMS = {
     events: [{ x: 4, y: 7, tutDoor: "r3-r2", bump: true }],
     light: { dim: 0, spots: 0.5 },
     visitors: [],
+  },  // The thinking room (Joe 10/20): an anxious visitor who can't pick which of two games to read; teaches Select (think) and
+  // recommending. Anything in here can be recommended; recommending one of the two games finishes it and unlocks the door.
+  tut_think: {
+    name: "Thinking Room", tutorial: true,
+    art: { top: "gallery_wall_top", upper: "gallery_wall_upper", lower: "gallery_wall_lower", floor: "hall_floor" },
+    map: [
+      "###########",
+      "#^^^^^^^^^#",
+      "#vvvvvvvvv#",
+      "#.........#",
+      "#.........#",
+      "#.........#",
+      "#.........#",
+      "#.........#",
+      "#.........#",
+      "#####K#####",
+    ],
+    spawn: [5, 8, "up"],
+    props: [
+      { key: "bench", x: 1, y: 7, sit: "right", say: ["A bench. Good for thinking."] },
+      { key: "vending_machine", x: 9, y: 4, tall: true, say: ["A coffee vending machine. Every button says COFFEE."] },
+      { key: "trash_full", x: 9, y: 8, say: ["A full trash can. Somebody packed it down really well. Nothing's falling out."] },
+    ], // the two games' cases are added by tutDress
+    events: [{ x: 5, y: 9, tutDoor: "think-office", bump: true }],
+    light: { dim: 0, spots: 0.5 },
+    lightSwitch: [5, 2],
+    visitors: [],
   },
+
 };
-const TUT_ROOMS = ["tut_office", "tut_room1", "tut_room2", "tut_room3"];
+const TUT_ROOMS = ["tut_office", "tut_room1", "tut_room2", "tut_room3", "tut_think"];
 /* The note card's keyboard for controllers: three rows of ten, then Caps, ', Space, Delete and Done. col/span place it on the grid. */
 const NOTE_KEYS = [..."abcdefghijklmnopqrstuvwxyz.,!?"].map((k, i) => ({ k, col: i % 10, span: 1 }))
   .concat([{ k: "CAPS", label: "Caps", col: 0, span: 2 }, { k: "'", col: 2, span: 1 }, { k: " ", label: "Space", col: 3, span: 3 }, { k: "DEL", label: "Del", col: 6, span: 2 }, { k: "DONE", label: "Done", col: 8, span: 2 }]);
@@ -2378,6 +2418,11 @@ const LOOK_SHIRTS = [["Red", "#c83838"], ["Orange", "#e07830"], ["Yellow", "#e8c
 /* The three questions every developer answers when they submit a game (answer cards, Joe 10/13). */
 const ANSWER_QS = ["What were you hoping the player would feel while playing your game?", "Why did you choose this experience?", "Were there specific moments, mechanics, or ideas you built around that emotional goal?"];
 const SHIRT_COLORS = ["#c83838", "#e07830", "#e8c040", "#58a048", "#3a9a98", "#3a68c8", "#8850c0", "#e070a8", "#8a5a34", "#808898"];
+const TUT_GAMES = [ // the two made-up games in the Thinking Room (Joe 10/20: two of the old tutorial's), at the back of the room
+  { id: "tut-bus", key: "bus", art: "#3a68c8", x: 3, y: 4 },
+  { id: "tut-sale", key: "sale", art: "#c8803a", x: 7, y: 4 },
+];
+const TUT_THINK = { anxious: [5, 6], zone: [3, 6, 7, 7] }; // where the anxious visitor starts, and the patch he paces (x0, y0, x1, y1)
 const TUT_SPOTS = { glass: [6, 8], trainer: [3, 3], trainee: [5, 4], chest: [8, 3], barrier: [5, 3], box: [2, 7] }; // the trainer (room B), the trainee (room C), and room A's chest, barrier and box
 
 /* ---------- Words ----------
@@ -2413,9 +2458,9 @@ const TEXT = {
   "tut.patreon":       { g: "Tutorial", l: "The usher, if you don't have a badge", v: [["Oh. Aren't you a Patreon member?"]] },
   "tut.volunteer":     { g: "Tutorial", l: "The usher, if you're not a Patreon member", v: [["Oh. Well, that's okay. You don't need a badge to do training.", "You'll just be a volunteer."]] },
   "tut.email":         { g: "Tutorial", l: "The usher, if you're a Patreon member without a badge (the last page asks)", v: [["Email info@gamesover.coffee and tell them you're a Patreon member and need a code.", "You wanna continue?"]] },
-  "tut.go":            { g: "Tutorial", l: "The usher sends you in (a page of just ... is a pause)", v: [["Just step right into that door there.", "...", "What?", "Oh yeah, I'm training you. But you'll be by yourself.", "...", "Yeah, well, the curator thinks gamification is the best way to train people.", "So off you go."]] },
+  "tut.go":            { g: "Tutorial", l: "The usher sends you in (a page of just ... is a pause)", v: [["Pick whichever door you want to start with.", "...", "What?", "Oh yeah, I'm training you. But you'll be by yourself.", "...", "Yeah, well, the curator thinks gamification is the best way to train people.", "So off you go."]] },
   "tut.usher.wait":    { g: "Tutorial", l: "The usher, if you try the door before signing in", v: [["Hang on! Let's get you signed in first."]] },
-  "tut.usher.go":      { g: "Tutorial", l: "The usher, while you're training", v: [["Go on, the door's right over there."]] },
+  "tut.usher.go":      { g: "Tutorial", l: "The usher, while you're training", v: [["Go on, pick a door. Either one."]] },
   "tut.speaker":       { g: "Tutorial", l: "The speaker crackling on (before each speaker line)", v: [["*ding dong*"]] },
   "tut.locked":        { g: "Tutorial", l: "A locked door", v: [["It's locked."]] },
   "tut.unlocked":      { g: "Tutorial", l: "The far door unlocking (one line)", v: [["*click* A door unlocked."]] },
@@ -2450,7 +2495,7 @@ const TEXT = {
   "tut.trainee.follow":  { g: "Tutorial", l: "The trainee, following you", by: "claude", v: [["Right behind you."]] },
   "tut.trainee.bye":  { g: "Tutorial", l: "The trainee, at the front desk, before they bolt out the glass door", by: "claude", v: [["Freedom! Thank you so much!"]] },
   "tut.usher.trainee":  { g: "Tutorial", l: "The usher, after the trainee bolts (the closing instructions come right after)", by: "claude", v: [["...Was that a trainee?", "They were supposed to finish training weeks ago.", "Anyway."]] },
-  "tut.usher.closing":  { g: "Tutorial", l: "The usher's closing instructions (and again if you ask before announcing)", by: "claude", v: [["Last thing. Let's close up for the night.", "Make the closing announcement on the intercom over there.", "Then turn off the lights in Room A, Room B and the closet.", "Come see me when you're done."]] },
+  "tut.usher.closing":  { g: "Tutorial", l: "The usher's closing instructions (and again if you ask before announcing)", by: "claude", v: [["Last thing. Let's close up for the night.", "Make the closing announcement on the intercom over there.", "Then turn off the lights in Room A, Room B, the closet and the Thinking Room.", "Come see me when you're done."]] },
   "tut.usher.lights":  { g: "Tutorial", l: "The usher, after the announcement, before the lights are off", by: "claude", v: [["Now the lights. Room A, Room B and the closet. Each room's got a switch on the wall."]] },
   "tut.intercomEarly":  { g: "Tutorial", l: "The office intercom, before it's time to close up", by: "claude", v: [["The intercom. Not yet."]] },
   "tut.lightsEarly":  { g: "Tutorial", l: "A light switch in training, before it's time to close up", by: "claude", v: [["A light switch. Leave it on for now."]] },
@@ -2463,6 +2508,23 @@ const TEXT = {
   "tut.notesIntro":  { g: "Tutorial", l: "The usher, right before the field notes", by: "claude", v: [["Oh, and the curator keeps field notes on everything. They're in your menu now.", "Here's what you did today."]] },
   "tut.notesSub":    { g: "Tutorial", l: "The field notes page in the wrap-up (one line under the title)", by: "claude", v: [["Today's training"]] },
   "tut.wrapEnd":     { g: "Tutorial", l: "The usher, after the field notes", by: "claude", v: [["Not bad for a first day. Head out through the glass door when you're ready."]] },
+  "tut.did.recommend": { g: "Tutorial", l: "Field notes: the Thinking Room", by: "claude", v: [["Recommended a game to a visitor."]] },
+  "tut.signs.broke":  { g: "Tutorial", l: "The usher, as the door signs scramble (then his remote clicks)", by: "claude", v: [["Oh, hang on. The door signs are doing the thing again."]] },
+  "tut.signs.click":  { g: "Tutorial", l: "The usher's remote (a toast, each click)", by: "claude", v: [["*click*"]] },
+  "tut.signs.fixed":  { g: "Tutorial", l: "The usher, once the signs come on properly", by: "claude", v: [["There we go.", "We've been having a door problem for a while."]] },
+  "tut.usher.other":  { g: "Tutorial", l: "The usher, back from one room with the other still to go", by: "claude", v: [["Nice work!", "Now head through the other door."]] },
+  "tut.thinkLocked":  { g: "Tutorial", l: "The Thinking Room's door, before he's found something to read", by: "claude", v: [["It's locked.", "Maybe help him find something to read first."]] },
+  "tut.anxName":      { g: "Tutorial", l: "The anxious visitor's name (the Thinking Room)", by: "claude", v: [["Wes"]] },
+  "tut.anx.hello":    { g: "Tutorial", l: "The anxious visitor, the first time you talk (Select is switched on after this)", by: "claude", v: [["Oh! Hi. Sorry.", "I've been wanting to read one of the exhibits in here, but I don't know which.", "What if I pick the wrong one?", "...Do you have any recommendations?", "Just point me at something in the room.", "Picture yourself walking over to it with Select. (C or Left Shift on a keyboard.)", "Then come tell me about it."]] },
+  "tut.anx.again":    { g: "Tutorial", l: "The anxious visitor, before you've got something in mind", by: "claude", v: [["Picture yourself walking over to something with Select.", "Then come tell me about it."]] },
+  "tut.anx.thanks":   { g: "Tutorial", l: "The anxious visitor, at the game you recommended (the door unlocks)", by: "claude", v: [["Oh, this one looks perfect.", "Thank you. I really just needed someone to pick.", "I think I heard the door unlock, by the way."]] },
+  "tut.anx.after":    { g: "Tutorial", l: "The anxious visitor, after that", by: "claude", v: [["I'm going to read this one twice. Just in case."]] },
+  "tut.bus.title":    { g: "Tutorial", l: "The Thinking Room's left game: its title", v: [["Last Bus Home"]] },
+  "tut.bus.intent":   { g: "Tutorial", l: "Last Bus Home: the developer's intention (front)", v: [["The developer worked nights for six years and wanted quiet companionship: the only adult awake in the city, but not lonely about it. Regulars start waving at you, and the last passenger always says \"thanks, driver.\""]] },
+  "tut.bus.react":    { g: "Tutorial", l: "Last Bus Home: the developer's reaction to the episode (back)", by: "claude", v: [["You noticed the last passenger. I spent more time on that one line than on the whole bus."]] },
+  "tut.sale.title":   { g: "Tutorial", l: "The Thinking Room's right game: its title", v: [["Grandpa's Garage Sale"]] },
+  "tut.sale.intent":  { g: "Tutorial", l: "Grandpa's Garage Sale: the developer's intention (front)", v: [["The developer wanted bittersweet letting go: helping Grandpa downsize after Grandma passed. Every item has a story, and you earn more the less you let him talk. Selling well is meant to feel a little bad."]] },
+  "tut.sale.react":   { g: "Tutorial", l: "Grandpa's Garage Sale: the developer's reaction to the episode (back)", by: "claude", v: [["You called it entrepreneurial. Honestly? Grandpa would have loved that."]] },
   "tut.did.sign":    { g: "Tutorial", l: "Field notes: you read the sign", by: "claude", v: [["Read a sign."]] },
   "tut.did.can":     { g: "Tutorial", l: "Field notes: the watering can", by: "claude", v: [["Got the watering can out of a treasure chest."]] },
   "tut.did.plant":   { g: "Tutorial", l: "Field notes: the sad plant", by: "claude", v: [["Watered a sad plant."]] },
@@ -3046,7 +3108,7 @@ const PIXEL_FONT = (() => {
 const KONAMI = ["up", "up", "down", "down", "left", "right", "left", "right", "b", "a", "start"];
 const POP_KINDS = ["dusted", "straightened", "watered", "mugs", "wiped", "litter"]; // tokens that just pop over your head
 const HO = { brew: 12, turn: 76, end: 104 }; // the café hand-off, in frames: she turns to the machine, it brews, she turns back round with your drink, and it's yours
-const TUT_DARK = ["tut_room1", "tut_room2", "tut_room3"]; // the rooms whose lights go off at the end of the tutorial (not the office)
+const TUT_DARK = ["tut_room1", "tut_room2", "tut_room3", "tut_think"]; // the rooms whose lights go off at the end of the tutorial (not the office)
 const TUT_TOKENS = 5; // for finishing the tutorial the first time
 const TUT_DROOP = 900; // frames in Training Room B before the day dial ticks over and a corner plant droops (15 seconds)
 const ZOOM = 3600; // the coffee rush: a minute, at double speed
@@ -3214,7 +3276,7 @@ prepLayoutRoom(ROOMS.museum);
    the level editor in curator.html writes them. Rooms are plain data, so a deep copy is enough. */
 const BUILTIN_ROOMS = JSON.parse(JSON.stringify(ROOMS));
 const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "runners", "lamps", "mats", "wallpaper", "arrows", "murals", "tint", "windowAt", "intercom", "lightSwitch", "eotmAt",
-  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "enterAt", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt", "posters", "floorLights", "camAt", "colorGlows", "keypadAt"];
+  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "enterAt", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt", "posters", "floorLights", "camAt", "colorGlows", "keypadAt", "doorSigns"];
 /* Light checks so a hand-edited or damaged pack can't break the game: rectangular map, sane size, a spawn on the map. */
 function normalizeRoom(id, d) {
   if (d && typeof d === "object" && d.layout) { d = Object.assign({}, d); prepLayoutRoom(d); }
@@ -5877,14 +5939,21 @@ class Game {
   needTutorial() { return !this.curator && !this.recording() && !!this.saveKey && !this.headless && (!this.progress.tutorial || (this.progress.tutorialRev || 1) < this.pack.settings.tutorialRev); }
   tutSaid(name, pages) { return pages.map(p => (p.trim() === "..." ? p : name + ": " + p)); }
   tutSpeak(key, vars) { return [...this.tx("tut.speaker"), ...this.tx(key, vars)]; }
-  tutName(who) { return this.tx(who === "trainer" ? "tut.trainerName" : "tut.traineeName")[0]; }
+  tutName(who) { return this.tx(who === "trainer" ? "tut.trainerName" : who === "anxious" ? "tut.anxName" : "tut.traineeName")[0]; }
   tutPerson(id, sheet, shirt, room, x, y, extra) {
     return Object.assign({ tutId: id, member: this.tutName(id), shirt, sheet, room, x, y, dir: "down", moving: false, prog: 0, step: false, bumpT: 0, pause: 0, stuck: 0, timer: 9999, still: true, lines: [["..."]], lineI: -1 }, extra);
+  }
+  tutGame(id) { // one of the Thinking Room's made-up games, as a piece (Words, Tutorial)
+    const C = this.tutGames || (this.tutGames = {}); if (C[id]) return C[id]; const g = TUT_GAMES.find(q => q.id === id); if (!g) return null;
+    return (C[id] = { id: g.id, kind: "episode", tut: true, art: g.art, title: this.tx("tut." + g.key + ".title")[0], developer: "The Training Department", intention: this.tx("tut." + g.key + ".intent").join(" "), reaction: this.tx("tut." + g.key + ".react").join(" "), answers: ["", "", ""], quiz: [], hint: "", episodeUrl: "", gameUrl: "", pick: false });
   }
   tutThirsty(id) { const t = this.tut; return !!t && (id === "tut-r2-sad" ? !t.watered : id === t.droop ? !t.droopWatered : false); }
   /* After the rooms are built (and when things change): room A's chest (hidden until you've read the sign) and the trainee's
      box, the rope Fern opens, her desk (talk to her across it), and the two of them. */
   tutDress() {
+    const K = this.rooms.tut_think; // the Thinking Room's two games, in their cases (there even when the curator just looks around)
+    if (K) for (const g of TUT_GAMES) { if (K.cases.some(c => c.piece && c.piece.id === g.id) || !K.solid[g.y] || K.solid[g.y][g.x] !== false) continue;
+      const c = { x: g.x, y: g.y, piece: this.tutGame(g.id), state: "wall", isCase: true }; K.solid[g.y][g.x] = true; K.cases.push(c); K.events[g.x + "," + g.y] = { caseAt: c }; }
     const t = this.tut; if (!t) return;
     const A = this.rooms.tut_room1, B = this.rooms.tut_room2;
     if (A) {
@@ -5933,7 +6002,8 @@ class Game {
     const [tx, ty] = TUT_SPOTS.trainer, [nx, ny] = TUT_SPOTS.trainee;
     this.tut = { step: "intro", sides: {}, replay: !!replay, did: [], people: {
       trainer: this.tutPerson("trainer", "visitor_b", "#3a9a98", "tut_room2", tx, ty),
-      trainee: this.tutPerson("trainee", "visitor_c", "#e8c040", "tut_room3", nx, ny, { tutAsk: true }) } };
+      trainee: this.tutPerson("trainee", "visitor_c", "#e8c040", "tut_room3", nx, ny, { tutAsk: true }),
+      anxious: this.tutPerson("anxious", "visitor_a", "#7a5ab8", "tut_think", ...TUT_THINK.anxious, { will: Object.fromEntries(RECO_KINDS.map(k => [k, 4])), vno: 1, thinkBubble: true }) }, signs: "scramble" }; // (Joe 10/20) he's game for anything you suggest
     for (const k of TUT_ROOMS) if (this.rooms[k]) this.rooms[k].npcs = this.rooms[k].npcs.filter(n => !n.tutId);
     this.tutDress(); this.closeAll();
     this.warp("tut_office", ...ROOMS.tut_office.spawn, () => { if (!this.tut) return; this.path = ["up", "up", "up"]; this.pathAct = null; this.tut.cut = () => this.tutUsher(); });
@@ -5975,7 +6045,7 @@ class Game {
     if (t.step === "closing") { this.say(U(this.tx("tut.usher.closing"))); return; }
     if (t.step === "lights") { this.say(U(this.tx("tut.usher.lights"))); return; }
     if (t.step === "done") { this.say(U(this.tx("tut.usher.bye"))); return; }
-    if (t.step !== "intro") { this.say(U(this.tx("tut.usher.go"))); return; }
+    if (t.step !== "intro") { this.say(U(this.tx(t.inspectDone || t.thinkDone ? "tut.usher.other" : "tut.usher.go"))); return; }
     t.step = "signin";
     if (this.staff) { this.say(U(this.tx("tut.already", { name: this.callName() })), () => this.tutGo()); return; }
     const hello = U(this.tx("tut.hello")), q = hello.pop();
@@ -5994,7 +6064,16 @@ class Game {
       this.say(e, () => this.ask(q, ["Continue anyway", "I have my badge"], k => (k === 1 ? this.tutBadge() : this.tutGo()), 0));
     }, 0);
   }
-  tutGo() { const t = this.tut; if (!t) return; this.say(this.tutSaid("Usher", this.tx("tut.go")), () => { if (this.tut && this.tut.step === "signin") this.tut.step = "rooms"; }); }
+  tutGo() { const t = this.tut; if (!t) return; const U = pages => this.tutSaid("Usher", pages); // the door signs first (Joe 10/20): scrambled until he clicks his remote at them a few times
+    const go = () => this.say(U(this.tx("tut.go")), () => { if (this.tut && this.tut.step === "signin") this.tut.step = "rooms"; });
+    if (t.signs === "on") { go(); return; }
+    this.say(U(this.tx("tut.signs.broke")), () => {
+      const u = this.room.npcs.find(n => n.usher); this.mode = "busy"; let k = 0;
+      const click = () => { if (!this.tut) return; k++; if (u) u.pose = { kind: "busy", t0: this.t, dur: 30 }; this.showLoc(this.tx("tut.signs.click")[0]); t.signT = this.t;
+        if (k < 3) { setTimeout(click, 750); return; } t.signs = "on"; setTimeout(() => { if (!this.tut) return; if (this.mode === "busy") this.mode = "walk"; this.say(U(this.tx("tut.signs.fixed")), go); }, 900); };
+      setTimeout(click, 500);
+    });
+  }
   /* Back at the desk with the trainee gone: your volunteer tag (or your badge's all set), and the field notes, for the first time. */
   tutWrap() {
     const t = this.tut, U = pages => this.tutSaid("Usher", pages); if (!t) return;
@@ -6008,6 +6087,10 @@ class Game {
       this.say(U(this.tx("tut.tokens")), () => { this.earn(TUT_TOKENS, true); this.afterCoin = () => this.say(U([...this.tx("tut.exchange"), ...this.tx("tut.notesIntro")]), notes); });
     });
   }
+  tutThinkDone(n) { // the Thinking Room's done: he found something to read, and the door unlocks
+    const t = this.tut; if (!t || t.thinkDone) return; t.thinkDone = true; this.tutDid("recommend"); n.tell = null; n.still = true; n.recoIdea = null;
+    setTimeout(() => { if (!this.tut) return; const go = () => this.say(this.tutSaid(n.member, this.tx("tut.anx.thanks")), () => this.showLoc(this.tx("tut.unlocked")[0])); if (this.mode === "walk") go(); else { const w = setInterval(() => { if (!this.tut) { clearInterval(w); return; } if (this.mode === "walk") { clearInterval(w); go(); } }, 300); } }, 1200);
+  }
   tutDid(k) { const t = this.tut; if (t && !t.did.includes(k)) t.did.push(k); }
   /* Things that happen on their own: the day dial ticking over in room B (a corner plant droops), and the trainee looking around. */
   tutTick() {
@@ -6017,6 +6100,14 @@ class Game {
       this.say(this.tutSaid(tr.member, this.tx("tut.trainer.droop")));
     }
     const n = t.people.trainee; if (n && !n.follow && !n.gone && this.t % 150 === 0) n.dir = ["down", "left", "right", "up"][(this.t / 150) % 4];
+    const a = t.people.anxious; // the anxious visitor paces a small patch (Joe 10/20), and comes back to it after a recommendation
+    if (a && this.room.id === "tut_think" && this.room.npcs.includes(a) && !t.thinkDone && !a.reco && !a.recoAt && !a.askFx && !a.chat && !a.moving && !(a.pose && this.t - a.pose.t0 < a.pose.dur)) {
+      if (a.sitting) { if (!a.sitT) a.sitT = this.t; if (this.t - a.sitT < 360) return; a.sitT = 0; if (a.sitFrom) [a.x, a.y] = a.sitFrom; a.sitting = false; a.seat = null; } // a seat you recommended: a little sit, then back up
+      if (!a.still && !a.viewing) a.still = true;
+      if (a.still && this.t % 55 === 0) { const [x0, y0, x1, y1] = TUT_THINK.zone, inZ = (x, y) => x >= x0 && x <= x1 && y >= y0 && y <= y1;
+        const dirs = inZ(a.x, a.y) ? Object.keys(DIRS).filter(d => inZ(a.x + DIRS[d][0], a.y + DIRS[d][1])) : [a.x < x0 ? "right" : a.x > x1 ? "left" : a.y < y0 ? "down" : "up"];
+        if (Math.random() < 0.3) a.dir = dirs[(Math.random() * dirs.length) | 0]; else { a.viewing = false; this.tryMove(a, dirs[(Math.random() * dirs.length) | 0]); } }
+    }
   }
   /* Fern points out the timer (Joe 10/15): the text box clears and the view eases in on the lower left corner, where the dial
      shows up for the first time; its label pops up, then the view eases back out and she explains. About 3.5 seconds in all.
@@ -6050,11 +6141,12 @@ class Game {
     if (e.tutDoor) {
       const go = (room, x, y, dir, after) => this.warp(room, x, y, dir, after);
       if (!t) { // just looking around (the curator): every door opens
-        const to = { "office-r1": ["tut_room1", 5, 8, "up"], "r1-office": ["tut_office", 10, 3, "down"], "r1-r2": ["tut_room2", 5, 8, "up"], "r2-r1": ["tut_room1", 5, 3, "down"], "r2-r3": ["tut_room3", 4, 6, "up"], "r3-r2": ["tut_room2", 5, 3, "down"], glass: ["lobby", 1, 6, "right"] }[e.tutDoor];
+        const to = { "office-think": ["tut_think", 5, 8, "up"], "think-office": ["tut_office", 2, 3, "down"], "office-r1": ["tut_room1", 5, 8, "up"], "r1-office": ["tut_office", 10, 3, "down"], "r1-r2": ["tut_room2", 5, 8, "up"], "r2-r1": ["tut_room1", 5, 3, "down"], "r2-r3": ["tut_room3", 4, 6, "up"], "r3-r2": ["tut_room2", 5, 3, "down"], glass: ["lobby", 1, 6, "right"] }[e.tutDoor];
         if (to) go(...to); return true;
       }
       const leading = this.fol && this.fol.tutId === "trainee";
-      if (e.tutDoor === "office-r1") { if (t.step === "intro" || t.step === "signin") this.say(this.tutSaid("Usher", this.tx("tut.usher.wait"))); else go("tut_room1", 5, 8, "up"); }
+      if (e.tutDoor === "office-r1" || e.tutDoor === "office-think") { if (t.step === "intro" || t.step === "signin") this.say(this.tutSaid("Usher", this.tx("tut.usher.wait"))); else if (e.tutDoor === "office-r1") go("tut_room1", 5, 8, "up"); else go("tut_think", 5, 8, "up"); }
+      else if (e.tutDoor === "think-office") { if (!t.thinkDone) this.say(this.tx("tut.thinkLocked")); else go("tut_office", 2, 3, "down", () => { if (!t.thinkBack) { t.thinkBack = true; setTimeout(() => this.tutNext(), 300); } }); } // locked until he's found something to read
       else if (e.tutDoor === "r1-office") go("tut_office", 10, 3, "down", () => { if (leading) this.tutHome(); });
       else if (e.tutDoor === "r1-r2") { if (!t.can) say("tut.locked"); else go("tut_room2", 5, 8, "up"); } // locked until you've got the watering can
       else if (e.tutDoor === "r2-r1") go("tut_room1", 5, 3, "down");
@@ -6120,10 +6212,18 @@ class Game {
       if (!this.tut) return;
       this.say(this.tutSaid(n.member, this.tx("tut.trainee.bye")), () => {
         this.fol = null; n.follow = false; n.leaving = true; n.leaveT = 0; n.alpha = 1; n.route = null; n.leaveTo = TUT_SPOTS.glass; n.tagging = true; n.hurry = true; n.onGone = () => { n.gone = true; };
-        this.tutDid("trainee"); t.step = "closing";
-        setTimeout(() => { if (this.tut && this.mode === "walk") { const u = this.room.npcs.find(m => m.usher); if (u) u.dir = "down"; this.say(this.tutSaid("Usher", [...this.tx("tut.usher.trainee"), ...this.tx("tut.usher.closing")])); } }, 1400);
+        this.tutDid("trainee"); t.inspectDone = true;
+        setTimeout(() => this.tutNext(this.tx("tut.usher.trainee")), 1400);
       });
     }, 300);
+  }
+  /* Back in the office from one of the two rooms (Joe 10/20): the other door, or with both done, closing up. before: the usher's lines first. */
+  tutNext(before) {
+    const t = this.tut; if (!t || this.room.id !== "tut_office") return;
+    if (this.mode !== "walk") { setTimeout(() => this.tutNext(before), 400); return; }
+    const u = this.room.npcs.find(m => m.usher); if (u) u.dir = "down";
+    const both = t.inspectDone && t.thinkDone; if (both) t.step = "closing";
+    this.say(this.tutSaid("Usher", [...(before || []), ...this.tx(both ? "tut.usher.closing" : "tut.usher.other")]));
   }
   /* The trainer and the trainee. */
   tutTalk(n) {
@@ -6132,6 +6232,12 @@ class Game {
     if (!n.tutId) return false;
     if (!t) return true;
     const S = pages => this.tutSaid(n.member, pages);
+    if (n.tutId === "anxious") { // the Thinking Room (Joe 10/20): he asks for a recommendation and explains Select; after that he's a visitor like any other
+      if (t.thinkDone) { this.say(S(this.tx("tut.anx.after"))); return true; }
+      if (!t.thinkOn) { n.dir = OPP[this.player.dir]; this.say(S(this.tx("tut.anx.hello")), () => { t.thinkOn = true; this.showLoc("Select: think"); }); return true; }
+      if (!this.canRecommend(n) && !n.reco) { this.say(S(this.tx("tut.anx.again"))); return true; }
+      return false; // Recommend (or Forget it), as with anyone
+    }
     if (n.tutId === "trainer") {
       if (!t.watered) {
         if (!t.ropeOpen) { t.metTrainer = true; this.say(S(this.tx("tut.trainer.hello")), () => { t.ropeOpen = true; this.tutDress(); this.say(this.tx("tut.ropeOpen")); }); } // and she unhooks a rope for you
@@ -7965,7 +8071,7 @@ class Game {
     const pages = [...this.tx("cur.back", vars), ...this.tx("cur." + take, vars), ...this.tx("cur.bye", vars)].map(pg => v.name + ": " + pg);
     this.say(pages, () => { n.leaving = true; n.leaveT = 0; n.alpha = 1; n.route = null; });
   }
-  pieceById(id) { return this.pack.pieces.find(p => p.id === id); }
+  pieceById(id) { return this.pack.pieces.find(p => p.id === id) || (/^tut-/.test(id || "") ? this.tutGame(id) : undefined); } // (and the Thinking Room's two made-up games)
   /* A question too long for the text box with the options open: the start reads out first, the end stays up with the options. */
   ask(q, options, done, cancelTo) {
     const pages = this.paginate([q]);
@@ -9070,7 +9176,7 @@ class Game {
      The idea stays until you pick another, fades when you leave its room, and isn't saved. No rewards. */
   newWill() { const w = {}; for (const k of RECO_KINDS) w[k] = Math.floor(Math.random() * 5); return w; } // exhibits, seats, the café, throwing a cup away, photos
   nextVno() { return (this.vnoNext = (this.vnoNext || 0) + 1); } // a visitor number (the curator's Preview shows it)
-  canThink() { return this.mode === "walk" && !this.tut && !this.trans && !this.cine && !this.player.moving && !this.askingMode && !this.handoff && !this.curator && !!this.room; }
+  canThink() { return this.mode === "walk" && (!this.tut || !!this.tut.thinkOn) && !this.trans && !this.cine && !this.player.moving && !this.askingMode && !this.handoff && !this.curator && !!this.room; }
   thinkFilter(on) { // the four Game Boy greens (the darkest milked up a little, Joe 10/19), as an SVG filter on the game screen: no pixels read back, nothing per frame
     if (typeof document === "undefined" || !this.canvas) return;
     if (on && !document.getElementById("goq-gb")) { const d = document.createElement("div"); d.style.cssText = "position:absolute;width:0;height:0;overflow:hidden";
@@ -9137,7 +9243,7 @@ class Game {
     n.askFx = { t0: this.t }; n.route = null; n.timer = Math.max(n.timer || 0, 50); n.stepWait = 50; // a "?" over their head while they think about it
     const idea = Object.assign({}, I); n.recoAt = { t: this.t + 40, fn: () => this.recoReply(n, idea) };
   }
-  recoReply(n, I) { n.askFx = null; this.recoAnswer(n, I); if ((n.reco || n.queue) && n.still) { n.wasBrowsing = !!n.browsing; n.still = false; n.browsing = false; n.lines = [CROWD_LINES[(Math.random() * CROWD_LINES.length) | 0]]; } // (Joe 10/19: the shopper went, then froze there) // the shopper who can't decide is off
+  recoReply(n, I) { n.askFx = null; this.recoAnswer(n, I); if (n.tutId === "anxious" && n.reco && n.reco.kind === "exhibit") n.reco.bad = false; if ((n.reco || n.queue) && n.still) { n.wasBrowsing = !!n.browsing; n.still = false; n.browsing = false; n.lines = [CROWD_LINES[(Math.random() * CROWD_LINES.length) | 0]]; } // (Joe 10/19: the shopper went, then froze there) // the shopper who can't decide is off // (the tutorial: a game is always a yes)
     if (n.reco) { n.ideaFx = { t0: this.t, icon: I.icon, keep: true }; if (!n.reco.bad) n.hopT = this.t; } return !!(n.reco && !n.reco.bad); } // a yes: a little hop, and the thought bubble rides with them
   recoAnswer(n, I) {
     const r = this.room; if (!r.npcs.includes(n)) return;
@@ -9299,7 +9405,7 @@ class Game {
     if (!R.bad && this.visitorDoes(n, R, face)) { this.recoDone(n, 200); return true; } // a plant watered, litter picked up, the lights flicked...
     if (R.kind === "seat" && !R.bad) { n.pose = { kind: "smile", t0: this.t, dur: 70 }; this.recoDone(n, 300); return false; } // the usual: sit down (stroll does it), and after a bit, tell someone
     n.dir = face; n.timer = 240 + Math.random() * 200;
-    if (!R.bad) { if (R.kind === "exhibit") { n.viewing = true; this.reactThenSnap(n, "pose"); n.hopT = this.t; } this.recoDone(n, 200); return true; } // there: sparkles and a hop (or a photo), then a good look (Joe 10/19: just staring read as nothing) // a good look, and maybe a photo; then maybe tell someone
+    if (!R.bad) { if (R.kind === "exhibit") { n.viewing = true; this.reactThenSnap(n, "pose"); n.hopT = this.t; if (n.tutId === "anxious") this.tutThinkDone(n); } this.recoDone(n, 200); return true; } // there: sparkles and a hop (or a photo), then a good look (Joe 10/19: just staring read as nothing) // a good look, and maybe a photo; then maybe tell someone
     this.recallLater(n, R.icon, Math.random() < 0.6 ? "annoyed" : "busy"); // and later, a grumble about it
     this.reactThenSnap(n, ["startled", "annoyed", "busy"][(Math.random() * 3) | 0]); // a bad fit: a reaction (and maybe a photo of it anyway)
     return true;
@@ -10868,6 +10974,22 @@ class Game {
   }
   /* The lit bits out front of the screening nook, drawn over the room's lighting so they glow: the marquee bulbs and the
      red letters on the NOW PLAYING sign (the title scrolls when it's too long for the board). */
+  /* The tutorial office's door signs (Joe 10/20): red LEDs on black, like the NOW PLAYING board but still. Scrambled (random
+     LEDs, flickering) until the usher's remote sorts them out; each click shakes them up again first. */
+  drawDoorSigns(r, cx, cy) {
+    const D = ROOMS[r.id] && ROOMS[r.id].doorSigns; if (!D || !D.length) return;
+    const ctx = this.ctx, t = this.tut, broken = t && t.signs !== "on", seed = Math.floor(this.t / 6);
+    for (const d of D) {
+      const txt = String(d.text || "").toUpperCase(), cols = txt.length * 4 - 1, w = cols + 4, h = 9, x0 = Math.round(d.x * T + 8 - w / 2 - cx), y0 = Math.round(T - 5 - cy);
+      ctx.fillStyle = "#3a3440"; ctx.fillRect(x0 - 1, y0 - 1, w + 2, h + 2); ctx.fillStyle = "#0a080c"; ctx.fillRect(x0, y0, w, h);
+      const lit = new Set(); if (!broken) [...txt].forEach((ch, i) => (PIXEL_FONT[ch] || []).forEach((row, yy) => [...row].forEach((v, xx) => { if (v === "1") lit.add((i * 4 + xx) + "," + yy); }))); // the game's own little pixel font (Joe 10/20: he liked it better)
+      for (let yy = 0; yy < 5; yy++) for (let xx = 0; xx < cols; xx++) {
+        const on = broken ? strSeed(seed + ":" + d.x + ":" + xx + ":" + yy) % 100 < 28 : lit.has(xx + "," + yy);
+        ctx.fillStyle = on ? "#ff3a2a" : "#2a0c0c"; ctx.fillRect(x0 + 2 + xx, y0 + 2 + yy, 1, 1);
+      }
+      if (!broken) { ctx.globalAlpha = 0.18; ctx.fillStyle = "#ff3a2a"; ctx.fillRect(x0, y0, w, h); ctx.globalAlpha = 1; } // a faint glow once they're on
+    }
+  }
   drawMarquee(r, cx, cy) {
     const ctx = this.ctx;
     if (r.colorGlows) { // a colored light (the office PC's purple), over the room's lighting
@@ -10971,6 +11093,9 @@ class Game {
       const p = this.pos(n), x = Math.round(p.x + 3 - cx), y = Math.round(p.y - cy - 12 + (Math.floor(this.t / 20) % 2)); this.drawAskBubble(ctx, x, y); }
     for (const n of r.npcs) { if (!n.cur || n.follow || n.reco || n.recoAt || n.askFx || n.ideaFx || n.leaving || this.full) continue; // a curious visitor: the game they're after, in a thought bubble (Joe 10/19: instead of a "?")
       const ic = this.wantIcon(n.cur.want); if (!ic) continue; const p = this.pos(n), x = Math.round(p.x + 2 - cx), y = Math.round(p.y - cy - 17 + (Math.floor(this.t / 20) % 2));
+      BUB(x, y, 12, 11); ctx.fillStyle = "#f8f8f0"; ctx.fillRect(x + 2, y + 12, 2, 2); ctx.drawImage(ic, x + 1, y + 1); }
+    for (const n of r.npcs) { if (!n.thinkBubble || !this.tut || this.tut.thinkDone || n.reco || n.recoAt || n.askFx || n.ideaFx || this.full) continue; // the Thinking Room's anxious visitor: one game, then the other (Joe 10/20)
+      const ic = this.wantIcon(TUT_GAMES[Math.floor(this.t / 90) % TUT_GAMES.length].id); if (!ic) continue; const p = this.pos(n), x = Math.round(p.x + 2 - cx), y = Math.round(p.y - cy - 17 + (Math.floor(this.t / 20) % 2));
       BUB(x, y, 12, 11); ctx.fillStyle = "#f8f8f0"; ctx.fillRect(x + 2, y + 12, 2, 2); ctx.drawImage(ic, x + 1, y + 1); }
     for (const n of r.npcs) { const F = n.ideaFx; if (!F) continue; const k = this.t - F.t0; if (!F.keep && k > (F.dur || 60)) { n.ideaFx = null; continue; } // the thought: over their head till they get there
       const g = Math.min(1, (k + 1) / 6); if (g < 1) { const p = this.pos(n), w = Math.max(2, Math.round(12 * g)), h = Math.max(2, Math.round(11 * g)); BUB(Math.round(p.x + 8 - w / 2 - cx), Math.round(p.y - cy - 6 - h), w, h); continue; } // it grows in
@@ -11437,6 +11562,7 @@ class Game {
     this.drawReadBorders(r, cx, cy, "cases"); // read cases: a faint sparkle, over their redrawn tops
     if (full) return;
     this.drawLighting(r, cx, cy, pp);
+    this.drawDoorSigns(r, cx, cy);
     this.drawMarquee(r, cx, cy);
     this.drawDayDial();
     this.syncScreen(r, cx, cy); this.syncTv(r, cx, cy);
@@ -11496,7 +11622,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 132";
+const VERSION = "2026-11-18 cards 133";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

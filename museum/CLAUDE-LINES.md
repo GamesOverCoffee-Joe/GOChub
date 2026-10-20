@@ -399,3 +399,10 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Quizzes | Right / wrong answer | That's right! / Not quite. |
 | Quizzes | The end: all right / some wrong / tokens / retry | {n} for {total}! You really read that placard. / {n} out of {total}. / You won {tokens}! / Give the placard another read and try again. The ones you missed still have tokens in them. |
 | Pieces (pack) | Every piece's quiz pool: 2–3 questions each, four answers and a developer quote, from the developer answers | (in museum-pack.json, `quiz`; edit in the curator's Quizzes tab) |
+| Tutorial | The usher: the door signs act up / his remote / they come on | Oh, hang on. The door signs are doing the thing again. / *click* / There we go. ⏎ We've been having a door problem for a while. |
+| Tutorial | The usher, back from one room with the other to go | Nice work! ⏎ Now head through the other door. |
+| Tutorial | The Thinking Room's locked door | It's locked. ⏎ Maybe help him find something to read first. |
+| Tutorial | The anxious visitor's name | Wes |
+| Tutorial | Wes: first talk / before you have an idea / at the game / after | Oh! Hi. Sorry. ⏎ I've been wanting to read one of the exhibits in here, but I don't know which. ⏎ What if I pick the wrong one? ⏎ ...Do you have any recommendations? ⏎ Just point me at something in the room. ⏎ Picture yourself walking over to it with Select. (C or Left Shift on a keyboard.) ⏎ Then come tell me about it. / Picture yourself walking over to something with Select. ⏎ Then come tell me about it. / Oh, this one looks perfect. ⏎ Thank you. I really just needed someone to pick. ⏎ I think I heard the door unlock, by the way. / I'm going to read this one twice. Just in case. |
+| Tutorial | Last Bus Home / Grandpa's Garage Sale: the developer's reaction (back) | You noticed the last passenger. I spent more time on that one line than on the whole bus. / You called it entrepreneurial. Honestly? Grandpa would have loved that. |
+| Tutorial | Field notes: the Thinking Room | Recommended a game to a visitor. |
