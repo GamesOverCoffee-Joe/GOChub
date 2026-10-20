@@ -484,7 +484,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 127";
+window.GOQ_WANT = "2026-11-18 cards 128";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -2682,12 +2682,14 @@ function renderQuizzes() {
     el("p", { class: "note", text: "Paste questions (or upload a .txt, .md or .json file) in the format from QUIZ-FORMAT.md. Games are matched by their piece ID, or by title. Add skips questions a game already has (same wording)." }),
     ta, el("div", { class: "row", style: "gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px" }, [file, how, el("button", { type: "button", class: "btn small", text: "Import", onclick: doImport }),
       el("button", { type: "button", class: "btn small quiet", text: "Export all questions", onclick: () => download("goq-quizzes.txt", new Blob([quizToText(pcs)], { type: "text/plain" })) }),
+      el("button", { type: "button", class: "btn small quiet", text: "Delete all questions", onclick: () => { const n = pcs.reduce((a, p) => a + (p.quiz || []).length, 0); if (!n) { status("There are no questions to delete."); return; } if (!confirm("Delete all " + n + " quiz questions from every game? Export them first if you might want them back.")) return; pcs.forEach(p => { p.quiz = []; }); changed({ now: true }); renderQuizzes(); status("Deleted all " + n + " quiz questions."); } }),
       el("button", { type: "button", class: "btn small quiet", text: "Blank template (every game)", onclick: () => download("goq-quiz-template.txt", new Blob([pcs.map(p => "=== " + p.title + " | " + p.id + "\n").join("\n")], { type: "text/plain" })) })]), res]));
   // one game's pool
   const sel = el("select", { "aria-label": "Game" }, pcs.map(p => el("option", { value: p.id, text: p.title + " (" + ((p.quiz || []).length) + ")" }))); sel.value = quizSel;
   sel.addEventListener("change", () => { quizSel = sel.value; renderQuizzes(); });
   const p = pcs.find(x => x.id === quizSel); if (!p) return; p.quiz = p.quiz || [];
   const box = el("section", { class: "prow", style: "display:block" }, [el("h3", { text: "Questions", style: "margin:0 0 8px" }), el("div", { class: "row", style: "gap:8px;align-items:center;flex-wrap:wrap" }, [sel,
+    el("button", { type: "button", class: "btn small quiet", text: "Delete this game's questions", onclick: () => { if (!p.quiz.length) { status("This game has no questions."); return; } if (!confirm("Delete all " + p.quiz.length + " questions for " + p.title + "?")) return; p.quiz = []; changed({ now: true }); renderQuizzes(); status("Deleted " + p.title + "'s questions."); } }),
     el("button", { type: "button", class: "btn small quiet", text: "Try it in the preview", onclick: async () => { if (!GOQ.normalizePiece(p, 0).quiz.length) { status("Add a full question first.", true); return; } await refreshPreview(); game.closeAll && game.closeAll(); game.mode = "walk"; game.pieceQuiz(GOQ.normalizePiece(p, 0), () => {}); status("The quiz is open in the preview."); } })]),
     el("p", { class: "note", text: p.quiz.length + " question" + (p.quiz.length === 1 ? "" : "s") + " in the pool. Each needs the question, the right answer and three wrong ones; \"From the developer\" is shown after the player answers." })]);
   wrap.appendChild(box);
