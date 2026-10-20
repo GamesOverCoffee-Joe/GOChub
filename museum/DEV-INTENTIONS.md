@@ -61,8 +61,6 @@ Every game exhibited in the GOQ Museum, with its developer's own words about wha
 
 - **Developer:** Popitch
 - **Aired:** 2025-12-26
-- **Category:** The Shape in the Dark
-- **Also fits:** The Long Road to Mastery
 - **Described by visitors as:** "the one with the spooky scary skeletons"
 - **Episode:** https://www.youtube.com/watch?v=1VMHBlHE2EQ
 - **Game:** https://popitch.itch.io/cave-escape
@@ -92,7 +90,6 @@ I may have already touched on this in an earlier answer, but to be more specific
 
 - **Developer:** Nicholas Corvino
 - **Aired:** 2026-01-03
-- **Category:** Whispers of a Larger World
 - **Described by visitors as:** "the one where you confuse putting out fires with the real objective"
 - **Episode:** https://www.youtube.com/watch?v=-H2RAHtldOQ
 - **Game:** https://store.steampowered.com/app/4217560/Stella_Incus_Demo/
@@ -122,7 +119,6 @@ You should feel some silliness, such as losing a tool, or kicking something impo
 
 - **Developer:** Cartable Studio
 - **Aired:** 2026-01-09
-- **Category:** Mad Scientist
 - **Described by visitors as:** "the one where you lure enemies through towers instead of defending"
 - **Episode:** https://www.youtube.com/watch?v=4zjXBWOGxCk
 - **Game:** https://store.steampowered.com/app/3811540/Survivor_TD__Favor_of_the_Gods/
@@ -174,7 +170,6 @@ The feelings are not quite well finished, I need to work more on the balancing t
 
 - **Developer:** Eloyy
 - **Aired:** 2026-01-17
-- **Category:** Stories
 - **Described by visitors as:** "the one with the creepy guy asking yes or no questions"
 - **Episode:** https://www.youtube.com/watch?v=thirAAkAoH0
 - **Game:** https://eloyy.itch.io/domingo
@@ -204,8 +199,6 @@ I am not sure
 
 - **Developer:** Serrated Studios
 - **Aired:** 2026-01-27
-- **Category:** Stories
-- **Also fits:** The Shape in the Dark
 - **Described by visitors as:** "the one where you play as two characters separated by space"
 - **Episode:** https://www.youtube.com/watch?v=zyTAsL6sl58
 - **Game:** https://store.steampowered.com/app/4267710/Seeing_Double/
@@ -235,7 +228,6 @@ Not sure, the idea just came to me one day.
 
 - **Developer:** Sneeden Software
 - **Aired:** 2026-02-04
-- **Category:** Mad Scientist
 - **Described by visitors as:** "the one with a 4x game you can finish in 20 minutes"
 - **Episode:** https://www.youtube.com/watch?v=I-Euz0Fj7qA
 - **Game:** https://store.steampowered.com/app/4006990/Orion_Wars/
@@ -265,7 +257,6 @@ The game evolved from turn based to more RTS to accommodate the timeframe.  I re
 
 - **Developer:** David Elliot
 - **Aired:** 2026-02-13
-- **Category:** Mad Scientist
 - **Described by visitors as:** "the one with the tower defense crafting system"
 - **Episode:** https://www.youtube.com/watch?v=NQCthIdgp64
 - **Game:** https://store.steampowered.com/app/4032000/MiniCraft_TD/
@@ -295,7 +286,6 @@ The mixing and matching of elements into different slots is what I found fun, in
 
 - **Developer:** Linnet Solutions
 - **Aired:** 2026-02-28
-- **Category:** Stories
 - **Described by visitors as:** "the one where you collect instruments from dreams"
 - **Episode:** https://www.youtube.com/watch?v=fk7zREqjEBg
 - **Game:** https://store.steampowered.com/app/2873610/Hope_Timbre/
@@ -325,7 +315,6 @@ I got the idea for main mechanic (rotating on flower icons to open new path) whe
 
 - **Developer:** sofamire
 - **Aired:** 2026-03-05
-- **Category:** Mad Scientist
 - **Described by visitors as:** "the one where you build dice like a deck builder"
 - **Episode:** https://www.youtube.com/watch?v=6hdykkgWaGw
 - **Game:** https://store.steampowered.com/app/3861370/Diecast_Demo/
@@ -355,7 +344,6 @@ Dopamine hits from big numbers, but also from finding an overpowered build.
 
 - **Developer:** Zizaco
 - **Aired:** 2026-03-20
-- **Category:** The Long Road to Mastery
 - **Described by visitors as:** "the one where blocking still damages you slightly"
 - **Episode:** https://www.youtube.com/watch?v=L5GAeWL7HB0
 - **Game:** https://zizaco.itch.io/wl-penance
@@ -392,7 +380,6 @@ We wanted to make a game that is simple to make, simple to play, and could be ex
 
 - **Developer:** Ele
 - **Aired:** 2026-03-26
-- **Category:** Whispers of a Larger World
 - **Described by visitors as:** "the one where you play as a tiny flower root exploring a huge world"
 - **Episode:** https://www.youtube.com/watch?v=IuhFX87t4Is
 - **Game:** https://store.steampowered.com/app/3151470/Spring_Escape_Deep_Down_Demo/
@@ -424,7 +411,6 @@ A lot of the game's mechanics, obstacle wise, tend to be built around this feeli
 
 - **Developer:** corporate filth
 - **Aired:** 2026-04-10
-- **Category:** The Long Road to Mastery
 - **Described by visitors as:** "the one where the real goal is reaching the exit, not killing all monsters"
 - **Episode:** https://www.youtube.com/watch?v=Y63pk-ktlbk
 - **Game:** https://corporatefilth.itch.io/monster-freaks
@@ -454,7 +440,6 @@ I want the player to feel cool as the main character. I also have tons of things
 
 - **Developer:** Long Sleeve Games
 - **Aired:** 2026-04-25
-- **Category:** The Long Road to Mastery
 - **Described by visitors as:** "the one that blocks your vision in a maze"
 - **Episode:** https://www.youtube.com/watch?v=BSAUndC4AbQ
 - **Game:** https://store.steampowered.com/app/2519440/Tangled_Crisis/
@@ -484,8 +469,6 @@ The vision mechanic, the idea of trying to complete the maze, like the ones you 
 
 - **Developer:** acvd
 - **Aired:** 2026-04-30
-- **Category:** The Long Road to Mastery
-- **Also fits:** Mad Scientist
 - **Described by visitors as:** "the one where you have to prioritize gems over clearing lines"
 - **Episode:** https://www.youtube.com/watch?v=UfPQxJmhC_A
 - **Game:** https://store.steampowered.com/app/2917340/Ominoflux/
@@ -549,8 +532,6 @@ New lines of blocks spawn inevitably. Thus you are always down-stacking. This is
 
 - **Developer:** BoomSqueak
 - **Aired:** 2026-05-02
-- **Category:** Stories
-- **Also fits:** The Shape in the Dark
 - **Described by visitors as:** "the one where the characters are two stick figures"
 - **Episode:** https://www.youtube.com/watch?v=w7RJv2K4WAc
 - **Game:** https://store.steampowered.com/app/4188530/Enemies_Within/
@@ -581,7 +562,6 @@ In general, I am hoping to achieve the above feelings by the following game loop
 
 - **Developer:** Shroombot
 - **Aired:** 2026-05-08
-- **Category:** Mad Scientist
 - **Described by visitors as:** "the one where you use credit cards to buy construction supplies"
 - **Episode:** https://www.youtube.com/watch?v=-7rcvLLZ4Ek
 - **Game:** https://shroomachine.itch.io/credit-farm
@@ -611,7 +591,6 @@ First of all, there isn't a clear path to victory. This makes it harder since yo
 
 - **Developer:** Yaniv
 - **Aired:** 2026-05-14
-- **Category:** The Long Road to Mastery
 - **Described by visitors as:** "the one where every shot sends you flying backward"
 - **Episode:** https://youtu.be/jFsrL1V_fY4
 - **Game:** https://store.steampowered.com/app/4696050/HoverShot/
@@ -644,7 +623,6 @@ Tension comes from battles that require focus, and satisfaction comes from beati
 
 - **Developer:** Gray Duck Games
 - **Aired:** 2026-05-23
-- **Category:** The Long Road to Mastery
 - **Described by visitors as:** "the one with cats, cosmic cards and stacking by suit"
 - **Episode:** https://youtu.be/y-yMAOFKLFM
 - **Game:** https://store.steampowered.com/app/4352480/Space_Cat_Solitaire_Demo/
@@ -674,7 +652,6 @@ The tutorials were where I hoped a lot of those moments of "oh, this isn't your 
 
 - **Developer:** Yaso Nex
 - **Aired:** 2026-05-27
-- **Category:** The Long Road to Mastery
 - **Described by visitors as:** "the one where you need to be obsessed to play"
 - **Episode:** https://www.youtube.com/watch?v=73dxbyhV5fY
 - **Game:** https://store.steampowered.com/app/1602330/ACROBATIC_CAR/
@@ -708,7 +685,6 @@ It's all about iterations, dozens of ideas and mechanics that I kept adding and 
 
 - **Developer:** Helixstar
 - **Aired:** 2026-06-05
-- **Category:** The Long Road to Mastery
 - **Described by visitors as:** "the one where you enter a volley tournament"
 - **Episode:** https://www.youtube.com/watch?v=j5P9BPJvLA8
 - **Game:** https://store.steampowered.com/app/2881670/Cyber_Volley/
@@ -738,7 +714,6 @@ I made the controls as simple as I could, since no extra buttons are required fo
 
 - **Developer:** ZeDoGiCa
 - **Aired:** 2026-06-11
-- **Category:** Stories
 - **Described by visitors as:** "the one that wasn't finished"
 - **Episode:** https://www.youtube.com/watch?v=ExO-axMmSUU
 - **Game:** https://zedo.itch.io/depth-complaint
@@ -772,7 +747,6 @@ If I could change anything, I would've not used any of the default RPGMaker asse
 
 - **Developer:** Zion D. Hill
 - **Aired:** 2026-06-19
-- **Category:** The Long Road to Mastery
 - **Described by visitors as:** "the one with magnets that pull a ball toward random targets"
 - **Episode:** https://www.youtube.com/watch?v=xOpMPkmuZZg
 - **Game:** https://store.steampowered.com/app/3627490/Polariball/
@@ -812,7 +786,6 @@ My hope is that these two factors combine to have an almost hypnotic effect to t
 
 - **Developer:** mondzi
 - **Aired:** 2026-06-26
-- **Category:** The Shape in the Dark
 - **Described by visitors as:** "the one where your choices change the track itself"
 - **Episode:** https://www.youtube.com/watch?v=-3-Kf9MWVew
 - **Game:** https://store.steampowered.com/app/1927200/near_the_fear/
@@ -845,7 +818,6 @@ The World Balance mechanic - a world view/perspective shifting as a consequence 
 
 - **Developer:** minenik
 - **Aired:** 2026-07-03
-- **Category:** The Shape in the Dark
 - **Described by visitors as:** "the one where the fishing never feels tense"
 - **Episode:** https://www.youtube.com/watch?v=e505kS-dFZE
 - **Game:** https://minenik.itch.io/esion
@@ -883,7 +855,6 @@ From my point of view I feel that I have achieved the feeling that I intended by
 
 - **Developer:** Purple Moth
 - **Aired:** 2026-07-10
-- **Category:** The Shape in the Dark
 - **Described by visitors as:** "the one where you have to keep the mannequin from seeing you"
 - **Episode:** https://www.youtube.com/watch?v=xZM-eHAKNUI
 - **Game:** https://store.steampowered.com/app/3080910/ZENOMATRIX/
@@ -948,7 +919,6 @@ I always thought this kind of enemy had a lot of potential, as it created intere
 
 - **Developer:** Confused Concept Minames
 - **Aired:** 2026-07-17
-- **Category:** Whispers of a Larger World
 - **Described by visitors as:** "the one where you can just look around the restaurant at the start"
 - **Episode:** https://www.youtube.com/watch?v=xC42QiXllWk
 - **Game:** https://man-booob-mini-games.itch.io/manboobs
@@ -978,8 +948,6 @@ As much interaction with everything as possible.  The more jiggles, movements, f
 
 - **Developer:** Trivial
 - **Aired:** 2026-07-23
-- **Category:** The Shape in the Dark
-- **Also fits:** The Long Road to Mastery
 - **Described by visitors as:** "the one where you memorize guard patterns to sneak past"
 - **Episode:** https://www.youtube.com/watch?v=0agIKLJEMUI
 - **Game:** https://trivlal.itch.io/sneaky-game
@@ -1014,7 +982,6 @@ I also want to point out : this was the first (and only) game I ever completed. 
 
 - **Developer:** Contrary Games
 - **Aired:** 2026-08-04
-- **Category:** Whispers of a Larger World
 - **Described by visitors as:** "the one where termites eat your wooden bow"
 - **Episode:** https://www.youtube.com/watch?v=rQKdzXM2ZEI
 - **Game:** https://store.steampowered.com/app/4062680/Zeroth/
@@ -1050,7 +1017,6 @@ The core principle of our game is that mechanics should all interplay with each 
 
 - **Developer:** Sublime Orange LLC
 - **Aired:** 2026-08-14
-- **Category:** Mad Scientist
 - **Described by visitors as:** "the one where you build your character through loot instead of combat"
 - **Episode:** https://www.youtube.com/watch?v=UAisUZYRn0Q
 - **Game:** https://store.steampowered.com/app/3528860/Sonak/
@@ -1086,7 +1052,6 @@ I cant define specific items that drop, or even bosses they will encounter. But 
 
 - **Developer:** Miracle Tea
 - **Aired:** 2026-08-26
-- **Category:** Stories
 - **Described by visitors as:** "the one with the graffiti artist getting pushed around in the nightclub"
 - **Episode:** https://www.youtube.com/watch?v=WpjsqLxoQxQ
 - **Game:** https://store.steampowered.com/app/3346410/Club_Soko/
@@ -1134,8 +1099,6 @@ I've learnt through making this game that good puzzles are something to do with 
 
 - **Developer:** Groundwater Studio
 - **Aired:** 2026-09-11
-- **Category:** The Shape in the Dark
-- **Also fits:** Stories
 - **Described by visitors as:** "the one where you keep a creature sealed"
 - **Episode:** https://www.youtube.com/watch?v=czWatBN8XxM
 - **Game:** https://groundwater.itch.io/hyperbaric
@@ -1171,7 +1134,6 @@ Absolutely I think we did. People sweat bullets while playing but you don't die 
 
 - **Developer:** Martin Edmaier
 - **Aired:** 2026-09-21
-- **Category:** Mad Scientist
 - **Described by visitors as:** "the one where you absorb enemy powers"
 - **Episode:** https://www.youtube.com/watch?v=ax7tdtLE_MQ
 - **Game:** https://store.steampowered.com/app/4412040/Absorber_Absorb_Adapt_Survive/
@@ -1201,7 +1163,6 @@ I'm becoming something more powerful by embracing the system. Do I play it safe 
 
 - **Developer:** Electric Hat
 - **Aired:** 2026-09-30
-- **Category:** Whispers of a Larger World
 - **Described by visitors as:** "the one where you fly in an open world"
 - **Episode:** https://www.youtube.com/watch?v=4qIwfaGbGMM
 - **Game:** https://store.steampowered.com/app/5067370/Comets_Have_Feathers_Demo/
@@ -1252,7 +1213,6 @@ Flying, and ball mode do seem to work well as 'cool factor' - however it doesn't
 
 - **Developer:** Lordricker
 - **Aired:** 2026-10-16
-- **Category:** The Long Road to Mastery
 - **Described by visitors as:** "the one where you battle tanks by editing their brains"
 - **Episode:** https://youtu.be/Vj6Y4ZSJlAc
 - **Game:** https://lordricker.itch.io/cognitanks
