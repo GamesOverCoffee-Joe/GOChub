@@ -95,7 +95,6 @@ const PAL = {
   ship:    [null, "#232a38", "#36405a", "#56627c", "#151a24", "#e04040", "#5a1c1c", "#40d8a8", "#163a30", "#8a96ac"],
   odesk:   [null, "#6a4a30", "#4a3220", "#2a1c12", "#141418", "#2e2e38", "#c8c8d0", "#e8dcc0", "#8a5a30", "#f0d020", "#f4f4f8"],
   tower:   [null, "#ececf2", "#c4c4d0", "#8a8a98", "#9a5cff", "#d4b8ff", "#4a4a56", "#141418"],
-  micons:  [null, "#181820", "#3fa03f", "#a8e098", "#f8f8f0", "#c83838", "#e8b24a", "#8a8aa0", "#5a78c8", "#f0c8a0"], // the menu icons: outline, green, light green, white, red, gold, gray, blue, skin
   stv:     [null, "#181820", "#2e2e38", "#f0c8a0", "#c84868", "#4868b8", "#e8d8b8", "#7a5a9a"], // the staff room TV: bezel, skin, her, him, the set, the dramatic purple
   otv:     [null, "#121216", "#26262e", "#3c3c48", "#1c2a3a", "#4a88b8", "#a0d8f0", "#e05050"],
   oshelf:  [null, "#5a3a24", "#3a2414", "#24160c", "#c84a3a", "#3a6ac8", "#e0b040", "#4a9a5a", "#9a5ac8", "#e8e0d0"],
@@ -1282,20 +1281,6 @@ const GEN = {
     else { rect(a, 6, 3, 4, 4, 3); rect(a, 5, 7, 6, 4, 5); px(a, 7, 5, 1); px(a, 8, 5, 1); rect(a, 6, 3, 4, 1, 1); }
     rect(a, 7, 12, 2, 2, 2); return outline(a, 1);
   },
-  menu_icons: f => { // beside menu options: recommend, follow me, help, the game's name, say hi, forget it, could I get by, buy, read, watch
-    const a = mk(16, 16);
-    if (f === 0) { rect(a, 6, 2, 4, 12, 2); rect(a, 2, 6, 12, 4, 2); rect(a, 7, 3, 1, 3, 3); rect(a, 3, 7, 3, 1, 3); }
-    else if (f === 1) { rect(a, 1, 6, 8, 4, 2); for (let i = 0; i < 6; i++) rect(a, 8 + i, 2 + i, 1, 12 - 2 * i, 2); rect(a, 2, 7, 5, 1, 3); }
-    else if (f === 2) { rect(a, 1, 2, 14, 10, 4); rect(a, 3, 12, 2, 2, 4); px(a, 4, 14, 4); [[6, 4], [7, 4], [8, 4], [9, 5], [9, 6], [8, 7], [7, 8], [7, 10]].forEach(([x, y]) => px(a, x, y, 1)); }
-    else if (f === 3) { rect(a, 1, 4, 14, 9, 6); px(a, 3, 8, 1); rect(a, 5, 6, 8, 1, 1); rect(a, 5, 8, 6, 1, 1); rect(a, 5, 10, 7, 1, 1); }
-    else if (f === 4) { rect(a, 4, 7, 7, 6, 9); rect(a, 4, 3, 1, 5, 9); rect(a, 6, 2, 1, 6, 9); rect(a, 8, 2, 1, 6, 9); rect(a, 10, 4, 1, 4, 9); rect(a, 11, 8, 2, 2, 9); px(a, 2, 3, 7); px(a, 1, 5, 7); px(a, 13, 2, 7); px(a, 14, 4, 7); }
-    else if (f === 5) { for (let i = 0; i < 10; i++) { rect(a, 3 + i, 3 + i, 2, 1, 5); rect(a, 11 - i, 3 + i, 2, 1, 5); } }
-    else if (f === 6) { rect(a, 7, 1, 3, 3, 9); rect(a, 7, 5, 3, 5, 8); px(a, 6, 6, 9); px(a, 5, 7, 9); px(a, 10, 6, 9); px(a, 11, 8, 9); rect(a, 6, 10, 2, 2, 8); rect(a, 5, 12, 2, 2, 8); rect(a, 9, 10, 2, 3, 8); rect(a, 10, 13, 2, 1, 8); }
-    else if (f === 7) { rect(a, 4, 2, 8, 12, 6); rect(a, 3, 4, 10, 8, 6); rect(a, 7, 5, 2, 6, 1); rect(a, 5, 3, 2, 1, 4); }
-    else if (f === 8) { rect(a, 3, 1, 10, 14, 4); for (const y of [4, 6, 8, 10]) rect(a, 5, y, y === 10 ? 4 : 6, 1, 7); }
-    else if (f === 9) { rect(a, 1, 2, 14, 10, 7); rect(a, 2, 3, 12, 8, 8); rect(a, 3, 4, 3, 2, 4); rect(a, 6, 12, 4, 2, 7); }
-    return outline(a, 1);
-  },
   bubble: f => {
     const a = rows(["........", ".000000.", "00000000", "00000000", "00000000", ".000000.", "...00...", "....0..."]);
     (f === 0 ? [[3, 1], [4, 1], [5, 2], [4, 3], [4, 5]] : [[4, 1], [4, 2], [4, 3], [4, 5]]).forEach(([x, y]) => px(a, x, y, 3));
@@ -1522,7 +1507,6 @@ const SLOTS = [
   { key: "ship_wall_lower", label: "Office wall, lower row", group: "Curator's office", w: 16, h: 16, frames: 2, fps: 1, pal: "ship", gen: GEN.ship_wall_lower, note: "2 frames (32×16): the control strip blinks a little." },
   { key: "office_desk", label: "Curator's desk", group: "Curator's office", w: 48, h: 32, pal: "odesk", gen: GEN.office_desk, note: "Three tiles wide, two tall: two monitors (off), keyboard, iced coffees, a can of yerba mate." },
   { key: "pc_tower", label: "White PC tower", group: "Curator's office", w: 16, h: 32, pal: "tower", gen: GEN.pc_tower, note: "Two tiles tall. A soft purple glow is added around it in the dark." },
-  { key: "menu_icons", label: "Menu icons", group: "UI", w: 16, h: 16, frames: 10, pal: "micons", gen: GEN.menu_icons, note: "10 frames (160×16), beside menu options: Recommend, Follow me, Do you need help?, What's the game name?, Say hi, Forget it, Could I get by?, Browse the shop (a coin), Read the placard, Watch for a bit. Options without one get the same space." },
   { key: "staff_tv", label: "Staff room TV", group: "Staff", w: 16, h: 16, frames: 3, fps: 0.5, pal: "stv", gen: GEN.staff_tv, note: "3 frames (48×16), on the staff room's upper wall row, always on a soap opera: the scene, her close-up, his. A new frame every 2 seconds." },
   { key: "office_tv", label: "Office TV", group: "Curator's office", w: 32, h: 32, frames: 2, pal: "otv", gen: GEN.office_tv, note: "2 frames (64×32): off, on. When it's on, gameplay clips play over the picture area, 26×15 at (3, 4)." },
   { key: "office_shelf", label: "Bookshelf", group: "Curator's office", w: 32, h: 32, pal: "oshelf", gen: GEN.office_shelf, note: "Two tiles wide and tall. The books on it are in Words, Curator's office." },
@@ -4211,9 +4195,7 @@ class Game {
 .gt-items .gt-polaroid.shown{background:#fff0b8;border-color:#c89020}
 .gt-shop-detail{margin:calc(3px * var(--s)) 0 0;padding-top:calc(3px * var(--s));border-top:calc(1px * var(--s)) solid #b0b0c0;color:#303048;min-height:3em}
 .gt-choice{right:0;bottom:calc(48px * var(--s));min-width:calc(80px * var(--s));max-width:calc(236px * var(--s));max-height:calc(110px * var(--s));overflow:auto;padding:0 calc(6px * var(--s));z-index:6}
-.gt-choice-item{position:relative;padding-left:calc(9px * var(--s));cursor:pointer;white-space:normal;line-height:1.5;display:flex;align-items:center;gap:calc(3px * var(--s));min-height:calc(17px * var(--s))}
-.gt-ci{flex:none;width:calc(16px * var(--s));height:calc(16px * var(--s))}
-.gt-ci img{display:block;width:100%;height:100%;image-rendering:pixelated}
+.gt-choice-item{position:relative;padding-left:calc(9px * var(--s));cursor:pointer;white-space:normal;line-height:1.5}
 .gt-choice-item.never{color:#a02828;border-top:calc(1px * var(--s)) solid #b0b0c0;margin-top:calc(2px * var(--s));padding-top:calc(2px * var(--s))}
 @media (pointer:coarse){.gt-choice-item{padding-top:calc(2px * var(--s));padding-bottom:calc(2px * var(--s))}.gt-shop-row{min-height:calc(15px * var(--s))}}
 .gt-shift .chip{font-size:max(calc(5px * var(--s)), 8px) !important}
@@ -4222,7 +4204,8 @@ class Game {
 /* On small game screens the badge form breaks out to fill the phone screen, so it's easy to read and type in. */
 .gt-badgewrap.big{position:fixed;inset:0;z-index:30;align-items:flex-start;padding-top:max(16px, env(safe-area-inset-top, 0px))}
 .gt-badgewrap.big .gt-badge{--s:1.6;width:min(94vw,360px);max-height:calc(100dvh - 32px);font-size:10px !important}
-.gt-choice-item.on::before{content:"";position:absolute;left:0;top:calc(50% - 4px * var(--s));border-top:calc(4px * var(--s)) solid transparent;border-bottom:calc(4px * var(--s)) solid transparent;border-left:calc(5px * var(--s)) solid #181820}
+.gt-choice-item.on::before{content:"";position:absolute;left:0;top:calc(4px * var(--s));border-top:calc(4px * var(--s)) solid transparent;border-bottom:calc(4px * var(--s)) solid transparent;border-left:calc(5px * var(--s)) solid #181820}
+.gt-choice-item.never.on::before{top:calc(6px * var(--s))}
 .gt-badgewrap{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(10,8,24,.7);z-index:7}
 .gt-badge.kp:not(.big){width:calc(228px * var(--s))}
 .gt-badge{position:relative;display:block;width:calc(212px * var(--s));max-height:calc(154px * var(--s));overflow:auto;padding:0 calc(4px * var(--s));line-height:1.4;font-size:calc(6px * var(--s))}
@@ -6420,20 +6403,12 @@ class Game {
     this.el.choice.style.display = "block"; this.renderChoice();
   }
   optL(id) { return (this.tx("opt." + id)[0] || TEXT["opt." + id].v[0][0]); } // a menu option's words (Words, Menu options)
-  optIcon(label) { // which of the Menu icons goes with an option (-1: none, just the space)
-    const m = { recommend: 0, follow: 1, help: 2, gameName: 3, hi: 4, forget: 5, getBy: 6, keepGoing: 1, lookingFor: 2 };
-    for (const id in m) if (label === this.optL(id)) return m[id];
-    const more = { "Recommend it": 0, "Follow me!": 1, "Read the placard": 8, "Watch for a bit": 9, "Can I get by you?": 6, "Browse the shop": 7, "Just chatting": 4 };
-    return more[label] !== undefined ? more[label] : -1;
-  }
-  menuIcon(f) { const k = "micon|" + f; if (this.cache[k]) return this.cache[k]; const c = document.createElement("canvas"); c.width = c.height = 16; const x = c.getContext("2d"); x.imageSmoothingEnabled = false; x.drawImage(this.sheet("menu_icons"), f * 16, 0, 16, 16, 0, 0, 16, 16); return (this.cache[k] = c.toDataURL()); }
   renderChoice() {
     const c = this.ch, box = this.el.choice, top = box.scrollTop; box.innerHTML = "";
     const never = this.optL("never");
     c.options.forEach((o, i) => {
-      const d = document.createElement("div"); d.className = "gt-choice-item" + (i === c.i ? " on" : "") + (o === never ? " never" : ""); // (Joe 10/19: every menu the same: an icon, the words; Never mind last, red, under a line)
-      const ic = document.createElement("span"); ic.className = "gt-ci"; const f = this.optIcon(o); if (f >= 0) { const im = document.createElement("img"); im.src = this.menuIcon(f); im.alt = ""; ic.appendChild(im); }
-      const tx = document.createElement("span"); tx.textContent = o; d.appendChild(ic); d.appendChild(tx);
+      const d = document.createElement("div"); d.className = "gt-choice-item" + (i === c.i ? " on" : "") + (o === never ? " never" : ""); // (Joe 10/19: every menu the same; Never mind last, red, under a line)
+      d.textContent = o;
       d.addEventListener("click", e => { e.stopPropagation(); c.i = i; this.endChoice(); });
       box.appendChild(d);
     });
@@ -11357,7 +11332,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 124";
+const VERSION = "2026-11-18 cards 125";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
