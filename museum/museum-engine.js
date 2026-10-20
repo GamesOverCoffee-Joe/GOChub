@@ -4493,7 +4493,7 @@ class Game {
       pages.forEach(p => { if (p.tone === undefined) p.tone = sec.tone || ""; });
     }
     if (!pages.length) pages.push({ label: "", text: "" });
-    const rd = this.rd = { pages, i: 0, done, note: spec.note || null, quiz: spec.quiz || null, sel: -1, menu: !!spec.menu }; // note: a piece you can leave a note on (its NOTE button); sel: the highlighted button
+    const rd = this.rd = { pages, i: 0, done, note: spec.note || null, quiz: spec.quiz || null, reopen: spec.reopen || null, sel: -1, menu: !!spec.menu }; // note: a piece you can leave a note on (its NOTE button); sel: the highlighted button
     this.renderRead();
     // A font still loading (the pixel font loads the first time it's used: maybe right now): measured with a stand-in, the pages
     // could overflow once it arrives. Lay them out again when it's in, if this placard is still open on its first page (Joe 10/16).
@@ -4534,14 +4534,14 @@ class Game {
   quizFromReader() {
     const r = this.rd; if (!r || !r.quiz) return;
     const d = r.done; r.done = null; this.closeRead();
-    this.pieceQuiz(r.quiz, () => { if (d) d(); });
+    this.pieceQuiz(r.quiz, () => { if (d) d(); }, r.reopen);
   }
-  pieceQuiz(p, done) {
+  pieceQuiz(p, done, reopen) { // reopen: back to the same side of the placard (Read the placard), still counting it read once you finish it
     const rec = this.quizRec(p), shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
     const per = Math.min(p.quiz.length, this.pack.settings.quizzes ? this.pack.settings.quizzes.perRound : 3);
     const fresh = shuffle(p.quiz.filter(q => !rec.ok.includes(quizKey(q)))), old = shuffle(p.quiz.filter(q => rec.ok.includes(quizKey(q))));
     const qs = shuffle([...fresh, ...old].slice(0, per)); // the ones with tokens still in them first, in a random order
-    this.pq = { p, qs, i: 0, score: 0, won: 0, marks: [], phase: "ask", sel: 0, opts: null, done };
+    this.pq = { p, qs, i: 0, score: 0, won: 0, marks: [], phase: "ask", sel: 0, opts: null, done, reopen };
     const box = this.el.reader; this.holdToast(); this.mode = "pquiz";
     box.style.display = "grid"; box.className = box.className.replace(/\s*(flip|gt-rd-pre)\b/g, ""); box.classList.add("clip", "gt-qz");
     box.innerHTML = '<div class="gt-rd-left"><div class="gt-rd-clip"></div><div class="gt-rd-head"></div></div><div class="gt-rd-top"></div><div class="gt-rd-body"></div><div class="gt-rd-foot"><span class="gt-rd-n"></span><span class="gt-rd-k"></span></div>';
@@ -4596,7 +4596,7 @@ class Game {
     this.dropClip(); const box = this.el.reader; box.style.display = "none"; box.classList.remove("gt-qz"); this.mode = "walk"; this.inputLock = true;
     if (Q.won) this.earn(Q.won, true);
     if (Q.done) Q.done();
-    if (again) this.viewPiece(Q.p, "front");
+    if (again) { if (Q.reopen) Q.reopen(); else this.viewPiece(Q.p, "front"); }
   }
   pqKeys(has) {
     const Q = this.pq; if (!Q) { this.mode = "walk"; return; }
@@ -4629,7 +4629,7 @@ class Game {
     const notes = bothRead && (this.online() || !!p.tut); // visitors' notes: only once you've read the other side too (so this is your second), or with the whole piece
     if (notes) { const ns = this.notesFor(p); secs.push(...ns); this.refreshNotes(); } // at the very end, after "Continues on other side"
     this.read({ img: img ? p.image : this.pieceArt(p).toDataURL(), imgClass: img && img.naturalWidth > 160 ? "photo" : "", title: p.title.toUpperCase(), sub: "By " + p.developer,
-      sections: secs, pick: p.pick, frame: true, clip: this.clipOf(p), flip: side === "back", note: notes && !this.curator ? p : null, quiz: !p.tut && p.quiz && p.quiz.length ? p : null, links: [side !== "front" ? [p.episodeUrl, "Watch the episode", "WATCH"] : [], side !== "back" ? [p.gameUrl, "Play the game", "PLAY"] : []] }, () => {
+      sections: secs, pick: p.pick, frame: true, clip: this.clipOf(p), flip: side === "back", note: notes && !this.curator ? p : null, quiz: !p.tut && p.quiz && p.quiz.length ? p : null, reopen: () => this.viewPiece(p, side, stampAfter, onRead), links: [side !== "front" ? [p.episodeUrl, "Watch the episode", "WATCH"] : [], side !== "back" ? [p.gameUrl, "Play the game", "PLAY"] : []] }, () => {
       if (!this.readEnded) return; // closed before the last page: not read yet
       if (onRead) onRead();
       if (side === undefined) { const k = (this.progress.sides || (this.progress.sides = {}))[p.id] || (this.progress.sides[p.id] = {}); if (gold) { k.front = k.back = 1; k.rv = this.reactRev(p); } else k.note = 1; this.saveProgress(); }
@@ -11473,7 +11473,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 129";
+const VERSION = "2026-11-18 cards 130";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
