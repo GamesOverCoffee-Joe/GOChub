@@ -121,6 +121,7 @@ const PAL = {
   rtable:  [null, "#7a4a2a", "#a86a3a", "#1a1418", "#f0ece4", "#5a3420", "#8a8c94", "#4a9a3a"], // her side table: wood, a white cup, coffee, the ashtray, its little leaf
   rshelf:  [null, "#5a3a22", "#7a4a2a", "#1a1418", "#c83a3a", "#3a68c8", "#e8c040", "#58a048", "#8850c0"], // the nook's bookshelf: wood, and the guides' spines
   rbook:   [null, "#c8c8c8", "#f4efe0", "#1a1418", "#b0a890"], // her book: the cover (tinted to the book), the pages, the lines of text
+  exitsign: ["#141012", "#1f8a3c", "#f8f8f0", "#0e4a20"], // the exit sign over someone leaving: outline, green, white letters, dark green edge
   vend: ["#141012", "#8a2a2a", "#5a1818", "#1e2a38", "#f0e8d8", "#6a4028", "#e8c070", "#e86050", "#0a0a0a", "#b84a3a"], // the coffee vending machine
   cpack: ["#141012", "#7a0e18", "#c8202e", "#e8c070", "#fbe7a8", "#8e8ca8", "#c8c6dc", "#f4f4ff", "#3a0408", "#a87a30"], // the card pack: outline, reds, golds, foil silvers
   cpackicon: ["#141012", "#9a3040", "#e8c070", "#fff4c8", "#6a8ad8", "#1a0c10"], // the small card pack icon
@@ -1302,6 +1303,11 @@ const GEN = {
     G.forEach(([x, y, c]) => px(a, x, y, c));
     return outline(a, 2);
   },
+  exit_sign: () => { // over someone on their way out (Joe 10/20): a little green EXIT sign, like the ones over museum doors
+    const a = mk(18, 8); rect(a, 0, 0, 18, 8, 0); rect(a, 1, 1, 16, 6, 1); rect(a, 1, 6, 16, 1, 3);
+    "EXIT".split("").forEach((ch, i) => (PIXEL_FONT[ch] || []).forEach((row, y) => [...row].forEach((v, x) => { if (v === "1") px(a, 2 + i * 4 + x, 1 + y, 2); })));
+    return a;
+  },
   leave_bubble: () => { // over someone on their way out: an arrow out the door
     const a = rows(["........", ".000000.", "00000000", "00000000", "00000000", ".000000.", "...00...", "....0..."]);
     [[2, 3], [3, 3], [4, 3], [5, 3], [4, 2], [4, 4], [6, 1], [6, 2], [6, 3], [6, 4], [6, 5]].forEach(([x, y]) => px(a, x, y, 3));
@@ -1437,7 +1443,6 @@ const CHAR_NOTE = "48×64 sheet of 16×16 frames: 3 columns (standing, left step
 const OVER_NOTE = "Drawn on top of the wall, so leave everything outside the door transparent.";
 const SLOTS = [
   { key: "player", label: "Player", group: "Characters", w: 16, h: 16, layout: "char", pal: "player", gen: GEN.character, note: CHAR_NOTE },
-  { key: "player_ghost", label: "Player's thinking ghost", group: "Characters", w: 16, h: 16, layout: "char", pal: "ghost", gen: GEN.character, note: "You, stepped out of yourself while thinking (Select). Drawn at 80% over the Game Boy green, which turns everything into four shades by brightness: keep it light so it stands out. " + CHAR_NOTE },
   { key: "visitor_a", label: "Visitor A", group: "Characters", w: 16, h: 16, layout: "char", pal: "visitorA", gen: GEN.character, note: CHAR_NOTE },
   { key: "visitor_b", label: "Visitor B", group: "Characters", w: 16, h: 16, layout: "char", pal: "visitorB", gen: GEN.character, note: CHAR_NOTE },
   { key: "visitor_shirt", label: "Visitor shirt (placeholder)", group: "Characters", w: 16, h: 16, layout: "char", pal: "shirt", gen: GEN.character, note: "Drawn over Visitors A, B and C in each visitor's shirt color (Visitors tab, Shirt colors). Only the shirt; gray, so it tints. Skipped for a visitor sheet you've replaced with your own art. " + CHAR_NOTE },
@@ -1549,7 +1554,6 @@ const SLOTS = [
   { key: "ship_wall_lower", label: "Office wall, lower row", group: "Curator's office", w: 16, h: 16, frames: 2, fps: 1, pal: "ship", gen: GEN.ship_wall_lower, note: "2 frames (32×16): the control strip blinks a little." },
   { key: "office_desk", label: "Curator's desk", group: "Curator's office", w: 48, h: 32, pal: "odesk", gen: GEN.office_desk, note: "Three tiles wide, two tall: two monitors (off), keyboard, iced coffees, a can of yerba mate." },
   { key: "pc_tower", label: "White PC tower", group: "Curator's office", w: 16, h: 32, pal: "tower", gen: GEN.pc_tower, note: "Two tiles tall. A soft purple glow is added around it in the dark." },
-  { key: "staff_tv", label: "Staff room TV", group: "Staff", w: 16, h: 16, frames: 3, fps: 0.5, pal: "stv", gen: GEN.staff_tv, note: "3 frames (48×16), on the staff room's upper wall row, always on a soap opera: the scene, her close-up, his. A new frame every 2 seconds." },
   { key: "office_tv", label: "Office TV", group: "Curator's office", w: 32, h: 32, frames: 2, pal: "otv", gen: GEN.office_tv, note: "2 frames (64×32): off, on. When it's on, gameplay clips play over the picture area, 26×15 at (3, 4)." },
   { key: "office_shelf", label: "Bookshelf", group: "Curator's office", w: 32, h: 32, pal: "oshelf", gen: GEN.office_shelf, note: "Two tiles wide and tall. The books on it are in Words, Curator's office." },
   { key: "office_chair", label: "Office chair", group: "Curator's office", w: 16, h: 16, pal: "ochair", gen: GEN.office_chair, note: "Seen from behind, facing the desk." },
@@ -1601,13 +1605,11 @@ const SLOTS = [
   { key: "trash_can", label: "Trash can", group: "Furniture", w: 16, h: 16, pal: "locker", gen: GEN.trash_can, note: "Takes empty cups too." },
   { key: "fingerprints", label: "Fingerprints on glass", group: "Pieces", w: 16, h: 16, frames: 3, pal: "glass", gen: GEN.fingerprints, note: "3 frames side by side (48×16): a few smudges, more, lots. Drawn over a case's glass." },
   { key: "emote", label: "Photo reactions", group: "People", w: 8, h: 8, frames: 8, pal: "emote", gen: GEN.emote, note: "8 frames (64×8), shown over someone you photograph: ! (startled), heart, peace sign, star (posing), ... (busy), wave, shy, annoyed." },
-  { key: "leave_bubble", label: "Visitor leaving", group: "People", w: 8, h: 8, pal: "ui", gen: GEN.leave_bubble, note: "8×8, over a visitor on their way out of the museum (you can't chat with them then)." },
   { key: "bubble", label: "Visitor's thought bubble", group: "People", w: 8, h: 8, frames: 2, pal: "ui", gen: GEN.bubble, note: "2 frames (16×8): \"?\" over a curious visitor, \"!\" over one who came back to tell you how a game went." },
   { key: "stairs_up", label: "Stairs going up", group: "Floors", w: 32, h: 32, pal: "staffrm", gen: GEN.stairs_up, note: "No longer used: stairs are one tile now." , retired: true },
   { key: "stairs_down", label: "Stairs going down", group: "Floors", w: 32, h: 32, pal: "staffrm", gen: GEN.stairs_down, note: "No longer used: stairs are one tile now.", retired: true },
   { key: "storage_shelves", label: "Storage shelves", group: "Floors", w: 32, h: 32, pal: "wood", gen: GEN.storage_shelves, note: "Two tiles tall." },
   { key: "garage_door", label: "Garage door (basement)", group: "Floors", w: 48, h: 32, pal: "garage", gen: GEN.garage_door, note: "On the basement's north wall, across both wall rows. Deliveries come in here." },
-  { key: "vending_machine", label: "Coffee vending machine", group: "Furniture", w: 16, h: 32, pal: "vend", gen: GEN.vending_machine, note: "In the tutorial's Thinking Room. Two tiles tall." },
   { key: "box_stack", label: "Stack of boxes", group: "Floors", w: 16, h: 32, pal: "wood", gen: GEN.box_stack, note: "Two tiles tall; you can walk behind the top." },
   { key: "workbench", label: "Workbench", group: "Floors", w: 48, h: 16, pal: "wood", gen: GEN.workbench, note: "In the storage room. Lists the crates for upcoming pieces." },
   { key: "stair_up", label: "Stairs up (one tile)", group: "Floors", w: 16, h: 16, pal: "staffrm", gen: GEN.stair_up, note: "Step on it to go up a floor." },
@@ -1672,11 +1674,16 @@ const SLOTS = [
   { key: "reader_table", label: "Reading nook side table", group: "Furniture", w: 16, h: 16, pal: "rtable", gen: GEN.reader_table, note: "Beside her chair: a cup of coffee and a very small ashtray with a leaf on it." },
   { key: "reader_shelf", label: "Reading nook bookshelf", group: "Furniture", w: 16, h: 32, pal: "rshelf", gen: GEN.reader_shelf, note: "A small bookshelf of video game strategy guides. Two tiles tall." },
   { key: "velvet_rope_v", label: "Velvet rope (up and down)", group: "Furniture", w: 16, h: 16, pal: "tbarrier", gen: GEN.velvet_rope_v, note: "A velvet rope running up and down. It's drawn from the Velvet rope's art (this is just its picture in the curator)." },
-  { key: "card_pack", label: "Card pack", group: "Gift shop and café", w: 48, h: 70, pal: "cpack", gen: GEN.card_pack, note: "The pack you tear open after buying one (shown twice as big). The top 7 rows are the strip that tears off; leave them looking like a crimped edge." },
-  { key: "card_pack_icon", label: "Card pack (small)", group: "Gift shop and café", w: 16, h: 16, pal: "cpackicon", gen: GEN.card_pack_icon, note: "The card pack in the shop list and on the stands." },
   { key: "token_coin_small", label: "Token (small)", group: "Gift shop and café", w: 8, h: 8, pal: "coin", gen: GEN.token_coin_small, note: "The little token in the corner count and next to prices." },
   { key: "door_bottom", label: "Closed door in a bottom wall", group: "Doors", w: 16, h: 16, pal: "wdoor", gen: GEN.door_bottom, note: "A wooden door in a bottom wall, shut (map letter K in the Rooms editor's brushes). The tutorial's rooms use it." },
   { key: "trash_bag_roll", label: "Roll of trash bags", group: "Furniture", w: 16, h: 16, pal: "bagroll", gen: GEN.trash_bag_roll, note: "On the floor by the staff room's trash can: A on it takes a trash bag (or puts an unused one back)." },
+  { key: "player_ghost", label: "Player's thinking ghost", group: "Characters", w: 16, h: 16, layout: "char", pal: "ghost", gen: GEN.character, note: "You, stepped out of yourself while thinking (Select). Drawn at 80% over the Game Boy green, which turns everything into four shades by brightness: keep it light so it stands out. " + CHAR_NOTE },
+  { key: "leave_bubble", retired: true, label: "Visitor leaving (old arrow, no longer used)", group: "People", w: 8, h: 8, pal: "ui", gen: GEN.leave_bubble, note: "8×8, over a visitor on their way out of the museum (you can't chat with them then)." },
+  { key: "staff_tv", label: "Staff room TV", group: "Staff", w: 16, h: 16, frames: 3, fps: 0.5, pal: "stv", gen: GEN.staff_tv, note: "3 frames (48×16), on the staff room's upper wall row, always on a soap opera: the scene, her close-up, his. A new frame every 2 seconds." },
+  { key: "card_pack", label: "Card pack", group: "Gift shop and café", w: 48, h: 70, pal: "cpack", gen: GEN.card_pack, note: "The pack you tear open after buying one (shown twice as big). The top 7 rows are the strip that tears off; leave them looking like a crimped edge." },
+  { key: "card_pack_icon", label: "Card pack (small)", group: "Gift shop and café", w: 16, h: 16, pal: "cpackicon", gen: GEN.card_pack_icon, note: "The card pack in the shop list and on the stands." },
+  { key: "vending_machine", label: "Coffee vending machine", group: "Furniture", w: 16, h: 32, pal: "vend", gen: GEN.vending_machine, note: "In the tutorial's Thinking Room. Two tiles tall." },
+  { key: "exit_sign", label: "Visitor leaving (exit sign)", group: "People", w: 18, h: 8, pal: "exitsign", gen: GEN.exit_sign, note: "18×8, over a visitor on their way out of the museum (talking to them just says they're leaving)." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
 const SLOT = {}; SLOTS.forEach(s => { s.frames = s.frames || 1; s.fps = s.fps || 0; SLOT[s.key] = s; });
@@ -2717,7 +2724,7 @@ const TEXT = {
   "door.lockUp":       { g: "Closing up", l: "Front doors with lights still on ({rooms} lists them)", v: [["The lights are still on in: {rooms}.", "Turn them off before you lock up."]] },
   "spooky.intercom":   { g: "Closing up", l: "The intercom crackles by itself", v: [["*krrsh*", "...ding......\n.........dong...", "*krrsh*"]] },
   "stairs.roof":       { g: "Floors", l: "Stairs to the roof (if a room has some)", v: [["That's the roof access."], ["I don't need to go to the roof."], ["I can't go to the roof because the door...yeah the door is locked."], ["Ok, seriously, there's nothing there."], ["The roof isn't made. It's not a part of the game."]] },
-  "visitor.leaving":   { g: "Visitors", l: "Talking to a visitor on their way out (a wave, no chat; one at random)", by: "claude", v: [["They give you a little wave. They're on their way out."], ["Heading home. They wave on the way past."]] },
+  "visitor.leaving":   { g: "Visitors", l: "Talking to a visitor on their way out (no chat; one at random)", by: "claude", v: [["They're leaving. They're on their way home."], ["They're on their way out of the museum."]] },
   "shop.ringing":      { g: "Gift shop", l: "The shopkeeper, while a visitor's paying at the counter", by: "claude", v: [["One sec! Just ringing someone up."], ["Be right with you. Somebody finally made up their mind."]] },
   "tv.ask":            { g: "Staff", l: "The staff room TV (then Watch for a bit / Not now)", by: "claude", v: [["The staff room TV. A soap opera's on. Watch for a bit?"]] },
   "tv.soap":           { g: "Staff", l: "Watching the soap opera on the staff room TV (picks one at random)", by: "claude", v: [["A man in a lab coat grabs a woman by the shoulders.", "\"Brenda. The baby... isn't mine.\"", "\"It's not yours, Chad. It's your twin brother's.\"", "\"I don't HAVE a twin brother!\"", "Dramatic music. Commercial break."], ["A woman throws a glass of wine across a fancy restaurant.", "\"You were dead, Rodrigo! I went to your funeral!\"", "\"Amnesia, Valentina. Six years of amnesia.\"", "...", "Nobody else in the restaurant reacts."], ["Two people whisper in a hospital hallway.", "\"If Doctor Steele finds out about the will...\"", "\"He won't. Not unless the evil twin talks.\"", "Thunder. Indoors. In the hallway.", "...You're kind of invested now."], ["The soap cuts to a news anchor at a desk.", "\"Breaking news. An inmate has escaped from the jail at the top of Mount Grimley.\"", "\"He is currently skiing down the mountain, dodging police at every turn.\"", "\"He is also streaming the whole thing live. He has gained four hundred thousand followers in the last ten minutes.\"", "\"...Police are asking the public to stop sending him tips.\"", "The soap comes back on. Someone's slapping someone. You missed why."]] },
@@ -8762,7 +8769,7 @@ class Game {
   usherTalk() { const u = this.room.npcs.find(n => n.usher); if (u && this.tour && this.tour.on && !this.tour.school) { this.usherTour(u); return; } this.staffTalk("usher"); } // Tuesdays the school brings its own guide // a tour today: about that
   talkTo(npc) {
     if (this.tutTalk(npc)) return;
-    if (npc.leaving && !npc.staff && !npc.role && !npc.janitor && !npc.usher) { npc.pose = { kind: "wave", t0: this.t, dur: 70 }; this.say(this.tx("visitor.leaving")); return; } // on their way out: a wave, no chat
+    if (npc.leaving && !npc.staff && !npc.role && !npc.janitor && !npc.usher) { this.say(this.tx("visitor.leaving")); return; } // on their way out: no chat, just that they're leaving (Joe 10/20)
     if (this.dayTalk(npc)) return; // the days of the week
     if (npc.usher) { this.usherTalk(); return; }
     if (npc.patron) { // now and then a member tells you about a game from the museum they enjoyed
@@ -11595,7 +11602,7 @@ class Game {
         ctx.font = "6px monospace"; const w = Math.ceil(ctx.measureText(c.member).width) + 4, nx = Math.round(sx + 8 - w / 2), ny = sy - (bub >= 0 ? 18 : c.cur && !c.follow ? 28 : 8);
         ctx.fillStyle = "rgba(24,24,32,.85)"; ctx.fillRect(nx, ny, w, 8); ctx.fillStyle = "#f8f0c0"; ctx.textBaseline = "top"; ctx.fillText(c.member, nx + 2, ny + 1);
       }
-      if (c.leaving && !c.staff && !c.janitor && !c.role && !this.full && !(c.pose && pk < c.pose.dur)) { const by = sy - 9 + (Math.floor(this.t / 20) % 2), ba = ctx.globalAlpha; bubbles.push(() => { ctx.globalAlpha = ba; this.drawSlot("leave_bubble", 0, 0, sx + 4, by); ctx.globalAlpha = 1; }); } // heading home (Joe 10/19)
+      if (c.leaving && !c.staff && !c.janitor && !c.role && !this.full && !(c.pose && pk < c.pose.dur)) { const by = sy - 9 + (Math.floor(this.t / 20) % 2), ba = ctx.globalAlpha; bubbles.push(() => { ctx.globalAlpha = ba; this.drawSlot("exit_sign", 0, 0, sx - 1, by - 1); ctx.globalAlpha = 1; }); } // heading home (Joe 10/19); an EXIT sign (Joe 10/20)
       if (bub >= 0) { const by = sy - 9 + (Math.floor(this.t / 20) % 2), ba = ctx.globalAlpha; bubbles.push(() => { ctx.globalAlpha = ba; this.drawSlot("bubble", bub, 0, sx + 4, by); ctx.globalAlpha = 1; }); }
       ctx.globalAlpha = 1;
     }
@@ -11663,7 +11670,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 137";
+const VERSION = "2026-11-18 cards 138";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
