@@ -1141,6 +1141,12 @@ const GEN = {
     if (f === 1) { for (let x = 0; x < 16; x++) { const y = 6 + Math.round(Math.sin(((x + 8) % 16) / 16 * Math.PI) * 2); px(a, x, y, 4); px(a, x, y + 1, 5); } return a; }
     for (let y = 0; y < 16; y++) { px(a, 8 + ((y >> 2) & 1 ? 0 : 0), y, 4); px(a, 9, y, 5); } return a;
   },
+  tut_barrier: () => { // the first velvet rope (cards 76): a rope between two brass posts (Joe 10/21: back, for closing a room for cleaning)
+    const a = mk(16, 16);
+    for (const x of [2, 13]) { rect(a, x, 4, 1, 9, 1); px(a, x, 3, 2); rect(a, x - 1, 13, 3, 2, 1); }
+    for (let x = 3; x < 13; x++) { const y = 5 + Math.round(Math.sin((x - 3) / 9 * Math.PI) * 2); px(a, x, y, 4); px(a, x, y + 1, 5); }
+    return outline(a);
+  },
   velvet_rope_v: () => { // its icon in the curator (it's drawn from the velvet rope's art)
     const a = mk(16, 16); rect(a, 8, 0, 1, 16, 4); rect(a, 9, 0, 1, 16, 5); rect(a, 7, 4, 2, 9, 1); rect(a, 6, 13, 4, 2, 1); return outline(a);
   },
@@ -1693,6 +1699,7 @@ const SLOTS = [
   { key: "vending_machine", label: "Coffee vending machine", group: "Furniture", w: 16, h: 32, pal: "vend", gen: GEN.vending_machine, note: "In the tutorial's Thinking Room. Two tiles tall." },
   { key: "exit_sign", label: "Visitor leaving (exit sign)", group: "People", w: 18, h: 8, pal: "exitsign", gen: GEN.exit_sign, note: "18×8, over a visitor on their way out of the museum (talking to them just says they're leaving)." },
   { key: "vacuum", label: "Vacuum", group: "Furniture", w: 16, h: 16, pal: "vac", gen: GEN.vacuum, note: "The Polish Lab's vacuum: standing in its corner, and pushed in front of you while you vacuum." },
+  { key: "tut_barrier", label: "Cleaning rope", group: "Furniture", w: 16, h: 16, pal: "tbarrier", gen: GEN.tut_barrier, note: "The first velvet rope: a rope between two brass posts. Stands by an entrance; A on it closes the room for cleaning." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
 const SLOT = {}; SLOTS.forEach(s => { s.frames = s.frames || 1; s.fps = s.fps || 0; SLOT[s.key] = s; });
@@ -2416,7 +2423,7 @@ const ROOMS = {
     props: [
       { key: "vacuum", x: 1, y: 3, toolSpot: "vacuum", event: { tool: "vacuum" } },
       { key: "vacuum", x: 2, y: 3, small: true, toolSpot: "handvac", event: { tool: "handvac" } },
-      { key: "velvet_rope", x: 8, y: 9, event: { labRopes: true } }, // close the room for cleaning (Joe 10/21)
+      { key: "tut_barrier", x: 8, y: 9, event: { labRopes: true } }, // close the room for cleaning (Joe 10/21: the first velvet rope's art)
       { key: "bench", x: 5, y: 8, sit: "up", say: ["A bench. Vacuum around it."] },
       { key: "bench", x: 9, y: 8, sit: "up", say: ["A bench. Someone's always on it."] },
       { key: "sign_stand", x: 13, y: 3, say: ["POLISH LAB", "Grab the vacuums, then pick one from Equipment in the Start menu: the wide one does three tiles, the hand vacuum one. Hold B to vacuum; double-tap B to leave it on.", "The rope by the door closes the room for cleaning (and opens it again).", "Every carpet tile remembers which way you went.", "No right answer. Stripes, diagonals, checkerboards: whatever looks nice to you.", "People walking across it scuff it up again."] },
@@ -6247,7 +6254,7 @@ class Game {
   }
   vacDrawer(c, sx, sy) { // the vacuum you're pushing (Joe 10/21): the wide one full size, the hand vacuum small at your hands; a puff while it runs
     const ctx = this.ctx, [dx, dy] = DIRS[c.dir], small = TOOLS[this.tool].small, sz = small ? 9 : 16;
-    const vx = small ? sx + 4 + dx * 8 : sx + dx * 9, vy = small ? sy + (dy < 0 ? 6 : dy > 0 ? 16 : 13) : sy + (dy < 0 ? -7 : dy > 0 ? 10 : 4);
+    const vx = small ? sx + 4 + dx * 8 : sx + dx * 9, vy = small ? sy + (dy < 0 ? 6 : dy > 0 ? 16 : 10) : sy + (dy < 0 ? -7 : dy > 0 ? 10 : 4);
     return () => { if (small) ctx.drawImage(this.sheet("vacuum"), 0, 0, 16, 16, vx, vy, sz, sz); else this.drawSlot("vacuum", 0, 0, vx, vy);
       if (this.vacuuming() && this.t % 8 < 4) { ctx.fillStyle = "rgba(255,250,235,.7)"; ctx.fillRect(vx + (sz >> 1) + (this.t % 16 < 8 ? -1 : 1), vy + sz, small ? 1 : 2, 1); } };
   }
@@ -6294,7 +6301,7 @@ class Game {
   dressLab() { const L = this.rooms && this.rooms.polish_lab; if (!L) return; const own = this.ownedTools();
     for (const q of L.props) { const ev = q.toolSpot; if (ev) { q.hidden = own.includes(ev); if (q.hidden) { L.solid[q.y][q.x] = false; delete L.events[q.x + "," + q.y]; } } } // a taken tool's spot is just floor again
     L.cases.forEach((c, i) => { if (!c.piece && LAB_CASES[i]) { c.piece = this.tutGame(LAB_CASES[i]); c.state = "wall"; } }); // exhibits to vacuum around (the Thinking Room's made-up games)
-    if (this.labShut) { this.labAway = L.npcs.filter(n => !n.staff); L.npcs = L.npcs.filter(n => n.staff); }
+    if (this.labShut) { const out = L.npcs.filter(n => !n.staff); if (out.length) this.labAway = out; L.npcs = L.npcs.filter(n => n.staff); } // (only after a rebuild: otherwise whoever's waiting outside stays waiting)
     if (this.labCarpet) this.setLabCarpet(this.labCarpet); }
   /* The Equipment screen: a row of icon squares (owned tools), the equipped one framed in gold; its name and what it does below. */
   openEquip() {
@@ -11867,7 +11874,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 143";
+const VERSION = "2026-11-18 cards 144";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
