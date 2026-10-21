@@ -3003,6 +3003,10 @@ const TEXT = {
   "cur.youThought":    { g: "Curious visitors", l: "After \"Let me think\": you've picked a game, as if you'd just told them where it is (then they head over)", by: "claude", v: [["Over there? Thanks! I'll go take a look."], ["Oh, that way? Great, I'll check it out!"], ["That one? Okay, let's see!"]] },
   "cur.cantReach":     { g: "Curious visitors", l: "A curious visitor sent to a game they can't get to (they give up)", by: "claude", v: [["Hmm, I can't seem to get over there.", "Maybe you could show me the way?"], ["I can't find a way through to it.", "Could you lead me there?"]] },
   "cur.notIt":         { g: "Curious visitors", l: "A curious visitor, when what you recommended isn't the game they're after", by: "claude", v: [["Hmm... this isn't the one I'm looking for."], ["No, this isn't it. But thanks for trying!"], ["Oh... this isn't the game I meant."]] },
+  "equip.drink":       { g: "Your stuff", l: "Picking a tool in Equipment while you're holding a drink ({drink})", by: "claude", v: [["Not with a {drink} in my hand.", "I'll finish it first."]] },
+  "clock.nudge":       { g: "Volunteering", l: "Walking into the museum before clocking in (the first time each day): you stop yourself", v: [["I should go clock in at the staff room."]] },
+  "equip.clockIn":     { g: "Volunteering", l: "The Equipment screen when you're not clocked in (just your phone)", v: [["Once you clock in, you get access to all your tools!"]] },
+  "board.month":       { g: "Staff", l: "Staff leaderboard: your own total this month ({points}), when you're not in the top", by: "claude", v: [["You have {points} points this month."]] },
   "think.dismiss":     { g: "Thinking", l: "While thinking, B with a thought in mind: let it go?", v: [["Dismiss thought?"]] },
   "opt.think":         { g: "Menu options", l: "A curious visitor, when the game they want isn't the one in your mind: go and think", v: [["Let me think"]] },
   "opt.thisGame":      { g: "Menu options", l: "A curious visitor, with the very game they want in your mind: recommend it", v: [["This game?"]] },
@@ -4637,6 +4641,7 @@ class Game {
 .gt-eq-name{font-size:calc(6px * var(--s));color:#181820;margin-bottom:calc(2px * var(--s))}
 .gt-eq-desc{font-size:calc(5px * var(--s));line-height:1.4;color:#2c2c3a}
 .gt-eq-k{font-size:calc(4px * var(--s));color:#3c3c4c;text-align:center}
+.gt-eq-note{font-size:calc(5px * var(--s));line-height:1.4;color:#5a4610;background:#fbf3d6;border:calc(1px * var(--s)) solid #c8b070;border-radius:calc(2px * var(--s));padding:calc(2px * var(--s)) calc(4px * var(--s));margin-bottom:calc(3px * var(--s));text-align:center}
 .gt-reader.gt-qz .gt-rd-body{overflow-y:auto;scrollbar-width:thin;white-space:normal}
 .gt-qz-left{font-size:calc(4.5px * var(--s));line-height:1.3;color:#5a3c9a}
 .gt-qz-pips{display:flex;gap:calc(2px * var(--s));margin-top:calc(2px * var(--s))}
@@ -5393,7 +5398,7 @@ class Game {
     // Someone clocked in or out: refresh who's visiting, so the person playing isn't also in the crowd.
     const sk = this.staff ? this.staff.badge + "|" + this.staff.name : "";
     if (this.rooms && this.lastStaffKey !== undefined && sk !== this.lastStaffKey) this.placeMembers();
-    const h = this.el.hud, s = this.staff; if (!h) return;
+    const h = this.el.hud, s = this.staff; if (!h) return; if (s && this.progress) this.progress.lastShiftDay = todayISO(); // (you've been on shift today)
     if (this.recording()) { h.innerHTML = ""; return; } // recording mode: no ON SHIFT tag or tokens
     const tokens = this.progress.tokens || 0;
     h.innerHTML = "";
@@ -5448,16 +5453,15 @@ class Game {
   }
 
   /* Chores on this badge's tally. Kept in the browser, so closing up and reopening never resets it. */
-  staffChores() {
-    const s = this.staff, t = s && this.progress.staffTally[s.badge]; if (!t) return 0;
-    return POINT_KINDS.reduce((a, k) => a + (t[k] || 0) * chorePoints(k), 0);
-  }
+  staffChores() { const s = this.staff, D = this.progress.staffDay; return s && D && D.day === todayISO() ? D.by[s.badge] || 0 : 0; } // (Joe 10/21) today's points: the tag starts at 0 each day; the month's are on the board
   count(kind, target, tokens) { // tokens: instead of the Tokens tab's amount for this kind
     this.progress.tally[kind] = (this.progress.tally[kind] || 0) + 1;
     this.earn(tokens !== undefined ? tokens : this.pack.settings.rewards[kind] !== undefined ? this.pack.settings.rewards[kind] : 1, !POP_KINDS.includes(kind)); // Tokens tab. Chores pop over your head; the rest get the big moment
     const s = this.staff; if (!s) { this.favor(kind); return; }
     const t = this.progress.staffTally[s.badge] || (this.progress.staffTally[s.badge] = { name: s.name });
     t[kind] = (t[kind] || 0) + 1; t.name = s.name;
+    if (POINT_KINDS.includes(kind)) { const td = todayISO(), mo = td.slice(0, 7), D = this.progress.staffDay && this.progress.staffDay.day === td ? this.progress.staffDay : (this.progress.staffDay = { day: td, by: {} }), Mo = this.progress.staffMonth && this.progress.staffMonth.month === mo ? this.progress.staffMonth : (this.progress.staffMonth = { month: mo, by: {} });
+      D.by[s.badge] = (D.by[s.badge] || 0) + chorePoints(kind); Mo.by[s.badge] = Mo.by[s.badge] || { name: s.name, points: 0 }; Mo.by[s.badge].points += chorePoints(kind); Mo.by[s.badge].name = s.name; } // (Joe 10/21) today's points (the tag) and this month's (the board)
     this.shift[kind] = (this.shift[kind] || 0) + 1;
     if (POINT_KINDS.includes(kind) && s.token) { (this.progress.dutyOutbox || (this.progress.dutyOutbox = [])).push({ t: s.token, k: kind, g: String(target || "").slice(0, 60) }); this.saveProgress(); this.sendOutbox(); } // on the board right away again (Joe 10/17); the outbox holds it if you're offline
     this.updateHud();
@@ -6056,6 +6060,7 @@ class Game {
     if (L.shirt && pal[2] && !goq && (k === "player" || k === "curator") && L.shirt !== pal[2]) sw.push(pal[2].slice(1) + "-" + L.shirt.slice(1));
     return sw.length ? "~look:" + sw.join(",") : "";
   }
+  clockNudge() { const t = todayISO(); return !this.staff && !this.isCurator() && !this.tut && !this.headless && !this.recording() && this.progress.clockNudged !== t && this.progress.lastShiftDay !== t; } // not on shift, and not yet today (clocked in earlier and back out: nothing)
   isCurator() { return !!(this.curator || (this.staff && this.staff.curator)); } // a curator badge, or the curator preview's curator view
   /* What people call you to your face: your badge name, or for a curator badge one of the curator's nicknames (Staff tab).
      Official things (the ON SHIFT tag, clocking in, the leaderboard, lockers, Employee of the Month) keep the badge name. */
@@ -6761,6 +6766,7 @@ class Game {
   renderEquip(step) { // (Joe 10/21) a carousel: the picked one's always in the middle, bigger; the list slides past it; the others darker
     const E = this.eq, box = this.el.equip, n = E.list.length;
     box.innerHTML = '<div class="gt-eq-h">EQUIPMENT</div><div class="gt-eq-view"><div class="gt-eq-frame"></div><div class="gt-eq-row"></div></div><div class="gt-eq-info"><div class="gt-eq-name"></div><div class="gt-eq-desc"></div></div><div class="gt-eq-k">\u25c0 \u25b6 choose \u00b7 A equip \u00b7 B back</div>';
+    if (!this.staff && !this.tut && !(this.room && ROOMS[this.room.id] && ROOMS[this.room.id].lab)) { const m = document.createElement("div"); m.className = "gt-eq-note"; m.textContent = this.tx("equip.clockIn")[0]; box.insertBefore(m, box.querySelector(".gt-eq-k")); } // (Joe 10/21) clocked out: just your phone, and why
     const row = box.querySelector(".gt-eq-row"), L = Math.min(3, Math.floor((n - 1) / 2)), R = Math.min(3, n - 1 - L); // how many fit each side without showing one twice
     for (let o = -3; o <= 3; o++) { const d = document.createElement("div"); row.appendChild(d);
       if (o < -L || o > R) { d.className = "gt-eq-cell gap"; continue; }
@@ -6772,7 +6778,7 @@ class Game {
     if (this.eqMinH) box.querySelector(".gt-eq-info").style.minHeight = this.eqMinH + "px";
     const k = E.list[E.i]; box.querySelector(".gt-eq-name").textContent = TOOLS[k].name + (this.tool === k ? " (equipped)" : ""); box.querySelector(".gt-eq-desc").textContent = TOOLS[k].desc;
   }
-  equipPick() { const k = this.eq.list[this.eq.i]; this.equip(this.tool === k ? null : k); this.renderEquip(); if (this.tool) this.showLoc(TOOLS[this.tool].hint); }
+  equipPick() { const k = this.eq.list[this.eq.i]; if (this.drink && k !== "phone" && this.tool !== k) { this.closeEquip(true); this.say(this.tx("equip.drink", { drink: this.drink.name.toLowerCase() })); return; } this.equip(this.tool === k ? null : k); this.renderEquip(); if (this.tool) this.showLoc(TOOLS[this.tool].hint); } // (Joe 10/21) not with a drink in your hand
   closeEquip(all) { this.el.equip.style.display = "none"; this.eq = null; this.mode = "walk"; this.inputLock = true; if (!all) this.openMenu(); }
   tutThinkDone(n) { // the Thinking Room's done: he found something to read, and the door unlocks
     const t = this.tut; if (!t || t.thinkDone) return; t.thinkDone = true; this.tutDid("recommend"); n.tell = null; n.still = true; n.recoIdea = null;
@@ -7163,7 +7169,7 @@ class Game {
   }
   readLeaderboard() {
     if (!this.online()) {
-      const rows = Object.values(this.progress.staffTally || {}).map(t => ({ name: t.name, points: POINT_KINDS.reduce((a, k) => a + (t[k] || 0) * chorePoints(k), 0) })).filter(r => r.points > 0).sort((a, b) => b.points - a.points);
+      const Mo = this.progress.staffMonth && this.progress.staffMonth.month === todayISO().slice(0, 7) ? this.progress.staffMonth.by : {}, rows = Object.values(Mo).filter(r => r.points > 0).sort((a, b) => b.points - a.points); // (Joe 10/21: this month's)
       this.say([...this.tx("board.offline"), ...rows.slice(0, 10).map((r, i) => (i + 1) + ". " + r.name + ", " + pts(r.points) + ".")]);
       return;
     }
@@ -7173,6 +7179,7 @@ class Game {
     for (let i = 0; i < top.length; i += 2) pages.push(top.slice(i, i + 2).map((r, j) => (i + j + 1) + ". " + r.name + ", " + pts(r.points) + ".").join("  "));
     const s = this.staff, at = s && s.token ? top.findIndex(r => r.name === s.name) : -1;
     if (at >= 0) pages.push(...this.tx("board.you", { rank: at + 1, points: top[at].points }));
+    else if (s) { const Mo = this.progress.staffMonth, mine = Mo && Mo.month === todayISO().slice(0, 7) && Mo.by[s.badge] ? Mo.by[s.badge].points : 0; pages.push(...this.tx("board.month", { points: mine })); } // (Joe 10/21) not in the top: your own month so far
     this.say(pages); this.refreshBoard();
   }
   /* The badge you last clocked in with, for clocking in again with one press. One saved before badges could be curators
@@ -7294,7 +7301,7 @@ class Game {
       return;
     }
     const n = this.staffChores();
-    this.choose("On shift as " + this.staff.name + ". " + n + " point" + (n === 1 ? "" : "s") + " on your tally. Clock out?",
+    this.choose("On shift as " + this.staff.name + ". " + n + " point" + (n === 1 ? "" : "s") + " today. Clock out?",
       ["Clock out", "Keep working"], i => {
         if (i !== 0) return;
         const name = this.callName(), remark = this.clockOutRemark(); this.clockOutDuties(); this.progress.staff = null; this.saveProgress(); this.updateHud();
@@ -8623,13 +8630,13 @@ class Game {
     if (!this.staff || this.tut || this.closing || this.mode !== "walk" || (ROOMS[r.id] && (ROOMS[r.id].tutorial || ROOMS[r.id].lab)) || this.fol) return;
     if (this.nextApproach === undefined) this.nextApproach = this.t + APPROACH_EVERY / 2; if (this.t < this.nextApproach) return;
     const wants = this.wantable(); if (!wants.length) { this.nextApproach = this.t + 600; return; }
-    const who = r.npcs.filter(n => n.random && !n.still && !n.sitting && !n.role && !n.staff && !n.patrol && !n.cur && !n.back && !n.follow && !n.member && !n.dayPerson && !n.leaving && !n.tour && !n.reco && !n.inLine && Math.abs(n.x - p.x) + Math.abs(n.y - p.y) <= 6);
+    const who = r.npcs.filter(n => n.random && !n.still && !n.sitting && !n.role && !n.staff && !n.patrol && !n.cur && !n.back && !n.follow && !n.member && !n.dayPerson && !n.leaving && !n.tour && !n.reco && !n.inLine && !n.queue && !n.shopQ && !n.ordering && !n.coffee && !n.binAt && Math.abs(n.x - p.x) + Math.abs(n.y - p.y) <= 6);
     if (!who.length) { this.nextApproach = this.t + 300; return; }
     const n = who[Math.floor(Math.random() * who.length)], cv = this.curiousPlan(), taken = new Set([...cv.list, ...(cv.back || [])].map(v => v.name));
     const names = shuffled((this.pack.settings.curious.names || VISITOR_NAMES).filter(x => !taken.has(x))), free = wants.filter(w => !cv.list.some(v => v.want === w));
     const v = { id: "v" + todayISO().replace(/-/g, "") + Math.random().toString(36).slice(2, 8), name: names[0] || "Sam", sheet: n.sheet, want: (free.length ? free : wants)[Math.floor(Math.random() * (free.length ? free : wants).length)], state: "waiting", room: r.id, home: r.id, zone: r.zoneAt ? ((this.zoneAt(r, n.x, n.y) || {}).id || null) : null };
     cv.list.push(v); this.saveProgress();
-    Object.assign(n, { cur: v, member: v.name, random: false, approach: true, goal: null, walkTo: null, route: null, spotT: this.t, hopT: this.t, lost: 0 }); n.dir = p.x > n.x ? "right" : p.x < n.x ? "left" : p.y > n.y ? "down" : "up"; this.approach = { n, t0: this.t }; // they spot you: a hop, a "!"
+    Object.assign(n, { cur: v, member: v.name, random: false, approach: true, goal: null, goalT: null, walkTo: null, route: null, queue: null, shopQ: null, coffee: false, binAt: null, seat: null, inLine: false, spotT: this.t, hopT: this.t, lost: 0 }); n.dir = p.x > n.x ? "right" : p.x < n.x ? "left" : p.y > n.y ? "down" : "up"; this.approach = { n, t0: this.t }; // they spot you: a hop, a "!" (Joe 10/21: whatever they were off to do, a coffee, can wait)
   }
   curiousTalk(n) { // (Joe 10/19) they think about the game they're after (its art in their bubble); help tells you what it is, and that's all; then Recommend (think about it first) or Follow me
     const v = n.cur; v.met = true;
@@ -8645,7 +8652,7 @@ class Game {
   }
   curHasIt(v) { const I = this.idea; return !!I && I.room === this.room.id && I.kind === "exhibit" && I.piece === v.want; } // (Joe 10/21) the very game they're after, in your mind: "This game?"; otherwise "Let me think"
   curPick(n, o) {
-    if (o === "thisGame") this.curRecommend(n);
+    if (o === "thisGame") this.say(this.tx("cur.youThought", { name: n.cur.name }).map((p, k) => (k ? p : n.cur.name + ": " + p)), () => this.curRecommend(n, true)); // (Joe 10/21) like being told where it is
     else if (o === "think") { if (this.canThink()) { this.thinkFor = n; this.enterThink(); } } // (Joe 10/21) whatever you pick, they take as your answer
     else if (o === "follow") this.startFollow(n);
     else if (o === "gameName") this.tellName(n);
@@ -8658,7 +8665,7 @@ class Game {
       if (!near) { this.saveProgress(); n.pose = { kind: I.kind === "exhibit" ? "busy" : "annoyed", t0: this.t, dur: 110 }; n.timer = 130; if (I.kind !== "exhibit") this.progress.stats.nope++;
         if (this.mode === "walk") this.say(named(this.tx(I.kind === "exhibit" ? "cur.cantReach" : "cur.notIt", { name: v.name }))); return; } // not a game at all; or no way there from here (try Follow me): they say so
       Object.assign(n, { goalT: near, route: null, timer: 0, retry: 0, viewing: false, stepWait: 0, arrived: false, reco: { kind: "cur", x: I.x, y: I.y, piece: I.piece, icon: I.icon } });
-      n.ideaFx = { t0: this.t, icon: I.icon, keep: true }; n.hopT = this.t; }; // off to see it
+      n.ideaFx = { t0: this.t, icon: I.icon, keep: true }; }; // off to see it (Joe 10/21: no "?" and hop first, they knew what they wanted)
     if (now) { decide(); return; }
     n.askFx = { t0: this.t }; n.route = null; n.timer = Math.max(n.timer || 0, 50); n.stepWait = 50;
     n.recoAt = { t: this.t + 40, fn: decide };
@@ -9585,6 +9592,9 @@ class Game {
     if (e.enterMuseum) { this.enterMuseum(); return; }
     if (e.staffDoor) { this.staffDoor(e); return; }
     if (e.shopDoor) { this.shopDoor(e); return; }
+    if (e.warp && e.warp[0] === "museum" && this.room.id === "lobby" && this.clockNudge()) { // (Joe 10/21) the first time each day, if you haven't clocked in: you stop yourself
+      this.progress.clockNudged = todayISO(); this.saveProgress(); const p = this.player, [dx, dy] = DIRS[p.dir]; if (this.tileFree(this.room, p.x - dx, p.y - dy)) { p.x -= dx; p.y -= dy; } p.dir = OPP[p.dir]; p.moving = false; this.path = null;
+      this.say(this.tx("clock.nudge")); return; }
     if (e.warp) this.warp(...e.warp);
     else if (e.caseAt) this.useCase(e.caseAt);
     else if (e.spot) {
@@ -9893,6 +9903,7 @@ class Game {
       if (!this.player.moving && (this.using("shades") === "fake" && !this.progress.lensPopped || this.using("hat") === "fake")) { this.gearCheck(); return; }
       const codeB = this.kbuf && this.kbuf.slice(-9).join() === KONAMI.slice(0, 9).join(); // the B in the code isn't a photo
       if (has("a") && this.kbuf && this.kbuf.slice(-10).join() === KONAMI.slice(0, 10).join()) return; // nor is its A a look
+      if (this.drink && this.tool && this.tool !== "phone" && TOOLS[this.tool]) { const was = TOOLS[this.tool].name; this.equip("phone"); this.showLoc("Put away the " + was.toLowerCase()); } // (Joe 10/21) a drink in hand: the tool goes away (never both)
       this.vacTick(); // (Joe 10/21: B is whatever you're holding; the phone takes photos)
       if (this.tool === "phone") { if (has("b") && !codeB && !this.bStale && !this.player.moving && !this.asleep) { this.takePhoto(); return; } }
       else if (this.toolActive() && has("b") && !codeB && !this.bStale) this.toolPress();
@@ -12406,7 +12417,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 165";
+const VERSION = "2026-11-18 cards 166";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
