@@ -19,11 +19,11 @@ const PAL = {
   plant:   [null, "#9ccc68", "#4c8c3c", "#1e2418", "#c8784c", "#8a4428", "#a89048"],
   retain:  [null, "#a8a49a", "#8a867c", "#6a665e", "#c8c4b8", "#4a4740", "#181820"], // the driveway's concrete retaining wall (Joe 10/21): concrete, shade, form-tie holes, its lit top edge, stains
   slab:    [null, "#b8b4aa", "#9a968c", "#d8d4c8", "#6a665e", "#2a2a30", "#e8c040", "#181820"], // the raised concrete slab out back: concrete, shade, lit edge, its side, the railing, the railing's safety-yellow top
-  truckside: [null, "#f4f4f6", "#c8dcc8", "#9aa8a0", "#5a8ad8", "#1a2230", "#2a2a30", "#8a8a94", "#c84838"], // the delivery truck from the side (Joe 10/21, from his reference): white, a pale green band, shade, the cab window, glass shade, tires, hubs and trim, tail light
+  truckside: [null, "#f4f4f6", "#c8dcc8", "#9aa8a0", "#5a8ad8", "#1a2230", "#2a2a30", "#8a8a94", "#c84838", "#181820"], // the delivery truck from the side (Joe 10/21, from his reference): white, a pale green band, shade, the cab window, glass shade, tires, hubs and trim, tail light
   gopen:   ["#c8ccd4", "#9aa0ac", "#6a707c", "#181820", "#3a3a44", "#e8c040", "#e8e8ec", "#2a2420", "#8a6a44", "#c89a5a", "#7a5a30"], // the garage door's colors, then the truck's white rear, its dark hold, wooden floor, boxes and their shade
   truck:   [null, "#e8e8ec", "#c8c8d0", "#3a6ab8", "#2a4a88", "#1a2230", "#141418", "#e8c040", "#8a6a44", "#c89a5a"], // the delivery truck (Joe 10/21): white box, its ribs, blue cab, cab shade, glass, tires, a yellow stripe, its wooden floor, boxes
-  dump:    [null, "#2e6a48", "#3e8a5e", "#1e4a32", "#141418", "#6a6a72", "#a8a8b0"], // the dumpster out back (Joe 10/21): green steel, a darker lid, black wheels, grey hinges
-  tbag:    [null, "#2a2a30", "#44444e", "#6a6a78", "#e8b24a"], // your trash bag: black plastic, its shine, a yellow tie
+  dump:    [null, "#2e6a48", "#3e8a5e", "#1e4a32", "#141418", "#6a6a72", "#a8a8b0", "#181820"], // the dumpster out back (Joe 10/21): green steel, a darker lid, black wheels, grey hinges
+  tbag:    [null, "#2a2a30", "#44444e", "#6a6a78", "#e8b24a", "#0e0e12"], // your trash bag: black plastic, its shine, a yellow tie
   bloom:   [null, "#9ccc68", "#4c8c3c", "#1e2418", "#c8784c", "#8a4428", "#a89048", "#f08cb0", "#fff0a0"], // a flowering plant (Joe 10/21: Phase 4): the plant's colors, pink petals, yellow middles
   dust:    ["#e8e0d0", "#b8b0a0"],
   mug:     ["#f8f4ec", "#e8e4dc", "#3a2418", "#181820"], // 0 is the mug's body: it used to be see-through, so the floor showed through the mug
@@ -129,8 +129,8 @@ const PAL = {
   rtable:  [null, "#7a4a2a", "#a86a3a", "#1a1418", "#f0ece4", "#5a3420", "#8a8c94", "#4a9a3a"], // her side table: wood, a white cup, coffee, the ashtray, its little leaf
   rshelf:  [null, "#5a3a22", "#7a4a2a", "#1a1418", "#c83a3a", "#3a68c8", "#e8c040", "#58a048", "#8850c0"], // the nook's bookshelf: wood, and the guides' spines
   rbook:   [null, "#c8c8c8", "#f4efe0", "#1a1418", "#b0a890"], // her book: the cover (tinted to the book), the pages, the lines of text
-  mop: [null, "#a87848", "#7a5430", "#e8e4d8", "#c0b8a8", "#4a90c8"], // the mop (Joe 10/21: Phase 3): wooden handle, string head, a blue bucket band
-  rag: [null, "#e8c858", "#c89c38", "#8a6a20", "#f8eab0"], // the polishing rag (Joe 10/21): a yellow duster
+  mop: [null, "#a87848", "#7a5430", "#e8e4d8", "#c0b8a8", "#4a90c8", "#181820"], // the mop (Joe 10/21: Phase 3): wooden handle, string head, a blue bucket band
+  rag: [null, "#e8c858", "#c89c38", "#8a6a20", "#f8eab0", "#181820"], // the polishing rag (Joe 10/21): a yellow duster
   vac: ["#141012", "#c83838", "#8a2020", "#d8d8e0", "#8a8a98", "#3a3a48", "#f0c040"], // the vacuum: outline, red body, dark red, light grey, grey, dark grey, a yellow light
   exitsign: ["#141012", "#1f8a3c", "#f8f8f0", "#0e4a20"], // the exit sign over someone leaving: outline, green, white letters, dark green edge
   vend: ["#141012", "#8a2a2a", "#5a1818", "#1e2a38", "#f0e8d8", "#6a4028", "#e8c070", "#e86050", "#0a0a0a", "#b84a3a"], // the coffee vending machine
@@ -474,7 +474,7 @@ const GEN = {
     const a = mk(16, 16), w = [6, 8, 10, 12][f], h = [5, 7, 9, 11][f], x0 = 8 - (w >> 1), y0 = 15 - h;
     rect(a, x0, y0, w, h, 1); rect(a, x0 + 1, y0 + 1, 1, Math.max(1, h - 3), 3); rect(a, 7, y0 - 2, 2, 2, 1); px(a, 7, y0 - 1, 4); px(a, 8, y0 - 1, 4); // the bag, a shine, its tied neck
     if (f >= 2) { px(a, x0 + w - 2, y0 + 2, 2); px(a, x0 + 3, y0 + h - 2, 2); } // lumps
-    return outline(a);
+    return outline(a, 5); // (black)
   },
   retain_upper: () => { // the driveway's retaining wall, upper row: poured concrete, a row of form-tie holes
     const a = mk(16, 16); fillFn(a, (x, y) => (y === 0 ? 4 : hash(x, y) % 9 === 0 ? 2 : 1)); for (const x of [3, 11]) { px(a, x, 6, 3); px(a, x, 12, 3); } return a;
@@ -491,7 +491,7 @@ const GEN = {
     const a = mk(16, 16); fillFn(a, x => (x === 15 ? 7 : x < 5 ? 1 : x < 10 ? 2 : 4)); for (const x of [4, 9]) rect(a, x, 0, 1, 16, 7); for (const x of [5, 10]) rect(a, x, 0, 1, 16, 3); return a; // (each step's edge in black)
   },
   dock_divider: () => { // the low north-south concrete divider (seen from above and a little in front): its top, its front
-    const a = mk(16, 16); rect(a, 5, 0, 6, 16, 1); rect(a, 5, 0, 1, 16, 3); rect(a, 10, 0, 1, 16, 2); return outline(a);
+    const a = mk(16, 16); rect(a, 5, 0, 6, 16, 1); rect(a, 5, 0, 1, 16, 3); rect(a, 10, 0, 1, 16, 2); return outline(a, 7); // (black)
   },
   garage_side: () => { // the basement's garage door in a side wall (Joe 10/21): seen edge-on, its slats, hazard stripes down the frame
     const a = mk(16, 32); rect(a, 1, 0, 14, 32, 4); rect(a, 3, 2, 10, 30, 0); for (let y = 4; y < 32; y += 3) rect(a, 3, y, 10, 1, 1);
@@ -507,7 +507,8 @@ const GEN = {
     rect(a, 80, 12, 26, 24, 1); rect(a, 80, 26, 26, 10, 2); rect(a, 104, 16, 4, 20, 1); rect(a, 86, 15, 15, 9, 4); rect(a, 87, 16, 4, 7, 5); rect(a, 80, 12, 2, 24, 3); // the cab, its window
     rect(a, 106, 30, 5, 6, 7); px(a, 108, 28, 6); // the bumper
     for (const cx of [14, 27, 64, 94]) { circ(a, cx, 42, 5, 6); circ(a, cx, 42, 2, 7); } // the wheels
-    return outline(a);
+    const o = outline(a, 9); for (let y = 12; y < 36; y++) o[y][79] = 9; for (let x = 86; x < 101; x++) { o[14][x] = 9; o[24][x] = 9; } for (let y = 14; y <= 24; y++) { o[y][85] = 9; o[y][101] = 9; } // a black outline (Joe 10/21), the gap between box and cab, the window's frame
+    return o;
   },
   truck_top: () => { // the delivery truck from above (Joe 10/21), backed up to the garage: cab at the top, the long white box down to the door. 3 tiles by 8
     const a = mk(48, 128);
@@ -539,7 +540,7 @@ const GEN = {
     rect(a, 4, 21, 3, 3, 4); rect(a, 25, 21, 3, 3, 4); // wheels
     if (!f) { rect(a, 1, 6, 30, 3, 3); rect(a, 1, 6, 30, 1, 1); px(a, 8, 8, 5); px(a, 23, 8, 5); } // the lid, closed
     else { rect(a, 2, 9, 28, 2, 4); rect(a, 3, 0, 26, 6, 3); rect(a, 3, 0, 26, 1, 1); px(a, 8, 6, 5); px(a, 23, 6, 5); } // open: the dark inside, the lid tipped back
-    return outline(a);
+    return outline(a, 7); // (black)
   },
   plant_full: () => { // Phase 4 (Joe 10/21): a well-watered plant, fuller and a little taller
     let a = mk(16, 16);
@@ -1246,13 +1247,13 @@ const GEN = {
     rect(a, 9, 0, 1, 9, 1); rect(a, 10, 0, 1, 9, 2); // the handle
     rect(a, 7, 8, 5, 2, 5); // the band
     for (let x = 5; x < 14; x++) { const h = 4 + ((x * 7) % 3); rect(a, x, 10, 1, h, x % 2 ? 3 : 4); } // the strings, uneven at the bottom
-    return outline(a);
+    return outline(a, 6); // (black)
   },
   rag: () => { // a folded polishing rag (Joe 10/21: Phase 2), a corner flopped over
     const a = mk(16, 16);
     rect(a, 3, 5, 10, 7, 1); rect(a, 3, 5, 10, 1, 4); rect(a, 3, 11, 10, 1, 2); rect(a, 9, 5, 4, 3, 2); px(a, 9, 7, 3); px(a, 12, 7, 3); // the cloth, a lighter fold, its shadow, the flopped corner
     for (let x = 4; x < 12; x += 3) px(a, x, 9, 2); // stitching
-    return outline(a);
+    return outline(a, 5); // (black)
   },
   tut_barrier: () => { // the first velvet rope (cards 76): a rope between two brass posts (Joe 10/21: back, for closing a room for cleaning)
     const a = mk(16, 16);
@@ -12178,7 +12179,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 151";
+const VERSION = "2026-11-18 cards 152";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
