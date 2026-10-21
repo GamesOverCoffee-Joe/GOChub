@@ -38,9 +38,11 @@ A test room you reach with a button code, so mechanics can be tried one at a tim
 - The **watering can** is in Equipment too (B at a plant).
 - **To decide after trying it:** how fast cases dull (four minutes now, for testing); paintings too; replacing today's "wipe the fingerprints" fix in the museum.
 
-### Phase 3: mopping and trash cans (in the lab)
-- Mop: a wet sheen that dries over a few seconds; visitors step around a wet patch.
-- Trash cans: swap in a fresh bag (a rustle, the lid settles). Cans fill gradually from visitors' cups; never overflow into a "problem."
+### Phase 3: mopping and trash cans — prototype built (in the lab)
+- The **mop** (Equipment): hold B as you walk the wood floor. It leaves a wet sheen that dries in about six seconds; visitors step around it while it's wet.
+- The lab's **trash can** fills slowly as people walk past (two minutes or so). A swaps in a fresh bag; the can wobbles as the lid settles. It never overflows into a problem.
+- Also this round: tools are held like a coffee cup; A no longer waters plants (the watering can does, with B, everywhere; it hangs in the staff room).
+- **To decide after trying it:** does the mop need a "wet floor" sign; how fast cans fill in the museum (from visitors' cups); whether the bag swap needs a sound.
 
 ### Phase 4: plants as care (in the lab)
 - Watering is maintenance: watered plants slowly flourish over days (fuller, then a flower). Neglected ones look a little tired, never dead.
