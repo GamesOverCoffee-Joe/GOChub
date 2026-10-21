@@ -121,6 +121,7 @@ const PAL = {
   rtable:  [null, "#7a4a2a", "#a86a3a", "#1a1418", "#f0ece4", "#5a3420", "#8a8c94", "#4a9a3a"], // her side table: wood, a white cup, coffee, the ashtray, its little leaf
   rshelf:  [null, "#5a3a22", "#7a4a2a", "#1a1418", "#c83a3a", "#3a68c8", "#e8c040", "#58a048", "#8850c0"], // the nook's bookshelf: wood, and the guides' spines
   rbook:   [null, "#c8c8c8", "#f4efe0", "#1a1418", "#b0a890"], // her book: the cover (tinted to the book), the pages, the lines of text
+  vac: ["#141012", "#c83838", "#8a2020", "#d8d8e0", "#8a8a98", "#3a3a48", "#f0c040"], // the vacuum: outline, red body, dark red, light grey, grey, dark grey, a yellow light
   exitsign: ["#141012", "#1f8a3c", "#f8f8f0", "#0e4a20"], // the exit sign over someone leaving: outline, green, white letters, dark green edge
   vend: ["#141012", "#8a2a2a", "#5a1818", "#1e2a38", "#f0e8d8", "#6a4028", "#e8c070", "#e86050", "#0a0a0a", "#b84a3a"], // the coffee vending machine
   cpack: ["#141012", "#7a0e18", "#c8202e", "#e8c070", "#fbe7a8", "#8e8ca8", "#c8c6dc", "#f4f4ff", "#3a0408", "#a87a30"], // the card pack: outline, reds, golds, foil silvers
@@ -1303,6 +1304,13 @@ const GEN = {
     G.forEach(([x, y, c]) => px(a, x, y, c));
     return outline(a, 2);
   },
+  vacuum: () => { // an upright vacuum (the Polish Lab, Joe 10/21): handle, red body with a bag, a wide head at the bottom
+    const a = mk(16, 16);
+    rect(a, 7, 0, 2, 5, 5); rect(a, 5, 0, 6, 1, 5); // the handle
+    rect(a, 5, 4, 6, 8, 1); rect(a, 6, 5, 4, 5, 2); rect(a, 6, 5, 1, 5, 3); px(a, 9, 10, 6); // the body and bag, a highlight, a light
+    rect(a, 3, 12, 10, 3, 4); rect(a, 3, 14, 10, 1, 5); rect(a, 4, 12, 8, 1, 3); // the head
+    return outline(a);
+  },
   exit_sign: () => { // over someone on their way out (Joe 10/20): a little green EXIT sign, like the ones over museum doors
     const a = mk(18, 8); rect(a, 0, 0, 18, 8, 0); rect(a, 1, 1, 16, 6, 1); rect(a, 1, 6, 16, 1, 3);
     "EXIT".split("").forEach((ch, i) => (PIXEL_FONT[ch] || []).forEach((row, y) => [...row].forEach((v, x) => { if (v === "1") px(a, 2 + i * 4 + x, 1 + y, 2); })));
@@ -1684,6 +1692,7 @@ const SLOTS = [
   { key: "card_pack_icon", label: "Card pack (small)", group: "Gift shop and café", w: 16, h: 16, pal: "cpackicon", gen: GEN.card_pack_icon, note: "The card pack in the shop list and on the stands." },
   { key: "vending_machine", label: "Coffee vending machine", group: "Furniture", w: 16, h: 32, pal: "vend", gen: GEN.vending_machine, note: "In the tutorial's Thinking Room. Two tiles tall." },
   { key: "exit_sign", label: "Visitor leaving (exit sign)", group: "People", w: 18, h: 8, pal: "exitsign", gen: GEN.exit_sign, note: "18×8, over a visitor on their way out of the museum (talking to them just says they're leaving)." },
+  { key: "vacuum", label: "Vacuum", group: "Furniture", w: 16, h: 16, pal: "vac", gen: GEN.vacuum, note: "The Polish Lab's vacuum: standing in its corner, and pushed in front of you while you vacuum." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
 const SLOT = {}; SLOTS.forEach(s => { s.frames = s.frames || 1; s.fps = s.fps || 0; SLOT[s.key] = s; });
@@ -2385,6 +2394,39 @@ const ROOMS = {
     visitors: [],
   },  // The thinking room (Joe 10/20): an anxious visitor who can't pick which of two games to read; teaches Select (think) and
   // recommending. Anything in here can be recommended; recommending one of the two games finishes it and unlocks the door.
+  // The Polish Lab (Joe 10/21): a test room for the "polish the museum" mechanics, one at a time (POLISH-PLAN.md). Reached with
+  // the button code (LAB_CODE), not from anywhere in the museum; the same code or its door takes you back.
+  polish_lab: {
+    name: "Polish Lab", tutorial: true, lab: true,
+    art: { top: "staff_wall_top", upper: "staff_wall_upper", lower: "staff_wall_lower", floor: "hall_floor" },
+    map: [
+      "###############",
+      "#^^^^^^^^^^^^^#",
+      "#vvvvvvvvvvvvv#",
+      "#.............#",
+      "#.............#",
+      "#.............#",
+      "#.............#",
+      "#.............#",
+      "#.............#",
+      "#.............#",
+      "#######K#######",
+    ],
+    spawn: [7, 9, "up"],
+    props: [
+      { key: "vacuum", x: 1, y: 3, event: { tool: "vacuum" } },
+      { key: "sign_stand", x: 13, y: 3, say: ["POLISH LAB", "Grab the vacuum and push it over the carpet. Every tile remembers which way you went.", "No right answer. Stripes, diagonals, checkerboards: whatever looks nice to you.", "People walking across it scuff it up again."] },
+      { key: "plant", x: 13, y: 9, say: ["A plant. Its turn comes later."] },
+      { key: "plant", x: 1, y: 9, say: ["A plant. Also waiting its turn."] },
+    ],
+    decals: [{ key: "rug", x: 3, y: 4, w: 9, h: 5, pattern: "double", motif: "flower", field: "#6a4630", border: "#452e0d", accent: "#3e2818", corner: "#c87848" }],
+    events: [{ x: 7, y: 10, labExit: true, bump: true }],
+    light: { dim: 0, spots: 0 },
+    visitors: [
+      { sheet: "visitor_a", x: 4, y: 6, lines: [["Is it weird that I find vacuum lines relaxing?"]] },
+      { sheet: "visitor_b", x: 10, y: 7, lines: [["Oh, sorry. Am I walking on your carpet?"]] },
+    ],
+  },
   tut_think: { // (Joe 10/20) his layout: in from the south-west corner, Wes four steps from the door, the vending machine and the trash together; a wall with a gap on the right, the two games on a rug behind it
     name: "Thinking Room", tutorial: true,
     art: { top: "gallery_wall_top", upper: "gallery_wall_upper", lower: "gallery_wall_lower", floor: "hall_floor" },
@@ -3133,6 +3175,7 @@ const PIXEL_FONT = (() => {
   g.split(" ").forEach(e => { const [k, b] = e.split(":"); out[k] = [0, 1, 2, 3, 4].map(i => b.slice(i * 3, i * 3 + 3)); });
   return out;
 })();
+const LAB_CODE = ["down", "down", "down", "up", "up", "up", "start"]; // to the Polish Lab and back (Joe 10/21)
 const KONAMI = ["up", "up", "down", "down", "left", "right", "left", "right", "b", "a", "start"];
 const POP_KINDS = ["dusted", "straightened", "watered", "mugs", "wiped", "litter"]; // tokens that just pop over your head
 const HO = { brew: 12, turn: 76, end: 104 }; // the café hand-off, in frames: she turns to the machine, it brews, she turns back round with your drink, and it's yours
@@ -3304,7 +3347,7 @@ prepLayoutRoom(ROOMS.museum);
    the level editor in curator.html writes them. Rooms are plain data, so a deep copy is enough. */
 const BUILTIN_ROOMS = JSON.parse(JSON.stringify(ROOMS));
 const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "runners", "lamps", "mats", "wallpaper", "arrows", "murals", "tint", "windowAt", "intercom", "lightSwitch", "eotmAt",
-  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "enterAt", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt", "posters", "floorLights", "camAt", "colorGlows", "keypadAt", "doorSigns"];
+  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "enterAt", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt", "posters", "floorLights", "camAt", "colorGlows", "keypadAt", "doorSigns", "lab"];
 /* Light checks so a hand-edited or damaged pack can't break the game: rectangular map, sane size, a spawn on the map. */
 function normalizeRoom(id, d) {
   if (d && typeof d === "object" && d.layout) { d = Object.assign({}, d); prepLayoutRoom(d); }
@@ -5099,7 +5142,7 @@ class Game {
     this.mode = "busy"; this.trans = { t: 0, dur: 14, switched: false, fn: go, after: () => { this.dialK = undefined; if (this.needTutorial()) this.startTutorial(); } };
   }
   outsideNow() { return !!(this.room && this.room.id === "outside"); } // the parking lot out front: no museum time there
-  dialOn() { if (this.tut) return this.tut.dialT0 !== undefined && !this.headless; return !!(this.rooms && this.rooms.museum && !this.chillOn() && !this.recording() && this.pack && !this.headless && !this.outsideNow()); } // the day dial is showing (in the tutorial: only once Fern's shown it to you)
+  dialOn() { if (this.tut) return this.tut.dialT0 !== undefined && !this.headless; if (this.room && ROOMS[this.room.id] && ROOMS[this.room.id].lab) return false; return !!(this.rooms && this.rooms.museum && !this.chillOn() && !this.recording() && this.pack && !this.headless && !this.outsideNow()); } // the day dial is showing (in the tutorial: only once Fern's shown it to you)
   drawDayDial() {
     if (!this.dialOn()) return;
     const ctx = this.ctx, d = this.tut ? this.tutDial() : this.director(), R = 7, x = 4 + R + 1, y = SH - 4 - R - 1, f = Math.min(1, d.min / d.minutes);
@@ -6130,6 +6173,44 @@ class Game {
     }
     return false;
   }
+  /* ----- polishing (Joe 10/21, POLISH-PLAN.md) -----
+     The Polish Lab, its code, and the mechanics being tried there. Phase 1: the vacuum. Carpet is any tile under a rug; pushing
+     the vacuum over one leaves it brushed the way you went (light going up or left, dark going down or right, like a mowed
+     lawn). Anyone else walking on it scuffs it a little. Kept for this visit only, for now. */
+  toggleLab() {
+    if (this.room.id === "polish_lab") { this.leaveLab(); return; }
+    if (!ROOMS.polish_lab || !this.rooms.polish_lab) return;
+    const p = this.player; this.labFrom = [this.room.id, p.x, p.y, p.dir]; this.closeAll();
+    this.warp("polish_lab", ...ROOMS.polish_lab.spawn, () => this.showLoc("Polish Lab"));
+  }
+  leaveLab() {
+    if (this.tool) this.putToolBack();
+    const f = this.labFrom && this.rooms[this.labFrom[0]] ? this.labFrom : ["lobby", ...ROOMS.lobby.spawn]; this.labFrom = null;
+    this.warp(...f);
+  }
+  carpetAt(r, x, y) { return (r.decals || []).some(d => d.key === "rug" && d.w && x >= d.x && x < d.x + d.w && y >= d.y && y < d.y + d.h); }
+  napStep(c) {
+    const r = this.room; if (!r || !this.carpetAt(r, c.x, c.y)) return;
+    const N = (this.nap || (this.nap = {}))[r.id] || (this.nap[r.id] = {}), k = c.x + "," + c.y;
+    if (c === this.player) { if (this.tool === "vacuum") N[k] = { d: c.dir, s: 1 }; return; } // the vacuum brushes it your way
+    const v = N[k]; if (v) { v.s -= 0.2; if (v.s <= 0.05) delete N[k]; } // someone walking on it: a little scuffed
+  }
+  drawNap(r, cx, cy) {
+    const N = this.nap && this.nap[r.id]; if (!N) return;
+    const ctx = this.ctx;
+    for (const k in N) { const v = N[k], [x, y] = k.split(",").map(Number), px = x * T - cx, py = y * T - cy; if (px < -T || py < -T || px > SW || py > SH) continue;
+      const light = v.d === "up" || v.d === "left", a = (light ? 0.16 : 0.2) * v.s, vert = v.d === "up" || v.d === "down";
+      ctx.globalAlpha = a; ctx.fillStyle = light ? "#fff4e0" : "#140a04"; ctx.fillRect(px, py, T, T);
+      ctx.globalAlpha = a * 0.9; for (let i = 1; i < T; i += 3) { if (vert) ctx.fillRect(px + i, py, 1, T); else ctx.fillRect(px, py + i, T, 1); } } // the nap's grain, along the way it was pushed
+    ctx.globalAlpha = 1;
+  }
+  takeTool(kind, e) {
+    if (this.tool === kind) { this.putToolBack(); return; }
+    if (this.tool || this.drink || this.carryBox || this.carryItem || this.trashBag != null) { this.say(["Your hands are full."]); return; }
+    const r = this.room, pr = r.props.find(q => q.key === kind && !q.hidden); if (pr) { pr.hidden = true; this.toolHome = { room: r.id, prop: pr }; }
+    this.tool = kind; this.showLoc(kind === "vacuum" ? "Vacuum: walk over the carpet" : "Got the " + kind);
+  }
+  putToolBack() { const h = this.toolHome; if (h && h.prop) h.prop.hidden = false; this.toolHome = null; this.tool = null; }
   tutThinkDone(n) { // the Thinking Room's done: he found something to read, and the door unlocks
     const t = this.tut; if (!t || t.thinkDone) return; t.thinkDone = true; this.tutDid("recommend"); n.tell = null; n.still = true; n.recoIdea = null;
     setTimeout(() => { if (!this.tut) return; const go = () => this.say(this.tutSaid(n.member, this.tx("tut.anx.thanks")), () => this.showLoc(this.tx("tut.unlocked")[0])); if (this.mode === "walk") go(); else { const w = setInterval(() => { if (!this.tut) { clearInterval(w); return; } if (this.mode === "walk") { clearInterval(w); go(); } }, 300); } }, 1200);
@@ -6202,6 +6283,8 @@ class Game {
       return true;
     }
     if (e.tutVend) return this.tutThinkThing(e);
+    if (e.tool) { this.takeTool(e.tool, e); return true; } // the Polish Lab's tools
+    if (e.labExit) { this.leaveLab(); return true; }
     if (e.usher || e.guestbook) { if (t) { const u = this.room.npcs.find(n => n.usher); if (u) u.dir = "down"; this.tutUsher(); } else this.say(["The training desk."]); return true; }
     if (!t) return false;
     if (e.tutSign) { // room A: reading it is the whole task; the chest opens, and the barrier with it
@@ -9051,7 +9134,7 @@ class Game {
     if (c !== this.player && !c.slow && !c.follow && !(c.tagging && c.hurry)) { const ps = this.pack.settings.staff.patronSpeed, sp = c.reco && !c.leaving ? 1 : c.leaving && !c.stroll ? Math.min(1, ps * 1.35) : ps; c.spd = (c.spd || 0) + sp; if (c.spd < 1) return false; c.spd -= 1; } // patrons: slower than you; heading out (the closing announcement) only a little brisker, not a stampede
     const behind = c.follow && c !== this.player && Math.abs(c.x - this.player.x) + Math.abs(c.y - this.player.y) > 1; // a follower who's dropped back catches up (they keep your pace)
     if ((c.prog += (c === this.player && (this.segway || this.zoomT > 0)) || behind ? 2 : 1) >= T) {
-      c.x += DIRS[c.dir][0]; c.y += DIRS[c.dir][1]; c.prog = 0; c.moving = false;
+      c.x += DIRS[c.dir][0]; c.y += DIRS[c.dir][1]; c.prog = 0; c.moving = false; this.napStep(c);
       if (c === this.player) {
         if (!this.full && this.progress.stats) this.progress.stats.steps++;
         if (this.drink && this.drink.mug === "fake" && (this.drink.leak = (this.drink.leak || 0) + 1) >= 6) { this.drink = null; setTimeout(() => this.say(this.tx("gear.leak")), 50); } // a fake travel mug leaks (and goes back in your bag, empty)
@@ -9071,6 +9154,10 @@ class Game {
       if (!hd) this.menuRep = null; else if (!R || R.d !== hd) this.menuRep = { d: hd, t: 0 }; else if (++R.t >= 18 && (R.t - 18) % 5 === 0) q.push(hd);
     } // K / Backspace: back, but no photo
     // Up, up, down, down, left, right, left, right, B, A, Start: a Segway. Enter it again to park it. That Start doesn't open the menu.
+    if (this.mode === "walk" && !this.tut) for (const k of q) if (LAB_CODE.includes(k)) { // the Polish Lab's code
+      (this.lbuf = this.lbuf || []).push(k); if (this.lbuf.length > LAB_CODE.length) this.lbuf.shift();
+      if (this.lbuf.join() === LAB_CODE.join()) { this.lbuf = []; this.konamiNow = true; this.toggleLab(); }
+    } else if (this.mode === "walk") this.lbuf = [];
     if (this.mode === "walk") for (const k of q) if (KONAMI.includes(k)) {
       (this.kbuf = this.kbuf || []).push(k); if (this.kbuf.length > KONAMI.length) this.kbuf.shift();
       if (this.kbuf.join() === KONAMI.join()) { this.kbuf = []; this.segway = !this.segway; if (this.segway) { this.progress.tally.segway = (this.progress.tally.segway || 0) + 1; this.saveProgress(); } this.konamiNow = true; this.showLoc(this.segway ? "SEGWAY UNLOCKED. Zoom zoom." : "Segway parked."); }
@@ -11509,6 +11596,7 @@ class Game {
     for (const [mx, my] of this.doorMats(r)) this.drawSlot("doormat", 0, 0, mx * T - cx, my * T - cy);
     for (const st of r.stairs) this.drawSlot(st.kind === "up" ? "stair_up" : "stair_down", 0, 0, st.x * T - cx, st.y * T - cy);
     this.drawReadBorders(r, cx, cy); // on the floor, under the cases and people
+    this.drawNap(r, cx, cy); // vacuum stripes in the carpet (the Polish Lab)
     for (const l of (this.litter && this.litter[r.id]) || []) this.drawSlot("litter", l.k, 0, l.x * T - cx + l.ox, l.y * T - cy + l.oy); // on the floor, under everyone
     { const I = this.side && this.side.item; if (I && I.on && I.phase === 1 && I.table && r.id === "staff") this.drawSlot("break_items", I.kind, 0, I.table.x * T - cx, I.table.y * T - 8 - cy); } // the item on the break table
     for (const b of (this.sup && this.sup.boxes) || []) if (b.room === r.id) this.drawSlot("supply_box", b.kind === "cafe" ? 1 : 0, 0, b.x * T - cx, b.y * T - cy); // deliveries waiting by the garage door
@@ -11583,6 +11671,7 @@ class Game {
           ctx.fillStyle = "rgba(255,255,240," + (0.95 * k) + ")"; ctx.fillRect(fx - 1, fy - 4, 2, 8); ctx.fillRect(fx - 4, fy - 1, 8, 2); ctx.fillRect(fx - 2, fy - 2, 4, 4);
           ctx.fillStyle = "rgba(255,255,230," + (0.25 * k) + ")"; ctx.beginPath(); ctx.arc(fx, fy, 9, 0, 7); ctx.fill(); }
       }
+      if (c === this.player && this.tool === "vacuum") { const [dx, dy] = DIRS[c.dir]; if (c.dir === "up") this.drawSlot("vacuum", 0, 0, sx + dx * 9, sy + dy * 9 + 2); else bubbles.push(() => this.drawSlot("vacuum", 0, 0, sx + dx * 9, sy + dy * 6 + 4)); } // pushed in front of you (Joe 10/21)
       if (c === this.player && this.phoneT > 0) {
         const ox = { down: 4, up: 4, left: 0, right: 8 }[c.dir]; if (c.dir !== "up") this.drawSlot(this.using("case") ? "phone_case" : "phone", 0, 0, sx + ox, sy + 4);
       }
@@ -11670,7 +11759,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 138";
+const VERSION = "2026-11-18 cards 139";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
