@@ -17,6 +17,9 @@ const PAL = {
   wood:    ["#f0dcc0", "#c08858", "#784830", "#2c1810", "#a06c44"],
   gold:    ["#fff6cc", "#f0c040", "#b07818", "#3c2408", "#c8d8e8", "#a8bcd0"],
   plant:   [null, "#9ccc68", "#4c8c3c", "#1e2418", "#c8784c", "#8a4428", "#a89048"],
+  retain:  [null, "#a8a49a", "#8a867c", "#6a665e", "#c8c4b8", "#4a4740"], // the driveway's concrete retaining wall (Joe 10/21): concrete, shade, form-tie holes, its lit top edge, stains
+  slab:    [null, "#b8b4aa", "#9a968c", "#d8d4c8", "#6a665e", "#2a2a30", "#e8c040"], // the raised concrete slab out back: concrete, shade, lit edge, its side, the railing, the railing's safety-yellow top
+  truckside: [null, "#f4f4f6", "#c8dcc8", "#9aa8a0", "#5a8ad8", "#1a2230", "#2a2a30", "#8a8a94", "#c84838"], // the delivery truck from the side (Joe 10/21, from his reference): white, a pale green band, shade, the cab window, glass shade, tires, hubs and trim, tail light
   gopen:   ["#c8ccd4", "#9aa0ac", "#6a707c", "#181820", "#3a3a44", "#e8c040", "#e8e8ec", "#2a2420", "#8a6a44", "#c89a5a", "#7a5a30"], // the garage door's colors, then the truck's white rear, its dark hold, wooden floor, boxes and their shade
   truck:   [null, "#e8e8ec", "#c8c8d0", "#3a6ab8", "#2a4a88", "#1a2230", "#141418", "#e8c040", "#8a6a44", "#c89a5a"], // the delivery truck (Joe 10/21): white box, its ribs, blue cab, cab shade, glass, tires, a yellow stripe, its wooden floor, boxes
   dump:    [null, "#2e6a48", "#3e8a5e", "#1e4a32", "#141418", "#6a6a72", "#a8a8b0"], // the dumpster out back (Joe 10/21): green steel, a darker lid, black wheels, grey hinges
@@ -471,6 +474,39 @@ const GEN = {
     const a = mk(16, 16), w = [6, 8, 10, 12][f], h = [5, 7, 9, 11][f], x0 = 8 - (w >> 1), y0 = 15 - h;
     rect(a, x0, y0, w, h, 1); rect(a, x0 + 1, y0 + 1, 1, Math.max(1, h - 3), 3); rect(a, 7, y0 - 2, 2, 2, 1); px(a, 7, y0 - 1, 4); px(a, 8, y0 - 1, 4); // the bag, a shine, its tied neck
     if (f >= 2) { px(a, x0 + w - 2, y0 + 2, 2); px(a, x0 + 3, y0 + h - 2, 2); } // lumps
+    return outline(a);
+  },
+  retain_upper: () => { // the driveway's retaining wall, upper row: poured concrete, a row of form-tie holes
+    const a = mk(16, 16); fillFn(a, (x, y) => (y === 0 ? 4 : hash(x, y) % 9 === 0 ? 2 : 1)); for (const x of [3, 11]) { px(a, x, 6, 3); px(a, x, 12, 3); } return a;
+  },
+  retain_lower: () => { // ...lower row: a little darker, rain stains running down
+    const a = mk(16, 16); fillFn(a, (x, y) => (y === 15 ? 3 : (x === 5 || x === 12) && y > 3 && hash(x, y) % 3 ? 5 : hash(x, y) % 7 === 0 ? 1 : 2)); for (const x of [3, 11]) px(a, x, 4, 3); return a;
+  },
+  dock_slab: () => { const a = mk(16, 16); fillFn(a, (x, y) => (x === 0 || y === 0 ? 2 : hash(x, y) % 11 === 0 ? 2 : 1)); return a; }, // the raised slab's concrete, its joints
+  dock_rail: () => { // the slab's north edge: a railing (dark posts, a safety-yellow top rail)
+    const a = GEN.dock_slab(); for (const x of [2, 13]) rect(a, x, 3, 1, 11, 5); rect(a, 0, 3, 16, 2, 6); rect(a, 0, 8, 16, 1, 5); return a;
+  },
+  dock_face: () => { const a = mk(16, 16); fillFn(a, (x, y) => (y < 3 ? 3 : x === 0 ? 2 : 4)); return a; }, // the slab's side, where it drops down to the driveway
+  dock_steps: () => { // steps down off the slab, going east
+    const a = mk(16, 16); fillFn(a, x => (x < 5 ? 1 : x < 10 ? 2 : 4)); for (const x of [5, 10]) rect(a, x, 0, 1, 16, 3); return a;
+  },
+  dock_divider: () => { // the low north-south concrete divider (seen from above and a little in front): its top, its front
+    const a = mk(16, 16); rect(a, 5, 0, 6, 16, 1); rect(a, 5, 0, 1, 16, 3); rect(a, 10, 0, 1, 16, 2); return outline(a);
+  },
+  garage_side: () => { // the basement's garage door in a side wall (Joe 10/21): seen edge-on, its slats, hazard stripes down the frame
+    const a = mk(16, 32); rect(a, 1, 0, 14, 32, 4); rect(a, 3, 2, 10, 30, 0); for (let y = 4; y < 32; y += 3) rect(a, 3, y, 10, 1, 1);
+    for (let y = 2; y < 32; y += 4) rect(a, 13, y, 2, 2, 5); return a;
+  },
+  garage_side_open: () => { // ...rolled up on a Monday: the open back of the truck through it, boxes inside
+    const a = mk(16, 32); rect(a, 1, 0, 14, 32, 4); rect(a, 3, 2, 10, 30, 3); rect(a, 3, 2, 3, 30, 6); rect(a, 6, 4, 7, 28, 7); rect(a, 6, 26, 7, 6, 8); rect(a, 7, 18, 5, 8, 9); rect(a, 8, 14, 4, 4, 9); rect(a, 7, 21, 5, 1, 10); return a;
+  },
+  truck_side: () => { // the delivery truck from the side (Joe 10/21, his reference): the long box at the back (left, against the garage), the cab facing right. 7 tiles by 3
+    const a = mk(112, 48);
+    rect(a, 1, 2, 78, 34, 1); rect(a, 1, 20, 78, 16, 2); rect(a, 1, 2, 2, 34, 3); px(a, 2, 30, 8); px(a, 2, 31, 8); // the box: white, a pale green lower half, its back edge, a tail light
+    rect(a, 0, 36, 110, 3, 7); // the frame
+    rect(a, 80, 12, 26, 24, 1); rect(a, 80, 26, 26, 10, 2); rect(a, 104, 16, 4, 20, 1); rect(a, 86, 15, 15, 9, 4); rect(a, 87, 16, 4, 7, 5); rect(a, 80, 12, 2, 24, 3); // the cab, its window
+    rect(a, 106, 30, 5, 6, 7); px(a, 108, 28, 6); // the bumper
+    for (const cx of [14, 27, 64, 94]) { circ(a, cx, 42, 5, 6); circ(a, cx, 42, 2, 7); } // the wheels
     return outline(a);
   },
   truck_top: () => { // the delivery truck from above (Joe 10/21), backed up to the garage: cab at the top, the long white box down to the door. 3 tiles by 8
@@ -1784,9 +1820,19 @@ const SLOTS = [
   { key: "trash_levels", label: "Trash can, filling", group: "Furniture", w: 16, h: 16, frames: 6, pal: "binfull", gen: GEN.trash_levels, note: "6 frames (96×16): empty, then one more piece of trash over the rim each frame, up to 5. You empty it one piece at a time with a trash bag." },
   { key: "carry_bag", label: "Your trash bag", group: "People", w: 16, h: 16, frames: 4, pal: "tbag", gen: GEN.carry_bag, note: "4 frames (64×16): flat, a little in it, half full, bulging. In your hand while you collect trash." },
   { key: "dumpster", label: "Dumpster", group: "Furniture", w: 32, h: 24, frames: 2, pal: "dump", gen: GEN.dumpster, note: "2 frames (64×24): lid down, lid up. Out back by the basement garage door; full trash bags go in here." },
-  { key: "truck_top", label: "Delivery truck (from above)", group: "Days of the week", w: 48, h: 128, pal: "truck", gen: GEN.truck_top, note: "Mondays, out back: the truck backed up to the garage door, cab at the top. 3 tiles by 8." },
-  { key: "garage_open", label: "Garage door, open on the truck", group: "Days of the week", w: 48, h: 32, pal: "gopen", gen: GEN.garage_open, note: "Mondays, in the basement: the garage door rolled up on the back of the delivery truck. Same size and spot as the Garage door." },
-  { key: "garage_back", label: "Garage door from out back", group: "Floors", w: 48, h: 16, pal: "garage", gen: GEN.garage_back, note: "Out back, in the building's wall at the bottom of the driveway: walk down into it to go inside." },
+  { key: "truck_top", retired: true, label: "Delivery truck (from above, no longer used)", group: "Days of the week", w: 48, h: 128, pal: "truck", gen: GEN.truck_top, note: "Mondays, out back: the truck backed up to the garage door, cab at the top. 3 tiles by 8." },
+  { key: "garage_open", retired: true, label: "Garage door, open on the truck (no longer used)", group: "Days of the week", w: 48, h: 32, pal: "gopen", gen: GEN.garage_open, note: "Mondays, in the basement: the garage door rolled up on the back of the delivery truck. Same size and spot as the Garage door." },
+  { key: "garage_back", retired: true, label: "Garage door from out back (no longer used)", group: "Floors", w: 48, h: 16, pal: "garage", gen: GEN.garage_back, note: "Out back, in the building's wall at the bottom of the driveway: walk down into it to go inside." },
+  { key: "retain_upper", label: "Retaining wall (top)", group: "Floors", w: 16, h: 16, pal: "retain", gen: GEN.retain_upper, note: "Out back: the concrete wall along the north side of the driveway, its upper row." },
+  { key: "retain_lower", label: "Retaining wall (bottom)", group: "Floors", w: 16, h: 16, pal: "retain", gen: GEN.retain_lower, note: "Out back: the retaining wall's lower row, where it meets the driveway." },
+  { key: "dock_slab", label: "Raised slab", group: "Floors", w: 16, h: 16, pal: "slab", gen: GEN.dock_slab, note: "Out back: the concrete slab outside the basement's door." },
+  { key: "dock_rail", label: "Slab railing", group: "Floors", w: 16, h: 16, pal: "slab", gen: GEN.dock_rail, note: "Out back: the railing along the slab's north edge (on the slab)." },
+  { key: "dock_face", label: "Slab side", group: "Floors", w: 16, h: 16, pal: "slab", gen: GEN.dock_face, note: "Out back: the slab's east side, where it drops to the driveway (above the steps)." },
+  { key: "dock_steps", label: "Slab steps", group: "Floors", w: 16, h: 16, pal: "slab", gen: GEN.dock_steps, note: "Out back: the steps down off the slab, going east." },
+  { key: "dock_divider", label: "Concrete divider", group: "Floors", w: 16, h: 16, pal: "slab", gen: GEN.dock_divider, note: "Out back: the low north-south divider, one tile of it (the dumpster's behind it)." },
+  { key: "garage_side", label: "Garage door (side wall)", group: "Floors", w: 16, h: 32, pal: "garage", gen: GEN.garage_side, note: "The basement's garage door, in its right wall (and out back in the left wall, flipped). Two tiles tall." },
+  { key: "garage_side_open", label: "Garage door, open on the truck (side wall)", group: "Days of the week", w: 16, h: 32, pal: "gopen", gen: GEN.garage_side_open, note: "Mondays: the side garage door rolled up on the back of the delivery truck." },
+  { key: "truck_side", label: "Delivery truck (side)", group: "Days of the week", w: 112, h: 48, pal: "truckside", gen: GEN.truck_side, note: "Mondays, out back: the truck backed up to the garage door, its cab facing east. 7 tiles by 3." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
 const SLOT = {}; SLOTS.forEach(s => { s.frames = s.frames || 1; s.fps = s.fps || 0; SLOT[s.key] = s; });
@@ -2168,25 +2214,26 @@ const ROOMS = {
     events: [{ x: 7, y: 3, enterMuseum: true, bump: true }, { x: 8, y: 3, enterMuseum: true, bump: true }],
     light: { dim: 0, spots: 0 },
   },
-  dock: { // out back (Joe 10/21): the delivery driveway, coming down a level from the street to the basement's garage door (at the bottom); the dumpster tucked aside, out of the trucks' way; now and then the reader on a smoke break
-    name: "Out back", art: { top: "lot_hedge", floor: "lot_asphalt", walkway: "lot_sidewalk", roof: "facade_roof" },
+  dock: { // out back (Joe 10/21, his drawing): the delivery driveway beside the building. The building's wall on the left with the
+         // garage door at the top (Mondays the truck's backed up to it) and the basement's door at the bottom onto a raised slab
+         // (a railing on its north side, steps down to the east); a low divider, the dumpster behind it; the street's off to the east
+    name: "Out back", art: { top: "lot_hedge", upper: "retain_upper", lower: "retain_lower", floor: "lot_asphalt", roof: "facade_roof" },
     map: [
-      ",,,,,,,,,,,,,",
-      "##.........##",
-      "##.........##",
-      "##.........##",
-      "##.........##",
-      "##.........##",
-      "##.........##",
-      "##.........##",
-      "##.........##",
-      "##.........##",
-      "##.........##",
-      "RRRRRRRRRRRRR",
+      "R##############",
+      "R^^^^^^^^^^^^^^",
+      "Rvvvvvvvvvvvvvv",
+      "R..............",
+      "R..............",
+      "R..............",
+      "R..............",
+      "R..............",
+      "R..............",
+      "R..............",
+      "R##############",
     ],
-    spawn: [6, 10, "up"],
-    props: [{ key: "garage_back", x: 5, y: 11, event: { dockIn: true, bump: true } }, { key: "dumpster", x: 2, y: 9, event: { dumpster: true } }],
-    visitors: [{ sheet: "visitor_b", shirt: "#3a5a7a", x: 10, y: 9, dir: "left", still: true, smoker: true, lines: [["..."]] }],
+    spawn: [1, 8, "right"],
+    props: [{ key: "garage_side", x: 0, y: 4, tall: true, event: { garage: "out" } }, { key: "doorway_side", x: 0, y: 8, event: { dockIn: true, bump: true } }, { key: "dumpster", x: 11, y: 9, event: { dumpster: true } }],
+    visitors: [{ sheet: "visitor_b", shirt: "#3a5a7a", x: 3, y: 8, dir: "down", still: true, smoker: true, lines: [["..."]] }],
     light: { dim: 0, spots: 0 },
   },
   lobby: {
@@ -3139,6 +3186,8 @@ const TEXT = {
   "reader.look":      { g: "The reader", l: "Talking to or looking at the reader in the reading nook ({book}: what she's reading today)", by: "claude", v: [["She's reading {book}.", "She doesn't look up."], ["{book}. She turns a page.", "You don't exist right now."], ["She's deep into {book}.", "She looks incredibly comfy."]] },
   "reader.shelf":     { g: "The reader", l: "The reading nook's bookshelf", by: "claude", v: [["A little shelf of video game strategy guides.", "None of these are what she's reading. She must've brought her own books."]] },
   "reader.table":     { g: "The reader", l: "Her side table", by: "claude", v: [["A cup of coffee, still warm. And a very small ashtray with a little leaf on it.", "...Is that allowed in here?"]] },
+  "dock.garage":      { g: "Out back", l: "The garage door from out back", by: "claude", v: [["The garage door into the basement.", "Trucks only. Somebody painted that on it, then painted over it."]] },
+  "dock.garageTruck": { g: "Out back", l: "The garage door on a Monday, with the delivery truck backed up to it (inside or out)", by: "claude", v: [["The delivery truck's backed right up to the garage door.", "Boxes come off it one at a time. It takes all morning."]] },
   "reader.smoke":     { g: "The reader", l: "Out back by the dumpster, now and then: the reader on a smoke break", by: "claude", v: [["She's out here on a smoke break, her book tucked under her arm.", "She gives you a small nod. That's new."], ["She blows the smoke away from you. Politely.", "Still doesn't say a word."], ["She checks how many pages are left, and lights another."]] },
   "reader.chairBreak": { g: "The reader", l: "Her armchair while she's out back on a smoke break", by: "claude", v: [["Her armchair, the plaid blanket thrown over the arm.", "Her book's gone too. She'll be back."]] },
   "reader.chair":     { g: "The reader", l: "Her armchair, once she's gone home", by: "claude", v: [["Her armchair. She left her plaid blanket on it.", "She'll be back tomorrow."]] },
@@ -3769,7 +3818,7 @@ function buildRoom(id, pieces, o) {
   if (def.intercom) { const [x, y] = def.intercom; r.intercomAt = { x, y }; r.events[x + "," + y] = { announce: true }; }
   if (def.wallArt) {
     r.wallArt = def.wallArt;
-    def.wallArt.forEach(w => { for (let i = 0; i < SLOT[w.key].w / T; i++) r.events[(w.x + i) + "," + ((w.y || 1) + 1)] = w.key === "staff_tv" ? { staffTv: true } : w.cafe && w.key !== "cafe_menu" ? { cafe: true } : w.tool || w.key === "watering_can" ? { tool: w.tool || "can", say: w.say } : w.key === "garage_door" ? { dockOut: true, bump: true } : { say: w.say || ["The café menu."] }; });
+    def.wallArt.forEach(w => { for (let i = 0; i < SLOT[w.key].w / T; i++) r.events[(w.x + i) + "," + ((w.y || 1) + 1)] = w.key === "staff_tv" ? { staffTv: true } : w.cafe && w.key !== "cafe_menu" ? { cafe: true } : w.tool || w.key === "watering_can" ? { tool: w.tool || "can", say: w.say } : w.key === "garage_side" ? { garage: "in" } : { say: w.say || ["The café menu."] }; });
   }
   r.decals = def.decals || []; r.glows = def.glows || []; r.bunting = !!def.bunting;
   r.wallpaper = SLOT[def.wallpaper] && SLOT[def.wallpaper].group === "Wallpaper" ? def.wallpaper : null; // every wall in the room papered with it
@@ -6463,7 +6512,7 @@ class Game {
     if (e.labBin && Math.floor(this.labBin || 0) >= 1 && n < cap && this.bagHold >= 24) { this.labBin -= 1; this.bagItems = n + 1; this.bagHold = 0; this.binHop = { room: r.id, x: p.x + dx, y: p.y + dy, t0: this.t }; }
   }
   trashAhead() { const r = this.room, p = this.player, [dx, dy] = DIRS[p.dir], e = r && r.events[(p.x + dx) + "," + (p.y + dy)]; return !!(e && (e.labBin || e.dumpster)); }
-  goOutBack() { this.dockDress(); this.warp("dock", ...(this.truckDay() ? [4, 10] : [6, 10]), "up"); } // out the garage door
+  goOutBack() { this.dockDress(); this.warp("dock", 1, 8, "right"); } // out the basement's door, onto the slab
   /* The reader's smoke break (Joe 10/21: an Easter egg): every so often she steps out back for a few minutes, and her chair
      sits empty with the blanket on it. It only changes where you can't see it happen. */
   readerOut() { const C = 60 * 60 * 12, cyc = Math.floor(this.t / C); return this.tod() !== "night" && hash(cyc, 77) % 100 < 35 && this.t % C < 60 * 60 * 3; }
@@ -6477,11 +6526,11 @@ class Game {
   }
   closingNow() { return !!(this.director && this.director().closing); }
   truckDay() { return this.weekday() === 1 && this.tod() !== "night"; } // Monday: the delivery truck's backed up to the garage door
-  dockDress() { // out back on a Monday: the truck, backed up to the garage door (its tiles solid), the garage's sides to get past it
-    const D = this.rooms && this.rooms.dock; if (!D) return; const on = this.truckDay(), has = D.props.some(q => q.key === "truck_top");
-    if (on && !has) D.props.push({ key: "truck_top", x: 5, y: 10, tall: true }); if (!on && has) D.props = D.props.filter(q => q.key !== "truck_top");
-    for (let y = 3; y <= 10; y++) for (let x = 5; x <= 7; x++) D.solid[y][x] = on;
-    for (const x of [4, 8]) { if (on) D.events[x + ",11"] = { dockIn: true, bump: true }; else delete D.events[x + ",11"]; }
+  dockDress() { // out back: the slab's railing and side, the divider (solid); on a Monday the truck, backed up to the garage door
+    const D = this.rooms && this.rooms.dock; if (!D) return; const on = this.truckDay(), has = D.props.some(q => q.key === "truck_side");
+    if (on && !has) D.props.push({ key: "truck_side", x: 1, y: 4, tall: true }); if (!on && has) D.props = D.props.filter(q => q.key !== "truck_side");
+    for (let y = 3; y <= 4; y++) for (let x = 1; x <= 7; x++) D.solid[y][x] = on;
+    for (let x = 1; x <= 5; x++) D.solid[7][x] = true; for (let y = 7; y <= 9; y++) D.solid[y][10] = true;
   }
   plantAhead() { const r = this.room, p = this.player, [dx, dy] = DIRS[p.dir], e = r && r.events[(p.x + dx) + "," + (p.y + dy)]; return e && e.plant ? e : null; }
   waterAhead() { // the watering can: B at a plant (Joe 10/21: the only way to water one now)
@@ -6512,15 +6561,12 @@ class Game {
     this.napGlint = { room: r.id, t0: this.t, at: all.slice().sort(() => Math.random() - 0.5).slice(0, 6) }; // a few soft glints, for a few seconds (drawNap)
     r.npcs.filter(n => !n.staff && !n.still).forEach((n, i) => { n.pose = { kind: "heart", t0: this.t, dur: 90 }; n.lines = [this.tx("polish.fresh")]; n.lineI = -1; });
   }
-  drawDock(r, cx, cy) { // the driveway: darker the further down it goes, concrete retaining walls rising along both sides, a drain by the door
-    const ctx = this.ctx;
-    for (let y = 1; y <= 10; y++) { const k = (y - 1) / 9, py = y * T - cy, w = 1 + Math.round(k * 5);
-      ctx.globalAlpha = 0.04 + k * 0.22; ctx.fillStyle = "#000"; ctx.fillRect(2 * T - cx, py, 9 * T, T);
-      ctx.globalAlpha = 1; ctx.fillStyle = "#8a8880"; ctx.fillRect(2 * T - cx, py, w, T); ctx.fillRect(11 * T - cx - w, py, w, T);
-      ctx.fillStyle = "#c8c6bc"; ctx.fillRect(2 * T - cx + w - 1, py, 1, T); ctx.fillRect(11 * T - cx - w, py, 1, T); }
-    ctx.fillStyle = "#e8c040"; for (let y = 2; y <= 8; y += 2) { ctx.fillRect(6 * T - cx + 7, y * T - cy + 3, 2, 8); } // the lane's dashed line
-    ctx.fillStyle = "#c8c6bc"; ctx.fillRect(2 * T - cx, T - cy, 9 * T, 1); // the lip where the street ends and the ramp starts
-    const gx = 9 * T - cx + 2, gy = 10 * T - cy + 4; ctx.fillStyle = "#1a1a20"; ctx.fillRect(gx, gy, 10, 7); ctx.fillStyle = "#5a5a64"; for (let i = 0; i < 5; i++) ctx.fillRect(gx + 1 + i * 2, gy + 1, 1, 5); // the drain
+  drawDock(r, cx, cy) { // the slab outside the basement's door: its railing, its side, the steps down; the divider by the dumpster; a drain
+    const d = (k, x, y) => this.drawSlot(k, 0, 0, x * T - cx, y * T - cy);
+    for (let x = 1; x <= 4; x++) { d("dock_rail", x, 7); d("dock_slab", x, 8); d("dock_slab", x, 9); }
+    d("dock_face", 5, 7); d("dock_steps", 5, 8); d("dock_steps", 5, 9);
+    for (let y = 7; y <= 9; y++) d("dock_divider", 10, y);
+    const ctx = this.ctx, gx = 8 * T - cx + 3, gy = 6 * T - cy + 4; ctx.fillStyle = "#1a1a20"; ctx.fillRect(gx, gy, 10, 7); ctx.fillStyle = "#5a5a64"; for (let i = 0; i < 5; i++) ctx.fillRect(gx + 1 + i * 2, gy + 1, 1, 5); // a drain
   }
   drawNap(r, cx, cy) {
     if (r.id === "dock") this.drawDock(r, cx, cy);
@@ -9213,8 +9259,8 @@ class Game {
      garage door again. A trash bag: an empty one back on the roll; a full one counted, as if the janitor took it. Your drink stays. */
   dropHands() {
     if (this.carryBox && this.carryBox !== "tut" && this.sup) {
-      const S = this.rooms && this.rooms.storage, g = S && (ROOMS.storage.wallArt || []).find(w => w.key === "garage_door"), gx = g ? g.x : 6, y = 3;
-      const free = [[gx, y], [gx + 2, y], [gx + 1, y + 1], [gx - 1, y], [gx + 3, y], [gx + 1, y + 2]].filter(([x, yy]) => S && S.solid[yy] && S.solid[yy][x] === false && !S.events[x + "," + yy] && !this.sup.boxes.some(b => b.room === "storage" && b.x === x && b.y === yy));
+      const S = this.rooms && this.rooms.storage, g = S && (ROOMS.storage.wallArt || []).find(w => w.key === "garage_side"), gx = g ? g.x - 1 : 13, y = g ? g.y : 3; // (just inside the side garage door)
+      const free = [[gx, y], [gx, y + 1], [gx - 1, y + 1], [gx, y + 2], [gx - 1, y + 2], [gx - 2, y + 1]].filter(([x, yy]) => S && S.solid[yy] && S.solid[yy][x] === false && !S.events[x + "," + yy] && !this.sup.boxes.some(b => b.room === "storage" && b.x === x && b.y === yy));
       const [x, yy] = free[0] || [7, 4]; this.sup.boxes.push({ room: "storage", x, y: yy, kind: this.carryBox }); this.carryBox = null;
     }
     if (this.trashBag != null) {
@@ -9358,7 +9404,8 @@ class Game {
     if (ROOMS[this.room.id] && ROOMS[this.room.id].tutorial && this.tutEvent(e)) return;
     if (e.tutorial) { this.choose(this.tx("tut.door").join(" "), ["Yes", "Not now"], i => { if (i === 0) this.startTutorial(true); }, 1); return; }
     if (e.dockOut) { this.goOutBack(); return; } // the basement's garage door: out back
-    if (e.dockIn) { this.warp("storage", 7, 3, "down"); return; } // (walk down into the garage door, back inside)
+    if (e.dockIn) { this.warp("storage", 13, 7, "left"); return; } // (back in through the basement's door)
+    if (e.garage) { this.say(this.tx(this.truckDay() ? "dock.garageTruck" : e.garage === "out" ? "dock.garage" : "storage.garage")); return; } // trucks only
     if (e.tool) { this.takeTool(e.tool); return; } // a tool on its hook (the staff room's watering can): into your Equipment
     if (e.enterMuseum) { this.enterMuseum(); return; }
     if (e.staffDoor) { this.staffDoor(e); return; }
@@ -10786,8 +10833,8 @@ class Game {
     const d = this.director(), key = todayISO() + ":" + d.loop;
     if (!this.sup || this.sup.key !== key) {
       const boxes = [], S = this.rooms && this.rooms.storage, spot = i => { // by the garage door (or wherever there's floor)
-        const g = S && (ROOMS.storage.wallArt || []).find(w => w.key === "garage_door"), gx = g ? g.x : 6, y = 3;
-        const c = [[gx, y], [gx + 2, y], [gx + 1, y + 1], [gx - 1, y], [gx + 3, y]].filter(([x, yy]) => S && S.solid[yy] && S.solid[yy][x] === false && !S.events[x + "," + yy]);
+        const g = S && (ROOMS.storage.wallArt || []).find(w => w.key === "garage_side"), gx = g ? g.x - 1 : 13, y = g ? g.y : 3; // (just inside the side garage door)
+        const c = [[gx, y], [gx, y + 1], [gx - 1, y + 1], [gx, y + 2], [gx - 1, y + 2]].filter(([x, yy]) => S && S.solid[yy] && S.solid[yy][x] === false && !S.events[x + "," + yy]);
         return c[i] || c[0] || [7, 4];
       };
       if (d.problems.includes("stock")) { const [x, y] = spot(0); boxes.push({ room: "storage", x, y, kind: "shop" }); }
@@ -11947,7 +11994,7 @@ class Game {
       const x = r.windowAt.x * T - cx, y = r.windowAt.y * T - cy;
       this.drawSlot("sky_" + tod, 0, 0, x + 2, y + 2); this.drawSlot("window_frame", 0, 0, x, y);
     }
-    if (r.wallArt) r.wallArt.forEach(w => { const k = w.key === "garage_door" && this.truckDay() ? "garage_open" : w.key; this.drawSlot(k, this.frame(k), 0, w.x * T - cx, (w.y || 1) * T - cy); }); // (frames: the staff room TV; Mondays the garage is open on the delivery truck)
+    if (r.wallArt) r.wallArt.forEach(w => { const k = w.key === "garage_side" && this.truckDay() ? "garage_side_open" : w.key; this.drawSlot(k, this.frame(k), 0, w.x * T - cx, (w.y || 1) * T - cy); }); // (frames: the staff room TV; Mondays the side garage door is open on the delivery truck)
     if (r.bunting) for (let x = 1; x < r.w - 1; x++) this.drawSlot("bunting", 0, 0, x * T - cx, T - cy);
     (r.unveilZones || []).forEach(z => { const R = z.rect; if (!R) return; const y = R.y - 2; for (let x = R.x; x < R.x + R.w; x++) if (r.tiles[y] && /upper/.test(String(r.tiles[y][x] || ""))) this.drawSlot("bunting", 0, 0, x * T - cx, y * T - cy); }); // an unveil day's bunting (a hallway has no bunting: a painting can unveil in one, Joe 10/16)
     if (r.switchAt) this.drawSlot("light_switch", 0, 0, r.switchAt.x * T - cx, r.switchAt.y * T - cy);
@@ -12131,7 +12178,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 149";
+const VERSION = "2026-11-18 cards 150";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
