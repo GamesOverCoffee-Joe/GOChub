@@ -9536,7 +9536,7 @@ class Game {
     // A room's overflow (its genre's episodes that don't fit its cases) is on that room's touch screen.
     this.overflow = {}; const first = cases.order.find(sl => sl.genre); if (first && cases.archived.length) this.overflow[first.genre] = cases.archived.slice(); // the oldest that don't fit: on the touch screen at the start of the timeline (the first wing's)
     this.rooms = {}; Object.keys(ROOMS).forEach(id => (this.rooms[id] = buildRoom(id, this.pack.pieces, o)));
-    this.tutDress(); this.dressLab(); this.dockDress(); this.zoneDress(); if (this.tool === undefined) { const on = this.progress.tools && this.progress.tools.on; this.tool = on === undefined ? "phone" : TOOLS[on] ? on : null; } // (the phone in hand to start) this.seatGuests(); this.placeJoe(); this.placeDay();
+    this.tutDress(); this.dressLab(); this.dockDress(); this.zoneDress(); if (this.tool === undefined) { const on = this.progress.tools && this.progress.tools.on; this.tool = on === undefined ? "phone" : TOOLS[on] ? on : null; } this.seatGuests(); this.placeJoe(); this.placeDay(); // (the phone in hand to start)
     this.placeCurious(); this.placeMembers(); this.giveLife();
     for (const id in this.rooms) this.rooms[id].fresh = true; // the director settles each room's crowd for this point in the visit
   }
@@ -12417,7 +12417,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 166";
+const VERSION = "2026-11-18 cards 167";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
