@@ -2417,6 +2417,7 @@ const ROOMS = {
       { key: "vacuum", x: 1, y: 3, toolSpot: "vacuum", event: { tool: "vacuum" } },
       { key: "velvet_rope", x: 2, y: 3, toolSpot: "ropes", event: { tool: "ropes" } },
       { key: "sign_stand", x: 13, y: 3, say: ["POLISH LAB", "Grab the vacuum (and the ropes), then pick them from Equipment in the Start menu. Hold B to vacuum; double-tap B to leave it on.", "Ropes: B where one starts, walk, B where it ends. B on a rope takes it back up.", "Every carpet tile remembers which way you went.", "No right answer. Stripes, diagonals, checkerboards: whatever looks nice to you.", "People walking across it scuff it up again."] },
+      { key: "sign_stand", x: 11, y: 3, event: { labCarpet: true } }, // carpet samples: the wings' carpets (Joe 10/21)
       { key: "plant", x: 13, y: 9, say: ["A plant. Its turn comes later."] },
       { key: "plant", x: 1, y: 9, say: ["A plant. Also waiting its turn."] },
     ],
@@ -6205,7 +6206,18 @@ class Game {
     const f = this.labFrom && this.rooms[this.labFrom[0]] ? this.labFrom : ["lobby", ...ROOMS.lobby.spawn]; this.labFrom = null;
     this.warp(...f);
   }
-  carpetAt(r, x, y) { return (r.decals || []).some(d => d.key === "rug" && d.w && x >= d.x && x < d.x + d.w && y >= d.y && y < d.y + d.h); }
+  carpetAt(r, x, y) { return /^carpet_floor/.test((r.tiles[y] && r.tiles[y][x]) || "") || (r.decals || []).some(d => d.key === "rug" && d.w && x >= d.x && x < d.x + d.w && y >= d.y && y < d.y + d.h); } // wall-to-wall carpet (the wings) or a rug
+  labCarpets() { // the lab's rug, then each wing's carpet, in its own color from the museum layout
+    const lay = ROOMS.museum && ROOMS.museum.layout, W = ((lay && lay.rooms) || []).filter(z => z.art && z.art.floor === "carpet_floor" && z.tint && z.tint.floor).sort((a, b) => (a.order || 99) - (b.order || 99));
+    return [{ name: "The rug" }].concat(W.map(z => ({ name: z.name, tint: z.tint.floor })));
+  }
+  setLabCarpet(i) { // swap the lab's floor: the rug on wood, or wall-to-wall wing carpet (fresh, no stripes yet)
+    const L = this.rooms.polish_lab, c = this.labCarpets()[i]; if (!L || !c) return;
+    if (!L.labFloor) { L.labFloor = L.tiles.map(row => row.slice()); L.labRug = L.decals.filter(d => d.key === "rug"); }
+    L.tiles = L.labFloor.map(row => row.map(t => c.tint && t === "hall_floor" ? "carpet_floor@" + c.tint : t));
+    L.decals = L.decals.filter(d => d.key !== "rug").concat(c.tint ? [] : L.labRug);
+    if (this.nap) delete this.nap.polish_lab; this.labCarpet = i;
+  }
   napStep(c) {
     const r = this.room; if (!r || !this.carpetAt(r, c.x, c.y)) return;
     const N = (this.nap || (this.nap = {}))[r.id] || (this.nap[r.id] = {}), k = c.x + "," + c.y;
@@ -6294,7 +6306,9 @@ class Game {
   }
   toolIcon(kind) { const C = this.toolIcons || (this.toolIcons = {}), sh = this.sheet(TOOLS[kind].slot); if (C[kind] && C[kind].src === sh) return C[kind].c;
     const c = document.createElement("canvas"); c.width = c.height = 16; c.getContext("2d").drawImage(sh, (TOOLS[kind].frame || 0) * 16, 0, 16, 16, 0, 0, 16, 16); C[kind] = { src: sh, c }; return c; }
-  dressLab() { const L = this.rooms && this.rooms.polish_lab; if (!L) return; const own = this.ownedTools(); for (const q of L.props) { const ev = q.toolSpot; if (ev) q.hidden = own.includes(ev); } }
+  dressLab() { const L = this.rooms && this.rooms.polish_lab; if (!L) return; const own = this.ownedTools();
+    for (const q of L.props) { const ev = q.toolSpot; if (ev) { q.hidden = own.includes(ev); if (q.hidden) { L.solid[q.y][q.x] = false; delete L.events[q.x + "," + q.y]; } } } // a taken tool's spot is just floor again
+    if (this.labCarpet) this.setLabCarpet(this.labCarpet); }
   /* The Equipment screen: a row of icon squares (owned tools), the equipped one framed in gold; its name and what it does below. */
   openEquip() {
     const own = this.ownedTools(); if (!own.length) return;
@@ -6384,6 +6398,7 @@ class Game {
     if (e.tutVend) return this.tutThinkThing(e);
     if (e.tool) { this.takeTool(e.tool); return true; } // the Polish Lab's tools
     if (e.labExit) { this.leaveLab(); return true; }
+    if (e.labCarpet) { this.ask("Carpet samples. Lay down which?", this.labCarpets().map(c => c.name).concat("Never mind"), i => { const C = this.labCarpets(); if (i < C.length) this.setLabCarpet(i); }); return true; }
     if (e.usher || e.guestbook) { if (t) { const u = this.room.npcs.find(n => n.usher); if (u) u.dir = "down"; this.tutUsher(); } else this.say(["The training desk."]); return true; }
     if (!t) return false;
     if (e.tutSign) { // room A: reading it is the whole task; the chest opens, and the barrier with it
@@ -11773,7 +11788,7 @@ class Game {
           ctx.fillStyle = "rgba(255,255,240," + (0.95 * k) + ")"; ctx.fillRect(fx - 1, fy - 4, 2, 8); ctx.fillRect(fx - 4, fy - 1, 8, 2); ctx.fillRect(fx - 2, fy - 2, 4, 4);
           ctx.fillStyle = "rgba(255,255,230," + (0.25 * k) + ")"; ctx.beginPath(); ctx.arc(fx, fy, 9, 0, 7); ctx.fill(); }
       }
-      if (c === this.player && this.tool === "vacuum" && this.toolActive()) { const [dx, dy] = DIRS[c.dir]; if (this.vacuuming() && this.t % 8 < 4) { ctx.fillStyle = "rgba(255,250,235,.7)"; ctx.fillRect(sx + dx * 9 + 7 + (this.t % 16 < 8 ? -1 : 1), sy + dy * 9 + 17, 2, 1); } if (c.dir === "up") this.drawSlot("vacuum", 0, 0, sx + dx * 9, sy + dy * 9 + 2); else bubbles.push(() => this.drawSlot("vacuum", 0, 0, sx + dx * 9, sy + dy * 6 + 4)); } // pushed in front of you (Joe 10/21)
+      if (c === this.player && this.tool === "vacuum" && this.toolActive()) { const [dx, dy] = DIRS[c.dir], vx = sx + 4 + dx * 8, vy = sy + (dy < 0 ? 6 : dy > 0 ? 16 : 13), vac = () => { ctx.drawImage(this.sheet("vacuum"), 0, 0, 16, 16, vx, vy, 9, 9); if (this.vacuuming() && this.t % 8 < 4) { ctx.fillStyle = "rgba(255,250,235,.7)"; ctx.fillRect(vx + 4 + (this.t % 16 < 8 ? -1 : 1), vy + 9, 1, 1); } }; if (c.dir === "up") vac(); else bubbles.push(vac); } // small, right at your hands (Joe 10/21)
       if (c === this.player && this.phoneT > 0) {
         const ox = { down: 4, up: 4, left: 0, right: 8 }[c.dir]; if (c.dir !== "up") this.drawSlot(this.using("case") ? "phone_case" : "phone", 0, 0, sx + ox, sy + 4);
       }
@@ -11861,7 +11876,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 141";
+const VERSION = "2026-11-18 cards 142";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
