@@ -63,7 +63,8 @@ A test room you reach with a button code, so mechanics can be tried one at a tim
 - What you polish gets noticed: visitors drift to a gleaming case, linger, take photos. Your care quietly steers people toward the pieces you love.
 - People mention your work: comments on the carpet pattern, a coworker who likes your stripes, a photo of your checkerboard.
 
-### Phase 7: into the museum
+### Phase 7: into the museum — partly built
+- Done: the carpets, the cases (polish and glints), the plants (and the planters), the bins (the museum's cans fill a piece at a time; the trash bags empty them), closing an area for cleaning; fingerprints retired.
 - Move what worked out of the lab: carpets in the hallways and café, the cases, the plants, the bins.
 - Retire the old fix-type chores (dust, crooked frames, fingerprints, the jammed can, dying plants) and the day dial in the default mode.
 - Wear comes from the day itself: tours and rushes scuff and smudge more.

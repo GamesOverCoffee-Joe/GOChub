@@ -425,3 +425,4 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Chores | A planter, looked at: in flower | The planter's in full bloom. / Somebody's been taking care of it. |
 | Curious visitors | After "Let me think": you come out of thinking with something in mind | Oh! You thought of something? · Ooh, that look. You've got an idea, don't you? · Did you think of one? Show me! |
 | Curious visitors | What you recommended isn't the game they're after | Hmm... I don't think that's the one. · No, that's not it. But thanks for trying! · Close, maybe? No... that's not it. |
+| Café | A full museum trash can, looked at when you have the trash bags | This one's full to the brim. / Hold B with a trash bag to take it out. |

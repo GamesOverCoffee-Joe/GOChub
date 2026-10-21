@@ -2751,6 +2751,7 @@ const TEXT = {
   "planter.0":         { g: "Chores", l: "A planter, looked at: plain (water it and it flowers the next day)", by: "claude", v: [["A planter. Green and tidy, but no flowers.", "A little water each day would help."]] },
   "planter.1":         { g: "Chores", l: "A planter, looked at: in flower (watered the day before)", by: "claude", v: [["The planter's in full bloom.", "Somebody's been taking care of it."]] },
   "polish.plantDamp": { g: "Polish Lab", l: "Added after the above, if it's been watered today", by: "claude", v: [["The soil's still damp from today."]] },
+  "bin.fullBag":       { g: "Café", l: "A museum trash can that's full, looked at when you have the trash bags", by: "claude", v: [["This one's full to the brim.", "Hold B with a trash bag to take it out."]] },
   "polish.binEmpty": { g: "Polish Lab", l: "The lab's trash can, when it's empty", by: "claude", v: [["Still plenty of room in this one."]] },
   "polish.binBag":   { g: "Polish Lab", l: "The lab's trash can with something in it, when you have trash bags", by: "claude", v: [["Some trash in this one.", "Hold B with a trash bag to take it out."]] },
   "polish.binNoBag": { g: "Polish Lab", l: "The same, before you've got the trash bags", by: "claude", v: [["Some trash in this one.", "There's a roll of trash bags by the wall."]] },
@@ -3410,7 +3411,7 @@ const TOOLS = { // equipment (Joe 10/21): what each is, its icon (an art slot an
 };
 const LAB_DAY = 60 * 60; // a day for the Polish Lab's plants: one minute (Joe 10/21)
 const LAB_STAGES = ["plant_thirsty", "plant", "plant_full", "plant_flower"]; // tired, normal, full, flowering
-const BIN_MAX = 5, BIN_PIECE = 60 * 40; // the lab's can: at most five pieces, one every forty seconds (Joe 10/21: never too much)
+const BIN_MAX = 5, BIN_PIECE = 60 * 40, BIN_PIECE_MUSEUM = 60 * 60 * 3; // the lab's can: at most five pieces, one every forty seconds (Joe 10/21: never too much)
 const MESS_MAX = 8; // at most this many specks in a room (and half as many spills)
 const ROPE_SPOTS = { north: [30, 12], strategy: [40, 17] }; // (Joe 10/21) Volume III's rope stand stays where it was; Volume IV's one tile left, in the hall against the wall
 const APPROACH_EVERY = 60 * 60 * 2; // Phase 5: a visitor comes over about every two minutes you're clocked in (one at a time)
@@ -4615,12 +4616,13 @@ class Game {
 .gt-equip{position:absolute;box-sizing:border-box;left:calc(30px * var(--s));right:calc(30px * var(--s));top:calc(18px * var(--s));padding:calc(5px * var(--s)) calc(7px * var(--s)) calc(4px * var(--s));z-index:7;display:none;background:#d4d5da;border:calc(1px * var(--s)) solid #181820;border-radius:calc(2px * var(--s));box-shadow:0 0 0 calc(1px * var(--s)) #eceef2 inset,0 calc(2px * var(--s)) 0 rgba(0,0,0,.25);color:#20202c;line-height:1.3} /* (Joe 10/21) a soft gray window */
 .gt-eq-h{font-size:calc(6px * var(--s));letter-spacing:.12em;color:#3c3c4c;text-align:center;margin-bottom:calc(3px * var(--s))}
 .gt-eq-view{position:relative;width:calc(126px * var(--s));height:calc(32px * var(--s));margin:0 auto calc(3px * var(--s));overflow:hidden} /* five slots, the middle one always the picked one */
-.gt-eq-row{position:absolute;left:calc(-26px * var(--s));top:0;height:100%;display:flex;align-items:center;gap:calc(4px * var(--s))}
+.gt-eq-row{position:absolute;left:calc(-26px * var(--s));top:0;height:100%;display:flex;align-items:center;gap:calc(4px * var(--s));z-index:1}
+.gt-eq-frame{position:absolute;left:calc(48px * var(--s));top:calc(1px * var(--s));width:calc(30px * var(--s));height:calc(30px * var(--s));box-sizing:border-box;border:calc(1px * var(--s)) solid #181820;border-radius:calc(2px * var(--s));background:#fbfbfd;z-index:0} /* (Joe 10/21) the selection window: it stays put, the tools slide through it */
+.gt-eq-frame.worn{background:#fff3c4;border-color:#b08020}
 .gt-eq-row.slide{transition:transform .14s ease-out}
 .gt-eq-cell{position:relative;flex:none;width:calc(22px * var(--s));height:calc(22px * var(--s));box-sizing:border-box;border:calc(1px * var(--s)) solid #8a8c98;border-radius:calc(2px * var(--s));background:#eef0f4;display:flex;align-items:center;justify-content:center;cursor:pointer;filter:brightness(.62) saturate(.7);transition:transform .14s ease-out,filter .14s ease-out}
 .gt-eq-cell img{width:calc(16px * var(--s));height:calc(16px * var(--s));image-rendering:pixelated}
-.gt-eq-cell.on{transform:scale(1.3);filter:none;border-color:#181820;background:#fbfbfd;z-index:1}
-.gt-eq-cell.worn{background:#fff3c4;border-color:#b08020}
+.gt-eq-cell.on{transform:scale(1.3);filter:none;border-color:transparent;background:transparent}
 .gt-eq-cell.gap{visibility:hidden}
 .gt-eq-cell span{position:absolute;right:calc(1px * var(--s));bottom:0;font-size:calc(4px * var(--s));line-height:1;color:#6a4a08}
 .gt-eq-info{box-sizing:border-box;text-align:left;background:#f4f5f8;border:calc(1px * var(--s)) solid #a4a6b2;border-radius:calc(2px * var(--s));padding:calc(3px * var(--s)) calc(4px * var(--s));margin-bottom:calc(3px * var(--s))} /* the words, in their own little box */
@@ -6477,6 +6479,7 @@ class Game {
   napStep(c) {
     const r = this.room; if (!r || c === this.player) return; // (your own steps don't scuff; the vacuum does the brushing, vacTick)
     if (ROOMS[r.id] && ROOMS[r.id].lab) { const B = r.props.find(q => q.key === "trash_can"); if (B && Math.abs(B.x - c.x) + Math.abs(B.y - c.y) === 1) this.labBin = Math.min(BIN_MAX, (this.labBin || 0) + 0.25); } // tossing something in on the way past
+    else if (!this.tut && Math.random() < 0.05) { const B = r.props.find(q => q.key === "trash_can" && Math.abs(q.x - c.x) + Math.abs(q.y - c.y) === 1); if (B) this.binAdd(r.id, B.x, B.y); } // (the museum's: now and then)
     this.messStep(r, c);
     if (!this.carpetAt(r, c.x, c.y)) return;
     const N = (this.nap || (this.nap = {}))[r.id] || (this.nap[r.id] = {}), k = c.x + "," + c.y;
@@ -6549,7 +6552,7 @@ class Game {
     ctx.globalAlpha = 1;
   }
   wetAt(r, x, y) { const W = this.wet && this.wet[r.id], t = W && W[x + "," + y]; return t !== undefined && this.t - t < WET_DRY; }
-  binTick(r) { if (!r || !ROOMS[r.id] || !ROOMS[r.id].lab) return; this.plantTick(r); this.labBin = Math.min(BIN_MAX, (this.labBin || 0) + 1 / BIN_PIECE); } // a piece every so often (faster with people passing, napStep); never more than five
+  binTick(r) { this.museumBins(); if (!r || !ROOMS[r.id] || !ROOMS[r.id].lab) return; this.plantTick(r); this.labBin = Math.min(BIN_MAX, (this.labBin || 0) + 1 / BIN_PIECE); } // a piece every so often (faster with people passing, napStep); never more than five
   /* Phase 4 (Joe 10/21): plants as care. A lab plant has four stages: tired, normal, full, flowering. Water it once a day
      (the lab's day is a minute) and it grows a stage, and stays in flower as long as you keep it up. Each day without
      water it slips back a stage, never further than tired. */
@@ -6582,8 +6585,9 @@ class Game {
     const [dx, dy] = DIRS[p.dir], e = r.events[(p.x + dx) + "," + (p.y + dy)] || {}, cap = TOOLS.bag.cap, n = this.bagItems || 0;
     this.bagHold = (this.bagHold || 0) + 1;
     if (e.labBin && Math.floor(this.labBin || 0) >= 1 && n < cap && this.bagHold >= 24) { this.labBin -= 1; this.bagItems = n + 1; this.bagHold = 0; this.binHop = { room: r.id, x: p.x + dx, y: p.y + dy, t0: this.t }; }
+    else if (e.trash && !e.labBin && !this.isJammed(r.id, p.x + dx, p.y + dy) && this.binLevel(r.id, p.x + dx, p.y + dy) >= 1 && n < cap && this.bagHold >= 24) { this.bins[this.binKey(r.id, p.x + dx, p.y + dy)] -= 1; this.bagItems = n + 1; this.bagHold = 0; this.binHop = { room: r.id, x: p.x + dx, y: p.y + dy, t0: this.t }; } // a museum can, the same
   }
-  trashAhead() { const r = this.room, p = this.player, [dx, dy] = DIRS[p.dir], e = r && r.events[(p.x + dx) + "," + (p.y + dy)]; return !!(e && (e.labBin || e.dumpster)); }
+  trashAhead() { const r = this.room, p = this.player, [dx, dy] = DIRS[p.dir], e = r && r.events[(p.x + dx) + "," + (p.y + dy)]; return !!(e && (e.labBin || e.dumpster || e.trash)); }
   goOutBack() { this.dockDress(); this.warp("dock", 1, 8, "right"); } // out the basement's door, onto the slab
   /* The reader's smoke break (Joe 10/21: an Easter egg): every so often she steps out back for a few minutes, and her chair
      sits empty with the blanket on it. It only changes where you can't see it happen. */
@@ -6747,12 +6751,12 @@ class Game {
   }
   renderEquip(step) { // (Joe 10/21) a carousel: the picked one's always in the middle, bigger; the list slides past it; the others darker
     const E = this.eq, box = this.el.equip, n = E.list.length;
-    box.innerHTML = '<div class="gt-eq-h">EQUIPMENT</div><div class="gt-eq-view"><div class="gt-eq-row"></div></div><div class="gt-eq-info"><div class="gt-eq-name"></div><div class="gt-eq-desc"></div></div><div class="gt-eq-k">\u25c0 \u25b6 choose \u00b7 A equip \u00b7 B back</div>';
+    box.innerHTML = '<div class="gt-eq-h">EQUIPMENT</div><div class="gt-eq-view"><div class="gt-eq-frame' + (this.tool === E.list[E.i] ? ' worn' : '') + '"></div><div class="gt-eq-row"></div></div><div class="gt-eq-info"><div class="gt-eq-name"></div><div class="gt-eq-desc"></div></div><div class="gt-eq-k">\u25c0 \u25b6 choose \u00b7 A equip \u00b7 B back</div>';
     const row = box.querySelector(".gt-eq-row"), L = Math.min(3, Math.floor((n - 1) / 2)), R = Math.min(3, n - 1 - L); // how many fit each side without showing one twice
     for (let o = -3; o <= 3; o++) { const d = document.createElement("div"); row.appendChild(d);
       if (o < -L || o > R) { d.className = "gt-eq-cell gap"; continue; }
       const i = (E.i + o + n) % n, k = E.list[i]; d.className = "gt-eq-cell" + (o === 0 ? " on" : "") + (this.tool === k ? " worn" : "");
-      const c = document.createElement("img"); c.src = this.toolIcon(k).toDataURL(); c.alt = TOOLS[k].name; d.appendChild(c); if (this.tool === k) { const t = document.createElement("span"); t.textContent = "E"; d.appendChild(t); }
+      const c = document.createElement("img"); c.src = this.toolIcon(k).toDataURL(); c.alt = TOOLS[k].name; d.appendChild(c);
       d.addEventListener("click", e => { e.stopPropagation(); if (o === 0) this.equipPick(); else { E.i = i; this.renderEquip(Math.sign(o)); } }); }
     if (step && typeof requestAnimationFrame !== "undefined") { const px = getComputedStyle(row.children[1]).width, sh = "calc(" + (step > 0 ? 1 : -1) + " * (" + px + " + " + getComputedStyle(row).columnGap + "))"; // it starts where it was, then slides over
       row.style.transform = "translateX(" + sh + ")"; requestAnimationFrame(() => requestAnimationFrame(() => { row.classList.add("slide"); row.style.transform = ""; })); }
@@ -8495,6 +8499,7 @@ class Game {
       this.choose(this.tx(d.mug ? "bin.pourMug" : "bin.tossFull", { drink: n }).join(" "), ["Yes", "No"], k => { if (k !== 0) return; this.drink = null; this.say(this.tx(d.mug ? "bin.poured" : e.tub ? "bin.tub" : "bin.trash")); }, 1);
       return;
     }
+    if (!e.tub && this.binLevel(this.room.id, bx, by) >= 1 && this.ownedTools().includes("bag")) { this.say(this.tx(this.binFull(this.room.id, bx, by) ? "bin.fullBag" : "polish.binBag")); return; } // (Joe 10/21) some in it, and you've got the trash bags
     this.say(this.tx(e.tub ? "bin.lookTub" : "bin.lookTrash"));
   }
   workbench() {
@@ -8994,13 +8999,12 @@ class Game {
       });
       return;
     }
-    const opts = ["My Stuff", ...(this.ownedTools().length ? ["Equipment"] : []), "Think", ...(this.idea ? ["Forget thought"] : []), ...(this.isCurator() && this.answerPieces().length ? ["Developer answers"] : []), "Settings", "Save", "Back"]; // (Joe 10/12: Recent notices, Controls and Respawn under Settings; Save asks if you're quitting)
+    const opts = ["My Stuff", ...(this.ownedTools().length ? ["Equipment"] : []), ...(this.tool && this.tool !== "phone" && TOOLS[this.tool] ? ["Put away"] : []), ...(this.isCurator() && this.answerPieces().length ? ["Developer answers"] : []), "Settings", "Save", "Back"]; // (Joe 10/12: Recent notices, Controls and Respawn under Settings; Save asks if you're quitting)
     this.choose("PAUSED", opts, k => {
       const o = opts[k];
       if (o === "My Stuff") this.myStuff();
       else if (o === "Equipment") this.openEquip();
-      else if (o === "Think") { if (this.canThink()) this.enterThink(); } // the same as Select
-      else if (o === "Forget thought") this.forgetThought();
+      else if (o === "Put away") { const was = TOOLS[this.tool].name; this.equip("phone"); this.showLoc("Put away the " + was.toLowerCase()); } // (Joe 10/21) empty hands again: B's your phone
       else if (o === "Settings") this.settingsMenu();
       else if (o === "Save") this.saveAsk();
       else if (o === "Developer answers") this.answersMenu();
@@ -9884,7 +9888,7 @@ class Game {
     if (this.mode === "walk" || this.mode === "busy") this.updateNpcs();
   }
   /* ----- Thinking and recommending (Joe 10/19; LIVING-MUSEUM-PLAN.md) -----
-     SELECT (or Think in the pause menu): time stops, the screen goes Game Boy green, and you step out of yourself as a ghost (your
+     SELECT: time stops, the screen goes Game Boy green, and you step out of yourself as a ghost (your
      sprite, half see-through) that walks through people but not walls, in this room only. A on something holds it in mind (the
      thought bubble in the corner) and you snap back. Then talk to a regular visitor and pick Recommend: no words, they just go and
      do something with it, or not, by their willingness (0 to 4 for each kind of thing, handed out silently when they come in).
@@ -11228,9 +11232,16 @@ class Game {
      else (Joe 10/11). Each piece of litter belongs to the bin nearest it: the janitor sweeps up round a bin, then empties
      that bin, then moves on (on his trash round, and whenever he spots litter between chores), which slows him down. */
   binKey(room, x, y) { return room + ":" + x + "," + y; }
-  binFill(room, x, y) { return this.isJammed(room, x, y) ? this.pack.settings.litter.cap : 0; } // bins are bottomless (Joe 10/12): only the jammed one takes nothing
-  binFull(room, x, y) { return this.isJammed(room, x, y); }
-  binAdd(room, x, y) { return !this.isJammed(room, x, y); }
+  binFill(room, x, y) { return this.isJammed(room, x, y) ? this.pack.settings.litter.cap : 0; } // (the old trash-bag-into-a-bin check: only the jammed one takes nothing)
+  /* (Joe 10/21) The museum's cans fill up too, a piece at a time like the lab's: one every few minutes, and whatever people
+     throw away. Full (five), nothing more goes in. With the trash bags (clocked in), hold B at one to take it out. */
+  binLevel(room, x, y) { return Math.min(BIN_MAX, (this.bins || {})[this.binKey(room, x, y)] || 0); }
+  binFull(room, x, y) { return this.isJammed(room, x, y) || this.binLevel(room, x, y) >= BIN_MAX; }
+  binAdd(room, x, y, amt) { if (this.binFull(room, x, y)) return false; const B = this.bins || (this.bins = {}), k = this.binKey(room, x, y); B[k] = Math.min(BIN_MAX, (B[k] || 0) + (amt === undefined ? 1 : amt)); return true; }
+  museumBins() { // every second: each can in the building gets a little fuller (not while it's closing up)
+    if (this.t % 60 || this.closing || this.tut || !this.rooms) return;
+    for (const id in this.rooms) { if (/^tut/.test(id) || (ROOMS[id] && ROOMS[id].lab)) continue; for (const q of this.rooms[id].props) if (q.key === "trash_can") this.binAdd(id, q.x, q.y, 60 / BIN_PIECE_MUSEUM); }
+  }
   /* ----- The jammed can (Joe 10/12) -----
      Trash on the floor means something's wrong. Each loop, one can out where people are (the lobby or the museum, never the
      theater or the basement) has a cup wedged in its flap from the start: it's drawn overflowing. From the busy part of the
@@ -11778,9 +11789,10 @@ class Game {
   drawProp(p, cx, cy) {
     if (p.hidden) return; // (the tutorial's chest, before you've read the sign)
     if (p.key === "velvet_rope" || p.key === "velvet_rope_v") { this.drawRope(p, cx, cy); return; }
-    const ctx = this.ctx, k = p.planter ? (this.plantStage(p.plant) ? p.key + "_flower" : p.key) : p.plant && !/^tut-/.test(p.plant) ? LAB_STAGES[this.plantStage(p.plant)] : p.plant && this.isThirsty(p.plant) ? "plant_thirsty" : p.key === "trash_can" && this.binFull(this.room.id, p.x, p.y) ? "trash_full" : p.key;
+    const ctx = this.ctx, k = p.planter ? (this.plantStage(p.plant) ? p.key + "_flower" : p.key) : p.plant && !/^tut-/.test(p.plant) ? LAB_STAGES[this.plantStage(p.plant)] : p.plant && this.isThirsty(p.plant) ? "plant_thirsty" : p.key === "trash_can" && this.isJammed(this.room.id, p.x, p.y) ? "trash_full" : p.key;
     const px0 = p.x * T - cx, py0 = p.y * T - (SLOT[k].h - T) - cy;
     if (k === "trash_can" && ROOMS[this.room.id] && ROOMS[this.room.id].lab) { this.drawSlot("trash_levels", Math.floor(this.labBin || 0), 0, px0, py0); return; } // (the lab's can: a piece at a time)
+    if (k === "trash_can" && !/^tut/.test(this.room.id)) { this.drawSlot("trash_levels", Math.floor(this.binLevel(this.room.id, p.x, p.y)), 0, px0, py0); return; } // the museum's, the same (a jammed one's drawn full, above)
     if (k === "dumpster") { this.drawSlot(k, this.dumpT && this.t - this.dumpT < 50 ? 1 : 0, 0, px0, py0); return; } // the lid goes up as a bag goes in
     if (k === "bench_side") { this.drawFlip(k, p.sit === "right", px0, py0); return; } // whoever sits on it is drawn over both seats
     if (p.small) { ctx.drawImage(this.sheet(k), 0, 0, SLOT[k].w, SLOT[k].h, px0 + 4, py0 + 6, 9, 9); return; } // drawn small (the Polish Lab's hand vacuum)
@@ -12378,7 +12390,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 161";
+const VERSION = "2026-11-18 cards 162";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
