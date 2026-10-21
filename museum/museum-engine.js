@@ -504,10 +504,10 @@ const GEN = {
     const a = mk(112, 48);
     rect(a, 1, 2, 78, 34, 1); rect(a, 1, 20, 78, 16, 2); rect(a, 1, 2, 2, 34, 3); px(a, 2, 30, 8); px(a, 2, 31, 8); // the box: white, a pale green lower half, its back edge, a tail light
     rect(a, 0, 36, 110, 3, 7); // the frame
-    rect(a, 80, 12, 26, 24, 1); rect(a, 80, 26, 26, 10, 2); rect(a, 104, 16, 4, 20, 1); rect(a, 86, 15, 15, 9, 4); rect(a, 87, 16, 4, 7, 5); rect(a, 80, 12, 2, 24, 3); // the cab, its window
+    rect(a, 80, 12, 26, 6, 1); rect(a, 80, 18, 28, 18, 2); rect(a, 80, 12, 2, 24, 3); rect(a, 88, 20, 13, 8, 4); rect(a, 89, 21, 3, 6, 5); // the cab: its roof (white), its side (Joe 10/21: the window's on the side, not the roof)
     rect(a, 106, 30, 5, 6, 7); px(a, 108, 28, 6); // the bumper
     for (const cx of [14, 27, 64, 94]) { circ(a, cx, 42, 5, 6); circ(a, cx, 42, 2, 7); } // the wheels
-    const o = outline(a, 9); for (let y = 12; y < 36; y++) o[y][79] = 9; for (let x = 86; x < 101; x++) { o[14][x] = 9; o[24][x] = 9; } for (let y = 14; y <= 24; y++) { o[y][85] = 9; o[y][101] = 9; } // a black outline (Joe 10/21), the gap between box and cab, the window's frame
+    const o = outline(a, 9); for (let y = 12; y < 36; y++) o[y][79] = 9; for (let x = 87; x < 102; x++) { o[19][x] = 9; o[28][x] = 9; } for (let y = 19; y <= 28; y++) { o[y][87] = 9; o[y][101] = 9; } for (let x = 80; x < 108; x++) o[18][x] = 9; // a black outline (Joe 10/21), the gap between box and cab, the window's frame, the cab's roof edge
     return o;
   },
   truck_top: () => { // the delivery truck from above (Joe 10/21), backed up to the garage: cab at the top, the long white box down to the door. 3 tiles by 8
@@ -12179,7 +12179,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 152";
+const VERSION = "2026-11-18 cards 153";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
