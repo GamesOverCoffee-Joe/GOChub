@@ -52,10 +52,12 @@ A test room you reach with a button code, so mechanics can be tried one at a tim
 - In the lab a day is one minute, so you can watch it happen. Watered today: the soil looks damp. Growing: a soft glint.
 - **To decide after trying it:** how a day maps in the museum (a real day, or the game's day); whether visitors notice a flowering plant (Phase 6); replacing today's dying-plant fix.
 
-### Phase 5: visitors come to you
-- While you're working (holding a tool, or just finished), a nearby visitor sometimes walks up: "Excuse me, do you work here? I want something cozy." Their ask can be vague, so knowing the collection is the skill.
-- You answer with what you're thinking of (Select), as today's recommending.
-- Try it in the lab with the two visitors first.
+### Phase 5: visitors come to you — built (in the museum)
+- While you're clocked in, about every two minutes someone near you who's looking for a game walks over, their thought bubble up, and waits beside you. Talk to them and it's the usual curious-visitor help (Select to recommend, or lead them). One at a time; they give up after a minute and a half.
+- Tools are in your Equipment whenever you're clocked in (nothing to pick up; a tutorial will introduce them one by one later). Clocked out, it's just your phone.
+- Specks on the carpet (vacuum) and little spills from drinks on the wood (mop) turn up now and then.
+- The café can be closed for cleaning with its rope stand (everyone steps out; A again to reopen).
+- The Janitor's retired: his jobs are yours now.
 
 ### Phase 6: care draws attention
 - What you polish gets noticed: visitors drift to a gleaming case, linger, take photos. Your care quietly steers people toward the pieces you love.
