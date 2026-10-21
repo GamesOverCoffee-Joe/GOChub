@@ -5170,11 +5170,8 @@ class Game {
   }
   /* Dust and crooked frames are new every session (Joe 10/11): about one piece in three dusty, one in five crooked, picked at
      random each time the game starts. Whatever you've dusted or straightened today stays done for the rest of the day. */
-  isDusty(p) { const t = todayISO(); return this.progress.dusted[p.id] !== t && strSeed(t + p.id + ":dust:" + RUN_SEED) % 3 === 0; }
-  isCrooked(p) {
-    if (this.forcedCrooked && this.forcedCrooked.has(p.id)) return true;
-    const t = todayISO(); return this.progress.straightened[p.id] !== t && strSeed(t + p.id + ":tilt:" + RUN_SEED) % 5 === 0;
-  }
+  isDusty(p) { return false; } // (Joe 10/21, Phase 7: the old fix-type chores are retired; polish, sweep and water instead)
+  isCrooked(p) { return !!(this.forcedCrooked && this.forcedCrooked.has(p.id)); } // (only the spooky creak tilts one now)
   isThirsty(id) { if (/^tut-/.test(id)) return this.tutThirsty(id); if (/^lab-/.test(id)) return !this.labPlant(id).watered; return this.progress.watered[id] !== todayISO(); } // the tutorial's plants go by the tutorial, the Polish Lab's by their stage (Phase 4)
   /* One press, one chore: a dusty frame gets dusted; a crooked one (once clean) gets straightened. Returns false when there's nothing to do. */
   tidy(spot) {
@@ -6526,12 +6523,14 @@ class Game {
      back bright, and a fully polished case glints now and then. No fingerprints. */
   shineOn(r) { return !!r && !!ROOMS[r.id] && (!ROOMS[r.id].tutorial || !!ROOMS[r.id].lab); } // (the lab and the museum; not the tutorial)
   shineOf(r, c) { const lab = !!ROOMS[r.id].lab, dull = lab ? SHINE_DULL : SHINE_DULL_MUSEUM, low = lab ? 0 : 0.3, S = (this.shine || (this.shine = {}))[r.id + ":" + c.x + "," + c.y];
-    return S ? Math.max(low, S.s - (this.t - S.t) / dull) : lab ? 0.35 : Math.max(low, 0.8 - this.t / dull); } // (the lab's start a bit dull; the museum's start nearly bright and dull slowly, never below 0.3)
+    if (!lab) { const D = this.dayShine(), Q = D.c[r.id + ":" + c.x + "," + c.y], f = at => (Date.now() - at) * 0.06; return Q ? Math.max(low, Q.s - f(Q.at) / dull) : Math.max(low, 0.8 - f(D.t0) / dull); } // (Joe 10/21, Phase 7) the museum's: what you polished stays for the day (by the clock, across visits)
+    return S ? Math.max(low, S.s - (this.t - S.t) / dull) : 0.35; }
+  dayShine() { const t = todayISO(); let D = this.progress.shine; if (!D || D.day !== t) D = this.progress.shine = { day: t, t0: Date.now(), c: {} }; return D; } // the day's polish: when it started dulling, and each case you've polished (how bright, when) // (the lab's start a bit dull; the museum's start nearly bright and dull slowly, never below 0.3)
   polishTick() {
     const r = this.room, p = this.player; this.polishing = null;
-    if (this.tool !== "rag" || !this.toolActive() || !this.bHeld() || p.moving) return;
+    if (this.tool !== "rag" || !this.toolActive() || !this.bHeld() || p.moving) { if (this.shineDirty) { this.shineDirty = false; this.saveProgress(); } return; } // (saved when you stop rubbing)
     const [dx, dy] = DIRS[p.dir], e = r.events[(p.x + dx) + "," + (p.y + dy)], c = e && e.caseAt; if (!c || !c.piece || !this.shineOn(r)) return;
-    const k = r.id + ":" + c.x + "," + c.y, was = this.shineOf(r, c), now = Math.min(1, was + 1 / 80); this.shine[k] = { s: now, t: this.t }; this.polishing = c;
+    const k = r.id + ":" + c.x + "," + c.y, was = this.shineOf(r, c), now = Math.min(1, was + 1 / 80); this.shine[k] = { s: now, t: this.t }; this.polishing = c; if (!ROOMS[r.id].lab) { this.dayShine().c[k] = { s: now, at: Date.now() }; this.shineDirty = true; }
     if (was < 1 && now >= 1) this.shine[k].glow = this.t;
   }
   /* Phase 3 (Joe 10/21): the mop leaves a wet sheen on the floor you walk over that dries in a few seconds, and people step
@@ -6542,8 +6541,9 @@ class Game {
     if (c.staff || !ROOMS[r.id] || ROOMS[r.id].tutorial && !ROOMS[r.id].lab) return;
     const M = (this.mess || (this.mess = {}))[r.id] || (this.mess[r.id] = {}), lab = ROOMS[r.id].lab, k = c.x + "," + c.y; if (M[k]) return;
     const n = Object.values(M), carpet = this.carpetAt(r, c.x, c.y), tl = String((r.tiles[c.y] && r.tiles[c.y][c.x]) || "");
-    if (carpet && n.filter(m => m.k === "speck").length < MESS_MAX && Math.random() < (lab ? 1 / 60 : 1 / 500)) M[k] = { k: "speck", f: Math.floor(Math.random() * 3) };
-    else if (!carpet && /floor/.test(tl) && (c.drink || lab) && n.filter(m => m.k === "spill").length < MESS_MAX / 2 && Math.random() < (lab ? 1 / 90 : 1 / 300)) M[k] = { k: "spill", f: Math.floor(Math.random() * 2) };
+    const T0 = this.tour, beat = lab ? 0 : this.dirBeatT === this.t ? this.dirBeat : (this.dirBeatT = this.t, this.dirBeat = this.director().beat), wear = lab ? 1 : (beat === 2 ? 2 : 1) * (T0 && ((T0.members || []).includes(c) || c === T0.guide) ? 2 : 1); // (Joe 10/21, Phase 7) the rush, and tours, leave more behind
+    if (carpet && n.filter(m => m.k === "speck").length < MESS_MAX && Math.random() < (lab ? 1 / 60 : wear / 500)) M[k] = { k: "speck", f: Math.floor(Math.random() * 3) };
+    else if (!carpet && /floor/.test(tl) && (c.drink || lab) && n.filter(m => m.k === "spill").length < MESS_MAX / 2 && Math.random() < (lab ? 1 / 90 : wear / 300)) M[k] = { k: "spill", f: Math.floor(Math.random() * 2) };
   }
   cleanAt(r, x, y, kind) { const M = this.mess && this.mess[r.id], m = M && M[x + "," + y]; if (m && m.k === kind) delete M[x + "," + y]; }
   drawMess(r, cx, cy) { const M = this.mess && this.mess[r.id]; if (!M) return; for (const k in M) { const [x, y] = k.split(",").map(Number); this.drawSlot(M[k].k === "speck" ? "floor_specks" : "floor_spill", M[k].f, 0, x * T - cx, y * T - cy); } }
@@ -7974,7 +7974,6 @@ class Game {
       { id: "cat", group: "Finds", label: "The cat", find: () => { for (const id in this.rooms) if (this.rooms[id].cat) return at(id, this.rooms[id].cat.x, this.rooms[id].cat.y); return "No cat right now."; } },
       { id: "curious", group: "Finds", label: "A curious visitor", find: () => this.npcAt(n => n.cur && !n.follow) || "None waiting right now." },
       { id: "crooked", group: "Finds", label: "A crooked frame", find: () => this.frameAt(p => this.isCrooked(p)) || "Nothing's crooked this session (or there are no frames on the walls)." },
-      { id: "dusty", group: "Finds", label: "A dusty frame or case", find: () => this.frameAt(p => this.isDusty(p)) || "Nothing's dusty this session." },
       { id: "plant", group: "Finds", label: "A thirsty plant", find: () => { for (const id in this.rooms) for (const k in this.rooms[id].events) { const e = this.rooms[id].events[k]; if (e.plant && this.isThirsty(e.plant)) return at(id, ...k.split(",").map(Number)); } return "Every plant's watered today."; } },
       { id: "joe", group: "Finds", label: "Joe", run: () => (this.summonJoe() ? true : "No floor free near you.") },
       { id: "figure", group: "Finds", label: "The figure", run: () => (this.summonFigure() ? "Turn around." : "No room for it here.") },
@@ -8577,7 +8576,7 @@ class Game {
     if (this.closing) return;
     const cv = this.curiousPlan(), t = todayISO();
     cv.list.forEach(v => { if (v.state === "following" && !(this.fol && this.fol.cur === v)) v.state = "waiting"; }); // reloaded mid-follow (Joe 10/21: nobody waits around the wings any more; curious visitors only come over to you, approachTick)
-    cv.back.filter(v => v.day < t).slice(0, 6).forEach(v => this.addVisitor("lobby", v, { back: v }));
+    cv.back = []; // (Joe 10/21) the ones you helped don't come back the next day any more
   }
   /* A museum wing with a genre, picked at random (null if there's no layout). */
   galleryZone() {
@@ -8751,7 +8750,7 @@ class Game {
       const p = this.pieceById(v.want); this.say(named(this.tx("cur.nope", { title: piece.title, name: v.name, hint: p ? p.hint : "" }))); return;
     }
     if (this.fol === n) this.fol = null; n.follow = false; n.cur = null;
-    cv.list = cv.list.filter(x => x !== v); Object.assign(v, { state: "recommended", piece: piece.id, day: todayISO(), room: null, take: ["agree", "disagree", "puzzled"][Math.floor(Math.random() * 3)] }); cv.back.push(v);
+    cv.list = cv.list.filter(x => x !== v); Object.assign(v, { state: "recommended", piece: piece.id, day: todayISO(), room: null, take: ["agree", "disagree", "puzzled"][Math.floor(Math.random() * 3)] });
     this.count("helped", v.id, v.asked ? this.pack.settings.rewards.helpedName : undefined); this.bump(this.progress.stats.loved, genreOf(piece, this.pack.settings.genres)); this.saveProgress(); // found from the description alone: helped; after asking the name: helpedName
     const thanks = () => this.cheer(n, () => this.say(named(this.tx("cur.thanks", { title: piece.title, name: v.name })), () => { n.leaving = true; n.leaveT = 0; n.alpha = 1; if (far) this.farBack(); }), far);
     const q = this.pos(n), far = !n.follow && !(q.x + 16 > this.camX && q.x < this.camX + SW && q.y + 16 > this.camY && q.y < this.camY + SH); // off where you can't see them (Joe 10/19)
@@ -12406,7 +12405,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 163";
+const VERSION = "2026-11-18 cards 164";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
