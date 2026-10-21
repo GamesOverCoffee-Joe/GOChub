@@ -17,8 +17,8 @@ const PAL = {
   wood:    ["#f0dcc0", "#c08858", "#784830", "#2c1810", "#a06c44"],
   gold:    ["#fff6cc", "#f0c040", "#b07818", "#3c2408", "#c8d8e8", "#a8bcd0"],
   plant:   [null, "#9ccc68", "#4c8c3c", "#1e2418", "#c8784c", "#8a4428", "#a89048"],
-  retain:  [null, "#a8a49a", "#8a867c", "#6a665e", "#c8c4b8", "#4a4740"], // the driveway's concrete retaining wall (Joe 10/21): concrete, shade, form-tie holes, its lit top edge, stains
-  slab:    [null, "#b8b4aa", "#9a968c", "#d8d4c8", "#6a665e", "#2a2a30", "#e8c040"], // the raised concrete slab out back: concrete, shade, lit edge, its side, the railing, the railing's safety-yellow top
+  retain:  [null, "#a8a49a", "#8a867c", "#6a665e", "#c8c4b8", "#4a4740", "#181820"], // the driveway's concrete retaining wall (Joe 10/21): concrete, shade, form-tie holes, its lit top edge, stains
+  slab:    [null, "#b8b4aa", "#9a968c", "#d8d4c8", "#6a665e", "#2a2a30", "#e8c040", "#181820"], // the raised concrete slab out back: concrete, shade, lit edge, its side, the railing, the railing's safety-yellow top
   truckside: [null, "#f4f4f6", "#c8dcc8", "#9aa8a0", "#5a8ad8", "#1a2230", "#2a2a30", "#8a8a94", "#c84838"], // the delivery truck from the side (Joe 10/21, from his reference): white, a pale green band, shade, the cab window, glass shade, tires, hubs and trim, tail light
   gopen:   ["#c8ccd4", "#9aa0ac", "#6a707c", "#181820", "#3a3a44", "#e8c040", "#e8e8ec", "#2a2420", "#8a6a44", "#c89a5a", "#7a5a30"], // the garage door's colors, then the truck's white rear, its dark hold, wooden floor, boxes and their shade
   truck:   [null, "#e8e8ec", "#c8c8d0", "#3a6ab8", "#2a4a88", "#1a2230", "#141418", "#e8c040", "#8a6a44", "#c89a5a"], // the delivery truck (Joe 10/21): white box, its ribs, blue cab, cab shade, glass, tires, a yellow stripe, its wooden floor, boxes
@@ -480,15 +480,15 @@ const GEN = {
     const a = mk(16, 16); fillFn(a, (x, y) => (y === 0 ? 4 : hash(x, y) % 9 === 0 ? 2 : 1)); for (const x of [3, 11]) { px(a, x, 6, 3); px(a, x, 12, 3); } return a;
   },
   retain_lower: () => { // ...lower row: a little darker, rain stains running down
-    const a = mk(16, 16); fillFn(a, (x, y) => (y === 15 ? 3 : (x === 5 || x === 12) && y > 3 && hash(x, y) % 3 ? 5 : hash(x, y) % 7 === 0 ? 1 : 2)); for (const x of [3, 11]) px(a, x, 4, 3); return a;
+    const a = mk(16, 16); fillFn(a, (x, y) => (y === 15 ? 6 : y === 14 ? 3 : (x === 5 || x === 12) && y > 3 && hash(x, y) % 3 ? 5 : hash(x, y) % 7 === 0 ? 1 : 2)); for (const x of [3, 11]) px(a, x, 4, 3); return a; // (a black line where it meets the ground)
   },
   dock_slab: () => { const a = mk(16, 16); fillFn(a, (x, y) => (x === 0 || y === 0 ? 2 : hash(x, y) % 11 === 0 ? 2 : 1)); return a; }, // the raised slab's concrete, its joints
   dock_rail: () => { // the slab's north edge: a railing (dark posts, a safety-yellow top rail)
-    const a = GEN.dock_slab(); for (const x of [2, 13]) rect(a, x, 3, 1, 11, 5); rect(a, 0, 3, 16, 2, 6); rect(a, 0, 8, 16, 1, 5); return a;
+    const a = GEN.dock_slab(); for (const x of [2, 13]) { rect(a, x - 1, 2, 3, 13, 7); rect(a, x, 3, 1, 11, 5); } rect(a, 0, 2, 16, 4, 7); rect(a, 0, 3, 16, 2, 6); rect(a, 0, 8, 16, 1, 5); rect(a, 0, 0, 16, 1, 7); return a; // (outlined in black, the slab's north edge too)
   },
-  dock_face: () => { const a = mk(16, 16); fillFn(a, (x, y) => (y < 3 ? 3 : x === 0 ? 2 : 4)); return a; }, // the slab's side, where it drops down to the driveway
+  dock_face: () => { const a = mk(16, 16); fillFn(a, (x, y) => (y === 0 || x === 15 || y === 15 ? 7 : y < 3 ? 3 : x === 0 ? 2 : 4)); return a; }, // the slab's side, where it drops down to the driveway
   dock_steps: () => { // steps down off the slab, going east
-    const a = mk(16, 16); fillFn(a, x => (x < 5 ? 1 : x < 10 ? 2 : 4)); for (const x of [5, 10]) rect(a, x, 0, 1, 16, 3); return a;
+    const a = mk(16, 16); fillFn(a, x => (x === 15 ? 7 : x < 5 ? 1 : x < 10 ? 2 : 4)); for (const x of [4, 9]) rect(a, x, 0, 1, 16, 7); for (const x of [5, 10]) rect(a, x, 0, 1, 16, 3); return a; // (each step's edge in black)
   },
   dock_divider: () => { // the low north-south concrete divider (seen from above and a little in front): its top, its front
     const a = mk(16, 16); rect(a, 5, 0, 6, 16, 1); rect(a, 5, 0, 1, 16, 3); rect(a, 10, 0, 1, 16, 2); return outline(a);
@@ -497,8 +497,8 @@ const GEN = {
     const a = mk(16, 32); rect(a, 1, 0, 14, 32, 4); rect(a, 3, 2, 10, 30, 0); for (let y = 4; y < 32; y += 3) rect(a, 3, y, 10, 1, 1);
     for (let y = 2; y < 32; y += 4) rect(a, 13, y, 2, 2, 5); return a;
   },
-  garage_side_open: () => { // ...rolled up on a Monday: the open back of the truck through it, boxes inside
-    const a = mk(16, 32); rect(a, 1, 0, 14, 32, 4); rect(a, 3, 2, 10, 30, 3); rect(a, 3, 2, 3, 30, 6); rect(a, 6, 4, 7, 28, 7); rect(a, 6, 26, 7, 6, 8); rect(a, 7, 18, 5, 8, 9); rect(a, 8, 14, 4, 4, 9); rect(a, 7, 21, 5, 1, 10); return a;
+  garage_side_open: () => { // ...rolled up on a Monday
+    const a = mk(16, 32); rect(a, 1, 0, 14, 32, 4); rect(a, 3, 2, 10, 30, 3); rect(a, 3, 2, 10, 3, 1); rect(a, 3, 4, 10, 1, 2); for (let y = 2; y < 32; y += 4) rect(a, 13, y, 2, 2, 5); return a; // (Joe 10/21: just the rolled-up door's lip, and dark beyond)
   },
   truck_side: () => { // the delivery truck from the side (Joe 10/21, his reference): the long box at the back (left, against the garage), the cab facing right. 7 tiles by 3
     const a = mk(112, 48);
@@ -2217,19 +2217,19 @@ const ROOMS = {
   dock: { // out back (Joe 10/21, his drawing): the delivery driveway beside the building. The building's wall on the left with the
          // garage door at the top (Mondays the truck's backed up to it) and the basement's door at the bottom onto a raised slab
          // (a railing on its north side, steps down to the east); a low divider, the dumpster behind it; the street's off to the east
-    name: "Out back", art: { top: "lot_hedge", upper: "retain_upper", lower: "retain_lower", floor: "lot_asphalt", roof: "facade_roof" },
+    name: "Out back", art: { top: "staff_wall_top", upper: "retain_upper", lower: "retain_lower", floor: "lot_asphalt" }, // (Joe 10/21: the basement's black wall tops, so it reads like the rooms inside)
     map: [
-      "R##############",
-      "R^^^^^^^^^^^^^^",
-      "Rvvvvvvvvvvvvvv",
-      "R..............",
-      "R..............",
-      "R..............",
-      "R..............",
-      "R..............",
-      "R..............",
-      "R..............",
-      "R##############",
+      "###############",
+      "#^^^^^^^^^^^^^^",
+      "#vvvvvvvvvvvvvv",
+      "#..............",
+      "#..............",
+      "#..............",
+      "#..............",
+      "#..............",
+      "#..............",
+      "#..............",
+      "###############",
     ],
     spawn: [1, 8, "right"],
     props: [{ key: "garage_side", x: 0, y: 4, tall: true, event: { garage: "out" } }, { key: "doorway_side", x: 0, y: 8, event: { dockIn: true, bump: true } }, { key: "dumpster", x: 11, y: 9, event: { dumpster: true } }],
@@ -6528,8 +6528,8 @@ class Game {
   truckDay() { return this.weekday() === 1 && this.tod() !== "night"; } // Monday: the delivery truck's backed up to the garage door
   dockDress() { // out back: the slab's railing and side, the divider (solid); on a Monday the truck, backed up to the garage door
     const D = this.rooms && this.rooms.dock; if (!D) return; const on = this.truckDay(), has = D.props.some(q => q.key === "truck_side");
-    if (on && !has) D.props.push({ key: "truck_side", x: 1, y: 4, tall: true }); if (!on && has) D.props = D.props.filter(q => q.key !== "truck_side");
-    for (let y = 3; y <= 4; y++) for (let x = 1; x <= 7; x++) D.solid[y][x] = on;
+    if (on && !has) D.props.push({ key: "truck_side", x: 1, y: 5, tall: true }); if (!on && has) D.props = D.props.filter(q => q.key !== "truck_side");
+    for (let y = 4; y <= 5; y++) for (let x = 1; x <= 7; x++) D.solid[y][x] = on;
     for (let x = 1; x <= 5; x++) D.solid[7][x] = true; for (let y = 7; y <= 9; y++) D.solid[y][10] = true;
   }
   plantAhead() { const r = this.room, p = this.player, [dx, dy] = DIRS[p.dir], e = r && r.events[(p.x + dx) + "," + (p.y + dy)]; return e && e.plant ? e : null; }
@@ -12178,7 +12178,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 150";
+const VERSION = "2026-11-18 cards 151";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
