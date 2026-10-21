@@ -2414,8 +2414,9 @@ const ROOMS = {
     ],
     spawn: [7, 9, "up"],
     props: [
-      { key: "vacuum", x: 1, y: 3, event: { tool: "vacuum" } },
-      { key: "sign_stand", x: 13, y: 3, say: ["POLISH LAB", "Grab the vacuum and push it over the carpet. Every tile remembers which way you went.", "No right answer. Stripes, diagonals, checkerboards: whatever looks nice to you.", "People walking across it scuff it up again."] },
+      { key: "vacuum", x: 1, y: 3, toolSpot: "vacuum", event: { tool: "vacuum" } },
+      { key: "velvet_rope", x: 2, y: 3, toolSpot: "ropes", event: { tool: "ropes" } },
+      { key: "sign_stand", x: 13, y: 3, say: ["POLISH LAB", "Grab the vacuum (and the ropes), then pick them from Equipment in the Start menu. Hold B to vacuum; double-tap B to leave it on.", "Every carpet tile remembers which way you went.", "No right answer. Stripes, diagonals, checkerboards: whatever looks nice to you.", "People walking across it scuff it up again."] },
       { key: "plant", x: 13, y: 9, say: ["A plant. Its turn comes later."] },
       { key: "plant", x: 1, y: 9, say: ["A plant. Also waiting its turn."] },
     ],
@@ -3175,6 +3176,10 @@ const PIXEL_FONT = (() => {
   g.split(" ").forEach(e => { const [k, b] = e.split(":"); out[k] = [0, 1, 2, 3, 4].map(i => b.slice(i * 3, i * 3 + 3)); });
   return out;
 })();
+const TOOLS = { // equipment (Joe 10/21): what each is, its icon (an art slot and frame), what it says
+  vacuum: { name: "Vacuum", slot: "vacuum", desc: "Hold B to vacuum the carpet; double-tap B to leave it running. Every tile remembers which way you pushed.", hint: "Vacuum: hold B (double-tap to leave it on)", got: "You got the vacuum!", spot: "The vacuum's corner. Yours is in your Equipment." },
+  ropes: { name: "Velvet ropes", slot: "velvet_rope", frame: 0, max: 16, desc: "B puts a rope post down in front of you, or picks it back up. Posts side by side link up. Keep people off what you're working on.", hint: "Velvet ropes: B puts a post down (or picks it up)", got: "You got a bundle of velvet ropes!", spot: "The rope stand. Yours are in your Equipment." },
+};
 const LAB_CODE = ["down", "down", "down", "up", "up", "up", "start"]; // to the Polish Lab and back (Joe 10/21)
 const KONAMI = ["up", "up", "down", "down", "left", "right", "left", "right", "b", "a", "start"];
 const POP_KINDS = ["dusted", "straightened", "watered", "mugs", "wiped", "litter"]; // tokens that just pop over your head
@@ -3579,7 +3584,7 @@ function buildRoom(id, pieces, o) {
     r.solid[y][x] = !WALK_TILES.includes(ch);
   }
   (def.props || []).forEach(p => {
-    r.props.push({ key: p.key, x: p.x, y: p.y, plant: p.plant, mugShelf: p.mugShelf, sit: p.sit, rack: p.rack, unit: p.unit, collection: p.collection, catBed: p.catBed, tall: p.tall });
+    r.props.push({ key: p.key, x: p.x, y: p.y, plant: p.plant, mugShelf: p.mugShelf, sit: p.sit, rack: p.rack, unit: p.unit, collection: p.collection, catBed: p.catBed, tall: p.tall, toolSpot: p.toolSpot });
     for (let i = 0; i < SLOT[p.key].w / T; i++) {
       r.solid[p.y][p.x + i] = true;
       // Tall things: you can walk behind the top row (and are hidden by it) unless it's marked blockTop, like racks and cabinets.
@@ -3959,10 +3964,11 @@ class Game {
       const ka = this.swapAB && (k === "a" || k === "b") ? (k === "a" ? "b" : "a") : k;
       if (ka === "a" && this.mode === "read" && this.rd && this.rd.sel >= 0) { this.rdUse(); return; }
       if (DIRS[k]) { this.held = this.held.filter(d => d !== k); this.held.push(k); }
+      (this.btnHeld || (this.btnHeld = new Set())).add(ka); // which buttons are down (holding B to vacuum)
       this.queue.push(this.swapAB && (k === "a" || k === "b") ? (k === "a" ? "b" : "a") : k); // Settings: Swap A and B
     });
-    window.addEventListener("keyup", e => { const k = this.keyFor(e.code); if (k && DIRS[k]) this.held = this.held.filter(d => d !== k); });
-    window.addEventListener("blur", () => { this.held = []; this.virt = []; });
+    window.addEventListener("keyup", e => { const k = this.keyFor(e.code); if (k && DIRS[k]) this.held = this.held.filter(d => d !== k); if (k && this.btnHeld) this.btnHeld.delete(this.swapAB && (k === "a" || k === "b") ? (k === "a" ? "b" : "a") : k); });
+    window.addEventListener("blur", () => { this.held = []; this.virt = []; if (this.btnHeld) this.btnHeld.clear(); });
     this.wrap.addEventListener("pointerdown", e => {
       this.wrap.focus({ preventScroll: true });
       if (e.target === this.canvas) this.tapStart = { x: e.clientX, y: e.clientY, t: performance.now() };
@@ -4359,6 +4365,17 @@ class Game {
 .gt-rd-links.three a,.gt-rd-links.three button.note,.gt-rd-links.three button.quiz{padding:calc(2px * var(--s)) calc(4px * var(--s))} /* three buttons fit beside the picture */
 .gt-rd-links .sel{outline:calc(1px * var(--s)) solid #181820;outline-offset:calc(1px * var(--s));filter:brightness(1.15)}
 .gt-rd-links button.quiz{display:block;text-align:center;font-family:var(--pixel, monospace);font-size:calc(5px * var(--s));line-height:1;color:#fff8ec;background:#5a3c9a;padding:calc(3px * var(--s)) calc(4px * var(--s));border:calc(1px * var(--s)) solid #181820;border-radius:calc(1px * var(--s));box-shadow:0 calc(1px * var(--s)) 0 #181820;white-space:nowrap;cursor:pointer;margin:0} /* the quiz: purple, so it reads apart from Watch, Play and Note */
+.gt-equip{left:calc(30px * var(--s));right:calc(30px * var(--s));top:calc(22px * var(--s));padding:calc(5px * var(--s)) calc(8px * var(--s));z-index:7;display:none;text-align:center}
+.gt-eq-h{font-size:calc(6px * var(--s));letter-spacing:.12em;color:#7c5a0c;margin-bottom:calc(4px * var(--s))}
+.gt-eq-row{display:flex;justify-content:center;gap:calc(4px * var(--s));margin-bottom:calc(4px * var(--s))}
+.gt-eq-cell{position:relative;width:calc(22px * var(--s));height:calc(22px * var(--s));border:calc(1px * var(--s)) solid #b0b0c0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.gt-eq-cell img{width:calc(16px * var(--s));height:calc(16px * var(--s));image-rendering:pixelated}
+.gt-eq-cell.on{border-color:#181820;box-shadow:0 0 0 calc(1px * var(--s)) #181820}
+.gt-eq-cell.worn{background:#fff3c4;border-color:#c89020}
+.gt-eq-cell span{position:absolute;right:calc(1px * var(--s));bottom:0;font-size:calc(4px * var(--s));color:#7c5a0c}
+.gt-eq-name{font-size:calc(6px * var(--s));color:#181820}
+.gt-eq-desc{font-size:calc(5px * var(--s));line-height:1.35;color:#404058;margin:calc(2px * var(--s)) 0 calc(3px * var(--s))}
+.gt-eq-k{font-size:calc(4px * var(--s));color:#505068}
 .gt-reader.gt-qz .gt-rd-body{overflow-y:auto;scrollbar-width:thin;white-space:normal}
 .gt-qz-left{font-size:calc(4.5px * var(--s));line-height:1.3;color:#5a3c9a}
 .gt-qz-pips{display:flex;gap:calc(2px * var(--s));margin-top:calc(2px * var(--s))}
@@ -6192,8 +6209,8 @@ class Game {
   napStep(c) {
     const r = this.room; if (!r || !this.carpetAt(r, c.x, c.y)) return;
     const N = (this.nap || (this.nap = {}))[r.id] || (this.nap[r.id] = {}), k = c.x + "," + c.y;
-    if (c === this.player) { if (this.tool === "vacuum") N[k] = { d: c.dir, s: 1 }; return; } // the vacuum brushes it your way
-    const v = N[k]; if (v) { v.s -= 0.2; if (v.s <= 0.05) delete N[k]; } // someone walking on it: a little scuffed
+    if (c === this.player) { if (this.vacuuming()) N[k] = { d: c.dir, s: 1, t: this.t }; return; } // the vacuum brushes it your way
+    const v = N[k]; if (v && this.t - (v.t || 0) > 3600) { v.s -= 0.08; if (v.s <= 0.05) delete N[k]; } // someone walking on it: a little scuffed, but only once it's had a minute (Joe 10/21)
   }
   drawNap(r, cx, cy) {
     const N = this.nap && this.nap[r.id]; if (!N) return;
@@ -6204,13 +6221,60 @@ class Game {
       ctx.globalAlpha = a * 0.9; for (let i = 1; i < T; i += 3) { if (vert) ctx.fillRect(px + i, py, 1, T); else ctx.fillRect(px, py + i, T, 1); } } // the nap's grain, along the way it was pushed
     ctx.globalAlpha = 1;
   }
-  takeTool(kind, e) {
-    if (this.tool === kind) { this.putToolBack(); return; }
-    if (this.tool || this.drink || this.carryBox || this.carryItem || this.trashBag != null) { this.say(["Your hands are full."]); return; }
-    const r = this.room, pr = r.props.find(q => q.key === kind && !q.hidden); if (pr) { pr.hidden = true; this.toolHome = { room: r.id, prop: pr }; }
-    this.tool = kind; this.showLoc(kind === "vacuum" ? "Vacuum: walk over the carpet" : "Got the " + kind);
+  /* Equipment (Joe 10/21): tools you find once and then equip from the Start menu, Zelda style. Only the Polish Lab uses them
+     for now. B is the tool button while one's equipped: hold it to vacuum (double-tap to leave it running, tap to stop);
+     with the velvet ropes, B puts a post down in front of you, or picks one up. */
+  ownedTools() { return ((this.progress.tools && this.progress.tools.owned) || []).filter(k => TOOLS[k]); }
+  toolActive() { return !!this.tool && !!this.room && !!ROOMS[this.room.id] && !!ROOMS[this.room.id].lab; }
+  vacuuming() { return this.tool === "vacuum" && this.toolActive() && (this.vacLatch || !!(this.btnHeld && this.btnHeld.has("b"))); }
+  takeTool(kind) { // A on a tool's spot: it's yours (and in your hands)
+    const T0 = this.progress.tools || (this.progress.tools = { owned: [] }); if (!TOOLS[kind]) return;
+    if (T0.owned.includes(kind)) { this.say([TOOLS[kind].spot]); return; }
+    T0.owned.push(kind); this.saveProgress(); this.equip(kind);
+    this.itemGet({ name: TOOLS[kind].name, img: this.toolIcon(kind), id: "tool-" + kind }, "walk", () => this.say([TOOLS[kind].got, "It's in your Equipment (Start) from now on."]));
+    this.dressLab();
   }
-  putToolBack() { const h = this.toolHome; if (h && h.prop) h.prop.hidden = false; this.toolHome = null; this.tool = null; }
+  equip(kind) { this.tool = kind || null; this.vacLatch = false; if (this.progress.tools) { this.progress.tools.on = this.tool; this.saveProgress(); } }
+  putToolBack() { this.vacLatch = false; } // (leaving the lab: the vacuum switches off)
+  toolPress() {
+    if (this.tool === "vacuum") { const dbl = this.lastB && this.t - this.lastB < 20; this.lastB = this.t;
+      if (this.vacLatch) { this.vacLatch = false; this.lastB = 0; this.showLoc("Vacuum off"); } else if (dbl) { this.vacLatch = true; this.lastB = 0; this.showLoc("Vacuum left on (B to stop)"); }
+      return; }
+    if (this.tool === "ropes") this.ropeAt();
+  }
+  ropeAt() { // a velvet rope post on the tile in front of you, or picked back up
+    const r = this.room, p = this.player, [dx, dy] = DIRS[p.dir], x = p.x + dx, y = p.y + dy, L = (this.ropes || (this.ropes = {}))[r.id] || (this.ropes[r.id] = []);
+    const i = L.findIndex(q => q.x === x && q.y === y);
+    if (i >= 0) { L.splice(i, 1); r.solid[y][x] = false; return; }
+    if (L.length >= TOOLS.ropes.max) { this.showLoc("That's all your rope posts (" + TOOLS.ropes.max + ")"); return; }
+    if (!r.solid[y] || r.solid[y][x] !== false || r.events[x + "," + y] || r.npcs.some(n => n.x === x && n.y === y)) { this.showLoc("Can't put a post there"); return; }
+    L.push({ x, y }); r.solid[y][x] = true;
+  }
+  drawRopes(r, cx, cy) { // posts, linked by rope to their neighbours (velvet_rope's frames: a post, across, up and down)
+    const ctx = this.ctx, L = this.ropes && this.ropes[r.id]; if (!L || !L.length) return;
+    const has = (x, y) => L.some(q => q.x === x && q.y === y);
+    for (const q of L) { const X = q.x * T - cx, Y = q.y * T - cy, half = (f, sx, sy, w, h) => { ctx.save(); ctx.beginPath(); ctx.rect(X + sx, Y + sy, w, h); ctx.clip(); this.drawSlot("velvet_rope", f, 0, X, Y); ctx.restore(); };
+      if (has(q.x - 1, q.y)) half(1, 0, 0, 8, 16); if (has(q.x + 1, q.y)) half(1, 8, 0, 8, 16); if (has(q.x, q.y - 1)) half(2, 0, 0, 16, 8); if (has(q.x, q.y + 1)) half(2, 0, 8, 16, 8);
+      this.drawSlot("velvet_rope", 0, 0, X, Y); }
+  }
+  toolIcon(kind) { const C = this.toolIcons || (this.toolIcons = {}), sh = this.sheet(TOOLS[kind].slot); if (C[kind] && C[kind].src === sh) return C[kind].c;
+    const c = document.createElement("canvas"); c.width = c.height = 16; c.getContext("2d").drawImage(sh, (TOOLS[kind].frame || 0) * 16, 0, 16, 16, 0, 0, 16, 16); C[kind] = { src: sh, c }; return c; }
+  dressLab() { const L = this.rooms && this.rooms.polish_lab; if (!L) return; const own = this.ownedTools(); for (const q of L.props) { const ev = q.toolSpot; if (ev) q.hidden = own.includes(ev); } }
+  /* The Equipment screen: a row of icon squares (owned tools), the equipped one framed in gold; its name and what it does below. */
+  openEquip() {
+    const own = this.ownedTools(); if (!own.length) return;
+    const box = this.el.equip || (this.el.equip = (() => { const e = document.createElement("div"); e.className = "gt-box gt-equip"; this.wrap.appendChild(e); return e; })());
+    this.eq = { list: own, i: Math.max(0, own.indexOf(this.tool)) }; this.mode = "equip"; box.style.display = "block"; this.renderEquip();
+  }
+  renderEquip() {
+    const E = this.eq, box = this.el.equip; box.innerHTML = '<div class="gt-eq-h">EQUIPMENT</div><div class="gt-eq-row"></div><div class="gt-eq-name"></div><div class="gt-eq-desc"></div><div class="gt-eq-k">A equip \u00b7 B back</div>';
+    const row = box.querySelector(".gt-eq-row");
+    E.list.forEach((k, i) => { const d = document.createElement("div"); d.className = "gt-eq-cell" + (i === E.i ? " on" : "") + (this.tool === k ? " worn" : ""); const c = document.createElement("img"); c.src = this.toolIcon(k).toDataURL(); c.alt = TOOLS[k].name; d.appendChild(c); if (this.tool === k) { const t = document.createElement("span"); t.textContent = "E"; d.appendChild(t); }
+      d.addEventListener("click", e => { e.stopPropagation(); if (E.i === i) this.equipPick(); else { E.i = i; this.renderEquip(); } }); row.appendChild(d); });
+    const k = E.list[E.i]; box.querySelector(".gt-eq-name").textContent = TOOLS[k].name + (this.tool === k ? " (equipped)" : ""); box.querySelector(".gt-eq-desc").textContent = TOOLS[k].desc;
+  }
+  equipPick() { const k = this.eq.list[this.eq.i]; this.equip(this.tool === k ? null : k); this.renderEquip(); if (this.tool) this.showLoc(TOOLS[this.tool].hint); }
+  closeEquip(all) { this.el.equip.style.display = "none"; this.eq = null; this.mode = "walk"; this.inputLock = true; if (!all) this.openMenu(); }
   tutThinkDone(n) { // the Thinking Room's done: he found something to read, and the door unlocks
     const t = this.tut; if (!t || t.thinkDone) return; t.thinkDone = true; this.tutDid("recommend"); n.tell = null; n.still = true; n.recoIdea = null;
     setTimeout(() => { if (!this.tut) return; const go = () => this.say(this.tutSaid(n.member, this.tx("tut.anx.thanks")), () => this.showLoc(this.tx("tut.unlocked")[0])); if (this.mode === "walk") go(); else { const w = setInterval(() => { if (!this.tut) { clearInterval(w); return; } if (this.mode === "walk") { clearInterval(w); go(); } }, 300); } }, 1200);
@@ -6283,7 +6347,7 @@ class Game {
       return true;
     }
     if (e.tutVend) return this.tutThinkThing(e);
-    if (e.tool) { this.takeTool(e.tool, e); return true; } // the Polish Lab's tools
+    if (e.tool) { this.takeTool(e.tool); return true; } // the Polish Lab's tools
     if (e.labExit) { this.leaveLab(); return true; }
     if (e.usher || e.guestbook) { if (t) { const u = this.room.npcs.find(n => n.usher); if (u) u.dir = "down"; this.tutUsher(); } else this.say(["The training desk."]); return true; }
     if (!t) return false;
@@ -8418,10 +8482,11 @@ class Game {
       });
       return;
     }
-    const opts = ["My Stuff", "Think", ...(this.idea ? ["Forget thought"] : []), ...(this.isCurator() && this.answerPieces().length ? ["Developer answers"] : []), "Settings", "Save", "Back"]; // (Joe 10/12: Recent notices, Controls and Respawn under Settings; Save asks if you're quitting)
+    const opts = ["My Stuff", ...(this.ownedTools().length ? ["Equipment"] : []), "Think", ...(this.idea ? ["Forget thought"] : []), ...(this.isCurator() && this.answerPieces().length ? ["Developer answers"] : []), "Settings", "Save", "Back"]; // (Joe 10/12: Recent notices, Controls and Respawn under Settings; Save asks if you're quitting)
     this.choose("PAUSED", opts, k => {
       const o = opts[k];
       if (o === "My Stuff") this.myStuff();
+      else if (o === "Equipment") this.openEquip();
       else if (o === "Think") { if (this.canThink()) this.enterThink(); } // the same as Select
       else if (o === "Forget thought") this.forgetThought();
       else if (o === "Settings") this.settingsMenu();
@@ -8933,7 +8998,7 @@ class Game {
     // A room's overflow (its genre's episodes that don't fit its cases) is on that room's touch screen.
     this.overflow = {}; const first = cases.order.find(sl => sl.genre); if (first && cases.archived.length) this.overflow[first.genre] = cases.archived.slice(); // the oldest that don't fit: on the touch screen at the start of the timeline (the first wing's)
     this.rooms = {}; Object.keys(ROOMS).forEach(id => (this.rooms[id] = buildRoom(id, this.pack.pieces, o)));
-    this.tutDress(); this.seatGuests(); this.placeJoe(); this.placeDay();
+    this.tutDress(); this.dressLab(); if (this.tool === undefined && this.progress.tools && TOOLS[this.progress.tools.on]) this.tool = this.progress.tools.on; this.seatGuests(); this.placeJoe(); this.placeDay();
     this.placeCurious(); this.placeMembers(); this.giveLife();
     for (const id in this.rooms) this.rooms[id].fresh = true; // the director settles each room's crowd for this point in the visit
   }
@@ -9194,6 +9259,7 @@ class Game {
       return;
     }
     if (this.mode === "pquiz") { this.pqKeys(has); return; }
+    if (this.mode === "equip") { const E = this.eq, n = E.list.length; if (has("left") || has("up")) { E.i = (E.i + n - 1) % n; this.renderEquip(); } else if (has("right") || has("down")) { E.i = (E.i + 1) % n; this.renderEquip(); } else if (has("a")) this.equipPick(); else if (has("b")) this.closeEquip(); else if (has("start")) this.closeEquip(true); return; }
     if (this.mode === "read") {
       const r = this.rd;
       if (has("left") && r.i > 0) { r.i--; this.renderRead(); }
@@ -9292,7 +9358,8 @@ class Game {
       if (!this.player.moving && (this.using("shades") === "fake" && !this.progress.lensPopped || this.using("hat") === "fake")) { this.gearCheck(); return; }
       const codeB = this.kbuf && this.kbuf.slice(-9).join() === KONAMI.slice(0, 9).join(); // the B in the code isn't a photo
       if (has("a") && this.kbuf && this.kbuf.slice(-10).join() === KONAMI.slice(0, 10).join()) return; // nor is its A a look
-      if (has("b") && !codeB && !this.player.moving && !this.asleep) { this.takePhoto(); return; }
+      if (this.toolActive()) { if (has("b") && !codeB) this.toolPress(); } // a tool in hand (the Polish Lab): B uses it, no photo
+      else if (has("b") && !codeB && !this.player.moving && !this.asleep) { this.takePhoto(); return; }
       this.updatePlayer(has("a"));
     }
     else if (this.mode === "think") this.updateThink(has);
@@ -11596,7 +11663,7 @@ class Game {
     for (const [mx, my] of this.doorMats(r)) this.drawSlot("doormat", 0, 0, mx * T - cx, my * T - cy);
     for (const st of r.stairs) this.drawSlot(st.kind === "up" ? "stair_up" : "stair_down", 0, 0, st.x * T - cx, st.y * T - cy);
     this.drawReadBorders(r, cx, cy); // on the floor, under the cases and people
-    this.drawNap(r, cx, cy); // vacuum stripes in the carpet (the Polish Lab)
+    this.drawNap(r, cx, cy); this.drawRopes(r, cx, cy); // vacuum stripes in the carpet, and your rope posts (the Polish Lab)
     for (const l of (this.litter && this.litter[r.id]) || []) this.drawSlot("litter", l.k, 0, l.x * T - cx + l.ox, l.y * T - cy + l.oy); // on the floor, under everyone
     { const I = this.side && this.side.item; if (I && I.on && I.phase === 1 && I.table && r.id === "staff") this.drawSlot("break_items", I.kind, 0, I.table.x * T - cx, I.table.y * T - 8 - cy); } // the item on the break table
     for (const b of (this.sup && this.sup.boxes) || []) if (b.room === r.id) this.drawSlot("supply_box", b.kind === "cafe" ? 1 : 0, 0, b.x * T - cx, b.y * T - cy); // deliveries waiting by the garage door
@@ -11671,7 +11738,7 @@ class Game {
           ctx.fillStyle = "rgba(255,255,240," + (0.95 * k) + ")"; ctx.fillRect(fx - 1, fy - 4, 2, 8); ctx.fillRect(fx - 4, fy - 1, 8, 2); ctx.fillRect(fx - 2, fy - 2, 4, 4);
           ctx.fillStyle = "rgba(255,255,230," + (0.25 * k) + ")"; ctx.beginPath(); ctx.arc(fx, fy, 9, 0, 7); ctx.fill(); }
       }
-      if (c === this.player && this.tool === "vacuum") { const [dx, dy] = DIRS[c.dir]; if (c.dir === "up") this.drawSlot("vacuum", 0, 0, sx + dx * 9, sy + dy * 9 + 2); else bubbles.push(() => this.drawSlot("vacuum", 0, 0, sx + dx * 9, sy + dy * 6 + 4)); } // pushed in front of you (Joe 10/21)
+      if (c === this.player && this.tool === "vacuum" && this.toolActive()) { const [dx, dy] = DIRS[c.dir]; if (this.vacuuming() && this.t % 8 < 4) { ctx.fillStyle = "rgba(255,250,235,.7)"; ctx.fillRect(sx + dx * 9 + 7 + (this.t % 16 < 8 ? -1 : 1), sy + dy * 9 + 17, 2, 1); } if (c.dir === "up") this.drawSlot("vacuum", 0, 0, sx + dx * 9, sy + dy * 9 + 2); else bubbles.push(() => this.drawSlot("vacuum", 0, 0, sx + dx * 9, sy + dy * 6 + 4)); } // pushed in front of you (Joe 10/21)
       if (c === this.player && this.phoneT > 0) {
         const ox = { down: 4, up: 4, left: 0, right: 8 }[c.dir]; if (c.dir !== "up") this.drawSlot(this.using("case") ? "phone_case" : "phone", 0, 0, sx + ox, sy + 4);
       }
@@ -11750,8 +11817,8 @@ function mountControls(game, host) {
   host.querySelectorAll(".gt-btn, .gt-start").forEach(b => {
     b.tabIndex = -1;
     const up = () => b.classList.remove("down");
-    b.addEventListener("pointerdown", e => { e.preventDefault(); buzz(); game.press(b.dataset.k); b.classList.add("down"); clearTimeout(b._t); b._t = setTimeout(up, 150); });
-    ["pointerup", "pointercancel", "pointerleave"].forEach(t => b.addEventListener(t, up));
+    b.addEventListener("pointerdown", e => { e.preventDefault(); buzz(); game.press(b.dataset.k); (game.btnHeld || (game.btnHeld = new Set())).add(b.dataset.k); b.classList.add("down"); clearTimeout(b._t); b._t = setTimeout(up, 150); });
+    ["pointerup", "pointercancel", "pointerleave"].forEach(t => b.addEventListener(t, () => { up(); if (game.btnHeld) game.btnHeld.delete(b.dataset.k); }));
     b.addEventListener("contextmenu", e => e.preventDefault());
   });
   host.addEventListener("contextmenu", e => e.preventDefault());
@@ -11759,7 +11826,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 139";
+const VERSION = "2026-11-18 cards 140";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
