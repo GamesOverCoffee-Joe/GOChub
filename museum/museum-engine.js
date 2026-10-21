@@ -17,6 +17,8 @@ const PAL = {
   wood:    ["#f0dcc0", "#c08858", "#784830", "#2c1810", "#a06c44"],
   gold:    ["#fff6cc", "#f0c040", "#b07818", "#3c2408", "#c8d8e8", "#a8bcd0"],
   plant:   [null, "#9ccc68", "#4c8c3c", "#1e2418", "#c8784c", "#8a4428", "#a89048"],
+  gopen:   ["#c8ccd4", "#9aa0ac", "#6a707c", "#181820", "#3a3a44", "#e8c040", "#e8e8ec", "#2a2420", "#8a6a44", "#c89a5a", "#7a5a30"], // the garage door's colors, then the truck's white rear, its dark hold, wooden floor, boxes and their shade
+  truck:   [null, "#e8e8ec", "#c8c8d0", "#3a6ab8", "#2a4a88", "#1a2230", "#141418", "#e8c040", "#8a6a44", "#c89a5a"], // the delivery truck (Joe 10/21): white box, its ribs, blue cab, cab shade, glass, tires, a yellow stripe, its wooden floor, boxes
   dump:    [null, "#2e6a48", "#3e8a5e", "#1e4a32", "#141418", "#6a6a72", "#a8a8b0"], // the dumpster out back (Joe 10/21): green steel, a darker lid, black wheels, grey hinges
   tbag:    [null, "#2a2a30", "#44444e", "#6a6a78", "#e8b24a"], // your trash bag: black plastic, its shine, a yellow tie
   bloom:   [null, "#9ccc68", "#4c8c3c", "#1e2418", "#c8784c", "#8a4428", "#a89048", "#f08cb0", "#fff0a0"], // a flowering plant (Joe 10/21: Phase 4): the plant's colors, pink petals, yellow middles
@@ -469,6 +471,30 @@ const GEN = {
     const a = mk(16, 16), w = [6, 8, 10, 12][f], h = [5, 7, 9, 11][f], x0 = 8 - (w >> 1), y0 = 15 - h;
     rect(a, x0, y0, w, h, 1); rect(a, x0 + 1, y0 + 1, 1, Math.max(1, h - 3), 3); rect(a, 7, y0 - 2, 2, 2, 1); px(a, 7, y0 - 1, 4); px(a, 8, y0 - 1, 4); // the bag, a shine, its tied neck
     if (f >= 2) { px(a, x0 + w - 2, y0 + 2, 2); px(a, x0 + 3, y0 + h - 2, 2); } // lumps
+    return outline(a);
+  },
+  truck_top: () => { // the delivery truck from above (Joe 10/21), backed up to the garage: cab at the top, the long white box down to the door. 3 tiles by 8
+    const a = mk(48, 128);
+    rect(a, 6, 0, 36, 12, 3); rect(a, 8, 2, 32, 4, 4); // the hood
+    rect(a, 7, 12, 34, 6, 5); // the windshield
+    rect(a, 6, 18, 36, 12, 3); rect(a, 8, 20, 32, 8, 4); rect(a, 1, 14, 5, 3, 6); rect(a, 42, 14, 5, 3, 6); // the cab's roof, mirrors
+    rect(a, 3, 32, 42, 96, 1); for (let y = 40; y < 126; y += 10) rect(a, 3, y, 42, 1, 2); rect(a, 3, 32, 42, 2, 2); rect(a, 3, 60, 42, 3, 7); // the box, its roof ribs, a yellow stripe
+    rect(a, 0, 26, 3, 8, 6); rect(a, 45, 26, 3, 8, 6); rect(a, 0, 100, 3, 10, 6); rect(a, 45, 100, 3, 10, 6); rect(a, 0, 114, 3, 10, 6); rect(a, 45, 114, 3, 10, 6); // tires peeking out
+    return outline(a);
+  },
+  garage_open: () => { // the basement's garage door rolled up on a Monday (Joe 10/21): the back of the delivery truck, its cargo box open, boxes inside
+    const a = GEN.garage_door().map(r => r.slice());
+    rect(a, 3, 3, 42, 29, 3); // the opening
+    rect(a, 5, 4, 38, 28, 6); rect(a, 8, 6, 32, 24, 7); // the truck's white rear frame, its dark cargo hold
+    rect(a, 8, 25, 32, 5, 8); for (let x = 9; x < 40; x += 4) rect(a, x, 25, 1, 5, 10); // the wooden loading floor
+    rect(a, 10, 15, 8, 10, 9); rect(a, 11, 11, 6, 4, 9); rect(a, 29, 17, 9, 8, 9); rect(a, 10, 19, 8, 1, 10); rect(a, 29, 20, 9, 1, 10); px(a, 13, 13, 10); // stacked boxes, their tape
+    rect(a, 5, 30, 38, 2, 2); // the bumper
+    return a;
+  },
+  garage_back: () => { // the garage door from out back (Joe 10/21): the top of the roll-up door in the wall, hazard stripes along its header
+    const a = mk(48, 16);
+    rect(a, 0, 0, 48, 16, 4); rect(a, 2, 4, 44, 12, 0); for (let y = 6; y < 16; y += 3) rect(a, 2, y, 44, 1, 1); // the frame, the slats
+    for (let x = 0; x < 48; x += 4) { rect(a, x, 0, 2, 3, 5); } // hazard stripes
     return outline(a);
   },
   dumpster: f => { // the dumpster by the basement garage door (Joe 10/21), two tiles wide: 0 lid down, 1 lid up
@@ -1758,6 +1784,9 @@ const SLOTS = [
   { key: "trash_levels", label: "Trash can, filling", group: "Furniture", w: 16, h: 16, frames: 6, pal: "binfull", gen: GEN.trash_levels, note: "6 frames (96×16): empty, then one more piece of trash over the rim each frame, up to 5. You empty it one piece at a time with a trash bag." },
   { key: "carry_bag", label: "Your trash bag", group: "People", w: 16, h: 16, frames: 4, pal: "tbag", gen: GEN.carry_bag, note: "4 frames (64×16): flat, a little in it, half full, bulging. In your hand while you collect trash." },
   { key: "dumpster", label: "Dumpster", group: "Furniture", w: 32, h: 24, frames: 2, pal: "dump", gen: GEN.dumpster, note: "2 frames (64×24): lid down, lid up. Out back by the basement garage door; full trash bags go in here." },
+  { key: "truck_top", label: "Delivery truck (from above)", group: "Days of the week", w: 48, h: 128, pal: "truck", gen: GEN.truck_top, note: "Mondays, out back: the truck backed up to the garage door, cab at the top. 3 tiles by 8." },
+  { key: "garage_open", label: "Garage door, open on the truck", group: "Days of the week", w: 48, h: 32, pal: "gopen", gen: GEN.garage_open, note: "Mondays, in the basement: the garage door rolled up on the back of the delivery truck. Same size and spot as the Garage door." },
+  { key: "garage_back", label: "Garage door from out back", group: "Floors", w: 48, h: 16, pal: "garage", gen: GEN.garage_back, note: "Out back, in the building's wall at the bottom of the driveway: walk down into it to go inside." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
 const SLOT = {}; SLOTS.forEach(s => { s.frames = s.frames || 1; s.fps = s.fps || 0; SLOT[s.key] = s; });
@@ -2139,22 +2168,25 @@ const ROOMS = {
     events: [{ x: 7, y: 3, enterMuseum: true, bump: true }, { x: 8, y: 3, enterMuseum: true, bump: true }],
     light: { dim: 0, spots: 0 },
   },
-  dock: { // out back (Joe 10/21): through the basement's garage door, a little lot with the dumpster; now and then the reader's out here on a smoke break
-    name: "Out back", art: { top: "lot_hedge", upper: "facade_upper", lower: "facade_lower", floor: "lot_asphalt", roof: "facade_roof" },
+  dock: { // out back (Joe 10/21): the delivery driveway, coming down a level from the street to the basement's garage door (at the bottom); the dumpster tucked aside, out of the trucks' way; now and then the reader on a smoke break
+    name: "Out back", art: { top: "lot_hedge", floor: "lot_asphalt", walkway: "lot_sidewalk", roof: "facade_roof" },
     map: [
-      "RRRRRRRRRRRR",
-      "^^^^^^^^^^^^",
-      "vvvvvvvvvvvv",
-      "#..........#",
-      "#..........#",
-      "#..........#",
-      "#..........#",
-      "############",
+      ",,,,,,,,,,,,,",
+      "##.........##",
+      "##.........##",
+      "##.........##",
+      "##.........##",
+      "##.........##",
+      "##.........##",
+      "##.........##",
+      "##.........##",
+      "##.........##",
+      "##.........##",
+      "RRRRRRRRRRRRR",
     ],
-    spawn: [5, 3, "down"],
-    wallArt: [{ key: "garage_door", x: 4, y: 1, dockIn: true }],
-    props: [{ key: "dumpster", x: 8, y: 4, event: { dumpster: true } }],
-    visitors: [{ sheet: "visitor_b", shirt: "#3a5a7a", x: 2, y: 3, dir: "down", still: true, smoker: true, lines: [["..."]] }],
+    spawn: [6, 10, "up"],
+    props: [{ key: "garage_back", x: 5, y: 11, event: { dockIn: true, bump: true } }, { key: "dumpster", x: 2, y: 9, event: { dumpster: true } }],
+    visitors: [{ sheet: "visitor_b", shirt: "#3a5a7a", x: 10, y: 9, dir: "left", still: true, smoker: true, lines: [["..."]] }],
     light: { dim: 0, spots: 0 },
   },
   lobby: {
@@ -2508,7 +2540,7 @@ const ROOMS = {
       { key: "tut_barrier", x: 8, y: 9, event: { labRopes: true } }, // close the room for cleaning (Joe 10/21: the first velvet rope's art)
       { key: "bench", x: 5, y: 8, sit: "up", say: ["A bench. Vacuum around it."] },
       { key: "bench", x: 9, y: 8, sit: "up", say: ["A bench. Someone's always on it."] },
-      { key: "sign_stand", x: 13, y: 3, say: ["POLISH LAB", "Grab the tools, then pick one from Equipment in the Start menu. The wide vacuum does all around you, the hand vacuum just where you stand. Hold B to vacuum; double-tap B to leave it on.", "The rag: hold B at a case to polish it. The watering can: B at a plant. The mop: hold B on the wood floor.", "The trash can fills up as people walk by. With a trash bag, hold B at it to take the trash out, then hold B at the dumpster.", "The plants: water them once a day (a day here is a minute) and they grow and flower. Skip a day and they slip back a little.", "The rope by the door closes the room for cleaning (and opens it again).", "Every carpet tile remembers which way you went.", "No right answer. Stripes, diagonals, checkerboards: whatever looks nice to you.", "People walking across it scuff it up again."] },
+      { key: "sign_stand", x: 13, y: 3, say: ["POLISH LAB", "Grab the tools, then pick one from Equipment in the Start menu. The wide vacuum does all around you, the hand vacuum just where you stand. Hold B to vacuum; double-tap B to leave it on.", "The rag: hold B at a case to polish it. The watering can: B at a plant. The mop: hold B on the wood floor.", "The trash can fills up as people walk by. With a trash bag, hold B at it to take the trash out, then press B at the dumpster.", "The plants: water them once a day (a day here is a minute) and they grow and flower. Skip a day and they slip back a little.", "The rope by the door closes the room for cleaning (and opens it again).", "Every carpet tile remembers which way you went.", "No right answer. Stripes, diagonals, checkerboards: whatever looks nice to you.", "People walking across it scuff it up again."] },
       { key: "sign_stand", x: 11, y: 3, event: { labCarpet: true } }, // carpet samples: the wings' carpets (Joe 10/21)
       { key: "plant", x: 13, y: 9, plant: "lab-plant-a", name: "plant" },
       { key: "plant", x: 1, y: 9, plant: "lab-plant-b", name: "plant" },
@@ -2650,7 +2682,7 @@ const TEXT = {
   "polish.binEmpty": { g: "Polish Lab", l: "The lab's trash can, when it's empty", by: "claude", v: [["Still plenty of room in this one."]] },
   "polish.binBag":   { g: "Polish Lab", l: "The lab's trash can with something in it, when you have trash bags", by: "claude", v: [["Some trash in this one.", "Hold B with a trash bag to take it out."]] },
   "polish.binNoBag": { g: "Polish Lab", l: "The same, before you've got the trash bags", by: "claude", v: [["Some trash in this one.", "There's a roll of trash bags by the wall."]] },
-  "polish.dumpster": { g: "Polish Lab", l: "A dumpster, looked at", by: "claude", v: [["A dumpster. It smells exactly like a dumpster.", "Hold B with a trash bag to toss it in."]] },
+  "polish.dumpster": { g: "Polish Lab", l: "A dumpster, looked at", by: "claude", v: [["A dumpster. It smells exactly like a dumpster.", "Press B with a trash bag to toss it in."]] },
   "polish.fresh":  { g: "Polish Lab", l: "Visitors, once the whole floor's freshly vacuumed (one line each)", by: "claude", v: [["Oh, these lines in the carpet. Someone took their time."], ["Look at this floor. It feels like a fancier museum."], ["I almost don't want to walk on it."]] },
   "tut.ropeOpen":  { g: "Tutorial", l: "Training Room B: the trainer unhooks a rope, after you first talk to her", by: "claude", v: [["She unhooks one of the velvet ropes for you."]] },
   "tut.trainer.thanks":  { g: "Tutorial", l: "The trainer, after you water the sad plant", by: "claude", v: [["You watered it! Look at it perk up!", "Thank you. The door to the closet's open now."]] },
@@ -3108,6 +3140,7 @@ const TEXT = {
   "reader.shelf":     { g: "The reader", l: "The reading nook's bookshelf", by: "claude", v: [["A little shelf of video game strategy guides.", "None of these are what she's reading. She must've brought her own books."]] },
   "reader.table":     { g: "The reader", l: "Her side table", by: "claude", v: [["A cup of coffee, still warm. And a very small ashtray with a little leaf on it.", "...Is that allowed in here?"]] },
   "reader.smoke":     { g: "The reader", l: "Out back by the dumpster, now and then: the reader on a smoke break", by: "claude", v: [["She's out here on a smoke break, her book tucked under her arm.", "She gives you a small nod. That's new."], ["She blows the smoke away from you. Politely.", "Still doesn't say a word."], ["She checks how many pages are left, and lights another."]] },
+  "reader.chairBreak": { g: "The reader", l: "Her armchair while she's out back on a smoke break", by: "claude", v: [["Her armchair, the plaid blanket thrown over the arm.", "Her book's gone too. She'll be back."]] },
   "reader.chair":     { g: "The reader", l: "Her armchair, once she's gone home", by: "claude", v: [["Her armchair. She left her plaid blanket on it.", "She'll be back tomorrow."]] },
   "reader.chatter":   { g: "The reader", l: "Visitors near the reading nook, now and then, about her", by: "claude", v: [["Is she... allowed to just read in here?", "She looks so comfy. Nobody wants to be the one to ask."], ["She was already here when I got here.", "I think she's always here."], ["I've never seen anyone that comfortable in a museum."], ["Do you think she knows this is a museum?"]] },
   "coffee.zoom":      { g: "Café", l: "Finishing a third caffeinated drink in a row: you're about to move at double speed for a minute", by: "claude", v: [["That's three in a row.", "Your eye is twitching. You can hear colors.", "Your legs feel... fast."], ["Three coffees. Zero regrets.", "Your heart is doing a drum solo. Time to move."]] },
@@ -3285,10 +3318,11 @@ const PIXEL_FONT = (() => {
   return out;
 })();
 const TOOLS = { // equipment (Joe 10/21): what each is, its icon (an art slot and frame), what it says, how many tiles it brushes across
+  phone: { name: "Phone", slot: "phone", desc: "B takes a photo of whatever's in front of you.", hint: "Phone: B takes a photo", got: "Your phone.", spot: "" }, // (Joe 10/21: the camera's a tool too; everyone starts with it)
   vacuum: { name: "Wide vacuum", slot: "vacuum", wide: 3, desc: "Hold B to vacuum all around you (three tiles by three); double-tap B to leave it running. Every tile remembers which way you pushed.", hint: "Wide vacuum: hold B (double-tap to leave it on)", got: "You got the wide vacuum!", spot: "The vacuum's corner. Yours is in your Equipment." },
   rag: { name: "Polishing rag", slot: "rag", hand: true, desc: "Hold B at a case to polish it. Polished glass glints; it dulls again slowly.", hint: "Rag: hold B at a case", got: "You got a polishing rag!", spot: "The rag hook. Yours is in your Equipment." },
   mop: { name: "Mop", slot: "mop", desc: "Hold B to mop the floor you're walking on (not the carpet). It dries in a few seconds; people step around it while it's wet.", hint: "Mop: hold B", got: "You got the mop!", spot: "The mop's corner. Yours is in your Equipment." },
-  bag: { name: "Trash bags", slot: "trash_bag_roll", cap: 8, desc: "Hold B at a trash can to take its trash out a piece at a time. When the bag's full, hold B at the dumpster.", hint: "Trash bags: hold B at a can", got: "You got a roll of trash bags!", spot: "The trash bag roll. Yours is in your Equipment." },
+  bag: { name: "Trash bags", slot: "trash_bag_roll", cap: 8, desc: "Hold B at a trash can to take its trash out a piece at a time. When the bag's full, press B at the dumpster.", hint: "Trash bags: hold B at a can", got: "You got a roll of trash bags!", spot: "The trash bag roll. Yours is in your Equipment." },
   can: { name: "Watering can", slot: "watering_can", hand: true, desc: "B at a plant waters it.", hint: "Watering can: B at a plant", got: "You got the watering can!", spot: "The watering can's hook. Yours is in your Equipment." },
   handvac: { name: "Hand vacuum", slot: "vacuum", small: true, hand: true, wide: 1, desc: "Hold B to vacuum the tile you're on; double-tap B to leave it running. For corners and around benches.", hint: "Hand vacuum: hold B (double-tap to leave it on)", got: "You got the hand vacuum!", spot: "The hand vacuum's spot. Yours is in your Equipment." },
 };
@@ -3735,7 +3769,7 @@ function buildRoom(id, pieces, o) {
   if (def.intercom) { const [x, y] = def.intercom; r.intercomAt = { x, y }; r.events[x + "," + y] = { announce: true }; }
   if (def.wallArt) {
     r.wallArt = def.wallArt;
-    def.wallArt.forEach(w => { for (let i = 0; i < SLOT[w.key].w / T; i++) r.events[(w.x + i) + "," + ((w.y || 1) + 1)] = w.key === "staff_tv" ? { staffTv: true } : w.cafe && w.key !== "cafe_menu" ? { cafe: true } : w.tool || w.key === "watering_can" ? { tool: w.tool || "can", say: w.say } : w.dockIn ? { dockIn: true } : w.key === "garage_door" ? { dockOut: true } : { say: w.say || ["The café menu."] }; });
+    def.wallArt.forEach(w => { for (let i = 0; i < SLOT[w.key].w / T; i++) r.events[(w.x + i) + "," + ((w.y || 1) + 1)] = w.key === "staff_tv" ? { staffTv: true } : w.cafe && w.key !== "cafe_menu" ? { cafe: true } : w.tool || w.key === "watering_can" ? { tool: w.tool || "can", say: w.say } : w.key === "garage_door" ? { dockOut: true, bump: true } : { say: w.say || ["The café menu."] }; });
   }
   r.decals = def.decals || []; r.glows = def.glows || []; r.bunting = !!def.bunting;
   r.wallpaper = SLOT[def.wallpaper] && SLOT[def.wallpaper].group === "Wallpaper" ? def.wallpaper : null; // every wall in the room papered with it
@@ -6351,7 +6385,7 @@ class Game {
   }
   vacTick() { // the tiles the vacuum reaches get brushed your way: as you start it, step, or turn get brushed your way: as you start it, step, or turn (Joe 10/21)
     const held = this.btnHeld && this.btnHeld.has("b"); if (!held) this.bStale = false; else if (this.walkSeen !== this.t - 1) this.bStale = true; this.walkSeen = this.t; // (back from a menu with B still down: it doesn't count until it's let go)
-    this.polishTick(); this.mopTick(); this.trashTick(); if (!this.vacuuming()) { this.vacLast = null; return; }
+    this.polishTick(); this.mopTick(); this.trashTick(); this.readerTick(); if (!this.vacuuming()) { this.vacLast = null; return; }
     const r = this.room, p = this.player, k = p.x + "," + p.y;
     if (this.vacLast === k + p.dir + this.tool) return; this.vacLast = k + p.dir + this.tool;
     const N = (this.nap || (this.nap = {}))[r.id] || (this.nap[r.id] = {}), half = (TOOLS[this.tool].wide - 1) / 2;
@@ -6427,15 +6461,27 @@ class Game {
     const [dx, dy] = DIRS[p.dir], e = r.events[(p.x + dx) + "," + (p.y + dy)] || {}, cap = TOOLS.bag.cap, n = this.bagItems || 0;
     this.bagHold = (this.bagHold || 0) + 1;
     if (e.labBin && Math.floor(this.labBin || 0) >= 1 && n < cap && this.bagHold >= 24) { this.labBin -= 1; this.bagItems = n + 1; this.bagHold = 0; this.binHop = { room: r.id, x: p.x + dx, y: p.y + dy, t0: this.t }; }
-    if (e.dumpster && n > 0 && this.bagHold >= 20) { this.bagItems = 0; this.bagHold = 0; this.dumpT = this.t; }
   }
   trashAhead() { const r = this.room, p = this.player, [dx, dy] = DIRS[p.dir], e = r && r.events[(p.x + dx) + "," + (p.y + dy)]; return !!(e && (e.labBin || e.dumpster)); }
-  goOutBack() { // out the garage door. Once a day it's decided whether the reader's out here having a smoke (Joe 10/21: an Easter egg)
-    const D = this.rooms.dock; if (!D) return; const day = todayISO();
-    if (this.smokeDay !== day) { this.smokeDay = day; this.smokeOn = Math.random() < 0.35 && this.tod() !== "night"; }
-    const S = D.npcs.find(n => n.smoker) || this.smoker; if (S) { this.smoker = S; S.lines = this.pack.settings.text["reader.smoke"] || TEXT["reader.smoke"].v; S.lineI = -1; }
-    D.npcs = D.npcs.filter(n => !n.smoker).concat(S && this.smokeOn ? [S] : []);
-    this.warp("dock", 5, 3, "down");
+  goOutBack() { this.dockDress(); this.warp("dock", ...(this.truckDay() ? [4, 10] : [6, 10]), "up"); } // out the garage door
+  /* The reader's smoke break (Joe 10/21: an Easter egg): every so often she steps out back for a few minutes, and her chair
+     sits empty with the blanket on it. It only changes where you can't see it happen. */
+  readerOut() { const C = 60 * 60 * 12, cyc = Math.floor(this.t / C); return this.tod() !== "night" && hash(cyc, 77) % 100 < 35 && this.t % C < 60 * 60 * 3; }
+  readerTick() {
+    const M = this.rooms && this.rooms.museum, D = this.rooms && this.rooms.dock; if (!M || !D) return; const out = this.readerOut();
+    const inM = M.npcs.find(n => n.reader); if (inM) this.readerNpc = inM;
+    const R = this.readerNpc, here = this.room === M && R && this.zoneAt(M, this.player.x, this.player.y) === this.zoneAt(M, R.x, R.y);
+    if (out && inM && !here) M.npcs = M.npcs.filter(n => n !== inM); else if (!out && !inM && R && !here && !this.closingNow()) M.npcs.push(R); // she gets up (or comes back) while you're elsewhere
+    const sm = D.npcs.find(n => n.smoker); if (sm) this.smoker = sm;
+    if (this.room !== D) { if (out && !sm && this.smoker) { this.smoker.lines = this.pack.settings.text["reader.smoke"] || TEXT["reader.smoke"].v; this.smoker.lineI = -1; D.npcs.push(this.smoker); } else if (!out && sm) D.npcs = D.npcs.filter(n => n !== sm); }
+  }
+  closingNow() { return !!(this.director && this.director().closing); }
+  truckDay() { return this.weekday() === 1 && this.tod() !== "night"; } // Monday: the delivery truck's backed up to the garage door
+  dockDress() { // out back on a Monday: the truck, backed up to the garage door (its tiles solid), the garage's sides to get past it
+    const D = this.rooms && this.rooms.dock; if (!D) return; const on = this.truckDay(), has = D.props.some(q => q.key === "truck_top");
+    if (on && !has) D.props.push({ key: "truck_top", x: 5, y: 10, tall: true }); if (!on && has) D.props = D.props.filter(q => q.key !== "truck_top");
+    for (let y = 3; y <= 10; y++) for (let x = 5; x <= 7; x++) D.solid[y][x] = on;
+    for (const x of [4, 8]) { if (on) D.events[x + ",11"] = { dockIn: true, bump: true }; else delete D.events[x + ",11"]; }
   }
   plantAhead() { const r = this.room, p = this.player, [dx, dy] = DIRS[p.dir], e = r && r.events[(p.x + dx) + "," + (p.y + dy)]; return e && e.plant ? e : null; }
   waterAhead() { // the watering can: B at a plant (Joe 10/21: the only way to water one now)
@@ -6466,7 +6512,18 @@ class Game {
     this.napGlint = { room: r.id, t0: this.t, at: all.slice().sort(() => Math.random() - 0.5).slice(0, 6) }; // a few soft glints, for a few seconds (drawNap)
     r.npcs.filter(n => !n.staff && !n.still).forEach((n, i) => { n.pose = { kind: "heart", t0: this.t, dur: 90 }; n.lines = [this.tx("polish.fresh")]; n.lineI = -1; });
   }
+  drawDock(r, cx, cy) { // the driveway: darker the further down it goes, concrete retaining walls rising along both sides, a drain by the door
+    const ctx = this.ctx;
+    for (let y = 1; y <= 10; y++) { const k = (y - 1) / 9, py = y * T - cy, w = 1 + Math.round(k * 5);
+      ctx.globalAlpha = 0.04 + k * 0.22; ctx.fillStyle = "#000"; ctx.fillRect(2 * T - cx, py, 9 * T, T);
+      ctx.globalAlpha = 1; ctx.fillStyle = "#8a8880"; ctx.fillRect(2 * T - cx, py, w, T); ctx.fillRect(11 * T - cx - w, py, w, T);
+      ctx.fillStyle = "#c8c6bc"; ctx.fillRect(2 * T - cx + w - 1, py, 1, T); ctx.fillRect(11 * T - cx - w, py, 1, T); }
+    ctx.fillStyle = "#e8c040"; for (let y = 2; y <= 8; y += 2) { ctx.fillRect(6 * T - cx + 7, y * T - cy + 3, 2, 8); } // the lane's dashed line
+    ctx.fillStyle = "#c8c6bc"; ctx.fillRect(2 * T - cx, T - cy, 9 * T, 1); // the lip where the street ends and the ramp starts
+    const gx = 9 * T - cx + 2, gy = 10 * T - cy + 4; ctx.fillStyle = "#1a1a20"; ctx.fillRect(gx, gy, 10, 7); ctx.fillStyle = "#5a5a64"; for (let i = 0; i < 5; i++) ctx.fillRect(gx + 1 + i * 2, gy + 1, 1, 5); // the drain
+  }
   drawNap(r, cx, cy) {
+    if (r.id === "dock") this.drawDock(r, cx, cy);
     this.drawWet(r, cx, cy);
     const N = this.nap && this.nap[r.id]; if (!N) return;
     const ctx = this.ctx;
@@ -6482,8 +6539,8 @@ class Game {
   /* Equipment (Joe 10/21): tools you find once and then equip from the Start menu, Zelda style. Only the Polish Lab uses them
      for now. B is the tool button while one's equipped: hold it to vacuum (double-tap to leave it running, tap to stop);
      the wide vacuum brushes three tiles across in front of you, the hand vacuum one. */
-  ownedTools() { return ((this.progress.tools && this.progress.tools.owned) || []).filter(k => TOOLS[k]); }
-  toolActive() { return !!this.tool && !!this.room && !!ROOMS[this.room.id] && (this.tool === "can" || this.tool === "bag" || !!ROOMS[this.room.id].lab); } // (the watering can and the trash bags work everywhere: plants, cans, the dumpster out back)
+  ownedTools() { const o = ((this.progress.tools && this.progress.tools.owned) || []).filter(k => TOOLS[k] && k !== "phone"); return ["phone"].concat(o); } // (your phone: always yours, first in the row)
+  toolActive() { return !!this.tool && !!this.room && !!ROOMS[this.room.id] && (this.tool === "phone" || this.tool === "can" || this.tool === "bag" || !!ROOMS[this.room.id].lab); } // (the watering can and the trash bags work everywhere: plants, cans, the dumpster out back)
   bHeld() { return !!(this.btnHeld && this.btnHeld.has("b")) && !this.bStale; } // B held for a tool: not the B that just backed out of a menu (Joe 10/21)
   vacuuming() { return !!TOOLS[this.tool] && !!TOOLS[this.tool].wide && this.toolActive() && (this.vacLatch || this.bHeld()); }
   takeTool(kind) { // A on a tool's spot: it's yours (and in your hands)
@@ -6493,10 +6550,11 @@ class Game {
     this.itemGet({ name: TOOLS[kind].name, img: this.toolIcon(kind), id: "tool-" + kind }, "walk", () => this.say([TOOLS[kind].got, "It's in your Equipment (Start) from now on."]));
     this.dressLab();
   }
-  equip(kind) { this.tool = kind || null; this.vacLatch = false; if (this.progress.tools) { this.progress.tools.on = this.tool; this.saveProgress(); } }
+  equip(kind) { this.tool = kind || null; this.vacLatch = false; const T0 = this.progress.tools || (this.progress.tools = { owned: [] }); T0.on = this.tool; this.saveProgress(); }
   putToolBack() { this.vacLatch = false; } // (leaving the lab: the vacuum switches off)
   toolPress() {
     if (this.tool === "can") { this.waterAhead(); return; }
+    if (this.tool === "bag") { const r = this.room, p = this.player, [dx, dy] = DIRS[p.dir], e = r.events[(p.x + dx) + "," + (p.y + dy)]; if (e && e.dumpster && this.bagItems > 0) { this.bagItems = 0; this.dumpT = this.t; } return; } // the dumpster: one press, the bag goes in (Joe 10/21)
     if (TOOLS[this.tool] && TOOLS[this.tool].wide) { const dbl = this.lastB && this.t - this.lastB < 20; this.lastB = this.t;
       if (this.vacLatch) { this.vacLatch = false; this.lastB = 0; } else if (dbl) { this.vacLatch = true; this.lastB = 0; }
       return; }
@@ -9202,7 +9260,7 @@ class Game {
     if (r.npcs.some(n => n.x === e.x && n.y === e.y)) { this.say(["Someone's already sitting there."]); return; }
     const p = this.player;
     p.sitFrom = [p.x, p.y]; p.x = e.x; p.y = e.y; p.dir = e.sit; p.sitting = true; p.moving = false; this.sipClock = Math.min(this.sipClock > 0 ? this.sipClock : 60, 60); this.inputLock = true; // a sip within a second of sitting, or sooner if one was due
-    if (this.room.props.some(q => q.key === "reader_chair" && q.x === e.x && q.y === e.y)) this.say(this.tx("reader.chair")); // her armchair, once she's gone home: the blanket she left
+    if (this.room.props.some(q => q.key === "reader_chair" && q.x === e.x && q.y === e.y)) this.say(this.tx(this.readerOut() ? "reader.chairBreak" : "reader.chair")); // her armchair, once she's gone home: the blanket she left
     p.bench = !!e.bench; this.sitIdle = 0; this.asleep = false;
     if (this.sundaySeat(e)) return; // Sunday: coffee with someone from the staff
     if (this.triviaSeat(e)) return; // Thursday: the free seat at the trivia tables
@@ -9251,7 +9309,7 @@ class Game {
     // A room's overflow (its genre's episodes that don't fit its cases) is on that room's touch screen.
     this.overflow = {}; const first = cases.order.find(sl => sl.genre); if (first && cases.archived.length) this.overflow[first.genre] = cases.archived.slice(); // the oldest that don't fit: on the touch screen at the start of the timeline (the first wing's)
     this.rooms = {}; Object.keys(ROOMS).forEach(id => (this.rooms[id] = buildRoom(id, this.pack.pieces, o)));
-    this.tutDress(); this.dressLab(); if (this.tool === undefined && this.progress.tools && TOOLS[this.progress.tools.on]) this.tool = this.progress.tools.on; this.seatGuests(); this.placeJoe(); this.placeDay();
+    this.tutDress(); this.dressLab(); this.dockDress(); if (this.tool === undefined) { const on = this.progress.tools && this.progress.tools.on; this.tool = on === undefined ? "phone" : TOOLS[on] ? on : null; } // (the phone in hand to start) this.seatGuests(); this.placeJoe(); this.placeDay();
     this.placeCurious(); this.placeMembers(); this.giveLife();
     for (const id in this.rooms) this.rooms[id].fresh = true; // the director settles each room's crowd for this point in the visit
   }
@@ -9300,7 +9358,7 @@ class Game {
     if (ROOMS[this.room.id] && ROOMS[this.room.id].tutorial && this.tutEvent(e)) return;
     if (e.tutorial) { this.choose(this.tx("tut.door").join(" "), ["Yes", "Not now"], i => { if (i === 0) this.startTutorial(true); }, 1); return; }
     if (e.dockOut) { this.goOutBack(); return; } // the basement's garage door: out back
-    if (e.dockIn) { this.warp("storage", 7, 3, "down"); return; }
+    if (e.dockIn) { this.warp("storage", 7, 3, "down"); return; } // (walk down into the garage door, back inside)
     if (e.tool) { this.takeTool(e.tool); return; } // a tool on its hook (the staff room's watering can): into your Equipment
     if (e.enterMuseum) { this.enterMuseum(); return; }
     if (e.staffDoor) { this.staffDoor(e); return; }
@@ -9613,8 +9671,9 @@ class Game {
       if (!this.player.moving && (this.using("shades") === "fake" && !this.progress.lensPopped || this.using("hat") === "fake")) { this.gearCheck(); return; }
       const codeB = this.kbuf && this.kbuf.slice(-9).join() === KONAMI.slice(0, 9).join(); // the B in the code isn't a photo
       if (has("a") && this.kbuf && this.kbuf.slice(-10).join() === KONAMI.slice(0, 10).join()) return; // nor is its A a look
-      this.vacTick(); if (this.toolActive() && !(this.tool === "can" && !this.plantAhead()) && !(this.tool === "bag" && !this.trashAhead())) { if (has("b") && !codeB && !this.bStale) this.toolPress(); } // (the can away from a plant: B is the camera again) // a tool in hand (the Polish Lab): B uses it, no photo
-      else if (has("b") && !codeB && !this.player.moving && !this.asleep) { this.takePhoto(); return; }
+      this.vacTick(); // (Joe 10/21: B is whatever you're holding; the phone takes photos)
+      if (this.tool === "phone") { if (has("b") && !codeB && !this.bStale && !this.player.moving && !this.asleep) { this.takePhoto(); return; } }
+      else if (this.toolActive() && has("b") && !codeB && !this.bStale) this.toolPress();
       this.updatePlayer(has("a"));
     }
     else if (this.mode === "think") this.updateThink(has);
@@ -11888,7 +11947,7 @@ class Game {
       const x = r.windowAt.x * T - cx, y = r.windowAt.y * T - cy;
       this.drawSlot("sky_" + tod, 0, 0, x + 2, y + 2); this.drawSlot("window_frame", 0, 0, x, y);
     }
-    if (r.wallArt) r.wallArt.forEach(w => this.drawSlot(w.key, this.frame(w.key), 0, w.x * T - cx, (w.y || 1) * T - cy)); // (frames: the staff room TV)
+    if (r.wallArt) r.wallArt.forEach(w => { const k = w.key === "garage_door" && this.truckDay() ? "garage_open" : w.key; this.drawSlot(k, this.frame(k), 0, w.x * T - cx, (w.y || 1) * T - cy); }); // (frames: the staff room TV; Mondays the garage is open on the delivery truck)
     if (r.bunting) for (let x = 1; x < r.w - 1; x++) this.drawSlot("bunting", 0, 0, x * T - cx, T - cy);
     (r.unveilZones || []).forEach(z => { const R = z.rect; if (!R) return; const y = R.y - 2; for (let x = R.x; x < R.x + R.w; x++) if (r.tiles[y] && /upper/.test(String(r.tiles[y][x] || ""))) this.drawSlot("bunting", 0, 0, x * T - cx, y * T - cy); }); // an unveil day's bunting (a hallway has no bunting: a painting can unveil in one, Joe 10/16)
     if (r.switchAt) this.drawSlot("light_switch", 0, 0, r.switchAt.x * T - cx, r.switchAt.y * T - cy);
@@ -11944,7 +12003,7 @@ class Game {
       const SI = this.side && this.side.item, held = SI && !c.sitting && ((c === this.player && this.carryItem) || (c.itemPair === "taker" && SI.phase >= 2 && !SI.got)) ? SI.kind : -1; // the break room mix-up: the item in hand
       const heldAt = held >= 0 ? [sx + { down: 9, up: 1, left: 1, right: 9 }[c.dir], sy + 9] : null, heldFirst = heldAt && c.dir === "up";
       if (heldFirst) this.drawSlot("held_items", held, 0, ...heldAt);
-      const vac = c === this.player && TOOLS[this.tool] && this.toolActive() && !(this.polishing && this.tool === "rag") && !c.sitting ? this.vacDrawer(c, sx, sy) : null;
+      const vac = c === this.player && TOOLS[this.tool] && this.tool !== "phone" && this.toolActive() && !(this.polishing && this.tool === "rag") && !c.sitting ? this.vacDrawer(c, sx, sy) : null;
       if (vac && c.dir === "up") vac(); // pushed away from you: behind you
       if (cupFirst) this.drawCup(sx, sy, c);
       const tbAt = (c.trashBag || (c === this.player && this.trashBag != null)) && !c.sitting ? [sx + { down: 1, up: 9, left: 9, right: -1 }[c.dir], sy + 9] : null, tbFirst = tbAt && c.dir !== "down"; // his trash bag hangs at his side
@@ -12072,7 +12131,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 148";
+const VERSION = "2026-11-18 cards 149";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
