@@ -5418,7 +5418,7 @@ class Game {
     this.mode = "busy"; this.trans = { t: 0, dur: 14, switched: false, fn: go, after: () => { this.dialK = undefined; if (this.needTutorial()) this.startTutorial(); } };
   }
   outsideNow() { return !!(this.room && this.room.id === "outside"); } // the parking lot out front: no museum time there
-  dialOn() { if (this.tut) return this.tut.dialT0 !== undefined && !this.headless; if (this.room && ROOMS[this.room.id] && ROOMS[this.room.id].lab) return false; return !!(this.rooms && this.rooms.museum && !this.chillOn() && !this.recording() && this.pack && !this.headless && !this.outsideNow()); } // the day dial is showing (in the tutorial: only once Fern's shown it to you)
+  dialOn() { if (this.tut) return this.tut.dialT0 !== undefined && !this.headless; if (this.room && ROOMS[this.room.id] && ROOMS[this.room.id].lab) return false; return !!(this.progress.showDial && this.rooms && this.rooms.museum && !this.chillOn() && !this.recording() && this.pack && !this.headless && !this.outsideNow()); } // (Joe 10/21: off unless you turn it on in Settings; the day still runs in its four parts either way) // the day dial is showing (in the tutorial: only once Fern's shown it to you)
   drawDayDial() {
     if (!this.dialOn()) return;
     const ctx = this.ctx, d = this.tut ? this.tutDial() : this.director(), R = 7, x = 4 + R + 1, y = SH - 4 - R - 1, f = Math.min(1, d.min / d.minutes);
@@ -9075,10 +9075,11 @@ class Game {
   answerStep(d) { const A = this.ans; if (!A) return; const j = A.i + d; if (j < 0) return; if (j >= A.cards.length) { this.closeAnswers(); return; } A.i = j; this.renderAnswer(); }
   closeAnswers() { if (this.el.ans) this.el.ans.style.display = "none"; this.ans = null; if (this.mode === "answer") this.mode = "walk"; }
   settingsMenu() {
-    const opts = [...(this.dialOn() ? ["Check time"] : []), "Recent notices", "Controls", "Respawn", "Back"]; // (Check time moved here, Joe 10/19: room for Think)
+    const dialOpt = "Day dial: " + (this.progress.showDial ? "On" : "Off"), opts = [...(this.dialOn() ? ["Check time"] : []), ...(this.tut ? [] : [dialOpt]), "Recent notices", "Controls", "Respawn", "Back"]; // (Check time moved here, Joe 10/19: room for Think)
     this.choose("SETTINGS", opts, k => {
       const o = opts[k], back = () => this.settingsMenu();
       if (o === "Check time") { this.dialShow = this.t; return; } // the menu closes and the dial's label slides in again (Joe 10/12)
+      if (o === dialOpt) { this.progress.showDial = !this.progress.showDial; this.saveProgress(); if (this.progress.showDial) this.dialShow = this.t; back(); return; } // (Joe 10/21) the day dial: a visual setting, off to start
       if (o === "Recent notices") this.recentNotices(back);
       else if (o === "Controls") this.controlsMenu(back);
       else if (o === "Respawn") this.respawn();
@@ -12405,7 +12406,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 164";
+const VERSION = "2026-11-18 cards 165";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
