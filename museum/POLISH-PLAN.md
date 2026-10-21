@@ -59,7 +59,7 @@ A test room you reach with a button code, so mechanics can be tried one at a tim
 - The café can be closed for cleaning with its rope stand (everyone steps out; A again to reopen).
 - The Janitor's retired: his jobs are yours now.
 
-### Phase 6: care draws attention
+### Phase 6: care draws attention — skipped (Joe 10/21: people already talk about it in their lines; that's enough)
 - What you polish gets noticed: visitors drift to a gleaming case, linger, take photos. Your care quietly steers people toward the pieces you love.
 - People mention your work: comments on the carpet pattern, a coworker who likes your stripes, a photo of your checkerboard.
 
@@ -72,7 +72,7 @@ A test room you reach with a button code, so mechanics can be tried one at a tim
 
 ## Open questions
 
-- Should vacuuming slow you down a little (weight) or not (comfort)?
+- ~~Should vacuuming slow you down a little (weight) or not (comfort)?~~ Settled (Joe 10/21): it doesn't slow you down.
 - Do tokens stay for anything in this system, or is it recognition only?
 - Which carpets in the museum should be vacuumable (all rugs, runners, the café)?
 - Does the tutorial's Inspecting side change to teach polishing instead of fixing?

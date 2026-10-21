@@ -148,6 +148,7 @@ const PAL = {
   kitchen: [null, "#e8eef4", "#9fb4c8", "#1a2230", "#e05050", "#58a868", "#d8a050"],
   plaque:  [null, "#e8c870", "#7a4a28", "#2a160c", "#f8f0c0"],
   ui:      ["#f8f8f0", "#b0b0c0", "#505068", "#181820"],
+  storm:   [null, "#b4b4c4", "#7a7a90", "#181820", "#f0c838", "#5a6a90"], // the disappointed storm cloud: cloud, its shade, outline, the bolt, rain
   emote:   ["#f8f8f0", "#e05a6a", "#181820", "#e8b030", "#7a7a90", "#f29ab0"],
   bag:     [null, "#8a2a3a", "#5a1824", "#181820", "#e8b24a"],
   player:  [null, "#f8e0c0", "#3878c8", "#181820"],
@@ -635,6 +636,11 @@ const GEN = {
     return outline(a);
   },
   // A full trash can: the same can, its lid knocked askew and trash popping out of the top.
+  emote_storm: f => { const a = mk(8, 8); // (Joe 10/21) a little storm cloud: disappointed. 2 frames: the bolt, then rain
+    rect(a, 1, 2, 6, 3, 1); rect(a, 2, 1, 2, 1, 1); rect(a, 4, 0, 2, 2, 1); rect(a, 1, 4, 6, 1, 2); const b = outline(a, 3);
+    if (f === 0) { px(b, 4, 5, 4); px(b, 3, 6, 4); px(b, 4, 6, 4); px(b, 3, 7, 4); } else { px(b, 2, 6, 5); px(b, 5, 6, 5); px(b, 3, 7, 5); px(b, 6, 7, 5); } return b; },
+  trash_heap: () => { const a = mk(16, 16); rect(a, 3, 3, 10, 4, 1); rect(a, 4, 2, 8, 1, 1); px(a, 5, 1, 1); px(a, 9, 1, 1); rect(a, 5, 3, 2, 2, 2); rect(a, 10, 3, 2, 1, 5); px(a, 8, 4, 4); px(a, 4, 5, 5); const b = outline(a);
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) if (a[y][x] >= 0 && (y === 15 || a[y + 1][x] < 0)) b[y][x] = a[y][x]; return b; }, // six rows, so it can sink a pixel per piece; no outline along its bottom (Joe 10/21: it read as sitting on the can) // (Joe 10/21: the heap from before, back) trash over the rim; it sinks a pixel for each piece taken out
   trash_full: () => {
     const a = mk(16, 16);
     rect(a, 3, 6, 10, 9, 2); for (let x = 5; x < 12; x += 3) rect(a, x, 8, 1, 6, 1); // the can, a little lower to make room
@@ -1835,7 +1841,7 @@ const SLOTS = [
   { key: "mop", label: "Mop", group: "Furniture", w: 16, h: 16, pal: "mop", gen: GEN.mop, note: "Equipment: hold B to mop the floor you walk on. Also its spot in the Polish Lab and its Equipment icon." },
   { key: "plant_full", label: "Plant, full", group: "Furniture", w: 16, h: 16, pal: "plant", gen: GEN.plant_full, note: "Phase 4: a plant that's been watered a few days running." },
   { key: "plant_flower", label: "Plant, flowering", group: "Furniture", w: 16, h: 16, pal: "bloom", gen: GEN.plant_flower, note: "Phase 4: the fullest stage. After it flowers it goes back through full to normal, then grows again." },
-  { key: "trash_levels", label: "Trash can, filling", group: "Furniture", w: 16, h: 16, frames: 6, pal: "binfull", gen: GEN.trash_levels, note: "6 frames (96×16): empty, then one more piece of trash over the rim each frame, up to 5. You empty it one piece at a time with a trash bag." },
+  { key: "trash_levels", retired: true, label: "Trash can, filling", group: "Furniture", w: 16, h: 16, frames: 6, pal: "binfull", gen: GEN.trash_levels, note: "6 frames (96×16): empty, then one more piece of trash over the rim each frame, up to 5. You empty it one piece at a time with a trash bag." },
   { key: "carry_bag", label: "Your trash bag", group: "People", w: 16, h: 16, frames: 4, pal: "tbag", gen: GEN.carry_bag, note: "4 frames (64×16): flat, a little in it, half full, bulging. In your hand while you collect trash." },
   { key: "dumpster", label: "Dumpster", group: "Furniture", w: 32, h: 24, frames: 2, pal: "dump", gen: GEN.dumpster, note: "2 frames (64×24): lid down, lid up. Out back by the basement garage door; full trash bags go in here." },
   { key: "truck_top", retired: true, label: "Delivery truck (from above, no longer used)", group: "Days of the week", w: 48, h: 128, pal: "truck", gen: GEN.truck_top, note: "Mondays, out back: the truck backed up to the garage door, cab at the top. 3 tiles by 8." },
@@ -1856,6 +1862,8 @@ const SLOTS = [
   { key: "rope_v", label: "Cleaning rope (up and down)", group: "Furniture", w: 16, h: 16, pal: "tbarrier", gen: GEN.rope_v, note: "The cleaning rope running up and down: across a way into a room from the side, when it's closed for cleaning. Tiles stack into one rope." },
   { key: "planter_flower", label: "Planter, in flower", group: "Gift shop and café", w: 16, h: 16, pal: "trinket", gen: GEN.planter_flower, note: "A planter that's been watered: in flower. It goes back to the plain planter a day after it misses its water." },
   { key: "planter_wide_flower", label: "Long planter, in flower", group: "Furniture", w: 32, h: 16, pal: "trinket", gen: GEN.planter_wide_flower, note: "The long planter, watered: in flower." },
+  { key: "emote_storm", label: "Disappointed (storm cloud)", group: "People", w: 8, h: 8, frames: 2, pal: "storm", gen: GEN.emote_storm, note: "2 frames (16×8): a little storm cloud with a bolt, then rain. Over a curious visitor who went to the game you recommended and it wasn't the one." },
+  { key: "trash_heap", label: "Trash heaped on a can", group: "Furniture", w: 16, h: 16, pal: "litter", gen: GEN.trash_heap, note: "Drawn over a trash can as it fills: it rises a pixel for each piece (six), and sinks a pixel for each one you take out." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
 const SLOT = {}; SLOTS.forEach(s => { s.frames = s.frames || 1; s.fps = s.fps || 0; SLOT[s.key] = s; });
@@ -2992,8 +3000,9 @@ const TEXT = {
   "opt.keepGoing":     { g: "Menu options", l: "Your follower: carry on", v: [["Keep going"]] },
   "opt.lookingFor":    { g: "Menu options", l: "Your follower: what they wanted again", v: [["What were you looking for?"]] },
   "zone.oneAtATime":   { g: "Volunteering", l: "The rope to close an area for cleaning, while another one's already closed ({other}: that one)", by: "claude", v: [["{other} is already closed for cleaning.", "One area at a time. Open that one back up first."]] },
-  "cur.youThought":    { g: "Curious visitors", l: "After \"Let me think\": you come out of thinking with something in mind, and they notice (then their answer)", by: "claude", v: [["Oh! You thought of something?"], ["Ooh, that look. You've got an idea, don't you?"], ["Did you think of one? Show me!"]] },
-  "cur.notIt":         { g: "Curious visitors", l: "A curious visitor, when what you recommended isn't the game they're after", by: "claude", v: [["Hmm... I don't think that's the one."], ["No, that's not it. But thanks for trying!"], ["Close, maybe? No... that's not it."]] },
+  "cur.youThought":    { g: "Curious visitors", l: "After \"Let me think\": you've picked a game, as if you'd just told them where it is (then they head over)", by: "claude", v: [["Over there? Thanks! I'll go take a look."], ["Oh, that way? Great, I'll check it out!"], ["That one? Okay, let's see!"]] },
+  "cur.cantReach":     { g: "Curious visitors", l: "A curious visitor sent to a game they can't get to (they give up)", by: "claude", v: [["Hmm, I can't seem to get over there.", "Maybe you could show me the way?"], ["I can't find a way through to it.", "Could you lead me there?"]] },
+  "cur.notIt":         { g: "Curious visitors", l: "A curious visitor, when what you recommended isn't the game they're after", by: "claude", v: [["Hmm... this isn't the one I'm looking for."], ["No, this isn't it. But thanks for trying!"], ["Oh... this isn't the game I meant."]] },
   "think.dismiss":     { g: "Thinking", l: "While thinking, B with a thought in mind: let it go?", v: [["Dismiss thought?"]] },
   "opt.think":         { g: "Menu options", l: "A curious visitor, when the game they want isn't the one in your mind: go and think", v: [["Let me think"]] },
   "opt.thisGame":      { g: "Menu options", l: "A curious visitor, with the very game they want in your mind: recommend it", v: [["This game?"]] },
@@ -3406,12 +3415,12 @@ const TOOLS = { // equipment (Joe 10/21): what each is, its icon (an art slot an
   handvac: { name: "Hand vacuum", slot: "vacuum", small: true, hand: true, wide: 1, desc: "Hold B to vacuum the tile you're on; double-tap B to leave it running. For corners and around benches.", hint: "Hand vacuum: hold B (double-tap to leave it on)", got: "You got the hand vacuum!", spot: "The hand vacuum's spot. Yours is in your Equipment." },
   rag: { name: "Polishing rag", slot: "rag", hand: true, desc: "Hold B at a case to polish it. Polished glass glints; it dulls again slowly.", hint: "Rag: hold B at a case", got: "You got a polishing rag!", spot: "The rag hook. Yours is in your Equipment." },
   mop: { name: "Mop", slot: "mop", desc: "Hold B to mop the floor you're walking on (not the carpet). It dries in a few seconds; people step around it while it's wet.", hint: "Mop: hold B", got: "You got the mop!", spot: "The mop's corner. Yours is in your Equipment." },
-  bag: { name: "Trash bags", slot: "trash_bag_roll", cap: 8, desc: "Hold B at a trash can to take its trash out a piece at a time. When the bag's full, press B at the dumpster.", hint: "Trash bags: hold B at a can", got: "You got a roll of trash bags!", spot: "The trash bag roll. Yours is in your Equipment." },
+  bag: { name: "Trash bags", slot: "trash_bag_roll", desc: "Hold B at a trash can to take its trash out a piece at a time. Press B at the dumpster out back to throw the bag out.", hint: "Trash bags: hold B at a can", got: "You got a roll of trash bags!", spot: "The trash bag roll. Yours is in your Equipment." },
   can: { name: "Watering can", slot: "watering_can", hand: true, desc: "B at a plant waters it.", hint: "Watering can: B at a plant", got: "You got the watering can!", spot: "The watering can's hook. Yours is in your Equipment." },
 };
 const LAB_DAY = 60 * 60; // a day for the Polish Lab's plants: one minute (Joe 10/21)
 const LAB_STAGES = ["plant_thirsty", "plant", "plant_full", "plant_flower"]; // tired, normal, full, flowering
-const BIN_MAX = 5, BIN_PIECE = 60 * 40, BIN_PIECE_MUSEUM = 60 * 60 * 3; // the lab's can: at most five pieces, one every forty seconds (Joe 10/21: never too much)
+const BIN_MAX = 6, BIN_PIECE = 60 * 40, BIN_PIECE_MUSEUM = 60 * 60 * 3; // the lab's can: at most five pieces, one every forty seconds (Joe 10/21: never too much)
 const MESS_MAX = 8; // at most this many specks in a room (and half as many spills)
 const ROPE_SPOTS = { north: [30, 12], strategy: [40, 17] }; // (Joe 10/21) Volume III's rope stand stays where it was; Volume IV's one tile left, in the hall against the wall
 const APPROACH_EVERY = 60 * 60 * 2; // Phase 5: a visitor comes over about every two minutes you're clocked in (one at a time)
@@ -4411,7 +4420,7 @@ class Game {
   box-shadow:0 0 0 calc(1px * var(--s)) #181820;white-space:nowrap;opacity:.92}
 .gt-shift .shift{background:#2f6b4f;color:#f8f0c0}
 .gt-shift .tok{background:#7c5a0c;color:#fff6cc}
-.gt-thought{position:absolute;right:calc(3px * var(--s));top:calc(19px * var(--s));display:none;z-index:6;pointer-events:none;width:calc(28px * var(--s))} /* the thought you're holding: just under the tokens, in colour even while you think (it isn't on the green screen) */
+.gt-thought{position:absolute;right:calc(3px * var(--s));top:calc(19px * var(--s));display:none;z-index:4;pointer-events:none;width:calc(28px * var(--s))} /* the thought you're holding: just under the tokens, in colour even while you think (it isn't on the green screen) */
 .gt-thought canvas{display:block;box-sizing:content-box;width:calc(24px * var(--s));height:calc(24px * var(--s));padding:calc(1px * var(--s));background:#f8f8f0;border:calc(1px * var(--s)) solid #181820;image-rendering:pixelated}
 .gt-thought::before,.gt-thought::after{content:"";position:absolute;background:#181820}
 .gt-thought::before{left:calc(-4px * var(--s));top:calc(26px * var(--s));width:calc(3px * var(--s));height:calc(3px * var(--s))}
@@ -4615,16 +4624,15 @@ class Game {
 .gt-rd-links button.quiz{display:block;text-align:center;font-family:var(--pixel, monospace);font-size:calc(5px * var(--s));line-height:1;color:#fff8ec;background:#5a3c9a;padding:calc(3px * var(--s)) calc(4px * var(--s));border:calc(1px * var(--s)) solid #181820;border-radius:calc(1px * var(--s));box-shadow:0 calc(1px * var(--s)) 0 #181820;white-space:nowrap;cursor:pointer;margin:0} /* the quiz: purple, so it reads apart from Watch, Play and Note */
 .gt-equip{position:absolute;box-sizing:border-box;left:calc(30px * var(--s));right:calc(30px * var(--s));top:calc(18px * var(--s));padding:calc(5px * var(--s)) calc(7px * var(--s)) calc(4px * var(--s));z-index:7;display:none;background:#d4d5da;border:calc(1px * var(--s)) solid #181820;border-radius:calc(2px * var(--s));box-shadow:0 0 0 calc(1px * var(--s)) #eceef2 inset,0 calc(2px * var(--s)) 0 rgba(0,0,0,.25);color:#20202c;line-height:1.3} /* (Joe 10/21) a soft gray window */
 .gt-eq-h{font-size:calc(6px * var(--s));letter-spacing:.12em;color:#3c3c4c;text-align:center;margin-bottom:calc(3px * var(--s))}
-.gt-eq-view{position:relative;width:calc(126px * var(--s));height:calc(32px * var(--s));margin:0 auto calc(3px * var(--s));overflow:hidden} /* five slots, the middle one always the picked one */
-.gt-eq-row{position:absolute;left:calc(-26px * var(--s));top:0;height:100%;display:flex;align-items:center;gap:calc(4px * var(--s));z-index:1}
-.gt-eq-frame{position:absolute;left:calc(48px * var(--s));top:calc(1px * var(--s));width:calc(30px * var(--s));height:calc(30px * var(--s));box-sizing:border-box;border:calc(1px * var(--s)) solid #181820;border-radius:calc(2px * var(--s));background:#fbfbfd;z-index:0} /* (Joe 10/21) the selection window: it stays put, the tools slide through it */
-.gt-eq-frame.worn{background:#fff3c4;border-color:#b08020}
+.gt-eq-view{position:relative;width:calc(142px * var(--s));height:calc(32px * var(--s));margin:0 auto calc(3px * var(--s));overflow:hidden} /* five slots, the middle one always the picked one */
+.gt-eq-row{position:absolute;left:calc(-30px * var(--s));top:0;height:100%;display:flex;align-items:center;gap:calc(8px * var(--s));z-index:1}
+.gt-eq-frame{position:absolute;left:calc(56px * var(--s));top:calc(1px * var(--s));width:calc(30px * var(--s));height:calc(30px * var(--s));box-sizing:border-box;border:calc(1px * var(--s)) solid #181820;border-radius:calc(2px * var(--s));background:#fbfbfd;z-index:0} /* (Joe 10/21) the selection window: it stays put, the tools slide through it */
 .gt-eq-row.slide{transition:transform .14s ease-out}
 .gt-eq-cell{position:relative;flex:none;width:calc(22px * var(--s));height:calc(22px * var(--s));box-sizing:border-box;border:calc(1px * var(--s)) solid #8a8c98;border-radius:calc(2px * var(--s));background:#eef0f4;display:flex;align-items:center;justify-content:center;cursor:pointer;filter:brightness(.62) saturate(.7);transition:transform .14s ease-out,filter .14s ease-out}
 .gt-eq-cell img{width:calc(16px * var(--s));height:calc(16px * var(--s));image-rendering:pixelated}
 .gt-eq-cell.on{transform:scale(1.3);filter:none;border-color:transparent;background:transparent}
+.gt-eq-cell.worn{background:#fff3c4;border-color:#b08020} /* the one you're holding: gold, wherever it's scrolled to */
 .gt-eq-cell.gap{visibility:hidden}
-.gt-eq-cell span{position:absolute;right:calc(1px * var(--s));bottom:0;font-size:calc(4px * var(--s));line-height:1;color:#6a4a08}
 .gt-eq-info{box-sizing:border-box;text-align:left;background:#f4f5f8;border:calc(1px * var(--s)) solid #a4a6b2;border-radius:calc(2px * var(--s));padding:calc(3px * var(--s)) calc(4px * var(--s));margin-bottom:calc(3px * var(--s))} /* the words, in their own little box */
 .gt-eq-name{font-size:calc(6px * var(--s));color:#181820;margin-bottom:calc(2px * var(--s))}
 .gt-eq-desc{font-size:calc(5px * var(--s));line-height:1.4;color:#2c2c3a}
@@ -4672,6 +4680,7 @@ class Game {
 .gt-choice{right:0;bottom:calc(48px * var(--s));min-width:calc(80px * var(--s));max-width:calc(236px * var(--s));max-height:calc(110px * var(--s));overflow:auto;padding:0 calc(6px * var(--s));z-index:6}
 .gt-choice-item{position:relative;padding-left:calc(9px * var(--s));cursor:pointer;white-space:normal;line-height:1.5}
 .gt-choice-item.reco{color:#1f7a32}
+.gt-choice-item.put{color:#b08010} /* (Joe 10/21) Put away, in yellow */
 .gt-choice-item.never{color:#a02828;border-top:calc(1px * var(--s)) solid #b0b0c0;margin-top:calc(2px * var(--s));padding-top:calc(2px * var(--s))}
 @media (pointer:coarse){.gt-choice-item{padding-top:calc(2px * var(--s));padding-bottom:calc(2px * var(--s))}.gt-shop-row{min-height:calc(15px * var(--s))}}
 .gt-shift .chip{font-size:max(calc(5px * var(--s)), 8px) !important}
@@ -6497,7 +6506,7 @@ class Game {
   vacDrawer(c, sx, sy) { // the tool in your hand, held like a coffee cup (Joe 10/21); the other hand if you've got a drink; a puff while the vacuum runs
     const ctx = this.ctx, slot = TOOLS[this.tool].slot, sz = 9, cup = !!this.drink;
     const vx = sx + (cup ? { down: -1, up: 12, left: 6, right: 2 } : { down: 10, up: 1, left: 0, right: 7 })[c.dir], vy = sy + 8;
-    const bag = this.tool === "bag", sh = this.sheet(bag ? "carry_bag" : slot), fr = bag ? Math.min(3, Math.ceil((this.bagItems || 0) / TOOLS.bag.cap * 3)) : 0; // (your trash bag: as full as it is)
+    const bag = this.tool === "bag", sh = this.sheet(bag ? "carry_bag" : slot), fr = bag ? Math.min(3, Math.ceil((this.bagItems || 0) / 3)) : 0; // (your trash bag: as full as it is)
     return () => { ctx.drawImage(sh, fr * 16, 0, 16, 16, vx, vy, sz, sz);
       if (this.vacuuming() && this.t % 8 < 4) { ctx.fillStyle = "rgba(255,250,235,.7)"; ctx.fillRect(vx + 4 + (this.t % 16 < 8 ? -1 : 1), vy + sz, 1, 1); } };
   }
@@ -6582,7 +6591,7 @@ class Game {
   trashTick() {
     const r = this.room, p = this.player, hold = this.tool === "bag" && this.toolActive() && this.bHeld() && !p.moving;
     if (!hold) { this.bagHold = 0; return; }
-    const [dx, dy] = DIRS[p.dir], e = r.events[(p.x + dx) + "," + (p.y + dy)] || {}, cap = TOOLS.bag.cap, n = this.bagItems || 0;
+    const [dx, dy] = DIRS[p.dir], e = r.events[(p.x + dx) + "," + (p.y + dy)] || {}, cap = Infinity, n = this.bagItems || 0; // (Joe 10/21: no limit)
     this.bagHold = (this.bagHold || 0) + 1;
     if (e.labBin && Math.floor(this.labBin || 0) >= 1 && n < cap && this.bagHold >= 24) { this.labBin -= 1; this.bagItems = n + 1; this.bagHold = 0; this.binHop = { room: r.id, x: p.x + dx, y: p.y + dy, t0: this.t }; }
     else if (e.trash && !e.labBin && !this.isJammed(r.id, p.x + dx, p.y + dy) && this.binLevel(r.id, p.x + dx, p.y + dy) >= 1 && n < cap && this.bagHold >= 24) { this.bins[this.binKey(r.id, p.x + dx, p.y + dy)] -= 1; this.bagItems = n + 1; this.bagHold = 0; this.binHop = { room: r.id, x: p.x + dx, y: p.y + dy, t0: this.t }; } // a museum can, the same
@@ -6751,7 +6760,7 @@ class Game {
   }
   renderEquip(step) { // (Joe 10/21) a carousel: the picked one's always in the middle, bigger; the list slides past it; the others darker
     const E = this.eq, box = this.el.equip, n = E.list.length;
-    box.innerHTML = '<div class="gt-eq-h">EQUIPMENT</div><div class="gt-eq-view"><div class="gt-eq-frame' + (this.tool === E.list[E.i] ? ' worn' : '') + '"></div><div class="gt-eq-row"></div></div><div class="gt-eq-info"><div class="gt-eq-name"></div><div class="gt-eq-desc"></div></div><div class="gt-eq-k">\u25c0 \u25b6 choose \u00b7 A equip \u00b7 B back</div>';
+    box.innerHTML = '<div class="gt-eq-h">EQUIPMENT</div><div class="gt-eq-view"><div class="gt-eq-frame"></div><div class="gt-eq-row"></div></div><div class="gt-eq-info"><div class="gt-eq-name"></div><div class="gt-eq-desc"></div></div><div class="gt-eq-k">\u25c0 \u25b6 choose \u00b7 A equip \u00b7 B back</div>';
     const row = box.querySelector(".gt-eq-row"), L = Math.min(3, Math.floor((n - 1) / 2)), R = Math.min(3, n - 1 - L); // how many fit each side without showing one twice
     for (let o = -3; o <= 3; o++) { const d = document.createElement("div"); row.appendChild(d);
       if (o < -L || o > R) { d.className = "gt-eq-cell gap"; continue; }
@@ -7361,7 +7370,7 @@ class Game {
     const c = this.ch, box = this.el.choice, top = box.scrollTop; box.innerHTML = "";
     const never = [this.optL("never"), this.optL("busy")], reco = [this.optL("recommend"), "Recommend it", this.optL("think"), this.optL("thisGame")];
     c.options.forEach((o, i) => {
-      const d = document.createElement("div"); d.className = "gt-choice-item" + (i === c.i ? " on" : "") + (never.includes(o) ? " never" : "") + (reco.includes(o) ? " reco" : ""); // (Joe 10/19: every menu the same; Never mind last, red, under a line) (Joe 10/20: Recommend in green)
+      const d = document.createElement("div"); d.className = "gt-choice-item" + (i === c.i ? " on" : "") + (never.includes(o) ? " never" : "") + (reco.includes(o) ? " reco" : "") + (o === "Put away" ? " put" : ""); // (Joe 10/19: every menu the same; Never mind last, red, under a line) (Joe 10/20: Recommend in green)
       d.textContent = o;
       d.addEventListener("click", e => { e.stopPropagation(); c.i = i; this.endChoice(); });
       box.appendChild(d);
@@ -8643,15 +8652,21 @@ class Game {
     else if (o === "gameName") this.tellName(n);
     else if (o === "busy") this.say(this.tx("cur.busy", { name: n.cur.name }).map((p, k) => (k ? p : n.cur.name + ": " + p))); // (Joe 10/21) they say something
   }
-  curRecommend(n) { // what you're thinking about, for the game they're thinking about: a "?", then the right one is off they go (briskly), the wrong one's a no
-    const v = n.cur, I = Object.assign({}, this.idea);
-    n.askFx = { t0: this.t }; n.route = null; n.timer = Math.max(n.timer || 0, 50); n.stepWait = 50;
-    n.recoAt = { t: this.t + 40, fn: () => { n.askFx = null; if (!n.cur) return;
-      const r = this.room, near = I.kind === "exhibit" && I.piece === v.want && this.recoSpot(r, n, I.x, I.y);
-      if (!near) { if (I.piece !== v.want) this.progress.stats.nope++; this.saveProgress(); n.pose = { kind: I.piece === v.want ? "busy" : "annoyed", t0: this.t, dur: 110 }; n.timer = 130;
-        if (I.piece !== v.want && this.mode === "walk") this.say(this.tx("cur.notIt", { name: v.name }).map((p, k) => (k ? p : v.name + ": " + p))); return; } // not the one (or no way to it from here: try Follow me); a wrong one, they say so (Joe 10/21)
+  curRecommend(n, now) { // what you're thinking about, for the game they're thinking about: (a "?" first, unless you'd just told them) then off they go to see; it's only there they find out (Joe 10/21: the wrong one is possible)
+    const v = n.cur, I = Object.assign({}, this.idea), named = ps => ps.map((p, k) => (k ? p : v.name + ": " + p));
+    const decide = () => { n.askFx = null; if (!n.cur) return;
+      const near = I.kind === "exhibit" && I.piece && this.recoSpot(this.room, n, I.x, I.y);
+      if (!near) { this.saveProgress(); n.pose = { kind: I.kind === "exhibit" ? "busy" : "annoyed", t0: this.t, dur: 110 }; n.timer = 130; if (I.kind !== "exhibit") this.progress.stats.nope++;
+        if (this.mode === "walk") this.say(named(this.tx(I.kind === "exhibit" ? "cur.cantReach" : "cur.notIt", { name: v.name }))); return; } // not a game at all; or no way there from here (try Follow me): they say so
       Object.assign(n, { goalT: near, route: null, timer: 0, retry: 0, viewing: false, stepWait: 0, arrived: false, reco: { kind: "cur", x: I.x, y: I.y, piece: I.piece, icon: I.icon } });
-      n.ideaFx = { t0: this.t, icon: I.icon, keep: true }; n.hopT = this.t; } }; // yes! that's it
+      n.ideaFx = { t0: this.t, icon: I.icon, keep: true }; n.hopT = this.t; }; // off to see it
+    if (now) { decide(); return; }
+    n.askFx = { t0: this.t }; n.route = null; n.timer = Math.max(n.timer || 0, 50); n.stepWait = 50;
+    n.recoAt = { t: this.t + 40, fn: decide };
+  }
+  curWrong(n) { // (Joe 10/21) they got there and it isn't the one: a storm cloud, a word, and they're still looking
+    const v = n.cur; this.progress.stats.nope++; this.saveProgress(); n.pose = { kind: "storm", t0: this.t, dur: 130 }; n.timer = 150; n.viewing = false;
+    if (this.mode === "walk") this.say(this.tx("cur.notIt", { name: v.name }).map((p, k) => (k ? p : v.name + ": " + p)));
   }
   startFollow(n) {
     n.cur.state = "following"; n.follow = true; n.still = false; n.route = null; n.aside = null; n.lost = 0; this.fol = n; this.saveProgress();
@@ -8999,7 +9014,7 @@ class Game {
       });
       return;
     }
-    const opts = ["My Stuff", ...(this.ownedTools().length ? ["Equipment"] : []), ...(this.tool && this.tool !== "phone" && TOOLS[this.tool] ? ["Put away"] : []), ...(this.isCurator() && this.answerPieces().length ? ["Developer answers"] : []), "Settings", "Save", "Back"]; // (Joe 10/12: Recent notices, Controls and Respawn under Settings; Save asks if you're quitting)
+    const opts = [...(this.tool && this.tool !== "phone" && TOOLS[this.tool] ? ["Put away"] : []), "My Stuff", ...(this.ownedTools().length ? ["Equipment"] : []), ...(this.isCurator() && this.answerPieces().length ? ["Developer answers"] : []), "Settings", "Save", "Back"]; // (Joe 10/12: Recent notices, Controls and Respawn under Settings; Save asks if you're quitting)
     this.choose("PAUSED", opts, k => {
       const o = opts[k];
       if (o === "My Stuff") this.myStuff();
@@ -9910,7 +9925,7 @@ class Game {
   }
   exitThink() { const T = this.think; if (!T) return; this.think = null; this.thinkFx = { t0: this.t, on: false }; if (this.dirClock) this.dirClock.paused = T.was; this.mode = "walk"; this.inputLock = true; // the same dip back to colour
     const n = this.thinkFor; this.thinkFor = null; // (Joe 10/21) thinking for a curious visitor ("Let me think"): back in your body, they see you've got something
-    if (n && T.picked && this.idea && n.cur && this.room.npcs.includes(n) && !n.reco && !n.recoAt && !n.leaving) n.recoAt = { t: this.t + 26, fn: () => { if (!n.cur || this.mode !== "walk") return; n.dir = this.player.x > n.x ? "right" : this.player.x < n.x ? "left" : this.player.y > n.y ? "down" : "up"; this.say(this.tx("cur.youThought", { name: n.cur.name }).map((p, k) => (k ? p : n.cur.name + ": " + p)), () => this.curRecommend(n)); } }; }
+    if (n && T.picked && this.idea && n.cur && this.room.npcs.includes(n) && !n.reco && !n.recoAt && !n.leaving) n.recoAt = { t: this.t + 26, fn: () => { if (!n.cur || this.mode !== "walk") return; n.dir = this.player.x > n.x ? "right" : this.player.x < n.x ? "left" : this.player.y > n.y ? "down" : "up"; if (this.idea.kind !== "exhibit") { this.curRecommend(n, true); return; } this.say(this.tx("cur.youThought", { name: n.cur.name }).map((p, k) => (k ? p : n.cur.name + ": " + p)), () => this.curRecommend(n, true)); } }; }
   updateThink(has) {
     const T = this.think, g = T && T.ghost, r = this.room; if (!g) { this.mode = "walk"; return; }
     if (T.picked) { this.exitThink(); return; } // the frame that showed the pick is drawn (and the bubble's picture taken): back into your body
@@ -10115,7 +10130,7 @@ class Game {
   recoArrive(n) { // they got there
     let R = n.reco; n.reco = null; const face = R.x > n.x ? "right" : R.x < n.x ? "left" : R.y > n.y ? "down" : "up";
     if (n.sitting) { this.reactThenSnap(n, (n.will.photo || 0) >= 3 ? "startled" : ["startled", "annoyed", "busy"][(Math.random() * 3) | 0]); return true; } // in their seat: they stay put, react, maybe a photo (Joe 10/19: just a photo read as nothing)
-    if (R.kind === "cur") { const p = this.pieceById(R.piece); n.dir = face; if (p && n.cur) { n.ideaFx = null; this.recommendPiece(n, p); } return true; } // at the game they wanted: the big heart, and they head home to play it
+    if (R.kind === "cur") { const p = this.pieceById(R.piece); n.dir = face; if (p && n.cur) { n.ideaFx = null; if (p.id !== n.cur.want) this.curWrong(n); else this.recommendPiece(n, p); } return true; } // at the game they wanted: the big heart, and they head home to play it
     if (R.kind === "tell" || R.kind === "person") { const m = R.to; // over to someone: right up next to them (Joe 10/19: a tile apart didn't look like talking), then their exchange
       if (!m || !this.room.npcs.includes(m) || m.leaving || m.chat) { this.recoGiveUp(n); return true; }
       if (Math.abs(m.x - n.x) + Math.abs(m.y - n.y) > 1) return this.recoAgain(n, R);
@@ -10143,7 +10158,8 @@ class Game {
     if (m) { R.x = x; R.y = y; }
     n.reco = R; Object.assign(n, { goalT: near, route: null, timer: 8, retry: 0, arrived: false, viewing: false }); return true;
   }
-  recoGiveUp(n) { n.reco = null; n.ideaFx = null; n.recoIdea = null; n.tell = null; n.goalT = null; n.route = null; n.seat = null; n.pose = { kind: "busy", t0: this.t, dur: 90 }; n.timer = 100; } // couldn't get there: a "...", no sparkle, and back to wandering
+  recoGiveUp(n) { if (n.cur && n.reco && n.reco.kind === "cur" && this.mode === "walk") { const v = n.cur; this.say(this.tx("cur.cantReach", { name: v.name }).map((p, k) => (k ? p : v.name + ": " + p))); } // (Joe 10/21) a curious visitor who can't get there says so
+    n.reco = null; n.ideaFx = null; n.recoIdea = null; n.tell = null; n.goalT = null; n.route = null; n.seat = null; n.pose = { kind: "busy", t0: this.t, dur: 90 }; n.timer = 100; } // couldn't get there: a "...", no sparkle, and back to wandering
   dropReco(n) { if (n.chat) this.endChat(n.chat); if (n.reco || n.recoAt || n.tell || n.chat || n.askFx || (n.ideaFx && n.ideaFx.keep)) n.pose = { kind: "wave", t0: this.t, dur: 90 }; Object.assign(n, { reco: null, recoAt: null, askFx: null, tell: null, recoIdea: null, recoDrink: false, hold: null, recall: null, ideaFx: null, shopQ: null }); } // heading home: whatever they had in mind goes (Joe 10/19: walking out with the bubble up)
   forgetThought() { if (!this.idea) return; const E = this.el && this.el.thought, k = this.canvas && this.canvas.clientWidth ? SW / this.canvas.clientWidth : 0, y = E && E.offsetTop && k ? E.offsetTop * k + 14 : 33; this.popFx = (this.popFx || []).concat([{ t0: this.t, x: this.camX + SW - 17, y: this.camY + y }]); this.idea = null; } // let it go: the corner bubble pops
   recallLater(n, icon, how) { n.recall = { at: this.t + 1500 + Math.random() * 2100, icon, how }; } // 25 to 60 seconds on, they think back on it (Joe 10/19: a nod to what you did)
@@ -11791,8 +11807,8 @@ class Game {
     if (p.key === "velvet_rope" || p.key === "velvet_rope_v") { this.drawRope(p, cx, cy); return; }
     const ctx = this.ctx, k = p.planter ? (this.plantStage(p.plant) ? p.key + "_flower" : p.key) : p.plant && !/^tut-/.test(p.plant) ? LAB_STAGES[this.plantStage(p.plant)] : p.plant && this.isThirsty(p.plant) ? "plant_thirsty" : p.key === "trash_can" && this.isJammed(this.room.id, p.x, p.y) ? "trash_full" : p.key;
     const px0 = p.x * T - cx, py0 = p.y * T - (SLOT[k].h - T) - cy;
-    if (k === "trash_can" && ROOMS[this.room.id] && ROOMS[this.room.id].lab) { this.drawSlot("trash_levels", Math.floor(this.labBin || 0), 0, px0, py0); return; } // (the lab's can: a piece at a time)
-    if (k === "trash_can" && !/^tut/.test(this.room.id)) { this.drawSlot("trash_levels", Math.floor(this.binLevel(this.room.id, p.x, p.y)), 0, px0, py0); return; } // the museum's, the same (a jammed one's drawn full, above)
+    if (k === "trash_can" && !/^tut/.test(this.room.id)) { const L = Math.floor(ROOMS[this.room.id] && ROOMS[this.room.id].lab ? this.labBin || 0 : this.binLevel(this.room.id, p.x, p.y)); // (Joe 10/21) the heap, behind the rim: up a pixel a piece, sinking into the can as you take it out (a jammed one's drawn full, above)
+      this.drawSlot("trash_can", 0, 0, px0, py0); if (L > 0) { ctx.save(); ctx.beginPath(); ctx.rect(px0, py0 - 8, 16, 12); ctx.clip(); this.drawSlot("trash_heap", 0, 0, px0, py0 - 3 + (BIN_MAX - L)); ctx.restore(); } return; } // over the can's top edge, never its rim
     if (k === "dumpster") { this.drawSlot(k, this.dumpT && this.t - this.dumpT < 50 ? 1 : 0, 0, px0, py0); return; } // the lid goes up as a bag goes in
     if (k === "bench_side") { this.drawFlip(k, p.sit === "right", px0, py0); return; } // whoever sits on it is drawn over both seats
     if (p.small) { ctx.drawImage(this.sheet(k), 0, 0, SLOT[k].w, SLOT[k].h, px0 + 4, py0 + 6, 9, 9); return; } // drawn small (the Polish Lab's hand vacuum)
@@ -11831,7 +11847,7 @@ class Game {
     }
     for (const n of r.npcs) { const A = n.askFx; if (!A) continue; if (A.until && this.t >= A.until) { n.askFx = null; continue; } // "?": thinking it over, in a round bubble like the curious visitors' (Joe 10/19), a size up so the "?" reads
       const p = this.pos(n), x = Math.round(p.x + 3 - cx), y = Math.round(p.y - cy - 12 + (Math.floor(this.t / 20) % 2)); this.drawAskBubble(ctx, x, y); }
-    for (const n of r.npcs) { if (!n.cur || n.follow || n.reco || n.recoAt || n.askFx || n.ideaFx || n.leaving || this.full || (n.spotT && this.t - n.spotT < 50)) continue; // a curious visitor: the game they're after, in a thought bubble (Joe 10/19: instead of a "?")
+    for (const n of r.npcs) { if (!n.cur || n.follow || n.reco || n.recoAt || n.askFx || n.ideaFx || n.leaving || (n.pose && this.t - n.pose.t0 < n.pose.dur) || this.full || (n.spotT && this.t - n.spotT < 50)) continue; // a curious visitor: the game they're after, in a thought bubble (Joe 10/19: instead of a "?")
       const ic = this.wantIcon(n.cur.want); if (!ic) continue; const p = this.pos(n), x = Math.round(p.x + 2 - cx), y = Math.round(p.y - cy - 17 + (Math.floor(this.t / 20) % 2));
       BUB(x, y, 12, 11); ctx.fillStyle = "#f8f8f0"; ctx.fillRect(x + 2, y + 12, 2, 2); ctx.drawImage(ic, x + 1, y + 1); }
     for (const n of r.npcs) { if (!n.thinkBubble || !this.tut || this.tut.thinkDone || n.reco || n.recoAt || n.askFx || n.ideaFx || this.full) continue; // the Thinking Room's anxious visitor: one game, then the other (Joe 10/20)
@@ -12279,7 +12295,7 @@ class Game {
         else if (c.pose.kind !== "snapback") {
           const fr = { startled: pk < 40 ? 0 : 2, guard: 0, heart: 1, smile: 2, pose: 3, busy: 4, wave: 5, shy: 6, annoyed: 7, bow: 3 }[c.pose.kind];
           const ea = Math.min(1, (c.pose.dur - pk) / 15) * (c.alpha !== undefined ? Math.max(0, c.alpha) : 1), ey = sy - 10 + (Math.floor(this.t / 20) % 2);
-          bubbles.push(() => { ctx.globalAlpha = ea; this.drawSlot("emote", fr, 0, sx + 4, ey); ctx.globalAlpha = 1; }); // drawn after the tall things' tops (the café's wall machine hid the barista's "!", Joe 10/15)
+          bubbles.push(() => { ctx.globalAlpha = ea; if (c.pose.kind === "storm") this.drawSlot("emote_storm", Math.floor(this.t / 8) % 2, 0, sx + 4, ey); else this.drawSlot("emote", fr, 0, sx + 4, ey); ctx.globalAlpha = 1; }); // (storm: disappointed, Joe 10/21) // drawn after the tall things' tops (the café's wall machine hid the barista's "!", Joe 10/15)
         }
       }
       if (c.member && !c.dayPerson && !c.leaving && !this.full && (c.follow || Math.abs(c.x - this.player.x) + Math.abs(c.y - this.player.y) <= 2)) { // name tags: Patreon members (not the day-of-the-week people); whoever's following you keeps theirs (Joe 10/21: it blinked as they fell behind)
@@ -12390,7 +12406,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 162";
+const VERSION = "2026-11-18 cards 163";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

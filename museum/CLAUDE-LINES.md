@@ -426,3 +426,6 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Curious visitors | After "Let me think": you come out of thinking with something in mind | Oh! You thought of something? · Ooh, that look. You've got an idea, don't you? · Did you think of one? Show me! |
 | Curious visitors | What you recommended isn't the game they're after | Hmm... I don't think that's the one. · No, that's not it. But thanks for trying! · Close, maybe? No... that's not it. |
 | Café | A full museum trash can, looked at when you have the trash bags | This one's full to the brim. / Hold B with a trash bag to take it out. |
+| Curious visitors | After "Let me think" (reworded): as if you'd told them where the game is | Over there? Thanks! I'll go take a look. · Oh, that way? Great, I'll check it out! · That one? Okay, let's see! |
+| Curious visitors | Sent to a game they can't get to | Hmm, I can't seem to get over there. / Maybe you could show me the way? · I can't find a way through to it. / Could you lead me there? |
+| Curious visitors | At the game you recommended, and it's the wrong one (reworded) | Hmm... this isn't the one I'm looking for. · No, this isn't it. But thanks for trying! · Oh... this isn't the game I meant. |
