@@ -7510,7 +7510,7 @@ class Game {
     const over = groups.map(([g, p]) => [p.now.length - p.want, p]).filter(x => x[0] > 0).sort((x, y) => y[0] - x[0])[0];
     const under = groups.map(([g, p]) => [p.want - p.now.length, p]).filter(x => x[0] > 0).sort((x, y) => y[0] - x[0])[0];
     if (over) {
-      const n = over[1].now.find(n => !n.moving && !n.sitting && !n.queue && !n.reco && !n.recoAt && !n.askFx && !n.tell && !n.chat && !n.hold && !n.cur && !n.follow && !n.approach && !n.cheering && !n.react && !n.ideaFx && Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 2); if (n) { n.leaving = true; n.stroll = true; n.leaveT = 0; n.alpha = 1; n.route = null; n.aside = null; n.timer = 0; this.dirClock.last = { what: "out", t: this.t }; }
+      const n = over[1].now.find(n => !n.moving && !n.sitting && !n.queue && !n.reco && !n.recoAt && !n.askFx && !n.tell && !n.chat && !n.hold && !n.cheering && Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 2); if (n) { n.leaving = true; n.stroll = true; n.leaveT = 0; n.alpha = 1; n.route = null; n.aside = null; n.timer = 0; this.dirClock.last = { what: "out", t: this.t }; }
     } else if (under) {
       const at = def.enterAt || def.exitTo || def.spawn, [x, y] = at || []; if (at === undefined || !this.tileFree(r, x, y) || (this.player.x === x && this.player.y === y)) return;
       // They head straight for somewhere in that wing (in front of a piece, if one's free) and only look around once there.
@@ -12378,7 +12378,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 160";
+const VERSION = "2026-11-18 cards 161";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
