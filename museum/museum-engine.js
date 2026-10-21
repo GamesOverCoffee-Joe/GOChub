@@ -3201,6 +3201,7 @@ const TEXT = {
   "shop.bye":          { g: "Gift shop", l: "Leaving the shop menu", v: [["Thanks for stopping by!"]] },
   "rack.empty":        { g: "Gift shop", l: "A stand with nothing for sale", v: [["A stand of little knickknacks.", "Nothing on this one is for sale. They're just here to keep you company."]] },
   "rack.available":    { g: "Gift shop", l: "Stand close-up: for sale", v: [["{n} tokens. Available to buy at the counter up front."]] },
+  "cur.approachAsk":  { g: "Curious visitors", l: "When you first talk to one who came over to you: asking for help (what they're after comes next, in cur.want; picks one at random)", by: "claude", v: [["Hello! I was wondering if you could recommend a game for me?"], ["Oh good, you work here! Could you help me find a game?"], ["Excuse me! Sorry to bother you. I'm trying to find a game, and I bet you'd know it."], ["Hi! You look like you know this place. Can you help me find something?"]] },
   "cur.hello":         { g: "Curious visitors", l: "When you walk up to them (takes turns)", v: [["Oh, hello!"], ["Oh! Hi there."], ["Hm? Oh, hello!"]] },
   "reader.look":      { g: "The reader", l: "Talking to or looking at the reader in the reading nook ({book}: what she's reading today)", by: "claude", v: [["She's reading {book}.", "She doesn't look up."], ["{book}. She turns a page.", "You don't exist right now."], ["She's deep into {book}.", "She looks incredibly comfy."]] },
   "reader.shelf":     { g: "The reader", l: "The reading nook's bookshelf", by: "claude", v: [["A little shelf of video game strategy guides.", "None of these are what she's reading. She must've brought her own books."]] },
@@ -8582,7 +8583,12 @@ class Game {
   curiousTalk(n) { // (Joe 10/19) they think about the game they're after (its art in their bubble); help tells you what it is, and that's all; then Recommend (think about it first) or Follow me
     const v = n.cur; v.met = true;
     if (n.reco || n.recoAt) { this.choose(v.name + ": " + this.tx("cur.onTheWay", { name: v.name }).join(" "), [this.optL("forget"), this.optL("never")], i => { if (i === 0) this.forgetIt(n); }, 1); return; } // on their way to what you recommended
-    const named = ps => ps.map(p => v.name + ": " + p), hello = named(this.tx("cur.hello", { name: v.name })), q = hello.pop();
+    const named = ps => ps.map(p => v.name + ": " + p);
+    if (!v.heard) { v.heard = true; this.saveProgress(); // (Joe 10/21) the first time: straight to what they need help with, then what you can do
+      const pages = named([...this.tx("cur.approachAsk", { name: v.name }, true), ...this.wantLines(v)]), q0 = pages.pop(), I0 = this.idea, rec0 = !!I0 && I0.room === this.room.id;
+      const ids0 = [...(rec0 ? ["recommend"] : []), "follow", ...(!v.asked ? ["gameName"] : []), "never"], opts0 = ids0.map(id => this.optL(id));
+      this.say(pages, () => this.choose(q0, opts0, i => { const o = ids0[i]; if (o === "recommend") this.curRecommend(n); else if (o === "follow") this.startFollow(n); else if (o === "gameName") this.tellName(n); }, opts0.length - 1)); return; }
+    const hello = named(this.tx("cur.hello", { name: v.name })), q = hello.pop();
     const I = this.idea, rec = !!I && I.room === this.room.id, ids = [...(v.heard ? [] : ["help"]), ...(rec ? ["recommend"] : []), ...(v.heard ? ["follow"] : []), ...(v.heard && !v.asked ? ["gameName"] : []), "getBy", "never"], opts = ids.map(id => this.optL(id));
     this.say(hello, () => this.choose(q, opts, i => {
       const o = ids[i];
@@ -12285,7 +12291,12 @@ class Game {
     const pr = cv.parentNode.getBoundingClientRect(), cr = cv.getBoundingClientRect();
     Object.assign(hl.style, { display: "block", left: (cr.left - pr.left) + "px", top: (cr.top - pr.top) + "px", width: cr.width + "px", height: cr.height + "px", transform: cv.style.transform || "", transformOrigin: cv.style.transformOrigin || "" });
     const k = cv.width / SW, [rx, ry, rw, rh] = this.thinkRect(t, cx, cy), x = Math.max(0, Math.round((rx - cx) * k)), y = Math.max(0, Math.round((ry - cy) * k)), w = Math.round(rw * k), h = Math.round(rh * k);
-    const c2 = hl.getContext("2d"); c2.clearRect(0, 0, hl.width, hl.height); if (w > 0 && h > 0) c2.drawImage(cv, x, y, w, h, x, y, w, h);
+    const c2 = hl.getContext("2d"); c2.setTransform(1, 0, 0, 1, 0, 0); c2.clearRect(0, 0, hl.width, hl.height); if (w > 0 && h > 0) c2.drawImage(cv, x, y, w, h, x, y, w, h);
+    const pc = t.kind === "exhibit" && this.pieceById(t.piece); if (pc && pc.title) { // (Joe 10/21) an exhibit: its game's name, just over it
+      const txt = [...String(pc.title).toUpperCase()].filter(ch => PIXEL_FONT[ch]).join("").slice(0, 28), tw = txt.length * 4 - 1, bx = Math.max(1, Math.min(SW - tw - 5, Math.round(rx - cx + rw / 2 - tw / 2 - 2))), by = Math.max(1, Math.round(ry - cy - 10));
+      c2.setTransform(k, 0, 0, k, 0, 0); c2.fillStyle = "#181820"; c2.fillRect(bx, by, tw + 4, 9); c2.fillStyle = "#f8f8f0"; c2.fillRect(bx + 1, by + 1, tw + 2, 7); c2.fillStyle = "#181820";
+      let tx = bx + 2; for (const ch of txt) { PIXEL_FONT[ch].forEach((row, yy) => [...row].forEach((on, xx) => { if (on === "1") c2.fillRect(tx + xx, by + 2 + yy, 1, 1); })); tx += 4; }
+      c2.setTransform(1, 0, 0, 1, 0, 0); }
   }
 }
 
@@ -12320,7 +12331,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 156";
+const VERSION = "2026-11-18 cards 157";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
