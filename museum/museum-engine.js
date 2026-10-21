@@ -3398,6 +3398,7 @@ const LAB_DAY = 60 * 60; // a day for the Polish Lab's plants: one minute (Joe 1
 const LAB_STAGES = ["plant_thirsty", "plant", "plant_full", "plant_flower"]; // tired, normal, full, flowering
 const BIN_MAX = 5, BIN_PIECE = 60 * 40; // the lab's can: at most five pieces, one every forty seconds (Joe 10/21: never too much)
 const MESS_MAX = 8; // at most this many specks in a room (and half as many spills)
+const ROPE_SPOTS = { north: [30, 12], strategy: [40, 17] }; // (Joe 10/21) Volume III's rope stand stays where it was; Volume IV's one tile left, in the hall against the wall
 const APPROACH_EVERY = 60 * 60 * 2; // Phase 5: a visitor comes over about every two minutes you're clocked in (one at a time)
 const WET_DRY = 60 * 6; // frames for a mopped floor to dry (six seconds)
 const SHINE_DULL_MUSEUM = 60 * 60 * 40; // in the museum: forty minutes from polished to as dull as it gets
@@ -4009,7 +4010,7 @@ class Game {
     if (this.outsideStart()) { this.entryFn = go; const sp = ROOMS.outside.spawn; this.enterRoom("outside", sp[0], sp[1], sp[2], true); } else go(); // every visit starts out front (Joe 10/12)
     if (this.curatorPlay() && !this.progress.recording) this.progress.recording = { tod: this.tod() }; // on a curator badge, recording mode starts by itself (the office PC turns it off, Joe 10/13)
     this.applyRecording();
-    this.ready = this.setPack(pack); this.updateHud();
+    this.ready = this.setPack(pack); this.updateHud(); this.loadWait = (this.loadWait || 0) + 1; this.ready.then(() => { this.loadWait--; }, () => { this.loadWait--; });
     this.ready.then(() => { this.started = true; if (this.needTutorial() && !this.outsideNow()) this.startTutorial(); }); // a new player starts with the tutorial
     this.markDay();
     setTimeout(() => { if (!this.tut && !this.needTutorial()) this.showLoc("GOQ Museum: " + (this.zone ? this.zone.name : this.room.name), "place"); }, 400);
@@ -6453,7 +6454,7 @@ class Game {
     this.messStep(r, c);
     if (!this.carpetAt(r, c.x, c.y)) return;
     const N = (this.nap || (this.nap = {}))[r.id] || (this.nap[r.id] = {}), k = c.x + "," + c.y;
-    const v = N[k]; if (v && this.t - (v.t || 0) > 3600) { v.s -= 0.08; if (v.s <= 0.05) delete N[k]; if (v.s < 0.6 && this.napDone) this.napDone[r.id] = false; } // someone walking on it: a little scuffed, but only once it's had a minute (Joe 10/21)
+    const v = N[k]; if (v && this.t - (v.t || 0) > 3600) { v.s -= 0.08; if (v.s <= 0.05) delete N[k]; if (v.s < 0.6 && this.napDone) this.napDone[this.napKey(r, c.x, c.y)] = false; } // someone walking on it: a little scuffed, but only once it's had a minute (Joe 10/21)
   }
   vacTick() { // the tiles the vacuum reaches get brushed your way: as you start it, step, or turn get brushed your way: as you start it, step, or turn (Joe 10/21)
     const held = this.btnHeld && this.btnHeld.has("b"); if (!held) this.bStale = false; else if (this.walkSeen !== this.t - 1) this.bStale = true; this.walkSeen = this.t; // (back from a menu with B still down: it doesn't count until it's let go)
@@ -6571,13 +6572,15 @@ class Game {
       if (from) out.push([x, y, from[0] ? "v" : "h"]); }
     return (C[z.id] = out);
   }
-  zoneDress() { // each closable room's rope stand, just inside its first way in, against a wall where it's out of the way
+  zoneDress() { // each closable room's rope stand (Joe 10/21): standing in the wall right beside its first way in, so it blends in; Volume III and IV where Joe put them
     const M = this.rooms && this.rooms.museum; if (!M) return;
-    for (const z of this.closableZones()) { if (M.props.some(q => q.zoneRope === z.id)) continue; const D = this.zoneDoors(z); let done = false;
-      for (const [x, y] of D) { if (done) break; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const sx = x + dx, sy = y + dy;
-        if (this.zoneAt(M, sx, sy) !== z || M.solid[sy][sx] || M.events[sx + "," + sy] || D.some(([a, b2]) => a === sx && b2 === sy) || this.byExhibit(M, sx, sy)) continue;
-        if (![[1, 0], [-1, 0], [0, 1], [0, -1]].some(([ex, ey]) => M.solid[sy + ey] && M.solid[sy + ey][sx + ex])) continue; // against a wall
-        M.props.push({ key: "tut_barrier", x: sx, y: sy, zoneRope: z.id }); M.solid[sy][sx] = true; M.events[sx + "," + sy] = { zoneRopes: z.id }; done = true; break; } } }
+    for (const z of this.closableZones()) { if (M.props.some(q => q.zoneRope === z.id)) continue; let at = null;
+      const fix = ROPE_SPOTS[z.id]; if (fix && M.solid[fix[1]] && M.solid[fix[1]][fix[0]] === false && !M.events[fix.join(",")]) at = fix;
+      if (!at) for (const [x, y] of this.zoneDoors(z)) { if (at) break; const from = [[1, 0], [-1, 0], [0, 1], [0, -1]].find(([dx, dy]) => { const q = this.zoneAt(M, x + dx, y + dy); return q && q !== z && !M.solid[y + dy][x + dx]; }); if (!from) continue;
+        const [dx, dy] = from, ox = x + dx, oy = y + dy; // the gap in the wall; the wall's on either side of it
+        for (const k of [-1, 1]) { const wx = ox + (dx ? 0 : k), wy = oy + (dy ? 0 : k); if (M.solid[wy] && M.solid[wy][wx] && !M.events[wx + "," + wy] && !M.props.some(q => q.x === wx && q.y === wy) && !(M.wallArt || []).some(w => wx >= w.x && wx < w.x + SLOT[w.key].w / T && (wy === (w.y || 1) || wy === (w.y || 1) + 1))) { at = [wx, wy]; break; } } }
+      if (!at) continue;
+      M.props.push({ key: "tut_barrier", x: at[0], y: at[1], zoneRope: z.id }); M.solid[at[1]][at[0]] = true; M.events[at.join(",")] = { zoneRopes: z.id }; }
   }
   zoneShut(id) { return !!(this.shutZones && this.shutZones.has(id)); }
   shutDoorAt(r, x, y) { if (!this.shutZones || !this.shutZones.size || r !== (this.rooms && this.rooms.museum)) return false; const z = this.zoneAt(r, x, y); return !!z && this.shutZones.has(z.id) && this.zoneDoors(z).some(([a, b2]) => a === x && b2 === y); }
@@ -6620,12 +6623,12 @@ class Game {
   plantAhead() { const r = this.room, p = this.player, [dx, dy] = DIRS[p.dir], e = r && r.events[(p.x + dx) + "," + (p.y + dy)]; return e && e.plant ? e : null; }
   waterAhead() { // the watering can: B at a plant (Joe 10/21: the only way to water one now)
     const r = this.room, p = this.player, [dx, dy] = DIRS[p.dir], e = this.plantAhead(); if (!e) return;
-    this.waterFx = { room: r.id, x: p.x + dx, y: p.y + dy, t0: this.t };
+    this.canFx = { room: r.id, x: p.x + dx, y: p.y + dy, t0: this.t };
     if (ROOMS[r.id] && ROOMS[r.id].tutorial && /^tut-/.test(e.plant)) { this.tutEvent(Object.assign({}, e, { canWater: true })); return; }
     if (/^lab-/.test(e.plant)) { this.labPlant(e.plant).watered = true; return; } // (just the water: it shows tomorrow)
-    if (!this.isThirsty(e.plant)) { this.say(this.tx("plant.done", { room: e.name })); return; }
+    if (!this.isThirsty(e.plant)) return; // (Joe 10/21: watering's quiet; A on a plant says how it's doing and if the soil's wet)
     this.progress.watered[e.plant] = todayISO(); this.count("watered", r.id + ":" + e.plant); this.bump(this.progress.stats.plants, e.name || "plant"); this.saveProgress();
-    this.quest("water"); this.say(this.tx("plant.water", { room: e.name }));
+    this.quest("water");
   }
   drawPolish(r, cx, cy) { // over the cases: the glint on polished ones, the rag at work, the can's water; a lab plant's damp soil and its glint when it grows
     const ctx = this.ctx;
@@ -6636,15 +6639,17 @@ class Game {
       if (sh >= 0.9 || fresh) this.twinkle(strSeed(c.piece.id) + c.x, c.x * T - cx + 1, c.y * T - T - cy + 2, 14, 12, fresh ? 1 : this.pack.settings.staff.sparkle, fresh ? 3 : 2); }
     const c = this.polishing; if (c) { const x = c.x * T - cx + 3 + Math.round(Math.sin(this.t / 3) * 3), y = c.y * T - T - cy + 4 + Math.round(Math.cos(this.t / 5)); ctx.globalAlpha = 1; ctx.drawImage(this.sheet("rag"), 0, 0, 16, 16, x, y, 9, 9); } // rubbing the glass
     const H = this.binHop; if (H && H.room === r.id && this.t - H.t0 < 14) { const e = (this.t - H.t0) / 14, p = this.player, x0 = H.x * T + 8, y0 = H.y * T + 2, x1 = p.x * T + 8, y1 = p.y * T + 10; ctx.globalAlpha = 1; ctx.fillStyle = "#f0ece0"; ctx.fillRect(Math.round(x0 + (x1 - x0) * e) - cx - 1, Math.round(y0 + (y1 - y0) * e - Math.sin(Math.PI * e) * 8) - cy - 1, 2, 2); } // a piece of trash hops into your bag
-    const W = this.waterFx; if (W && W.room === r.id && this.t - W.t0 < 40) { const e = this.t - W.t0; ctx.fillStyle = "#8ac8f0"; for (let i = 0; i < 4; i++) { const d = (e * 0.6 + i * 5) % 12; ctx.globalAlpha = 0.8; ctx.fillRect(W.x * T - cx + 4 + i * 3, W.y * T - cy - 6 + d, 1, 2); } }
+    const W = this.canFx; if (W && W.room === r.id && this.t - W.t0 < 40) { const e = this.t - W.t0; ctx.fillStyle = "#8ac8f0"; for (let i = 0; i < 4; i++) { const d = (e * 0.6 + i * 5) % 12; ctx.globalAlpha = 0.8; ctx.fillRect(W.x * T - cx + 4 + i * 3, W.y * T - cy - 6 + d, 1, 2); } }
     ctx.globalAlpha = 1;
   }
-  napTiles(r) { const out = []; for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) if (!r.solid[y][x] && this.carpetAt(r, x, y)) out.push([x, y]); return out; } // the carpet you can get at (not under benches or cases)
-  napCheck(r) { // the whole floor freshly done: a few sparkles on it, and the people here notice (Joe 10/21)
-    const N = (this.nap && this.nap[r.id]) || {}, D = this.napDone || (this.napDone = {}), all = this.napTiles(r), done = all.length > 0 && all.every(([x, y]) => N[x + "," + y] && N[x + "," + y].s >= 0.6);
-    if (!done) { D[r.id] = false; return; } if (D[r.id]) return; D[r.id] = true;
+  napTiles(r, z) { const out = []; for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) if (!r.solid[y][x] && this.carpetAt(r, x, y) && (!z || this.zoneAt(r, x, y) === z)) out.push([x, y]); return out; } // the carpet you can get at (not under benches or cases); in the museum, one room's
+  napKey(r, x, y) { const z = r.zoneAt ? this.zoneAt(r, x, y) : null; return z ? r.id + ":" + z.id : r.id; }
+  napCheck(r) { // the whole floor freshly done (in the museum, the room you're in): a few sparkles on it, and the people there notice (Joe 10/21)
+    const p = this.player, z = r.zoneAt ? this.zoneAt(r, p.x, p.y) : null; if (r.zoneAt && (!z || z.kind !== "room")) return;
+    const N = (this.nap && this.nap[r.id]) || {}, D = this.napDone || (this.napDone = {}), key = z ? r.id + ":" + z.id : r.id, all = this.napTiles(r, z), done = all.length > 0 && all.every(([x, y]) => N[x + "," + y] && N[x + "," + y].s >= 0.6);
+    if (!done) { D[key] = false; return; } if (D[key]) return; D[key] = true;
     this.napGlint = { room: r.id, t0: this.t, at: all.slice().sort(() => Math.random() - 0.5).slice(0, 6) }; // a few soft glints, for a few seconds (drawNap)
-    r.npcs.filter(n => !n.staff && !n.still).forEach((n, i) => { n.pose = { kind: "heart", t0: this.t, dur: 90 }; n.lines = [this.tx("polish.fresh")]; n.lineI = -1; });
+    r.npcs.filter(n => !n.staff && !n.still && (!z || this.zoneAt(r, n.x, n.y) === z)).forEach((n, i) => { n.pose = { kind: "heart", t0: this.t, dur: 90 }; n.lines = [this.tx("polish.fresh")]; n.lineI = -1; });
   }
   drawDock(r, cx, cy) { // the slab outside the basement's door: its railing, its side, the steps down; the divider by the dumpster; a drain
     const d = (k, x, y) => this.drawSlot(k, 0, 0, x * T - cx, y * T - cy);
@@ -7969,7 +7974,8 @@ class Game {
       return [...out, ...(this.pack.settings.cards.on && this.cardList().length ? this.cardItems() : [])];
     }
     const f = this.featuredId(off), feat = this.pack.settings.shop.items.find(it => it.id === f) || null, gift = this.weekGift();
-    const merch = [...(gift && (!feat || gift.id !== feat.id) ? [gift] : []), ...this.stockToday(off).filter(it => !feat || it.id !== feat.id)].slice(0, 2);
+    const dayKey = "merch|" + todayISO() + "|" + (off || 0), pool = this.stockToday(off).filter(it => !feat || it.id !== feat.id), rot = pool.map(it => [strSeed(dayKey + it.id), it]).sort((a, b) => a[0] - b[0]).map(x => x[1]); // (Joe 10/21: a different pair each day, not always the first two)
+    const merch = [...(gift && (!feat || gift.id !== feat.id) ? [gift] : []), ...pool.filter(it => rot.indexOf(it) < 2)].slice(0, 2);
     return [feat, ...merch, ...(this.pack.settings.cards.on && this.cardList().length ? this.cardItems() : [])].filter(Boolean);
   }
   buyCards(slot) { const out = []; for (let i = 0; i < (slot === "pack" ? 3 : 1); i++) { const c = this.randomCard(slot === "pack" ? this.pack.settings.cards.packRare : 0); if (c) out.push(c); } if (this.forceRare && out.length && !out.some(c => c.kind === "r")) out[(Math.random() * out.length) | 0].kind = "r"; // the curator's preview: Rare cards
@@ -8516,15 +8522,8 @@ class Game {
   placeCurious() {
     for (const id in this.rooms) this.rooms[id].npcs = this.rooms[id].npcs.filter(n => !n.cur && !n.back);
     if (this.closing) return;
-    const cv = this.curiousPlan(), t = todayISO(), galleries = Object.keys(this.rooms).filter(id => this.rooms[id].cases.length || this.rooms[id].hung.length);
-    cv.list.forEach((v, i) => {
-      if (v.state === "following" && !(this.fol && this.fol.cur === v)) v.state = "waiting"; // reloaded mid-follow
-      if (v.state !== "waiting") return;
-      const mus = Object.keys(this.rooms).find(k => this.rooms[k].zoneAt), id = v.room && this.rooms[v.room] ? v.room : mus || galleries[i % galleries.length];
-      if (!v.home || !this.rooms[v.home]) v.home = id; // where they came to see; they go back there if you leave them somewhere else
-      if (id === mus && !v.zone) v.zone = this.galleryZone(); // in the museum: one of its wings
-      if (id) this.addVisitor(id, v, { cur: v, zone: id === mus ? v.zone : null });
-    });
+    const cv = this.curiousPlan(), t = todayISO();
+    cv.list.forEach(v => { if (v.state === "following" && !(this.fol && this.fol.cur === v)) v.state = "waiting"; }); // reloaded mid-follow (Joe 10/21: nobody waits around the wings any more; curious visitors only come over to you, approachTick)
     cv.back.filter(v => v.day < t).slice(0, 6).forEach(v => this.addVisitor("lobby", v, { back: v }));
   }
   /* A museum wing with a genre, picked at random (null if there's no layout). */
@@ -8567,10 +8566,7 @@ class Game {
     const r = this.room, p = this.player, A = this.approach;
     if (A) { const n = A.n;
       if (!r.npcs.includes(n) || n.cur.met || this.t - A.t0 > 60 * 90 || !this.staff) { n.approach = false; n.walkTo = null; n.route = null; this.approach = null; this.nextApproach = this.t + APPROACH_EVERY; return; } // you talked to them (or they gave up)
-      const d = Math.abs(n.x - p.x) + Math.abs(n.y - p.y);
-      if (d > 1 && !n.moving && this.t % 20 === 0) { const at = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => [p.x + dx, p.y + dy]).filter(([x, y]) => this.tileFree(r, x, y, n)).sort((a, b) => Math.abs(a[0] - n.x) + Math.abs(a[1] - n.y) - Math.abs(b[0] - n.x) - Math.abs(b[1] - n.y))[0];
-        if (at) { n.walkTo = { at, dir: n.dir }; n.route = null; } }
-      if (d <= 1 && !n.moving) { n.walkTo = null; n.dir = p.x > n.x ? "right" : p.x < n.x ? "left" : p.y > n.y ? "down" : "up"; } // beside you: waiting, looking at you
+      if (Math.abs(n.x - p.x) + Math.abs(n.y - p.y) <= 1 && !n.moving) n.dir = p.x > n.x ? "right" : p.x < n.x ? "left" : p.y > n.y ? "down" : "up"; // beside you: waiting, looking at you
       return; }
     if (!this.staff || this.tut || this.closing || this.mode !== "walk" || (ROOMS[r.id] && (ROOMS[r.id].tutorial || ROOMS[r.id].lab)) || this.fol) return;
     if (this.nextApproach === undefined) this.nextApproach = this.t + APPROACH_EVERY / 2; if (this.t < this.nextApproach) return;
@@ -8581,7 +8577,7 @@ class Game {
     const names = shuffled((this.pack.settings.curious.names || VISITOR_NAMES).filter(x => !taken.has(x))), free = wants.filter(w => !cv.list.some(v => v.want === w));
     const v = { id: "v" + todayISO().replace(/-/g, "") + Math.random().toString(36).slice(2, 8), name: names[0] || "Sam", sheet: n.sheet, want: (free.length ? free : wants)[Math.floor(Math.random() * (free.length ? free : wants).length)], state: "waiting", room: r.id, home: r.id, zone: r.zoneAt ? ((this.zoneAt(r, n.x, n.y) || {}).id || null) : null };
     cv.list.push(v); this.saveProgress();
-    Object.assign(n, { cur: v, member: v.name, random: false, approach: true, goal: null, walkTo: null, route: null }); this.approach = { n, t0: this.t };
+    Object.assign(n, { cur: v, member: v.name, random: false, approach: true, goal: null, walkTo: null, route: null, spotT: this.t, hopT: this.t, lost: 0 }); n.dir = p.x > n.x ? "right" : p.x < n.x ? "left" : p.y > n.y ? "down" : "up"; this.approach = { n, t0: this.t }; // they spot you: a hop, a "!"
   }
   curiousTalk(n) { // (Joe 10/19) they think about the game they're after (its art in their bubble); help tells you what it is, and that's all; then Recommend (think about it first) or Follow me
     const v = n.cur; v.met = true;
@@ -9670,7 +9666,7 @@ class Game {
     if (!c.moving) return false;
     if (c.slow && (this.t & 1)) return false; // the night guard strolls at half speed
     if (c !== this.player && !c.slow && !c.follow && !(c.tagging && c.hurry)) { const ps = this.pack.settings.staff.patronSpeed, sp = c.reco && !c.leaving ? 1 : c.leaving && !c.stroll ? Math.min(1, ps * 1.35) : ps; c.spd = (c.spd || 0) + sp; if (c.spd < 1) return false; c.spd -= 1; } // patrons: slower than you; heading out (the closing announcement) only a little brisker, not a stampede
-    const behind = c.follow && c !== this.player && Math.abs(c.x - this.player.x) + Math.abs(c.y - this.player.y) > 1; // a follower who's dropped back catches up (they keep your pace)
+    const behind = (c.follow || c.approach) && c !== this.player && Math.abs(c.x - this.player.x) + Math.abs(c.y - this.player.y) > 1; // a follower who's dropped back catches up (they keep your pace)
     if ((c.prog += (c === this.player && (this.segway || this.zoomT > 0)) || behind ? 2 : 1) >= T) {
       c.x += DIRS[c.dir][0]; c.y += DIRS[c.dir][1]; c.prog = 0; c.moving = false; this.napStep(c);
       if (c === this.player) {
@@ -9869,7 +9865,7 @@ class Game {
     if (g.bumpT > 0) g.bumpT--;
     g.alpha = Math.min(0.8, Math.max(0, (this.t - T.t0 - 6) / 24)); // fading in as it steps out of you
     if (g.moving) { g.prog += 1; if (g.prog >= 16) { const [dx, dy] = DIRS[g.dir]; g.x += dx; g.y += dy; g.prog = 0; g.moving = false; const home = g.x === this.player.x && g.y === this.player.y; if (!home) T.away = true; else if (T.away) this.exitThink(); } return; } // back into yourself: done thinking (Joe 10/19)
-    const TS = 16, onScreen = (x, y) => x * TS >= this.camX && (x + 1) * TS <= this.camX + SW && y * TS >= this.camY && (y + 1) * TS <= this.camY + SH; // one screen (Joe 10/19; T here is the thinking, not the tile size)
+    const onScreen = () => true; // (Joe 10/21: anywhere in this room now, the camera goes with you; not other rooms)
     if (has("a")) { const [dx, dy] = DIRS[g.dir], t = onScreen(g.x + dx, g.y + dy) && this.thinkTarget(r, g.x + dx, g.y + dy); if (t) T.pick = t; else g.bumpT = 8; return; }
     const d = this.heldDir(); if (!d) { this.inputLock = false; return; } if (this.inputLock) return;
     g.dir = d; const [dx, dy] = DIRS[d], nx = g.x + dx, ny = g.y + dy;
@@ -10200,6 +10196,7 @@ class Game {
       if (into) { into.x = fx; into.y = fy; into.moving = false; into.prog = 0; into.route = null; npc = into; }
       else if (out) { out.moving = false; out.prog = 0; out.route = null; npc = out; }
     }
+    if (npc && npc.smoker) { this.say(this.tx("reader.smoke")); return; } // out back on her smoke break
     if (npc && npc.reader) { this.say(this.tx("reader.look", { book: this.readerBook().t })); return; } // she ignores everyone: all you get is what she's reading
     if (npc && this.carryBox && (npc.role === "shopkeeper" || npc.role === "barista")) { this.deliver(npc.role); return; } // a delivery box for them
     if (npc && (npc.consDream || npc.itemPair)) { if (!npc.walkTo && !npc.sitting) this.faceYou(npc, 240); if (this.sideTalk(npc)) return; } // the conservator out in the wings, the break room pair
@@ -10264,7 +10261,7 @@ class Game {
       if (n.queue && !n.moving && this.mode === "walk") { this.queueStep(n); continue; } // in (or joining) the café line
       if (n.shopQ && !n.moving && this.mode === "walk") { this.shopQStep(n); continue; } // in (or joining) the gift shop's line
       if (n.walkTo && !n.moving) { if (this.mode === "walk") this.walkToStep(n); continue; } // staff walking somewhere (the shopkeeper to his shelves and back)
-      if (n.approach) { if (n.moving) this.advance(n); continue; } // coming over to ask you something (approachTick moves them)
+      if (n.approach) { if (this.t - (n.spotT || 0) >= 30 && this.mode === "walk") this.followStep(n); else if (n.moving) this.advance(n); continue; } // coming over to ask you something: a moment to spot you, then briskly, the way a follower keeps up
       this.updateLife(n);
       if (n.follow) { this.followStep(n); continue; } // a curious visitor following you around
       if (n.moving) { this.advance(n); continue; }
@@ -11775,7 +11772,7 @@ class Game {
     }
     for (const n of r.npcs) { const A = n.askFx; if (!A) continue; if (A.until && this.t >= A.until) { n.askFx = null; continue; } // "?": thinking it over, in a round bubble like the curious visitors' (Joe 10/19), a size up so the "?" reads
       const p = this.pos(n), x = Math.round(p.x + 3 - cx), y = Math.round(p.y - cy - 12 + (Math.floor(this.t / 20) % 2)); this.drawAskBubble(ctx, x, y); }
-    for (const n of r.npcs) { if (!n.cur || n.follow || n.reco || n.recoAt || n.askFx || n.ideaFx || n.leaving || this.full) continue; // a curious visitor: the game they're after, in a thought bubble (Joe 10/19: instead of a "?")
+    for (const n of r.npcs) { if (!n.cur || n.follow || n.reco || n.recoAt || n.askFx || n.ideaFx || n.leaving || this.full || (n.spotT && this.t - n.spotT < 50)) continue; // a curious visitor: the game they're after, in a thought bubble (Joe 10/19: instead of a "?")
       const ic = this.wantIcon(n.cur.want); if (!ic) continue; const p = this.pos(n), x = Math.round(p.x + 2 - cx), y = Math.round(p.y - cy - 17 + (Math.floor(this.t / 20) % 2));
       BUB(x, y, 12, 11); ctx.fillStyle = "#f8f8f0"; ctx.fillRect(x + 2, y + 12, 2, 2); ctx.drawImage(ic, x + 1, y + 1); }
     for (const n of r.npcs) { if (!n.thinkBubble || !this.tut || this.tut.thinkDone || n.reco || n.recoAt || n.askFx || n.ideaFx || this.full) continue; // the Thinking Room's anxious visitor: one game, then the other (Joe 10/20)
@@ -12036,12 +12033,14 @@ class Game {
   draw() {
     const ctx = this.ctx, r = this.room, pp = this.pos(this.player), full = this.full; // thinking: the view stays on you, and your ghost keeps to what's on screen (Joe 10/19)
     if (this.blackout && !full) { ctx.fillStyle = "#000"; ctx.fillRect(0, 0, SW, SH); return; } // picking a mode: just the usher's words on black
+    if (this.loadWait > 0 && !full && this.t < 60 * 8) { this.drawLoading(ctx); return; } // (Joe 10/21) loading: black, until the museum's art and rooms are in (at most a few seconds)
     if (!full && this.shakeT > 0 && !this.shaking && !REDUCED_MOTION) { this.shaking = true; ctx.save(); ctx.translate(this.shakeT % 4 < 2 ? 1 : -1, 0); this.draw(); ctx.restore(); this.shaking = false; return; }
     const VWp = full ? full.w : SW, VHp = full ? full.h : SH;
     ctx.fillStyle = "#000"; ctx.fillRect(0, 0, VWp, VHp);
     const rw = r.w * T, rh = r.h * T;
     const cn = this.cine && !full ? this.cine : null, ke = cn ? cn.blend * cn.blend * (3 - 2 * cn.blend) : 0; // the ceremony's camera: eased from you to the piece
-    const fx = cn ? pp.x + (cn.fx - 8 - pp.x) * ke : pp.x, fy = cn ? pp.y + (cn.fy - pp.y) * ke : pp.y;
+    const gp = this.think && this.think.ghost && !full ? this.pos(this.think.ghost) : null; // thinking: the camera goes with your ghost
+    const fx = cn ? pp.x + (cn.fx - 8 - pp.x) * ke : gp ? gp.x : pp.x, fy = cn ? pp.y + (cn.fy - pp.y) * ke : gp ? gp.y : pp.y;
     const cx = full ? 0 : Math.round(rw <= SW ? (rw - SW) / 2 : Math.max(0, Math.min(rw - SW, fx + 8 - SW / 2)));
     const cy = full ? 0 : Math.round(rh <= SH ? (rh - SH) / 2 : Math.max(0, Math.min(rh - SH, fy + 8 - SH * (ROOMS[r.id].camAt || 0.5))));
     if (!full) { this.camX = cx; this.camY = cy; }
@@ -12210,7 +12209,7 @@ class Game {
       }
       if (c === this.player && this.asleep && c.sitting && this.t % 120 < 90) { const zy = Math.floor((this.t % 120) / 30); ctx.fillStyle = "#f8f8f0"; ctx.font = "6px monospace"; ctx.fillText("z", sx + 12 + zy, sy - zy * 3); }
       if (c.tutId === "trainer" && this.tut && !this.tut.watered && !this.full) { ctx.fillStyle = "#fffbe8"; const dy = Math.floor(this.t / 30) % 2; for (let i = 0; i < 3; i++) if ((this.t / 20 | 0) % 4 > i) ctx.fillRect(sx + 4 + i * 3, sy - 4 - dy, 2, 2); } // "..." over her head, staring at the plant
-      const bub = c.leaving || this.full ? -1 : c.tutId ? (c.tutAsk && !c.follow ? 0 : -1) : c.back ? 1 : -1; // (curious visitors: their thought bubble, drawThinking) // "?" curious, "!" back to tell you how it went
+      const bub = c.leaving || this.full ? -1 : c.spotT && this.t - c.spotT < 50 ? 1 : c.tutId ? (c.tutAsk && !c.follow ? 0 : -1) : c.back ? 1 : -1; // (curious visitors: their thought bubble, drawThinking) // "?" curious, "!" back to tell you how it went
       if (c.react && !this.full) bubbles.push(() => { if (c.react) this.drawReaction(c, sx, sy); }); // over the cases' tops too (Joe 10/20: the heart went under the exhibit)
       if (c.pose && !this.full) { // the photo reaction's bubble, fading out at the end
         if (pk >= c.pose.dur) c.pose = null;
@@ -12258,6 +12257,35 @@ class Game {
     if (!full) { this.drawHandoff(ctx, cx, cy); this.drawCoins(ctx, cx, cy); this.drawLens(ctx); }
     if (!full) this.drawThinking(ctx, cx, cy);
     if (this.fade > 0) { ctx.globalAlpha = Math.min(1, this.fade); ctx.fillStyle = "#000"; ctx.fillRect(0, 0, SW, SH); ctx.globalAlpha = 1; }
+    if (!full) this.drawThinkColor(cx, cy);
+  }
+  holdLoading() { this.loadWait = (this.loadWait || 0) + 1; let done = false; return () => { if (!done) { done = true; this.loadWait--; } }; } // the page holds the loading screen while it fetches the museum's pack
+  drawLoading(ctx) {
+    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, SW, SH); const txt = "LOADING" + ".".repeat(Math.floor(this.t / 20) % 4), x0 = Math.round(SW / 2 - 14 * 4 / 2), y0 = Math.round(SH / 2 - 3);
+    ctx.fillStyle = "#e8e0c8"; let x = x0; for (const ch of txt) { (PIXEL_FONT[ch] || []).forEach((row, yy) => [...row].forEach((v, xx) => { if (v === "1") ctx.fillRect(x + xx, y0 + yy, 1, 1); })); x += 4; }
+  }
+  /* Thinking (Joe 10/21): whatever your ghost is looking at shows in its real colours over the green: that patch of the game
+     screen, copied onto a little unfiltered canvas laid over it. */
+  thinkRect(t, cx, cy) {
+    const r = this.room, e = r.events[t.x + "," + t.y] || {};
+    if (e.caseAt) return [t.x * T, t.y * T - T, T, 2 * T];
+    if (t.who) { const p = this.pos(t.who); return [p.x, p.y - 8, T, T + 8]; }
+    const pr = (r.props || []).find(q => !q.hidden && t.x >= q.x && t.x < q.x + (SLOT[q.key] ? SLOT[q.key].w / T : 1) && (t.y === q.y || (q.tall && t.y === q.y - 1)));
+    if (pr && SLOT[pr.key]) { const S = SLOT[pr.key]; return [pr.x * T, pr.y * T - (S.h - T), S.w, S.h]; }
+    const w = (r.wallArt || []).find(a => SLOT[a.key] && t.x >= a.x && t.x < a.x + SLOT[a.key].w / T && t.y >= (a.y || 1) && t.y < (a.y || 1) + SLOT[a.key].h / T);
+    if (w) return [w.x * T, (w.y || 1) * T, SLOT[w.key].w, SLOT[w.key].h];
+    return [t.x * T, t.y * T, T, T];
+  }
+  drawThinkColor(cx, cy) {
+    const TH = this.think, g = TH && TH.ghost, cv = this.canvas; let hl = this.hlCanvas;
+    if (!g || !cv || typeof document === "undefined" || this.thinkFx) { if (hl) hl.style.display = "none"; return; }
+    const [dx, dy] = DIRS[g.dir], t = !g.moving && this.thinkTarget(this.room, g.x + dx, g.y + dy); if (!t) { if (hl) hl.style.display = "none"; return; }
+    if (!hl) { hl = this.hlCanvas = document.createElement("canvas"); hl.style.cssText = "position:absolute;pointer-events:none;image-rendering:pixelated"; cv.parentNode.insertBefore(hl, cv.nextSibling); if (getComputedStyle(cv.parentNode).position === "static") cv.parentNode.style.position = "relative"; }
+    if (hl.width !== cv.width || hl.height !== cv.height) { hl.width = cv.width; hl.height = cv.height; }
+    const pr = cv.parentNode.getBoundingClientRect(), cr = cv.getBoundingClientRect();
+    Object.assign(hl.style, { display: "block", left: (cr.left - pr.left) + "px", top: (cr.top - pr.top) + "px", width: cr.width + "px", height: cr.height + "px", transform: cv.style.transform || "", transformOrigin: cv.style.transformOrigin || "" });
+    const k = cv.width / SW, [rx, ry, rw, rh] = this.thinkRect(t, cx, cy), x = Math.max(0, Math.round((rx - cx) * k)), y = Math.max(0, Math.round((ry - cy) * k)), w = Math.round(rw * k), h = Math.round(rh * k);
+    const c2 = hl.getContext("2d"); c2.clearRect(0, 0, hl.width, hl.height); if (w > 0 && h > 0) c2.drawImage(cv, x, y, w, h, x, y, w, h);
   }
 }
 
@@ -12292,7 +12320,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 155";
+const VERSION = "2026-11-18 cards 156";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

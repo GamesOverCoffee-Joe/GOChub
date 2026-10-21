@@ -273,7 +273,7 @@ dialog.news{max-width:min(520px,calc(100vw - 24px))}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 155";
+window.GOQ_WANT = "2026-11-18 cards 156";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -521,11 +521,12 @@ window.goqStart = function () {
      The pack file next to the page always wins over a pack saved in this browser, so new pieces show up.
      With ?test, a pack you loaded by hand stays in charge instead. */
   if (/^https?:$/.test(location.protocol) && !(saved && testMode)) {
+    const release = game.holdLoading ? game.holdLoading() : () => {}; // the loading screen stays up until the site's pack is in (Joe 10/21: no old lobby first)
     fetch(PACK_FILE, { cache: "no-cache" }).then(r => (r.ok ? r.json() : null)).then(j => {
-      if (!isPack(j)) return;
-      game.setPack(j); describe(GOQ.normalizePack(j), "Site pack"); resetBtn.hidden = true;
+      if (!isPack(j)) { release(); return; }
+      Promise.resolve(game.setPack(j)).then(release, release); describe(GOQ.normalizePack(j), "Site pack"); resetBtn.hidden = true;
       if (!testMode && !curator) { document.querySelector(".pack").hidden = true; document.getElementById("rowPack").hidden = true; }
-    }).catch(() => {});
+    }).catch(() => release());
   }
   document.getElementById("packFile").addEventListener("change", async e => {
     const f = e.target.files[0]; e.target.value = ""; if (!f) return;
