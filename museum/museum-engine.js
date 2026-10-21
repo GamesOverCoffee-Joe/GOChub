@@ -2984,6 +2984,10 @@ const TEXT = {
   "opt.gameName":      { g: "Menu options", l: "A curious visitor (or your follower): the game's name, the one hint (worth fewer tokens)", v: [["What's the game name?"]] },
   "opt.keepGoing":     { g: "Menu options", l: "Your follower: carry on", v: [["Keep going"]] },
   "opt.lookingFor":    { g: "Menu options", l: "Your follower: what they wanted again", v: [["What were you looking for?"]] },
+  "think.dismiss":     { g: "Thinking", l: "While thinking, B with a thought in mind: let it go?", v: [["Dismiss thought?"]] },
+  "opt.think":         { g: "Menu options", l: "A curious visitor, when the game they want isn't the one in your mind: go and think", v: [["Let me think"]] },
+  "opt.thisGame":      { g: "Menu options", l: "A curious visitor, with the very game they want in your mind: recommend it", v: [["This game?"]] },
+  "opt.busy":          { g: "Menu options", l: "A curious visitor: leaving the conversation (always last, in red, under a line)", v: [["I'm busy"]] },
   "opt.never":         { g: "Menu options", l: "Leaving a conversation (always last, in red, under a line)", v: [["Never mind"]] },
   "move.ok":           { g: "Visitors", l: "A visitor stepping aside when you ask (one at random)", v: [["Oh! Sorry, go ahead."], ["My bad. All yours."], ["Oops, didn't see you there."]] },
   "move.stuck":        { g: "Visitors", l: "A boxed-in visitor, before they teleport (one at random)", v: [["Oh, I'd love to, but I'm a little stuck..."], ["Move? Where? There's nowhere to..."]] },
@@ -3382,18 +3386,18 @@ function officeUnlock(lock) {
 const PIXEL_FONT = (() => {
   const g = "A:010101111101101 B:110101110101110 C:011100100100011 D:110101101101110 E:111100110100111 F:111100110100100 G:011100101101011 H:101101111101101 I:111010010010111 J:001001001101010 K:101101110101101 L:100100100100111 M:101111111101101 N:110101101101101 O:010101101101010 P:110101110100100 Q:010101101110011 R:110101110101101 S:011100010001110 T:111010010010010 U:101101101101111 V:101101101101010 W:101101111111101 X:101101010101101 Y:101101010010010 Z:111001010100111 0:111101101101111 1:010110010010111 2:110001010100111 3:110001010001110 4:101101111001001 5:111100110001110 6:011100111101111 7:111001010010010 8:111101111101111 9:111101111001110";
   const out = { " ": ["000", "000", "000", "000", "000"], ":": ["000", "010", "000", "010", "000"], "-": ["000", "000", "111", "000", "000"], ".": ["000", "000", "000", "000", "010"],
-    "!": ["010", "010", "010", "000", "010"], "?": ["110", "001", "010", "000", "010"], "'": ["010", "010", "000", "000", "000"], "&": ["010", "101", "010", "101", "011"], ",": ["000", "000", "000", "010", "100"], "/": ["001", "001", "010", "100", "100"], "+": ["000", "010", "111", "010", "000"] };
+    "!": ["010", "010", "010", "000", "010"], "?": ["110", "001", "010", "000", "010"], "'": ["010", "010", "000", "000", "000"], "&": ["010", "101", "010", "101", "011"], ",": ["000", "000", "000", "010", "100"], "/": ["001", "001", "010", "100", "100"], "+": ["000", "010", "111", "010", "000"], "(": ["010", "100", "100", "100", "010"], ")": ["010", "001", "001", "001", "010"] };
   g.split(" ").forEach(e => { const [k, b] = e.split(":"); out[k] = [0, 1, 2, 3, 4].map(i => b.slice(i * 3, i * 3 + 3)); });
   return out;
 })();
 const TOOLS = { // equipment (Joe 10/21): what each is, its icon (an art slot and frame), what it says, how many tiles it brushes across
   phone: { name: "Phone", slot: "phone", desc: "B takes a photo of whatever's in front of you.", hint: "Phone: B takes a photo", got: "Your phone.", spot: "" }, // (Joe 10/21: the camera's a tool too; everyone starts with it)
   vacuum: { name: "Wide vacuum", slot: "vacuum", wide: 3, desc: "Hold B to vacuum all around you (three tiles by three); double-tap B to leave it running. Every tile remembers which way you pushed.", hint: "Wide vacuum: hold B (double-tap to leave it on)", got: "You got the wide vacuum!", spot: "The vacuum's corner. Yours is in your Equipment." },
+  handvac: { name: "Hand vacuum", slot: "vacuum", small: true, hand: true, wide: 1, desc: "Hold B to vacuum the tile you're on; double-tap B to leave it running. For corners and around benches.", hint: "Hand vacuum: hold B (double-tap to leave it on)", got: "You got the hand vacuum!", spot: "The hand vacuum's spot. Yours is in your Equipment." },
   rag: { name: "Polishing rag", slot: "rag", hand: true, desc: "Hold B at a case to polish it. Polished glass glints; it dulls again slowly.", hint: "Rag: hold B at a case", got: "You got a polishing rag!", spot: "The rag hook. Yours is in your Equipment." },
   mop: { name: "Mop", slot: "mop", desc: "Hold B to mop the floor you're walking on (not the carpet). It dries in a few seconds; people step around it while it's wet.", hint: "Mop: hold B", got: "You got the mop!", spot: "The mop's corner. Yours is in your Equipment." },
   bag: { name: "Trash bags", slot: "trash_bag_roll", cap: 8, desc: "Hold B at a trash can to take its trash out a piece at a time. When the bag's full, press B at the dumpster.", hint: "Trash bags: hold B at a can", got: "You got a roll of trash bags!", spot: "The trash bag roll. Yours is in your Equipment." },
   can: { name: "Watering can", slot: "watering_can", hand: true, desc: "B at a plant waters it.", hint: "Watering can: B at a plant", got: "You got the watering can!", spot: "The watering can's hook. Yours is in your Equipment." },
-  handvac: { name: "Hand vacuum", slot: "vacuum", small: true, hand: true, wide: 1, desc: "Hold B to vacuum the tile you're on; double-tap B to leave it running. For corners and around benches.", hint: "Hand vacuum: hold B (double-tap to leave it on)", got: "You got the hand vacuum!", spot: "The hand vacuum's spot. Yours is in your Equipment." },
 };
 const LAB_DAY = 60 * 60; // a day for the Polish Lab's plants: one minute (Joe 10/21)
 const LAB_STAGES = ["plant_thirsty", "plant", "plant_full", "plant_flower"]; // tired, normal, full, flowering
@@ -4590,17 +4594,21 @@ class Game {
 .gt-rd-links.three a,.gt-rd-links.three button.note,.gt-rd-links.three button.quiz{padding:calc(2px * var(--s)) calc(4px * var(--s))} /* three buttons fit beside the picture */
 .gt-rd-links .sel{outline:calc(1px * var(--s)) solid #181820;outline-offset:calc(1px * var(--s));filter:brightness(1.15)}
 .gt-rd-links button.quiz{display:block;text-align:center;font-family:var(--pixel, monospace);font-size:calc(5px * var(--s));line-height:1;color:#fff8ec;background:#5a3c9a;padding:calc(3px * var(--s)) calc(4px * var(--s));border:calc(1px * var(--s)) solid #181820;border-radius:calc(1px * var(--s));box-shadow:0 calc(1px * var(--s)) 0 #181820;white-space:nowrap;cursor:pointer;margin:0} /* the quiz: purple, so it reads apart from Watch, Play and Note */
-.gt-equip{left:calc(30px * var(--s));right:calc(30px * var(--s));top:calc(22px * var(--s));padding:calc(5px * var(--s)) calc(8px * var(--s));z-index:7;display:none;text-align:center}
-.gt-eq-h{font-size:calc(6px * var(--s));letter-spacing:.12em;color:#7c5a0c;margin-bottom:calc(4px * var(--s))}
-.gt-eq-row{display:flex;justify-content:center;gap:calc(4px * var(--s));margin-bottom:calc(4px * var(--s))}
-.gt-eq-cell{position:relative;width:calc(22px * var(--s));height:calc(22px * var(--s));border:calc(1px * var(--s)) solid #b0b0c0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.gt-equip{position:absolute;box-sizing:border-box;left:calc(30px * var(--s));right:calc(30px * var(--s));top:calc(18px * var(--s));padding:calc(5px * var(--s)) calc(7px * var(--s)) calc(4px * var(--s));z-index:7;display:none;background:#d4d5da;border:calc(1px * var(--s)) solid #181820;border-radius:calc(2px * var(--s));box-shadow:0 0 0 calc(1px * var(--s)) #eceef2 inset,0 calc(2px * var(--s)) 0 rgba(0,0,0,.25);color:#20202c;line-height:1.3} /* (Joe 10/21) a soft gray window */
+.gt-eq-h{font-size:calc(6px * var(--s));letter-spacing:.12em;color:#3c3c4c;text-align:center;margin-bottom:calc(3px * var(--s))}
+.gt-eq-view{position:relative;width:calc(126px * var(--s));height:calc(32px * var(--s));margin:0 auto calc(3px * var(--s));overflow:hidden} /* five slots, the middle one always the picked one */
+.gt-eq-row{position:absolute;left:calc(-26px * var(--s));top:0;height:100%;display:flex;align-items:center;gap:calc(4px * var(--s))}
+.gt-eq-row.slide{transition:transform .14s ease-out}
+.gt-eq-cell{position:relative;flex:none;width:calc(22px * var(--s));height:calc(22px * var(--s));box-sizing:border-box;border:calc(1px * var(--s)) solid #8a8c98;border-radius:calc(2px * var(--s));background:#eef0f4;display:flex;align-items:center;justify-content:center;cursor:pointer;filter:brightness(.62) saturate(.7);transition:transform .14s ease-out,filter .14s ease-out}
 .gt-eq-cell img{width:calc(16px * var(--s));height:calc(16px * var(--s));image-rendering:pixelated}
-.gt-eq-cell.on{border-color:#181820;box-shadow:0 0 0 calc(1px * var(--s)) #181820}
-.gt-eq-cell.worn{background:#fff3c4;border-color:#c89020}
-.gt-eq-cell span{position:absolute;right:calc(1px * var(--s));bottom:0;font-size:calc(4px * var(--s));color:#7c5a0c}
-.gt-eq-name{font-size:calc(6px * var(--s));color:#181820}
-.gt-eq-desc{font-size:calc(5px * var(--s));line-height:1.35;color:#404058;margin:calc(2px * var(--s)) 0 calc(3px * var(--s))}
-.gt-eq-k{font-size:calc(4px * var(--s));color:#505068}
+.gt-eq-cell.on{transform:scale(1.3);filter:none;border-color:#181820;background:#fbfbfd;z-index:1}
+.gt-eq-cell.worn{background:#fff3c4;border-color:#b08020}
+.gt-eq-cell.gap{visibility:hidden}
+.gt-eq-cell span{position:absolute;right:calc(1px * var(--s));bottom:0;font-size:calc(4px * var(--s));line-height:1;color:#6a4a08}
+.gt-eq-info{text-align:left;background:#f4f5f8;border:calc(1px * var(--s)) solid #a4a6b2;border-radius:calc(2px * var(--s));padding:calc(3px * var(--s)) calc(4px * var(--s));margin-bottom:calc(3px * var(--s))} /* the words, in their own little box */
+.gt-eq-name{font-size:calc(6px * var(--s));color:#181820;margin-bottom:calc(2px * var(--s))}
+.gt-eq-desc{font-size:calc(5px * var(--s));line-height:1.4;color:#2c2c3a}
+.gt-eq-k{font-size:calc(4px * var(--s));color:#3c3c4c;text-align:center}
 .gt-reader.gt-qz .gt-rd-body{overflow-y:auto;scrollbar-width:thin;white-space:normal}
 .gt-qz-left{font-size:calc(4.5px * var(--s));line-height:1.3;color:#5a3c9a}
 .gt-qz-pips{display:flex;gap:calc(2px * var(--s));margin-top:calc(2px * var(--s))}
@@ -5452,7 +5460,6 @@ class Game {
     for (const id in this.rooms) { if (/^tut/.test(id)) continue; const r = this.rooms[id];
       (r.cases || []).forEach(c => { if (c.piece && this.prints(c.piece) > 0) glass.push(zname(r, c.x, c.y)); });
       for (const k in r.events) { const e = r.events[k], sp = e && e.spot; if (sp && sp.state === "wall" && sp.piece && (this.isDusty(sp.piece) || this.isCrooked(sp.piece))) { const [x, y] = k.split(",").map(Number); frames.push(zname(r, x, y)); } } }
-    lines.push(glass.length ? this.tx("shift.glass", { where: where(glass) }).join(" ") : this.tx("shift.glassDone").join(" "));
     if (frames.length) lines.push(this.tx("shift.frames", { where: where(frames) }).join(" "));
     lines.push(this.tx(this.progress.mug === t ? "shift.mugDone" : "shift.mug").join(" "));
     lines.push(this.tx(this.progress.closingDay === t ? "shift.closeDone" : "shift.close").join(" "));
@@ -6701,7 +6708,10 @@ class Game {
       return; }
   }
   toolIcon(kind) { const C = this.toolIcons || (this.toolIcons = {}), sh = this.sheet(TOOLS[kind].slot); if (C[kind] && C[kind].src === sh) return C[kind].c;
-    const c = document.createElement("canvas"); c.width = c.height = 16; const sz = TOOLS[kind].small ? 10 : 16; c.getContext("2d").drawImage(sh, (TOOLS[kind].frame || 0) * 16, 0, 16, 16, (16 - sz) / 2, (16 - sz) / 2, sz, sz); C[kind] = { src: sh, c }; return c; }
+    const c = document.createElement("canvas"); c.width = c.height = 16; const sz = TOOLS[kind].small ? 10 : 16, x = c.getContext("2d"); x.drawImage(sh, (TOOLS[kind].frame || 0) * 16, 0, 16, 16, (16 - sz) / 2, (16 - sz) / 2, sz, sz);
+    try { const d = x.getImageData(0, 0, 16, 16).data; let x0 = 16, y0 = 16, x1 = -1, y1 = -1; for (let i = 0; i < 256; i++) if (d[i * 4 + 3]) { const px = i % 16, py = i >> 4; x0 = Math.min(x0, px); x1 = Math.max(x1, px); y0 = Math.min(y0, py); y1 = Math.max(y1, py); } // (Joe 10/21) centred on what's drawn (the phone sat to one side)
+      const ox = Math.floor((15 - x1 - x0) / 2), oy = Math.floor((15 - y1 - y0) / 2); if (x1 >= 0 && (ox || oy)) { const t = document.createElement("canvas"); t.width = t.height = 16; t.getContext("2d").drawImage(c, 0, 0); x.clearRect(0, 0, 16, 16); x.drawImage(t, ox, oy); } } catch (e) {}
+    C[kind] = { src: sh, c }; return c; }
   dressLab() { const L = this.rooms && this.rooms.polish_lab; if (!L) return; const own = this.ownedTools();
     for (const q of L.props) { const ev = q.toolSpot; if (ev) { q.hidden = own.includes(ev); if (q.hidden) { L.solid[q.y][q.x] = false; delete L.events[q.x + "," + q.y]; } } } // a taken tool's spot is just floor again
     L.cases.forEach((c, i) => { if (!c.piece && LAB_CASES[i]) { c.piece = this.tutGame(LAB_CASES[i]); c.state = "wall"; } }); // exhibits to vacuum around (the Thinking Room's made-up games)
@@ -6710,14 +6720,20 @@ class Game {
   /* The Equipment screen: a row of icon squares (owned tools), the equipped one framed in gold; its name and what it does below. */
   openEquip() {
     const own = this.ownedTools(); if (!own.length) return;
-    const box = this.el.equip || (this.el.equip = (() => { const e = document.createElement("div"); e.className = "gt-box gt-equip"; this.wrap.appendChild(e); return e; })());
+    const box = this.el.equip || (this.el.equip = (() => { const e = document.createElement("div"); e.className = "gt-equip"; this.wrap.appendChild(e); return e; })());
     this.eq = { list: own, i: Math.max(0, own.indexOf(this.tool)) }; this.mode = "equip"; box.style.display = "block"; this.renderEquip();
   }
-  renderEquip() {
-    const E = this.eq, box = this.el.equip; box.innerHTML = '<div class="gt-eq-h">EQUIPMENT</div><div class="gt-eq-row"></div><div class="gt-eq-name"></div><div class="gt-eq-desc"></div><div class="gt-eq-k">A equip \u00b7 B back</div>';
-    const row = box.querySelector(".gt-eq-row");
-    E.list.forEach((k, i) => { const d = document.createElement("div"); d.className = "gt-eq-cell" + (i === E.i ? " on" : "") + (this.tool === k ? " worn" : ""); const c = document.createElement("img"); c.src = this.toolIcon(k).toDataURL(); c.alt = TOOLS[k].name; d.appendChild(c); if (this.tool === k) { const t = document.createElement("span"); t.textContent = "E"; d.appendChild(t); }
-      d.addEventListener("click", e => { e.stopPropagation(); if (E.i === i) this.equipPick(); else { E.i = i; this.renderEquip(); } }); row.appendChild(d); });
+  renderEquip(step) { // (Joe 10/21) a carousel: the picked one's always in the middle, bigger; the list slides past it; the others darker
+    const E = this.eq, box = this.el.equip, n = E.list.length;
+    box.innerHTML = '<div class="gt-eq-h">EQUIPMENT</div><div class="gt-eq-view"><div class="gt-eq-row"></div></div><div class="gt-eq-info"><div class="gt-eq-name"></div><div class="gt-eq-desc"></div></div><div class="gt-eq-k">\u25c0 \u25b6 choose \u00b7 A equip \u00b7 B back</div>';
+    const row = box.querySelector(".gt-eq-row"), L = Math.min(3, Math.floor((n - 1) / 2)), R = Math.min(3, n - 1 - L); // how many fit each side without showing one twice
+    for (let o = -3; o <= 3; o++) { const d = document.createElement("div"); row.appendChild(d);
+      if (o < -L || o > R) { d.className = "gt-eq-cell gap"; continue; }
+      const i = (E.i + o + n) % n, k = E.list[i]; d.className = "gt-eq-cell" + (o === 0 ? " on" : "") + (this.tool === k ? " worn" : "");
+      const c = document.createElement("img"); c.src = this.toolIcon(k).toDataURL(); c.alt = TOOLS[k].name; d.appendChild(c); if (this.tool === k) { const t = document.createElement("span"); t.textContent = "E"; d.appendChild(t); }
+      d.addEventListener("click", e => { e.stopPropagation(); if (o === 0) this.equipPick(); else { E.i = i; this.renderEquip(Math.sign(o)); } }); }
+    if (step && typeof requestAnimationFrame !== "undefined") { const px = getComputedStyle(row.children[1]).width, sh = "calc(" + (step > 0 ? 1 : -1) + " * (" + px + " + " + getComputedStyle(row).columnGap + "))"; // it starts where it was, then slides over
+      row.style.transform = "translateX(" + sh + ")"; requestAnimationFrame(() => requestAnimationFrame(() => { row.classList.add("slide"); row.style.transform = ""; })); }
     const k = E.list[E.i]; box.querySelector(".gt-eq-name").textContent = TOOLS[k].name + (this.tool === k ? " (equipped)" : ""); box.querySelector(".gt-eq-desc").textContent = TOOLS[k].desc;
   }
   equipPick() { const k = this.eq.list[this.eq.i]; this.equip(this.tool === k ? null : k); this.renderEquip(); if (this.tool) this.showLoc(TOOLS[this.tool].hint); }
@@ -7316,9 +7332,9 @@ class Game {
   optL(id) { return (this.tx("opt." + id)[0] || TEXT["opt." + id].v[0][0]); } // a menu option's words (Words, Menu options)
   renderChoice() {
     const c = this.ch, box = this.el.choice, top = box.scrollTop; box.innerHTML = "";
-    const never = this.optL("never"), reco = [this.optL("recommend"), "Recommend it"];
+    const never = [this.optL("never"), this.optL("busy")], reco = [this.optL("recommend"), "Recommend it", this.optL("think"), this.optL("thisGame")];
     c.options.forEach((o, i) => {
-      const d = document.createElement("div"); d.className = "gt-choice-item" + (i === c.i ? " on" : "") + (o === never ? " never" : "") + (reco.includes(o) ? " reco" : ""); // (Joe 10/19: every menu the same; Never mind last, red, under a line) (Joe 10/20: Recommend in green)
+      const d = document.createElement("div"); d.className = "gt-choice-item" + (i === c.i ? " on" : "") + (never.includes(o) ? " never" : "") + (reco.includes(o) ? " reco" : ""); // (Joe 10/19: every menu the same; Never mind last, red, under a line) (Joe 10/20: Recommend in green)
       d.textContent = o;
       d.addEventListener("click", e => { e.stopPropagation(); c.i = i; this.endChoice(); });
       box.appendChild(d);
@@ -7923,7 +7939,6 @@ class Game {
       { id: "curious", group: "Finds", label: "A curious visitor", find: () => this.npcAt(n => n.cur && !n.follow) || "None waiting right now." },
       { id: "crooked", group: "Finds", label: "A crooked frame", find: () => this.frameAt(p => this.isCrooked(p)) || "Nothing's crooked this session (or there are no frames on the walls)." },
       { id: "dusty", group: "Finds", label: "A dusty frame or case", find: () => this.frameAt(p => this.isDusty(p)) || "Nothing's dusty this session." },
-      { id: "prints", group: "Finds", label: "Fingerprints on a case", find: () => this.frameAt(p => this.prints(p) > 0) || "No fingerprints this session." },
       { id: "plant", group: "Finds", label: "A thirsty plant", find: () => { for (const id in this.rooms) for (const k in this.rooms[id].events) { const e = this.rooms[id].events[k]; if (e.plant && this.isThirsty(e.plant)) return at(id, ...k.split(",").map(Number)); } return "Every plant's watered today."; } },
       { id: "joe", group: "Finds", label: "Joe", run: () => (this.summonJoe() ? true : "No floor free near you.") },
       { id: "figure", group: "Finds", label: "The figure", run: () => (this.summonFigure() ? "Turn around." : "No room for it here.") },
@@ -8465,7 +8480,7 @@ class Game {
     this.say([...this.tx("workbench.intro"), ...up.map(p => "A crate labeled " + p.title.toUpperCase() + ". Unveiling " + niceDate(p.unveil) + ".")]);
   }
   /* Fingerprints on cases: new every session (wiped today stays wiped), and visitors who linger by a case leave more. */
-  prints(p) {
+  prints(p) { return 0; // (Joe 10/21) no more fingerprints
     if (p.tut) return 0;
     // amount (0 to 1, set in the curator) is roughly the chance a case has picked up a smudge each session.
     const amt = this.pack.settings.staff.fingerprints, t = todayISO(), w = (this.progress.wiped || {})[p.id];
@@ -8585,19 +8600,19 @@ class Game {
     if (n.reco || n.recoAt) { this.choose(v.name + ": " + this.tx("cur.onTheWay", { name: v.name }).join(" "), [this.optL("forget"), this.optL("never")], i => { if (i === 0) this.forgetIt(n); }, 1); return; } // on their way to what you recommended
     const named = ps => ps.map(p => v.name + ": " + p);
     if (!v.heard) { v.heard = true; this.saveProgress(); // (Joe 10/21) the first time: straight to what they need help with, then what you can do
-      const pages = named([...this.tx("cur.approachAsk", { name: v.name }, true), ...this.wantLines(v)]), q0 = pages.pop(), I0 = this.idea, rec0 = !!I0 && I0.room === this.room.id;
-      const ids0 = [...(rec0 ? ["recommend"] : []), "follow", ...(!v.asked ? ["gameName"] : []), "never"], opts0 = ids0.map(id => this.optL(id));
-      this.say(pages, () => this.choose(q0, opts0, i => { const o = ids0[i]; if (o === "recommend") this.curRecommend(n); else if (o === "follow") this.startFollow(n); else if (o === "gameName") this.tellName(n); }, opts0.length - 1)); return; }
+      const pages = named([...this.tx("cur.approachAsk", { name: v.name }, true), ...this.wantLines(v)]), q0 = pages.pop();
+      const ids0 = [this.curHasIt(v) ? "thisGame" : "think", "follow", ...(!v.asked ? ["gameName"] : []), "busy"], opts0 = ids0.map(id => this.optL(id));
+      this.say(pages, () => this.choose(q0, opts0, i => this.curPick(n, ids0[i]), opts0.length - 1)); return; }
     const hello = named(this.tx("cur.hello", { name: v.name })), q = hello.pop();
-    const I = this.idea, rec = !!I && I.room === this.room.id, ids = [...(v.heard ? [] : ["help"]), ...(rec ? ["recommend"] : []), ...(v.heard ? ["follow"] : []), ...(v.heard && !v.asked ? ["gameName"] : []), "getBy", "never"], opts = ids.map(id => this.optL(id));
-    this.say(hello, () => this.choose(q, opts, i => {
-      const o = ids[i];
-      if (o === "help") { v.heard = true; this.saveProgress(); this.say(named([...this.tx("cur.helpFind", { name: v.name }), ...this.wantLines(v)])); } // what they're after; that's all for now
-      else if (o === "recommend") this.curRecommend(n);
-      else if (o === "follow") this.startFollow(n);
-      else if (o === "gameName") this.tellName(n);
-      else if (o === "getBy") this.askToMove(n, named);
-    }, opts.length - 1));
+    const ids = [this.curHasIt(v) ? "thisGame" : "think", "follow", ...(!v.asked ? ["gameName"] : []), "getBy", "busy"], opts = ids.map(id => this.optL(id));
+    this.say(hello, () => this.choose(q, opts, i => { if (ids[i] === "getBy") this.askToMove(n, named); else this.curPick(n, ids[i]); }, opts.length - 1));
+  }
+  curHasIt(v) { const I = this.idea; return !!I && I.room === this.room.id && I.kind === "exhibit" && I.piece === v.want; } // (Joe 10/21) the very game they're after, in your mind: "This game?"; otherwise "Let me think"
+  curPick(n, o) {
+    if (o === "thisGame") this.curRecommend(n);
+    else if (o === "think") { if (this.canThink()) this.enterThink(); }
+    else if (o === "follow") this.startFollow(n);
+    else if (o === "gameName") this.tellName(n);
   }
   curRecommend(n) { // what you're thinking about, for the game they're thinking about: a "?", then the right one is off they go (briskly), the wrong one's a no
     const v = n.cur, I = Object.assign({}, this.idea);
@@ -9734,7 +9749,7 @@ class Game {
       return;
     }
     if (this.mode === "pquiz") { this.pqKeys(has); return; }
-    if (this.mode === "equip") { const E = this.eq, n = E.list.length; if (has("left") || has("up")) { E.i = (E.i + n - 1) % n; this.renderEquip(); } else if (has("right") || has("down")) { E.i = (E.i + 1) % n; this.renderEquip(); } else if (has("a")) this.equipPick(); else if (has("b")) this.closeEquip(); else if (has("start")) this.closeEquip(true); return; }
+    if (this.mode === "equip") { const E = this.eq, n = E.list.length; if (has("left") || has("up")) { if (n > 1) { E.i = (E.i + n - 1) % n; this.renderEquip(-1); } } else if (has("right") || has("down")) { if (n > 1) { E.i = (E.i + 1) % n; this.renderEquip(1); } } else if (has("a")) this.equipPick(); else if (has("b")) this.closeEquip(); else if (has("start")) this.closeEquip(true); return; }
     if (this.mode === "read") {
       const r = this.rd;
       if (has("left") && r.i > 0) { r.i--; this.renderRead(); }
@@ -9867,6 +9882,7 @@ class Game {
   updateThink(has) {
     const T = this.think, g = T && T.ghost, r = this.room; if (!g) { this.mode = "walk"; return; }
     if (T.picked) { this.exitThink(); return; } // the frame that showed the pick is drawn (and the bubble's picture taken): back into your body
+    if (has("b") && this.idea) { this.choose(this.tx("think.dismiss").join(" "), ["Yes", "No"], i => { this.mode = "think"; this.inputLock = true; if (i === 0) this.forgetThought(); }, 1); return; } // (Joe 10/21) let go of what's in your mind, without leaving
     if (has("select") || has("b") || has("start")) { this.exitThink(); return; }
     if (g.bumpT > 0) g.bumpT--;
     g.alpha = Math.min(0.8, Math.max(0, (this.t - T.t0 - 6) / 24)); // fading in as it steps out of you
@@ -10406,10 +10422,6 @@ class Game {
     // A long walk (another room) comes in stretches: keep going toward the same spot.
     if (n.goalT && (n.x + dx !== n.goalT[0] || n.y + dy !== n.goalT[1])) { n.timer = 6; return; }
     n.timer = 180 + Math.random() * 300; n.goalT = null; n.retry = 0; n.arrived = true; // arrived (once this last step lands): stay a while
-    // Stopping right next to a case now and then leaves a fingerprint (not every time).
-    const ax = n.x + dx, ay = n.y + dy, amt = this.pack.settings.staff.fingerprints;
-    const near = this.room.cases.find(c => c.piece && c.state === "wall" && Math.abs(c.x - ax) + Math.abs(c.y - ay) === 1);
-    if (near && amt > 0 && Math.random() < amt * 0.5) { const xp = this.extraPrints || (this.extraPrints = {}); xp[near.piece.id] = Math.min(3, (xp[near.piece.id] || 0) + 1); }
   }
   strollWait(n) { if (n && n.reco && !n.leaving) return 0; const sp = this.pack.settings.staff.patronSpeed; return Math.round(8 * (1 - sp) / sp); } // on a recommendation: no dawdling (Joe 10/19)
   /* Sitting down on their own: a free bench or stool near where they're strolling (Joe 10/9). Not seats kept for you
@@ -11803,15 +11815,17 @@ class Game {
         this.idea = Object.assign({}, TH.pick, { icon: ic }); TH.picked = true;
       }
       if (TH.ghost && !TH.picked) this.drawThinkPick(ctx, cx, cy, TH.ghost);
+      if (I && I.icon && I.room === r.id && !TH.picked) { this.drawThought(ctx, BUB, I); // (Joe 10/21) it stays up while you think, with how to let it go
+        const txt = "DISMISS (B)", w = txt.length * 4 - 1, x = SW - 4 - w - 3, y = 22 + 26 + 4; ctx.fillStyle = "#181820"; ctx.fillRect(x, y, w + 4, 9); ctx.fillStyle = "#f8f8f0"; ctx.fillRect(x + 1, y + 1, w + 2, 7); ctx.fillStyle = "#181820";
+        let tx = x + 2; for (const ch of txt) { (PIXEL_FONT[ch] || []).forEach((row, yy) => [...row].forEach((on, xx) => { if (on === "1") ctx.fillRect(tx + xx, y + 2 + yy, 1, 1); })); tx += 4; } }
       { const txt = "Thinking...", dots = 1 + (Math.floor(this.t / 20) % 3); ctx.font = "bold 8px monospace"; ctx.textBaseline = "alphabetic"; ctx.textAlign = "left"; // along the bottom (Joe 10/19); the dots tick over
         const w = Math.ceil(ctx.measureText(txt).width), x = Math.round(SW / 2 - w / 2), y = SH - 7, show = txt.slice(0, txt.length - 3 + dots);
         ctx.fillStyle = "#181820"; for (const [ox, oy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) ctx.fillText(show, x + ox, y + oy); ctx.fillStyle = "#fffbe8"; ctx.fillText(show, x, y); }
       return; // the green is a filter on the screen itself (thinkFilter): reading the picture back every frame made Chrome draw the whole game more slowly afterwards (Joe 10/19: choppy)
     }
-    if (I && I.icon && I.room === r.id) { // what you're holding in mind (it stays up through dialogue too, Joe 10/19)
-      const x = SW - 34, y = 22; BUB(x, y, 26, 26); ctx.drawImage(this.thoughtStripes(), x + 1, y + 1); ctx.drawImage(I.icon, x + 1, y + 1); ctx.fillStyle = "#181820"; ctx.fillRect(x - 4, y + 27, 3, 3); ctx.fillRect(x - 7, y + 31, 2, 2); // top right, under your tokens (the room's name pops up top left, the day dial's bottom left)
-    }
+    if (I && I.icon && I.room === r.id) this.drawThought(ctx, BUB, I); // what you're holding in mind (it stays up through dialogue too, Joe 10/19)
   }
+  drawThought(ctx, BUB, I) { const x = SW - 34, y = 22; BUB(x, y, 26, 26); ctx.drawImage(this.thoughtStripes(), x + 1, y + 1); ctx.drawImage(I.icon, x + 1, y + 1); ctx.fillStyle = "#181820"; ctx.fillRect(x - 4, y + 27, 3, 3); ctx.fillRect(x - 7, y + 31, 2, 2); } // top right, under your tokens (the room's name pops up top left, the day dial's bottom left)
   /* While thinking: corners around whatever the ghost is facing that you could pick (Joe 10/19: keep these; not on yourself). */
   drawThinkPick(ctx, cx, cy, g) {
     if (g.moving) return;
@@ -12225,9 +12239,10 @@ class Game {
           bubbles.push(() => { ctx.globalAlpha = ea; this.drawSlot("emote", fr, 0, sx + 4, ey); ctx.globalAlpha = 1; }); // drawn after the tall things' tops (the café's wall machine hid the barista's "!", Joe 10/15)
         }
       }
-      if (c.member && !c.dayPerson && !c.leaving && !this.full && Math.abs(c.x - this.player.x) + Math.abs(c.y - this.player.y) <= 2) { // name tags: Patreon members (not the day-of-the-week people)
-        ctx.font = "6px monospace"; const w = Math.ceil(ctx.measureText(c.member).width) + 4, nx = Math.round(sx + 8 - w / 2), ny = sy - (bub >= 0 ? 18 : c.cur && !c.follow ? 28 : 8);
-        ctx.fillStyle = "rgba(24,24,32,.85)"; ctx.fillRect(nx, ny, w, 8); ctx.fillStyle = "#f8f0c0"; ctx.textBaseline = "top"; ctx.fillText(c.member, nx + 2, ny + 1);
+      if (c.member && !c.dayPerson && !c.leaving && !this.full && (c.follow || Math.abs(c.x - this.player.x) + Math.abs(c.y - this.player.y) <= 2)) { // name tags: Patreon members (not the day-of-the-week people); whoever's following you keeps theirs (Joe 10/21: it blinked as they fell behind)
+        const over = c.ideaFx || c.askFx || (c.pose && pk < c.pose.dur && c.pose.kind !== "snapback"); // (Joe 10/21) a thought, a "?" or an emote over their head: the name goes above it, not tangled in it
+        ctx.font = "6px monospace"; const w = Math.ceil(ctx.measureText(c.member).width) + 4, nx = Math.round(sx + 8 - w / 2), ny = sy - (over ? 27 : bub >= 0 ? 18 : c.cur && !c.follow ? 28 : 8);
+        bubbles.push(() => { ctx.font = "6px monospace"; ctx.fillStyle = "rgba(24,24,32,.85)"; ctx.fillRect(nx, ny, w, 8); ctx.fillStyle = "#f8f0c0"; ctx.textBaseline = "top"; ctx.fillText(c.member, nx + 2, ny + 1); }); // over everything (Joe 10/21: cases and people drawn after it cut into it)
       }
       if (c.leaving && !c.staff && !c.janitor && !c.role && !this.full && !(c.pose && pk < c.pose.dur)) { const by = sy - 9 + (Math.floor(this.t / 20) % 2), ba = ctx.globalAlpha; bubbles.push(() => { ctx.globalAlpha = ba; this.drawSlot("exit_sign", 0, 0, sx - 1, by - 1); ctx.globalAlpha = 1; }); } // heading home (Joe 10/19); an EXIT sign (Joe 10/20)
       if (bub >= 0) { const by = sy - 9 + (Math.floor(this.t / 20) % 2), ba = ctx.globalAlpha; bubbles.push(() => { ctx.globalAlpha = ba; this.drawSlot("bubble", bub, 0, sx + 4, by); ctx.globalAlpha = 1; }); }
@@ -12285,13 +12300,16 @@ class Game {
   drawThinkColor(cx, cy) {
     const TH = this.think, g = TH && TH.ghost, cv = this.canvas; let hl = this.hlCanvas;
     if (!g || !cv || typeof document === "undefined" || this.thinkFx) { if (hl) hl.style.display = "none"; return; }
-    const [dx, dy] = DIRS[g.dir], t = !g.moving && this.thinkTarget(this.room, g.x + dx, g.y + dy); if (!t) { if (hl) hl.style.display = "none"; return; }
+    const [dx, dy] = DIRS[g.dir], t = !g.moving && this.thinkTarget(this.room, g.x + dx, g.y + dy), I = this.idea, thought = !!(I && I.icon && I.room === this.room.id && !TH.picked); if (!t && !thought) { if (hl) hl.style.display = "none"; return; }
     if (!hl) { hl = this.hlCanvas = document.createElement("canvas"); hl.style.cssText = "position:absolute;pointer-events:none;image-rendering:pixelated"; cv.parentNode.insertBefore(hl, cv.nextSibling); if (getComputedStyle(cv.parentNode).position === "static") cv.parentNode.style.position = "relative"; }
     if (hl.width !== cv.width || hl.height !== cv.height) { hl.width = cv.width; hl.height = cv.height; }
     const pr = cv.parentNode.getBoundingClientRect(), cr = cv.getBoundingClientRect();
     Object.assign(hl.style, { display: "block", left: (cr.left - pr.left) + "px", top: (cr.top - pr.top) + "px", width: cr.width + "px", height: cr.height + "px", transform: cv.style.transform || "", transformOrigin: cv.style.transformOrigin || "" });
-    const k = cv.width / SW, [rx, ry, rw, rh] = this.thinkRect(t, cx, cy), x = Math.max(0, Math.round((rx - cx) * k)), y = Math.max(0, Math.round((ry - cy) * k)), w = Math.round(rw * k), h = Math.round(rh * k);
-    const c2 = hl.getContext("2d"); c2.setTransform(1, 0, 0, 1, 0, 0); c2.clearRect(0, 0, hl.width, hl.height); if (w > 0 && h > 0) c2.drawImage(cv, x, y, w, h, x, y, w, h);
+    const k = cv.width / SW, c2 = hl.getContext("2d"); c2.setTransform(1, 0, 0, 1, 0, 0); c2.clearRect(0, 0, hl.width, hl.height);
+    if (thought) for (const [qx, qy, qw, qh] of [[SW - 35, 21, 28, 28], [SW - 41, 49, 7, 7], [SW - 50, 52, 47, 9]]) { const X = Math.round(qx * k), Y = Math.round(qy * k), W = Math.round(qw * k), H = Math.round(qh * k); c2.drawImage(cv, X, Y, W, H, X, Y, W, H); } // the thought, its little tail and "dismiss", in colour too
+    if (!t) return;
+    const [rx, ry, rw, rh] = this.thinkRect(t, cx, cy), x = Math.max(0, Math.round((rx - cx) * k)), y = Math.max(0, Math.round((ry - cy) * k)), w = Math.round(rw * k), h = Math.round(rh * k);
+    if (w > 0 && h > 0) c2.drawImage(cv, x, y, w, h, x, y, w, h);
     const pc = t.kind === "exhibit" && this.pieceById(t.piece); if (pc && pc.title) { // (Joe 10/21) an exhibit: its game's name, just over it
       const txt = [...String(pc.title).toUpperCase()].filter(ch => PIXEL_FONT[ch]).join("").slice(0, 28), tw = txt.length * 4 - 1, bx = Math.max(1, Math.min(SW - tw - 5, Math.round(rx - cx + rw / 2 - tw / 2 - 2))), by = Math.max(1, Math.round(ry - cy - 10));
       c2.setTransform(k, 0, 0, k, 0, 0); c2.fillStyle = "#181820"; c2.fillRect(bx, by, tw + 4, 9); c2.fillStyle = "#f8f8f0"; c2.fillRect(bx + 1, by + 1, tw + 2, 7); c2.fillStyle = "#181820";
@@ -12331,7 +12349,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 157";
+const VERSION = "2026-11-18 cards 158";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

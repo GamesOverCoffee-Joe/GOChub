@@ -484,7 +484,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 157";
+window.GOQ_WANT = "2026-11-18 cards 158";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -1126,14 +1126,6 @@ function renderStaff() {
     el("h3", { text: "The museum cat", style: "margin:0 0 4px" }),
     el("p", { class: "note", style: "margin:0 0 12px", text: "Naps somewhere different every day: the lobby, the gallery, its bed in the gift shop, or the staff room. Visitors can pet it." }),
     el("div", { class: "fields", style: "max-width:420px" }, [el("label", {}, [document.createTextNode("Name"), cat])]),
-  ]));
-  const fp = el("input", { type: "range", min: 0, max: 100, step: 1, value: Math.round((st.fingerprints === undefined ? 0.15 : st.fingerprints) * 100), "aria-label": "Fingerprints on cases" });
-  const fpOut = el("output", { text: fp.value + "%" });
-  fp.addEventListener("input", () => { st.fingerprints = +fp.value / 100; fpOut.textContent = fp.value + "%"; changed(); });
-  wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
-    el("h3", { text: "Fingerprints on cases", style: "margin:0 0 4px" }),
-    el("p", { class: "note", style: "margin:0 0 12px", text: "Roughly the chance a case has a smudge on a given day. Visitors who stop next to a case now and then leave one more. 0% turns fingerprints off and clears them." }),
-    el("label", { class: "range" }, [el("span", { text: "Amount" }), fp, fpOut]),
   ]));
   // Pieces you haven't read yet: how they're marked in the museum, and how strongly.
   const rsty = el("select", {}, [["border", "Glowing border on the floor"], ["off", "Off"]].map(([v, t]) => el("option", { value: v, text: t })));
