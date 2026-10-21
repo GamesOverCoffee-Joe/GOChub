@@ -40,14 +40,15 @@ A test room you reach with a button code, so mechanics can be tried one at a tim
 
 ### Phase 3: mopping and trash cans — prototype built (in the lab)
 - The **mop** (Equipment): hold B as you walk the wood floor. It leaves a wet sheen that dries in about six seconds; visitors step around it while it's wet.
-- The lab's **trash can** fills slowly as people walk past (two minutes or so). A swaps in a fresh bag; the can wobbles as the lid settles. It never overflows into a problem.
+- **Trash bags** (Equipment): hold B at a can and its trash hops into your bag one piece at a time. Stop whenever; whatever's left stays, so it fills back up sooner. A can holds at most five pieces and fills slowly; it never overflows into a problem, and nobody comments on it.
+- Your bag holds eight (for now) and fills up in your hand. Hold B at the **dumpster** to throw it out. The museum's dumpster is **out back**, through the basement's garage door; once in a while the reader is out there on a smoke break.
 - Also this round: tools are held like a coffee cup; A no longer waters plants (the watering can does, with B, everywhere; it hangs in the staff room).
 - **To decide after trying it:** does the mop need a "wet floor" sign; how fast cans fill in the museum (from visitors' cups); whether the bag swap needs a sound.
 
 ### Phase 4: plants as care — prototype built (in the lab)
 - Four stages: tired, normal, full, flowering. Water a plant once a day (the watering can, B) and it grows a stage the next day.
-- After flowering it goes back down through full to normal, then grows again: a cycle, not a finish line.
-- A day without water and it slips a stage; it never gets worse than a little tired, never dies.
+- Keep watering and it stays in flower. Each day you miss, it steps back a stage.
+- It never gets worse than a little tired, never dies.
 - In the lab a day is one minute, so you can watch it happen. Watered today: the soil looks damp. Growing: a soft glint.
 - **To decide after trying it:** how a day maps in the museum (a real day, or the game's day); whether visitors notice a flowering plant (Phase 6); replacing today's dying-plant fix.
 
