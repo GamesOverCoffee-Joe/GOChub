@@ -2415,17 +2415,21 @@ const ROOMS = {
     spawn: [7, 9, "up"],
     props: [
       { key: "vacuum", x: 1, y: 3, toolSpot: "vacuum", event: { tool: "vacuum" } },
-      { key: "velvet_rope", x: 2, y: 3, toolSpot: "ropes", event: { tool: "ropes" } },
-      { key: "sign_stand", x: 13, y: 3, say: ["POLISH LAB", "Grab the vacuum (and the ropes), then pick them from Equipment in the Start menu. Hold B to vacuum; double-tap B to leave it on.", "Ropes: B where one starts, walk, B where it ends. B on a rope takes it back up.", "Every carpet tile remembers which way you went.", "No right answer. Stripes, diagonals, checkerboards: whatever looks nice to you.", "People walking across it scuff it up again."] },
+      { key: "vacuum", x: 2, y: 3, small: true, toolSpot: "handvac", event: { tool: "handvac" } },
+      { key: "velvet_rope", x: 8, y: 9, event: { labRopes: true } }, // close the room for cleaning (Joe 10/21)
+      { key: "bench", x: 5, y: 8, sit: "up", say: ["A bench. Vacuum around it."] },
+      { key: "bench", x: 9, y: 8, sit: "up", say: ["A bench. Someone's always on it."] },
+      { key: "sign_stand", x: 13, y: 3, say: ["POLISH LAB", "Grab the vacuums, then pick one from Equipment in the Start menu: the wide one does three tiles, the hand vacuum one. Hold B to vacuum; double-tap B to leave it on.", "The rope by the door closes the room for cleaning (and opens it again).", "Every carpet tile remembers which way you went.", "No right answer. Stripes, diagonals, checkerboards: whatever looks nice to you.", "People walking across it scuff it up again."] },
       { key: "sign_stand", x: 11, y: 3, event: { labCarpet: true } }, // carpet samples: the wings' carpets (Joe 10/21)
       { key: "plant", x: 13, y: 9, say: ["A plant. Its turn comes later."] },
       { key: "plant", x: 1, y: 9, say: ["A plant. Also waiting its turn."] },
     ],
     decals: [{ key: "rug", x: 3, y: 4, w: 9, h: 5, pattern: "double", motif: "flower", field: "#6a4630", border: "#452e0d", accent: "#3e2818", corner: "#c87848" }],
+    cases: [[4, 5], [7, 5], [10, 5]],
     events: [{ x: 7, y: 10, labExit: true, bump: true }],
     light: { dim: 0, spots: 0 },
     visitors: [
-      { sheet: "visitor_a", x: 4, y: 6, lines: [["Is it weird that I find vacuum lines relaxing?"]] },
+      { sheet: "visitor_a", x: 6, y: 4, lines: [["Is it weird that I find vacuum lines relaxing?"]] },
       { sheet: "visitor_b", x: 10, y: 7, lines: [["Oh, sorry. Am I walking on your carpet?"]] },
     ],
   },
@@ -2548,6 +2552,7 @@ const TEXT = {
   "tut.plantFine":   { g: "Tutorial", l: "A plant that's fine ({name})", by: "claude", v: [["The {name} looks happy."]] },
   "tut.trainer.hello":  { g: "Tutorial", l: "Training Room B: the trainer, the first time you talk to her across the desk", by: "claude", v: [["Oh! Hi. Sorry, I've been staring at this plant all day.", "Staff aren't allowed to water the plants. It has to be a visitor. And nobody ever comes in here.", "Wait, is that a watering can? Oh thank goodness.", "Here, let me get the rope for you."]] },
   "tut.trainer.again0":  { g: "Tutorial", l: "The trainer, again, before the plant's watered", by: "claude", v: [["It's so sad. Look at it."]] },
+  "polish.fresh":  { g: "Polish Lab", l: "Visitors, once the whole floor's freshly vacuumed (one line each)", by: "claude", v: [["Oh, these lines in the carpet. Someone took their time."], ["Look at this floor. It feels like a fancier museum."], ["I almost don't want to walk on it."]] },
   "tut.ropeOpen":  { g: "Tutorial", l: "Training Room B: the trainer unhooks a rope, after you first talk to her", by: "claude", v: [["She unhooks one of the velvet ropes for you."]] },
   "tut.trainer.thanks":  { g: "Tutorial", l: "The trainer, after you water the sad plant", by: "claude", v: [["You watered it! Look at it perk up!", "Thank you. The door to the closet's open now."]] },
   "tut.trainer.timer":  { g: "Tutorial", l: "The trainer, right after the thanks: then the view zooms in on the day dial", by: "claude", v: [["Oh, and see that little timer in the lower left corner?"]] },
@@ -3177,10 +3182,11 @@ const PIXEL_FONT = (() => {
   g.split(" ").forEach(e => { const [k, b] = e.split(":"); out[k] = [0, 1, 2, 3, 4].map(i => b.slice(i * 3, i * 3 + 3)); });
   return out;
 })();
-const TOOLS = { // equipment (Joe 10/21): what each is, its icon (an art slot and frame), what it says
-  vacuum: { name: "Vacuum", slot: "vacuum", desc: "Hold B to vacuum the carpet; double-tap B to leave it running. Every tile remembers which way you pushed.", hint: "Vacuum: hold B (double-tap to leave it on)", got: "You got the vacuum!", spot: "The vacuum's corner. Yours is in your Equipment." },
-  ropes: { name: "Velvet ropes", slot: "velvet_rope", frame: 0, max: 60, desc: "B marks where a rope starts, walk to where it ends, B again: the rope goes down in a straight line. B on a rope takes it back up. Keep people off what you're working on.", hint: "Velvet ropes: B at one end, B at the other", got: "You got a bundle of velvet ropes!", spot: "The rope stand. Yours are in your Equipment." },
+const TOOLS = { // equipment (Joe 10/21): what each is, its icon (an art slot and frame), what it says, how many tiles it brushes across
+  vacuum: { name: "Wide vacuum", slot: "vacuum", wide: 3, desc: "Hold B to vacuum three tiles across; double-tap B to leave it running. Every tile remembers which way you pushed.", hint: "Wide vacuum: hold B (double-tap to leave it on)", got: "You got the wide vacuum!", spot: "The vacuum's corner. Yours is in your Equipment." },
+  handvac: { name: "Hand vacuum", slot: "vacuum", small: true, wide: 1, desc: "Hold B to vacuum one tile; double-tap B to leave it running. For corners and around benches.", hint: "Hand vacuum: hold B (double-tap to leave it on)", got: "You got the hand vacuum!", spot: "The hand vacuum's spot. Yours is in your Equipment." },
 };
+const LAB_CASES = ["tut-bus", "tut-sale", "tut-bus"]; // what's in the Polish Lab's cases
 const LAB_CODE = ["down", "down", "down", "up", "up", "up", "start"]; // to the Polish Lab and back (Joe 10/21)
 const KONAMI = ["up", "up", "down", "down", "left", "right", "left", "right", "b", "a", "start"];
 const POP_KINDS = ["dusted", "straightened", "watered", "mugs", "wiped", "litter"]; // tokens that just pop over your head
@@ -3585,7 +3591,7 @@ function buildRoom(id, pieces, o) {
     r.solid[y][x] = !WALK_TILES.includes(ch);
   }
   (def.props || []).forEach(p => {
-    r.props.push({ key: p.key, x: p.x, y: p.y, plant: p.plant, mugShelf: p.mugShelf, sit: p.sit, rack: p.rack, unit: p.unit, collection: p.collection, catBed: p.catBed, tall: p.tall, toolSpot: p.toolSpot });
+    r.props.push({ key: p.key, x: p.x, y: p.y, plant: p.plant, mugShelf: p.mugShelf, sit: p.sit, rack: p.rack, unit: p.unit, collection: p.collection, catBed: p.catBed, tall: p.tall, toolSpot: p.toolSpot, small: p.small });
     for (let i = 0; i < SLOT[p.key].w / T; i++) {
       r.solid[p.y][p.x + i] = true;
       // Tall things: you can walk behind the top row (and are hidden by it) unless it's marked blockTop, like racks and cabinets.
@@ -6207,6 +6213,13 @@ class Game {
     this.warp(...f);
   }
   carpetAt(r, x, y) { return /^carpet_floor/.test((r.tiles[y] && r.tiles[y][x]) || "") || (r.decals || []).some(d => d.key === "rug" && d.w && x >= d.x && x < d.x + d.w && y >= d.y && y < d.y + d.h); } // wall-to-wall carpet (the wings) or a rug
+  labDoors(shut) { // the rope by the door: a dip to black, and everyone's out (or back in)
+    const r = this.rooms.polish_lab; if (!r) return;
+    this.mode = "busy"; this.trans = { t: 0, dur: 14, switched: false, fn: () => {
+      if (shut) { this.labAway = r.npcs.filter(n => !n.staff); r.npcs = r.npcs.filter(n => n.staff); }
+      else { for (const n of this.labAway || []) { n.moving = false; n.prog = 0; n.walkTo = null; n.route = null; if (this.blocked(n.x, n.y, n)) { const o = this.napTiles(r).find(([x, y]) => !this.blocked(x, y, n)); if (o) [n.x, n.y] = o; } r.npcs.push(n); } this.labAway = null; }
+      this.labShut = shut; }, after: () => this.showLoc(shut ? "Closed for cleaning" : "Open again") };
+  }
   labCarpets() { // the lab's rug, then each wing's carpet, in its own color from the museum layout
     const lay = ROOMS.museum && ROOMS.museum.layout, W = ((lay && lay.rooms) || []).filter(z => z.art && z.art.floor === "carpet_floor" && z.tint && z.tint.floor).sort((a, b) => (a.order || 99) - (b.order || 99));
     return [{ name: "The rug" }].concat(W.map(z => ({ name: z.name, tint: z.tint.floor })));
@@ -6222,14 +6235,28 @@ class Game {
     const r = this.room; if (!r || !this.carpetAt(r, c.x, c.y)) return;
     const N = (this.nap || (this.nap = {}))[r.id] || (this.nap[r.id] = {}), k = c.x + "," + c.y;
     if (c === this.player) return; // (your own steps don't scuff; the vacuum ahead of you does the brushing, vacTick)
-    const v = N[k]; if (v && this.t - (v.t || 0) > 3600) { v.s -= 0.08; if (v.s <= 0.05) delete N[k]; } // someone walking on it: a little scuffed, but only once it's had a minute (Joe 10/21)
+    const v = N[k]; if (v && this.t - (v.t || 0) > 3600) { v.s -= 0.08; if (v.s <= 0.05) delete N[k]; if (v.s < 0.6 && this.napDone) this.napDone[r.id] = false; } // someone walking on it: a little scuffed, but only once it's had a minute (Joe 10/21)
   }
-  vacTick() { // the tile under the vacuum (in front of you) gets brushed your way: as you start it, step, or turn (Joe 10/21)
+  vacTick() { // the tiles under the vacuum (in front of you; the wide one three across) get brushed your way: as you start it, step, or turn (Joe 10/21)
     if (!this.vacuuming()) { this.vacLast = null; return; }
     const r = this.room, p = this.player, [dx, dy] = DIRS[p.dir], x = p.x + dx, y = p.y + dy, k = x + "," + y;
-    if (this.vacLast === k + p.dir) return; this.vacLast = k + p.dir;
-    if (!this.carpetAt(r, x, y)) return;
-    ((this.nap || (this.nap = {}))[r.id] || (this.nap[r.id] = {}))[k] = { d: p.dir, s: 1, t: this.t };
+    if (this.vacLast === k + p.dir + this.tool) return; this.vacLast = k + p.dir + this.tool;
+    const N = (this.nap || (this.nap = {}))[r.id] || (this.nap[r.id] = {}), half = (TOOLS[this.tool].wide - 1) / 2;
+    for (let i = -half; i <= half; i++) { const tx = x + (dx ? 0 : i), ty = y + (dy ? 0 : i); if (this.carpetAt(r, tx, ty)) N[tx + "," + ty] = { d: p.dir, s: 1, t: this.t }; }
+    this.napCheck(r);
+  }
+  vacDrawer(c, sx, sy) { // the vacuum you're pushing (Joe 10/21): the wide one full size, the hand vacuum small at your hands; a puff while it runs
+    const ctx = this.ctx, [dx, dy] = DIRS[c.dir], small = TOOLS[this.tool].small, sz = small ? 9 : 16;
+    const vx = small ? sx + 4 + dx * 8 : sx + dx * 9, vy = small ? sy + (dy < 0 ? 6 : dy > 0 ? 16 : 13) : sy + (dy < 0 ? -7 : dy > 0 ? 10 : 4);
+    return () => { if (small) ctx.drawImage(this.sheet("vacuum"), 0, 0, 16, 16, vx, vy, sz, sz); else this.drawSlot("vacuum", 0, 0, vx, vy);
+      if (this.vacuuming() && this.t % 8 < 4) { ctx.fillStyle = "rgba(255,250,235,.7)"; ctx.fillRect(vx + (sz >> 1) + (this.t % 16 < 8 ? -1 : 1), vy + sz, small ? 1 : 2, 1); } };
+  }
+  napTiles(r) { const out = []; for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) if (!r.solid[y][x] && this.carpetAt(r, x, y)) out.push([x, y]); return out; } // the carpet you can get at (not under benches or cases)
+  napCheck(r) { // the whole floor freshly done: a few sparkles on it, and the people here notice (Joe 10/21)
+    const N = (this.nap && this.nap[r.id]) || {}, D = this.napDone || (this.napDone = {}), all = this.napTiles(r), done = all.length > 0 && all.every(([x, y]) => N[x + "," + y] && N[x + "," + y].s >= 0.6);
+    if (!done) { D[r.id] = false; return; } if (D[r.id]) return; D[r.id] = true;
+    const pick = all.slice().sort(() => Math.random() - 0.5).slice(0, 9); this.floorFx = pick.map(([x, y], i) => ({ room: r.id, x, y, t0: this.t + i * 8 }));
+    r.npcs.filter(n => !n.staff && !n.still).forEach((n, i) => { n.pose = { kind: "heart", t0: this.t, dur: 90 }; n.lines = [this.tx("polish.fresh")]; n.lineI = -1; });
   }
   drawNap(r, cx, cy) {
     const N = this.nap && this.nap[r.id]; if (!N) return;
@@ -6239,13 +6266,15 @@ class Game {
       ctx.globalAlpha = a; ctx.fillStyle = light ? "#fff4e0" : "#140a04"; ctx.fillRect(px, py, T, T);
       ctx.globalAlpha = a * 0.9; for (let i = 1; i < T; i += 3) { if (vert) ctx.fillRect(px + i, py, 1, T); else ctx.fillRect(px, py + i, T, 1); } } // the nap's grain, along the way it was pushed
     ctx.globalAlpha = 1;
+    this.floorFx = (this.floorFx || []).filter(f => this.t - f.t0 < 32);
+    for (const f of this.floorFx) { const fr = Math.floor((this.t - f.t0) / 4) % 4; if (f.room === r.id && fr >= 0) this.drawSlot("sparkle", fr, 0, f.x * T - cx, f.y * T - cy); } // the floor's done: sparkles here and there
   }
   /* Equipment (Joe 10/21): tools you find once and then equip from the Start menu, Zelda style. Only the Polish Lab uses them
      for now. B is the tool button while one's equipped: hold it to vacuum (double-tap to leave it running, tap to stop);
-     with the velvet ropes, B starts a rope in front of you, then B again at the other end lays it in a straight line. */
+     the wide vacuum brushes three tiles across in front of you, the hand vacuum one. */
   ownedTools() { return ((this.progress.tools && this.progress.tools.owned) || []).filter(k => TOOLS[k]); }
   toolActive() { return !!this.tool && !!this.room && !!ROOMS[this.room.id] && !!ROOMS[this.room.id].lab; }
-  vacuuming() { return this.tool === "vacuum" && this.toolActive() && (this.vacLatch || !!(this.btnHeld && this.btnHeld.has("b"))); }
+  vacuuming() { return !!TOOLS[this.tool] && !!TOOLS[this.tool].wide && this.toolActive() && (this.vacLatch || !!(this.btnHeld && this.btnHeld.has("b"))); }
   takeTool(kind) { // A on a tool's spot: it's yours (and in your hands)
     const T0 = this.progress.tools || (this.progress.tools = { owned: [] }); if (!TOOLS[kind]) return;
     if (T0.owned.includes(kind)) { this.say([TOOLS[kind].spot]); return; }
@@ -6253,61 +6282,19 @@ class Game {
     this.itemGet({ name: TOOLS[kind].name, img: this.toolIcon(kind), id: "tool-" + kind }, "walk", () => this.say([TOOLS[kind].got, "It's in your Equipment (Start) from now on."]));
     this.dressLab();
   }
-  equip(kind) { this.tool = kind || null; this.vacLatch = false; this.ropeDraft = null; if (this.progress.tools) { this.progress.tools.on = this.tool; this.saveProgress(); } }
-  putToolBack() { this.vacLatch = false; this.ropeDraft = null; } // (leaving the lab: the vacuum switches off)
+  equip(kind) { this.tool = kind || null; this.vacLatch = false; if (this.progress.tools) { this.progress.tools.on = this.tool; this.saveProgress(); } }
+  putToolBack() { this.vacLatch = false; } // (leaving the lab: the vacuum switches off)
   toolPress() {
-    if (this.tool === "vacuum") { const dbl = this.lastB && this.t - this.lastB < 20; this.lastB = this.t;
+    if (TOOLS[this.tool] && TOOLS[this.tool].wide) { const dbl = this.lastB && this.t - this.lastB < 20; this.lastB = this.t;
       if (this.vacLatch) { this.vacLatch = false; this.lastB = 0; this.showLoc("Vacuum off"); } else if (dbl) { this.vacLatch = true; this.lastB = 0; this.showLoc("Vacuum left on (B to stop)"); }
       return; }
-    if (this.tool === "ropes") this.ropeAt();
-  }
-  /* Ropes go down like a line in a paint program (Joe 10/21): B marks one end (the tile in front of you), walk, B again marks the
-     other end, and the rope fills the straight line between (across or up and down, whichever way you went further). It stops
-     short of anything in the way. B on the start again cancels; B facing a laid rope takes that whole rope back up. */
-  ropeFree(r, x, y) { const p = this.player; return !!r.solid[y] && r.solid[y][x] === false && !r.events[x + "," + y] && !r.npcs.some(n => n.x === x && n.y === y) && !(p.x === x && p.y === y); }
-  ropeLine() { // the tiles the rope would cover right now, from the start to the tile in front of you
-    const D = this.ropeDraft, r = this.room; if (!D || D.room !== r.id) return [];
-    const p = this.player, [dx, dy] = DIRS[p.dir], fx = p.x + dx, fy = p.y + dy, ax = fx - D.x, ay = fy - D.y, across = Math.abs(ax) >= Math.abs(ay);
-    const n = across ? Math.abs(ax) : Math.abs(ay), sx = across ? Math.sign(ax) : 0, sy = across ? 0 : Math.sign(ay), L = this.ropes[r.id], out = [];
-    for (let i = 0; i <= n; i++) { const x = D.x + sx * i, y = D.y + sy * i, old = L.some(q => q.x === x && q.y === y); if (!old && !this.ropeFree(r, x, y)) break; out.push({ x, y, old }); }
-    return out;
-  }
-  ropeAt() {
-    const r = this.room, p = this.player, [dx, dy] = DIRS[p.dir], x = p.x + dx, y = p.y + dy, L = (this.ropes || (this.ropes = {}))[r.id] || (this.ropes[r.id] = []), max = TOOLS.ropes.max;
-    if (this.ropeDraft && this.ropeDraft.room !== r.id) this.ropeDraft = null;
-    const D = this.ropeDraft;
-    if (D) {
-      if (D.x === x && D.y === y) { this.ropeDraft = null; this.showLoc("Rope put away"); return; }
-      const line = this.ropeLine().filter(q => !q.old); this.ropeDraft = null;
-      if (!line.length) { this.showLoc("Something's in the way"); return; }
-      if (L.length + line.length > max) { this.showLoc("Not enough rope for that (" + (max - L.length) + " left)"); return; }
-      for (const q of line) { L.push({ x: q.x, y: q.y }); r.solid[q.y][q.x] = true; }
-      return;
-    }
-    if (L.some(q => q.x === x && q.y === y)) { // take down the whole rope it's part of
-      const seen = new Set([x + "," + y]), todo = [[x, y]];
-      while (todo.length) { const [cx, cy] = todo.pop(); for (const [ex, ey] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const k = (cx + ex) + "," + (cy + ey); if (!seen.has(k) && L.some(q => q.x === cx + ex && q.y === cy + ey)) { seen.add(k); todo.push([cx + ex, cy + ey]); } } }
-      this.ropes[r.id] = L.filter(q => { const hit = seen.has(q.x + "," + q.y); if (hit) r.solid[q.y][q.x] = false; return !hit; });
-      this.showLoc("Rope taken down"); return;
-    }
-    if (L.length >= max) { this.showLoc("That's all your rope"); return; }
-    if (!this.ropeFree(r, x, y)) { this.showLoc("Can't start a rope there"); return; }
-    this.ropeDraft = { room: r.id, x, y }; this.showLoc("Walk to the other end, then B");
-  }
-  drawRopes(r, cx, cy) { // brass posts at the ends and corners (and every few tiles), rope between (velvet_rope's frames: a post, across, up and down)
-    const ctx = this.ctx, L = (this.ropes && this.ropes[r.id]) || [], draft = this.ropeLine().filter(q => !q.old); if (!L.length && !draft.length) return;
-    const all = L.concat(draft), has = (x, y) => all.some(q => q.x === x && q.y === y);
-    for (const q of all) { const X = q.x * T - cx, Y = q.y * T - cy, half = (f, sx, sy, w, h) => { ctx.save(); ctx.beginPath(); ctx.rect(X + sx, Y + sy, w, h); ctx.clip(); this.drawSlot("velvet_rope", f, 0, X, Y); ctx.restore(); };
-      const l = has(q.x - 1, q.y), rr = has(q.x + 1, q.y), u = has(q.x, q.y - 1), d = has(q.x, q.y + 1), ew = l && rr && !u && !d, ns = u && d && !l && !rr;
-      ctx.globalAlpha = draft.includes(q) ? (this.t % 40 < 20 ? 0.3 : 0.5) : 1; // the rope you're still laying: see-through
-      if (l) half(1, 0, 0, 8, 16); if (rr) half(1, 8, 0, 8, 16); if (u) half(2, 0, 0, 16, 8); if (d) half(2, 0, 8, 16, 8);
-      if (!(ew && q.x % 3) && !(ns && q.y % 3)) this.drawSlot("velvet_rope", 0, 0, X, Y); }
-    ctx.globalAlpha = 1;
   }
   toolIcon(kind) { const C = this.toolIcons || (this.toolIcons = {}), sh = this.sheet(TOOLS[kind].slot); if (C[kind] && C[kind].src === sh) return C[kind].c;
-    const c = document.createElement("canvas"); c.width = c.height = 16; c.getContext("2d").drawImage(sh, (TOOLS[kind].frame || 0) * 16, 0, 16, 16, 0, 0, 16, 16); C[kind] = { src: sh, c }; return c; }
+    const c = document.createElement("canvas"); c.width = c.height = 16; const sz = TOOLS[kind].small ? 10 : 16; c.getContext("2d").drawImage(sh, (TOOLS[kind].frame || 0) * 16, 0, 16, 16, (16 - sz) / 2, (16 - sz) / 2, sz, sz); C[kind] = { src: sh, c }; return c; }
   dressLab() { const L = this.rooms && this.rooms.polish_lab; if (!L) return; const own = this.ownedTools();
     for (const q of L.props) { const ev = q.toolSpot; if (ev) { q.hidden = own.includes(ev); if (q.hidden) { L.solid[q.y][q.x] = false; delete L.events[q.x + "," + q.y]; } } } // a taken tool's spot is just floor again
+    L.cases.forEach((c, i) => { if (!c.piece && LAB_CASES[i]) { c.piece = this.tutGame(LAB_CASES[i]); c.state = "wall"; } }); // exhibits to vacuum around (the Thinking Room's made-up games)
+    if (this.labShut) { this.labAway = L.npcs.filter(n => !n.staff); L.npcs = L.npcs.filter(n => n.staff); }
     if (this.labCarpet) this.setLabCarpet(this.labCarpet); }
   /* The Equipment screen: a row of icon squares (owned tools), the equipped one framed in gold; its name and what it does below. */
   openEquip() {
@@ -6398,6 +6385,7 @@ class Game {
     if (e.tutVend) return this.tutThinkThing(e);
     if (e.tool) { this.takeTool(e.tool); return true; } // the Polish Lab's tools
     if (e.labExit) { this.leaveLab(); return true; }
+    if (e.labRopes) { const shut = this.labShut; this.ask(shut ? "Open the room back up?" : "Close the room for cleaning?", ["Yes", "Not now"], i => { if (i === 0) this.labDoors(!shut); }, 1); return true; }
     if (e.labCarpet) { this.ask("Carpet samples. Lay down which?", this.labCarpets().map(c => c.name).concat("Never mind"), i => { const C = this.labCarpets(); if (i < C.length) this.setLabCarpet(i); }); return true; }
     if (e.usher || e.guestbook) { if (t) { const u = this.room.npcs.find(n => n.usher); if (u) u.dir = "down"; this.tutUsher(); } else this.say(["The training desk."]); return true; }
     if (!t) return false;
@@ -11308,6 +11296,7 @@ class Game {
     const ctx = this.ctx, k = p.plant && this.isThirsty(p.plant) ? "plant_thirsty" : p.key === "trash_can" && this.binFull(this.room.id, p.x, p.y) ? "trash_full" : p.key;
     const px0 = p.x * T - cx, py0 = p.y * T - (SLOT[k].h - T) - cy;
     if (k === "bench_side") { this.drawFlip(k, p.sit === "right", px0, py0); return; } // whoever sits on it is drawn over both seats
+    if (p.small) { ctx.drawImage(this.sheet(k), 0, 0, SLOT[k].w, SLOT[k].h, px0 + 4, py0 + 6, 9, 9); return; } // drawn small (the Polish Lab's hand vacuum)
     this.drawSlot(k, k === "microwave_counter" ? (this.microwaved ? 1 : 0) : k === "office_tv" ? (this.tvOn ? 1 : 0) : k === "tut_chest" ? (this.tut && this.tut.can ? 1 : 0) : k === "reader_chair" ? (this.room.npcs.some(n => n.reader && n.x === p.x && n.y === p.y) ? 0 : 1) : this.frame(k), 0, px0, py0);
     if (k === "museum_sign") { const im = this.signImg(), X = Math.round(px0), Y = Math.round(py0); // the GOQ Museum logo, over the doors out front
       if (im) ctx.drawImage(im, X + 6, Y + 5, 52, 23); ctx.fillStyle = "#1c1620"; ctx.fillRect(X + 3, Y + 21, 58, 8); // (its own MUSEUM is too small to read here: ours, bigger)
@@ -11713,7 +11702,7 @@ class Game {
     for (const [mx, my] of this.doorMats(r)) this.drawSlot("doormat", 0, 0, mx * T - cx, my * T - cy);
     for (const st of r.stairs) this.drawSlot(st.kind === "up" ? "stair_up" : "stair_down", 0, 0, st.x * T - cx, st.y * T - cy);
     this.drawReadBorders(r, cx, cy); // on the floor, under the cases and people
-    this.drawNap(r, cx, cy); this.drawRopes(r, cx, cy); // vacuum stripes in the carpet, and your rope posts (the Polish Lab)
+    this.drawNap(r, cx, cy); // vacuum stripes in the carpet (the Polish Lab)
     for (const l of (this.litter && this.litter[r.id]) || []) this.drawSlot("litter", l.k, 0, l.x * T - cx + l.ox, l.y * T - cy + l.oy); // on the floor, under everyone
     { const I = this.side && this.side.item; if (I && I.on && I.phase === 1 && I.table && r.id === "staff") this.drawSlot("break_items", I.kind, 0, I.table.x * T - cx, I.table.y * T - 8 - cy); } // the item on the break table
     for (const b of (this.sup && this.sup.boxes) || []) if (b.room === r.id) this.drawSlot("supply_box", b.kind === "cafe" ? 1 : 0, 0, b.x * T - cx, b.y * T - cy); // deliveries waiting by the garage door
@@ -11752,6 +11741,8 @@ class Game {
       const SI = this.side && this.side.item, held = SI && !c.sitting && ((c === this.player && this.carryItem) || (c.itemPair === "taker" && SI.phase >= 2 && !SI.got)) ? SI.kind : -1; // the break room mix-up: the item in hand
       const heldAt = held >= 0 ? [sx + { down: 9, up: 1, left: 1, right: 9 }[c.dir], sy + 9] : null, heldFirst = heldAt && c.dir === "up";
       if (heldFirst) this.drawSlot("held_items", held, 0, ...heldAt);
+      const vac = c === this.player && TOOLS[this.tool] && TOOLS[this.tool].wide && this.toolActive() ? this.vacDrawer(c, sx, sy) : null;
+      if (vac && c.dir === "up") vac(); // pushed away from you: behind you
       if (cupFirst) this.drawCup(sx, sy, c);
       const tbAt = (c.trashBag || (c === this.player && this.trashBag != null)) && !c.sitting ? [sx + { down: 1, up: 9, left: 9, right: -1 }[c.dir], sy + 9] : null, tbFirst = tbAt && c.dir !== "down"; // his trash bag hangs at his side
       const panAt = c.sweep ? [sx + { down: 1, up: 7, left: -3, right: 11 }[c.dir], sy + { down: 11, up: 4, left: 10, right: 10 }[c.dir]] : null; // the dustpan, low beside the broom
@@ -11788,7 +11779,7 @@ class Game {
           ctx.fillStyle = "rgba(255,255,240," + (0.95 * k) + ")"; ctx.fillRect(fx - 1, fy - 4, 2, 8); ctx.fillRect(fx - 4, fy - 1, 8, 2); ctx.fillRect(fx - 2, fy - 2, 4, 4);
           ctx.fillStyle = "rgba(255,255,230," + (0.25 * k) + ")"; ctx.beginPath(); ctx.arc(fx, fy, 9, 0, 7); ctx.fill(); }
       }
-      if (c === this.player && this.tool === "vacuum" && this.toolActive()) { const [dx, dy] = DIRS[c.dir], vx = sx + 4 + dx * 8, vy = sy + (dy < 0 ? 6 : dy > 0 ? 16 : 13), vac = () => { ctx.drawImage(this.sheet("vacuum"), 0, 0, 16, 16, vx, vy, 9, 9); if (this.vacuuming() && this.t % 8 < 4) { ctx.fillStyle = "rgba(255,250,235,.7)"; ctx.fillRect(vx + 4 + (this.t % 16 < 8 ? -1 : 1), vy + 9, 1, 1); } }; if (c.dir === "up") vac(); else bubbles.push(vac); } // small, right at your hands (Joe 10/21)
+      if (vac && c.dir !== "up") bubbles.push(vac); // in front of you (facing up it went behind, above)
       if (c === this.player && this.phoneT > 0) {
         const ox = { down: 4, up: 4, left: 0, right: 8 }[c.dir]; if (c.dir !== "up") this.drawSlot(this.using("case") ? "phone_case" : "phone", 0, 0, sx + ox, sy + 4);
       }
@@ -11876,7 +11867,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 142";
+const VERSION = "2026-11-18 cards 143";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

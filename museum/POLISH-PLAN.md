@@ -21,10 +21,12 @@ A test room you reach with a button code, so mechanics can be tried one at a tim
 - **In the room:** a big carpet, two visitors wandering, and the tools as they're built.
 
 ### Phase 1: vacuuming — prototype built (in the lab)
-- Pick up the vacuum (A on its stand). It's yours from then on, like a Zelda item.
-- **Equipment** (Start menu, once you own a tool): a row of icons; pick one to hold it. Tools work in the lab for now.
-- **Hold B** to vacuum: the tile under the vacuum (in front of you) remembers the direction you went, showing light and dark stripes like a mowed lawn. **Double-tap B** to leave it on; tap B to turn it off.
-- **Velvet ropes** (also on a stand), laid like a line in a paint program: B marks one end, walk, B marks the other end, and the rope goes down straight (across or up and down). A see-through preview follows you. B on the start cancels; B on a laid rope takes it back up. Rope off a patch while visitors are around.
+- Two vacuums, each on its own stand, yours once you pick them up (like Zelda items): the **wide vacuum** brushes three tiles across in front of you, the **hand vacuum** one (for corners and around benches).
+- **Equipment** (Start menu, once you own one): a row of icons; pick which you hold. They work in the lab for now.
+- **Hold B** to vacuum: the tiles under the vacuum remember the direction you went, showing light and dark stripes like a mowed lawn. **Double-tap B** to leave it on; tap B to turn it off.
+- **Finishing the floor:** when every carpet tile you can reach is freshly done, a few sparkles on the floor, and the people there notice (a heart, a line). No counter.
+- **Closing a room for cleaning:** a velvet rope stand by the entrance. A on it: a dip to black, everyone's out. A again: they come back. In the museum this becomes one stand per wing entrance (tours out too, the reader stays); these can't be recommended.
+- The lab has three cases, two benches and carpet samples (each wing's carpet) to try it on.
 - No correct pattern. Straight lines, diagonals, checkerboards, initials.
 - Visitors walking across the carpet scuff your stripes, but only a minute after you vacuumed there, and slowly. Vacuum again any time.
 - **To decide after trying it:** how strong the stripes look; how fast scuffs wear them; whether the vacuum slows you down; a hum or sparkle as you go.
