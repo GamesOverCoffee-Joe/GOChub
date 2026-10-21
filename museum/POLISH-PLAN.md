@@ -44,9 +44,12 @@ A test room you reach with a button code, so mechanics can be tried one at a tim
 - Also this round: tools are held like a coffee cup; A no longer waters plants (the watering can does, with B, everywhere; it hangs in the staff room).
 - **To decide after trying it:** does the mop need a "wet floor" sign; how fast cans fill in the museum (from visitors' cups); whether the bag swap needs a sound.
 
-### Phase 4: plants as care (in the lab)
-- Watering is maintenance: watered plants slowly flourish over days (fuller, then a flower). Neglected ones look a little tired, never dead.
-- Replaces today's dying-plant fix.
+### Phase 4: plants as care — prototype built (in the lab)
+- Four stages: tired, normal, full, flowering. Water a plant once a day (the watering can, B) and it grows a stage the next day.
+- After flowering it goes back down through full to normal, then grows again: a cycle, not a finish line.
+- A day without water and it slips a stage; it never gets worse than a little tired, never dies.
+- In the lab a day is one minute, so you can watch it happen. Watered today: the soil looks damp. Growing: a soft glint.
+- **To decide after trying it:** how a day maps in the museum (a real day, or the game's day); whether visitors notice a flowering plant (Phase 6); replacing today's dying-plant fix.
 
 ### Phase 5: visitors come to you
 - While you're working (holding a tool, or just finished), a nearby visitor sometimes walks up: "Excuse me, do you work here? I want something cozy." Their ask can be vague, so knowing the collection is the skill.

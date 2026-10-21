@@ -17,6 +17,7 @@ const PAL = {
   wood:    ["#f0dcc0", "#c08858", "#784830", "#2c1810", "#a06c44"],
   gold:    ["#fff6cc", "#f0c040", "#b07818", "#3c2408", "#c8d8e8", "#a8bcd0"],
   plant:   [null, "#9ccc68", "#4c8c3c", "#1e2418", "#c8784c", "#8a4428", "#a89048"],
+  bloom:   [null, "#9ccc68", "#4c8c3c", "#1e2418", "#c8784c", "#8a4428", "#a89048", "#f08cb0", "#fff0a0"], // a flowering plant (Joe 10/21: Phase 4): the plant's colors, pink petals, yellow middles
   dust:    ["#e8e0d0", "#b8b0a0"],
   mug:     ["#f8f4ec", "#e8e4dc", "#3a2418", "#181820"], // 0 is the mug's body: it used to be see-through, so the floor showed through the mug
   switchp: ["#f4f0e8", "#e8b24a", "#505068", "#181820"],
@@ -455,6 +456,18 @@ const GEN = {
   },
   // Cozy loop
   dust: () => fillFn(mk(32, 32), (x, y) => (y <= 25 && hash(x * 3, y * 7) % 9 === 0 ? (hash(x, y) % 3 ? 0 : 1) : undefined)),
+  plant_full: () => { // Phase 4 (Joe 10/21): a well-watered plant, fuller and a little taller
+    let a = mk(16, 16);
+    [[8, 4.5, 4.6], [4, 7.5, 3.6], [12, 7.5, 3.6], [8, 8.5, 3.6], [5, 4.5, 2.6], [11, 4.5, 2.6]].forEach(([cx, cy, r]) => circ(a, cx, cy, r, 1));
+    fillFn(a, (x, y, v) => (v === 1 && hash(x, y) % 3 === 0 ? 2 : undefined));
+    rect(a, 3, 11, 10, 1, 5); rect(a, 4, 12, 8, 4, 4); rect(a, 10, 12, 1, 4, 5);
+    return outline(a);
+  },
+  plant_flower: () => { // ...and then in flower
+    const a = GEN.plant_full().map(r => r.slice());
+    [[5, 3], [10, 2], [12, 6], [3, 7], [8, 6]].forEach(([x, y]) => { px(a, x, y, 7); px(a, x + 1, y, 7); px(a, x, y + 1, 7); px(a, x + 1, y + 1, 8); });
+    return a;
+  },
   plant_thirsty: () => {
     let a = mk(16, 16);
     // Leaves droop over the rim and go yellow-brown until watered.
@@ -1717,6 +1730,8 @@ const SLOTS = [
   { key: "tut_barrier", label: "Cleaning rope", group: "Furniture", w: 16, h: 16, pal: "tbarrier", gen: GEN.tut_barrier, note: "The first velvet rope: a rope between two brass posts. Stands by an entrance; A on it closes the room for cleaning." },
   { key: "rag", label: "Polishing rag", group: "Furniture", w: 16, h: 16, pal: "rag", gen: GEN.rag, note: "Equipment: hold B at a case to polish it. Also its spot in the Polish Lab and its Equipment icon." },
   { key: "mop", label: "Mop", group: "Furniture", w: 16, h: 16, pal: "mop", gen: GEN.mop, note: "Equipment: hold B to mop the floor you walk on. Also its spot in the Polish Lab and its Equipment icon." },
+  { key: "plant_full", label: "Plant, full", group: "Furniture", w: 16, h: 16, pal: "plant", gen: GEN.plant_full, note: "Phase 4: a plant that's been watered a few days running." },
+  { key: "plant_flower", label: "Plant, flowering", group: "Furniture", w: 16, h: 16, pal: "bloom", gen: GEN.plant_flower, note: "Phase 4: the fullest stage. After it flowers it goes back through full to normal, then grows again." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
 const SLOT = {}; SLOTS.forEach(s => { s.frames = s.frames || 1; s.fps = s.fps || 0; SLOT[s.key] = s; });
@@ -2447,7 +2462,7 @@ const ROOMS = {
       { key: "tut_barrier", x: 8, y: 9, event: { labRopes: true } }, // close the room for cleaning (Joe 10/21: the first velvet rope's art)
       { key: "bench", x: 5, y: 8, sit: "up", say: ["A bench. Vacuum around it."] },
       { key: "bench", x: 9, y: 8, sit: "up", say: ["A bench. Someone's always on it."] },
-      { key: "sign_stand", x: 13, y: 3, say: ["POLISH LAB", "Grab the tools, then pick one from Equipment in the Start menu. The wide vacuum does all around you, the hand vacuum just where you stand. Hold B to vacuum; double-tap B to leave it on.", "The rag: hold B at a case to polish it. The watering can: B at a plant. The mop: hold B on the wood floor.", "The trash can fills up as people walk by. A swaps the bag.", "The rope by the door closes the room for cleaning (and opens it again).", "Every carpet tile remembers which way you went.", "No right answer. Stripes, diagonals, checkerboards: whatever looks nice to you.", "People walking across it scuff it up again."] },
+      { key: "sign_stand", x: 13, y: 3, say: ["POLISH LAB", "Grab the tools, then pick one from Equipment in the Start menu. The wide vacuum does all around you, the hand vacuum just where you stand. Hold B to vacuum; double-tap B to leave it on.", "The rag: hold B at a case to polish it. The watering can: B at a plant. The mop: hold B on the wood floor.", "The trash can fills up as people walk by. A swaps the bag.", "The plants: water them once a day (a day here is a minute) and they grow, flower, and settle back. Skip a day and they get a little tired.", "The rope by the door closes the room for cleaning (and opens it again).", "Every carpet tile remembers which way you went.", "No right answer. Stripes, diagonals, checkerboards: whatever looks nice to you.", "People walking across it scuff it up again."] },
       { key: "sign_stand", x: 11, y: 3, event: { labCarpet: true } }, // carpet samples: the wings' carpets (Joe 10/21)
       { key: "plant", x: 13, y: 9, plant: "lab-plant-a", name: "plant" },
       { key: "plant", x: 1, y: 9, plant: "lab-plant-b", name: "plant" },
@@ -2581,6 +2596,11 @@ const TEXT = {
   "tut.plantFine":   { g: "Tutorial", l: "A plant that's fine ({name})", by: "claude", v: [["The {name} looks happy."]] },
   "tut.trainer.hello":  { g: "Tutorial", l: "Training Room B: the trainer, the first time you talk to her across the desk", by: "claude", v: [["Oh! Hi. Sorry, I've been staring at this plant all day.", "Staff aren't allowed to water the plants. It has to be a visitor. And nobody ever comes in here.", "Wait, is that a watering can? Oh thank goodness.", "Here, let me get the rope for you."]] },
   "tut.trainer.again0":  { g: "Tutorial", l: "The trainer, again, before the plant's watered", by: "claude", v: [["It's so sad. Look at it."]] },
+  "polish.plant0":   { g: "Polish Lab", l: "A lab plant, looked at: tired (a day or more without water)", by: "claude", v: [["It looks a little tired.", "Some water, a day at a time."]] },
+  "polish.plant1":   { g: "Polish Lab", l: "A lab plant, looked at: normal", by: "claude", v: [["A healthy plant. Nothing fancy."]] },
+  "polish.plant2":   { g: "Polish Lab", l: "A lab plant, looked at: full", by: "claude", v: [["Full and leafy. Someone's been looking after it."]] },
+  "polish.plant3":   { g: "Polish Lab", l: "A lab plant, looked at: flowering", by: "claude", v: [["It's flowering!"]] },
+  "polish.plantDamp": { g: "Polish Lab", l: "Added after the above, if it's been watered today", by: "claude", v: [["The soil's still damp from today."]] },
   "polish.binEmpty": { g: "Polish Lab", l: "The lab's trash can, when there's hardly anything in it", by: "claude", v: [["Still plenty of room in this one."]] },
   "polish.fresh":  { g: "Polish Lab", l: "Visitors, once the whole floor's freshly vacuumed (one line each)", by: "claude", v: [["Oh, these lines in the carpet. Someone took their time."], ["Look at this floor. It feels like a fancier museum."], ["I almost don't want to walk on it."]] },
   "tut.ropeOpen":  { g: "Tutorial", l: "Training Room B: the trainer unhooks a rope, after you first talk to her", by: "claude", v: [["She unhooks one of the velvet ropes for you."]] },
@@ -3221,6 +3241,8 @@ const TOOLS = { // equipment (Joe 10/21): what each is, its icon (an art slot an
   can: { name: "Watering can", slot: "watering_can", hand: true, desc: "B at a plant waters it.", hint: "Watering can: B at a plant", got: "You got the watering can!", spot: "The watering can's hook. Yours is in your Equipment." },
   handvac: { name: "Hand vacuum", slot: "vacuum", small: true, hand: true, wide: 1, desc: "Hold B to vacuum the tile you're on; double-tap B to leave it running. For corners and around benches.", hint: "Hand vacuum: hold B (double-tap to leave it on)", got: "You got the hand vacuum!", spot: "The hand vacuum's spot. Yours is in your Equipment." },
 };
+const LAB_DAY = 60 * 60; // a day for the Polish Lab's plants: one minute (Joe 10/21)
+const LAB_STAGES = ["plant_thirsty", "plant", "plant_full", "plant_flower"]; // tired, normal, full, flowering
 const WET_DRY = 60 * 6; // frames for a mopped floor to dry (six seconds)
 const SHINE_DULL = 60 * 60 * 4; // frames for a polished case to go fully dull again (four minutes, for trying it in the lab)
 const LAB_CASES = ["tut-bus", "tut-sale", "tut-bus"]; // what's in the Polish Lab's cases
@@ -4957,7 +4979,7 @@ class Game {
     if (this.forcedCrooked && this.forcedCrooked.has(p.id)) return true;
     const t = todayISO(); return this.progress.straightened[p.id] !== t && strSeed(t + p.id + ":tilt:" + RUN_SEED) % 5 === 0;
   }
-  isThirsty(id) { if (/^tut-/.test(id)) return this.tutThirsty(id); return this.progress.watered[id] !== todayISO(); } // the tutorial's plants go by the tutorial
+  isThirsty(id) { if (/^tut-/.test(id)) return this.tutThirsty(id); if (/^lab-/.test(id)) return !this.labPlant(id).watered; return this.progress.watered[id] !== todayISO(); } // the tutorial's plants go by the tutorial, the Polish Lab's by their stage (Phase 4)
   /* One press, one chore: a dusty frame gets dusted; a crooked one (once clean) gets straightened. Returns false when there's nothing to do. */
   tidy(spot) {
     const p = spot.piece, t = todayISO();
@@ -6329,22 +6351,42 @@ class Game {
     ctx.globalAlpha = 1;
   }
   wetAt(r, x, y) { const W = this.wet && this.wet[r.id], t = W && W[x + "," + y]; return t !== undefined && this.t - t < WET_DRY; }
-  binTick(r) { if (!r || !ROOMS[r.id] || !ROOMS[r.id].lab) return; this.labBin = Math.min(1, (this.labBin || 0) + 1 / (60 * 120)); } // full in two minutes (and faster with people passing, napStep)
+  binTick(r) { if (!r || !ROOMS[r.id] || !ROOMS[r.id].lab) return; this.plantTick(r); this.labBin = Math.min(1, (this.labBin || 0) + 1 / (60 * 120)); } // full in two minutes (and faster with people passing, napStep)
   binSwap() { // A on the lab's can: a fresh bag (the can wobbles as the lid settles)
     if ((this.labBin || 0) < 0.2) { this.say(this.tx("polish.binEmpty")); return; }
     this.labBin = 0; this.binSwapT = this.t;
+  }
+  /* Phase 4 (Joe 10/21): plants as care. A lab plant has four stages: tired, normal, full, flowering. Water it once a day
+     (the lab's day is a minute) and it grows a stage; past flowering it goes back down through full to normal, then up again.
+     A day without water and it slips a stage, never further than tired. */
+  labPlant(id) { const P = this.labPlants || (this.labPlants = {}); return P[id] || (P[id] = { stage: id === "lab-plant-b" ? 0 : 1, dir: 1, watered: false }); }
+  plantTick(r) {
+    const day = Math.floor(this.t / LAB_DAY); if (this.labDay === undefined) this.labDay = day;
+    for (let n = 0; this.labDay < day && n < 10; n++) { this.labDay++;
+      for (const q of r.props) { if (!q.plant || !/^lab-/.test(q.plant)) continue; const P = this.labPlant(q.plant), was = P.stage;
+        if (!P.watered) { P.stage = Math.max(0, P.stage - 1); P.dir = 1; }
+        else if (P.stage === 0) P.stage = 1;
+        else { let nx = P.stage + P.dir; if (nx > 3) { P.dir = -1; nx = 2; } else if (nx < 1) { P.dir = 1; nx = 2; } P.stage = nx; }
+        if (P.stage > was) (this.plantFx || (this.plantFx = [])).push({ room: r.id, x: q.x, y: q.y, t0: this.t }); // grown: a soft glint
+        P.watered = false; }
+    }
+    this.labDay = Math.max(this.labDay, day);
   }
   plantAhead() { const r = this.room, p = this.player, [dx, dy] = DIRS[p.dir], e = r && r.events[(p.x + dx) + "," + (p.y + dy)]; return e && e.plant ? e : null; }
   waterAhead() { // the watering can: B at a plant (Joe 10/21: the only way to water one now)
     const r = this.room, p = this.player, [dx, dy] = DIRS[p.dir], e = this.plantAhead(); if (!e) return;
     this.waterFx = { room: r.id, x: p.x + dx, y: p.y + dy, t0: this.t };
     if (ROOMS[r.id] && ROOMS[r.id].tutorial && /^tut-/.test(e.plant)) { this.tutEvent(Object.assign({}, e, { canWater: true })); return; }
+    if (/^lab-/.test(e.plant)) { this.labPlant(e.plant).watered = true; return; } // (just the water: it shows tomorrow)
     if (!this.isThirsty(e.plant)) { this.say(this.tx("plant.done", { room: e.name })); return; }
     this.progress.watered[e.plant] = todayISO(); this.count("watered", r.id + ":" + e.plant); this.bump(this.progress.stats.plants, e.name || "plant"); this.saveProgress();
     this.quest("water"); this.say(this.tx("plant.water", { room: e.name }));
   }
-  drawPolish(r, cx, cy) { // over the cases: the glint on polished ones, the rag at work, the can's water
+  drawPolish(r, cx, cy) { // over the cases: the glint on polished ones, the rag at work, the can's water; a lab plant's damp soil and its glint when it grows
     const ctx = this.ctx;
+    for (const q of r.props) if (q.plant && /^lab-/.test(q.plant) && this.labPlant(q.plant).watered) { ctx.globalAlpha = 0.45; ctx.fillStyle = "#2a1a10"; ctx.fillRect(q.x * T - cx + 4, q.y * T - cy + 11, 8, 1); } // watered today: the soil's dark and damp
+    this.plantFx = (this.plantFx || []).filter(f => this.t - f.t0 < 70);
+    for (const f of this.plantFx) if (f.room === r.id) { const e = (this.t - f.t0) / 70, k = Math.sin(Math.PI * e); this.star(f.x * T - cx + 11, f.y * T - cy + 2, k, k * k * 0.8); }
     if (this.shineOn(r)) for (const c of r.cases) { if (!c.piece || c.state !== "wall") continue; const sh = this.shineOf(r, c), S = this.shine && this.shine[r.id + ":" + c.x + "," + c.y], fresh = S && S.glow && this.t - S.glow < 240;
       if (sh >= 0.85 || fresh) this.twinkle(strSeed(c.piece.id) + c.x, c.x * T - cx + 1, c.y * T - T - cy + 2, 14, 12, fresh ? 1 : this.pack.settings.staff.sparkle, fresh ? 3 : 2); }
     const c = this.polishing; if (c) { const x = c.x * T - cx + 3 + Math.round(Math.sin(this.t / 3) * 3), y = c.y * T - T - cy + 4 + Math.round(Math.cos(this.t / 5)); ctx.globalAlpha = 1; ctx.drawImage(this.sheet("rag"), 0, 0, 16, 16, x, y, 9, 9); } // rubbing the glass
@@ -9202,6 +9244,7 @@ class Game {
       else if (s.state === "crate") this.hang(s);
       else if (!(s.state === "wall" && this.offerRecommend(s.piece, () => { if (!this.tidy(s)) this.viewPiece(s.piece, undefined, true); })) && !this.tidy(s)) this.viewPiece(s.piece, undefined, true); // a painting has one side: one read stamps it
     }
+    else if (e.plant && /^lab-/.test(e.plant)) { const P = this.labPlant(e.plant); this.say(this.tx("polish.plant" + P.stage).concat(P.watered ? this.tx("polish.plantDamp") : [])); } // how it's doing
     else if (e.plant) { // (Joe 10/21: A doesn't water any more; the watering can does, with B)
       if (!this.isThirsty(e.plant)) { this.say(this.tx("plant.done", { room: e.name })); return; }
       this.say(this.tx(this.ownedTools().includes("can") ? "plant.useCan" : "plant.noCan", { room: e.name }));
@@ -11402,7 +11445,7 @@ class Game {
   drawProp(p, cx, cy) {
     if (p.hidden) return; // (the tutorial's chest, before you've read the sign)
     if (p.key === "velvet_rope" || p.key === "velvet_rope_v") { this.drawRope(p, cx, cy); return; }
-    const ctx = this.ctx, k = p.plant && this.isThirsty(p.plant) ? "plant_thirsty" : p.key === "trash_can" && this.binFull(this.room.id, p.x, p.y) ? "trash_full" : p.key;
+    const ctx = this.ctx, k = p.plant && /^lab-/.test(p.plant) ? LAB_STAGES[this.labPlant(p.plant).stage] : p.plant && this.isThirsty(p.plant) ? "plant_thirsty" : p.key === "trash_can" && this.binFull(this.room.id, p.x, p.y) ? "trash_full" : p.key;
     const px0 = p.x * T - cx + (p.key === "trash_can" && this.binSwapT && this.t - this.binSwapT < 24 && ROOMS[this.room.id] && ROOMS[this.room.id].lab ? Math.round(Math.sin((this.t - this.binSwapT) / 2) * (24 - (this.t - this.binSwapT)) / 12) : 0), py0 = p.y * T - (SLOT[k].h - T) - cy; // (the lab's can wobbles as the new bag goes in)
     if (k === "bench_side") { this.drawFlip(k, p.sit === "right", px0, py0); return; } // whoever sits on it is drawn over both seats
     if (p.small) { ctx.drawImage(this.sheet(k), 0, 0, SLOT[k].w, SLOT[k].h, px0 + 4, py0 + 6, 9, 9); return; } // drawn small (the Polish Lab's hand vacuum)
@@ -11956,7 +11999,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 146";
+const VERSION = "2026-11-18 cards 147";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
