@@ -1263,11 +1263,18 @@ const GEN = {
     for (let x = 4; x < 12; x += 3) px(a, x, 9, 2); // stitching
     return outline(a, 5); // (black)
   },
-  tut_barrier: () => { // the first velvet rope (cards 76): a rope between two brass posts (Joe 10/21: back, for closing a room for cleaning)
+  tut_barrier: () => { // the velvet rope between two posts (cards 76; Joe 10/21: a red rope outlined in black, black posts with a little brass cap)
     const a = mk(16, 16);
-    for (const x of [2, 13]) { rect(a, x, 4, 1, 9, 1); px(a, x, 3, 2); rect(a, x - 1, 13, 3, 2, 1); }
-    for (let x = 3; x < 13; x++) { const y = 5 + Math.round(Math.sin((x - 3) / 9 * Math.PI) * 2); px(a, x, y, 4); px(a, x, y + 1, 5); }
-    return outline(a);
+    for (const x of [2, 13]) { rect(a, x, 4, 1, 9, 3); px(a, x, 3, 1); rect(a, x - 1, 13, 3, 2, 3); }
+    const o = outline(a);
+    for (let x = 3; x < 13; x++) { const y = 5 + Math.round(Math.sin((x - 3) / 9 * Math.PI) * 2); o[y - 1][x] = 3; o[y][x] = 5; o[y + 1][x] = 4; o[y + 2][x] = 3; } // the rope: highlight, red, black under and over
+    return o;
+  },
+  rope_v: () => { // the same rope running up and down (across a way in from the side): a post, the rope through it
+    const a = mk(16, 16); rect(a, 7, 4, 2, 9, 3); px(a, 7, 3, 1); px(a, 8, 3, 1); rect(a, 6, 13, 4, 2, 3);
+    const o = outline(a);
+    for (let y = 0; y < 16; y++) { const x = 9 + Math.round(Math.sin(((y + 8) % 16) / 16 * Math.PI) * 1.5); o[y][x - 1] = 3; o[y][x] = 5; o[y][x + 1] = 4; o[y][x + 2] = 3; }
+    return o;
   },
   velvet_rope_v: () => { // its icon in the curator (it's drawn from the velvet rope's art)
     const a = mk(16, 16); rect(a, 8, 0, 1, 16, 4); rect(a, 9, 0, 1, 16, 5); rect(a, 7, 4, 2, 9, 1); rect(a, 6, 13, 4, 2, 1); return outline(a);
@@ -1844,6 +1851,7 @@ const SLOTS = [
   { key: "truck_side", label: "Delivery truck (side)", group: "Days of the week", w: 112, h: 48, pal: "truckside", gen: GEN.truck_side, note: "Mondays, out back: the truck backed up to the garage door, its cab facing east. 7 tiles by 3." },
   { key: "floor_specks", label: "Specks on the carpet", group: "Floors", w: 16, h: 16, frames: 3, pal: "mess", gen: GEN.floor_specks, note: "3 looks (48×16). People leave a few now and then; the vacuum picks them up." },
   { key: "floor_spill", label: "Spill on the floor", group: "Floors", w: 16, h: 16, frames: 2, pal: "mess", gen: GEN.floor_spill, note: "2 looks (32×16). From people's drinks, on wood floors; the mop cleans it up." },
+  { key: "rope_v", label: "Cleaning rope (up and down)", group: "Furniture", w: 16, h: 16, pal: "tbarrier", gen: GEN.rope_v, note: "The cleaning rope running up and down: across a way into a room from the side, when it's closed for cleaning. Tiles stack into one rope." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
 const SLOT = {}; SLOTS.forEach(s => { s.frames = s.frames || 1; s.fps = s.fps || 0; SLOT[s.key] = s; });
@@ -6449,7 +6457,7 @@ class Game {
   }
   vacTick() { // the tiles the vacuum reaches get brushed your way: as you start it, step, or turn get brushed your way: as you start it, step, or turn (Joe 10/21)
     const held = this.btnHeld && this.btnHeld.has("b"); if (!held) this.bStale = false; else if (this.walkSeen !== this.t - 1) this.bStale = true; this.walkSeen = this.t; // (back from a menu with B still down: it doesn't count until it's let go)
-    this.polishTick(); this.mopTick(); this.trashTick(); this.readerTick(); this.approachTick(); this.cafeTick(); if (!this.vacuuming()) { this.vacLast = null; return; }
+    this.polishTick(); this.mopTick(); this.trashTick(); this.readerTick(); this.approachTick(); this.zoneTick(); if (!this.vacuuming()) { this.vacLast = null; return; }
     const r = this.room, p = this.player, k = p.x + "," + p.y;
     if (this.vacLast === k + p.dir + this.tool) return; this.vacLast = k + p.dir + this.tool;
     const N = (this.nap || (this.nap = {}))[r.id] || (this.nap[r.id] = {}), half = (TOOLS[this.tool].wide - 1) / 2;
@@ -6518,6 +6526,16 @@ class Game {
   /* Phase 4 (Joe 10/21): plants as care. A lab plant has four stages: tired, normal, full, flowering. Water it once a day
      (the lab's day is a minute) and it grows a stage, and stays in flower as long as you keep it up. Each day without
      water it slips back a stage, never further than tired. */
+  /* The museum's plants (Joe 10/21: Phase 4 in the museum): the same four stages, by real days. Water one on a day and the
+     next day it's grown a stage (up to flowering, where it stays while you keep at it); each day it went without, it slips back one. */
+  plantCare(id) {
+    const C = this.progress.plantCare || (this.progress.plantCare = {}), today = todayISO(), P = C[id] || (C[id] = { stage: 1, day: today });
+    if (P.day !== today) { const n = Math.max(1, daysBetween(P.day, today)), was = this.progress.watered[id] === P.day;
+      P.stage = Math.max(0, Math.min(3, P.stage + (was ? 1 : -1) - (n - 1))); P.day = today; this.saveProgress(); }
+    return P;
+  }
+  plantStage(id) { return /^lab-/.test(id) ? this.labPlant(id).stage : this.plantCare(id).stage; }
+  wateredToday(id) { return /^lab-/.test(id) ? this.labPlant(id).watered : !/^tut-/.test(id) && this.progress.watered[id] === todayISO(); }
   labPlant(id) { const P = this.labPlants || (this.labPlants = {}); return P[id] || (P[id] = { stage: id === "lab-plant-b" ? 0 : 1, watered: false }); }
   plantTick(r) {
     const day = Math.floor(this.t / LAB_DAY); if (this.labDay === undefined) this.labDay = day;
@@ -6542,36 +6560,46 @@ class Game {
   goOutBack() { this.dockDress(); this.warp("dock", 1, 8, "right"); } // out the basement's door, onto the slab
   /* The reader's smoke break (Joe 10/21: an Easter egg): every so often she steps out back for a few minutes, and her chair
      sits empty with the blanket on it. It only changes where you can't see it happen. */
-  cafeArea() { const M = this.rooms && this.rooms.museum; return M && M.zones ? M.zones.find(z => z.id === "cafe") : null; } // the café's zone in the museum
-  cafeDoors() { // the café's floor tiles you step into it on from the halls
-    const M = this.rooms.museum, z = this.cafeArea(); if (!z) return []; if (M.cafeDoors) return M.cafeDoors;
+  /* Closing a room for cleaning (Joe 10/21): the café and each wing have a rope stand just inside their way in. A on it: a
+     dip, everyone but the staff (and the reader) steps out to the nearest spot outside, ropes go across every way in
+     (blocked for visitors, not for you), and anyone headed in turns around. A again opens it. */
+  closableZones() { const M = this.rooms && this.rooms.museum; return M && M.zones ? M.zones.filter(z => z.id === "cafe" || (z.kind === "room" && z.rect && z.rect.genre)) : []; }
+  zoneDoors(z) { // a zone's floor tiles you step into it on from the halls, and which way the rope runs on each ("v": across a way in from the side)
+    const M = this.rooms.museum, C = M.zoneDoors || (M.zoneDoors = {}); if (C[z.id]) return C[z.id];
     const out = []; for (let y = 1; y < M.h - 1; y++) for (let x = 1; x < M.w - 1; x++) { if (M.solid[y][x] || this.zoneAt(M, x, y) !== z) continue;
-      if ([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => { const q = this.zoneAt(M, x + dx, y + dy); return q && q !== z && !M.solid[y + dy][x + dx]; })) out.push([x, y]); }
-    return (M.cafeDoors = out);
+      const from = [[1, 0], [-1, 0], [0, 1], [0, -1]].find(([dx, dy]) => { const q = this.zoneAt(M, x + dx, y + dy); return q && q !== z && !M.solid[y + dy][x + dx]; });
+      if (from) out.push([x, y, from[0] ? "v" : "h"]); }
+    return (C[z.id] = out);
   }
-  cafeDress() { // the rope stand, just inside the café's first way in, against a wall where it's out of the way
-    const M = this.rooms && this.rooms.museum, z = this.cafeArea(); if (!M || !z || M.props.some(q => q.cafeRope)) return;
-    for (const [x, y] of this.cafeDoors()) { for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const sx = x + dx, sy = y + dy;
-      if (this.zoneAt(M, sx, sy) !== z || M.solid[sy][sx] || M.events[sx + "," + sy] || this.cafeDoors().some(([a, b]) => a === sx && b === sy)) continue;
-      const wallBy = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([ex, ey]) => M.solid[sy + ey] && M.solid[sy + ey][sx + ex] && this.zoneAt(M, sx + ex, sy + ey) !== z || (M.solid[sy + ey] && M.solid[sy + ey][sx + ex] && !this.zoneAt(M, sx + ex, sy + ey)));
-      if (!wallBy) continue;
-      M.props.push({ key: "tut_barrier", x: sx, y: sy, cafeRope: true }); M.solid[sy][sx] = true; M.events[sx + "," + sy] = { cafeRopes: true }; return; } }
+  zoneDress() { // each closable room's rope stand, just inside its first way in, against a wall where it's out of the way
+    const M = this.rooms && this.rooms.museum; if (!M) return;
+    for (const z of this.closableZones()) { if (M.props.some(q => q.zoneRope === z.id)) continue; const D = this.zoneDoors(z); let done = false;
+      for (const [x, y] of D) { if (done) break; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const sx = x + dx, sy = y + dy;
+        if (this.zoneAt(M, sx, sy) !== z || M.solid[sy][sx] || M.events[sx + "," + sy] || D.some(([a, b2]) => a === sx && b2 === sy) || this.byExhibit(M, sx, sy)) continue;
+        if (![[1, 0], [-1, 0], [0, 1], [0, -1]].some(([ex, ey]) => M.solid[sy + ey] && M.solid[sy + ey][sx + ex])) continue; // against a wall
+        M.props.push({ key: "tut_barrier", x: sx, y: sy, zoneRope: z.id }); M.solid[sy][sx] = true; M.events[sx + "," + sy] = { zoneRopes: z.id }; done = true; break; } } }
   }
-  cafeDoorsShut(r, x, y) { return !!this.cafeShut && r === (this.rooms && this.rooms.museum) && this.cafeDoors().some(([a, b]) => a === x && b === y); }
-  cafeClose(shut) { // a dip; closing: everyone but the staff steps out into the hall, ropes go across the way in; opening: the ropes come down
-    const M = this.rooms.museum, z = this.cafeArea(); if (!M || !z) return;
+  zoneShut(id) { return !!(this.shutZones && this.shutZones.has(id)); }
+  shutDoorAt(r, x, y) { if (!this.shutZones || !this.shutZones.size || r !== (this.rooms && this.rooms.museum)) return false; const z = this.zoneAt(r, x, y); return !!z && this.shutZones.has(z.id) && this.zoneDoors(z).some(([a, b2]) => a === x && b2 === y); }
+  zoneRopes(id) { const z = this.closableZones().find(q => q.id === id); if (!z) return; const shut = this.zoneShut(id), nm = id === "cafe" ? "the café" : z.name;
+    this.ask(shut ? "Open " + nm + " back up?" : "Close " + nm + " for cleaning?", ["Yes", "Not now"], i => { if (i === 0) this.zoneClose(z, !shut); }, 1); }
+  zoneClose(z, shut) {
+    const M = this.rooms.museum; if (!M) return;
     this.mode = "busy"; this.trans = { t: 0, dur: 14, switched: false, fn: () => {
-      this.cafeShut = shut;
-      if (shut) for (const n of M.npcs) { if (n.staff || n.role || this.zoneAt(M, n.x, n.y) !== z) continue;
-        let ok = null, best = 1e9; for (let y = 3; y < M.h - 1; y++) for (let x = 1; x < M.w - 1; x++) { const q = this.zoneAt(M, x, y); if (!q || q === z || !this.tileFree(M, x, y)) continue; const d = Math.abs(x - n.x) + Math.abs(y - n.y); if (d < best) { best = d; ok = [x, y]; } } if (!ok) continue; // the nearest free spot outside the café
-        Object.assign(n, { x: ok[0], y: ok[1], moving: false, prog: 0, walkTo: null, route: null, goal: null, seat: null, sitting: false, inLine: false, queue: null, shopQ: null, still: false, random: n.random !== false }); }
-      }, after: () => this.showLoc(shut ? "Café closed for cleaning" : "Café open again") };
+      const S = this.shutZones || (this.shutZones = new Set()); if (shut) S.add(z.id); else S.delete(z.id);
+      if (shut) for (const n of M.npcs) { if (n.staff || n.role || n.reader || this.zoneAt(M, n.x, n.y) !== z) continue;
+        let ok = null, best = 1e9; for (let y = 3; y < M.h - 1; y++) for (let x = 1; x < M.w - 1; x++) { const q = this.zoneAt(M, x, y); if (!q || this.shutZones.has(q.id) || !this.tileFree(M, x, y)) continue; const d = Math.abs(x - n.x) + Math.abs(y - n.y); if (d < best) { best = d; ok = [x, y]; } } if (!ok) continue; // the nearest free spot outside
+        Object.assign(n, { x: ok[0], y: ok[1], moving: false, prog: 0, walkTo: null, route: null, goal: null, seat: null, sitting: false, inLine: false, queue: null, shopQ: null, still: false }); if (n.zone === z.id) n.zone = (this.zoneAt(M, ok[0], ok[1]) || {}).id; }
+      }, after: () => this.showLoc((z.id === "cafe" ? "Café" : z.name) + (shut ? " closed for cleaning" : " open again")) };
   }
-  cafeTick() { // while it's closed: nobody heads in (anyone on their way is turned around)
-    if (!this.cafeShut || this.t % 30) return; const M = this.rooms && this.rooms.museum, z = this.cafeArea(); if (!M || !z) return;
-    for (const n of M.npcs) { if (n.staff || n.role || this.zoneAt(M, n.x, n.y) === z) continue; n.queue = null; n.shopQ = null; const t = n.walkTo && n.walkTo.at; if (t && this.zoneAt(M, t[0], t[1]) === z) { n.walkTo = null; n.route = null; } if (n.goal && Array.isArray(n.goal) && this.zoneAt(M, n.goal[0], n.goal[1]) === z) n.goal = null; }
+  zoneTick() { // while a room's closed: nobody heads in (anyone on their way is turned around)
+    if (!this.shutZones || !this.shutZones.size || this.t % 30) return; const M = this.rooms && this.rooms.museum; if (!M) return;
+    const inShut = (x, y) => { const q = this.zoneAt(M, x, y); return !!q && this.shutZones.has(q.id); };
+    for (const n of M.npcs) { if (n.staff || n.role || n.reader || inShut(n.x, n.y)) continue; if (n.zone && this.shutZones.has(n.zone)) n.zone = null;
+      const t = n.walkTo && n.walkTo.at; if (t && inShut(t[0], t[1])) { n.walkTo = null; n.route = null; } if (n.goal && Array.isArray(n.goal) && inShut(n.goal[0], n.goal[1])) n.goal = null;
+      if (this.shutZones.has("cafe")) { n.queue = null; n.shopQ = null; } }
   }
-  drawCafeRopes(r, cx, cy) { if (!this.cafeShut || r !== this.rooms.museum) return; for (const [x, y] of this.cafeDoors()) this.drawSlot("tut_barrier", 0, 0, x * T - cx, y * T - cy); }
+  drawZoneRopes(r, cx, cy) { if (!this.shutZones || !this.shutZones.size || r !== this.rooms.museum) return; for (const z of this.closableZones()) if (this.shutZones.has(z.id)) for (const [x, y, o] of this.zoneDoors(z)) this.drawSlot(o === "v" ? "rope_v" : "tut_barrier", 0, 0, x * T - cx, y * T - cy); }
   readerOut() { const C = 60 * 60 * 12, cyc = Math.floor(this.t / C); return this.tod() !== "night" && hash(cyc, 77) % 100 < 35 && this.t % C < 60 * 60 * 3; }
   readerTick() {
     const M = this.rooms && this.rooms.museum, D = this.rooms && this.rooms.dock; if (!M || !D) return; const out = this.readerOut();
@@ -6601,7 +6629,7 @@ class Game {
   }
   drawPolish(r, cx, cy) { // over the cases: the glint on polished ones, the rag at work, the can's water; a lab plant's damp soil and its glint when it grows
     const ctx = this.ctx;
-    for (const q of r.props) if (q.plant && /^lab-/.test(q.plant) && this.labPlant(q.plant).watered) { ctx.globalAlpha = 0.45; ctx.fillStyle = "#2a1a10"; ctx.fillRect(q.x * T - cx + 4, q.y * T - cy + 11, 8, 1); } // watered today: the soil's dark and damp
+    for (const q of r.props) if (q.plant && this.wateredToday(q.plant)) { ctx.globalAlpha = 0.45; ctx.fillStyle = "#2a1a10"; ctx.fillRect(q.x * T - cx + 4, q.y * T - cy + 11, 8, 1); } // watered today: the soil's dark and damp
     this.plantFx = (this.plantFx || []).filter(f => this.t - f.t0 < 70);
     for (const f of this.plantFx) if (f.room === r.id) { const e = (this.t - f.t0) / 70, k = Math.sin(Math.PI * e); this.star(f.x * T - cx + 11, f.y * T - cy + 2, k, k * k * 0.8); }
     if (this.shineOn(r)) for (const c of r.cases) { if (!c.piece || c.state !== "wall") continue; const sh = this.shineOf(r, c), S = this.shine && this.shine[r.id + ":" + c.x + "," + c.y], fresh = S && S.glow && this.t - S.glow < 240;
@@ -6627,7 +6655,7 @@ class Game {
   }
   drawNap(r, cx, cy) {
     if (r.id === "dock") this.drawDock(r, cx, cy);
-    this.drawMess(r, cx, cy); this.drawWet(r, cx, cy); this.drawCafeRopes(r, cx, cy);
+    this.drawMess(r, cx, cy); this.drawWet(r, cx, cy); this.drawZoneRopes(r, cx, cy);
     const N = this.nap && this.nap[r.id]; if (!N) return;
     const ctx = this.ctx;
     for (const k in N) { const v = N[k], [x, y] = k.split(",").map(Number), px = x * T - cx, py = y * T - cy; if (px < -T || py < -T || px > SW || py > SH) continue;
@@ -6764,7 +6792,6 @@ class Game {
     if (e.labExit) { this.leaveLab(); return true; }
     if (e.labBin) { this.say(this.tx(Math.floor(this.labBin || 0) < 1 ? "polish.binEmpty" : this.ownedTools().includes("bag") ? "polish.binBag" : "polish.binNoBag")); return true; }
     if (e.dumpster) { this.say(this.tx("polish.dumpster")); return true; }
-    if (e.cafeRopes) { const shut = this.cafeShut; this.ask(shut ? "Open the café back up?" : "Close the café for cleaning?", ["Yes", "Not now"], i => { if (i === 0) this.cafeClose(!shut); }, 1); return true; }
     if (e.labRopes) { const shut = this.labShut; this.ask(shut ? "Open the room back up?" : "Close the room for cleaning?", ["Yes", "Not now"], i => { if (i === 0) this.labDoors(!shut); }, 1); return true; }
     if (e.labCarpet) { this.ask("Carpet samples. Lay down which?", this.labCarpets().map(c => c.name).concat("Never mind"), i => { const C = this.labCarpets(); if (i < C.length) this.setLabCarpet(i); }); return true; }
     if (e.usher || e.guestbook) { if (t) { const u = this.room.npcs.find(n => n.usher); if (u) u.dir = "down"; this.tutUsher(); } else this.say(["The training desk."]); return true; }
@@ -9440,7 +9467,7 @@ class Game {
     // A room's overflow (its genre's episodes that don't fit its cases) is on that room's touch screen.
     this.overflow = {}; const first = cases.order.find(sl => sl.genre); if (first && cases.archived.length) this.overflow[first.genre] = cases.archived.slice(); // the oldest that don't fit: on the touch screen at the start of the timeline (the first wing's)
     this.rooms = {}; Object.keys(ROOMS).forEach(id => (this.rooms[id] = buildRoom(id, this.pack.pieces, o)));
-    this.tutDress(); this.dressLab(); this.dockDress(); this.cafeDress(); if (this.tool === undefined) { const on = this.progress.tools && this.progress.tools.on; this.tool = on === undefined ? "phone" : TOOLS[on] ? on : null; } // (the phone in hand to start) this.seatGuests(); this.placeJoe(); this.placeDay();
+    this.tutDress(); this.dressLab(); this.dockDress(); this.zoneDress(); if (this.tool === undefined) { const on = this.progress.tools && this.progress.tools.on; this.tool = on === undefined ? "phone" : TOOLS[on] ? on : null; } // (the phone in hand to start) this.seatGuests(); this.placeJoe(); this.placeDay();
     this.placeCurious(); this.placeMembers(); this.giveLife();
     for (const id in this.rooms) this.rooms[id].fresh = true; // the director settles each room's crowd for this point in the visit
   }
@@ -9488,7 +9515,7 @@ class Game {
   runEvent(e) {
     if (ROOMS[this.room.id] && ROOMS[this.room.id].tutorial && this.tutEvent(e)) return;
     if (e.tutorial) { this.choose(this.tx("tut.door").join(" "), ["Yes", "Not now"], i => { if (i === 0) this.startTutorial(true); }, 1); return; }
-    if (e.cafeRopes) { const shut = this.cafeShut; this.ask(shut ? "Open the café back up?" : "Close the café for cleaning?", ["Yes", "Not now"], i => { if (i === 0) this.cafeClose(!shut); }, 1); return; } // the café's rope stand (Joe 10/21)
+    if (e.zoneRopes) { this.zoneRopes(e.zoneRopes); return; } // a rope stand: close the café or a wing for cleaning (Joe 10/21)
     if (e.dockOut) { this.goOutBack(); return; } // the basement's garage door: out back
     if (e.dockIn) { this.warp("storage", 13, 7, "left"); return; } // (back in through the basement's door)
     if (e.garage) { this.say(this.tx(this.truckDay() ? "dock.garageTruck" : e.garage === "out" ? "dock.garage" : "storage.garage")); return; } // trucks only
@@ -9505,9 +9532,9 @@ class Game {
       else if (!(s.state === "wall" && this.offerRecommend(s.piece, () => { if (!this.tidy(s)) this.viewPiece(s.piece, undefined, true); })) && !this.tidy(s)) this.viewPiece(s.piece, undefined, true); // a painting has one side: one read stamps it
     }
     else if (e.plant && /^lab-/.test(e.plant)) { const P = this.labPlant(e.plant); this.say(this.tx("polish.plant" + P.stage).concat(P.watered ? this.tx("polish.plantDamp") : [])); } // how it's doing
-    else if (e.plant) { // (Joe 10/21: A doesn't water any more; the watering can does, with B)
-      if (!this.isThirsty(e.plant)) { this.say(this.tx("plant.done", { room: e.name })); return; }
-      this.say(this.tx(this.ownedTools().includes("can") ? "plant.useCan" : "plant.noCan", { room: e.name }));
+    else if (e.plant) { // (Joe 10/21: A doesn't water any more; the watering can does, with B) how it's doing, then whether it wants water today
+      const st = this.tx("polish.plant" + this.plantStage(e.plant));
+      this.say(st.concat(this.isThirsty(e.plant) ? this.tx(this.ownedTools().includes("can") ? "plant.useCan" : "plant.noCan", { room: e.name }).slice(1) : this.tx("polish.plantDamp")));
     }
     else if (e.mug) {
       this.progress.mug = todayISO(); this.count("mugs"); this.saveProgress();
@@ -9618,7 +9645,7 @@ class Game {
     const f = this.fol, pl = this.player; // you and whoever is following you never block each other (nor do people in the tour's line, lining up)
     return [this.player, ...this.room.npcs].some(c => c !== self && !(f && ((self === pl && c === f) || (self === f && c === pl))) && ((c.x === x && c.y === y) || (c.moving && c.x + DIRS[c.dir][0] === x && c.y + DIRS[c.dir][1] === y)));
   }
-  blocked(x, y, self) { const r = this.room; return x < 0 || y < 0 || x >= r.w || y >= r.h || r.solid[y][x] || this.occupied(x, y, self) || (self && self !== this.player && ((r.keepFree && r.keepFree.has(x + "," + y)) || (this.wet && this.wet[r.id] && this.wetAt(r, x, y)) || this.cafeDoorsShut(r, x, y))); } // (people step around a wet floor) // keepFree: a seat saved for you
+  blocked(x, y, self) { const r = this.room; return x < 0 || y < 0 || x >= r.w || y >= r.h || r.solid[y][x] || this.occupied(x, y, self) || (self && self !== this.player && ((r.keepFree && r.keepFree.has(x + "," + y)) || (this.wet && this.wet[r.id] && this.wetAt(r, x, y)) || this.shutDoorAt(r, x, y))); } // (people step around a wet floor) // keepFree: a seat saved for you
   tryMove(c, d) {
     c.dir = d; const [dx, dy] = DIRS[d], nx = c.x + dx, ny = c.y + dy;
     if (c !== this.player && this.tour && !c.tourKid && !c.schoolKid) { // a grown-up walking into the kid who's tagging along with them: they swap places instead of getting stuck
@@ -11010,7 +11037,7 @@ class Game {
     const [tx, ty] = n.walkTo.at;
     if (n.x === tx && n.y === ty) { n.dir = n.walkTo.dir; n.walkTo = null; n.route = null; return; }
     if (!n.route || !n.route.length) n.route = this.npcPath(n, tx, ty, true);
-    const jump = () => { if (this.tileFree(this.room, tx, ty) && !(this.player.x === tx && this.player.y === ty) && !(this.cafeShut && this.room === this.rooms.museum && !n.staff && !n.role && this.zoneAt(this.room, tx, ty) === this.cafeArea())) { n.x = tx; n.y = ty; n.dir = n.walkTo.dir; n.walkTo = null; n.route = null; } n.walkStuck = 0; };
+    const jump = () => { if (this.tileFree(this.room, tx, ty) && !(this.player.x === tx && this.player.y === ty) && !(this.shutZones && this.shutZones.size && this.room === this.rooms.museum && !n.staff && !n.role && this.shutZones.has((this.zoneAt(this.room, tx, ty) || {}).id))) { n.x = tx; n.y = ty; n.dir = n.walkTo.dir; n.walkTo = null; n.route = null; } n.walkStuck = 0; };
     if (!n.route || !n.route.length) { if ((n.walkStuck = (n.walkStuck || 0) + 1) > 240) jump(); return; }
     const d = n.route[0]; if (this.tryMove(n, d)) { n.route.shift(); n.stepWait = this.strollWait(); n.walkStuck = 0; } else { n.route = null; n.stepWait = 20; if ((n.walkStuck = (n.walkStuck || 0) + 20) > 240) jump(); }
   }
@@ -11707,7 +11734,7 @@ class Game {
   drawProp(p, cx, cy) {
     if (p.hidden) return; // (the tutorial's chest, before you've read the sign)
     if (p.key === "velvet_rope" || p.key === "velvet_rope_v") { this.drawRope(p, cx, cy); return; }
-    const ctx = this.ctx, k = p.plant && /^lab-/.test(p.plant) ? LAB_STAGES[this.labPlant(p.plant).stage] : p.plant && this.isThirsty(p.plant) ? "plant_thirsty" : p.key === "trash_can" && this.binFull(this.room.id, p.x, p.y) ? "trash_full" : p.key;
+    const ctx = this.ctx, k = p.plant && !/^tut-/.test(p.plant) ? LAB_STAGES[this.plantStage(p.plant)] : p.plant && this.isThirsty(p.plant) ? "plant_thirsty" : p.key === "trash_can" && this.binFull(this.room.id, p.x, p.y) ? "trash_full" : p.key;
     const px0 = p.x * T - cx, py0 = p.y * T - (SLOT[k].h - T) - cy;
     if (k === "trash_can" && ROOMS[this.room.id] && ROOMS[this.room.id].lab) { this.drawSlot("trash_levels", Math.floor(this.labBin || 0), 0, px0, py0); return; } // (the lab's can: a piece at a time)
     if (k === "dumpster") { this.drawSlot(k, this.dumpT && this.t - this.dumpT < 50 ? 1 : 0, 0, px0, py0); return; } // the lid goes up as a bag goes in
@@ -12265,7 +12292,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 154";
+const VERSION = "2026-11-18 cards 155";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
