@@ -23,8 +23,8 @@ A test room you reach with a button code, so mechanics can be tried one at a tim
 ### Phase 1: vacuuming — prototype built (in the lab)
 - Pick up the vacuum (A on its stand). It's yours from then on, like a Zelda item.
 - **Equipment** (Start menu, once you own a tool): a row of icons; pick one to hold it. Tools work in the lab for now.
-- **Hold B** to vacuum: each carpet tile remembers the direction you went, showing light and dark stripes like a mowed lawn. **Double-tap B** to leave it on; tap B to turn it off.
-- **Velvet rope posts** (also on a stand): B places a post on the tile in front, or lifts it. Neighbouring posts link with rope, so you can rope off a patch while visitors are around. Up to 16.
+- **Hold B** to vacuum: the tile under the vacuum (in front of you) remembers the direction you went, showing light and dark stripes like a mowed lawn. **Double-tap B** to leave it on; tap B to turn it off.
+- **Velvet ropes** (also on a stand), laid like a line in a paint program: B marks one end, walk, B marks the other end, and the rope goes down straight (across or up and down). A see-through preview follows you. B on the start cancels; B on a laid rope takes it back up. Rope off a patch while visitors are around.
 - No correct pattern. Straight lines, diagonals, checkerboards, initials.
 - Visitors walking across the carpet scuff your stripes, but only a minute after you vacuumed there, and slowly. Vacuum again any time.
 - **To decide after trying it:** how strong the stripes look; how fast scuffs wear them; whether the vacuum slows you down; a hum or sparkle as you go.

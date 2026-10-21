@@ -2416,7 +2416,7 @@ const ROOMS = {
     props: [
       { key: "vacuum", x: 1, y: 3, toolSpot: "vacuum", event: { tool: "vacuum" } },
       { key: "velvet_rope", x: 2, y: 3, toolSpot: "ropes", event: { tool: "ropes" } },
-      { key: "sign_stand", x: 13, y: 3, say: ["POLISH LAB", "Grab the vacuum (and the ropes), then pick them from Equipment in the Start menu. Hold B to vacuum; double-tap B to leave it on.", "Every carpet tile remembers which way you went.", "No right answer. Stripes, diagonals, checkerboards: whatever looks nice to you.", "People walking across it scuff it up again."] },
+      { key: "sign_stand", x: 13, y: 3, say: ["POLISH LAB", "Grab the vacuum (and the ropes), then pick them from Equipment in the Start menu. Hold B to vacuum; double-tap B to leave it on.", "Ropes: B where one starts, walk, B where it ends. B on a rope takes it back up.", "Every carpet tile remembers which way you went.", "No right answer. Stripes, diagonals, checkerboards: whatever looks nice to you.", "People walking across it scuff it up again."] },
       { key: "plant", x: 13, y: 9, say: ["A plant. Its turn comes later."] },
       { key: "plant", x: 1, y: 9, say: ["A plant. Also waiting its turn."] },
     ],
@@ -3178,7 +3178,7 @@ const PIXEL_FONT = (() => {
 })();
 const TOOLS = { // equipment (Joe 10/21): what each is, its icon (an art slot and frame), what it says
   vacuum: { name: "Vacuum", slot: "vacuum", desc: "Hold B to vacuum the carpet; double-tap B to leave it running. Every tile remembers which way you pushed.", hint: "Vacuum: hold B (double-tap to leave it on)", got: "You got the vacuum!", spot: "The vacuum's corner. Yours is in your Equipment." },
-  ropes: { name: "Velvet ropes", slot: "velvet_rope", frame: 0, max: 16, desc: "B puts a rope post down in front of you, or picks it back up. Posts side by side link up. Keep people off what you're working on.", hint: "Velvet ropes: B puts a post down (or picks it up)", got: "You got a bundle of velvet ropes!", spot: "The rope stand. Yours are in your Equipment." },
+  ropes: { name: "Velvet ropes", slot: "velvet_rope", frame: 0, max: 60, desc: "B marks where a rope starts, walk to where it ends, B again: the rope goes down in a straight line. B on a rope takes it back up. Keep people off what you're working on.", hint: "Velvet ropes: B at one end, B at the other", got: "You got a bundle of velvet ropes!", spot: "The rope stand. Yours are in your Equipment." },
 };
 const LAB_CODE = ["down", "down", "down", "up", "up", "up", "start"]; // to the Polish Lab and back (Joe 10/21)
 const KONAMI = ["up", "up", "down", "down", "left", "right", "left", "right", "b", "a", "start"];
@@ -6209,8 +6209,15 @@ class Game {
   napStep(c) {
     const r = this.room; if (!r || !this.carpetAt(r, c.x, c.y)) return;
     const N = (this.nap || (this.nap = {}))[r.id] || (this.nap[r.id] = {}), k = c.x + "," + c.y;
-    if (c === this.player) { if (this.vacuuming()) N[k] = { d: c.dir, s: 1, t: this.t }; return; } // the vacuum brushes it your way
+    if (c === this.player) return; // (your own steps don't scuff; the vacuum ahead of you does the brushing, vacTick)
     const v = N[k]; if (v && this.t - (v.t || 0) > 3600) { v.s -= 0.08; if (v.s <= 0.05) delete N[k]; } // someone walking on it: a little scuffed, but only once it's had a minute (Joe 10/21)
+  }
+  vacTick() { // the tile under the vacuum (in front of you) gets brushed your way: as you start it, step, or turn (Joe 10/21)
+    if (!this.vacuuming()) { this.vacLast = null; return; }
+    const r = this.room, p = this.player, [dx, dy] = DIRS[p.dir], x = p.x + dx, y = p.y + dy, k = x + "," + y;
+    if (this.vacLast === k + p.dir) return; this.vacLast = k + p.dir;
+    if (!this.carpetAt(r, x, y)) return;
+    ((this.nap || (this.nap = {}))[r.id] || (this.nap[r.id] = {}))[k] = { d: p.dir, s: 1, t: this.t };
   }
   drawNap(r, cx, cy) {
     const N = this.nap && this.nap[r.id]; if (!N) return;
@@ -6223,7 +6230,7 @@ class Game {
   }
   /* Equipment (Joe 10/21): tools you find once and then equip from the Start menu, Zelda style. Only the Polish Lab uses them
      for now. B is the tool button while one's equipped: hold it to vacuum (double-tap to leave it running, tap to stop);
-     with the velvet ropes, B puts a post down in front of you, or picks one up. */
+     with the velvet ropes, B starts a rope in front of you, then B again at the other end lays it in a straight line. */
   ownedTools() { return ((this.progress.tools && this.progress.tools.owned) || []).filter(k => TOOLS[k]); }
   toolActive() { return !!this.tool && !!this.room && !!ROOMS[this.room.id] && !!ROOMS[this.room.id].lab; }
   vacuuming() { return this.tool === "vacuum" && this.toolActive() && (this.vacLatch || !!(this.btnHeld && this.btnHeld.has("b"))); }
@@ -6234,28 +6241,56 @@ class Game {
     this.itemGet({ name: TOOLS[kind].name, img: this.toolIcon(kind), id: "tool-" + kind }, "walk", () => this.say([TOOLS[kind].got, "It's in your Equipment (Start) from now on."]));
     this.dressLab();
   }
-  equip(kind) { this.tool = kind || null; this.vacLatch = false; if (this.progress.tools) { this.progress.tools.on = this.tool; this.saveProgress(); } }
-  putToolBack() { this.vacLatch = false; } // (leaving the lab: the vacuum switches off)
+  equip(kind) { this.tool = kind || null; this.vacLatch = false; this.ropeDraft = null; if (this.progress.tools) { this.progress.tools.on = this.tool; this.saveProgress(); } }
+  putToolBack() { this.vacLatch = false; this.ropeDraft = null; } // (leaving the lab: the vacuum switches off)
   toolPress() {
     if (this.tool === "vacuum") { const dbl = this.lastB && this.t - this.lastB < 20; this.lastB = this.t;
       if (this.vacLatch) { this.vacLatch = false; this.lastB = 0; this.showLoc("Vacuum off"); } else if (dbl) { this.vacLatch = true; this.lastB = 0; this.showLoc("Vacuum left on (B to stop)"); }
       return; }
     if (this.tool === "ropes") this.ropeAt();
   }
-  ropeAt() { // a velvet rope post on the tile in front of you, or picked back up
-    const r = this.room, p = this.player, [dx, dy] = DIRS[p.dir], x = p.x + dx, y = p.y + dy, L = (this.ropes || (this.ropes = {}))[r.id] || (this.ropes[r.id] = []);
-    const i = L.findIndex(q => q.x === x && q.y === y);
-    if (i >= 0) { L.splice(i, 1); r.solid[y][x] = false; return; }
-    if (L.length >= TOOLS.ropes.max) { this.showLoc("That's all your rope posts (" + TOOLS.ropes.max + ")"); return; }
-    if (!r.solid[y] || r.solid[y][x] !== false || r.events[x + "," + y] || r.npcs.some(n => n.x === x && n.y === y)) { this.showLoc("Can't put a post there"); return; }
-    L.push({ x, y }); r.solid[y][x] = true;
+  /* Ropes go down like a line in a paint program (Joe 10/21): B marks one end (the tile in front of you), walk, B again marks the
+     other end, and the rope fills the straight line between (across or up and down, whichever way you went further). It stops
+     short of anything in the way. B on the start again cancels; B facing a laid rope takes that whole rope back up. */
+  ropeFree(r, x, y) { const p = this.player; return !!r.solid[y] && r.solid[y][x] === false && !r.events[x + "," + y] && !r.npcs.some(n => n.x === x && n.y === y) && !(p.x === x && p.y === y); }
+  ropeLine() { // the tiles the rope would cover right now, from the start to the tile in front of you
+    const D = this.ropeDraft, r = this.room; if (!D || D.room !== r.id) return [];
+    const p = this.player, [dx, dy] = DIRS[p.dir], fx = p.x + dx, fy = p.y + dy, ax = fx - D.x, ay = fy - D.y, across = Math.abs(ax) >= Math.abs(ay);
+    const n = across ? Math.abs(ax) : Math.abs(ay), sx = across ? Math.sign(ax) : 0, sy = across ? 0 : Math.sign(ay), L = this.ropes[r.id], out = [];
+    for (let i = 0; i <= n; i++) { const x = D.x + sx * i, y = D.y + sy * i, old = L.some(q => q.x === x && q.y === y); if (!old && !this.ropeFree(r, x, y)) break; out.push({ x, y, old }); }
+    return out;
   }
-  drawRopes(r, cx, cy) { // posts, linked by rope to their neighbours (velvet_rope's frames: a post, across, up and down)
-    const ctx = this.ctx, L = this.ropes && this.ropes[r.id]; if (!L || !L.length) return;
-    const has = (x, y) => L.some(q => q.x === x && q.y === y);
-    for (const q of L) { const X = q.x * T - cx, Y = q.y * T - cy, half = (f, sx, sy, w, h) => { ctx.save(); ctx.beginPath(); ctx.rect(X + sx, Y + sy, w, h); ctx.clip(); this.drawSlot("velvet_rope", f, 0, X, Y); ctx.restore(); };
-      if (has(q.x - 1, q.y)) half(1, 0, 0, 8, 16); if (has(q.x + 1, q.y)) half(1, 8, 0, 8, 16); if (has(q.x, q.y - 1)) half(2, 0, 0, 16, 8); if (has(q.x, q.y + 1)) half(2, 0, 8, 16, 8);
-      this.drawSlot("velvet_rope", 0, 0, X, Y); }
+  ropeAt() {
+    const r = this.room, p = this.player, [dx, dy] = DIRS[p.dir], x = p.x + dx, y = p.y + dy, L = (this.ropes || (this.ropes = {}))[r.id] || (this.ropes[r.id] = []), max = TOOLS.ropes.max;
+    if (this.ropeDraft && this.ropeDraft.room !== r.id) this.ropeDraft = null;
+    const D = this.ropeDraft;
+    if (D) {
+      if (D.x === x && D.y === y) { this.ropeDraft = null; this.showLoc("Rope put away"); return; }
+      const line = this.ropeLine().filter(q => !q.old); this.ropeDraft = null;
+      if (!line.length) { this.showLoc("Something's in the way"); return; }
+      if (L.length + line.length > max) { this.showLoc("Not enough rope for that (" + (max - L.length) + " left)"); return; }
+      for (const q of line) { L.push({ x: q.x, y: q.y }); r.solid[q.y][q.x] = true; }
+      return;
+    }
+    if (L.some(q => q.x === x && q.y === y)) { // take down the whole rope it's part of
+      const seen = new Set([x + "," + y]), todo = [[x, y]];
+      while (todo.length) { const [cx, cy] = todo.pop(); for (const [ex, ey] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const k = (cx + ex) + "," + (cy + ey); if (!seen.has(k) && L.some(q => q.x === cx + ex && q.y === cy + ey)) { seen.add(k); todo.push([cx + ex, cy + ey]); } } }
+      this.ropes[r.id] = L.filter(q => { const hit = seen.has(q.x + "," + q.y); if (hit) r.solid[q.y][q.x] = false; return !hit; });
+      this.showLoc("Rope taken down"); return;
+    }
+    if (L.length >= max) { this.showLoc("That's all your rope"); return; }
+    if (!this.ropeFree(r, x, y)) { this.showLoc("Can't start a rope there"); return; }
+    this.ropeDraft = { room: r.id, x, y }; this.showLoc("Walk to the other end, then B");
+  }
+  drawRopes(r, cx, cy) { // brass posts at the ends and corners (and every few tiles), rope between (velvet_rope's frames: a post, across, up and down)
+    const ctx = this.ctx, L = (this.ropes && this.ropes[r.id]) || [], draft = this.ropeLine().filter(q => !q.old); if (!L.length && !draft.length) return;
+    const all = L.concat(draft), has = (x, y) => all.some(q => q.x === x && q.y === y);
+    for (const q of all) { const X = q.x * T - cx, Y = q.y * T - cy, half = (f, sx, sy, w, h) => { ctx.save(); ctx.beginPath(); ctx.rect(X + sx, Y + sy, w, h); ctx.clip(); this.drawSlot("velvet_rope", f, 0, X, Y); ctx.restore(); };
+      const l = has(q.x - 1, q.y), rr = has(q.x + 1, q.y), u = has(q.x, q.y - 1), d = has(q.x, q.y + 1), ew = l && rr && !u && !d, ns = u && d && !l && !rr;
+      ctx.globalAlpha = draft.includes(q) ? (this.t % 40 < 20 ? 0.3 : 0.5) : 1; // the rope you're still laying: see-through
+      if (l) half(1, 0, 0, 8, 16); if (rr) half(1, 8, 0, 8, 16); if (u) half(2, 0, 0, 16, 8); if (d) half(2, 0, 8, 16, 8);
+      if (!(ew && q.x % 3) && !(ns && q.y % 3)) this.drawSlot("velvet_rope", 0, 0, X, Y); }
+    ctx.globalAlpha = 1;
   }
   toolIcon(kind) { const C = this.toolIcons || (this.toolIcons = {}), sh = this.sheet(TOOLS[kind].slot); if (C[kind] && C[kind].src === sh) return C[kind].c;
     const c = document.createElement("canvas"); c.width = c.height = 16; c.getContext("2d").drawImage(sh, (TOOLS[kind].frame || 0) * 16, 0, 16, 16, 0, 0, 16, 16); C[kind] = { src: sh, c }; return c; }
@@ -9358,7 +9393,7 @@ class Game {
       if (!this.player.moving && (this.using("shades") === "fake" && !this.progress.lensPopped || this.using("hat") === "fake")) { this.gearCheck(); return; }
       const codeB = this.kbuf && this.kbuf.slice(-9).join() === KONAMI.slice(0, 9).join(); // the B in the code isn't a photo
       if (has("a") && this.kbuf && this.kbuf.slice(-10).join() === KONAMI.slice(0, 10).join()) return; // nor is its A a look
-      if (this.toolActive()) { if (has("b") && !codeB) this.toolPress(); } // a tool in hand (the Polish Lab): B uses it, no photo
+      this.vacTick(); if (this.toolActive()) { if (has("b") && !codeB) this.toolPress(); } // a tool in hand (the Polish Lab): B uses it, no photo
       else if (has("b") && !codeB && !this.player.moving && !this.asleep) { this.takePhoto(); return; }
       this.updatePlayer(has("a"));
     }
@@ -11826,7 +11861,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 140";
+const VERSION = "2026-11-18 cards 141";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
