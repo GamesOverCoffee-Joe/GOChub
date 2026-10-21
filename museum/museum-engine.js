@@ -2984,6 +2984,7 @@ const TEXT = {
   "opt.gameName":      { g: "Menu options", l: "A curious visitor (or your follower): the game's name, the one hint (worth fewer tokens)", v: [["What's the game name?"]] },
   "opt.keepGoing":     { g: "Menu options", l: "Your follower: carry on", v: [["Keep going"]] },
   "opt.lookingFor":    { g: "Menu options", l: "Your follower: what they wanted again", v: [["What were you looking for?"]] },
+  "zone.oneAtATime":   { g: "Volunteering", l: "The rope to close an area for cleaning, while another one's already closed ({other}: that one)", by: "claude", v: [["{other} is already closed for cleaning.", "One area at a time. Open that one back up first."]] },
   "think.dismiss":     { g: "Thinking", l: "While thinking, B with a thought in mind: let it go?", v: [["Dismiss thought?"]] },
   "opt.think":         { g: "Menu options", l: "A curious visitor, when the game they want isn't the one in your mind: go and think", v: [["Let me think"]] },
   "opt.thisGame":      { g: "Menu options", l: "A curious visitor, with the very game they want in your mind: recommend it", v: [["This game?"]] },
@@ -4315,6 +4316,7 @@ class Game {
     el.text.addEventListener("click", () => this.press("a"));
     el.choice = h("gt-box gt-choice");
     el.hud = h("gt-shift");
+    el.thought = h("gt-thought"); el.thoughtCv = h("", el.thought, "canvas"); el.thoughtCv.width = el.thoughtCv.height = 24; el.thoughtK = h("gt-thought-k", el.thought); el.thoughtK.innerHTML = "Dismiss<br>(B)"; // what you're holding in mind, under your tokens (Joe 10/21)
     el.shop = h("gt-box gt-shop");
     el.cafe = h("gt-box gt-shop gt-cafe");
     el.album = h("gt-box gt-shop gt-album");
@@ -4399,6 +4401,13 @@ class Game {
   box-shadow:0 0 0 calc(1px * var(--s)) #181820;white-space:nowrap;opacity:.92}
 .gt-shift .shift{background:#2f6b4f;color:#f8f0c0}
 .gt-shift .tok{background:#7c5a0c;color:#fff6cc}
+.gt-thought{position:absolute;right:calc(3px * var(--s));top:calc(19px * var(--s));display:none;z-index:6;pointer-events:none;width:calc(28px * var(--s))} /* the thought you're holding: just under the tokens, in colour even while you think (it isn't on the green screen) */
+.gt-thought canvas{display:block;box-sizing:content-box;width:calc(24px * var(--s));height:calc(24px * var(--s));padding:calc(1px * var(--s));background:#f8f8f0;border:calc(1px * var(--s)) solid #181820;image-rendering:pixelated}
+.gt-thought::before,.gt-thought::after{content:"";position:absolute;background:#181820}
+.gt-thought::before{left:calc(-4px * var(--s));top:calc(26px * var(--s));width:calc(3px * var(--s));height:calc(3px * var(--s))}
+.gt-thought::after{left:calc(-7px * var(--s));top:calc(30px * var(--s));width:calc(2px * var(--s));height:calc(2px * var(--s))}
+.gt-thought-k{display:none;margin-top:calc(3px * var(--s));font-size:calc(4px * var(--s));line-height:1.5;text-align:center;color:#c4c4cc;text-shadow:0 0 calc(1px * var(--s)) #181820,0 0 calc(1px * var(--s)) #181820} /* while thinking: how to let it go */
+.gt-thought.thinking .gt-thought-k{display:block}
 .gt-coin{width:1em;height:1em;vertical-align:-.12em;margin-right:.3em;image-rendering:pixelated;image-rendering:crisp-edges}
 .gt-shop-row img.gt-coin,.gt-janky .gt-shop-row img.gt-coin{width:1em;height:1em;transform:none;flex:none}
 .gt-shift .pulse{animation:gtPulse .5s steps(3)}
@@ -4605,7 +4614,7 @@ class Game {
 .gt-eq-cell.worn{background:#fff3c4;border-color:#b08020}
 .gt-eq-cell.gap{visibility:hidden}
 .gt-eq-cell span{position:absolute;right:calc(1px * var(--s));bottom:0;font-size:calc(4px * var(--s));line-height:1;color:#6a4a08}
-.gt-eq-info{text-align:left;background:#f4f5f8;border:calc(1px * var(--s)) solid #a4a6b2;border-radius:calc(2px * var(--s));padding:calc(3px * var(--s)) calc(4px * var(--s));margin-bottom:calc(3px * var(--s))} /* the words, in their own little box */
+.gt-eq-info{box-sizing:border-box;text-align:left;background:#f4f5f8;border:calc(1px * var(--s)) solid #a4a6b2;border-radius:calc(2px * var(--s));padding:calc(3px * var(--s)) calc(4px * var(--s));margin-bottom:calc(3px * var(--s))} /* the words, in their own little box */
 .gt-eq-name{font-size:calc(6px * var(--s));color:#181820;margin-bottom:calc(2px * var(--s))}
 .gt-eq-desc{font-size:calc(5px * var(--s));line-height:1.4;color:#2c2c3a}
 .gt-eq-k{font-size:calc(4px * var(--s));color:#3c3c4c;text-align:center}
@@ -6593,6 +6602,8 @@ class Game {
   zoneShut(id) { return !!(this.shutZones && this.shutZones.has(id)); }
   shutDoorAt(r, x, y) { if (!this.shutZones || !this.shutZones.size || r !== (this.rooms && this.rooms.museum)) return false; const z = this.zoneAt(r, x, y); return !!z && this.shutZones.has(z.id) && this.zoneDoors(z).some(([a, b2]) => a === x && b2 === y); }
   zoneRopes(id) { const z = this.closableZones().find(q => q.id === id); if (!z) return; const shut = this.zoneShut(id), nm = id === "cafe" ? "the café" : z.name;
+    const other = !shut && this.shutZones && [...this.shutZones].find(q => q !== id), oz = other && this.closableZones().find(q => q.id === other); // (Joe 10/21) only one area closed at a time
+    if (oz) { this.say(this.tx("zone.oneAtATime", { other: other === "cafe" ? "the café" : oz.name })); return; }
     this.ask(shut ? "Open " + nm + " back up?" : "Close " + nm + " for cleaning?", ["Yes", "Not now"], i => { if (i === 0) this.zoneClose(z, !shut); }, 1); }
   zoneClose(z, shut) {
     const M = this.rooms.museum; if (!M) return;
@@ -6722,6 +6733,8 @@ class Game {
     const own = this.ownedTools(); if (!own.length) return;
     const box = this.el.equip || (this.el.equip = (() => { const e = document.createElement("div"); e.className = "gt-equip"; this.wrap.appendChild(e); return e; })());
     this.eq = { list: own, i: Math.max(0, own.indexOf(this.tool)) }; this.mode = "equip"; box.style.display = "block"; this.renderEquip();
+    { const info = box.querySelector(".gt-eq-info"), nm = box.querySelector(".gt-eq-name"), ds = box.querySelector(".gt-eq-desc"), was = [nm.textContent, ds.textContent]; let hi = 0; // (Joe 10/21) one size whichever you're on: as tall as the longest
+      info.style.minHeight = ""; for (const k of own) { nm.textContent = TOOLS[k].name + " (equipped)"; ds.textContent = TOOLS[k].desc; hi = Math.max(hi, info.offsetHeight); } [nm.textContent, ds.textContent] = was; this.eqMinH = hi; info.style.minHeight = hi + "px"; }
   }
   renderEquip(step) { // (Joe 10/21) a carousel: the picked one's always in the middle, bigger; the list slides past it; the others darker
     const E = this.eq, box = this.el.equip, n = E.list.length;
@@ -6734,6 +6747,7 @@ class Game {
       d.addEventListener("click", e => { e.stopPropagation(); if (o === 0) this.equipPick(); else { E.i = i; this.renderEquip(Math.sign(o)); } }); }
     if (step && typeof requestAnimationFrame !== "undefined") { const px = getComputedStyle(row.children[1]).width, sh = "calc(" + (step > 0 ? 1 : -1) + " * (" + px + " + " + getComputedStyle(row).columnGap + "))"; // it starts where it was, then slides over
       row.style.transform = "translateX(" + sh + ")"; requestAnimationFrame(() => requestAnimationFrame(() => { row.classList.add("slide"); row.style.transform = ""; })); }
+    if (this.eqMinH) box.querySelector(".gt-eq-info").style.minHeight = this.eqMinH + "px";
     const k = E.list[E.i]; box.querySelector(".gt-eq-name").textContent = TOOLS[k].name + (this.tool === k ? " (equipped)" : ""); box.querySelector(".gt-eq-desc").textContent = TOOLS[k].desc;
   }
   equipPick() { const k = this.eq.list[this.eq.i]; this.equip(this.tool === k ? null : k); this.renderEquip(); if (this.tool) this.showLoc(TOOLS[this.tool].hint); }
@@ -8680,6 +8694,7 @@ class Game {
     if (n.moving) { this.advance(n); return; }
     const p = this.player, d = Math.abs(n.x - p.x) + Math.abs(n.y - p.y), t = this.trail && this.trail.room === this.room.id ? this.trail : null;
     if (d <= 1 && !p.moving) { n.lost = 0; return; }
+    if (!n.staff && !n.role && this.shutZones && this.shutZones.size && this.room === this.rooms.museum) { const pz = this.zoneAt(this.room, p.x, p.y); if (pz && this.shutZones.has(pz.id) && this.zoneAt(this.room, n.x, n.y) !== pz) { n.lost = 0; return; } } // (Joe 10/21) you've gone into an area closed for cleaning: they wait outside it (no hopping in after you)
     let dir = null;
     if (t && Math.abs(t.x - n.x) + Math.abs(t.y - n.y) === 1) dir = t.x > n.x ? "right" : t.x < n.x ? "left" : t.y > n.y ? "down" : "up";
     else if (d > 1) {
@@ -10113,7 +10128,7 @@ class Game {
   }
   recoGiveUp(n) { n.reco = null; n.ideaFx = null; n.recoIdea = null; n.tell = null; n.goalT = null; n.route = null; n.seat = null; n.pose = { kind: "busy", t0: this.t, dur: 90 }; n.timer = 100; } // couldn't get there: a "...", no sparkle, and back to wandering
   dropReco(n) { if (n.chat) this.endChat(n.chat); if (n.reco || n.recoAt || n.tell || n.chat || n.askFx || (n.ideaFx && n.ideaFx.keep)) n.pose = { kind: "wave", t0: this.t, dur: 90 }; Object.assign(n, { reco: null, recoAt: null, askFx: null, tell: null, recoIdea: null, recoDrink: false, hold: null, recall: null, ideaFx: null, shopQ: null }); } // heading home: whatever they had in mind goes (Joe 10/19: walking out with the bubble up)
-  forgetThought() { if (!this.idea) return; this.popFx = (this.popFx || []).concat([{ t0: this.t, x: this.camX + SW - 21, y: this.camY + 35 }]); this.idea = null; } // let it go: the corner bubble pops
+  forgetThought() { if (!this.idea) return; const E = this.el && this.el.thought, k = this.canvas && this.canvas.clientWidth ? SW / this.canvas.clientWidth : 0, y = E && E.offsetTop && k ? E.offsetTop * k + 14 : 33; this.popFx = (this.popFx || []).concat([{ t0: this.t, x: this.camX + SW - 17, y: this.camY + y }]); this.idea = null; } // let it go: the corner bubble pops
   recallLater(n, icon, how) { n.recall = { at: this.t + 1500 + Math.random() * 2100, icon, how }; } // 25 to 60 seconds on, they think back on it (Joe 10/19: a nod to what you did)
   recallStep(n) {
     const L = n.recall;
@@ -11815,17 +11830,19 @@ class Game {
         this.idea = Object.assign({}, TH.pick, { icon: ic }); TH.picked = true;
       }
       if (TH.ghost && !TH.picked) this.drawThinkPick(ctx, cx, cy, TH.ghost);
-      if (I && I.icon && I.room === r.id && !TH.picked) { this.drawThought(ctx, BUB, I); // (Joe 10/21) it stays up while you think, with how to let it go
-        const txt = "DISMISS (B)", w = txt.length * 4 - 1, x = SW - 4 - w - 3, y = 22 + 26 + 4; ctx.fillStyle = "#181820"; ctx.fillRect(x, y, w + 4, 9); ctx.fillStyle = "#f8f8f0"; ctx.fillRect(x + 1, y + 1, w + 2, 7); ctx.fillStyle = "#181820";
-        let tx = x + 2; for (const ch of txt) { (PIXEL_FONT[ch] || []).forEach((row, yy) => [...row].forEach((on, xx) => { if (on === "1") ctx.fillRect(tx + xx, y + 2 + yy, 1, 1); })); tx += 4; } }
+      this.syncThought(I && I.icon && I.room === r.id && !TH.picked ? I : null, true); // (Joe 10/21) it stays up while you think, with how to let it go
       { const txt = "Thinking...", dots = 1 + (Math.floor(this.t / 20) % 3); ctx.font = "bold 8px monospace"; ctx.textBaseline = "alphabetic"; ctx.textAlign = "left"; // along the bottom (Joe 10/19); the dots tick over
         const w = Math.ceil(ctx.measureText(txt).width), x = Math.round(SW / 2 - w / 2), y = SH - 7, show = txt.slice(0, txt.length - 3 + dots);
         ctx.fillStyle = "#181820"; for (const [ox, oy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) ctx.fillText(show, x + ox, y + oy); ctx.fillStyle = "#fffbe8"; ctx.fillText(show, x, y); }
       return; // the green is a filter on the screen itself (thinkFilter): reading the picture back every frame made Chrome draw the whole game more slowly afterwards (Joe 10/19: choppy)
     }
-    if (I && I.icon && I.room === r.id) this.drawThought(ctx, BUB, I); // what you're holding in mind (it stays up through dialogue too, Joe 10/19)
+    this.syncThought(I && I.icon && I.room === r.id ? I : null, false); // what you're holding in mind (it stays up through dialogue too, Joe 10/19)
   }
-  drawThought(ctx, BUB, I) { const x = SW - 34, y = 22; BUB(x, y, 26, 26); ctx.drawImage(this.thoughtStripes(), x + 1, y + 1); ctx.drawImage(I.icon, x + 1, y + 1); ctx.fillStyle = "#181820"; ctx.fillRect(x - 4, y + 27, 3, 3); ctx.fillRect(x - 7, y + 31, 2, 2); } // top right, under your tokens (the room's name pops up top left, the day dial's bottom left)
+  syncThought(I, thinking) { const E = this.el && this.el.thought; if (!E) return; // top right, just under your tokens (the room's name pops up top left, the day dial's bottom left)
+    if (!I) { if (E.style.display !== "none") E.style.display = "none"; return; }
+    const H = this.el.hud, top = H && H.style.display !== "none" && H.offsetHeight ? (H.offsetTop + H.offsetHeight) + "px + 4px" : "3px"; if (E.dataset.top !== top) { E.dataset.top = top; E.style.top = "calc(" + top + " * var(--s))"; } // (the tag's own height, then a little gap)
+    if (E.style.display !== "block") E.style.display = "block"; E.classList.toggle("thinking", !!thinking);
+    const x = this.el.thoughtCv.getContext("2d"); x.imageSmoothingEnabled = false; x.drawImage(this.thoughtStripes(), 0, 0); x.drawImage(I.icon, 0, 0); }
   /* While thinking: corners around whatever the ghost is facing that you could pick (Joe 10/19: keep these; not on yourself). */
   drawThinkPick(ctx, cx, cy, g) {
     if (g.moving) return;
@@ -12276,7 +12293,7 @@ class Game {
       ctx.fillStyle = g; ctx.fillRect(x0 - 30, y0 - 30, 60, 60);
     }
     if (!full) { this.drawHandoff(ctx, cx, cy); this.drawCoins(ctx, cx, cy); this.drawLens(ctx); }
-    if (!full) this.drawThinking(ctx, cx, cy);
+    if (!full) this.drawThinking(ctx, cx, cy); else this.syncThought(null);
     if (this.fade > 0) { ctx.globalAlpha = Math.min(1, this.fade); ctx.fillStyle = "#000"; ctx.fillRect(0, 0, SW, SH); ctx.globalAlpha = 1; }
     if (!full) this.drawThinkColor(cx, cy);
   }
@@ -12300,14 +12317,12 @@ class Game {
   drawThinkColor(cx, cy) {
     const TH = this.think, g = TH && TH.ghost, cv = this.canvas; let hl = this.hlCanvas;
     if (!g || !cv || typeof document === "undefined" || this.thinkFx) { if (hl) hl.style.display = "none"; return; }
-    const [dx, dy] = DIRS[g.dir], t = !g.moving && this.thinkTarget(this.room, g.x + dx, g.y + dy), I = this.idea, thought = !!(I && I.icon && I.room === this.room.id && !TH.picked); if (!t && !thought) { if (hl) hl.style.display = "none"; return; }
+    const [dx, dy] = DIRS[g.dir], t = !g.moving && this.thinkTarget(this.room, g.x + dx, g.y + dy); if (!t) { if (hl) hl.style.display = "none"; return; }
     if (!hl) { hl = this.hlCanvas = document.createElement("canvas"); hl.style.cssText = "position:absolute;pointer-events:none;image-rendering:pixelated"; cv.parentNode.insertBefore(hl, cv.nextSibling); if (getComputedStyle(cv.parentNode).position === "static") cv.parentNode.style.position = "relative"; }
     if (hl.width !== cv.width || hl.height !== cv.height) { hl.width = cv.width; hl.height = cv.height; }
     const pr = cv.parentNode.getBoundingClientRect(), cr = cv.getBoundingClientRect();
     Object.assign(hl.style, { display: "block", left: (cr.left - pr.left) + "px", top: (cr.top - pr.top) + "px", width: cr.width + "px", height: cr.height + "px", transform: cv.style.transform || "", transformOrigin: cv.style.transformOrigin || "" });
     const k = cv.width / SW, c2 = hl.getContext("2d"); c2.setTransform(1, 0, 0, 1, 0, 0); c2.clearRect(0, 0, hl.width, hl.height);
-    if (thought) for (const [qx, qy, qw, qh] of [[SW - 35, 21, 28, 28], [SW - 41, 49, 7, 7], [SW - 50, 52, 47, 9]]) { const X = Math.round(qx * k), Y = Math.round(qy * k), W = Math.round(qw * k), H = Math.round(qh * k); c2.drawImage(cv, X, Y, W, H, X, Y, W, H); } // the thought, its little tail and "dismiss", in colour too
-    if (!t) return;
     const [rx, ry, rw, rh] = this.thinkRect(t, cx, cy), x = Math.max(0, Math.round((rx - cx) * k)), y = Math.max(0, Math.round((ry - cy) * k)), w = Math.round(rw * k), h = Math.round(rh * k);
     if (w > 0 && h > 0) c2.drawImage(cv, x, y, w, h, x, y, w, h);
     const pc = t.kind === "exhibit" && this.pieceById(t.piece); if (pc && pc.title) { // (Joe 10/21) an exhibit: its game's name, just over it
@@ -12349,7 +12364,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 158";
+const VERSION = "2026-11-18 cards 159";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
