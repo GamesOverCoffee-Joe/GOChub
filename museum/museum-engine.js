@@ -121,6 +121,7 @@ const PAL = {
   rtable:  [null, "#7a4a2a", "#a86a3a", "#1a1418", "#f0ece4", "#5a3420", "#8a8c94", "#4a9a3a"], // her side table: wood, a white cup, coffee, the ashtray, its little leaf
   rshelf:  [null, "#5a3a22", "#7a4a2a", "#1a1418", "#c83a3a", "#3a68c8", "#e8c040", "#58a048", "#8850c0"], // the nook's bookshelf: wood, and the guides' spines
   rbook:   [null, "#c8c8c8", "#f4efe0", "#1a1418", "#b0a890"], // her book: the cover (tinted to the book), the pages, the lines of text
+  rag: [null, "#e8c858", "#c89c38", "#8a6a20", "#f8eab0"], // the polishing rag (Joe 10/21): a yellow duster
   vac: ["#141012", "#c83838", "#8a2020", "#d8d8e0", "#8a8a98", "#3a3a48", "#f0c040"], // the vacuum: outline, red body, dark red, light grey, grey, dark grey, a yellow light
   exitsign: ["#141012", "#1f8a3c", "#f8f8f0", "#0e4a20"], // the exit sign over someone leaving: outline, green, white letters, dark green edge
   vend: ["#141012", "#8a2a2a", "#5a1818", "#1e2a38", "#f0e8d8", "#6a4028", "#e8c070", "#e86050", "#0a0a0a", "#b84a3a"], // the coffee vending machine
@@ -1141,6 +1142,12 @@ const GEN = {
     if (f === 1) { for (let x = 0; x < 16; x++) { const y = 6 + Math.round(Math.sin(((x + 8) % 16) / 16 * Math.PI) * 2); px(a, x, y, 4); px(a, x, y + 1, 5); } return a; }
     for (let y = 0; y < 16; y++) { px(a, 8 + ((y >> 2) & 1 ? 0 : 0), y, 4); px(a, 9, y, 5); } return a;
   },
+  rag: () => { // a folded polishing rag (Joe 10/21: Phase 2), a corner flopped over
+    const a = mk(16, 16);
+    rect(a, 3, 5, 10, 7, 1); rect(a, 3, 5, 10, 1, 4); rect(a, 3, 11, 10, 1, 2); rect(a, 9, 5, 4, 3, 2); px(a, 9, 7, 3); px(a, 12, 7, 3); // the cloth, a lighter fold, its shadow, the flopped corner
+    for (let x = 4; x < 12; x += 3) px(a, x, 9, 2); // stitching
+    return outline(a);
+  },
   tut_barrier: () => { // the first velvet rope (cards 76): a rope between two brass posts (Joe 10/21: back, for closing a room for cleaning)
     const a = mk(16, 16);
     for (const x of [2, 13]) { rect(a, x, 4, 1, 9, 1); px(a, x, 3, 2); rect(a, x - 1, 13, 3, 2, 1); }
@@ -1700,6 +1707,7 @@ const SLOTS = [
   { key: "exit_sign", label: "Visitor leaving (exit sign)", group: "People", w: 18, h: 8, pal: "exitsign", gen: GEN.exit_sign, note: "18×8, over a visitor on their way out of the museum (talking to them just says they're leaving)." },
   { key: "vacuum", label: "Vacuum", group: "Furniture", w: 16, h: 16, pal: "vac", gen: GEN.vacuum, note: "The Polish Lab's vacuum: standing in its corner, and pushed in front of you while you vacuum." },
   { key: "tut_barrier", label: "Cleaning rope", group: "Furniture", w: 16, h: 16, pal: "tbarrier", gen: GEN.tut_barrier, note: "The first velvet rope: a rope between two brass posts. Stands by an entrance; A on it closes the room for cleaning." },
+  { key: "rag", label: "Polishing rag", group: "Furniture", w: 16, h: 16, pal: "rag", gen: GEN.rag, note: "Equipment: hold B at a case to polish it. Also its spot in the Polish Lab and its Equipment icon." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
 const SLOT = {}; SLOTS.forEach(s => { s.frames = s.frames || 1; s.fps = s.fps || 0; SLOT[s.key] = s; });
@@ -2423,13 +2431,15 @@ const ROOMS = {
     props: [
       { key: "vacuum", x: 1, y: 3, toolSpot: "vacuum", event: { tool: "vacuum" } },
       { key: "vacuum", x: 2, y: 3, small: true, toolSpot: "handvac", event: { tool: "handvac" } },
+      { key: "rag", x: 3, y: 3, toolSpot: "rag", event: { tool: "rag" } },
+      { key: "watering_can", x: 12, y: 3, toolSpot: "can", event: { tool: "can" } },
       { key: "tut_barrier", x: 8, y: 9, event: { labRopes: true } }, // close the room for cleaning (Joe 10/21: the first velvet rope's art)
       { key: "bench", x: 5, y: 8, sit: "up", say: ["A bench. Vacuum around it."] },
       { key: "bench", x: 9, y: 8, sit: "up", say: ["A bench. Someone's always on it."] },
-      { key: "sign_stand", x: 13, y: 3, say: ["POLISH LAB", "Grab the vacuums, then pick one from Equipment in the Start menu: the wide one does three tiles, the hand vacuum one. Hold B to vacuum; double-tap B to leave it on.", "The rope by the door closes the room for cleaning (and opens it again).", "Every carpet tile remembers which way you went.", "No right answer. Stripes, diagonals, checkerboards: whatever looks nice to you.", "People walking across it scuff it up again."] },
+      { key: "sign_stand", x: 13, y: 3, say: ["POLISH LAB", "Grab the tools, then pick one from Equipment in the Start menu. The wide vacuum does all around you, the hand vacuum just where you stand. Hold B to vacuum; double-tap B to leave it on.", "The rag: hold B at a case to polish it. The watering can: B at a plant.", "The rope by the door closes the room for cleaning (and opens it again).", "Every carpet tile remembers which way you went.", "No right answer. Stripes, diagonals, checkerboards: whatever looks nice to you.", "People walking across it scuff it up again."] },
       { key: "sign_stand", x: 11, y: 3, event: { labCarpet: true } }, // carpet samples: the wings' carpets (Joe 10/21)
-      { key: "plant", x: 13, y: 9, say: ["A plant. Its turn comes later."] },
-      { key: "plant", x: 1, y: 9, say: ["A plant. Also waiting its turn."] },
+      { key: "plant", x: 13, y: 9, plant: "lab-plant-a", name: "Polish Lab" },
+      { key: "plant", x: 1, y: 9, plant: "lab-plant-b", name: "Polish Lab" },
     ],
     decals: [{ key: "rug", x: 3, y: 4, w: 9, h: 5, pattern: "double", motif: "flower", field: "#6a4630", border: "#452e0d", accent: "#3e2818", corner: "#c87848" }],
     cases: [[4, 5], [7, 5], [10, 5]],
@@ -3190,9 +3200,12 @@ const PIXEL_FONT = (() => {
   return out;
 })();
 const TOOLS = { // equipment (Joe 10/21): what each is, its icon (an art slot and frame), what it says, how many tiles it brushes across
-  vacuum: { name: "Wide vacuum", slot: "vacuum", wide: 3, desc: "Hold B to vacuum three tiles across; double-tap B to leave it running. Every tile remembers which way you pushed.", hint: "Wide vacuum: hold B (double-tap to leave it on)", got: "You got the wide vacuum!", spot: "The vacuum's corner. Yours is in your Equipment." },
-  handvac: { name: "Hand vacuum", slot: "vacuum", small: true, wide: 1, desc: "Hold B to vacuum one tile; double-tap B to leave it running. For corners and around benches.", hint: "Hand vacuum: hold B (double-tap to leave it on)", got: "You got the hand vacuum!", spot: "The hand vacuum's spot. Yours is in your Equipment." },
+  vacuum: { name: "Wide vacuum", slot: "vacuum", wide: 3, desc: "Hold B to vacuum all around you (three tiles by three); double-tap B to leave it running. Every tile remembers which way you pushed.", hint: "Wide vacuum: hold B (double-tap to leave it on)", got: "You got the wide vacuum!", spot: "The vacuum's corner. Yours is in your Equipment." },
+  rag: { name: "Polishing rag", slot: "rag", hand: true, desc: "Hold B at a case to polish it. Polished glass glints; it dulls again slowly.", hint: "Rag: hold B at a case", got: "You got a polishing rag!", spot: "The rag hook. Yours is in your Equipment." },
+  can: { name: "Watering can", slot: "watering_can", hand: true, desc: "B at a plant waters it.", hint: "Watering can: B at a plant", got: "You got the watering can!", spot: "The watering can's hook. Yours is in your Equipment." },
+  handvac: { name: "Hand vacuum", slot: "vacuum", small: true, hand: true, wide: 1, desc: "Hold B to vacuum the tile you're on; double-tap B to leave it running. For corners and around benches.", hint: "Hand vacuum: hold B (double-tap to leave it on)", got: "You got the hand vacuum!", spot: "The hand vacuum's spot. Yours is in your Equipment." },
 };
+const SHINE_DULL = 60 * 60 * 4; // frames for a polished case to go fully dull again (four minutes, for trying it in the lab)
 const LAB_CASES = ["tut-bus", "tut-sale", "tut-bus"]; // what's in the Polish Lab's cases
 const LAB_CODE = ["down", "down", "down", "up", "up", "up", "start"]; // to the Polish Lab and back (Joe 10/21)
 const KONAMI = ["up", "up", "down", "down", "left", "right", "left", "right", "b", "a", "start"];
@@ -6244,25 +6257,62 @@ class Game {
     if (c === this.player) return; // (your own steps don't scuff; the vacuum ahead of you does the brushing, vacTick)
     const v = N[k]; if (v && this.t - (v.t || 0) > 3600) { v.s -= 0.08; if (v.s <= 0.05) delete N[k]; if (v.s < 0.6 && this.napDone) this.napDone[r.id] = false; } // someone walking on it: a little scuffed, but only once it's had a minute (Joe 10/21)
   }
-  vacTick() { // the tiles under the vacuum (in front of you; the wide one three across) get brushed your way: as you start it, step, or turn (Joe 10/21)
-    if (!this.vacuuming()) { this.vacLast = null; return; }
-    const r = this.room, p = this.player, [dx, dy] = DIRS[p.dir], x = p.x + dx, y = p.y + dy, k = x + "," + y;
+  vacTick() { // the tiles the vacuum reaches get brushed your way: as you start it, step, or turn get brushed your way: as you start it, step, or turn (Joe 10/21)
+    this.polishTick(); if (!this.vacuuming()) { this.vacLast = null; return; }
+    const r = this.room, p = this.player, k = p.x + "," + p.y;
     if (this.vacLast === k + p.dir + this.tool) return; this.vacLast = k + p.dir + this.tool;
     const N = (this.nap || (this.nap = {}))[r.id] || (this.nap[r.id] = {}), half = (TOOLS[this.tool].wide - 1) / 2;
-    for (let i = -half; i <= half; i++) { const tx = x + (dx ? 0 : i), ty = y + (dy ? 0 : i); if (this.carpetAt(r, tx, ty)) N[tx + "," + ty] = { d: p.dir, s: 1, t: this.t }; }
+    for (let j = -half; j <= half; j++) for (let i = -half; i <= half; i++) { const tx = p.x + i, ty = p.y + j; if (this.carpetAt(r, tx, ty)) N[tx + "," + ty] = { d: p.dir, s: 1, t: this.t }; } // (Joe 10/21) the wide one: all nine tiles around you, yours too; the hand one: just yours
     this.napCheck(r);
   }
   vacDrawer(c, sx, sy) { // the vacuum you're pushing (Joe 10/21): the wide one full size, the hand vacuum small at your hands; a puff while it runs
-    const ctx = this.ctx, [dx, dy] = DIRS[c.dir], small = TOOLS[this.tool].small, sz = small ? 9 : 16;
+    const ctx = this.ctx, [dx, dy] = DIRS[c.dir], small = !!TOOLS[this.tool].hand, sz = small ? 9 : 16, slot = TOOLS[this.tool].slot; // (the rag and the can: small in your hand too)
     const vx = small ? sx + 4 + dx * 8 : sx + dx * 9, vy = small ? sy + (dy < 0 ? 6 : dy > 0 ? 16 : 10) : sy + (dy < 0 ? -7 : dy > 0 ? 10 : 4);
-    return () => { if (small) ctx.drawImage(this.sheet("vacuum"), 0, 0, 16, 16, vx, vy, sz, sz); else this.drawSlot("vacuum", 0, 0, vx, vy);
+    return () => { if (small) ctx.drawImage(this.sheet(slot), 0, 0, 16, 16, vx, vy, sz, sz); else this.drawSlot(slot, 0, 0, vx, vy);
       if (this.vacuuming() && this.t % 8 < 4) { ctx.fillStyle = "rgba(255,250,235,.7)"; ctx.fillRect(vx + (sz >> 1) + (this.t % 16 < 8 ? -1 : 1), vy + sz, small ? 1 : 2, 1); } };
+  }
+  twinkle(seed, x, y, w, h, sp, n) { // a faint twinkle now and then, eased in and out, somewhere new each time (the read pieces' sparkle, now the polish glint and a fresh carpet's)
+    if (sp <= 0) return; const ctx = this.ctx, period = Math.round(900 - 720 * sp), life = 60; n = n || (sp >= 0.5 ? 2 : 1);
+    for (let i = 0; i < n; i++) {
+      const tt = this.t + hash(seed, 7 + i * 5) % period, ph = tt % period; if (ph >= life) continue;
+      const cyc = Math.floor(tt / period), e = Math.sin(Math.PI * ph / life), a = e * e * (0.3 + 0.7 * sp);
+      const px = Math.round(x + 1 + hash(seed + cyc, 1 + i * 13) % Math.max(1, w - 2)), py = Math.round(y + 1 + hash(seed + cyc, 2 + i * 13) % Math.max(1, h - 2));
+      ctx.fillStyle = "#fff8dc"; ctx.globalAlpha = a; ctx.fillRect(px, py, 1, 1);
+      ctx.globalAlpha = a * 0.7; ctx.fillRect(px - 1, py, 3, 1); ctx.fillRect(px, py - 1, 1, 3);
+      if (e > 0.6) { ctx.globalAlpha = a * 0.35; ctx.fillRect(px - 2, py, 5, 1); ctx.fillRect(px, py - 2, 1, 5); }
+    }
+  }
+  /* Phase 2, polish (Joe 10/21): in the lab, a case's glass slowly dulls (its art a little less saturated); the rag brings it
+     back bright, and a fully polished case glints now and then. No fingerprints. */
+  shineOn(r) { return !!r && !!ROOMS[r.id] && !!ROOMS[r.id].lab; }
+  shineOf(r, c) { const S = (this.shine || (this.shine = {}))[r.id + ":" + c.x + "," + c.y]; return S ? Math.max(0, S.s - (this.t - S.t) / SHINE_DULL) : 0.35; } // (unpolished: a bit dull)
+  polishTick() {
+    const r = this.room, p = this.player; this.polishing = null;
+    if (this.tool !== "rag" || !this.toolActive() || !(this.btnHeld && this.btnHeld.has("b")) || p.moving) return;
+    const [dx, dy] = DIRS[p.dir], e = r.events[(p.x + dx) + "," + (p.y + dy)], c = e && e.caseAt; if (!c || !c.piece || !this.shineOn(r)) return;
+    const k = r.id + ":" + c.x + "," + c.y, was = this.shineOf(r, c), now = Math.min(1, was + 1 / 80); this.shine[k] = { s: now, t: this.t }; this.polishing = c;
+    if (was < 1 && now >= 1) { this.shine[k].glow = this.t; this.showLoc("Gleaming"); }
+  }
+  waterAhead() { // the watering can: B at a plant
+    const r = this.room, p = this.player, [dx, dy] = DIRS[p.dir], x = p.x + dx, y = p.y + dy, e = r.events[x + "," + y];
+    if (!e || !e.plant) { this.showLoc("Nothing to water there"); return; }
+    this.waterFx = { room: r.id, x, y, t0: this.t };
+    if (!this.isThirsty(e.plant)) { this.showLoc("It's had plenty"); return; }
+    this.progress.watered[e.plant] = todayISO(); this.count("watered", r.id + ":" + e.plant); this.bump(this.progress.stats.plants, e.name || "plant"); this.saveProgress(); this.showLoc("Watered");
+  }
+  drawPolish(r, cx, cy) { // over the cases: the glint on polished ones, the rag at work, the can's water
+    const ctx = this.ctx;
+    if (this.shineOn(r)) for (const c of r.cases) { if (!c.piece || c.state !== "wall") continue; const sh = this.shineOf(r, c), S = this.shine && this.shine[r.id + ":" + c.x + "," + c.y], fresh = S && S.glow && this.t - S.glow < 240;
+      if (sh >= 0.85 || fresh) this.twinkle(strSeed(c.piece.id) + c.x, c.x * T - cx + 1, c.y * T - T - cy + 2, 14, 12, fresh ? 1 : this.pack.settings.staff.sparkle, fresh ? 3 : 2); }
+    const c = this.polishing; if (c) { const x = c.x * T - cx + 3 + Math.round(Math.sin(this.t / 3) * 3), y = c.y * T - T - cy + 4 + Math.round(Math.cos(this.t / 5)); ctx.globalAlpha = 1; ctx.drawImage(this.sheet("rag"), 0, 0, 16, 16, x, y, 9, 9); } // rubbing the glass
+    const W = this.waterFx; if (W && W.room === r.id && this.t - W.t0 < 40) { const e = this.t - W.t0; ctx.fillStyle = "#8ac8f0"; for (let i = 0; i < 4; i++) { const d = (e * 0.6 + i * 5) % 12; ctx.globalAlpha = 0.8; ctx.fillRect(W.x * T - cx + 4 + i * 3, W.y * T - cy - 6 + d, 1, 2); } }
+    ctx.globalAlpha = 1;
   }
   napTiles(r) { const out = []; for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) if (!r.solid[y][x] && this.carpetAt(r, x, y)) out.push([x, y]); return out; } // the carpet you can get at (not under benches or cases)
   napCheck(r) { // the whole floor freshly done: a few sparkles on it, and the people here notice (Joe 10/21)
     const N = (this.nap && this.nap[r.id]) || {}, D = this.napDone || (this.napDone = {}), all = this.napTiles(r), done = all.length > 0 && all.every(([x, y]) => N[x + "," + y] && N[x + "," + y].s >= 0.6);
     if (!done) { D[r.id] = false; return; } if (D[r.id]) return; D[r.id] = true;
-    const pick = all.slice().sort(() => Math.random() - 0.5).slice(0, 9); this.floorFx = pick.map(([x, y], i) => ({ room: r.id, x, y, t0: this.t + i * 8 }));
+    this.napDoneT = this.t; // a burst of twinkles to start (drawNap), then the odd one while it stays fresh
     r.npcs.filter(n => !n.staff && !n.still).forEach((n, i) => { n.pose = { kind: "heart", t0: this.t, dur: 90 }; n.lines = [this.tx("polish.fresh")]; n.lineI = -1; });
   }
   drawNap(r, cx, cy) {
@@ -6273,8 +6323,9 @@ class Game {
       ctx.globalAlpha = a; ctx.fillStyle = light ? "#fff4e0" : "#140a04"; ctx.fillRect(px, py, T, T);
       ctx.globalAlpha = a * 0.9; for (let i = 1; i < T; i += 3) { if (vert) ctx.fillRect(px + i, py, 1, T); else ctx.fillRect(px, py + i, T, 1); } } // the nap's grain, along the way it was pushed
     ctx.globalAlpha = 1;
-    this.floorFx = (this.floorFx || []).filter(f => this.t - f.t0 < 32);
-    for (const f of this.floorFx) { const fr = Math.floor((this.t - f.t0) / 4) % 4; if (f.room === r.id && fr >= 0) this.drawSlot("sparkle", fr, 0, f.x * T - cx, f.y * T - cy); } // the floor's done: sparkles here and there
+    if (this.napDone && this.napDone[r.id]) { const burst = this.t - (this.napDoneT || -9999) < 300; // the floor's all fresh: the read pieces' old twinkle, here and there (Joe 10/21)
+      for (const k in N) { const [x, y] = k.split(",").map(Number); this.twinkle(x * 977 + y * 131, x * T - cx, y * T - cy, T, T, burst ? 0.9 : 0.35, 1); }
+      ctx.globalAlpha = 1; }
   }
   /* Equipment (Joe 10/21): tools you find once and then equip from the Start menu, Zelda style. Only the Polish Lab uses them
      for now. B is the tool button while one's equipped: hold it to vacuum (double-tap to leave it running, tap to stop);
@@ -6292,6 +6343,7 @@ class Game {
   equip(kind) { this.tool = kind || null; this.vacLatch = false; if (this.progress.tools) { this.progress.tools.on = this.tool; this.saveProgress(); } }
   putToolBack() { this.vacLatch = false; } // (leaving the lab: the vacuum switches off)
   toolPress() {
+    if (this.tool === "can") { this.waterAhead(); return; }
     if (TOOLS[this.tool] && TOOLS[this.tool].wide) { const dbl = this.lastB && this.t - this.lastB < 20; this.lastB = this.t;
       if (this.vacLatch) { this.vacLatch = false; this.lastB = 0; this.showLoc("Vacuum off"); } else if (dbl) { this.vacLatch = true; this.lastB = 0; this.showLoc("Vacuum left on (B to stop)"); }
       return; }
@@ -11204,6 +11256,10 @@ class Game {
       const art = this.pieceArt(c.piece), iw = art.naturalWidth || art.width, ih = art.naturalHeight || art.height;
       const lift = c.state === "lifting" && this.hanging ? Math.round(10 * (1 - Math.min(1, this.hanging.t / 26))) : 0;
       ctx.imageSmoothingEnabled = iw > 48; ctx.drawImage(art, 0, 0, iw, ih, x + 2, y + 3 + lift, 12, 10); ctx.imageSmoothingEnabled = false;
+      if (this.shineOn(this.room) && c.state === "wall") { const sh = this.shineOf(this.room, c); ctx.save(); // polish (the lab): dull glass washes the color out a little; polished, it's brighter
+        if (sh < 1) { ctx.globalCompositeOperation = "saturation"; ctx.globalAlpha = 0.75 * (1 - sh); ctx.fillStyle = "#808080"; ctx.fillRect(x + 2, y + 3, 12, 10); ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 0.18 * (1 - sh); ctx.fillStyle = "#3a3440"; ctx.fillRect(x + 2, y + 3, 12, 10); }
+        if (sh > 0.7) { ctx.globalCompositeOperation = "screen"; ctx.globalAlpha = 0.35 * (sh - 0.7); ctx.fillStyle = "#fff4dc"; ctx.fillRect(x + 2, y + 3, 12, 10); }
+        ctx.restore(); }
     }
     this.drawSlot("display_case", 0, 0, x, y);
     if (c.piece && c.state === "wall") {
@@ -11428,7 +11484,7 @@ class Game {
      gives off a very faint, now-and-then sparkle. A painting gets the same line along the floor in front of it. On a
      piece's unveil day (while its wing has bunting) its border pulses blue all day. Staff tab: Pieces you haven't read. */
   sidesOf(p) { return (p.tut ? (this.tut ? this.tut.sides[p.id] : { note: 1 }) : this.progress.sides[p.id]) || {}; }
-  drawReadBorders(r, cx, cy, top) { // top: the second pass, after the cases are drawn: just the sparkles
+  drawReadBorders(r, cx, cy) { // (Joe 10/21: reading a piece no longer makes it sparkle; polishing makes it glint, drawPolish)
     const st = this.pack.settings.staff, s = st.readStrength; if (st.readStyle === "off" || s <= 0) return;
     const ctx = this.ctx, today = todayISO(), base = Math.min(1, 0.35 + s), pulse = 0.5 + 0.5 * Math.sin(this.t / 45);
     const RED = [232, 70, 70], GREEN = [96, 220, 112], BLUE = [90, 170, 255], FLARE = [214, 255, 220], FX = 100;
@@ -11446,26 +11502,7 @@ class Game {
       return k => { const g = f ? k : b ? 1 - k : 0; return [RED.map((v, i) => Math.round(v + (GREEN[i] - v) * g)), base * (g * 0.7 + (1 - g) * (0.4 + 0.6 * pulse))]; };
     };
     const dot = (col, wx, wy, k, w, h) => { if (!floor(wx, wy)) return; const [c, a] = col(k); ctx.globalAlpha = a; ctx.fillStyle = "rgb(" + c + ")"; ctx.fillRect(wx - cx, wy - cy, w, h); };
-    const sp = st.sparkle; // Staff tab: Sparkle on read pieces (0 is off)
-    const sparkle = (p, x, y, w, h) => { // read: twinkles now and then, eased in and out, somewhere new each time
-      if (sp <= 0) return;
-      const seed = strSeed(p.id), period = Math.round(900 - 720 * sp), life = 60, n = sp >= 0.5 ? 2 : 1;
-      for (let i = 0; i < n; i++) {
-        const tt = this.t + hash(seed, 7 + i * 5) % period, ph = tt % period; if (ph >= life) continue;
-        const cyc = Math.floor(tt / period), e = Math.sin(Math.PI * ph / life), a = e * e * (0.3 + 0.7 * sp);
-        const px = Math.round(x + 1 + hash(seed + cyc, 1 + i * 13) % Math.max(1, w - 2)), py = Math.round(y + 1 + hash(seed + cyc, 2 + i * 13) % Math.max(1, h - 2));
-        ctx.fillStyle = "#fff8dc"; ctx.globalAlpha = a; ctx.fillRect(px, py, 1, 1);
-        ctx.globalAlpha = a * 0.7; ctx.fillRect(px - 1, py, 3, 1); ctx.fillRect(px, py - 1, 1, 3);
-        if (e > 0.6) { ctx.globalAlpha = a * 0.35; ctx.fillRect(px - 2, py, 5, 1); ctx.fillRect(px, py - 2, 1, 5); }
-      }
-    };
     const onScreen = (x, y) => x * T - cx > -48 && x * T - cx < SW + 48 && y * T - cy > -48 && y * T - cy < SH + 48;
-    const done = p => { const sd = this.sidesOf(p); return (sd.note || (sd.front && sd.back)) && (fx[p.id] === undefined || this.t - fx[p.id] >= FX); };
-    if (top) { // "cases": over the cases, after their tops are redrawn over people (or the tops would cover it); otherwise the paintings
-      if (top === "cases") { for (const c of r.cases) if (c.piece && c.state === "wall" && onScreen(c.x, c.y) && !this.isDark(r, c.x, c.y) && done(c.piece)) sparkle(c.piece, c.x * T - cx + 2, c.y * T - T - cy + 3, 12, 10); ctx.globalAlpha = 1; return; }
-      for (const h of r.hung) if (h.piece && h.state === "wall" && onScreen(h.x, h.y + 2) && !this.isDark(r, h.x, h.y + 2) && done(h.piece)) sparkle(h.piece, h.x * T - cx + 4, h.y * T - cy + 4, 24, 18);
-      ctx.globalAlpha = 1; return;
-    }
     for (const c of r.cases) {
       if (!c.piece || c.piece.tut || c.state !== "wall" || !onScreen(c.x, c.y) || this.isDark(r, c.x, c.y)) continue; // (the tutorial's games: no border, Joe 10/20)
       const col = state(c.piece); if (!col) continue;
@@ -11715,7 +11752,6 @@ class Game {
     for (const b of (this.sup && this.sup.boxes) || []) if (b.room === r.id) this.drawSlot("supply_box", b.kind === "cafe" ? 1 : 0, 0, b.x * T - cx, b.y * T - cy); // deliveries waiting by the garage door
     for (const c of r.cases) this.drawCase(c, cx, cy);
     for (const p of r.props) this.drawProp(p, cx, cy);
-    this.drawReadBorders(r, cx, cy, true); // read paintings: a faint sparkle
     if (r.joe) { // Joe on the museum floor; glitching out when you talk to him
       const j = r.joe, x = j.x * T - cx, y = j.y * T - cy, img = this.sheet("joe"), f = this.frame("joe");
       if (!j.t) this.drawSlot("joe", f, 0, x, y);
@@ -11748,7 +11784,7 @@ class Game {
       const SI = this.side && this.side.item, held = SI && !c.sitting && ((c === this.player && this.carryItem) || (c.itemPair === "taker" && SI.phase >= 2 && !SI.got)) ? SI.kind : -1; // the break room mix-up: the item in hand
       const heldAt = held >= 0 ? [sx + { down: 9, up: 1, left: 1, right: 9 }[c.dir], sy + 9] : null, heldFirst = heldAt && c.dir === "up";
       if (heldFirst) this.drawSlot("held_items", held, 0, ...heldAt);
-      const vac = c === this.player && TOOLS[this.tool] && TOOLS[this.tool].wide && this.toolActive() ? this.vacDrawer(c, sx, sy) : null;
+      const vac = c === this.player && TOOLS[this.tool] && (TOOLS[this.tool].wide || TOOLS[this.tool].hand) && this.toolActive() && !(this.polishing && this.tool === "rag") ? this.vacDrawer(c, sx, sy) : null;
       if (vac && c.dir === "up") vac(); // pushed away from you: behind you
       if (cupFirst) this.drawCup(sx, sy, c);
       const tbAt = (c.trashBag || (c === this.player && this.trashBag != null)) && !c.sitting ? [sx + { down: 1, up: 9, left: 9, right: -1 }[c.dir], sy + 9] : null, tbFirst = tbAt && c.dir !== "down"; // his trash bag hangs at his side
@@ -11811,7 +11847,7 @@ class Game {
       ctx.globalAlpha = 1;
     }
     this.drawUppers(r, cx, cy); bubbles.forEach(f => f());
-    this.drawReadBorders(r, cx, cy, "cases"); // read cases: a faint sparkle, over their redrawn tops
+    this.drawPolish(r, cx, cy); // polished cases glint, the rag, the can's water (over the cases' redrawn tops)
     if (full) return;
     this.drawLighting(r, cx, cy, pp);
     this.drawDoorSigns(r, cx, cy);
@@ -11874,7 +11910,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 144";
+const VERSION = "2026-11-18 cards 145";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

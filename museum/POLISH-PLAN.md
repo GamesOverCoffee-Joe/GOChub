@@ -21,20 +21,22 @@ A test room you reach with a button code, so mechanics can be tried one at a tim
 - **In the room:** a big carpet, two visitors wandering, and the tools as they're built.
 
 ### Phase 1: vacuuming — prototype built (in the lab)
-- Two vacuums, each on its own stand, yours once you pick them up (like Zelda items): the **wide vacuum** brushes three tiles across in front of you, the **hand vacuum** one (for corners and around benches).
+- Two vacuums, each on its own stand, yours once you pick them up (like Zelda items): the **wide vacuum** brushes all nine tiles around you (yours too), the **hand vacuum** just the tile you're on (for corners and around benches).
 - **Equipment** (Start menu, once you own one): a row of icons; pick which you hold. They work in the lab for now.
 - **Hold B** to vacuum: the tiles under the vacuum remember the direction you went, showing light and dark stripes like a mowed lawn. **Double-tap B** to leave it on; tap B to turn it off.
-- **Finishing the floor:** when every carpet tile you can reach is freshly done, a few sparkles on the floor, and the people there notice (a heart, a line). No counter.
+- **Finishing the floor:** when every carpet tile you can reach is freshly done, soft twinkles across it (the same ones as a polished case), and the people there notice (a heart, a line). No counter.
 - **Closing a room for cleaning:** a velvet rope stand by the entrance. A on it: a dip to black, everyone's out. A again: they come back. In the museum this becomes one stand per wing entrance (tours out too, the reader stays); these can't be recommended.
 - The lab has three cases, two benches and carpet samples (each wing's carpet) to try it on.
 - No correct pattern. Straight lines, diagonals, checkerboards, initials.
 - Visitors walking across the carpet scuff your stripes, but only a minute after you vacuumed there, and slowly. Vacuum again any time.
 - **To decide after trying it:** how strong the stripes look; how fast scuffs wear them; whether the vacuum slows you down; a hum or sparkle as you go.
 
-### Phase 2: glass and cases (in the lab)
-- Cases have layers of shine (not dirty/clean). Polishing raises it; a fully polished case gives a quiet glint now and then.
-- Fingerprints come back slowly from visitors leaning in to read.
-- Replaces today's "wipe the fingerprints" fix.
+### Phase 2: polish — prototype built (in the lab)
+- The **polishing rag** (Equipment): hold B at a case and the rag rubs the glass. No fingerprints, just polish.
+- Over time a case's glass dulls: its piece looks a little less saturated. Polished, it's brighter, and a fully polished case glints now and then.
+- The glint used to be what a fully read piece did; reading no longer sparkles, polishing does (curator Staff: Glint on polished cases).
+- The **watering can** is in Equipment too (B at a plant).
+- **To decide after trying it:** how fast cases dull (four minutes now, for testing); paintings too; replacing today's "wipe the fingerprints" fix in the museum.
 
 ### Phase 3: mopping and trash cans (in the lab)
 - Mop: a wet sheen that dries over a few seconds; visitors step around a wet patch.

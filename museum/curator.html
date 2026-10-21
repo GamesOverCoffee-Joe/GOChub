@@ -484,7 +484,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 144";
+window.GOQ_WANT = "2026-11-18 cards 145";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -1140,7 +1140,7 @@ function renderStaff() {
   rsty.value = st.readStyle === "off" ? "off" : "border";
   const rs = el("input", { type: "range", min: 0, max: 100, step: 1, value: Math.round((st.readStrength === undefined ? 0.4 : st.readStrength) * 100), "aria-label": "How strong the unread mark is" });
   const rsOut = el("output", { text: rs.value + "%" });
-  const sk = el("input", { type: "range", min: 0, max: 100, step: 1, value: Math.round((st.sparkle === undefined ? 0.7 : st.sparkle) * 100), "aria-label": "How much read pieces sparkle" });
+  const sk = el("input", { type: "range", min: 0, max: 100, step: 1, value: Math.round((st.sparkle === undefined ? 0.7 : st.sparkle) * 100), "aria-label": "How much polished cases glint" });
   const skOut = el("output", { text: sk.value + "%" });
   sk.addEventListener("input", () => { st.sparkle = +sk.value / 100; skOut.textContent = sk.value + "%"; if (game && game.pack) game.pack.settings.staff.sparkle = st.sparkle; changed(); }); // see it in the preview right away
   const rApply = () => { if (game && game.pack) { game.pack.settings.staff.readStyle = st.readStyle; game.pack.settings.staff.readStrength = st.readStrength; } }; // see it in the preview right away
@@ -1148,10 +1148,10 @@ function renderStaff() {
   rs.addEventListener("input", () => { st.readStrength = +rs.value / 100; rsOut.textContent = rs.value + "%"; rApply(); changed(); });
   wrap.appendChild(el("section", { class: "prow", style: "display:block" }, [
     el("h3", { text: "Pieces you haven't read", style: "margin:0 0 4px" }),
-    el("p", { class: "note", style: "margin:0 0 12px", text: "A thin border on the floor around each case (and a line in front of each painting) shows what's left to read. It pulses red until you read it; reading one side turns that side green, fading to red toward the other side. A side only counts once its placard is read to the last page. Once both sides are read it turns green, flares, and fades away for good, and from then on the piece sparkles now and then (Sparkle on read pieces; 0% turns it off). On a piece's unveil day it pulses blue until it's read, then flares the same way. Strength sets how bright it is. The Preview tab's Unread everything resets it." }),
+    el("p", { class: "note", style: "margin:0 0 12px", text: "A thin border on the floor around each case (and a line in front of each painting) shows what's left to read. It pulses red until you read it; reading one side turns that side green, fading to red toward the other side. A side only counts once its placard is read to the last page. Once both sides are read it turns green, flares, and fades away for good. (Reading no longer makes a piece sparkle: a polished case glints now and then instead, Glint on polished cases, 0% turns it off.) On a piece's unveil day it pulses blue until it's read, then flares the same way. Strength sets how bright it is. The Preview tab's Unread everything resets it." }),
     el("div", { class: "fields", style: "max-width:420px" }, [el("label", {}, [document.createTextNode("Style"), rsty])]),
     el("label", { class: "range" }, [el("span", { text: "Strength" }), rs, rsOut]),
-    el("label", { class: "range" }, [el("span", { text: "Sparkle on read pieces" }), sk, skOut]),
+    el("label", { class: "range" }, [el("span", { text: "Glint on polished cases" }), sk, skOut]),
   ]));
   const ps = el("input", { type: "range", min: 20, max: 100, step: 5, value: Math.round((st.patronSpeed === undefined ? 0.45 : st.patronSpeed) * 100), "aria-label": "Visitor walking speed" });
   const psOut = el("output", { text: ps.value + "%" });
