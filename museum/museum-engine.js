@@ -1350,6 +1350,8 @@ const GEN = {
   },
   // A little light on the hallway floor, by the wall: lit even in the dark (left side; mirrored on the right).
   aisle_light: () => { const a = mk(4, 3); rect(a, 0, 0, 4, 3, 1); rect(a, 1, 0, 2, 2, 2); px(a, 1, 0, 3); return a; },
+  planter_flower: () => { const a = GEN.planter(); [[3, 3, 2], [8, 1, 9], [12, 3, 3], [6, 5, 6], [10, 5, 2], [4, 6, 3]].forEach(([x, y, c]) => { px(a, x, y, c); px(a, x + 1, y, c); px(a, x, y + 1, c); px(a, x + 1, y + 1, c); }); return a; }, // (Joe 10/21) watered: in flower
+  planter_wide_flower: () => { const a = GEN.planter_wide(); [[3, 4, 9], [9, 1, 3], [13, 4, 6], [19, 2, 2], [23, 4, 3], [27, 2, 9], [7, 6, 2], [18, 6, 6]].forEach(([x, y, c]) => { px(a, x, y, c); px(a, x + 1, y, c); px(a, x, y + 1, c); px(a, x + 1, y + 1, c); }); return a; },
   // A long planter box, two tiles wide: a leafy row with a few flowers.
   planter_wide: () => {
     const a = mk(32, 16);
@@ -1852,6 +1854,8 @@ const SLOTS = [
   { key: "floor_specks", label: "Specks on the carpet", group: "Floors", w: 16, h: 16, frames: 3, pal: "mess", gen: GEN.floor_specks, note: "3 looks (48×16). People leave a few now and then; the vacuum picks them up." },
   { key: "floor_spill", label: "Spill on the floor", group: "Floors", w: 16, h: 16, frames: 2, pal: "mess", gen: GEN.floor_spill, note: "2 looks (32×16). From people's drinks, on wood floors; the mop cleans it up." },
   { key: "rope_v", label: "Cleaning rope (up and down)", group: "Furniture", w: 16, h: 16, pal: "tbarrier", gen: GEN.rope_v, note: "The cleaning rope running up and down: across a way into a room from the side, when it's closed for cleaning. Tiles stack into one rope." },
+  { key: "planter_flower", label: "Planter, in flower", group: "Gift shop and café", w: 16, h: 16, pal: "trinket", gen: GEN.planter_flower, note: "A planter that's been watered: in flower. It goes back to the plain planter a day after it misses its water." },
+  { key: "planter_wide_flower", label: "Long planter, in flower", group: "Furniture", w: 32, h: 16, pal: "trinket", gen: GEN.planter_wide_flower, note: "The long planter, watered: in flower." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
 const SLOT = {}; SLOTS.forEach(s => { s.frames = s.frames || 1; s.fps = s.fps || 0; SLOT[s.key] = s; });
@@ -2744,6 +2748,8 @@ const TEXT = {
   "polish.plant1":   { g: "Polish Lab", l: "A lab plant, looked at: normal", by: "claude", v: [["A healthy plant. Nothing fancy."]] },
   "polish.plant2":   { g: "Polish Lab", l: "A lab plant, looked at: full", by: "claude", v: [["Full and leafy. Someone's been looking after it."]] },
   "polish.plant3":   { g: "Polish Lab", l: "A lab plant, looked at: flowering", by: "claude", v: [["It's flowering!"]] },
+  "planter.0":         { g: "Chores", l: "A planter, looked at: plain (water it and it flowers the next day)", by: "claude", v: [["A planter. Green and tidy, but no flowers.", "A little water each day would help."]] },
+  "planter.1":         { g: "Chores", l: "A planter, looked at: in flower (watered the day before)", by: "claude", v: [["The planter's in full bloom.", "Somebody's been taking care of it."]] },
   "polish.plantDamp": { g: "Polish Lab", l: "Added after the above, if it's been watered today", by: "claude", v: [["The soil's still damp from today."]] },
   "polish.binEmpty": { g: "Polish Lab", l: "The lab's trash can, when it's empty", by: "claude", v: [["Still plenty of room in this one."]] },
   "polish.binBag":   { g: "Polish Lab", l: "The lab's trash can with something in it, when you have trash bags", by: "claude", v: [["Some trash in this one.", "Hold B with a trash bag to take it out."]] },
@@ -2985,6 +2991,8 @@ const TEXT = {
   "opt.keepGoing":     { g: "Menu options", l: "Your follower: carry on", v: [["Keep going"]] },
   "opt.lookingFor":    { g: "Menu options", l: "Your follower: what they wanted again", v: [["What were you looking for?"]] },
   "zone.oneAtATime":   { g: "Volunteering", l: "The rope to close an area for cleaning, while another one's already closed ({other}: that one)", by: "claude", v: [["{other} is already closed for cleaning.", "One area at a time. Open that one back up first."]] },
+  "cur.youThought":    { g: "Curious visitors", l: "After \"Let me think\": you come out of thinking with something in mind, and they notice (then their answer)", by: "claude", v: [["Oh! You thought of something?"], ["Ooh, that look. You've got an idea, don't you?"], ["Did you think of one? Show me!"]] },
+  "cur.notIt":         { g: "Curious visitors", l: "A curious visitor, when what you recommended isn't the game they're after", by: "claude", v: [["Hmm... I don't think that's the one."], ["No, that's not it. But thanks for trying!"], ["Close, maybe? No... that's not it."]] },
   "think.dismiss":     { g: "Thinking", l: "While thinking, B with a thought in mind: let it go?", v: [["Dismiss thought?"]] },
   "opt.think":         { g: "Menu options", l: "A curious visitor, when the game they want isn't the one in your mind: go and think", v: [["Let me think"]] },
   "opt.thisGame":      { g: "Menu options", l: "A curious visitor, with the very game they want in your mind: recommend it", v: [["This game?"]] },
@@ -3814,7 +3822,8 @@ function buildRoom(id, pieces, o) {
     r.solid[y][x] = !WALK_TILES.includes(ch);
   }
   (def.props || []).forEach(p => {
-    r.props.push({ key: p.key, x: p.x, y: p.y, plant: p.plant, mugShelf: p.mugShelf, sit: p.sit, rack: p.rack, unit: p.unit, collection: p.collection, catBed: p.catBed, tall: p.tall, toolSpot: p.toolSpot, small: p.small });
+    if ((p.key === "planter" || p.key === "planter_wide") && !p.plant) p = Object.assign({}, p, { plant: "planter-" + id + "-" + p.x + "-" + p.y, name: "planter", planter: true }); // (Joe 10/21) planters get watered too: plain, or in flower
+    r.props.push({ key: p.key, x: p.x, y: p.y, plant: p.plant, planter: p.planter, mugShelf: p.mugShelf, sit: p.sit, rack: p.rack, unit: p.unit, collection: p.collection, catBed: p.catBed, tall: p.tall, toolSpot: p.toolSpot, small: p.small });
     for (let i = 0; i < SLOT[p.key].w / T; i++) {
       r.solid[p.y][p.x + i] = true;
       // Tall things: you can walk behind the top row (and are hidden by it) unless it's marked blockTop, like racks and cabinets.
@@ -6547,9 +6556,9 @@ class Game {
   /* The museum's plants (Joe 10/21: Phase 4 in the museum): the same four stages, by real days. Water one on a day and the
      next day it's grown a stage (up to flowering, where it stays while you keep at it); each day it went without, it slips back one. */
   plantCare(id) {
-    const C = this.progress.plantCare || (this.progress.plantCare = {}), today = todayISO(), P = C[id] || (C[id] = { stage: 1, day: today });
+    const C = this.progress.plantCare || (this.progress.plantCare = {}), today = todayISO(), top = /^planter-/.test(id) ? 1 : 3, P = C[id] || (C[id] = { stage: top === 1 ? 0 : 1, day: today }); // (a planter: just plain, or in flower)
     if (P.day !== today) { const n = Math.max(1, daysBetween(P.day, today)), was = this.progress.watered[id] === P.day;
-      P.stage = Math.max(0, Math.min(3, P.stage + (was ? 1 : -1) - (n - 1))); P.day = today; this.saveProgress(); }
+      P.stage = Math.max(0, Math.min(top, P.stage + (was ? 1 : -1) - (n - 1))); P.day = today; this.saveProgress(); }
     return P;
   }
   plantStage(id) { return /^lab-/.test(id) ? this.labPlant(id).stage : this.plantCare(id).stage; }
@@ -7501,7 +7510,7 @@ class Game {
     const over = groups.map(([g, p]) => [p.now.length - p.want, p]).filter(x => x[0] > 0).sort((x, y) => y[0] - x[0])[0];
     const under = groups.map(([g, p]) => [p.want - p.now.length, p]).filter(x => x[0] > 0).sort((x, y) => y[0] - x[0])[0];
     if (over) {
-      const n = over[1].now.find(n => !n.moving && !n.sitting && !n.queue && !n.reco && !n.recoAt && !n.askFx && !n.tell && !n.chat && !n.hold && Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 2); if (n) { n.leaving = true; n.stroll = true; n.leaveT = 0; n.alpha = 1; n.route = null; n.aside = null; n.timer = 0; this.dirClock.last = { what: "out", t: this.t }; }
+      const n = over[1].now.find(n => !n.moving && !n.sitting && !n.queue && !n.reco && !n.recoAt && !n.askFx && !n.tell && !n.chat && !n.hold && !n.cur && !n.follow && !n.approach && !n.cheering && !n.react && !n.ideaFx && Math.abs(n.x - this.player.x) + Math.abs(n.y - this.player.y) > 2); if (n) { n.leaving = true; n.stroll = true; n.leaveT = 0; n.alpha = 1; n.route = null; n.aside = null; n.timer = 0; this.dirClock.last = { what: "out", t: this.t }; }
     } else if (under) {
       const at = def.enterAt || def.exitTo || def.spawn, [x, y] = at || []; if (at === undefined || !this.tileFree(r, x, y) || (this.player.x === x && this.player.y === y)) return;
       // They head straight for somewhere in that wing (in front of a piece, if one's free) and only look around once there.
@@ -8624,16 +8633,18 @@ class Game {
   curHasIt(v) { const I = this.idea; return !!I && I.room === this.room.id && I.kind === "exhibit" && I.piece === v.want; } // (Joe 10/21) the very game they're after, in your mind: "This game?"; otherwise "Let me think"
   curPick(n, o) {
     if (o === "thisGame") this.curRecommend(n);
-    else if (o === "think") { if (this.canThink()) this.enterThink(); }
+    else if (o === "think") { if (this.canThink()) { this.thinkFor = n; this.enterThink(); } } // (Joe 10/21) whatever you pick, they take as your answer
     else if (o === "follow") this.startFollow(n);
     else if (o === "gameName") this.tellName(n);
+    else if (o === "busy") this.say(this.tx("cur.busy", { name: n.cur.name }).map((p, k) => (k ? p : n.cur.name + ": " + p))); // (Joe 10/21) they say something
   }
   curRecommend(n) { // what you're thinking about, for the game they're thinking about: a "?", then the right one is off they go (briskly), the wrong one's a no
     const v = n.cur, I = Object.assign({}, this.idea);
     n.askFx = { t0: this.t }; n.route = null; n.timer = Math.max(n.timer || 0, 50); n.stepWait = 50;
     n.recoAt = { t: this.t + 40, fn: () => { n.askFx = null; if (!n.cur) return;
       const r = this.room, near = I.kind === "exhibit" && I.piece === v.want && this.recoSpot(r, n, I.x, I.y);
-      if (!near) { if (I.piece !== v.want) this.progress.stats.nope++; this.saveProgress(); n.pose = { kind: I.piece === v.want ? "busy" : "annoyed", t0: this.t, dur: 110 }; n.timer = 130; return; } // not the one (or no way to it from here: try Follow me)
+      if (!near) { if (I.piece !== v.want) this.progress.stats.nope++; this.saveProgress(); n.pose = { kind: I.piece === v.want ? "busy" : "annoyed", t0: this.t, dur: 110 }; n.timer = 130;
+        if (I.piece !== v.want && this.mode === "walk") this.say(this.tx("cur.notIt", { name: v.name }).map((p, k) => (k ? p : v.name + ": " + p))); return; } // not the one (or no way to it from here: try Follow me); a wrong one, they say so (Joe 10/21)
       Object.assign(n, { goalT: near, route: null, timer: 0, retry: 0, viewing: false, stepWait: 0, arrived: false, reco: { kind: "cur", x: I.x, y: I.y, piece: I.piece, icon: I.icon } });
       n.ideaFx = { t0: this.t, icon: I.icon, keep: true }; n.hopT = this.t; } }; // yes! that's it
   }
@@ -8735,7 +8746,7 @@ class Game {
   /* The right recommendation: they're thrilled (a big heart, sparkles, a hop), you see it for a moment, then they talk. */
   cheer(n, then, away) { // a little moment: your controls wait, the text box clears, the view eases in on them while the heart floats up, then back out (away: you're not there, they keep facing the case)
     this.el.text.style.display = "none"; this.txt = null; this.mode = "busy"; if (!away) n.dir = OPP[this.player.dir];
-    n.react = { how: "thrilled", t0: this.t };
+    n.react = { how: "thrilled", t0: this.t }; n.cheering = true; n.route = null; n.goalT = null; n.leaving = false; // (Joe 10/21) they stay put for it: nobody sends them home mid-heart
     const cv = this.canvas, q = this.pos(n), zoom = !REDUCED_MOTION && cv;
     if (zoom) {
       const ox = Math.max(0, Math.min(100, (q.x + 8 - this.camX) / SW * 100)), oy = Math.max(0, Math.min(100, (q.y + 2 - this.camY) / SH * 100));
@@ -8744,7 +8755,7 @@ class Game {
     }
     setTimeout(() => {
       if (zoom) { cv.style.transition = ""; cv.style.transformOrigin = ""; }
-      if (this.mode === "busy") this.mode = "walk";
+      if (this.mode === "busy") this.mode = "walk"; n.cheering = false;
       then();
     }, 2250);
   }
@@ -9565,7 +9576,7 @@ class Game {
     }
     else if (e.plant && /^lab-/.test(e.plant)) { const P = this.labPlant(e.plant); this.say(this.tx("polish.plant" + P.stage).concat(P.watered ? this.tx("polish.plantDamp") : [])); } // how it's doing
     else if (e.plant) { // (Joe 10/21: A doesn't water any more; the watering can does, with B) how it's doing, then whether it wants water today
-      const st = this.tx("polish.plant" + this.plantStage(e.plant));
+      const st = this.tx((/^planter-/.test(e.plant) ? "planter." : "polish.plant") + this.plantStage(e.plant));
       this.say(st.concat(this.isThirsty(e.plant) ? this.tx(this.ownedTools().includes("can") ? "plant.useCan" : "plant.noCan", { room: e.name }).slice(1) : this.tx("polish.plantDamp")));
     }
     else if (e.mug) {
@@ -9893,7 +9904,9 @@ class Game {
     this.think = { t0: this.t, ghost: { ghost: true, x: p.x, y: p.y, dir: p.dir, moving: false, prog: 0, step: false, bumpT: 0, alpha: 0, sheet: p.sheet }, was: dc ? !!dc.paused : false };
     if (dc) dc.paused = true; this.mode = "think"; this.inputLock = true; // the day waits; a held direction has to come up first
   }
-  exitThink() { const T = this.think; if (!T) return; this.think = null; this.thinkFx = { t0: this.t, on: false }; if (this.dirClock) this.dirClock.paused = T.was; this.mode = "walk"; this.inputLock = true; } // the same dip back to colour
+  exitThink() { const T = this.think; if (!T) return; this.think = null; this.thinkFx = { t0: this.t, on: false }; if (this.dirClock) this.dirClock.paused = T.was; this.mode = "walk"; this.inputLock = true; // the same dip back to colour
+    const n = this.thinkFor; this.thinkFor = null; // (Joe 10/21) thinking for a curious visitor ("Let me think"): back in your body, they see you've got something
+    if (n && T.picked && this.idea && n.cur && this.room.npcs.includes(n) && !n.reco && !n.recoAt && !n.leaving) n.recoAt = { t: this.t + 26, fn: () => { if (!n.cur || this.mode !== "walk") return; n.dir = this.player.x > n.x ? "right" : this.player.x < n.x ? "left" : this.player.y > n.y ? "down" : "up"; this.say(this.tx("cur.youThought", { name: n.cur.name }).map((p, k) => (k ? p : n.cur.name + ": " + p)), () => this.curRecommend(n)); } }; }
   updateThink(has) {
     const T = this.think, g = T && T.ghost, r = this.room; if (!g) { this.mode = "walk"; return; }
     if (T.picked) { this.exitThink(); return; } // the frame that showed the pick is drawn (and the bubble's picture taken): back into your body
@@ -9901,7 +9914,7 @@ class Game {
     if (has("select") || has("b") || has("start")) { this.exitThink(); return; }
     if (g.bumpT > 0) g.bumpT--;
     g.alpha = Math.min(0.8, Math.max(0, (this.t - T.t0 - 6) / 24)); // fading in as it steps out of you
-    if (g.moving) { g.prog += 1; if (g.prog >= 16) { const [dx, dy] = DIRS[g.dir]; g.x += dx; g.y += dy; g.prog = 0; g.moving = false; const home = g.x === this.player.x && g.y === this.player.y; if (!home) T.away = true; else if (T.away) this.exitThink(); } return; } // back into yourself: done thinking (Joe 10/19)
+    if (g.moving) { g.prog += 2; if (g.prog >= 16) { const [dx, dy] = DIRS[g.dir]; g.x += dx; g.y += dy; g.prog = 0; g.moving = false; const home = g.x === this.player.x && g.y === this.player.y; if (!home) T.away = true; else if (T.away) this.exitThink(); } return; } // back into yourself: done thinking (Joe 10/19)
     const onScreen = () => true; // (Joe 10/21: anywhere in this room now, the camera goes with you; not other rooms)
     if (has("a")) { const [dx, dy] = DIRS[g.dir], t = onScreen(g.x + dx, g.y + dy) && this.thinkTarget(r, g.x + dx, g.y + dy); if (t) T.pick = t; else g.bumpT = 8; return; }
     const d = this.heldDir(); if (!d) { this.inputLock = false; return; } if (this.inputLock) return;
@@ -10279,6 +10292,7 @@ class Game {
       if (!n.will && !n.willChecked) { n.willChecked = true; if (this.regularVisitor(n)) { n.will = this.newWill(); n.vno = n.vno || this.nextVno(); } } // anyone who's a visitor gets theirs (once) // the visitors already there when the room's built get theirs here
       if (n.snapAt && this.t >= n.snapAt) { n.snapAt = null; if (!n.leaving && !n.moving) n.snapT = 70; } // the photo after the reaction
       if (n.snapT > 0) n.snapT--;
+      if (n.owns && n.drink && !n.bag) { const it = this.itemById(n.owns); if (it && it.use !== "hat" && it.use !== "shades") n.bag = true; } // (Joe 10/21) a drink after something they bought to carry: that goes in a shop bag (one thing in each hand, not two in one)
       if (n.sipT > 0) n.sipT--; // (here, not with the rest of their drink: someone leaving mid-sip walked out with the cup at their face, Joe 10/19)
       if (n.cue && this.t >= n.cue.at) { const f = n.cue.fn; n.cue = null; f(); } // something they're in the middle of (watering a plant) // a photo's phone comes down whatever they're doing (Joe 10/19: someone stuck mid-photo, busy with something that skipped this)
       if (n.recoAt && this.t >= n.recoAt.t) { const f = n.recoAt.fn; n.recoAt = null; f(); } // a recommendation: their answer, once they've thought about it
@@ -11764,7 +11778,7 @@ class Game {
   drawProp(p, cx, cy) {
     if (p.hidden) return; // (the tutorial's chest, before you've read the sign)
     if (p.key === "velvet_rope" || p.key === "velvet_rope_v") { this.drawRope(p, cx, cy); return; }
-    const ctx = this.ctx, k = p.plant && !/^tut-/.test(p.plant) ? LAB_STAGES[this.plantStage(p.plant)] : p.plant && this.isThirsty(p.plant) ? "plant_thirsty" : p.key === "trash_can" && this.binFull(this.room.id, p.x, p.y) ? "trash_full" : p.key;
+    const ctx = this.ctx, k = p.planter ? (this.plantStage(p.plant) ? p.key + "_flower" : p.key) : p.plant && !/^tut-/.test(p.plant) ? LAB_STAGES[this.plantStage(p.plant)] : p.plant && this.isThirsty(p.plant) ? "plant_thirsty" : p.key === "trash_can" && this.binFull(this.room.id, p.x, p.y) ? "trash_full" : p.key;
     const px0 = p.x * T - cx, py0 = p.y * T - (SLOT[k].h - T) - cy;
     if (k === "trash_can" && ROOMS[this.room.id] && ROOMS[this.room.id].lab) { this.drawSlot("trash_levels", Math.floor(this.labBin || 0), 0, px0, py0); return; } // (the lab's can: a piece at a time)
     if (k === "dumpster") { this.drawSlot(k, this.dumpT && this.t - this.dumpT < 50 ? 1 : 0, 0, px0, py0); return; } // the lid goes up as a bag goes in
@@ -12364,7 +12378,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 159";
+const VERSION = "2026-11-18 cards 160";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
