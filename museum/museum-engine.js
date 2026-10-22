@@ -6129,7 +6129,8 @@ class Game {
     [...code].forEach((d, k) => { const q = ps[idx[k]]; if (q) out[q[0] + "," + q[1]] = d; });
     return out;
   }
-  arrowsOn() { const want = Object.keys(this.posterDigits()), got = (this.progress && this.progress.posterShots) || []; return !!want.length && want.every(k => got.includes(k)); } // every number photographed
+  posterShot(k) { return this.pack.settings.office.lock + "@" + k; } // a photo of a number poster counts for this code only (a new code moves the numbers: Joe 10/22)
+  arrowsOn() { const want = Object.keys(this.posterDigits()), got = (this.progress && this.progress.posterShots) || []; return !!want.length && want.every(k => got.includes(this.posterShot(k))); } // every number photographed
   wingDone(id) { // every piece in the wing read front and back (once done, it stays done when new pieces arrive)
     const done = this.progress.wingsDone || (this.progress.wingsDone = {}); if (done[id]) return true;
     const today = todayISO(), inWing = new Set(assignCases(this.pack.pieces, this.pack.settings.genres).slots.filter(s => s.p && s.genre === id).map(s => s.p.id)); // the pieces in its cases (the wings go by air date now)
@@ -9087,7 +9088,7 @@ class Game {
     if (r.screenAt && e && e.screen) return { desc: "The big screen in the screening nook." + dark, thumb: { layers: [["theater_screen", 0, 0, 0, 0]], w: 96, h: 48, bg: tile(r.screenAt.x, r.screenAt.y), dark: dk } };
     const po = (r.posters || []).find(q => q.x === fx && (q.y === fy || q.y + 1 === fy));
     const pd = po && r.id === "screening" && this.postersOn() && this.posterDigits()[po.x + "," + po.y]; // Behind the Scenes: a number, only the flash shows it
-    if (pd) return { desc: this.tx("office.posterPhoto", { digit: pd }).join(" "), rarity: 2, posterKey: po.x + "," + po.y, thumb: wallScene(po.x, po.y, 1, 2, { layers: [["posternum:" + pd, 0, 0, 0, 0]] }) };
+    if (pd) return { desc: this.tx("office.posterPhoto", { digit: pd }).join(" "), rarity: 2, posterKey: this.posterShot(po.x + "," + po.y), thumb: wallScene(po.x, po.y, 1, 2, { layers: [["posternum:" + pd, 0, 0, 0, 0]] }) };
     if (po) { const ps = this.pack.pieces.filter(q => !q.tut), pc = ps.length ? ps[strSeed(r.id + ":" + po.x + "," + po.y) % ps.length] : null; // the flash lights it up: always the same game for this poster
       return { desc: pc ? "The flash lights up a poster: " + pc.title + "." : "A movie poster. Too dark to make out." + dark, rarity: pc ? 2 : 0, thumb: wallScene(po.x, po.y, 1, 2, { layers: pc ? [["poster:" + pc.id, 0, 0, 0, 0]] : [["hall_poster", 0, 0, 0, 0, po.side === "r" ? 1 : 0]] }) }; }
     const wa = (r.wallArt || []).find(w => fx >= w.x && fx < w.x + SLOT[w.key].w / T && (fy === (w.y || 1) || fy === (w.y || 1) + 1)); if (wa) return { desc: "The " + SLOT[wa.key].label.toLowerCase().replace(/^(the|a|an) /, "") + " on the wall." + dark, thumb: wallScene(wa.x, wa.y || 1, SLOT[wa.key].w / T, 2, { layers: [[wa.key, 0, 0, 0, 0]] }) };
@@ -12566,7 +12567,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 175";
+const VERSION = "2026-11-18 cards 176";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
