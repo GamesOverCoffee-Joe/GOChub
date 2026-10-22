@@ -22,6 +22,22 @@ def fit(path, w, h):
     tw,th=(cw+15)//16,(ch+15)//16
     out=Image.new('RGBA',(tw*16,th*16),(0,0,0,0)); out.alpha_composite(c,((tw*16-cw)//2,th*16-ch))
     return out,'resize','%d×%d tiles here'%(tw,th)
+def shrink(im, w, h): # bigger than the spot: scaled down to fit, for the live preview only
+    k=min(w/im.size[0], h/im.size[1]); s=im.resize((max(1,round(im.size[0]*k)),max(1,round(im.size[1]*k))),Image.NEAREST)
+    out=Image.new('RGBA',(w,h),(0,0,0,0)); out.alpha_composite(s,((w-s.size[0])//2,h-s.size[1])); return out
+def clear_from(im, x, y, tol=48): # flood-fill the colour at (x,y) to transparent: a frame's canvas, a case's glass
+    im=im.copy(); px=im.load(); W,H=im.size
+    if not (0<=x<W and 0<=y<H): return im
+    c0=px[x,y]; seen=set(); st=[(x,y)]
+    while st:
+        a,b=st.pop()
+        if (a,b) in seen or not (0<=a<W and 0<=b<H): continue
+        seen.add((a,b)); c=px[a,b]
+        if c[3]==0 or sum(abs(c[i]-c0[i]) for i in range(3))>tol: continue
+        px[a,b]=(0,0,0,0); st+= [(a+1,b),(a-1,b),(a,b+1),(a,b-1)]
+    return im
+POST={'display_case':lambda im: clear_from(im,8,9), 'wall_frame_gold':lambda im: clear_from(im,16,14), 'wall_frame_wood':lambda im: clear_from(im,16,14)}
+ALSO={'plant':['plant_thirsty'],'trash_can':['trash_full']}
 def cands(slot, items, w, h, fitnote=None):
     out=[]
     for i,(p,lab) in enumerate(items):
@@ -29,7 +45,11 @@ def cands(slot, items, w, h, fitnote=None):
         r=fit(p,w,h)
         if not r: continue
         im,f,n=r
-        out.append(dict(id=slot+'-'+str(i), src=uri(im), w=im.size[0], h=im.size[1], from_=lab, path=os.path.relpath(p,S), fit=fitnote or f, note=n))
+        pv=im if f=='fits' else shrink(im,w,h)
+        if slot in POST: pv=POST[slot](pv)
+        ap={slot:uri(pv)}
+        for k in ALSO.get(slot,[]): ap[k]=ap[slot]
+        out.append(dict(id=slot+'-'+str(i), src=uri(im), w=im.size[0], h=im.size[1], from_=lab, path=os.path.relpath(p,S), fit=fitnote or f, note=n, apply=ap))
     return out
 # floors: each style is a 3x2 block; take its top-middle tile
 F=Image.open(MI+'/Room_Builder_subfiles/Room_Builder_Floors_16x16.png').convert('RGBA'); floors=[]
@@ -47,7 +67,9 @@ def ropes():
     for name,ns in [('black',[74,71,72,73,75]),('gold',[79,76,77,78,80]),('silver',[84,81,82,83,85])]:
         ims=[Image.open(mus(n)[0]).convert('RGBA') for n in ns]; strip=Image.new('RGBA',(16*len(ims),32),(0,0,0,0))
         for k,im in enumerate(ims): strip.alpha_composite(im,(16*k,32-im.size[1]))
-        out.append(dict(src=uri(strip),w=strip.size[0],h=32,from_='Interiors · Museum #%s (%s posts and rope)'%(', '.join(map(str,ns)),name),path=','.join(mus(n)[0][len(S)+1:] for n in ns),fit='resize',note='The posts are 2 tiles tall'))
+        sq=[im.resize((16,16),Image.NEAREST) for im in ims]; pv=Image.new('RGBA',(48,16),(0,0,0,0))
+        for k,j in enumerate((0,2,4)): pv.alpha_composite(sq[j],(16*k,0))
+        out.append(dict(apply={'velvet_rope':uri(pv)},src=uri(strip),w=strip.size[0],h=32,from_='Interiors · Museum #%s (%s posts and rope)'%(', '.join(map(str,ns)),name),path=','.join(mus(n)[0][len(S)+1:] for n in ns),fit='resize',note='The posts are 2 tiles tall'))
     return out
 cur=json.load(open(S+'/current.json'))
 def C(k): return cur[k]
@@ -60,18 +82,22 @@ def first(k,w,h): b=base64.b64decode(cur[k]['src'].split(',')[1]); return uri(Im
 groups=[]
 def slot(group,key,label,w,h,items=None,pool=None,note='',current=None,own=None,tile=False,strip=False):
     cs=pool if pool is not None else cands(key,items,w,h)
-    for i,c in enumerate(cs): c['id']=key+'-'+str(i)
+    cs=[dict(c) for c in cs]
+    for i,c in enumerate(cs):
+        c['id']=key+'-'+str(i)
+        if 'apply' not in c:
+            if key.endswith('_wall'):
+                b=base64.b64decode(c['src'].split(',')[1]); im=Image.open(io.BytesIO(b)).convert('RGBA')
+                c['apply']={key+'_upper':uri(im.crop((0,0,16,16))), key+'_lower':uri(im.crop((0,16,16,32)))}
+            else: c['apply']={key:c['src']}
     g=next((x for x in groups if x['name']==group),None)
     if not g: g=dict(name=group,slots=[]); groups.append(g)
     g['slots'].append(dict(key=key,label=label,w=w,h=h,note=note,current=current or first(key,w,h),own=C(key)['own'] if own is None and key in cur else bool(own),tile=tile,strip=strip,cands=[dict(c) for c in cs]))
-fl='Tiles in every direction. The preview repeats it so you can see the pattern.'
-slot('Floors','gallery_floor','Gallery floor',16,16,pool=floors,note=fl,tile=True)
-slot('Floors','g2_floor','Gallery Two floor',16,16,pool=floors,note=fl,tile=True)
-slot('Floors','g3_floor','Gallery Three floor',16,16,pool=floors,note=fl,tile=True)
-slot('Floors','hall_floor','Hallway floor',16,16,pool=floors,note=fl,tile=True)
-slot('Floors','carpet_floor','Carpet floor',16,16,pool=floors,note='Tinted by each room\'s floor color in Rooms, so a light, plain one works best.',tile=True)
-for p,nm in [('gallery','Gallery'),('g2','Gallery Two'),('g3','Gallery Three')]:
-    src,own=wallcur(p); slot('Walls',p+'_wall',nm+' wall',16,32,pool=walls,note='Upper and lower rows (frames hang across both). The wall top stays as it is.',current=src,own=own,tile=True)
+fl='Tiles in every direction.'
+slot('Floors','carpet_floor','Wing floor (carpet)',16,16,pool=floors,note='Every Volume wing uses this one, recolored with the wing\'s own color.',tile=True)
+slot('Floors','hall_floor','Hallway floor',16,16,pool=floors,note='The halls between the wings, and the lobby.',tile=True)
+for p,nm,nt in [('gallery','Wing wall A','Two of the wings, each in its own color.'),('g2','Wing wall B','One wing, in its color.'),('g3','Wing wall C','One wing, in its color.'),('staff','Staff room wall','The staff room, and one wing in its color.'),('lobby','Hallway wall','The lobby and the halls (the halls fade it from one wing\'s color to the next).'),('shop','Café and gift shop wall','')]:
+    src,own=wallcur(p); slot('Walls',p+'_wall',nm,16,32,pool=walls,note=(nt+' ' if nt else '')+'Upper and lower rows; the wall top stays.',current=src,own=own,tile=True)
 slot('Exhibits','display_case','Episode display case',16,32,[mus(n) for n in (28,29,30,64,65)],note='The game\'s art shows through the glass, so I\'d clear the glass and anything inside it.')
 fr=[mus(n) for n in (91,92,93,89,90)]
 slot('Exhibits','wall_frame_gold','Gold frame (episodes)',32,32,fr,note='I\'d cut the canvas out so the episode art shows through.')
