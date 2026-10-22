@@ -431,3 +431,16 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Curious visitors | At the game you recommended, and it's the wrong one (reworded) | Hmm... this isn't the one I'm looking for. · No, this isn't it. But thanks for trying! · Oh... this isn't the game I meant. |
 | Your stuff | Picking a tool while holding a drink | Not with a {drink} in my hand. / I'll finish it first. |
 | Staff | Leaderboard: your own total this month, when you're not in the top | You have {points} points this month. |
+| Tutorial | Fern, after the sad plant (no day dial now) | Doesn't it look nice? / Plants need a little water every day. Keep that in mind out there. |
+| Tutorial | The usher, back from the practice gallery | Dale's done already? He takes that role very seriously. / We keep telling him it's not an audition. |
+| Tutorial | Dale's introduction | Ah! At last! An audience! / *ahem* Allow me to introduce myself. I am Dale. / Today I shall be playing the role of... a Visitor. / The training department hired me. I've been rehearsing for weeks. / Places, everyone! And... action! |
+| Tutorial | Dale spills his chips | *crunch crunch crunch* / Oh! Oh no! Crumbs! Upon this pristine carpet! / Whatever shall become of this fine museum?! |
+| Tutorial | Dale at the exhibit's glass | Hark! What is this I see? / Smudges! Upon the glass! I can barely make out the art! / My eyes! My poor, cultured eyes! |
+| Tutorial | Dale at the vending machine | Ah, the vending machine. A weary visitor's oasis. / One coffee, please. Black, like my monologues. |
+| Tutorial | Dale spills his coffee | Whoa-oh-oh! / My coffee! It's everywhere! A tragedy in one act! |
+| Tutorial | Dale, when you take the trash out | Wait... that wasn't part of the tutorial. / ... / I mean! Yes! The trash! A pivotal scene! Exactly as rehearsed. Bravo! |
+| Tutorial | Dale's thanks | Thank you, thank you. You were a wonderful scene partner. / Now, if you'll excuse me, I gave that performance everything I had. / I must rest. |
+| Tutorial | Dale, talked to between scenes, and after | *crunch* The crumbs. They haunt me. · The smudges! I cannot look! · My poor coffee. Gone too soon. · ... · Shh. The artist is resting. |
+| Tutorial | The practice gallery's chests | *poof* / A treasure chest appeared! · *poof* / The chest vanished... and another one appeared somewhere else! · It's locked tight. |
+| Tutorial | The practice gallery's exhibit, "Encore!" | I wanted players to feel the rush of stepping on stage, forgetting their lines, and making it up anyway. · I forgot every line and got a standing ovation. That's the whole game, and I loved it. |
+| Tutorial | Field notes | Vacuumed up some crumbs. · Polished a display case. · Mopped up a spill. · Took out the trash. |
