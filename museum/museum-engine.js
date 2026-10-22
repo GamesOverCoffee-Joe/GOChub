@@ -2570,7 +2570,7 @@ const ROOMS = {
     light: { dim: 0, spots: 0.5 },
     visitors: [],
   },
-  tut_room3: {"name": "Practice Gallery", "tutorial": true, "art": {"top": "gallery_wall_top", "upper": "gallery_wall_upper", "lower": "gallery_wall_lower", "floor": "hall_floor"}, "map": ["##################", "#^^^^^^^^^^^######", "#vvvvvvvvvvv######", "#...........######", "#...........^^^^^#", "#...........vvvvv#", "#................#", "#................#", "#................#", "#................#", "######K###########"], "spawn": [6, 9, "up"], "props": [{"key": "vending_machine", "x": 13, "y": 6, "tall": true, "say": ["A vending machine. Coffee, apparently."]}, {"key": "trash_can", "x": 14, "y": 6, "event": {"trash": true}}, {"key": "bench", "x": 13, "y": 9, "sit": "up", "say": ["A bench, for resting between scenes."]}, {"key": "plant", "x": 16, "y": 9, "say": ["A potted plant. It's been in every rehearsal."]}], "decals": [{"key": "rug", "x": 3, "y": 5, "w": 7, "h": 3, "pattern": "double", "motif": "flower", "field": "#6a4630", "border": "#452e0d", "accent": "#3e2818", "corner": "#c87848"}], "events": [{"x": 6, "y": 10, "tutDoor": "r3-r2", "bump": true}], "light": {"dim": 0, "spots": 0.5}, "visitors": [], "lightSwitch": [3, 2]}, // (Joe 10/22) the practice gallery: one exhibit on a 7 by 3 carpet, wood all round, a rest area with a vending machine, the trash and a bench; Dale acts out a visitor
+  tut_room3: {"name": "Practice Gallery", "tutorial": true, "art": {"top": "gallery_wall_top", "upper": "gallery_wall_upper", "lower": "gallery_wall_lower", "floor": "hall_floor"}, "map": ["##################", "#^^^^^^^^^^^######", "#vvvvvvvvvvv######", "#...........######", "#...........^^^^^#", "#...........vvvvv#", "#................#", "#................#", "#................#", "#................#", "######K###########"], "spawn": [6, 9, "up"], "props": [{"key": "vending_machine", "x": 13, "y": 6, "tall": true, "say": ["A vending machine. Coffee, apparently."]}, {"key": "trash_can", "x": 14, "y": 6, "event": {"trash": true}}, {"key": "plant", "x": 16, "y": 9, "say": ["A potted plant. It's been in every rehearsal."]}, {"key": "bench_side", "x": 16, "y": 7, "tall": true, "sit": "left", "say": ["A bench, for resting between scenes."]}], "decals": [{"key": "rug", "x": 3, "y": 5, "w": 7, "h": 3, "pattern": "double", "motif": "flower", "field": "#6a4630", "border": "#452e0d", "accent": "#3e2818", "corner": "#c87848"}], "events": [{"x": 6, "y": 10, "tutDoor": "r3-r2", "bump": true}], "light": {"dim": 0, "spots": 0.5}, "visitors": [], "lightSwitch": [3, 2]}, // (Joe 10/22) the practice gallery: one exhibit on a 7 by 3 carpet, wood all round, a rest area with a vending machine, the trash and a bench; Dale acts out a visitor
   // The thinking room (Joe 10/20): an anxious visitor who can't pick which of two games to read; teaches Select (think) and
   // recommending. Anything in here can be recommended; recommending one of the two games finishes it and unlocks the door.
   // The Polish Lab (Joe 10/21): a test room for the "polish the museum" mechanics, one at a time (POLISH-PLAN.md). Reached with
@@ -2680,7 +2680,7 @@ const TUT_GAMES = [ // the two made-up games in the Thinking Room (Joe 10/20: tw
   { id: "tut-sale", key: "sale", art: "#c8803a", x: 8, y: 5 },
 ];
 const TUT_EXHIBIT = { id: "tut-encore", key: "encore", art: "#b84868", x: 6, y: 6 }; // (Joe 10/22) the practice gallery's one exhibit
-const TUT_C3 = { start: [4, 8, "left"], chests: { vacuum: [10, 8], rag: [10, 4], mop: [2, 4], bag: [15, 6] }, crumbs: [[3, 5], [4, 5], [5, 5], [3, 6], [4, 7], [5, 7]], spill: [11, 8], trash: [14, 6], bench: [13, 9] }; // where Dale starts, the four chests (the trash bags' is locked by the trash from the start), his crumbs and his coffee
+const TUT_C3 = { start: [4, 4, "down"], chests: { vacuum: [9, 3], rag: [2, 3], mop: [11, 3], bag: [15, 6] }, crumbs: [[3, 5], [4, 5], [5, 5], [3, 6], [4, 7], [5, 7]], spill: [11, 6], trash: [14, 6], bench: [16, 7] }; // (Joe 10/22: all up in the top half, so the text box never covers him or the chest) // where Dale starts, the four chests (the trash bags' is locked by the trash from the start), his crumbs and his coffee
 const TUT_THINK = { anxious: [3, 12], zone: [3, 12, 5, 13], coffee: 3 }; // where Wes starts (four steps from the door) and the patch he paces (x0, y0, x1, y1); a vending coffee's price
 const TUT_SPOTS = { glass: [11, 6], trainer: [3, 3], trainee: [5, 4], chest: [8, 3], barrier: [5, 3], box: [2, 7] }; // the trainer (room B), the trainee (room C), and room A's chest, barrier and box
 
@@ -2812,12 +2812,13 @@ const TEXT = {
   "tut.usher.other":  { g: "Tutorial", l: "The usher, back from one room with the other still to go", by: "claude", v: [["Nice work!", "Now head through the other door."]] },
   "tut.thinkLocked":  { g: "Tutorial", l: "The Thinking Room's door, before he's found something to read", by: "claude", v: [["It's locked.", "Maybe help him find something to read first."]] },
   "tut.anxName":      { g: "Tutorial", l: "The anxious visitor's name (the Thinking Room)", by: "claude", v: [["Wes"]] },
-  "tut.anx.hello":    { g: "Tutorial", l: "The anxious visitor, the first time you talk (Select is switched on after this)", by: "claude", v: [["Oh! Hi. Sorry.", "I've been wanting to read one of the exhibits back there, but I don't know which.", "What if I pick the wrong one?", "...Do you have any recommendations?", "Honestly, just point me at something. Anything in the room.", "Picture yourself walking over to it with Select. (C or Left Shift on a keyboard.)", "Then come tell me about it."]] },
+  "tut.anx.hello":    { g: "Tutorial", l: "The anxious visitor, the first time you talk (the last page comes with Let me think / Not yet)", by: "claude", v: [["Oh! Hi. Sorry.", "I've been wanting to read one of the exhibits back there, but I don't know which.", "What if I pick the wrong one?", "...Do you have any recommendations?", "Honestly, just point me at something. Anything in the room.", "Picture yourself walking over to it."]] },
   "tut.vend.ask":     { g: "Tutorial", l: "The Thinking Room's coffee vending machine ({n}: its price in tokens; then Buy one / Not now)", by: "claude", v: [["A coffee vending machine. One coffee, {n} tokens."]] },
   "tut.vend.broke":   { g: "Tutorial", l: "The vending machine, without enough tokens ({n})", by: "claude", v: [["You don't have {n} tokens.", "The machine hums at you anyway."]] },
   "tut.vend.got":     { g: "Tutorial", l: "Buying a vending machine coffee", by: "claude", v: [["*clunk* ...*whirrr* ...*drip*", "A coffee. It's hot, technically."]] },
   "tut.vend.hands":   { g: "Tutorial", l: "The vending machine, with your hands full", by: "claude", v: [["Your hands are full."]] },
-  "tut.anx.again":    { g: "Tutorial", l: "The anxious visitor, before you've got something in mind", by: "claude", v: [["Picture yourself walking over to something with Select.", "Then come tell me about it."]] },
+  "tut.anx.again":    { g: "Tutorial", l: "The anxious visitor, talked to again before he's found his game (then Let me think / Not yet)", by: "claude", v: [["Anything in the room. Just picture yourself walking over to it."]] },
+  "tut.anx.anytime":  { g: "Tutorial", l: "The anxious visitor, after the thanks ({keys}: the button you think with)", by: "claude", v: [["Oh, and you can think hard like that any time, you know.", "Just press {keys}."]] },
   "tut.anx.thanks":   { g: "Tutorial", l: "The anxious visitor, at the game you recommended (the door unlocks)", by: "claude", v: [["Oh, this one looks perfect.", "Thank you. I really just needed someone to pick.", "I think I heard the door unlock, by the way."]] },
   "tut.anx.after":    { g: "Tutorial", l: "The anxious visitor, after that", by: "claude", v: [["I'm going to read this one twice. Just in case."]] },
   "tut.bus.title":    { g: "Tutorial", l: "The Thinking Room's left game: its title", v: [["Last Bus Home"]] },
@@ -4017,7 +4018,7 @@ const MENU_MODES = new Set(["choice", "shop", "cafe", "album", "items", "binder"
 
 /* Keyboard controls you can change (Joe 10/12): two keys per action. Esc (pause, and back out of anything) and Backspace (back
    in menus) always work and can't be taken, so nobody locks themselves out; picking a key another action has swaps the two. */
-const KEY_ACTIONS = [["up", "Move up"], ["down", "Move down"], ["left", "Move left"], ["right", "Move right"], ["a", "A: look, talk, read"], ["b", "B: photo, back"], ["start", "Pause"], ["select", "Select: think"]];
+const KEY_ACTIONS = [["up", "Move up"], ["down", "Move down"], ["left", "Move left"], ["right", "Move right"], ["a", "A: look, talk, read"], ["b", "B: use what you hold, back"], ["start", "Pause"], ["select", "Select: think"]];
 const DEFAULT_KEYS = { up: ["ArrowUp", "KeyW"], down: ["ArrowDown", "KeyS"], left: ["ArrowLeft", "KeyA"], right: ["ArrowRight", "KeyD"], a: ["KeyZ", "Space"], b: ["KeyX", "KeyK"], start: ["Enter", "KeyP"], select: ["KeyC", "ShiftLeft"] };
 const KEY_OK = c => /^(Key[A-Z]|Digit\d|Numpad\w+|Arrow(Up|Down|Left|Right)|Space|Enter|Shift(Left|Right)|Control(Left|Right)|Semicolon|Quote|Comma|Period|Slash|Backslash|BracketLeft|BracketRight|Minus|Equal|Backquote)$/.test(c);
 const keyName = c => ({ ArrowUp: "\u2191", ArrowDown: "\u2193", ArrowLeft: "\u2190", ArrowRight: "\u2192", Space: "Space", Enter: "Enter", ShiftLeft: "Left Shift", ShiftRight: "Right Shift", ControlLeft: "Left Ctrl", ControlRight: "Right Ctrl", Semicolon: ";", Quote: "'", Comma: ",", Period: ".", Slash: "/", Backslash: "\\", BracketLeft: "[", BracketRight: "]", Minus: "-", Equal: "=", Backquote: "`" })[c] || c.replace(/^Key|^Digit/, "").replace(/^Numpad/, "Num ");
@@ -4634,6 +4635,7 @@ class Game {
 .gt-rd-links a{display:block;text-align:center;font-family:var(--pixel, monospace);font-size:calc(5px * var(--s));line-height:1;color:#fff8ec;text-decoration:none;padding:calc(3px * var(--s)) calc(4px * var(--s));border:calc(1px * var(--s)) solid #181820;border-radius:calc(1px * var(--s));box-shadow:0 calc(1px * var(--s)) 0 #181820;white-space:nowrap;cursor:pointer}
 .gt-rd-links a.watch{background:#b8382c}.gt-rd-links a.play{background:#2f6f3a}
 .gt-rd-pre .gt-rd-body{white-space:pre-wrap}
+.gt-rd-compact .gt-rd-body{font-size:calc(5.5px * var(--s));line-height:1.55;height:calc(100px * var(--s))}
 .gt-rd-links button.note{display:block;text-align:center;font-family:var(--pixel, monospace);font-size:calc(5px * var(--s));line-height:1;color:#181820;background:#f0c040;padding:calc(3px * var(--s)) calc(4px * var(--s));border:calc(1px * var(--s)) solid #181820;border-radius:calc(1px * var(--s));box-shadow:0 calc(1px * var(--s)) 0 #181820;white-space:nowrap;cursor:pointer;margin:0}
 .gt-rd-links.three{gap:calc(1px * var(--s))}
 .gt-rd-links.three a,.gt-rd-links.three button.note,.gt-rd-links.three button.quiz{padding:calc(2px * var(--s)) calc(4px * var(--s))} /* three buttons fit beside the picture */
@@ -4904,6 +4906,7 @@ class Game {
     const box = this.el.reader, clip = spec.clip || null, framed = !!(spec.frame || clip); box.style.display = framed ? "grid" : "block"; this.mode = "read";
     box.innerHTML = (framed ? '<div class="gt-rd-left"><div class="gt-rd-clip"></div><div class="gt-rd-head"></div></div><div class="gt-rd-top"></div>' : '<div class="gt-rd-head"></div>') + '<div class="gt-rd-body"></div><div class="gt-rd-foot"><span class="gt-rd-n"></span><span class="gt-rd-k"></span></div>'; // a piece (Joe 10/16): the picture, the pick tag and the link on the left; its title and developer over the text
     box.classList.toggle("gt-rd-pre", !!spec.pre); // line breaks and indents kept (the stats)
+    box.classList.toggle("gt-rd-compact", !!spec.compact); // (Joe 10/22) the controls: smaller type, more on a page
     box.classList.toggle("clip", framed); // a piece: its screen (gameplay, or its art until it has a clip) and title on one side, the placard on the other
     box.classList.toggle("flip", framed && !!spec.flip); // the developer's side: mirrored
     const head = box.querySelector(".gt-rd-head"), body = box.querySelector(".gt-rd-body");
@@ -6440,7 +6443,7 @@ class Game {
     if (t.signs === "on") { go(); return; }
     this.say(U(this.tx("tut.signs.broke")), () => {
       const u = this.room.npcs.find(n => n.usher); this.mode = "busy"; let k = 0;
-      const click = () => { if (!this.tut) return; k++; if (u) u.pose = { kind: "busy", t0: this.t, dur: 30 }; this.showLoc(this.tx("tut.signs.click")[0]); t.signT = this.t;
+      const click = () => { if (!this.tut) return; k++; if (u) u.pose = { kind: "busy", t0: this.t, dur: 30 }; t.signT = this.t; // (Joe 10/22: no *click* toast)
         t.signs = "on"; setTimeout(() => { if (!this.tut) return; if (this.mode === "busy") this.mode = "walk"; this.say(U(this.tx("tut.signs.fixed")), go); }, 900); }; // one click does it (Joe 10/20)
       setTimeout(click, 500);
     });
@@ -6802,7 +6805,7 @@ class Game {
   closeEquip(all) { this.el.equip.style.display = "none"; this.eq = null; this.mode = "walk"; this.inputLock = true; if (!all) this.openMenu(); }
   tutThinkDone(n) { // the Thinking Room's done: he found something to read, and the door unlocks
     const t = this.tut; if (!t || t.thinkDone) return; t.thinkDone = true; this.tutDid("recommend"); n.tell = null; n.still = true; n.recoIdea = null;
-    setTimeout(() => { if (!this.tut) return; const go = () => this.say(this.tutSaid(n.member, this.tx("tut.anx.thanks")), () => this.showLoc(this.tx("tut.unlocked")[0])); if (this.mode === "walk") go(); else { const w = setInterval(() => { if (!this.tut) { clearInterval(w); return; } if (this.mode === "walk") { clearInterval(w); go(); } }, 300); } }, 1200);
+    setTimeout(() => { if (!this.tut) return; const go = () => this.say(this.tutSaid(n.member, [...this.tx("tut.anx.thanks"), ...this.tx("tut.anx.anytime", { keys: this.thinkKeys() })]), () => this.showLoc(this.tx("tut.unlocked")[0])); if (this.mode === "walk") go(); else { const w = setInterval(() => { if (!this.tut) { clearInterval(w); return; } if (this.mode === "walk") { clearInterval(w); go(); } }, 300); } }, 1200); // (Joe 10/22) and that you can think like that any time
   }
   tutDid(k) { const t = this.tut; if (t && !t.did.includes(k)) t.did.push(k); }
   /* Things that happen on their own: the day dial ticking over in room B (a corner plant droops), and the trainee looking around. */
@@ -6962,8 +6965,9 @@ class Game {
     const S = pages => this.tutSaid(n.member, pages);
     if (n.tutId === "anxious") { // the Thinking Room (Joe 10/20): he asks for a recommendation and explains Select; after that he's a visitor like any other
       if (t.thinkDone) { this.say(S(this.tx("tut.anx.after"))); return true; }
-      if (!t.thinkOn) { n.dir = OPP[this.player.dir]; this.say(S(this.tx("tut.anx.hello")), () => { t.thinkOn = true; this.showLoc("Select: think"); }); return true; }
-      if (!this.canRecommend(n) && !n.reco) { this.say(S(this.tx("tut.anx.again"))); return true; }
+      if (n.reco || n.recoAt || n.askFx) return false; // (on his way)
+      n.dir = OPP[this.player.dir]; const pages = S(this.tx(t.wesMet ? "tut.anx.again" : "tut.anx.hello")), q = pages.pop(); t.wesMet = true; // (Joe 10/22) he asks you to picture walking over to something: Let me think does just that
+      this.say(pages, () => this.choose(q, ["Let me think", "Not yet"], i => { if (i !== 0) return; t.thinkOn = true; this.thinkFor = n; if (this.canThink()) this.enterThink(); }, 1)); return true;
       return false; // Recommend (or Forget it), as with anyone
     }
     if (n.tutId === "trainer") {
@@ -7004,17 +7008,17 @@ class Game {
   daleIntro() { const t = this.tut; if (!t || t.c3 || this.room.id !== "tut_room3") return;
     this.tutBeats([{ fn: d => { d.dir = d.x < this.player.x ? "right" : "left"; d.hopT = this.t; } }, { say: "tut.dale.intro" }, { fn: () => { t.c3 = 1; this.tutDress(); } }, { narr: "tut.chest3Appears" }]); }
   daleCrumbs() { const t = this.tut; if (!t) return;
-    this.tutBeats([{ walk: [4, 6, "right"] }, { wait: 20 }, { fn: d => { const M = (this.mess || (this.mess = {})).tut_room3 = {}; TUT_C3.crumbs.forEach(([x, y], i) => { M[x + "," + y] = { k: "speck", f: i % 3 }; }); d.pose = { kind: "startled", t0: this.t, dur: 60 }; } }, { wait: 30 }, { say: "tut.dale.crumbs" }, { walk: [2, 6, "right"] }], () => { t.vacOn = true; }); }
+    this.tutBeats([{ walk: [4, 6, "right"] }, { wait: 20 }, { fn: d => { const M = (this.mess || (this.mess = {})).tut_room3 = {}; TUT_C3.crumbs.forEach(([x, y], i) => { M[x + "," + y] = { k: "speck", f: i % 3 }; }); d.pose = { kind: "startled", t0: this.t, dur: 60 }; } }, { wait: 30 }, { say: "tut.dale.crumbs" }, { walk: [2, 5, "right"] }], () => { t.vacOn = true; }); }
   daleGlass() { const t = this.tut; if (!t) return; const R = this.rooms.tut_room3, c = R && R.cases.find(q => q.piece && q.piece.id === TUT_EXHIBIT.id);
     if (c) (this.shine || (this.shine = {}))["tut_room3:" + c.x + "," + c.y] = { s: 0.15, t: this.t }; // the glass, smudged
-    this.tutBeats([{ walk: [6, 7, "up"] }, { wait: 20 }, { say: "tut.dale.glass" }, { fn: () => { t.c3 = 2; this.tutDress(); } }, { narr: "tut.chest3Moved" }, { walk: [8, 8, "up"] }], () => { t.polishOn = true; }); }
+    this.tutBeats([{ walk: [6, 5, "down"] }, { wait: 20 }, { say: "tut.dale.glass" }, { fn: () => { t.c3 = 2; this.tutDress(); } }, { narr: "tut.chest3Moved" }, { walk: [8, 4, "down"] }], () => { t.polishOn = true; }); }
   daleCoffee() { const t = this.tut; if (!t) return; const [sx, sy] = TUT_C3.spill;
     this.tutBeats([{ walk: [13, 7, "up"] }, { wait: 30 }, { fn: d => { d.drink = { kind: 0, name: "Vending machine coffee", sips: 0, t: 99999 }; } }, { say: "tut.dale.coffee" }, { walk: [sx, sy - 1, "down"] }, { wait: 20 },
       { fn: d => { ((this.mess || (this.mess = {})).tut_room3 || (this.mess.tut_room3 = {}))[sx + "," + sy] = { k: "spill", f: 0 }; d.drink.empty = true; d.pose = { kind: "startled", t0: this.t, dur: 60 }; } }, { wait: 20 }, { say: "tut.dale.spill" },
       { fn: () => { t.c3 = 3; this.tutDress(); } }, { narr: "tut.chest3Moved" }], () => { t.mopOn = true; }); }
   daleTrash() { const t = this.tut; if (!t) return; const [tx, ty] = TUT_C3.trash, [bx, by] = TUT_C3.bench; // (no words: he fills the can and sits down; the bags' chest unlocks)
-    this.tutBeats([{ walk: [tx, ty + 1, "up"] }, { wait: 25 }, { fn: d => { d.drink = null; (this.bins || (this.bins = {}))[this.binKey("tut_room3", tx, ty)] = BIN_MAX; } }, { wait: 25 }, { walk: [bx, by - 1, "down"] },
-      { fn: d => { d.sitFrom = [d.x, d.y]; d.x = bx; d.y = by; d.sitting = true; d.dir = "up"; d.chips = true; t.c3 = 4; this.tutDress(); } }], () => { t.trashOn = true; }); }
+    this.tutBeats([{ walk: [tx, ty + 1, "up"] }, { wait: 25 }, { fn: d => { d.drink = null; (this.bins || (this.bins = {}))[this.binKey("tut_room3", tx, ty)] = BIN_MAX; } }, { wait: 25 }, { walk: [bx - 1, by, "right"] },
+      { fn: d => { d.sitFrom = [d.x, d.y]; d.x = bx; d.y = by; d.sitting = true; d.dir = "left"; d.chips = true; t.c3 = 4; this.tutDress(); } }], () => { t.trashOn = true; }); }
   daleDone() { const t = this.tut; if (!t) return; t.inspectDone = true;
     this.tutBeats([{ fn: d => { d.pose = { kind: "startled", t0: this.t, dur: 60 }; } }, { wait: 30 }, { say: "tut.dale.notPart" }, { say: "tut.dale.thanks" }], () => this.showLoc(this.tx("tut.unlocked")[0])); }
   daleCheck() { // each frame in the gallery: is that step done?
@@ -9274,13 +9278,14 @@ class Game {
   }
   showControls(back) {
     const sw = this.swapAB, A = sw ? "B" : "A", B = sw ? "A" : "B", KB = this.keyBinds(), kn = a => KB[a].map(keyName).join(" or "); // your keys (Settings, Controls)
+    const L = rows => rows.map(([k, v]) => k + ": " + v).join("\n"); // (Joe 10/22) one control to a line
     const pages = {
-      keyboard: { label: "KEYBOARD", text: "Move: " + ["up", "down", "left", "right"].map(d => KB[d].map(keyName).join(" or ")).join(", ") + ". " + A + " (look, talk, read): " + kn("a") + ". " + B + " (photo, and back in menus): " + kn("b") + ". Back in menus: Backspace. Pause: " + kn("start") + " or Esc. Think (hold something in mind to recommend): " + kn("select") + ". In a menu, hold up or down to scroll; Esc closes it. Change the keys in Settings, Controls." + (sw ? " (A and B are swapped in Settings.)" : "") },
-      touch: { label: "TOUCH", text: "Move with the on-screen pad. A looks, talks and reads. B takes a photo, and goes back in menus. START pauses. SELECT thinks: hold something in mind to recommend to a visitor. With Tap to walk on (Settings), tap where you want to go, or tap something to walk over and use it." },
-      pad: { label: "CONTROLLER", text: "Move: D-pad or left stick. " + A + " (look, talk, read): the bottom button. " + B + " (photo, and back in menus): the right button. Pause: Start. Think (hold something in mind to recommend): Select or Back. Writing a note shows a keyboard: the D-pad picks a key, A types it, B deletes, Start sends." + (sw ? " (A and B are swapped in Settings.)" : "") },
+      keyboard: { label: "KEYBOARD", text: L([["Move", ["up", "down", "left", "right"].map(d => KB[d].map(keyName).join(" or ")).join(", ")], [A + ": " + kn("a"), "Look, talk, read."], [B + ": " + kn("b"), "Use what you're holding (your phone takes a photo). Hold it to vacuum, polish, mop or take out the trash; double-tap to leave the vacuum running. Back in menus."], ["Think: " + kn("select"), "Picture yourself walking over to something, to recommend it."], ["Pause: " + kn("start") + " or Esc", "Your stuff, Equipment, Put away, Settings, Save."], ["In menus", "Hold up or down to scroll. Backspace goes back."]]) + "\n\nChange the keys in Settings, Controls." + (sw ? " (A and B are swapped in Settings.)" : "") },
+      touch: { label: "TOUCH", text: L([["Move", "The on-screen pad."], ["A", "Look, talk, read."], ["B", "Use what you're holding (your phone takes a photo). Hold it to vacuum, polish, mop or take out the trash. Back in menus."], ["SELECT", "Think: picture yourself walking over to something, to recommend it."], ["START", "Pause: your stuff, Equipment, Put away, Settings, Save."], ["Tap to walk", "With it on (Settings), tap where you want to go, or tap something to walk over and use it."]]) },
+      pad: { label: "CONTROLLER", text: L([["Move", "D-pad or left stick."], [A + ": bottom button", "Look, talk, read."], [B + ": right button", "Use what you're holding (your phone takes a photo). Hold it to vacuum, polish, mop or take out the trash. Back in menus."], ["Select (or Back)", "Think: picture yourself walking over to something, to recommend it."], ["Start", "Pause: your stuff, Equipment, Put away, Settings, Save."], ["Writing a note", "The D-pad picks a key, " + A + " types it, " + B + " deletes, Start sends."]]) + (sw ? "\n\n(A and B are swapped in Settings.)" : "") },
     };
     const first = this.lastInput === "pad" ? "pad" : this.lastInput === "touch" ? "touch" : "keyboard";
-    this.read({ title: "CONTROLS", sections: [first, ...["keyboard", "touch", "pad"].filter(k => k !== first)].map(k => pages[k]), menu: true }, back || (() => this.openMenu()));
+    this.read({ title: "CONTROLS", sections: [first, ...["keyboard", "touch", "pad"].filter(k => k !== first)].map(k => pages[k]), menu: true, compact: true }, back || (() => this.openMenu()));
   }
   /* ----- the photo album -----
      A grid of little snapshots, newest first, with the selected photo's description underneath.
@@ -9622,7 +9627,7 @@ class Game {
     p.x = x; p.y = y; p.dir = dir; p.moving = false; p.prog = 0; p.sitting = false; this.asleep = false; this.sitIdle = 0; this.sip = null; this.path = null; this.pathAct = null;
     this.updateHud();
     this.zone = null; if (this.room.zoneAt) { this.zoneCheck(quiet); quiet = true; }
-    if (!quiet) this.showLoc(this.room.name.replace(/\s+/g, " "), "place");
+    if (!quiet && id !== "tut_office") this.showLoc(this.room.name.replace(/\s+/g, " "), "place"); // (Joe 10/22: not the tutorial's staff office)
     this.bringFollower();
     if (this.fol && this.fol.tutId) this.fol.room = id;
   }
@@ -9987,6 +9992,7 @@ class Game {
      The idea stays until you pick another, fades when you leave its room, and isn't saved. No rewards. */
   newWill() { const w = {}; for (const k of RECO_KINDS) w[k] = Math.floor(Math.random() * 5); return w; } // exhibits, seats, the café, throwing a cup away, photos
   nextVno() { return (this.vnoNext = (this.vnoNext || 0) + 1); } // a visitor number (the curator's Preview shows it)
+  thinkKeys() { const KB = this.keyBinds(); return this.lastInput === "pad" ? "Select" : this.lastInput === "touch" ? "SELECT" : KB.select.map(keyName).join(" or "); } // the button(s) you think with, as you play
   canThink() { return this.mode === "walk" && (!this.tut || (!!this.tut.thinkOn && !!this.room && this.room.id === "tut_think")) && !this.trans && !this.cine && !this.player.moving && !this.askingMode && !this.handoff && !this.curator && !!this.room; }
   thinkFilter(on) { // the four Game Boy greens (the darkest milked up a little, Joe 10/19), as an SVG filter on the game screen: no pixels read back, nothing per frame
     if (typeof document === "undefined" || !this.canvas) return;
@@ -10002,6 +10008,7 @@ class Game {
   }
   exitThink() { const T = this.think; if (!T) return; this.think = null; this.thinkFx = { t0: this.t, on: false }; if (this.dirClock) this.dirClock.paused = T.was; this.mode = "walk"; this.inputLock = true; // the same dip back to colour
     const n = this.thinkFor; this.thinkFor = null; // (Joe 10/21) thinking for a curious visitor ("Let me think"): back in your body, they see you've got something
+    if (n && n.tutId === "anxious" && T.picked && this.idea && this.room.npcs.includes(n) && !n.reco && !n.recoAt) { n.recoAt = { t: this.t + 26, fn: () => this.recommend(n) }; return; } // (Joe 10/22) Wes takes whatever you pictured as your recommendation
     if (n && T.picked && this.idea && n.cur && this.room.npcs.includes(n) && !n.reco && !n.recoAt && !n.leaving) n.recoAt = { t: this.t + 26, fn: () => { if (!n.cur || this.mode !== "walk") return; n.dir = this.player.x > n.x ? "right" : this.player.x < n.x ? "left" : this.player.y > n.y ? "down" : "up"; if (this.idea.kind !== "exhibit") { this.curRecommend(n, true); return; } this.say(this.tx("cur.youThought", { name: n.cur.name }).map((p, k) => (k ? p : n.cur.name + ": " + p)), () => this.curRecommend(n, true)); } }; }
   updateThink(has) {
     const T = this.think, g = T && T.ghost, r = this.room; if (!g) { this.mode = "walk"; return; }
@@ -11809,7 +11816,7 @@ class Game {
     const D = ROOMS[r.id] && ROOMS[r.id].doorSigns; if (!D || !D.length) return;
     const ctx = this.ctx, t = this.tut, broken = t && t.signs !== "on", seed = 7; // scrambled: one stuck frame, not flickering (Joe 10/20)
     for (const d of D) {
-      const txt = String(d.text || "").toUpperCase(), cols = txt.length * 4 - 1, w = cols + 4, h = 9, x0 = Math.round(d.x * T + 8 - w / 2 - cx), y0 = Math.round(T - 5 - cy);
+      const txt = String(d.text || "").toUpperCase(), cols = txt.length * 4 - 1, w = cols + 4, h = 9, x0 = Math.round(d.x * T + 8 - w / 2 - cx), y0 = Math.round(2 * T - 11 - cy); // (Joe 10/22) just above the door
       ctx.fillStyle = "#3a3440"; ctx.fillRect(x0 - 1, y0 - 1, w + 2, h + 2); ctx.fillStyle = "#0a080c"; ctx.fillRect(x0, y0, w, h);
       const lit = new Set(); if (!broken) [...txt].forEach((ch, i) => (PIXEL_FONT[ch] || []).forEach((row, yy) => [...row].forEach((v, xx) => { if (v === "1") lit.add((i * 4 + xx) + "," + yy); }))); // the game's own little pixel font (Joe 10/20: he liked it better)
       for (let yy = 0; yy < 5; yy++) for (let xx = 0; xx < cols; xx++) {
@@ -12485,7 +12492,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 169";
+const VERSION = "2026-11-18 cards 170";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
