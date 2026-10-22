@@ -3007,6 +3007,7 @@ const TEXT = {
   "clock.nudge":       { g: "Volunteering", l: "Walking into the museum before clocking in (the first time each day): you stop yourself", v: [["I should go clock in at the staff room."]] },
   "equip.clockIn":     { g: "Volunteering", l: "The Equipment screen when you're not clocked in (just your phone)", v: [["Once you clock in, you get access to all your tools!"]] },
   "board.month":       { g: "Staff", l: "Staff leaderboard: your own total this month ({points}), when you're not in the top", by: "claude", v: [["You have {points} points this month."]] },
+  "vac.theater":       { g: "Your stuff", l: "Trying to vacuum in the screening nook", v: [["You can't vacuum in the theater!"]] },
   "think.dismiss":     { g: "Thinking", l: "While thinking, B with a thought in mind: let it go?", v: [["Dismiss thought?"]] },
   "opt.think":         { g: "Menu options", l: "A curious visitor, when the game they want isn't the one in your mind: go and think", v: [["Let me think"]] },
   "opt.thisGame":      { g: "Menu options", l: "A curious visitor, with the very game they want in your mind: recommend it", v: [["This game?"]] },
@@ -6500,6 +6501,7 @@ class Game {
     const held = this.btnHeld && this.btnHeld.has("b"); if (!held) this.bStale = false; else if (this.walkSeen !== this.t - 1) this.bStale = true; this.walkSeen = this.t; // (back from a menu with B still down: it doesn't count until it's let go)
     this.polishTick(); this.mopTick(); this.trashTick(); this.readerTick(); this.approachTick(); this.zoneTick(); if (!this.vacuuming()) { this.vacLast = null; return; }
     const r = this.room, p = this.player, k = p.x + "," + p.y;
+    if (r.id === "screening") { this.vacLatch = false; this.bStale = true; this.vacLast = null; if (this.mode === "walk") this.say(this.tx("vac.theater")); return; } // (Joe 10/21) not in the theater
     if (this.vacLast === k + p.dir + this.tool) return; this.vacLast = k + p.dir + this.tool;
     const N = (this.nap || (this.nap = {}))[r.id] || (this.nap[r.id] = {}), half = (TOOLS[this.tool].wide - 1) / 2;
     for (let j = -half; j <= half; j++) for (let i = -half; i <= half; i++) { const tx = p.x + i, ty = p.y + j; if (this.carpetAt(r, tx, ty)) { N[tx + "," + ty] = { d: p.dir, s: 1, t: this.t }; this.cleanAt(r, tx, ty, "speck"); } } // (Joe 10/21) the wide one: all nine tiles around you, yours too; the hand one: just yours
@@ -6543,7 +6545,7 @@ class Game {
   /* Specks and spills (Joe 10/21): someone walking by now and then leaves a few dark specks on the carpet (the vacuum gets
      them) or, with a drink, a little spill on the wood (the mop gets it). Never many at once. */
   messStep(r, c) {
-    if (c.staff || !ROOMS[r.id] || ROOMS[r.id].tutorial && !ROOMS[r.id].lab) return;
+    if (c.staff || !ROOMS[r.id] || r.id === "screening" || ROOMS[r.id].tutorial && !ROOMS[r.id].lab) return; // (the theater never gets specks or spills)
     const M = (this.mess || (this.mess = {}))[r.id] || (this.mess[r.id] = {}), lab = ROOMS[r.id].lab, k = c.x + "," + c.y; if (M[k]) return;
     const n = Object.values(M), carpet = this.carpetAt(r, c.x, c.y), tl = String((r.tiles[c.y] && r.tiles[c.y][c.x]) || "");
     const T0 = this.tour, beat = lab ? 0 : this.dirBeatT === this.t ? this.dirBeat : (this.dirBeatT = this.t, this.dirBeat = this.director().beat), wear = lab ? 1 : (beat === 2 ? 2 : 1) * (T0 && ((T0.members || []).includes(c) || c === T0.guide) ? 2 : 1); // (Joe 10/21, Phase 7) the rush, and tours, leave more behind
@@ -12417,7 +12419,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 167";
+const VERSION = "2026-11-18 cards 168";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
