@@ -710,7 +710,7 @@ function exportPack() {
     if (!confirm("Your draft is older than this folder's museum-pack.json. Update it first? (Recommended: keeps every line you've saved here, and the rest comes from the folder.)")) return;
     const n = rebase(); render(); toast(n + (n === 1 ? " line" : " lines") + " kept; the rest is up to date");
   }
-  const savedAt = new Date().toISOString(), text = JSON.stringify(Object.assign({}, raw, { savedAt }));
+  const savedAt = new Date().toISOString(), text = GOQ.packText(Object.assign({}, raw, { savedAt })); // one line per piece, room and setting (pictures the site doesn't have yet stay inside it: the curator's Export hands those over as files)
   const a = el("a", { href: URL.createObjectURL(new Blob([text], { type: "application/json" })), download: "museum-pack.json" });
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   setBase(text, "export", savedAt); toast("Exported museum-pack.json");

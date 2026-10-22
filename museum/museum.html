@@ -79,18 +79,22 @@ body.touch .gt-controls{display:flex}
 .gt-btn{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;outline:none;touch-action:none;width:var(--btn);height:var(--btn);border-radius:50%;
   border:2px solid var(--muted);background:var(--surface-2);color:var(--text);font-family:var(--pixel);font-size:calc(var(--btn) * .23);cursor:pointer;box-shadow:3px 3px 0 var(--shadow)}
 .gt-btn-a{color:var(--gold);margin-top:calc(var(--btn) * -.42)}
-.gt-start{align-self:flex-end;margin-bottom:6px;flex:none;-webkit-tap-highlight-color:transparent;touch-action:none;font-family:var(--pixel);font-size:9px;letter-spacing:.06em;
-  padding:7px 12px;border-radius:12px;border:2px solid var(--muted);background:var(--surface-2);color:var(--muted);cursor:pointer;transform:rotate(-18deg)}
-.gt-start.down{background:var(--gold);color:var(--on-gold)}
-body.l-landscape .gt-start{grid-column:3;grid-row:1;align-self:end;margin-bottom:14px}
-body.l-split-h .gt-start{align-self:center}
+.gt-ss{align-self:flex-end;margin-bottom:6px;flex:none;display:flex;gap:16px;align-items:flex-start} /* SELECT and START like a Game Boy (Joe 10/19): two pills side by side, each tilted on its own, the words printed under them */
+.gt-ssb{display:flex;flex-direction:column;align-items:center;gap:6px;transform:rotate(-25deg)}
+.gt-ssb span{font-family:var(--pixel);font-size:8px;letter-spacing:.08em;color:var(--muted);pointer-events:none}
+.gt-start{position:relative;flex:none;-webkit-tap-highlight-color:transparent;touch-action:none;width:44px;height:14px;padding:0;border-radius:8px;
+  border:2px solid var(--muted);background:var(--surface-2);box-shadow:0 0 0 3px color-mix(in srgb,var(--muted) 22%,transparent);cursor:pointer}
+.gt-start::after{content:"";position:absolute;inset:-12px -8px} /* a bigger target than the pill */
+.gt-start.down{background:var(--gold)}
+body.l-landscape .gt-ss{grid-column:3;grid-row:1;align-self:end;margin-bottom:14px}
+body.l-split-h .gt-ss{align-self:center}
 .gt-btn.down{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow);background:var(--gold);color:var(--on-gold)}
 
 /* Portrait (slab phones upright, folded cover screens, tablets upright): game on top, controls below */
 body.l-portrait .play{justify-content:flex-start;padding-top:6px}
 body.l-portrait .gt-controls{width:100%;max-width:560px;padding:0 6px;flex:1;align-items:center;position:relative;gap:12px}
-body.l-portrait .gt-start,body.l-split-v .gt-start{position:absolute;left:50%;bottom:6px;margin:0;transform:translateX(-50%) rotate(-18deg)} /* under the middle, out of the row: the pad and A/B get the full width (Joe 10/16: A was cropped on narrow phones) */
-body.l-portrait .gt-start.down,body.l-split-v .gt-start.down{transform:translateX(-50%) rotate(-18deg) translate(1px,1px)}
+body.l-portrait .gt-ss,body.l-split-v .gt-ss{position:absolute;left:50%;top:calc(50% + var(--pad) / 2 + 10px);margin:0;transform:translateX(-50%)} /* under the middle, out of the row: the pad and A/B get the full width (Joe 10/16: A was cropped on narrow phones); just under the pad, not at the bottom of the screen (Joe 10/20) */
+.gt-start.down{transform:translate(1px,1px)}
 /* Landscape (phones sideways, unfolded foldables, tablets sideways): D-pad and buttons either side of the screen */
 body.l-landscape .play{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;justify-items:center;padding:4px 8px}
 body.l-landscape #controls{display:contents}
@@ -195,7 +199,7 @@ dialog.news{max-width:min(520px,calc(100vw - 24px))}
   <div id="stage" aria-label="Game screen. Use arrow keys or WASD to walk, Z or Space to look and talk, X to go back."></div>
   <div id="controls"></div>
 </main>
-<p class="hint">Walk with <kbd>Arrow keys</kbd> or <kbd>WASD</kbd>, or click to walk if it's on in Settings. Look, talk and tidy with <kbd>Z</kbd> or <kbd>Space</kbd>. <kbd>X</kbd> goes back, or takes a photo of whatever's in front of you. <kbd>Enter</kbd> or <kbd>Esc</kbd> opens the menu (your stuff, controls, save). A game controller works too. Dust the frames, water the plants, find the curator's mug, and turn out the lights when you leave.</p>
+<p class="hint">Walk with <kbd>Arrow keys</kbd> or <kbd>WASD</kbd>, or click to walk if it's on in Settings. Look, talk and tidy with <kbd>Z</kbd> or <kbd>Space</kbd>. <kbd>X</kbd> goes back, or takes a photo of whatever's in front of you. <kbd>Enter</kbd> or <kbd>Esc</kbd> opens the menu (your stuff, controls, save). <kbd>C</kbd> or <kbd>Shift</kbd> thinks: pick something to recommend to a visitor. A game controller works too. Dust the frames, water the plants, find the curator's mug, and turn out the lights when you leave.</p>
 <p class="hint" id="ver"></p>
 
 <dialog class="settings news" id="news" aria-labelledby="newsTitle">
@@ -211,15 +215,15 @@ dialog.news{max-width:min(520px,calc(100vw - 24px))}
     <button class="set-x" type="submit" value="close" aria-label="Close settings" title="Close">&#x2715;&#xFE0E;</button>
     <h2 id="setTitle">SETTINGS</h2>
     <div class="set-row">
-      <div class="txt"><b>Chill museum</b><small>Nothing goes wrong: no problems to solve, just the museum on a good day. The tour still comes through, and it goes well. Turn it off to bring the problems back. While it's on, you can also switch off the Janitor and the tours.</small></div>
-      <input type="checkbox" class="switch" id="optChill" aria-label="Chill museum">
+      <div class="txt"><b>Museum mode</b><small>Normal: one thing goes wrong each day. Busy: everything goes wrong, every day. Chill: nothing goes wrong, just the museum on a good day (and you can switch off the Janitor and the tours).</small></div>
+      <select id="optMode" aria-label="Museum mode"><option value="normal">Normal</option><option value="busy">Busy</option><option value="chill">Chill</option></select>
     </div>
     <div class="set-row set-sub" id="rowChillJan" hidden>
-      <div class="txt"><b>The Janitor</b><small>Off: no Janitor and no trash at all. The bins never fill up.</small></div>
+      <div class="txt"><b>The Janitor</b><small>Chill only. Off: no Janitor and no trash at all. The bins never fill up.</small></div>
       <input type="checkbox" class="switch" id="optChillJan" aria-label="The Janitor">
     </div>
     <div class="set-row set-sub" id="rowChillTour" hidden>
-      <div class="txt"><b>Tours</b><small>Off: no tour group, and no school group on Tuesdays.</small></div>
+      <div class="txt"><b>Tours</b><small>Chill only. Off: no tour group, and no school group on Tuesdays.</small></div>
       <input type="checkbox" class="switch" id="optChillTour" aria-label="Tours">
     </div>
     <div class="set-row">
@@ -269,7 +273,7 @@ dialog.news{max-width:min(520px,calc(100vw - 24px))}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 92";
+window.GOQ_WANT = "2026-11-18 cards 179";
 /* A stale page: browsers can keep an old copy of this page itself, and then it asks for the old engine too. version.json is
    always fetched fresh; if it names a newer version than this page, reload once with the version in the address, which
    gets a fresh copy of the page (and with it the new engine). Bump version.json along with GOQ_WANT. */
@@ -449,16 +453,16 @@ window.goqStart = function () {
 
   /* ---------- Settings panel ---------- */
   const dlg = document.getElementById("settings"), optTap = document.getElementById("optTap"), optCtl = document.getElementById("optCtl"), optBuzz = document.getElementById("optBuzz");
-  const optChill = document.getElementById("optChill");
+  const optMode = document.getElementById("optMode");
   const optChillJan = document.getElementById("optChillJan"), optChillTour = document.getElementById("optChillTour");
   function chillRows() { // the two switches under Chill museum show while it's on
-    const cur = !!(game.curatorPlay && game.curatorPlay()); optChill.disabled = optChillJan.disabled = optChillTour.disabled = cur; // a curator badge always plays chill, with no tours or Janitor
-    if (cur) { optChill.checked = true; optChillJan.checked = optChillTour.checked = false; document.getElementById("rowChillJan").hidden = document.getElementById("rowChillTour").hidden = false; return; }
-    const on = optChill.checked, P = game.progress || {};
+    const cur = !!(game.curatorPlay && game.curatorPlay()); optMode.disabled = optChillJan.disabled = optChillTour.disabled = cur; // a curator badge always plays chill, with no tours or Janitor
+    if (cur) { optMode.value = "chill"; optChillJan.checked = optChillTour.checked = false; document.getElementById("rowChillJan").hidden = document.getElementById("rowChillTour").hidden = false; return; }
+    const on = optMode.value === "chill", P = game.progress || {};
     document.getElementById("rowChillJan").hidden = document.getElementById("rowChillTour").hidden = !on;
     optChillJan.checked = P.chillJan !== false; optChillTour.checked = P.chillTour !== false;
   }
-  optChill.addEventListener("change", () => { if (game.setChill) game.setChill(optChill.checked); chillRows(); });
+  optMode.addEventListener("change", () => { if (game.setMode) game.setMode(optMode.value); chillRows(); });
   optChillJan.addEventListener("change", () => { if (game.setChillPart) game.setChillPart("jan", optChillJan.checked); });
   optChillTour.addEventListener("change", () => { if (game.setChillPart) game.setChillPart("tour", optChillTour.checked); });
   dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close ? dlg.close() : dlg.removeAttribute("open"); }); // a tap outside the panel closes it
@@ -469,7 +473,7 @@ window.goqStart = function () {
   if (navigator.vibrate) document.getElementById("rowBuzz").hidden = false;
   document.getElementById("setBtn").addEventListener("click", () => {
     document.getElementById("rowReplay").hidden = !(testMode || curator || isLocal || (game.isCurator && game.isCurator())); // the curator's own tool
-    optTap.checked = tapWalk(); optCtl.value = set.controls || "auto"; optBuzz.checked = set.haptics !== false; optSharp.checked = sharp(); optSwap.checked = !!set.swapAB; optVid.checked = set.screenVideo !== false; optChill.checked = !!(game.chillOn && game.chillOn()); chillRows();
+    optTap.checked = tapWalk(); optCtl.value = set.controls || "auto"; optBuzz.checked = set.haptics !== false; optSharp.checked = sharp(); optSwap.checked = !!set.swapAB; optVid.checked = set.screenVideo !== false; optMode.value = game.gameMode ? game.gameMode() : "normal"; chillRows();
     if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
   });
   document.getElementById("replayLoop").addEventListener("click", () => { game.replayLoop(); dlg.close ? dlg.close() : dlg.removeAttribute("open"); });
@@ -517,11 +521,12 @@ window.goqStart = function () {
      The pack file next to the page always wins over a pack saved in this browser, so new pieces show up.
      With ?test, a pack you loaded by hand stays in charge instead. */
   if (/^https?:$/.test(location.protocol) && !(saved && testMode)) {
+    const release = game.holdLoading ? game.holdLoading() : () => {}; // the loading screen stays up until the site's pack is in (Joe 10/21: no old lobby first)
     fetch(PACK_FILE, { cache: "no-cache" }).then(r => (r.ok ? r.json() : null)).then(j => {
-      if (!isPack(j)) return;
-      game.setPack(j); describe(GOQ.normalizePack(j), "Site pack"); resetBtn.hidden = true;
+      if (!isPack(j)) { release(); return; }
+      Promise.resolve(game.setPack(j)).then(release, release); describe(GOQ.normalizePack(j), "Site pack"); resetBtn.hidden = true;
       if (!testMode && !curator) { document.querySelector(".pack").hidden = true; document.getElementById("rowPack").hidden = true; }
-    }).catch(() => {});
+    }).catch(() => release());
   }
   document.getElementById("packFile").addEventListener("change", async e => {
     const f = e.target.files[0]; e.target.value = ""; if (!f) return;
