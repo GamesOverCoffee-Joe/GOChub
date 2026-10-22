@@ -8,7 +8,6 @@ Two more, outside Words: a new version in the screening nook guest's lines ("I k
 
 | Group | Line | What Claude wrote |
 | --- | --- | --- |
-| Curator's office | The call sheet on the staff corkboard, after 5 visitors loved your picks (the wings are listed after it, in the order of the code) | A call sheet, pinned under everything else. ⏎ Someone circled the order the wings are listed in. Three times. ⏎ Probably important. |
 | Curator's office | The white PC tower (picks one at random) | A white PC tower with a purple light inside. ⏎ It hums like it's thinking about something. / The purple light pulses slowly. ⏎ It's either rendering something or it's alive. |
 | Curator's office | The studio light with the soft box (picks one at random) | A big studio light with a soft box. ⏎ Everything looks better in soft lighting. Even me. / The soft box light. It's off, but I still feel like I'm on camera. |
 | Janitor | Just out of the staff door, starting his chores | Alright. Let's get this over with. / Morning. Don't track anything in. |
@@ -448,3 +447,6 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Tutorial | Wes, talked to again before he's found his game | Anything in the room. Just picture yourself walking over to it. |
 | Tutorial | Wes, after the thanks ({keys}: the think button) | Oh, and you can think hard like that any time, you know. / Just press {keys}. |
 | Tutorial | The practice gallery's vending machine | A vending machine. Chips, candy, and coffee. |
+| Curator's office | A photo of a theater hallway poster once every exhibit is read: it's a number now | The flash lights up a poster. It's just a big {digit}. |
+| Curator's office | Right after photographing the last numbered poster | That's every number on those posters. ⏎ Now what order do they go in? |
+| Screening nook | Looking at a hallway poster that's turned into a number | There's something big printed on this poster. A number? ⏎ It's too dark to tell. A flash might help. |

@@ -2174,7 +2174,7 @@ function normalizePack(p) {
   pieces.forEach(pc => { if (!gids.has(pc.genre)) pc.genre = ""; if (!gids.has(pc.blend) || pc.blend === pc.genre) pc.blend = ""; });
   const friday = (Array.isArray(p.settings && p.settings.friday) ? p.settings.friday : []).map(e => ({ title: str(e && e.title, 80) || "Games Over Coffee", url: safeUrl(e && e.url) })).filter(e => e.url).slice(0, 200); // Friday features: episodes for the screening nook
   const ofin = (p.settings && p.settings.office) || {};
-  const office = { lock: officeLock(officeUnlock(ofin.lock) || String(ofin.code || "").replace(/\D/g, "").slice(0, 8) || "40917"), // the keypad code, scrambled (never plain in the pack)
+  const office = { lock: officeLock(officeUnlock(ofin.lock) || String(ofin.code || "").replace(/\D/g, "").slice(0, 8) || "41917"), // the keypad code, scrambled (never plain in the pack)
     nicknames: Array.isArray(ofin.nicknames) ? ofin.nicknames.map(n => str(n, 40)).filter(Boolean).slice(0, 12) : ["DeVaughn", "Boss", "Mr. curator sir"] }; // what people call a curator badge
   // Gifts set on the piece itself (before gifts were shop items) become shop items.
   pieces.forEach(pc => { if (pc.gift && pc.gift.name && !items.some(it => it.gift === pc.id)) items.push({ id: "gift-" + pc.id, name: pc.gift.name, price: pc.gift.price, description: pc.gift.description, image: null, gift: pc.id }); delete pc.gift; });
@@ -2854,13 +2854,13 @@ const TEXT = {
   "screen.marquee":    { g: "Screening nook", l: "The red LED sign out front, before the title (letters, numbers and : - . ! ? ' & , / only)", v: [["NOW PLAYING:"]] },
   "screen.sign":       { g: "Screening nook", l: "Looking at the LED sign out front ({title}: what's playing this hour)", v: [["NOW PLAYING: {title}.", "It changes every hour.", "Neat."]] },
   "screen.enter":      { g: "Screening nook", l: "The little notice walking in ({title})", v: [["Now playing: {title}"]] },
-  "office.locked":     { g: "Curator's office", l: "The office door's keypad before closing (it only works after hours)", v: [["The door is locked and there's a keypad to get in.", "If you really want to get in, you could find the code somehow. I'd start by reading every single exhibit."]] },
-  "office.keypad":     { g: "Curator's office", l: "The keypad's title, after hours", v: [["KEYPAD"]] },
+  "office.locked":     { g: "Curator's office", l: "The office door, right before the keypad comes up", v: [["The door is locked and there's a keypad to get in.", "If you really want to get in, you could find the code somehow. I'd start by reading every single exhibit."]] },
+  "office.keypad":     { g: "Curator's office", l: "The keypad's title", v: [["KEYPAD"]] },
   "office.wrong":      { g: "Curator's office", l: "Wrong code on the keypad", v: [["*buzz*", "Whoops. Wrong code.", "Looks like I have one more attempt."]] },
   "office.lockout":    { g: "Curator's office", l: "Third wrong code today: the keypad locks until tomorrow", v: [["Welp, now it's locked. I'll have to try again tomorrow."]] },
   "office.open":       { g: "Curator's office", l: "The right code: the office opens for the first time", v: [["*ding*", "The light turned green! It's open!"]] },
-  "office.digit":      { g: "Curator's office", l: "A wing's touch screen once every piece in it is read front and back ({digit}: this wing's digit, {room}: the wing)", v: [["{room} digit is {digit}"]] },
-  "office.callsheet":  { g: "Curator's office", l: "The call sheet on the staff corkboard, after 5 visitors loved your picks (the wings are listed after it, in the order of the code)", by: "claude", v: [["A call sheet, pinned under everything else.", "Someone circled the order the wings are listed in. Three times.", "Probably important."]] },
+  "office.posterPhoto": { g: "Curator's office", l: "A photo of a theater hallway poster once every exhibit is read: it's a number now ({digit}: its number)", by: "claude", v: [["The flash lights up a poster. It's just a big {digit}."]] },
+  "office.allNums":    { g: "Curator's office", l: "Right after photographing the last numbered poster (the Volume arrows in the museum have changed)", by: "claude", v: [["That's every number on those posters.", "Now what order do they go in?"]] },
   "office.joe":        { g: "Curator's office", l: "Joe, the crochet robot, when you're clocked in ({name}: your badge name; picks one at random)", v: [["Hello {name}. My name Joe."], ["Are you supposed to be in here?", "...", "Yes, I am supposed to be here."], ["\"Curator?\" Do you mean DeVaughn? He is not here at the moment."], ["What do you mean by \"what is your true nature?\"", "I am Joe."], ["I do not know what you mean.", "I am a crochet robot.", "That is the extent of my nature."]] },
   "office.joeAnon":    { g: "Curator's office", l: "Joe, when you're not clocked in (picks one at random)", v: [["Hello. My name Joe."]] },
   "office.books":      { g: "Curator's office", l: "The bookshelf: one book each (the first line is the spine, the rest is your note)", v: [["The Art of Game Design by Jesse Schell", "\"When you know how to listen, everyone is the guru.\""], ["House of Leaves by Mark Z. Danielewski", "Note: READ THIS ALREADY"], ["Uzumaki by Junji Ito", "Note: Well this is absolutely disgusting. I love it."], ["The Design Of Everyday Things by Don Norman", "“The vicious cycle starts: if you fail at something, you think it is your fault. Therefore you think you can’t do that task. As a result, next time you have to do the task, you believe you can’t, so you don’t even try. The result is that you can’t, just as you thought.”"], ["Cinematography: Theory And Practice by Blain Brown", "\"It’s easy to think of filmmaking as not much more than 'We’ll put the actors on the set and roll the camera.' Obviously, there is much more involved, but it’s important to understand that even if all you do is record what is in front of the camera, you are still making definite decisions about how the viewers are going to perceive the scene.\""]] },
@@ -2969,6 +2969,7 @@ const TEXT = {
   "dir.room":          { g: "Signs", l: "The lobby directory: one page for each other room ({place}: its name, {PLACE}: in capitals, {dir}: north, southeast..., {middle}: the room in the middle)", v: [["{PLACE}: {dir} of the {middle}."]] },
   "dir.storage":       { g: "Signs", l: "The lobby directory: the last page, about B1", v: [["B1 STORAGE: down the stairs, right here in the lobby. Staff only, mostly."]] },
   "hall.arrow":        { g: "Signs", l: "Looking at an arrow sign in a hallway ({place}: the room it points to, {PLACE}: in capitals, {arrow}: the arrow)", v: [["{PLACE} {arrow}", "This way to {place}."]] },
+  "hall.posterNum":    { g: "Screening nook", l: "Looking at a hallway poster that's turned into a number (once every exhibit is read; only a photo shows it)", by: "claude", v: [["There's something big printed on this poster. A number?", "It's too dark to tell. A flash might help."]] },
   "hall.poster":       { g: "Screening nook", l: "Looking at a movie poster in the dark theater hallway (picks one at random)", v: [["There's a poster here. It's dark to see what it is."]] },
   "arcade.title":      { g: "Arcade", l: "The arcade cabinet's list title", v: [["GAME SELECT"]] },
   "arcade.intro":      { g: "Arcade", l: "Walking up to the arcade cabinet", v: [["Looks like this lets you can open games in a new tab."]] },
@@ -3503,6 +3504,7 @@ const hexOr = c => (/^#[0-9a-f]{6}$/i.test(c || "") ? c.toLowerCase() : "");
 function normalizeNews(n) { n = n && typeof n === "object" ? n : {}; return { date: /^\d{4}-\d{2}-\d{2}$/.test(n.date || "") ? n.date : "", text: str(n.text, 12000) }; }
 /* The wings are named by their place in the timeline (Joe 10/15): Volume I holds the oldest episodes, then Volume II, and so on. */
 function roman(n) { let s = ""; for (const [v, r] of [[1000, "M"], [900, "CM"], [500, "D"], [400, "CD"], [100, "C"], [90, "XC"], [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]]) while (n >= v) { s += r; n -= v; } return s; }
+function unroman(s) { const v = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 }; let n = 0; [...s].forEach((c, i) => { n += v[c] < (v[s[i + 1]] || 0) ? -v[c] : v[c]; }); return n; }
 function volumeNames(rooms) { rooms.map((r, i) => [r, (r.order || 50) * 100 + i]).filter(x => x[0].genre).sort((a, b) => a[1] - b[1]).forEach((x, k) => { x[0].name = "Volume " + roman(k + 1); }); return rooms; }
 function normalizeLayout(L) {
   L = L && typeof L === "object" ? L : {};
@@ -6086,10 +6088,11 @@ class Game {
     return true;
   }
   /* ----- the curator's office -----
-     Off B1 Storage, behind a keypad. "Behind the Scenes": every wing's touch screen gives up one digit once you've read
-     every piece in it front and back; once 5 visitors have loved your picks, a call sheet on the staff corkboard gives the
-     order; and the keypad only works after closing (announcement made, lights out). One code for everyone (curator, Staff
-     tab), so players can trade it. A curator badge always gets in, and starts there. */
+     Off B1 Storage, behind a keypad that always takes a code (Joe 10/22). "Behind the Scenes": once every exhibit is read
+     front and back, the theater hallway's posters turn into numbers, only seen in a photo (the flash); once each of them is
+     photographed, the big Volume arrows in the museum swap their roman numeral for the digit in that place (the arrow to
+     Volume I shows the first digit, and so on), and the wing with no arrow gets the number left over. No 0s in the code.
+     One code for everyone (curator, Staff tab), so players can trade it. A curator badge always gets in, and starts there. */
   /* What you look like: the curator in person on a curator badge, the staff uniform on shift, the shirt if you wear it. */
   playerSheet(base) { // the GOQ shirt (Joe 10/19): its design goes on your own clothes (the player or the curator), with your skin tone; not over the staff uniform
     const k = this.isCurator() ? "curator" : this.staff ? "player_staff" : base || "player", goq = !!this.progress.wearShirt && k !== "player_staff" && !this.headless && !!SLOT[k] && !!PAL[SLOT[k].pal];
@@ -6113,13 +6116,20 @@ class Game {
     const nn = s.curator ? this.pack.settings.office.nicknames : []; return nn.length ? nn[Math.floor(Math.random() * nn.length)] : s.name;
   }
   officeOpen() { return !!(this.progress.office || (this.staff && this.staff.curator) || this.curator); }
-  wings() { // the wings with a category, in the call sheet's order (shuffled by the code, so the order is part of the puzzle)
-    const lay = layoutOf(ROOMS.museum), code = officeUnlock(this.pack.settings.office.lock), out = [];
-    for (const g of this.pack.settings.genres || []) { const z = lay && lay.zones.find(q => q.rect && q.rect.genre === g.id); if (z) out.push({ id: g.id, name: z.name }); }
-    return out.sort((a, b) => strSeed(code + a.id) - strSeed(code + b.id));
+  officeCode() { return String(officeUnlock(this.pack.settings.office.lock) || ""); } // Volume I's digit first
+  postersOn() { // every exhibit read front and back: the hallway posters turn into numbers (once on, they stay on)
+    const P = this.progress; if (P.postersOn) return true;
+    const today = todayISO(), ps = this.pack.pieces.filter(p => !p.tut && !(p.unveil && p.unveil > today));
+    if (!ps.length || !ps.every(p => this.isRead(p))) return false;
+    P.postersOn = today; this.saveProgress(); return true;
   }
-  wingDigit(id) { const w = this.wings(), i = w.findIndex(q => q.id === id), code = officeUnlock(this.pack.settings.office.lock); return i < 0 ? "" : code[i % code.length]; }
-  officeCode() { return this.wings().map(w => this.wingDigit(w.id)).join(""); }
+  posterDigits() { // "x,y" of a hallway poster: its digit. The code's digits, spread over the posters in an order set by the code
+    const code = this.officeCode(), ps = (ROOMS.screening && ROOMS.screening.posters) || [], out = {};
+    const idx = ps.map((_, i) => i).sort((a, b) => strSeed(code + ":p" + a) - strSeed(code + ":p" + b));
+    [...code].forEach((d, k) => { const q = ps[idx[k]]; if (q) out[q[0] + "," + q[1]] = d; });
+    return out;
+  }
+  arrowsOn() { const want = Object.keys(this.posterDigits()), got = (this.progress && this.progress.posterShots) || []; return !!want.length && want.every(k => got.includes(k)); } // every number photographed
   wingDone(id) { // every piece in the wing read front and back (once done, it stays done when new pieces arrive)
     const done = this.progress.wingsDone || (this.progress.wingsDone = {}); if (done[id]) return true;
     const today = todayISO(), inWing = new Set(assignCases(this.pack.pieces, this.pack.settings.genres).slots.filter(s => s.p && s.genre === id).map(s => s.p.id)); // the pieces in its cases (the wings go by air date now)
@@ -6129,7 +6139,6 @@ class Game {
   }
   officeDoor() {
     if (this.officeOpen()) { this.warp("office", ...ROOMS.office.spawn); return; }
-    if (!this.closed) { this.say(this.tx("office.locked")); return; }
     if (this.keypadLocked()) { this.say(this.tx("office.lockout")); return; }
     const code = this.officeCode(), entered = [];
     const pad = () => this.openList(this.tx("office.keypad")[0] + "   " + Array.from({ length: code.length }, (_, i) => entered[i] || "_").join(" "),
@@ -6144,7 +6153,7 @@ class Game {
         this.progress.office = todayISO(); this.saveProgress(); this.checkAchievements && this.checkAchievements();
         this.say(this.tx("office.open"), () => this.warp("office", ...ROOMS.office.spawn));
       });
-    pad();
+    this.say(this.tx("office.locked"), pad); // (Joe 10/22) any time, not just after closing
   }
   keypadLocked() { const k = this.progress.keypad; return !!(k && k.day === todayISO() && k.fails >= 3); }
   officeBooks() {
@@ -7457,10 +7466,9 @@ class Game {
   }
   readCorkboard() {
     const notes = this.pack.settings.staff.corkboard;
-    const sheet = !this.progress.office && (this.progress.tally.helped || 0) >= 5 ? [...this.tx("office.callsheet"), "CALL SHEET\n" + this.wings().map((w, i) => (i + 1) + ". " + w.name).join("\n")] : []; // Behind the Scenes: the order
     const sk = this.progress.sketch, sketch = sk && sk.ph && daysBetween(sk.day, todayISO()) < 7 ? sk : null; // the artist's sketch of your photo, for a week
     const shift = this.tut ? [] : this.shiftSheet();
-    this.say(notes.length ? [...shift, ...this.tx("cork.intro"), ...notes, ...sheet] : [...shift, ...this.tx("cork.empty"), ...sheet], sketch ? () => {
+    this.say(notes.length ? [...shift, ...this.tx("cork.intro"), ...notes] : [...shift, ...this.tx("cork.empty")], sketch ? () => {
       this.el.cuImg.src = this.photoSrc(sketch.ph); this.el.cuImg.alt = sketch.ph.desc; this.el.cuImg.classList.remove("photo", "item"); this.el.cuImg.classList.add("sketch");
       this.el.cuLinks.innerHTML = ""; this.el.cu.style.display = "flex";
       this.say(this.tx("wed.sketch", { desc: sketch.ph.desc }), () => { this.el.cu.style.display = "none"; this.el.cuImg.classList.remove("sketch"); });
@@ -9074,10 +9082,12 @@ class Game {
     if (e && e.spot && e.spot.piece && e.spot.state === "wall") return { desc: e.spot.piece.title + ", hanging on the wall." + dark, piece: e.spot.piece.id, thumb: { piece: e.spot.piece.id, dark: dk } };
     if (e && e.window) return { desc: "The sky through the lobby window, " + { day: "bright blue", sunset: "orange and pink", night: "full of stars" }[this.tod()] + ".", thumb: { slot: "sky_" + this.tod() } };
     const m = r.marquee; if (m && fx >= m.x && fx < m.x + 2 && fy >= m.y && fy < m.y + 2) return { desc: "The way into the screening nook, all lit up." + dark, thumb: wallScene(m.x, m.y, 2, 2, { noOver: true, layers: [["theater_door", 0, 0, 0, 0], ["marquee_lights", 0, 0, 0, 0]] }) };
-    const k = r.keypadAt; if (k && k.x === fx && k.y === fy) return { desc: "A keypad by the door. It isn't telling." + dark, thumb: wallScene(fx, fy, 1, 1, { layers: [["office_keypad", this.officeOpen() ? 2 : this.closed ? 1 : 0, 0, 0, 0, r.solid[fy][fx + 1] !== false ? 1 : 0]] }) };
+    const k = r.keypadAt; if (k && k.x === fx && k.y === fy) return { desc: "A keypad by the door. It isn't telling." + dark, thumb: wallScene(fx, fy, 1, 1, { layers: [["office_keypad", this.officeOpen() ? 2 : !this.keypadLocked() ? 1 : 0, 0, 0, 0, r.solid[fy][fx + 1] !== false ? 1 : 0]] }) };
     const ns = r.nowSign; if (ns && fx >= ns.x && fx < ns.x + 4 && (fy === ns.y || fy === ns.y + 1)) { const np = this.nowPlaying(); return { desc: "The NOW PLAYING sign" + (np ? ": " + np.title + "." : ".") + dark, thumb: wallScene(ns.x, ns.y, 4, 2, { layers: [["led_sign", 0, 0, 0, 10], ["led:" + (np ? np.title : (this.tx("screen.marquee")[0] || "")), 0, 0, 4, 12]] }) }; }
     if (r.screenAt && e && e.screen) return { desc: "The big screen in the screening nook." + dark, thumb: { layers: [["theater_screen", 0, 0, 0, 0]], w: 96, h: 48, bg: tile(r.screenAt.x, r.screenAt.y), dark: dk } };
     const po = (r.posters || []).find(q => q.x === fx && (q.y === fy || q.y + 1 === fy));
+    const pd = po && r.id === "screening" && this.postersOn() && this.posterDigits()[po.x + "," + po.y]; // Behind the Scenes: a number, only the flash shows it
+    if (pd) return { desc: this.tx("office.posterPhoto", { digit: pd }).join(" "), rarity: 2, posterKey: po.x + "," + po.y, thumb: wallScene(po.x, po.y, 1, 2, { layers: [["posternum:" + pd, 0, 0, 0, 0]] }) };
     if (po) { const ps = this.pack.pieces.filter(q => !q.tut), pc = ps.length ? ps[strSeed(r.id + ":" + po.x + "," + po.y) % ps.length] : null; // the flash lights it up: always the same game for this poster
       return { desc: pc ? "The flash lights up a poster: " + pc.title + "." : "A movie poster. Too dark to make out." + dark, rarity: pc ? 2 : 0, thumb: wallScene(po.x, po.y, 1, 2, { layers: pc ? [["poster:" + pc.id, 0, 0, 0, 0]] : [["hall_poster", 0, 0, 0, 0, po.side === "r" ? 1 : 0]] }) }; }
     const wa = (r.wallArt || []).find(w => fx >= w.x && fx < w.x + SLOT[w.key].w / T && (fy === (w.y || 1) || fy === (w.y || 1) + 1)); if (wa) return { desc: "The " + SLOT[wa.key].label.toLowerCase().replace(/^(the|a|an) /, "") + " on the wall." + dark, thumb: wallScene(wa.x, wa.y || 1, SLOT[wa.key].w / T, 2, { layers: [[wa.key, 0, 0, 0, 0]] }) };
@@ -9130,7 +9140,9 @@ class Game {
     ph.unshift({ rarity, desc: sub.desc, piece: sub.piece || null, of: sub.of || undefined, room: (this.room.zoneAt && this.zone ? this.zone.name : this.room.name).replace(/\s+/g, " "), /* the wing or hall, in the museum */ thumb: sub.thumb || null, tod: this.tod(), seed: (Math.random() * 1e9) | 0 });
     if (ph.length > 40) ph.length = 40;
     this.progress.tally.photos = (this.progress.tally.photos || 0) + 1;
+    let allNums = false; if (sub.posterKey) { const got = this.progress.posterShots || (this.progress.posterShots = []); if (!got.includes(sub.posterKey)) { got.push(sub.posterKey); allNums = this.arrowsOn(); } } // every number: the Volume arrows change
     this.saveProgress(); this.phoneT = 34;
+    if (allNums) setTimeout(() => { if (this.mode === "walk") this.say(this.tx("office.allNums")); }, 450);
     if (!this.tut) this.showLoc("Photo saved");
     else if (!this.tut.photoTold) { this.tut.photoTold = true; setTimeout(() => { if (this.mode === "walk") this.say(this.tx("tut.photo")); }, 450); } // once per run, then no toast
     if (/napping/.test(sub.desc)) this.quest("catPhoto");
@@ -9377,6 +9389,10 @@ class Game {
       const sc = document.createElement("canvas"); sc.width = th.w; sc.height = th.h; const sx = sc.getContext("2d"); sx.imageSmoothingEnabled = false;
       for (const [k, col, row, lx, ly, flip] of th.layers) {
         if (/^led:/.test(k)) { sx.drawImage(this.ledText(k.slice(4)), lx, ly); continue; }
+        if (/^posternum:/.test(k)) { // a hallway poster that's just a big number, lit up by the flash
+          sx.fillStyle = "#1a1418"; sx.fillRect(lx + 1, ly + 1, 14, 30); sx.fillStyle = "#c8a050"; sx.fillRect(lx + 1, ly + 1, 14, 1); sx.fillRect(lx + 1, ly + 30, 14, 1);
+          sx.fillStyle = "#e8dcc0"; (PIXEL_FONT[k.slice(10)] || []).forEach((row, yy) => [...row].forEach((v, xx) => { if (v === "1") sx.fillRect(lx + 3 + xx * 3, ly + 8 + yy * 3, 3, 3); })); continue;
+        }
         const pid = (k.match(/^poster:(.+)$/) || [])[1], pc = pid && this.pack.pieces.find(q => q.id === pid);
         if (/^poster:/.test(k)) { // a hallway poster, lit up by the flash: a game from the museum
           sx.fillStyle = "#1a1418"; sx.fillRect(lx + 1, ly + 1, 14, 30); sx.fillStyle = "#c8a050"; sx.fillRect(lx + 1, ly + 1, 14, 1); sx.fillRect(lx + 1, ly + 30, 14, 1);
@@ -9458,9 +9474,7 @@ class Game {
     const p = this.player, [dx, dy] = DIRS[p.dir], z = this.zoneAt(this.room, p.x + dx, p.y + dy) || this.zone;
     const g = z && z.rect ? z.rect.genre : "", gen = (this.pack.settings.genres || []).find(x => x.id === g), list = (this.overflow && this.overflow[g]) || [];
     const title = (z ? z.name : gen ? gen.short || gen.name : "This room").toUpperCase(); // the wing's own name
-    const digit = g && !this.progress.office && this.wingDone(g) ? this.tx("office.digit", { digit: this.wingDigit(g), room: z ? z.name : gen ? gen.name : "this wing" }) : null; // Behind the Scenes: this wing's digit
-    if (!list.length) { this.say(digit || this.tx("screen.empty", { room: z ? z.name : gen ? gen.name : "this room" })); return; }
-    if (digit) { const d = digit; this.say(d, () => this.overflowList(title, list)); return; }
+    if (!list.length) { this.say(this.tx("screen.empty", { room: z ? z.name : gen ? gen.name : "this room" })); return; }
     this.overflowList(title, list);
   }
   overflowList(title, list) {
@@ -9789,7 +9803,8 @@ class Game {
     else if (e.officeTv) this.officeTv();
     else if (e.joeTalk) this.say(this.tx(this.staff && this.staff.name ? "office.joe" : "office.joeAnon", { name: this.staff ? this.callName() : "" }, true));
     else if (e.joe) this.joeGlitch();
-    else if (e.poster) this.say(this.tx("hall.poster", null, true));
+    else if (e.poster) { const [dx, dy] = DIRS[this.player.dir], fx = this.player.x + dx, fy = this.player.y + dy, po = (this.room.posters || []).find(q => q.x === fx && (q.y === fy || q.y + 1 === fy));
+      this.say(this.tx(po && this.room.id === "screening" && this.postersOn() && this.posterDigits()[po.x + "," + po.y] ? "hall.posterNum" : "hall.poster", null, true)); }
     else if (e.arrow) { const a = this.arrowInfo(e.arrow); this.say(this.tx("hall.arrow", { place: a.label, PLACE: a.label.toUpperCase(), arrow: { left: "\u2190", right: "\u2192", up: "\u2191", down: "\u2193" }[e.arrow.dir] || "" })); }
     else if (e.say) { const pages = typeof e.say === "string" ? this.tx(e.say, null, true) : e.say; this.say(pages, this.coinFind(e)); } // a Words key, or the lines themselves
   }
@@ -9807,7 +9822,8 @@ class Game {
   arrowInfo(a) {
     const g = (this.pack.settings.genres || []).find(g => g.id === a.genre);
     const lay = layoutOf(ROOMS[this.room ? this.room.id : "museum"]), z = g && lay && lay.zones.find(q => q.rect && q.rect.genre === g.id);
-    return { label: a.label || (z ? z.name : g ? g.name : "This way"), color: /^#[0-9a-f]{6}$/i.test(a.color || "") ? a.color : g ? g.color : "#c8a070" };
+    const vol = !a.label && z && this.arrowsOn() && (z.name.match(/^Volume ([IVXLCDM]+)$/) || [])[1], d = vol && this.officeCode()[unroman(vol) - 1]; // Behind the Scenes: the digit in this wing's place
+    return { label: a.label || (d && d !== "0" ? "Volume " + roman(+d) : z ? z.name : g ? g.name : "This way"), color: /^#[0-9a-f]{6}$/i.test(a.color || "") ? a.color : g ? g.color : "#c8a070" };
   }
   /* A big arrow painted across the wall (both wall rows, w tiles long) with the room's name on it, in the room's color. */
   arrowArt(a) {
@@ -12335,7 +12351,7 @@ class Game {
     for (const sw of r.switches || []) this.drawSlot("light_switch", 0, 0, sw.x * T - cx, sw.y * T - cy);
     if (r.intercomAt) this.drawSlot("intercom", 0, 0, r.intercomAt.x * T - cx, r.intercomAt.y * T - cy);
     for (const p of r.posters || []) this.drawFlip("hall_poster", p.side === "r", p.x * T - cx, p.y * T - cy);
-    if (r.keypadAt) { const k = r.keypadAt; this.drawFlip("office_keypad", r.solid[k.y][k.x + 1] !== false, k.x * T - cx, k.y * T - cy, this.officeOpen() ? 2 : this.closed && !this.keypadLocked() ? 1 : 0); }
+    if (r.keypadAt) { const k = r.keypadAt; this.drawFlip("office_keypad", r.solid[k.y][k.x + 1] !== false, k.x * T - cx, k.y * T - cy, this.officeOpen() ? 2 : !this.keypadLocked() ? 1 : 0); }
     if (r.marquee) this.drawSlot("theater_door", 0, 0, r.marquee.x * T - cx, r.marquee.y * T - cy);
     if (r.nowSign) this.drawSlot("led_sign", 0, 0, r.nowSign.x * T - cx, r.nowSign.y * T + 10 - cy);
     if (r.screenAt) this.drawSlot("theater_screen", Math.floor(this.t / 45) % 2, 0, r.screenAt.x * T - cx, (r.screenAt.y - 1) * T - cy); // the big screen, flickering softly (the video goes over it)
@@ -12550,7 +12566,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 174";
+const VERSION = "2026-11-18 cards 175";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
