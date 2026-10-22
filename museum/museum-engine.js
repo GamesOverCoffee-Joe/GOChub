@@ -6967,7 +6967,7 @@ class Game {
       if (t.thinkDone) { this.say(S(this.tx("tut.anx.after"))); return true; }
       if (n.reco || n.recoAt || n.askFx) return false; // (on his way)
       n.dir = OPP[this.player.dir]; const pages = S(this.tx(t.wesMet ? "tut.anx.again" : "tut.anx.hello")), q = pages.pop(); t.wesMet = true; // (Joe 10/22) he asks you to picture walking over to something: Let me think does just that
-      this.say(pages, () => this.choose(q, ["Let me think", "Not yet"], i => { if (i !== 0) return; t.thinkOn = true; this.thinkFor = n; if (this.canThink()) this.enterThink(); }, 1)); return true;
+      this.say(pages, () => this.ask(q, ["Let me think", "Not yet"], i => { if (i !== 0) return; t.thinkOn = true; this.thinkFor = n; if (this.canThink()) this.enterThink(); }, 1)); return true; // (ask: a long question gets its own pages, Joe 10/22: it was cut off)
       return false; // Recommend (or Forget it), as with anyone
     }
     if (n.tutId === "trainer") {
@@ -10045,7 +10045,8 @@ class Game {
     const cafeBit = e.cafe || e.cafeSign || r.npcs.some(n => n.role === "barista" && n.x === x && n.y === y) || (r.props || []).some(p => p.x === x && p.y === y && /espresso|coffee|cafe|pastry|cup/.test(p.key)) || (r.wallArt || []).some(w => w.cafe && x >= w.x && x < w.x + SLOT[w.key].w / T && (y === (w.y || 1) || y === (w.y || 1) + 1));
     if (cafeBit) return Object.assign(at, { kind: "cafe" }, (r.props || []).some(p => p.key === "cafe_sign" && p.x === x && p.y === y) || e.cafeSign ? { special: true } : {}); // the café sign: today's special // the counter, the barista, the machine, the menu: all the café (Joe 10/19: nobody went for coffee)
     if (e.trash) return Object.assign(at, { kind: "bin" });
-    const who = r.npcs.find(n => n.x === x && n.y === y); if (who && (who.sheet === "kid" || who.tourKid || who.schoolKid || who.kid || who.lost)) return null; // a kid: not something to pick (Joe 10/19)
+    const who = r.npcs.find(n => n.x === x && n.y === y); if (who && who.tutId === "anxious" && this.tut && !this.tut.thinkDone) return null; // (Joe 10/22) Wes isn't something to picture for himself
+    if (who && (who.sheet === "kid" || who.tourKid || who.schoolKid || who.kid || who.lost)) return null; // a kid: not something to pick (Joe 10/19)
     if (who && this.regularVisitor(who)) return Object.assign(at, { kind: "person", who }); // a visitor: someone to go and talk to
     if (who || Object.keys(e).length || (r.solid[y][x] && !/wall/.test(String(r.tiles[y][x] || "wall")))) return Object.assign(at, { kind: "other" });
     return null; // bare floor or wall: nothing to think about
@@ -12492,7 +12493,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 170";
+const VERSION = "2026-11-18 cards 171";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
