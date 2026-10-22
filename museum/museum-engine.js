@@ -148,6 +148,8 @@ const PAL = {
   kitchen: [null, "#e8eef4", "#9fb4c8", "#1a2230", "#e05050", "#58a868", "#d8a050"],
   plaque:  [null, "#e8c870", "#7a4a28", "#2a160c", "#f8f0c0"],
   ui:      ["#f8f8f0", "#b0b0c0", "#505068", "#181820"],
+  tbill:   [null, "#cfe6b4", "#6a9a5a", "#2e5a32", "#e6f0d6", "#181820", "#7a5a3a"], // the dollar bill: paper, ink, its dark edge, the pale middle; the table under it
+  troad:   [null, "#9ccde8", "#6aa858", "#4a8a48", "#8a8a94", "#e8e0c8", "#f0d060", "#a8cca0"], // the road picture: sky, hills, road, its lines, the sun, the far hills
   chips:   [null, "#e8c040", "#c83838", "#181820", "#f8f0d0"], // Dale's chips: the bag, its red band, outline, crumbs and shine
   storm:   [null, "#b4b4c4", "#7a7a90", "#181820", "#f0c838", "#5a6a90"], // the disappointed storm cloud: cloud, its shade, outline, the bolt, rain
   emote:   ["#f8f8f0", "#e05a6a", "#181820", "#e8b030", "#7a7a90", "#f29ab0"],
@@ -637,6 +639,11 @@ const GEN = {
     return outline(a);
   },
   // A full trash can: the same can, its lid knocked askew and trash popping out of the top.
+  tut_art_bill: () => { const a = mk(24, 18); rect(a, 0, 0, 24, 18, 6); rect(a, 2, 4, 20, 10, 3); rect(a, 3, 5, 18, 8, 1); rect(a, 4, 6, 16, 6, 4); // (Joe 10/22) Grandpa's Garage Sale: a dollar bill
+    circ(a, 12, 9, 2.6, 2); px(a, 12, 8, 3); rect(a, 11, 10, 3, 1, 3); [[5, 7], [18, 7], [5, 10], [18, 10]].forEach(([x, y]) => { px(a, x, y, 2); px(a, x, y + 1, 2); }); rect(a, 7, 8, 2, 1, 2); rect(a, 15, 8, 2, 1, 2); return a; },
+  tut_art_road: () => { const a = mk(24, 18); rect(a, 0, 0, 24, 18, 1); circ(a, 18, 4, 2, 6); // (Joe 10/22) Last Bus Home: a road into the hills
+    fillFn(a, (x, y) => (y >= 8 + Math.round(Math.sin(x / 4) * 1.5) ? 7 : undefined)); fillFn(a, (x, y) => (y >= 11 + Math.round(Math.sin(x / 3 + 2) * 1.5) ? 2 : undefined)); fillFn(a, (x, y) => (y >= 14 + Math.round(Math.cos(x / 5) * 1) ? 3 : undefined));
+    for (let y = 9; y < 18; y++) { const k = (y - 9) / 8, c = 12 + Math.round(Math.sin(y / 2) * (1 - k) * 2), w = Math.max(1, Math.round(1 + k * 5)); rect(a, c - w, y, w * 2, 1, 4); if (y % 3 === 0 && w > 1) px(a, c, y, 5); } return a; },
   chips_bag: () => { const a = mk(8, 8); rect(a, 1, 1, 6, 7, 1); rect(a, 1, 3, 6, 2, 2); px(a, 2, 0, 1); px(a, 5, 0, 1); px(a, 2, 6, 4); const b = outline(a, 3); px(b, 3, 2, 4); return b; }, // (Joe 10/22) Dale's bag of chips, in hand
   emote_storm: f => { const a = mk(8, 8); // (Joe 10/21) a little storm cloud: disappointed. 2 frames: the bolt, then rain
     rect(a, 1, 2, 6, 3, 1); rect(a, 2, 1, 2, 1, 1); rect(a, 4, 0, 2, 2, 1); rect(a, 1, 4, 6, 1, 2); const b = outline(a, 3);
@@ -1867,6 +1874,8 @@ const SLOTS = [
   { key: "emote_storm", label: "Disappointed (storm cloud)", group: "People", w: 8, h: 8, frames: 2, pal: "storm", gen: GEN.emote_storm, note: "2 frames (16×8): a little storm cloud with a bolt, then rain. Over a curious visitor who went to the game you recommended and it wasn't the one." },
   { key: "trash_heap", label: "Trash heaped on a can", group: "Furniture", w: 16, h: 16, pal: "litter", gen: GEN.trash_heap, note: "Drawn over a trash can as it fills: it rises a pixel for each piece (six), and sinks a pixel for each one you take out." },
   { key: "chips_bag", label: "Bag of chips in hand", group: "Tutorial", w: 8, h: 8, pal: "chips", gen: GEN.chips_bag, note: "Dale's bag of chips, held at his side in the tutorial's practice gallery." },
+  { key: "tut_art_bill", label: "Thinking Room: the garage sale game's picture", group: "Tutorial", w: 24, h: 18, pal: "tbill", gen: GEN.tut_art_bill, note: "Grandpa's Garage Sale, in its case: a dollar bill. Same size as any piece's art." },
+  { key: "tut_art_road", label: "Thinking Room: the last bus game's picture", group: "Tutorial", w: 24, h: 18, pal: "troad", gen: GEN.tut_art_road, note: "Last Bus Home, in its case: a road winding into the hills." },
 ];
 /* New slots are only ever added to the end of this list, so atlases made earlier keep lining up. */
 const SLOT = {}; SLOTS.forEach(s => { s.frames = s.frames || 1; s.fps = s.fps || 0; SLOT[s.key] = s; });
@@ -2570,7 +2579,7 @@ const ROOMS = {
     light: { dim: 0, spots: 0.5 },
     visitors: [],
   },
-  tut_room3: {"name": "Practice Gallery", "tutorial": true, "art": {"top": "gallery_wall_top", "upper": "gallery_wall_upper", "lower": "gallery_wall_lower", "floor": "hall_floor"}, "map": ["##################", "#^^^^^^^^^^^######", "#vvvvvvvvvvv######", "#...........######", "#...........^^^^^#", "#...........vvvvv#", "#................#", "#................#", "#................#", "#................#", "######K###########"], "spawn": [6, 9, "up"], "props": [{"key": "vending_machine", "x": 13, "y": 6, "tall": true, "say": ["A vending machine. Coffee, apparently."]}, {"key": "trash_can", "x": 14, "y": 6, "event": {"trash": true}}, {"key": "plant", "x": 16, "y": 9, "say": ["A potted plant. It's been in every rehearsal."]}, {"key": "bench_side", "x": 16, "y": 7, "tall": true, "sit": "left", "say": ["A bench, for resting between scenes."]}], "decals": [{"key": "rug", "x": 3, "y": 5, "w": 7, "h": 3, "pattern": "double", "motif": "flower", "field": "#6a4630", "border": "#452e0d", "accent": "#3e2818", "corner": "#c87848"}], "events": [{"x": 6, "y": 10, "tutDoor": "r3-r2", "bump": true}], "light": {"dim": 0, "spots": 0.5}, "visitors": [], "lightSwitch": [3, 2]}, // (Joe 10/22) the practice gallery: one exhibit on a 7 by 3 carpet, wood all round, a rest area with a vending machine, the trash and a bench; Dale acts out a visitor
+  tut_room3: {"name": "Practice Gallery", "tutorial": true, "art": {"top": "gallery_wall_top", "upper": "gallery_wall_upper", "lower": "gallery_wall_lower", "floor": "hall_floor"}, "map": ["##################", "#^^^^^^^^^^^######", "#vvvvvvvvvvv######", "#...........######", "#...........^^^^^#", "#...........vvvvv#", "#................#", "#................#", "#................#", "#................#", "######K###########"], "spawn": [6, 9, "up"], "props": [{"key": "vending_machine", "x": 13, "y": 6, "tall": true, "say": ["A vending machine. Chips, candy, and coffee."]}, {"key": "trash_can", "x": 14, "y": 6, "event": {"trash": true}}, {"key": "plant", "x": 16, "y": 9, "say": ["A potted plant. It's been in every rehearsal."]}, {"key": "bench_side", "x": 16, "y": 7, "tall": true, "sit": "left", "say": ["A bench, for resting between scenes."]}], "decals": [{"key": "rug", "x": 3, "y": 5, "w": 7, "h": 3, "pattern": "double", "motif": "flower", "field": "#6a4630", "border": "#452e0d", "accent": "#3e2818", "corner": "#c87848"}], "events": [{"x": 6, "y": 10, "tutDoor": "r3-r2", "bump": true}], "light": {"dim": 0, "spots": 0.5}, "visitors": [], "lightSwitch": [3, 2]}, // (Joe 10/22) the practice gallery: one exhibit on a 7 by 3 carpet, wood all round, a rest area with a vending machine, the trash and a bench; Dale acts out a visitor
   // The thinking room (Joe 10/20): an anxious visitor who can't pick which of two games to read; teaches Select (think) and
   // recommending. Anything in here can be recommended; recommending one of the two games finishes it and unlocks the door.
   // The Polish Lab (Joe 10/21): a test room for the "polish the museum" mechanics, one at a time (POLISH-PLAN.md). Reached with
@@ -2676,12 +2685,12 @@ const LOOK_SHIRTS = [["Red", "#c83838"], ["Orange", "#e07830"], ["Yellow", "#e8c
 const ANSWER_QS = ["What were you hoping the player would feel while playing your game?", "Why did you choose this experience?", "Were there specific moments, mechanics, or ideas you built around that emotional goal?"];
 const SHIRT_COLORS = ["#c83838", "#e07830", "#e8c040", "#58a048", "#3a9a98", "#3a68c8", "#8850c0", "#e070a8", "#8a5a34", "#808898"];
 const TUT_GAMES = [ // the two made-up games in the Thinking Room (Joe 10/20: two of the old tutorial's), at the back of the room
-  { id: "tut-bus", key: "bus", art: "#3a68c8", x: 4, y: 5 },
-  { id: "tut-sale", key: "sale", art: "#c8803a", x: 8, y: 5 },
+  { id: "tut-bus", key: "bus", art: "#3a68c8", pic: "tut_art_road", x: 4, y: 5 }, // (Joe 10/22) a road into the hills
+  { id: "tut-sale", key: "sale", art: "#c8803a", pic: "tut_art_bill", x: 8, y: 5 }, // and a dollar bill
 ];
 const TUT_EXHIBIT = { id: "tut-encore", key: "encore", art: "#b84868", x: 6, y: 6 }; // (Joe 10/22) the practice gallery's one exhibit
 const TUT_C3 = { start: [4, 4, "down"], chests: { vacuum: [9, 3], rag: [2, 3], mop: [11, 3], bag: [15, 6] }, crumbs: [[3, 5], [4, 5], [5, 5], [3, 6], [4, 7], [5, 7]], spill: [11, 6], trash: [14, 6], bench: [16, 7] }; // (Joe 10/22: all up in the top half, so the text box never covers him or the chest) // where Dale starts, the four chests (the trash bags' is locked by the trash from the start), his crumbs and his coffee
-const TUT_THINK = { anxious: [3, 12], zone: [3, 12, 5, 13], coffee: 3 }; // where Wes starts (four steps from the door) and the patch he paces (x0, y0, x1, y1); a vending coffee's price
+const TUT_THINK = { anxious: [10, 12], come: [3, 14], zone: [3, 13, 5, 14], coffee: 3 }; // (Joe 10/22) he starts on the right, spots you and hurries over // where Wes starts (four steps from the door) and the patch he paces (x0, y0, x1, y1); a vending coffee's price
 const TUT_SPOTS = { glass: [11, 6], trainer: [3, 3], trainee: [5, 4], chest: [8, 3], barrier: [5, 3], box: [2, 7] }; // the trainer (room B), the trainee (room C), and room A's chest, barrier and box
 
 /* ---------- Words ----------
@@ -2782,7 +2791,7 @@ const TEXT = {
   "tut.dale.again1":   { g: "Tutorial", l: "Dale, talked to while the crumbs are still there", by: "claude", v: [["*crunch* The crumbs. They haunt me."]] },
   "tut.dale.again2":   { g: "Tutorial", l: "Dale, talked to while the glass is still smudged", by: "claude", v: [["The smudges! I cannot look!"]] },
   "tut.dale.again3":   { g: "Tutorial", l: "Dale, talked to while his coffee's still on the floor", by: "claude", v: [["My poor coffee. Gone too soon."]] },
-  "tut.dale.again4":   { g: "Tutorial", l: "Dale, on his bench, talked to before you take the trash out", by: "claude", v: [["..."]] },
+  "tut.dale.again4":   { g: "Tutorial", l: "Dale, on his bench, talked to before you take the trash out", by: "claude", v: [["Oh! Sorry. I'm still in character.", "Visitors sit on benches, you know. It's very realistic."]] },
   "tut.dale.rest":     { g: "Tutorial", l: "Dale, after it's all done", by: "claude", v: [["Shh. The artist is resting."]] },
   "tut.chest3Appears": { g: "Tutorial", l: "The practice gallery: the first chest shows up, after Dale's introduction", by: "claude", v: [["*poof*", "A treasure chest appeared!"]] },
   "tut.chest3Moved":   { g: "Tutorial", l: "The practice gallery: the next chest shows up somewhere else (the last one's gone)", by: "claude", v: [["*poof*", "The chest vanished... and another one appeared somewhere else!"]] },
@@ -4186,6 +4195,7 @@ class Game {
   /* A piece's art: its image if the pack has one, otherwise a placeholder painting. */
   pieceArt(p) {
     if (this.pieceImgs[p.id]) return this.pieceImgs[p.id];
+    if (p.tut && p.pic && SLOT[p.pic]) return this.sheet(p.pic); // (Joe 10/22) a picture of its own
     if (p.tut) { const ck = "tutart|" + p.art; if (!this.cache[ck]) { const c = document.createElement("canvas"); c.width = 24; c.height = 18; const x = c.getContext("2d"); x.fillStyle = p.art; x.fillRect(0, 0, 24, 18); this.cache[ck] = c; } return this.cache[ck]; } // the tutorial's games: just a color
     const ck = "paint|" + p.id; return this.cache[ck] || (this.cache[ck] = paint([paintingGrid(p)], 24, 18, 1, p.colors));
   }
@@ -4635,6 +4645,8 @@ class Game {
 .gt-rd-links a{display:block;text-align:center;font-family:var(--pixel, monospace);font-size:calc(5px * var(--s));line-height:1;color:#fff8ec;text-decoration:none;padding:calc(3px * var(--s)) calc(4px * var(--s));border:calc(1px * var(--s)) solid #181820;border-radius:calc(1px * var(--s));box-shadow:0 calc(1px * var(--s)) 0 #181820;white-space:nowrap;cursor:pointer}
 .gt-rd-links a.watch{background:#b8382c}.gt-rd-links a.play{background:#2f6f3a}
 .gt-rd-pre .gt-rd-body{white-space:pre-wrap}
+.gt-text-body[data-kind="narr"]{color:#6a6a76} /* (Joe 10/22) narration: grey */
+.gt-text-body[data-kind="thought"]{color:#24807a} /* your thoughts: a muted teal */
 .gt-rd-compact .gt-rd-body{font-size:calc(5.5px * var(--s));line-height:1.55;height:calc(100px * var(--s))}
 .gt-rd-links button.note{display:block;text-align:center;font-family:var(--pixel, monospace);font-size:calc(5px * var(--s));line-height:1;color:#181820;background:#f0c040;padding:calc(3px * var(--s)) calc(4px * var(--s));border:calc(1px * var(--s)) solid #181820;border-radius:calc(1px * var(--s));box-shadow:0 calc(1px * var(--s)) 0 #181820;white-space:nowrap;cursor:pointer;margin:0}
 .gt-rd-links.three{gap:calc(1px * var(--s))}
@@ -4890,8 +4902,18 @@ class Game {
   }
   renderText() {
     const tx = this.txt, page = tx.pages[tx.i] || "";
+    this.el.textBody.dataset.kind = this.textKind(page, tx.pages[tx.i - 1]);
     this.el.textBody.textContent = page.slice(0, Math.floor(tx.n));
     this.el.more.style.display = tx.n >= page.length ? "block" : "none";
+  }
+  /* (Joe 10/22) What kind of line it is, for its colour: someone talking ("Name: ..."), your own thoughts (you, in the first
+     person), or narration (everything else). A page carried over from someone's line stays theirs. */
+  textKind(page, prev) {
+    const said = p => /^[A-Z][A-Za-z.'\- ]{0,22}: \S/.test(p || "") && !/\d/.test((p || "").split(":")[0]);
+    if (said(page)) return "said";
+    if (prev && said(prev) && (/^[a-z]/.test(page) || !/[.!?\u2026"')\]*]\s*$/.test(prev))) return "said";
+    if (/^\(.*\)$/.test(page.trim())) return "narr";
+    return /\b(I|I'm|I'll|I've|I'd|me|my|myself|mine)\b/.test(page) ? "thought" : "narr";
   }
   closeText() {
     this.el.text.style.display = "none"; const d = this.txt && this.txt.done; this.txt = null;
@@ -6312,7 +6334,7 @@ class Game {
   }
   tutGame(id) { // one of the Thinking Room's made-up games, as a piece (Words, Tutorial)
     const C = this.tutGames || (this.tutGames = {}); if (C[id]) return C[id]; const g = [...TUT_GAMES, TUT_EXHIBIT].find(q => q.id === id); if (!g) return null;
-    return (C[id] = { id: g.id, kind: "episode", tut: true, art: g.art, title: this.tx("tut." + g.key + ".title")[0], developer: "The Training Department", intention: this.tx("tut." + g.key + ".intent").join(" "), reaction: this.tx("tut." + g.key + ".react").join(" "), answers: ["", "", ""], quiz: [], hint: "", episodeUrl: "", gameUrl: "", pick: false });
+    return (C[id] = { id: g.id, kind: "episode", tut: true, art: g.art, pic: g.pic, title: this.tx("tut." + g.key + ".title")[0], developer: "The Training Department", intention: this.tx("tut." + g.key + ".intent").join(" "), reaction: this.tx("tut." + g.key + ".react").join(" "), answers: ["", "", ""], quiz: [], hint: "", episodeUrl: "", gameUrl: "", pick: false });
   }
   tutThirsty(id) { const t = this.tut; return !!t && (id === "tut-r2-sad" ? !t.watered : id === t.droop ? !t.droopWatered : false); }
   /* After the rooms are built (and when things change): room A's chest (hidden until you've read the sign) and the trainee's
@@ -6807,6 +6829,11 @@ class Game {
     const t = this.tut; if (!t || t.thinkDone) return; t.thinkDone = true; this.tutDid("recommend"); n.tell = null; n.still = true; n.recoIdea = null;
     setTimeout(() => { if (!this.tut) return; const go = () => this.say(this.tutSaid(n.member, [...this.tx("tut.anx.thanks"), ...this.tx("tut.anx.anytime", { keys: this.thinkKeys() })]), () => this.showLoc(this.tx("tut.unlocked")[0])); if (this.mode === "walk") go(); else { const w = setInterval(() => { if (!this.tut) { clearInterval(w); return; } if (this.mode === "walk") { clearInterval(w); go(); } }, 300); } }, 1200); // (Joe 10/22) and that you can think like that any time
   }
+  wesNotice() { // (Joe 10/22) like a real visitor: he sees you come in (a hop, a "!") and hurries over
+    const t = this.tut, w = t && t.people.anxious; if (!w || t.wesCame || t.thinkDone || this.room.id !== "tut_think") return; t.wesCame = true;
+    w.dir = this.player.x > w.x ? "left" : "right"; if (this.player.x < w.x) w.dir = "left"; w.spotT = this.t; w.hopT = this.t;
+    w.cue = { at: this.t + 45, fn: () => { w.brisk = true; w.still = true; w.walkTo = { at: TUT_THINK.come.slice(), dir: "left" }; w.route = null; } };
+  }
   tutDid(k) { const t = this.tut; if (t && !t.did.includes(k)) t.did.push(k); }
   /* Things that happen on their own: the day dial ticking over in room B (a corner plant droops), and the trainee looking around. */
   tutTick() {
@@ -6817,7 +6844,8 @@ class Game {
     }
     this.daleCheck();
     const a = t.people.anxious; // the anxious visitor paces a small patch (Joe 10/20), and comes back to it after a recommendation
-    if (a && this.room.id === "tut_think" && this.room.npcs.includes(a) && !t.thinkDone && !a.reco && !a.recoAt && !a.askFx && !a.chat && !a.moving && !(a.pose && this.t - a.pose.t0 < a.pose.dur)) {
+    if (a && a.brisk && !a.walkTo) a.brisk = false; // (arrived)
+    if (a && this.room.id === "tut_think" && this.room.npcs.includes(a) && t.wesCame && !a.walkTo && !a.cue && !t.thinkDone && !a.reco && !a.recoAt && !a.askFx && !a.chat && !a.moving && !(a.pose && this.t - a.pose.t0 < a.pose.dur)) {
       if (a.sitting) { if (!a.sitT) a.sitT = this.t; if (this.t - a.sitT < 360) return; a.sitT = 0; if (a.sitFrom) [a.x, a.y] = a.sitFrom; a.sitting = false; a.seat = null; } // a seat you recommended: a little sit, then back up
       if (!a.still && !a.viewing) a.still = true;
       if (a.still && this.t % 55 === 0) { const [x0, y0, x1, y1] = TUT_THINK.zone, inZ = (x, y) => x >= x0 && x <= x1 && y >= y0 && y <= y1;
@@ -6861,7 +6889,7 @@ class Game {
         if (to) go(...to); return true;
       }
       const leading = this.fol && this.fol.tutId === "trainee";
-      if (e.tutDoor === "office-r1" || e.tutDoor === "office-think") { if (t.step === "intro" || t.step === "signin") this.say(this.tutSaid("Usher", this.tx("tut.usher.wait"))); else if (e.tutDoor === "office-r1") go("tut_room1", 5, 8, "up"); else go("tut_think", 2, 15, "up"); }
+      if (e.tutDoor === "office-r1" || e.tutDoor === "office-think") { if (t.step === "intro" || t.step === "signin") this.say(this.tutSaid("Usher", this.tx("tut.usher.wait"))); else if (e.tutDoor === "office-r1") go("tut_room1", 5, 8, "up"); else go("tut_think", 2, 15, "up", () => this.wesNotice()); }
       else if (e.tutDoor === "think-office") { if (!t.thinkDone) this.say(this.tx("tut.thinkLocked")); else go("tut_office", 2, 3, "down", () => { if (!t.thinkBack) { t.thinkBack = true; setTimeout(() => this.tutNext(), 300); } }); } // locked until he's found something to read
       else if (e.tutDoor === "r1-office") go("tut_office", 10, 3, "down", () => { if (t.inspectDone && !t.inspectBack) { t.inspectBack = true; setTimeout(() => this.tutNext(this.tx("tut.usher.dale")), 300); } }); // back from Dale
       else if (e.tutDoor === "r1-r2") { if (!t.can) say("tut.locked"); else go("tut_room2", 5, 8, "up"); } // locked until you've got the watering can
@@ -7006,7 +7034,7 @@ class Game {
     if (this.t >= W.until) { B.wait = null; this.beatNext(); }
   }
   daleIntro() { const t = this.tut; if (!t || t.c3 || this.room.id !== "tut_room3") return;
-    this.tutBeats([{ fn: d => { d.dir = d.x < this.player.x ? "right" : "left"; d.hopT = this.t; } }, { say: "tut.dale.intro" }, { fn: () => { t.c3 = 1; this.tutDress(); } }, { narr: "tut.chest3Appears" }]); }
+    this.tutBeats([{ fn: d => { const dx = this.player.x - d.x, dy = this.player.y - d.y; d.dir = Math.abs(dy) >= Math.abs(dx) ? (dy > 0 ? "down" : "up") : dx > 0 ? "right" : "left"; d.hopT = this.t; } }, { say: "tut.dale.intro" }, { fn: () => { t.c3 = 1; this.tutDress(); } }, { narr: "tut.chest3Appears" }]); }
   daleCrumbs() { const t = this.tut; if (!t) return;
     this.tutBeats([{ walk: [4, 6, "right"] }, { wait: 20 }, { fn: d => { const M = (this.mess || (this.mess = {})).tut_room3 = {}; TUT_C3.crumbs.forEach(([x, y], i) => { M[x + "," + y] = { k: "speck", f: i % 3 }; }); d.pose = { kind: "startled", t0: this.t, dur: 60 }; } }, { wait: 30 }, { say: "tut.dale.crumbs" }, { walk: [2, 5, "right"] }], () => { t.vacOn = true; }); }
   daleGlass() { const t = this.tut; if (!t) return; const R = this.rooms.tut_room3, c = R && R.cases.find(q => q.piece && q.piece.id === TUT_EXHIBIT.id);
@@ -7017,8 +7045,8 @@ class Game {
       { fn: d => { ((this.mess || (this.mess = {})).tut_room3 || (this.mess.tut_room3 = {}))[sx + "," + sy] = { k: "spill", f: 0 }; d.drink.empty = true; d.pose = { kind: "startled", t0: this.t, dur: 60 }; } }, { wait: 20 }, { say: "tut.dale.spill" },
       { fn: () => { t.c3 = 3; this.tutDress(); } }, { narr: "tut.chest3Moved" }], () => { t.mopOn = true; }); }
   daleTrash() { const t = this.tut; if (!t) return; const [tx, ty] = TUT_C3.trash, [bx, by] = TUT_C3.bench; // (no words: he fills the can and sits down; the bags' chest unlocks)
-    this.tutBeats([{ walk: [tx, ty + 1, "up"] }, { wait: 25 }, { fn: d => { d.drink = null; (this.bins || (this.bins = {}))[this.binKey("tut_room3", tx, ty)] = BIN_MAX; } }, { wait: 25 }, { walk: [bx - 1, by, "right"] },
-      { fn: d => { d.sitFrom = [d.x, d.y]; d.x = bx; d.y = by; d.sitting = true; d.dir = "left"; d.chips = true; t.c3 = 4; this.tutDress(); } }], () => { t.trashOn = true; }); }
+    this.tutBeats([{ walk: [tx, ty + 1, "up"] }, { wait: 25 }, { fn: d => { d.drink = null; d.chips = false; (this.bins || (this.bins = {}))[this.binKey("tut_room3", tx, ty)] = BIN_MAX; } }, { wait: 25 }, { walk: [bx - 1, by, "right"] },
+      { fn: d => { d.sitFrom = [d.x, d.y]; d.x = bx; d.y = by; d.sitting = true; d.dir = "left"; t.c3 = 4; this.tutDress(); } }], () => { t.trashOn = true; }); }
   daleDone() { const t = this.tut; if (!t) return; t.inspectDone = true;
     this.tutBeats([{ fn: d => { d.pose = { kind: "startled", t0: this.t, dur: 60 }; } }, { wait: 30 }, { say: "tut.dale.notPart" }, { say: "tut.dale.thanks" }], () => this.showLoc(this.tx("tut.unlocked")[0])); }
   daleCheck() { // each frame in the gallery: is that step done?
@@ -7437,7 +7465,7 @@ class Game {
   /* A yes/no style choice: the question in the text box, options in a small box above it. */
   choose(question, options, done, cancelTo) {
     this.mode = "choice"; this.ch = { options, i: 0, done, cancelTo }; // cancelTo: what B picks (-1 = nothing); default the last option
-    this.el.text.style.display = "block"; this.el.textBody.textContent = question; this.el.more.style.display = "none";
+    this.el.text.style.display = "block"; this.el.textBody.dataset.kind = this.textKind(String(question || "")); this.el.textBody.textContent = question; this.el.more.style.display = "none";
     this.el.choice.style.display = "block"; this.renderChoice();
   }
   optL(id) { return (this.tx("opt." + id)[0] || TEXT["opt." + id].v[0][0]); } // a menu option's words (Words, Menu options)
@@ -9812,7 +9840,7 @@ class Game {
     if (c.bumpT > 0) c.bumpT--;
     if (!c.moving) return false;
     if (c.slow && (this.t & 1)) return false; // the night guard strolls at half speed
-    if (c !== this.player && !c.slow && !c.follow && !(c.tagging && c.hurry)) { const ps = this.pack.settings.staff.patronSpeed, sp = c.reco && !c.leaving ? 1 : c.leaving && !c.stroll ? Math.min(1, ps * 1.35) : ps; c.spd = (c.spd || 0) + sp; if (c.spd < 1) return false; c.spd -= 1; } // patrons: slower than you; heading out (the closing announcement) only a little brisker, not a stampede
+    if (c !== this.player && !c.slow && !c.follow && !(c.tagging && c.hurry)) { const ps = this.pack.settings.staff.patronSpeed, sp = (c.reco || c.brisk) && !c.leaving ? 1 : c.leaving && !c.stroll ? Math.min(1, ps * 1.35) : ps; c.spd = (c.spd || 0) + sp; if (c.spd < 1) return false; c.spd -= 1; } // patrons: slower than you; heading out (the closing announcement) only a little brisker, not a stampede
     const behind = (c.follow || c.approach) && c !== this.player && Math.abs(c.x - this.player.x) + Math.abs(c.y - this.player.y) > 1; // a follower who's dropped back catches up (they keep your pace)
     if ((c.prog += (c === this.player && (this.segway || this.zoomT > 0)) || behind ? 2 : 1) >= T) {
       c.x += DIRS[c.dir][0]; c.y += DIRS[c.dir][1]; c.prog = 0; c.moving = false; this.napStep(c);
@@ -11188,7 +11216,7 @@ class Game {
     if (!n.route || !n.route.length) n.route = this.npcPath(n, tx, ty, true);
     const jump = () => { if (this.tileFree(this.room, tx, ty) && !(this.player.x === tx && this.player.y === ty) && !(this.shutZones && this.shutZones.size && this.room === this.rooms.museum && !n.staff && !n.role && this.shutZones.has((this.zoneAt(this.room, tx, ty) || {}).id))) { n.x = tx; n.y = ty; n.dir = n.walkTo.dir; n.walkTo = null; n.route = null; } n.walkStuck = 0; };
     if (!n.route || !n.route.length) { if ((n.walkStuck = (n.walkStuck || 0) + 1) > 240) jump(); return; }
-    const d = n.route[0]; if (this.tryMove(n, d)) { n.route.shift(); n.stepWait = this.strollWait(); n.walkStuck = 0; } else { n.route = null; n.stepWait = 20; if ((n.walkStuck = (n.walkStuck || 0) + 20) > 240) jump(); }
+    const d = n.route[0]; if (this.tryMove(n, d)) { n.route.shift(); n.stepWait = n.brisk ? 0 : this.strollWait(); n.walkStuck = 0; } else { n.route = null; n.stepWait = 20; if ((n.walkStuck = (n.walkStuck || 0) + 20) > 240) jump(); }
   }
   /* The café line: a row of spots from the counter, out toward the nearest hallway and along it. */
   queueSpots(r) {
@@ -12493,7 +12521,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 171";
+const VERSION = "2026-11-18 cards 172";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),

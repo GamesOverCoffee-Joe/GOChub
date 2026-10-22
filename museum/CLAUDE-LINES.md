@@ -440,10 +440,11 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Tutorial | Dale spills his coffee | Whoa-oh-oh! / My coffee! It's everywhere! A tragedy in one act! |
 | Tutorial | Dale, when you take the trash out | Wait... that wasn't part of the tutorial. / ... / I mean! Yes! The trash! A pivotal scene! Exactly as rehearsed. Bravo! |
 | Tutorial | Dale's thanks | Thank you, thank you. You were a wonderful scene partner. / Now, if you'll excuse me, I gave that performance everything I had. / I must rest. |
-| Tutorial | Dale, talked to between scenes, and after | *crunch* The crumbs. They haunt me. · The smudges! I cannot look! · My poor coffee. Gone too soon. · ... · Shh. The artist is resting. |
+| Tutorial | Dale, talked to between scenes, and after | *crunch* The crumbs. They haunt me. · The smudges! I cannot look! · My poor coffee. Gone too soon. · Oh! Sorry. I'm still in character. / Visitors sit on benches, you know. It's very realistic. · Shh. The artist is resting. |
 | Tutorial | The practice gallery's chests | *poof* / A treasure chest appeared! · *poof* / The chest vanished... and another one appeared somewhere else! · It's locked tight. |
 | Tutorial | The practice gallery's exhibit, "Encore!" | I wanted players to feel the rush of stepping on stage, forgetting their lines, and making it up anyway. · I forgot every line and got a standing ovation. That's the whole game, and I loved it. |
 | Tutorial | Field notes | Vacuumed up some crumbs. · Polished a display case. · Mopped up a spill. · Took out the trash. |
 | Tutorial | Wes, the first time (reworded: no Select; then Let me think / Not yet) | Oh! Hi. Sorry. / I've been wanting to read one of the exhibits back there, but I don't know which. / What if I pick the wrong one? / ...Do you have any recommendations? / Honestly, just point me at something. Anything in the room. / Picture yourself walking over to it. |
 | Tutorial | Wes, talked to again before he's found his game | Anything in the room. Just picture yourself walking over to it. |
 | Tutorial | Wes, after the thanks ({keys}: the think button) | Oh, and you can think hard like that any time, you know. / Just press {keys}. |
+| Tutorial | The practice gallery's vending machine | A vending machine. Chips, candy, and coffee. |
