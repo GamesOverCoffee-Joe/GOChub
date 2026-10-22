@@ -450,3 +450,4 @@ Each card's blurb, in the pack (`cardBlurb`, editable in Cards). Written from th
 | Curator's office | A photo of a theater hallway poster once every exhibit is read: it's a number now | The flash lights up a poster. It's just a big {digit}. |
 | Curator's office | Right after photographing the last numbered poster | That's every number on those posters. ⏎ Now what order do they go in? |
 | Screening nook | Looking at a hallway poster that's turned into a number | There's something big printed on this poster. A number? ⏎ It's too dark to tell. A flash might help. |
+| Curator's office | On the keypad, after a wrong code (in red) | *buzz* Wrong code. |

@@ -2856,7 +2856,9 @@ const TEXT = {
   "screen.enter":      { g: "Screening nook", l: "The little notice walking in ({title})", v: [["Now playing: {title}"]] },
   "office.locked":     { g: "Curator's office", l: "The office door, right before the keypad comes up", v: [["The door is locked and there's a keypad to get in.", "If you really want to get in, you could find the code somehow. I'd start by reading every single exhibit."]] },
   "office.keypad":     { g: "Curator's office", l: "The keypad's title", v: [["KEYPAD"]] },
-  "office.wrong":      { g: "Curator's office", l: "Wrong code on the keypad", v: [["*buzz*", "Whoops. Wrong code.", "Looks like I have one more attempt."]] },
+  "office.tries":      { g: "Curator's office", l: "On the keypad: tries left today ({n}: how many, {s}: an s unless it's 1)", v: [["{n} more attempt{s}"]] },
+  "office.padWrong":   { g: "Curator's office", l: "On the keypad, after a wrong code (in red)", by: "claude", v: [["*buzz* Wrong code."]] },
+  "office.wrong":      { g: "Curator's office", l: "Wrong code on the keypad (no longer used: the keypad says office.padWrong itself)", v: [["*buzz*", "Whoops. Wrong code.", "Looks like I have one more attempt."]] },
   "office.lockout":    { g: "Curator's office", l: "Third wrong code today: the keypad locks until tomorrow", v: [["Welp, now it's locked. I'll have to try again tomorrow."]] },
   "office.open":       { g: "Curator's office", l: "The right code: the office opens for the first time", v: [["*ding*", "The light turned green! It's open!"]] },
   "office.posterPhoto": { g: "Curator's office", l: "A photo of a theater hallway poster once every exhibit is read: it's a number now ({digit}: its number)", by: "claude", v: [["The flash lights up a poster. It's just a big {digit}."]] },
@@ -4377,9 +4379,9 @@ class Game {
     el.badgeForm = h("gt-box gt-badge", el.badgeWrap, "form");
     el.badgeForm.innerHTML = '<div class="gt-badge-main"><p class="gt-badge-title">STAFF ENTRANCE</p>' +
       '<p class="gt-badge-sub">Patreon members get a staff badge. On shift, your chores count toward Employee of the Month.</p>' +
-      '<label>Badge number<input name="badge" autocomplete="off" inputmode="numeric" maxlength="12"></label>' +
-      '<label>Badge key<input name="key" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="12" placeholder="ABC-123"></label>' +
-      '<p class="gt-badge-test">Offline test badge: 0001, key QQQ-QQQ</p>' +
+      '<label><span class="gt-badge-lbl">Badge number</span><input name="badge" autocomplete="off" inputmode="numeric" maxlength="12"></label>' +
+      '<label class="gt-badge-keyl">Badge key<input name="key" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="12" placeholder="ABC-123"></label>' +
+      '<p class="gt-badge-test">Offline test badge: 0001, key QQQ-QQQ</p><p class="gt-badge-tries"></p>' +
       '<p class="gt-badge-err" role="alert"></p>' +
       '<div class="gt-badge-btns"><button type="submit">Clock in</button><button type="button" class="ghost">Not now</button></div>' +
       '<button type="button" class="gt-badge-native">Use my phone\'s keyboard</button><button type="button" class="gt-badge-kpback">Use the in-game keypad</button></div>' +
@@ -4390,11 +4392,13 @@ class Game {
     // On the keypad, tapping a field picks which one you're typing into.
     ["badge", "key"].forEach(n => el.badgeForm[n].addEventListener("pointerdown", e => { if (this.kp) { e.preventDefault(); this.kpField(n); } }));
     el.badgeForm.key.addEventListener("input", e => { const t = e.target, v = normKey(t.value).slice(0, 6); t.value = v.length > 3 ? v.slice(0, 3) + "-" + v.slice(3) : v; });
-    el.badgeForm.addEventListener("submit", e => { e.preventDefault(); this.submitBadge(); });
+    el.badgeForm.addEventListener("submit", e => { e.preventDefault(); if (this.door) this.doorCheck(); else this.submitBadge(); });
     el.badgeForm.querySelector(".ghost").addEventListener("click", () => this.closeBadge());
     el.badgeForm.addEventListener("focusin", () => el.badgeWrap.classList.add("kb"));
     el.badgeForm.addEventListener("focusout", () => setTimeout(() => { if (!el.badgeForm.contains(document.activeElement)) el.badgeWrap.classList.remove("kb"); }, 50));
     el.badgeForm.addEventListener("keydown", e => { if (e.key === "Escape") { e.preventDefault(); this.closeBadge(); } if (!this.kp) e.stopPropagation(); });
+    window.addEventListener("keydown", e => { if (!this.door || this.mode !== "form") return; // the office door's keypad: a keyboard's number keys type too
+      const k = /^[0-9]$/.test(e.key) ? e.key : e.key === "Backspace" ? "DEL" : null; if (!k) return; e.preventDefault(); e.stopPropagation(); this.kpPress(k); }, true);
     // The note card: a visitor's note on a piece (it goes to the curator to approve first).
     el.noteWrap = h("gt-badgewrap gt-notewrap");
     el.noteForm = h("gt-box gt-badge gt-note", el.noteWrap, "form");
@@ -4802,6 +4806,11 @@ class Game {
 .gt-note.kb textarea.on,.gt-note.kb input.on{box-shadow:0 0 0 calc(1px * var(--s)) #e8b24a}
 .gt-badge-test{color:#7c5a0c;margin-top:calc(3px * var(--s)) !important}
 .gt-badge-err{color:#a33a22;min-height:1.5em}
+.gt-badge-tries{display:none;color:#505068}
+.gt-badge.door .gt-badge-tries{display:block}
+.gt-badge.door .gt-badge-sub,.gt-badge.door .gt-badge-keyl,.gt-badge.door .gt-badge-test,.gt-badge.door .gt-badge-btns,.gt-badge.door .gt-badge-native,.gt-badge.door .gt-badge-kpback{display:none !important}
+.gt-badge.door.kp:not(.big){width:calc(150px * var(--s))}
+.gt-badge.door input{letter-spacing:.3em;text-align:center}
 .gt-badge-btns{display:flex;gap:calc(4px * var(--s))}
 .gt-badge-btns button{font-family:inherit;font-size:calc(6px * var(--s));padding:calc(3px * var(--s)) calc(6px * var(--s));background:#181820;color:#f8f8f0;border:calc(1px * var(--s)) solid #181820;cursor:pointer}
 .gt-badge-btns button.ghost{background:transparent;color:#181820}
@@ -6118,7 +6127,7 @@ class Game {
   officeOpen() { return !!(this.progress.office || (this.staff && this.staff.curator) || this.curator); }
   officeCode() { return String(officeUnlock(this.pack.settings.office.lock) || ""); } // Volume I's digit first
   postersOn() { // every exhibit read front and back: the hallway posters turn into numbers (once on, they stay on)
-    const P = this.progress; if (P.postersOn) return true;
+    const P = this.progress; if (P.office) return false; if (P.postersOn) return true; // (Joe 10/22) back to movie posters once you're in
     const today = todayISO(), ps = this.pack.pieces.filter(p => !p.tut && !(p.unveil && p.unveil > today));
     if (!ps.length || !ps.every(p => this.isRead(p))) return false;
     P.postersOn = today; this.saveProgress(); return true;
@@ -6130,7 +6139,7 @@ class Game {
     return out;
   }
   posterShot(k) { return this.pack.settings.office.lock + "@" + k; } // a photo of a number poster counts for this code only (a new code moves the numbers: Joe 10/22)
-  arrowsOn() { const want = Object.keys(this.posterDigits()), got = (this.progress && this.progress.posterShots) || []; return !!want.length && want.every(k => got.includes(this.posterShot(k))); } // every number photographed
+  arrowsOn() { if (this.progress && this.progress.office) return false; const want = Object.keys(this.posterDigits()), got = (this.progress && this.progress.posterShots) || []; return !!want.length && want.every(k => got.includes(this.posterShot(k))); } // every number photographed
   wingDone(id) { // every piece in the wing read front and back (once done, it stays done when new pieces arrive)
     const done = this.progress.wingsDone || (this.progress.wingsDone = {}); if (done[id]) return true;
     const today = todayISO(), inWing = new Set(assignCases(this.pack.pieces, this.pack.settings.genres).slots.filter(s => s.p && s.genre === id).map(s => s.p.id)); // the pieces in its cases (the wings go by air date now)
@@ -6141,20 +6150,28 @@ class Game {
   officeDoor() {
     if (this.officeOpen()) { this.warp("office", ...ROOMS.office.spawn); return; }
     if (this.keypadLocked()) { this.say(this.tx("office.lockout")); return; }
-    const code = this.officeCode(), entered = [];
-    const pad = () => this.openList(this.tx("office.keypad")[0] + "   " + Array.from({ length: code.length }, (_, i) => entered[i] || "_").join(" "),
-      ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "DELETE", "CLOSE"], i => {
-        if (i === 11 || i === undefined) return;
-        if (i === 10) entered.pop(); else entered.push(i === 9 ? "0" : String(i + 1));
-        if (entered.length < code.length) { setTimeout(pad, 0); return; }
-        if (entered.join("") !== code) { // three wrong tries and it locks until tomorrow
-          const k = this.progress.keypad = this.progress.keypad && this.progress.keypad.day === todayISO() ? this.progress.keypad : { day: todayISO(), fails: 0 };
-          k.fails++; this.saveProgress(); this.say(this.tx(k.fails >= 3 ? "office.lockout" : "office.wrong")); return;
-        }
-        this.progress.office = todayISO(); this.saveProgress(); this.checkAchievements && this.checkAchievements();
-        this.say(this.tx("office.open"), () => this.warp("office", ...ROOMS.office.spawn));
-      });
-    this.say(this.tx("office.locked"), pad); // (Joe 10/22) any time, not just after closing
+    this.say(this.tx("office.locked"), () => this.openDoorPad()); // (Joe 10/22) any time, not just after closing
+  }
+  /* The office door's keypad (Joe 10/22): the staff login's numpad (openBadge), with the code field, how many tries are
+     left today, and "wrong code" on the pad itself. Full length checks it; OK checks it too. */
+  openDoorPad() {
+    this.door = { len: this.officeCode().length }; this.openBadge();
+    const f = this.el.badgeForm; f.classList.add("door"); f.querySelector(".gt-badge-title").textContent = this.tx("office.keypad")[0] || "KEYPAD";
+    f.querySelector(".gt-badge-lbl").textContent = "Code"; f.badge.maxLength = this.door.len; this.doorTries();
+    if (!this.kp) this.useKeypad(); // always the numpad here, keyboard or not
+  }
+  doorTries() { const k = this.progress.keypad, n = 3 - (k && k.day === todayISO() ? k.fails : 0); this.el.badgeForm.querySelector(".gt-badge-tries").textContent = this.tx("office.tries", { n, s: n === 1 ? "" : "s" })[0]; }
+  doorCheck() {
+    const f = this.el.badgeForm, err = f.querySelector(".gt-badge-err"), code = this.officeCode();
+    if (f.badge.value.length < code.length) return;
+    if (f.badge.value !== code) { // three wrong tries and it locks until tomorrow
+      const k = this.progress.keypad = this.progress.keypad && this.progress.keypad.day === todayISO() ? this.progress.keypad : { day: todayISO(), fails: 0 };
+      k.fails++; this.saveProgress(); f.badge.value = "";
+      if (k.fails >= 3) { this.closeBadge(); this.say(this.tx("office.lockout")); return; }
+      err.textContent = this.tx("office.padWrong")[0]; this.doorTries(); return;
+    }
+    this.closeBadge(); this.progress.office = todayISO(); this.saveProgress(); this.checkAchievements && this.checkAchievements();
+    this.say(this.tx("office.open"), () => this.warp("office", ...ROOMS.office.spawn));
   }
   keypadLocked() { const k = this.progress.keypad; return !!(k && k.day === todayISO() && k.fails >= 3); }
   officeBooks() {
@@ -7341,7 +7358,7 @@ class Game {
     const pad = this.el.keypad; pad.className = "gt-keypad " + (name === "badge" ? "num" : "abc"); pad.innerHTML = "";
     keys.forEach((k, i) => {
       const b = document.createElement("button"); b.type = "button"; b.textContent = k === "DEL" ? "\u2190" : k === "BACK" ? "\u2191" : k === "NEXT" ? "OK" : k;
-      b.setAttribute("aria-label", k === "DEL" ? "Delete" : k === "BACK" ? "Back to badge number" : k === "NEXT" ? "Next: badge key" : k === "CLOCK IN" ? "Clock in" : k);
+      b.setAttribute("aria-label", k === "DEL" ? "Delete" : k === "BACK" ? "Back to badge number" : k === "NEXT" ? (this.door ? "Enter" : "Next: badge key") : k === "CLOCK IN" ? "Clock in" : k);
       if (k === "CLOCK IN" || (name === "key" && (k === "DEL" || k === "BACK"))) b.className = k === "CLOCK IN" ? "wide" : "";
       if (k === "CLOCK IN") b.style.gridColumn = "span 6";
       b.addEventListener("pointerdown", e => e.preventDefault());
@@ -7358,10 +7375,10 @@ class Game {
       if (this.kpOn === "key" && !normKey(inp.value)) { this.kpField("badge"); return; }
       const v = this.kpOn === "key" ? normKey(inp.value).slice(0, -1) : inp.value.slice(0, -1);
       inp.value = this.kpOn === "key" && v.length > 3 ? v.slice(0, 3) + "-" + v.slice(3) : v;
-    } else if (k === "NEXT") this.kpField("key");
+    } else if (k === "NEXT") { if (this.door) this.doorCheck(); else this.kpField("key"); } // the office door: OK checks the code
     else if (k === "BACK") this.kpField("badge");
     else if (k === "CLOCK IN") this.submitBadge();
-    else if (this.kpOn === "badge") { if (inp.value.length < 8) inp.value += k; }
+    else if (this.kpOn === "badge") { if (inp.value.length < (this.door ? this.door.len : 8)) inp.value += k; if (this.door) { f.querySelector(".gt-badge-err").textContent = ""; if (inp.value.length === this.door.len) this.doorCheck(); } }
     else { const v = normKey(inp.value); if (v.length < 6) { const n = v + k; inp.value = n.length > 3 ? n.slice(0, 3) + "-" + n.slice(3) : n; } if (normKey(inp.value).length === 6) { this.kpSel = this.kpKeys.indexOf("CLOCK IN"); this.kpRender(); } }
   }
   kpMove(d) {
@@ -7385,6 +7402,7 @@ class Game {
     this.kpField(f.badge.value && !normKey(f.key.value) ? "key" : "badge");
   }
   closeBadge() {
+    if (this.door) { const f = this.el.badgeForm; this.door = null; f.classList.remove("door"); f.querySelector(".gt-badge-title").textContent = "STAFF ENTRANCE"; f.querySelector(".gt-badge-lbl").textContent = "Badge number"; f.badge.maxLength = 12; } // back to the staff login
     this.el.badgeWrap.style.display = "none"; this.mode = "walk"; this.inputLock = true; this.wrap.focus({ preventScroll: true });
     if (this.tut && this.tut.onBadge) { const f = this.tut.onBadge; this.tut.onBadge = null; f(false); } // "Not now" at the usher's desk
   }
@@ -12567,7 +12585,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 176";
+const VERSION = "2026-11-18 cards 177";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
