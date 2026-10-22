@@ -2942,7 +2942,7 @@ const TEXT = {
   "sat.ultra":         { g: "Bluu", l: "Bluu's stall: the ultra-rare red lens shades (always real)", by: "claude", v: [["Red lenses. The real deal. Everything looks like a boss fight now."]] },
   "sat.desc":          { g: "Bluu", l: "Bluu's stall: what it says about an item with no description of its own", by: "claude", v: [["Mint condition, innit. Basically."]] },
   "sat.bye":           { g: "Bluu", l: "Bluu, when you close his stall", by: "claude", v: [["Laters. Tell your mates."], ["Oi, come back when you're minted."]] },
-  "sat.vendor":        { g: "Bluu", l: "His greeting at the table", v: [["Hey fam, you've come to the right place innit?", "Smart chap like yourself knows where to pick 'em.", "Check the fit. 3 items.", "You'll never find these anywhere else."]] },
+  "sat.vendor":        { g: "Bluu", l: "His greeting at the table ({n}: how many things he's selling this week)", v: [["Hey fam, you've come to the right place innit?", "Smart chap like yourself knows where to pick 'em.", "Check the fit. {n} items.", "You'll never find these anywhere else."]] },
   "gear.lens":         { g: "Your stuff", l: "Putting on fake GOQ shades: a lens pops out (they stay on, half of them)", v: [["As you put on the shades, one lens pops out."]] },
   "gear.hatSmall":     { g: "Your stuff", l: "Trying on a fake GOQ hat: it won't go on", v: [["You try to put on the hat but it's much too small. It's a wonder they even make them this small."]] },
   "gear.mugDone":      { g: "Your stuff", l: "Finishing a drink from your (real) travel mug ({drink}: what it was); the mug goes back in your bag", v: [["Whoo, that {drink} hit the spot. And now the travel mug shall disappear."]] },
@@ -4610,7 +4610,12 @@ class Game {
 .gt-card.fake{background:#a04858;transform:rotate(-1.2deg)}
 .gt-card.fake .gtc-in{border-color:#d8cc48}
 .gt-card.fake .gtc-t{color:#e8e070}
-.gt-card.fake .gtc-art{filter:saturate(.55) hue-rotate(18deg);border-color:#d8cc48}
+.gt-card.fake .gtc-art{border-color:#d8cc48;image-rendering:auto}
+.gt-card.fake .gtc-t{transform:translate(calc(3px * var(--s)), calc(-1px * var(--s))) rotate(-2deg);letter-spacing:.09em;word-spacing:-.2em} /* (Joe 10/22) the fake's printing: everything a bit off */
+.gt-card.fake .gtc-no{transform:translate(calc(-2px * var(--s)), calc(2px * var(--s))) rotate(4deg)}
+.gt-card.fake .gtc-bl{transform:translate(calc(4px * var(--s)), calc(1px * var(--s))) rotate(1.5deg) skewX(-6deg)}
+.gt-card.fake .gtc-ep span{display:inline-block;transform:translateY(calc(2px * var(--s))) rotate(-1.5deg);letter-spacing:-.04em}
+.gt-card.fake .gtc-foot{transform:translate(calc(-3px * var(--s)), 0) rotate(2deg)}
 .gt-card.fake .gtc-ep{background:#a04858}
 @keyframes gtCardSpin{to{--ga:360deg}}
 @keyframes gtCardSheen{0%,15%{transform:translateX(-70%)}55%,100%{transform:translateX(70%)}}
@@ -6062,7 +6067,7 @@ class Game {
   bluuChoices() { // what Bluu's table can be made to carry
     return [...this.stockChoices(), { id: "goc-shirt", name: "GOC shirt (always fake)" }, ...BLUU_GEAR.map(g => ({ id: g.id, name: g.name + " (exclusive" + (g.ultra ? ", always real" : "") + ")" })), { id: "card-c", name: "Trading card, common" }, { id: "card-r", name: "Trading card, rare (always real)" }];
   }
-  popupStall() { this.say(this.tx("sat.vendor"), () => this.openStall()); }
+  popupStall() { this.say(this.tx("sat.vendor", { n: this.popupItems().length }), () => this.openStall()); } // ({n}: what's on his table, Joe 10/22)
   /* Thursday: sitting in the one free seat at the café tables starts trivia (if you haven't played today). */
   triviaSeat(e) {
     const d = this.dayState(), seat = d.thuSeat;
@@ -6681,6 +6686,13 @@ class Game {
     const M = this.rooms.museum; if (!M) return;
     this.mode = "busy"; this.trans = { t: 0, dur: 14, switched: false, fn: () => {
       const S = this.shutZones || (this.shutZones = new Set()); if (shut) S.add(z.id); else S.delete(z.id);
+      const Pk = this.zoneParked || (this.zoneParked = {});
+      if (!shut && Pk[z.id]) { for (const q of Pk[z.id]) { const n = q.n; if (M.npcs.includes(n)) continue; let at = [q.x, q.y]; // (Joe 10/22) back where they were: the artist at his easel, the trivia players, Sunday's chats
+          if (!(M.solid[at[1]] && M.solid[at[1]][at[0]] === false || q.sitting) || M.npcs.some(m => m.x === at[0] && m.y === at[1]) || (this.player.x === at[0] && this.player.y === at[1])) { const f = this.freeSpot(M, null, z.id); if (f) at = f; }
+          Object.assign(n, { x: at[0], y: at[1], dir: q.dir, moving: false, prog: 0, route: null, goalT: null, sitting: q.sitting && at[0] === q.x && at[1] === q.y, seat: q.seat, sitFrom: q.sitFrom }); M.npcs.push(n); }
+        delete Pk[z.id]; }
+      if (shut) { const keep = n => n.dayPerson || n.trivia || n.still || n.sitting || n.chat || n.artist; // (Joe 10/22) people placed there for the day step out of sight till it opens again (the artist used to wander off and vanish)
+        const out = M.npcs.filter(n => !n.staff && !n.role && !n.reader && this.zoneAt(M, n.x, n.y) === z && keep(n)); if (out.length) { Pk[z.id] = out.map(n => ({ n, x: n.x, y: n.y, dir: n.dir, sitting: !!n.sitting, seat: n.seat, sitFrom: n.sitFrom })); M.npcs = M.npcs.filter(n => !out.includes(n)); } }
       if (shut) for (const n of M.npcs) { if (n.staff || n.role || n.reader || this.zoneAt(M, n.x, n.y) !== z) continue;
         let ok = null, best = 1e9; for (let y = 3; y < M.h - 1; y++) for (let x = 1; x < M.w - 1; x++) { const q = this.zoneAt(M, x, y); if (!q || this.shutZones.has(q.id) || !this.tileFree(M, x, y)) continue; const d = Math.abs(x - n.x) + Math.abs(y - n.y); if (d < best) { best = d; ok = [x, y]; } } if (!ok) continue; // the nearest free spot outside
         Object.assign(n, { x: ok[0], y: ok[1], moving: false, prog: 0, walkTo: null, route: null, goal: null, seat: null, sitting: false, inLine: false, queue: null, shopQ: null, still: false }); if (n.zone === z.id) n.zone = (this.zoneAt(M, ok[0], ok[1]) || {}).id; }
@@ -6832,7 +6844,7 @@ class Game {
   wesNotice() { // (Joe 10/22) like a real visitor: he sees you come in (a hop, a "!") and hurries over
     const t = this.tut, w = t && t.people.anxious; if (!w || t.wesCame || t.thinkDone || this.room.id !== "tut_think") return; t.wesCame = true;
     w.dir = this.player.x > w.x ? "left" : "right"; if (this.player.x < w.x) w.dir = "left"; w.spotT = this.t; w.hopT = this.t;
-    w.cue = { at: this.t + 45, fn: () => { w.brisk = true; w.still = false; w.approach = true; w.route = null; } }; // (Joe 10/22) and then he stays with you, like a visitor who wants help, until he's found his game
+    w.cue = { at: this.t + 45, fn: () => { w.still = false; w.approach = true; w.route = null; } }; // (Joe 10/22) and then he stays with you, like a visitor who wants help, until he's found his game
   }
   tutDid(k) { const t = this.tut; if (t && !t.did.includes(k)) t.did.push(k); }
   /* Things that happen on their own: the day dial ticking over in room B (a corner plant droops), and the trainee looking around. */
@@ -6846,7 +6858,7 @@ class Game {
     const a = t.people.anxious; // the anxious visitor paces a small patch (Joe 10/20), and comes back to it after a recommendation
     if (a && this.room.id === "tut_think" && this.room.npcs.includes(a) && t.wesCame && !a.approach && !a.cue && !t.thinkDone && !a.reco && !a.recoAt && !a.askFx && !a.chat && !a.moving && !(a.pose && this.t - a.pose.t0 < a.pose.dur)) {
       if (a.sitting) { if (!a.sitT) a.sitT = this.t; if (this.t - a.sitT < 360) return; a.sitT = 0; if (a.sitFrom) [a.x, a.y] = a.sitFrom; a.sitting = false; a.seat = null; } // a seat you recommended: a little sit, then back up
-      a.viewing = false; a.still = false; a.brisk = true; a.approach = true; a.spotT = this.t - 30; // (Joe 10/22) back to sticking with you (not pacing his little patch)
+      a.viewing = false; a.still = false; a.approach = true; a.spotT = this.t - 30; // (Joe 10/22) back to sticking with you (not pacing his little patch)
     }
   }
   /* Fern points out the timer (Joe 10/15): the text box clears and the view eases in on the lower left corner, where the dial
@@ -8143,6 +8155,26 @@ class Game {
       '<g fill="none" stroke="#000" stroke-opacity=".55" stroke-width="12" transform="translate(2,3)">' + L + '</g><g fill="none" stroke="' + g + '" stroke-width="12">' + L + '</g>' +
       '<rect x="28" y="112" width="58" height="2" fill="#e8c070"/><rect x="214" y="112" width="58" height="2" fill="#e8c070"/><text x="150" y="121" text-anchor="middle" font-family="Press Start 2P, monospace" font-size="15" letter-spacing="5" fill="#d8485a">' + word + '</text></svg>';
   }
+  /* (Joe 10/22) A fake card's picture: a badly drawn "screenshot" of a video game, in marker: a wobbly ground, a lumpy hero,
+     a coin or two, a lopsided sun and a SCORE that doesn't fit. Different for each card, the same every time. */
+  fakeShot(p) {
+    const C = this.fakeShots || (this.fakeShots = {}); if (C[p.id]) return C[p.id];
+    let sd = strSeed("fake|" + p.id); const r = () => (sd = (Math.imul(sd, 1103515245) + 12345) >>> 0) / 4294967296, j = k => (r() - 0.5) * k;
+    const c = document.createElement("canvas"); c.width = 160; c.height = 90; const x = c.getContext("2d"); x.lineCap = "round"; x.lineJoin = "round";
+    x.fillStyle = ["#9ad8f0", "#f0b8d0", "#c8f0a0"][(r() * 3) | 0]; x.fillRect(0, 0, 160, 90); // the sky, coloured in unevenly
+    x.strokeStyle = "#ffffff"; x.lineWidth = 7; x.globalAlpha = 0.35; for (let i = 0; i < 6; i++) { x.beginPath(); x.moveTo(j(40) + 10, i * 16); x.lineTo(150 + j(20), i * 16 + j(10)); x.stroke(); } x.globalAlpha = 1;
+    x.fillStyle = "#f8d040"; x.strokeStyle = "#e08020"; x.lineWidth = 3; x.beginPath(); x.ellipse(132 + j(8), 18 + j(6), 12 + j(4), 9 + j(4), j(1), 0, 7); x.fill(); x.stroke(); // a lopsided sun
+    for (let i = 0; i < 5; i++) { const a = i * 1.3 + j(0.4); x.beginPath(); x.moveTo(132 + Math.cos(a) * 15, 18 + Math.sin(a) * 13); x.lineTo(132 + Math.cos(a) * 22 + j(4), 18 + Math.sin(a) * 19 + j(4)); x.stroke(); }
+    x.fillStyle = "#58b048"; x.strokeStyle = "#2a6a20"; x.lineWidth = 4; x.beginPath(); x.moveTo(0, 90); for (let X = 0; X <= 160; X += 16) x.lineTo(X, 66 + j(12)); x.lineTo(160, 90); x.closePath(); x.fill(); x.stroke(); // the wobbly ground
+    for (let i = 0; i < 3; i++) { const bx = 30 + i * 30 + j(10), by = 36 + j(10); x.fillStyle = "#c86838"; x.strokeStyle = "#5a2a10"; x.lineWidth = 3; x.beginPath(); x.rect(bx, by, 14 + j(4), 13 + j(4)); x.fill(); x.stroke(); x.fillStyle = "#f8e060"; x.font = "bold 11px sans-serif"; x.fillText("?", bx + 3 + j(2), by + 11 + j(2)); } // blocks, with a ?
+    const hx = 38 + j(10), hy = 58 + j(4); x.fillStyle = "#d84848"; x.strokeStyle = "#202020"; x.lineWidth = 3; x.beginPath(); x.ellipse(hx, hy, 7 + j(3), 10 + j(3), j(0.6), 0, 7); x.fill(); x.stroke(); // the hero: a lump
+    x.fillStyle = "#f8e0c0"; x.beginPath(); x.arc(hx + j(3), hy - 13, 6 + j(2), 0, 7); x.fill(); x.stroke(); x.fillStyle = "#202020"; x.fillRect(hx + 1, hy - 15, 2, 2); x.fillRect(hx + 4 + j(2), hy - 14, 2, 2);
+    x.beginPath(); x.moveTo(hx - 3, hy + 9); x.lineTo(hx - 6 + j(3), hy + 17); x.moveTo(hx + 3, hy + 9); x.lineTo(hx + 7 + j(3), hy + 16); x.stroke();
+    x.fillStyle = "#f8d040"; x.strokeStyle = "#a07010"; x.lineWidth = 2; for (let i = 0; i < 3; i++) { x.beginPath(); x.ellipse(80 + i * 16 + j(6), 56 + j(8), 4, 5 + j(2), 0, 0, 7); x.fill(); x.stroke(); } // coins
+    x.fillStyle = "#7a3aa8"; x.strokeStyle = "#202020"; x.beginPath(); x.ellipse(128 + j(6), 66 + j(4), 9, 6 + j(2), 0, 0, 7); x.fill(); x.stroke(); x.fillStyle = "#ffffff"; x.fillRect(124, 63, 3, 3); x.fillRect(130, 63, 3, 3); // a blob of an enemy
+    x.save(); x.translate(8 + j(6), 14 + j(4)); x.rotate(j(0.3)); x.font = "bold 13px monospace"; x.fillStyle = "#202020"; x.fillText("SCOER: 00" + ((r() * 90) | 0), 0, 0); x.restore(); // the score, spelled wrong
+    return (C[p.id] = c.toDataURL());
+  }
   /* One card as a DOM element (the card view, the binder, the curator's Cards tab). kind: c common, r rare, f fake. */
   cardElement(p, kind) {
     const L = this.cardList(), no = Math.max(1, L.findIndex(q => q.id === p.id) + 1), mk2 = (cls, parent, tag) => { const e = document.createElement(tag || "div"); if (cls) e.className = cls; if (parent) parent.appendChild(e); return e; };
@@ -8151,8 +8183,9 @@ class Game {
     const inn = mk2("gtc-in", card), top = mk2("gtc-top", inn);
     mk2("gtc-t", top).textContent = kind === "f" ? misspell(p.title, strSeed(p.id)) : p.title;
     mk2("gtc-no", top).textContent = String(no).padStart(2, "0") + "/" + String(L.length).padStart(2, "0");
-    const art = mk2("gtc-art", inn), gameArt = p.image || this.pieceArt(p).toDataURL(), thumb = this.cardThumb(p);
-    if (thumb) { art.style.backgroundImage = 'url("' + thumb + '")'; const pip = mk2("gtc-pip", art); pip.style.backgroundImage = 'url("' + gameArt + '")'; if (!p.image) pip.style.imageRendering = "pixelated"; } // the episode's thumbnail, the game in the corner
+    const art = mk2("gtc-art", inn), gameArt = p.image || this.pieceArt(p).toDataURL(), thumb = kind === "f" ? this.fakeShot(p) : this.cardThumb(p); // (Joe 10/22) a fake: somebody's drawing of the game
+    if (thumb && kind === "f") { art.style.backgroundImage = 'url("' + thumb + '")'; art.style.backgroundSize = "cover"; } // (a fake: just the drawing)
+    else if (thumb) { art.style.backgroundImage = 'url("' + thumb + '")'; const pip = mk2("gtc-pip", art); pip.style.backgroundImage = 'url("' + gameArt + '")'; if (!p.image) pip.style.imageRendering = "pixelated"; } // the episode's thumbnail, the game in the corner
     else { art.style.backgroundImage = 'url("' + gameArt + '")'; if (!p.image) art.style.imageRendering = "pixelated"; }
     mk2("gtc-accent", inn); // the category's color, as an accent (no name: Joe 10/11)
     const bl = mk2("gtc-bl", inn); // the curator's take, as a quote: the connection they had with the game (Joe 10/12)
@@ -10617,7 +10650,7 @@ class Game {
      The group moves between rooms like the Janitor: they walk through the doors you can see, and are simply there
      otherwise. */
   tourState() {
-    const d = this.director(), key = todayISO() + ":" + d.loop;
+    const d = this.director(), key = todayISO() + ":" + d.loop + ":" + this.weekday(); // (Joe 10/22: the weekday too, so a different day in the curator's Preview brings its own tour: Tuesday's school group)
     if (this.tour && this.tour.key === key) { if (this.tour.on && this.tour.gen !== this.worldGen) this.tourPlan(this.tour); return this.tour; } // the museum was rebuilt (the pack loading): plan its stops again
     if (this.tour) this.endTour(true);
     const calm = !d.problems.includes("tour"), on = !this.noTours() && !!this.rooms.lobby && !!this.rooms.museum; // the tour comes through every day; when it isn't the day's problem (Chill, or another problem's day in Normal) it goes well and nobody gets lost
@@ -12517,7 +12550,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 173";
+const VERSION = "2026-11-18 cards 174";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
