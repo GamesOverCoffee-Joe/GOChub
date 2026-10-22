@@ -3459,6 +3459,7 @@ const SHINE_DULL_MUSEUM = 60 * 60 * 40; // in the museum: forty minutes from pol
 const SHINE_DULL = 60 * 60 * 4; // frames for a polished case to go fully dull again (four minutes, for trying it in the lab)
 const LAB_CASES = ["tut-bus", "tut-sale", "tut-bus"]; // what's in the Polish Lab's cases
 const LAB_CODE = ["down", "down", "down", "up", "up", "up", "start"]; // to the Polish Lab and back (Joe 10/21)
+const LAB_OPEN = false; // (Joe 10/22) the code does nothing for now; true brings the Polish Lab back
 const KONAMI = ["up", "up", "down", "down", "left", "right", "left", "right", "b", "a", "start"];
 const POP_KINDS = ["dusted", "straightened", "watered", "mugs", "wiped", "litter"]; // tokens that just pop over your head
 const HO = { brew: 12, turn: 76, end: 104 }; // the café hand-off, in frames: she turns to the machine, it brews, she turns back round with your drink, and it's yours
@@ -9927,7 +9928,7 @@ class Game {
       if (!hd) this.menuRep = null; else if (!R || R.d !== hd) this.menuRep = { d: hd, t: 0 }; else if (++R.t >= 18 && (R.t - 18) % 5 === 0) q.push(hd);
     } // K / Backspace: back, but no photo
     // Up, up, down, down, left, right, left, right, B, A, Start: a Segway. Enter it again to park it. That Start doesn't open the menu.
-    if (this.mode === "walk" && !this.tut) for (const k of q) if (LAB_CODE.includes(k)) { // the Polish Lab's code
+    if (LAB_OPEN && this.mode === "walk" && !this.tut) for (const k of q) if (LAB_CODE.includes(k)) { // the Polish Lab's code
       (this.lbuf = this.lbuf || []).push(k); if (this.lbuf.length > LAB_CODE.length) this.lbuf.shift();
       if (this.lbuf.join() === LAB_CODE.join()) { this.lbuf = []; this.konamiNow = true; this.toggleLab(); }
     } else if (this.mode === "walk") this.lbuf = [];
@@ -12585,7 +12586,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 178";
+const VERSION = "2026-11-18 cards 179";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
