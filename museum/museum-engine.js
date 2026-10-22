@@ -4709,7 +4709,7 @@ class Game {
 .gt-items .gt-polaroid img{aspect-ratio:1}
 .gt-items .gt-polaroid.shown{background:#fff0b8;border-color:#c89020}
 .gt-shop-detail{margin:calc(3px * var(--s)) 0 0;padding-top:calc(3px * var(--s));border-top:calc(1px * var(--s)) solid #b0b0c0;color:#303048;min-height:3em}
-.gt-choice{right:0;bottom:calc(48px * var(--s));min-width:calc(80px * var(--s));max-width:calc(236px * var(--s));max-height:calc(110px * var(--s));overflow:auto;padding:0 calc(6px * var(--s));z-index:6}
+.gt-choice{right:0;bottom:calc(48px * var(--s));min-width:calc(80px * var(--s));max-width:calc(236px * var(--s));max-height:calc(110px * var(--s));overflow:auto;padding:0 calc(6px * var(--s));z-index:7}
 .gt-choice-item{position:relative;padding-left:calc(9px * var(--s));cursor:pointer;white-space:normal;line-height:1.5}
 .gt-choice-item.reco{color:#1f7a32}
 .gt-choice-item.put{color:#b08010} /* (Joe 10/21) Put away, in yellow */
@@ -4902,7 +4902,7 @@ class Game {
   }
   renderText() {
     const tx = this.txt, page = tx.pages[tx.i] || "";
-    this.el.textBody.dataset.kind = this.textKind(page, tx.pages[tx.i - 1]);
+    if (this.pack.settings.textColors) this.el.textBody.dataset.kind = this.textKind(page, tx.pages[tx.i - 1]); else delete this.el.textBody.dataset.kind; // (Joe 10/22: all black for now)
     this.el.textBody.textContent = page.slice(0, Math.floor(tx.n));
     this.el.more.style.display = tx.n >= page.length ? "block" : "none";
   }
@@ -6826,13 +6826,13 @@ class Game {
   equipPick() { const k = this.eq.list[this.eq.i]; if (this.drink && k !== "phone" && this.tool !== k) { this.closeEquip(true); this.say(this.tx("equip.drink", { drink: this.drink.name.toLowerCase() })); return; } this.equip(this.tool === k ? null : k); this.renderEquip(); if (this.tool) this.showLoc(TOOLS[this.tool].hint); } // (Joe 10/21) not with a drink in your hand
   closeEquip(all) { this.el.equip.style.display = "none"; this.eq = null; this.mode = "walk"; this.inputLock = true; if (!all) this.openMenu(); }
   tutThinkDone(n) { // the Thinking Room's done: he found something to read, and the door unlocks
-    const t = this.tut; if (!t || t.thinkDone) return; t.thinkDone = true; this.tutDid("recommend"); n.tell = null; n.still = true; n.recoIdea = null;
+    const t = this.tut; if (!t || t.thinkDone) return; t.thinkDone = true; this.tutDid("recommend"); n.approach = false; n.brisk = false; n.tell = null; n.still = true; n.recoIdea = null;
     setTimeout(() => { if (!this.tut) return; const go = () => this.say(this.tutSaid(n.member, [...this.tx("tut.anx.thanks"), ...this.tx("tut.anx.anytime", { keys: this.thinkKeys() })]), () => this.showLoc(this.tx("tut.unlocked")[0])); if (this.mode === "walk") go(); else { const w = setInterval(() => { if (!this.tut) { clearInterval(w); return; } if (this.mode === "walk") { clearInterval(w); go(); } }, 300); } }, 1200); // (Joe 10/22) and that you can think like that any time
   }
   wesNotice() { // (Joe 10/22) like a real visitor: he sees you come in (a hop, a "!") and hurries over
     const t = this.tut, w = t && t.people.anxious; if (!w || t.wesCame || t.thinkDone || this.room.id !== "tut_think") return; t.wesCame = true;
     w.dir = this.player.x > w.x ? "left" : "right"; if (this.player.x < w.x) w.dir = "left"; w.spotT = this.t; w.hopT = this.t;
-    w.cue = { at: this.t + 45, fn: () => { w.brisk = true; w.still = true; w.walkTo = { at: TUT_THINK.come.slice(), dir: "left" }; w.route = null; } };
+    w.cue = { at: this.t + 45, fn: () => { w.brisk = true; w.still = false; w.approach = true; w.route = null; } }; // (Joe 10/22) and then he stays with you, like a visitor who wants help, until he's found his game
   }
   tutDid(k) { const t = this.tut; if (t && !t.did.includes(k)) t.did.push(k); }
   /* Things that happen on their own: the day dial ticking over in room B (a corner plant droops), and the trainee looking around. */
@@ -6844,13 +6844,9 @@ class Game {
     }
     this.daleCheck();
     const a = t.people.anxious; // the anxious visitor paces a small patch (Joe 10/20), and comes back to it after a recommendation
-    if (a && a.brisk && !a.walkTo) a.brisk = false; // (arrived)
-    if (a && this.room.id === "tut_think" && this.room.npcs.includes(a) && t.wesCame && !a.walkTo && !a.cue && !t.thinkDone && !a.reco && !a.recoAt && !a.askFx && !a.chat && !a.moving && !(a.pose && this.t - a.pose.t0 < a.pose.dur)) {
+    if (a && this.room.id === "tut_think" && this.room.npcs.includes(a) && t.wesCame && !a.approach && !a.cue && !t.thinkDone && !a.reco && !a.recoAt && !a.askFx && !a.chat && !a.moving && !(a.pose && this.t - a.pose.t0 < a.pose.dur)) {
       if (a.sitting) { if (!a.sitT) a.sitT = this.t; if (this.t - a.sitT < 360) return; a.sitT = 0; if (a.sitFrom) [a.x, a.y] = a.sitFrom; a.sitting = false; a.seat = null; } // a seat you recommended: a little sit, then back up
-      if (!a.still && !a.viewing) a.still = true;
-      if (a.still && this.t % 55 === 0) { const [x0, y0, x1, y1] = TUT_THINK.zone, inZ = (x, y) => x >= x0 && x <= x1 && y >= y0 && y <= y1;
-        const dirs = inZ(a.x, a.y) ? Object.keys(DIRS).filter(d => inZ(a.x + DIRS[d][0], a.y + DIRS[d][1])) : [a.x < x0 ? "right" : a.x > x1 ? "left" : a.y < y0 ? "down" : "up"];
-        if (Math.random() < 0.3) a.dir = dirs[(Math.random() * dirs.length) | 0]; else { a.viewing = false; this.tryMove(a, dirs[(Math.random() * dirs.length) | 0]); } }
+      a.viewing = false; a.still = false; a.brisk = true; a.approach = true; a.spotT = this.t - 30; // (Joe 10/22) back to sticking with you (not pacing his little patch)
     }
   }
   /* Fern points out the timer (Joe 10/15): the text box clears and the view eases in on the lower left corner, where the dial
@@ -7465,7 +7461,7 @@ class Game {
   /* A yes/no style choice: the question in the text box, options in a small box above it. */
   choose(question, options, done, cancelTo) {
     this.mode = "choice"; this.ch = { options, i: 0, done, cancelTo }; // cancelTo: what B picks (-1 = nothing); default the last option
-    this.el.text.style.display = "block"; this.el.textBody.dataset.kind = this.textKind(String(question || "")); this.el.textBody.textContent = question; this.el.more.style.display = "none";
+    this.el.text.style.display = "block"; if (this.pack.settings.textColors) this.el.textBody.dataset.kind = this.textKind(String(question || "")); else delete this.el.textBody.dataset.kind; this.el.textBody.textContent = question; this.el.more.style.display = "none";
     this.el.choice.style.display = "block"; this.renderChoice();
   }
   optL(id) { return (this.tx("opt." + id)[0] || TEXT["opt." + id].v[0][0]); } // a menu option's words (Words, Menu options)
@@ -10036,7 +10032,7 @@ class Game {
   }
   exitThink() { const T = this.think; if (!T) return; this.think = null; this.thinkFx = { t0: this.t, on: false }; if (this.dirClock) this.dirClock.paused = T.was; this.mode = "walk"; this.inputLock = true; // the same dip back to colour
     const n = this.thinkFor; this.thinkFor = null; // (Joe 10/21) thinking for a curious visitor ("Let me think"): back in your body, they see you've got something
-    if (n && n.tutId === "anxious" && T.picked && this.idea && this.room.npcs.includes(n) && !n.reco && !n.recoAt) { n.recoAt = { t: this.t + 26, fn: () => this.recommend(n) }; return; } // (Joe 10/22) Wes takes whatever you pictured as your recommendation
+    if (n && n.tutId === "anxious" && T.picked && this.idea && this.room.npcs.includes(n) && !n.reco && !n.recoAt) { n.recoAt = { t: this.t + 26, fn: () => { n.approach = false; n.brisk = false; this.recommend(n); } }; return; } // (Joe 10/22) Wes takes whatever you pictured as your recommendation
     if (n && T.picked && this.idea && n.cur && this.room.npcs.includes(n) && !n.reco && !n.recoAt && !n.leaving) n.recoAt = { t: this.t + 26, fn: () => { if (!n.cur || this.mode !== "walk") return; n.dir = this.player.x > n.x ? "right" : this.player.x < n.x ? "left" : this.player.y > n.y ? "down" : "up"; if (this.idea.kind !== "exhibit") { this.curRecommend(n, true); return; } this.say(this.tx("cur.youThought", { name: n.cur.name }).map((p, k) => (k ? p : n.cur.name + ": " + p)), () => this.curRecommend(n, true)); } }; }
   updateThink(has) {
     const T = this.think, g = T && T.ghost, r = this.room; if (!g) { this.mode = "walk"; return; }
@@ -12521,7 +12517,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 172";
+const VERSION = "2026-11-18 cards 173";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
