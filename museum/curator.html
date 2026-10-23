@@ -484,7 +484,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 180";
+window.GOQ_WANT = "2026-11-18 cards 181";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -901,7 +901,8 @@ function renderSlot() {
     try {
       const src = await readFile(file), img = await loadImg(src);
       let out = src;
-      if (img.width !== w || img.height !== h) {
+      const variants = /^plant(_|$)/.test(current) && img.height === h && img.width > w && img.width % w === 0; // (Joe 10/23) several plants side by side: each plant in the museum keeps one of them
+      if (!variants && (img.width !== w || img.height !== h)) {
         const k = img.width / w;
         if (Number.isInteger(k) && k > 1 && img.height === h * k) { const [c, x] = canvasOf(w, h); x.drawImage(img, 0, 0, w, h); out = c.toDataURL("image/png"); }
         else throw new Error("This slot needs a " + w + "×" + h + " image. That one is " + img.width + "×" + img.height + ".");
@@ -925,6 +926,29 @@ function renderSlot() {
     custom ? el("button", { class: "btn quiet", type: "button", text: "Use built-in art", onclick: async () => { delete draft.assets[current]; changed({ now: true }); await game.setPack(packOut()); render(); } }) : null,
   ]));
   ed.appendChild(msg);
+  if (TINTABLE.test(current)) ed.appendChild(tintControl(current, scale));
+}
+/* Wing color (Joe 10/23): how strongly a wing's (or a hall's) color tints this art. 100% is the old look (fully recolored), 0% keeps
+   the art's own colors. The upper and lower rows of a wall move together. Saved as settings.artTint, only where it isn't 100%. */
+const TINTABLE = /^(carpet_floor|[a-z0-9]+_wall_(upper|lower))$/;
+function tintControl(key, scale) {
+  const pair = /_wall_(upper|lower)$/.test(key) ? [key.replace(/_(upper|lower)$/, "_upper"), key.replace(/_(upper|lower)$/, "_lower")] : [key];
+  const T = draft.settings.artTint || (draft.settings.artTint = {}), pct = Math.round((T[key] === undefined ? 1 : T[key]) * 100);
+  const genres = (draft.settings.genres || GOQ.SAMPLE_GENRES).filter(g => g.color), col = (genres[0] || { color: "#7a1f2b" }).color;
+  const box = el("section", { class: "prow", style: "display:block;margin-top:22px" });
+  const swatches = el("div", { class: "views", style: "margin:10px 0 0" });
+  const draw = () => { swatches.innerHTML = ""; genres.slice(0, 5).forEach(g => { const { w, h } = sheetSize(key), k = Math.max(2, Math.floor(scale / 2)), [c, x] = canvasOf(w * 3 * k, h * k);
+    const im = game.sheet(key + "@" + g.color); for (let i = 0; i < 3; i++) x.drawImage(im, 0, 0, w, h, i * w * k, 0, w * k, h * k); swatches.appendChild(el("figure", { class: "view" }, [el("figcaption", { text: g.name }), c])); }); };
+  const val = el("output", { text: pct + "%", style: "font-variant-numeric:tabular-nums;min-width:3.5em;display:inline-block" });
+  const range = el("input", { type: "range", min: "0", max: "100", step: "5", value: String(pct), id: "tintRange", "aria-label": "Wing color strength", style: "width:min(320px,100%)" });
+  let t = null;
+  range.addEventListener("input", () => { val.textContent = range.value + "%"; clearTimeout(t); t = setTimeout(async () => {
+    for (const k of pair) { if (+range.value === 100) delete T[k]; else T[k] = +range.value / 100; }
+    changed(); await game.setPack(packOut()); draw(); }, 120); });
+  box.append(el("h3", { text: "Wing color", style: "margin:0 0 4px" }),
+    el("p", { class: "note", style: "margin:0 0 10px", text: "The museum tints this art with each wing's color (the halls blend from one wing's color to the next). 100% is fully recolored, like before; 0% keeps the art's own colors." + (pair.length > 1 ? " The wall's upper and lower rows change together." : "") }),
+    el("div", { class: "row", style: "align-items:center;gap:10px" }, [el("label", { for: "tintRange", text: "Strength" }), range, val]), swatches);
+  draw(); return box;
 }
 
 /* ---------- Photoshop atlas ----------

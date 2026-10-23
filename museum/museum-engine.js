@@ -4109,7 +4109,7 @@ class Game {
     this.loadThumbs(pack);
     if (token !== this.packToken) return;
     // Keep the art already drawn (tiles, tints, murals) when the pack's art hasn't changed; redraw piece art either way.
-    const sig = Object.keys(pack.assets).sort().map(k => k + ":" + pack.assets[k].src.length + pack.assets[k].src.slice(-24)).join("|");
+    const sig = Object.keys(pack.assets).sort().map(k => k + ":" + pack.assets[k].src.length + pack.assets[k].src.slice(-24)).join("|") + JSON.stringify(pack.settings.artTint || {}); // a new wing-color strength redraws the tinted art too
     if (sig !== this.assetSig) { this.cache = {}; this.assetSig = sig; } else for (const k in this.cache) if (k.includes("|")) delete this.cache[k];
     this.pack = pack; this.overrides = ov; this.pieceImgs = pi;
     if (p) this.newReactions(); // a real pack (not the built-in placeholder): a changed reaction makes that case's back unread again
@@ -12589,7 +12589,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 180";
+const VERSION = "2026-11-18 cards 181";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
