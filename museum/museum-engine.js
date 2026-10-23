@@ -3633,7 +3633,7 @@ prepLayoutRoom(ROOMS.museum);
    the level editor in curator.html writes them. Rooms are plain data, so a deep copy is enough. */
 const BUILTIN_ROOMS = JSON.parse(JSON.stringify(ROOMS));
 const ROOM_KEYS = ["name", "art", "map", "layout", "spawn", "props", "events", "visitors", "light", "spots", "cases", "stairs", "crowd", "runners", "lamps", "mats", "wallpaper", "arrows", "murals", "tint", "windowAt", "intercom", "lightSwitch", "eotmAt",
-  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "enterAt", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt", "posters", "floorLights", "camAt", "colorGlows", "keypadAt", "doorSigns", "lab"];
+  "lockers", "corkboardAt", "leaderboardAt", "timeClock", "featuredAt", "wallArt", "decals", "glows", "bunting", "catSpots", "mugSpots", "exitTo", "enterAt", "tutorial", "screenAt", "marqueeAt", "nowPlayingAt", "posters", "floorLights", "camAt", "colorGlows", "keypadAt", "doorSigns", "lab", "paint"];
 /* Light checks so a hand-edited or damaged pack can't break the game: rectangular map, sane size, a spawn on the map. */
 function normalizeRoom(id, d) {
   if (d && typeof d === "object" && d.layout) { d = Object.assign({}, d); prepLayoutRoom(d); }
@@ -3890,6 +3890,11 @@ function buildRoom(id, pieces, o) {
   if (def.timeClock) { const [x, y] = def.timeClock; r.clockAt = { x, y }; r.events[x + "," + y] = { timeClock: true }; }
   if (def.eotmAt) r.eotmAt = { x: def.eotmAt[0], y: def.eotmAt[1] };
   if (def.screenAt) { const [x, y] = def.screenAt; r.screenAt = { x, y }; for (let i = 0; i < SLOT.theater_screen.w / T; i++) r.events[(x + i) + "," + (y + 1)] = { screen: true }; }
+  if (def.paint && def.paint.layers && def.paint.w === r.w && def.paint.h === r.h) { // (Joe 10/23) painted in Tiled: art layers drawn instead of the room's own tiles where painted (the game's logic stays as it is)
+    const P = def.paint, n = r.w * r.h, below = P.layers.filter(l => !l.above), above = P.layers.filter(l => l.above), deco = below.filter(l => !/floor|wall|rug|baseboard/i.test(l.name));
+    const any = ls => { const m = new Uint8Array(n); for (const l of ls) for (let i = 0; i < n; i++) if (l.data[i]) m[i] = 1; return m; };
+    r.paint = { img: P.img, cols: P.cols, below, above, painted: any(below), furnished: any(deco.concat(above)) };
+  }
   if (def.posters) { r.posters = def.posters.map(([x, y, side]) => ({ x, y, side })); r.posters.forEach(p => { r.events[p.x + "," + p.y] = r.events[p.x + "," + (p.y + 1)] = { poster: true }; }); }
   if (def.keypadAt) { const [x, y] = def.keypadAt; r.keypadAt = { x, y }; r.events[x + "," + y] = { officeDoor: true }; } // the office keypad, beside its door
   if (def.colorGlows) r.colorGlows = def.colorGlows.map(([x, y, color, rad]) => ({ x, y, color: /^#[0-9a-f]{6}$/i.test(color || "") ? color : "#ffffff", rad: Math.max(4, Math.min(64, +rad || 20)) }));
@@ -4106,6 +4111,7 @@ class Game {
       ...pack.settings.shop.items.filter(x => x.image).map(async x => { const img = await loadImage(x.image); if (img) ii[x.id] = img; }),
     ]);
     this.itemImgs = ii;
+    this.paintImgs = {}; for (const id in pack.rooms || {}) { const P = pack.rooms[id] && pack.rooms[id].paint; if (P && P.img) loadImage(P.img).then(im => { if (im) { this.paintImgs[P.img] = im; } }); } // rooms painted in Tiled
     this.loadThumbs(pack);
     if (token !== this.packToken) return;
     // Keep the art already drawn (tiles, tints, murals) when the pack's art hasn't changed; redraw piece art either way.
@@ -12305,7 +12311,10 @@ class Game {
     const cy = full ? 0 : Math.round(rh <= SH ? (rh - SH) / 2 : Math.max(0, Math.min(rh - SH, fy + 8 - SH * (ROOMS[r.id].camAt || 0.5))));
     if (!full) { this.camX = cx; this.camY = cy; }
     const tx0 = Math.max(0, Math.floor(cx / T)), ty0 = Math.max(0, Math.floor(cy / T)), tx1 = Math.min(r.w - 1, Math.floor((cx + VWp) / T)), ty1 = Math.min(r.h - 1, Math.floor((cy + VHp) / T));
+    const PT = r.paint, pim = PT && this.paintImgs && this.paintImgs[PT.img], cell = (x, y) => pim && PT.painted[y * r.w + x]; // painted in Tiled (Joe 10/23)
+    const paintCell = (ls, x, y) => { for (const l of ls) { const v = l.data[y * r.w + x]; if (v) ctx.drawImage(pim, ((v - 1) % PT.cols) * T, Math.floor((v - 1) / PT.cols) * T, T, T, x * T - cx, y * T - cy, T, T); } };
     for (let y = ty0; y <= ty1; y++) for (let x = tx0; x <= tx1; x++) {
+      if (cell(x, y)) { paintCell(PT.below, x, y); continue; }
       const t = r.tiles[y][x]; if (!t) continue;
       const spec = (r.wpAt && r.wpAt[y][x]) || r.wallpaper, wr = spec && /_wall_(upper|lower)(@|$)/.exec(t), wp = wr && this.wallpaperArt(spec);
       if (wp) ctx.drawImage(wp, (x * T) % wp.width, wr[1] === "lower" ? T : 0, T, T, x * T - cx, y * T - cy, T, T); // wallpaper instead of the plain wall
@@ -12318,7 +12327,7 @@ class Game {
     }
     for (let y = ty0; y <= ty1; y++) for (let x = tx0; x <= tx1; x++) {
       const sx = x * T - cx, sy = y * T - cy;
-      if (r.over[y][x] && !this.underMarquee(r, x, y)) { const o = r.over[y][x]; if (o === "doorway_side") this.drawFlip(o, r.solid[y][x + 1] !== false, sx, sy); else this.drawSlot(o, this.frame(o), 0, sx, sy); } // side doors: handle toward the room
+      if (r.over[y][x] && !this.underMarquee(r, x, y) && !cell(x, y)) { const o = r.over[y][x]; if (o === "doorway_side") this.drawFlip(o, r.solid[y][x + 1] !== false, sx, sy); else this.drawSlot(o, this.frame(o), 0, sx, sy); } // side doors: handle toward the room
     }
     for (const h of r.hung) {
       const x = h.x * T - cx, y = h.y * T - cy;
@@ -12378,9 +12387,9 @@ class Game {
     if (r.marquee) this.drawSlot("theater_door", 0, 0, r.marquee.x * T - cx, r.marquee.y * T - cy);
     if (r.nowSign) this.drawSlot("led_sign", 0, 0, r.nowSign.x * T - cx, r.nowSign.y * T + 10 - cy);
     if (r.screenAt) this.drawSlot("theater_screen", Math.floor(this.t / 45) % 2, 0, r.screenAt.x * T - cx, (r.screenAt.y - 1) * T - cy); // the big screen, flickering softly (the video goes over it)
-    for (const d of r.decals) { if (d.key === "rug" && d.w) ctx.drawImage(this.rugArt(d), d.x * T - cx, d.y * T - cy); else this.drawSlot(d.key, 0, 0, d.x * T - cx, d.y * T - cy); }
-    for (const ru of r.runners) drawRunner(ctx, this.sheet(ru.k[0] === "v" ? "carpet_v" : "carpet_h"), ru, cx, cy);
-    for (const [x, y] of r.lamps) this.drawSlot("wall_sconce", 0, 0, x * T - cx, y * T - cy);
+    for (const d of r.decals) { if (cell(d.x, d.y)) continue; if (d.key === "rug" && d.w) ctx.drawImage(this.rugArt(d), d.x * T - cx, d.y * T - cy); else this.drawSlot(d.key, 0, 0, d.x * T - cx, d.y * T - cy); }
+    for (const ru of r.runners) if (!cell(ru.x, ru.y)) drawRunner(ctx, this.sheet(ru.k[0] === "v" ? "carpet_v" : "carpet_h"), ru, cx, cy);
+    for (const [x, y] of r.lamps) if (!cell(x, y)) this.drawSlot("wall_sconce", 0, 0, x * T - cx, y * T - cy);
     for (const a of r.arrows) ctx.drawImage(this.arrowArt(a), a.x * T - cx, (a.y || 1) * T - cy);
     for (const [mx, my] of this.doorMats(r)) this.drawSlot("doormat", 0, 0, mx * T - cx, my * T - cy);
     for (const st of r.stairs) this.drawSlot(st.kind === "up" ? "stair_up" : "stair_down", 0, 0, st.x * T - cx, st.y * T - cy);
@@ -12390,7 +12399,7 @@ class Game {
     { const I = this.side && this.side.item; if (I && I.on && I.phase === 1 && I.table && r.id === "staff") this.drawSlot("break_items", I.kind, 0, I.table.x * T - cx, I.table.y * T - 8 - cy); } // the item on the break table
     for (const b of (this.sup && this.sup.boxes) || []) if (b.room === r.id) this.drawSlot("supply_box", b.kind === "cafe" ? 1 : 0, 0, b.x * T - cx, b.y * T - cy); // deliveries waiting by the garage door
     for (const c of r.cases) this.drawCase(c, cx, cy);
-    for (const p of r.props) this.drawProp(p, cx, cy);
+    for (const p of r.props) if (!(pim && PT.furnished[p.y * r.w + p.x] && !p.plant && p.key !== "trash_can")) this.drawProp(p, cx, cy); // painted furniture there: the game's own art steps aside (plants and bins still show how they're doing)
     if (r.joe) { // Joe on the museum floor; glitching out when you talk to him
       const j = r.joe, x = j.x * T - cx, y = j.y * T - cy, img = this.sheet("joe"), f = this.frame("joe");
       if (!j.t) this.drawSlot("joe", f, 0, x, y);
@@ -12490,7 +12499,9 @@ class Game {
       if (bub >= 0) { const by = sy - 9 + (Math.floor(this.t / 20) % 2), ba = ctx.globalAlpha; bubbles.push(() => { ctx.globalAlpha = ba; this.drawSlot("bubble", bub, 0, sx + 4, by); ctx.globalAlpha = 1; }); }
       ctx.globalAlpha = 1;
     }
-    this.drawUppers(r, cx, cy); bubbles.forEach(f => f());
+    this.drawUppers(r, cx, cy);
+    if (pim && PT.above.length) for (let y = ty0; y <= ty1; y++) for (let x = tx0; x <= tx1; x++) paintCell(PT.above, x, y); // Tiled's "Above people" layers
+    bubbles.forEach(f => f());
     this.drawPolish(r, cx, cy); // polished cases glint, the rag, the can's water (over the cases' redrawn tops)
     if (full) return;
     this.drawLighting(r, cx, cy, pp);
@@ -12589,7 +12600,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 181";
+const VERSION = "2026-11-18 cards 182";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
