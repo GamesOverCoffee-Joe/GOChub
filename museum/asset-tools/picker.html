@@ -127,7 +127,7 @@ textarea:focus-visible { outline: 2px solid var(--gold); }
       <div class="status" id="status"><span class="dot"></span><span id="statusText">Connecting so your picks save…</span></div>
       <p class="intro">Open a spot, then tap a candidate: it swaps into the museum on the left right away. Your pick saves as you go. “Keep what's there” puts the original back.</p>
       <div class="legend" style="margin-top:6px"><span><span class="flagdot"></span>bigger than the spot (shrunk here; the room would change around it)</span><span class="chip yours">yours</span> art you drew</div>
-      <p class="intro">Wing floors and walls: the game recolors these with each wing's color. A pick shows in the pack's own colors unless you tick “Recolor”.</p>
+      <p class="intro">Round two: the café and gift shop, lobby, staff room, your office, B1 Storage and the screening nook. Round one's picks are already in the museum.</p>
     </div>
     <div id="groups"></div>
     <div class="sum" id="sum"></div>
@@ -142,24 +142,30 @@ textarea:focus-visible { outline: 2px solid var(--gold); }
   const TINTED = new Set(["carpet_floor", "gallery_wall", "g2_wall", "g3_wall", "staff_wall", "lobby_wall"]); // the game recolors these per wing (or along a hall)
   const LS = "museum-art-picks";
   const el = (tag, attrs = {}, kids = []) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k === "text") e.textContent = v; else if (k === "class") e.className = v; else if (k.startsWith("on")) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v); } for (const c of [].concat(kids)) if (c) e.append(c); return e; };
-  const keysOf = s => [...new Set(s.cands.flatMap(c => Object.keys(c.apply || {})))];
+  const ALSO = { plant: ["plant_thirsty"], trash_can: ["trash_full"], planter: ["planter_flower"] }; // partner art that follows a pick
+  const applyOf = (s, c) => c.apply || Object.fromEntries([s.key, ...(ALSO[s.key] || [])].map(k => [k, c.src]));
+  const keysOf = s => [...new Set(s.cands.flatMap(c => Object.keys(applyOf(s, c))))];
   const load = src => imgCache[src] || (imgCache[src] = new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; }));
 
   /* ----- the live museum ----- */
   async function applySlot(s) { // what the game shows for this spot: the pick, or the original
     if (!game) return; const p = picks[s.key], c = p && p.choice !== "keep" ? s.cands.find(x => x.id === p.choice) : null;
-    for (const k of keysOf(s)) { if (c && c.apply[k]) { const im = await load(c.apply[k]); if (im) game.overrides[k] = im; } else if (orig[k]) game.overrides[k] = orig[k]; else delete game.overrides[k];
+    const ap = c ? applyOf(s, c) : {};
+    for (const k of keysOf(s)) { if (c && ap[k]) { const im = await load(ap[k]); if (im) game.overrides[k] = im; } else if (orig[k]) game.overrides[k] = orig[k]; else delete game.overrides[k];
       if (c && TINTED.has(s.key) && !p.tint) plain.add(k); else plain.delete(k); } // the pack's own colors unless "recolor" is on
     game.cache = {}; game.arrowCache = null;
   }
   function fit() { if (!game) return; const b = document.getElementById("stagebox"); game.fit(b.clientWidth - 16, b.clientHeight - 16, true); }
-  function where(key) { // a museum spot that shows this art, to walk the player to
-    const r = game.rooms.museum; if (!r) return null; const base = key.replace(/_wall$/, "_wall_upper"), hit = t => t && (t === base || t.split("@")[0] === base);
-    for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) if (hit(r.tiles[y][x]) || hit((r.over[y] || [])[x])) { const z = game.zoneAt(r, x, y); if (z) return z.id; }
-    const pr = r.props.find(q => q.key === key); if (pr) { const z = game.zoneAt(r, pr.x, pr.y + 1) || game.zoneAt(r, pr.x, pr.y); if (z) return z.id; }
+  function where(key) { // a room (and museum zone) that shows this art, to take the player to
+    const base = key.replace(/_wall$/, "_wall_upper"), hit = t => t && (t === base || t.split("@")[0] === base);
+    for (const id of ["museum", "lobby", "staff", "office", "storage", "screening"]) { const r = game.rooms[id]; if (!r) continue;
+      const pr = r.props.find(q => q.key === key); let at = pr ? [pr.x, pr.y] : null;
+      if (!at) for (let y = 0; y < r.h && !at; y++) for (let x = 0; x < r.w; x++) if (hit(r.tiles[y][x]) || hit((r.over[y] || [])[x])) { at = [x, y]; break; }
+      if (!at) continue; if (id !== "museum") return id;
+      const z = game.zoneAt(r, at[0], at[1] + 1) || game.zoneAt(r, at[0], at[1]); return z ? "museum:" + z.id : "museum"; }
     return null;
   }
-  function go(zone) { if (!game || !zone) return; try { game.teleport("museum:" + zone); } catch (e) {} game.wrap.focus({ preventScroll: true }); }
+  function go(where) { if (!game || !where) return; try { game.teleport(where); } catch (e) {} game.wrap.focus({ preventScroll: true }); }
   async function startGame() {
     let pack = null; try { const r = await fetch("museum-pack.json"); pack = r.ok ? await r.json() : null; } catch (e) {}
     if (!window.GOQ || !pack) { document.getElementById("loading").textContent = "The museum didn't load. Reload the page to try again."; return; }
@@ -168,8 +174,9 @@ textarea:focus-visible { outline: 2px solid var(--gold); }
     const tinted = game.tinted.bind(game); game.tinted = key => (plain.has(key.split("@")[0]) ? game.sheet(key.split("@")[0]) : tinted(key));
     await game.ready; document.getElementById("loading").remove(); orig = Object.assign({}, game.overrides);
     const zs = GOQ.layoutOf(GOQ.ROOMS.museum).zones, box = document.getElementById("zones");
-    zs.filter(z => !/^cafe-/.test(z.id)).forEach(z => box.append(el("button", { type: "button", text: z.name, onclick: () => go(z.id) })));
-    fit(); addEventListener("resize", fit); go("action");
+    [["museum:cafe", "Café and Gift Shop"], ["lobby", "Lobby"], ["staff", "Staff room"], ["office", "Curator's office"], ["storage", "B1 Storage"], ["screening", "Screening Nook"]].forEach(([w, n]) => box.append(el("button", { type: "button", text: n, onclick: () => go(w) })));
+    zs.filter(z => z.kind === "room" && z.id !== "cafe").forEach(z => box.append(el("button", { type: "button", text: z.name, onclick: () => go("museum:" + z.id) })));
+    fit(); addEventListener("resize", fit); go("museum:cafe");
     for (const s of slots) await applySlot(s);
   }
 
@@ -187,7 +194,7 @@ textarea:focus-visible { outline: 2px solid var(--gold); }
   }
   function slotView(s) {
     const p = picks[s.key], chosen = p && p.choice !== "keep" ? s.cands.find(c => c.id === p.choice) : null, isOpen = !!open[s.key];
-    const head = el("button", { class: "shead", type: "button", "aria-expanded": String(isOpen), onclick: () => { open[s.key] = !isOpen; render(); if (!isOpen) go(where(s.key)); } }, [
+    const head = el("button", { class: "shead", type: "button", "aria-expanded": String(isOpen), onclick: () => { open[s.key] = !isOpen; render(); if (!isOpen) go(where(s.key) || s.room); } }, [
       el("span", { class: "thumb" }, [el("img", { src: chosen ? chosen.src : s.current, alt: "" })]),
       el("span", { class: "t" }, [el("b", { text: s.label }), el("small", { text: p ? (p.choice === "keep" ? "Keeping what's there" : "Chosen: " + (chosen ? chosen.from : "a candidate")) : "Not chosen yet" })]),
       s.own ? el("span", { class: "chip yours", text: "yours" }) : null,
@@ -196,7 +203,7 @@ textarea:focus-visible { outline: 2px solid var(--gold); }
     if (!isOpen) return art;
     const body = el("div", { class: "sbody" });
     if (s.note) body.append(el("p", { class: "note", text: s.note }));
-    const z = game && where(s.key); if (z) body.append(el("button", { class: "go", type: "button", text: "Show me where it is", onclick: () => go(z) }));
+    const z = game && (where(s.key) || s.room); if (z) body.append(el("button", { class: "go", type: "button", text: "Show me where it is", onclick: () => go(z) }));
     const grid = el("div", { class: "cands" });
     grid.append(el("button", { class: "cand keep", type: "button", "aria-pressed": String(!!(p && p.choice === "keep")), title: "Keep what's there", onclick: () => save(s, { choice: "keep" }) }, [el("span", { class: "well", text: "Keep what's there" })]));
     s.cands.forEach(c => grid.append(el("button", { class: "cand", type: "button", "aria-pressed": String(!!(p && p.choice === c.id)), title: c.from + (c.note ? " · " + c.note : ""), onclick: () => save(s, { choice: c.id, from: c.from, path: c.path }) }, [
