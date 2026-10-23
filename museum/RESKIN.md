@@ -5,6 +5,8 @@ Lives on `experiments-1` only (notes never go to `main`). Update this file at th
 
 ## Where we are
 
+- **Switching to Tiled (Joe 10/23).** The picker's auto-sorting didn't match Joe's ideas, so rooms will be painted in Tiled and imported. Starter kit: `museum/GOQ-Tiled-starter.zip` (8 rooms as .tmj maps with the game's current look as a faded reference layer, layers Floor/Walls/Furniture/Details/Above people/Logic, tilesets: Room Builder + 26 Interiors themes, + 24 Exteriors themes on outside/dock). Next: Joe paints the lobby, sends the .tmj, and I write the importer (stage 1: art only, logic unchanged).
+
 - **Round 1 (museum floor): done**, cards 180. Wing tint slider in the curator: cards 181.
 - **Round 2 (café and gift shop, lobby, staff room, office, B1 Storage, screening nook): picker is live (version 3), waiting on Joe's picks.** 35 spots, built by `asset-tools/build_round2.py`.
 - Next after that: round 3 (out front and out back, Exteriors pack), then the resize batch, then characters.
@@ -51,4 +53,5 @@ Picked or wanted, but bigger than its spot in the current layout. Each needs the
 - **Picker:** https://claude.ai/artifact/N3ojdMwrfrSqi8FBCRPsny (one page; each round replaces `data.js`; picks of every round stay in the same `picks` collection, keyed by slot). Rooms outside the museum are found by prop, else by the spot's `room` (set per group in the builder). Publish from `scratchpad/picker/index.html` with `root` = the picker folder and `files` = data.js, museum-engine.js, museum-pack.json, pieces/* (copy the current engine, pack and pieces in first). Read picks with ArtifactData `list` on collection `picks` (fields: `choice` = candidate id or "keep", `from`, `path`, `note`, `tint`).
 - **Putting art in the pack:** `assets` has one line per slot (`"key":{"src":"data:image/png;base64,…"}`). Edit lines with Python, keep the commas right, bump `savedAt`, then check with `json.load`.
 - **Testing in the game:** the server is `python3 -m http.server 8765` from the repo root. Load `museum.html?time=day` (the test clock can be night, and the museum is dark at night). After `teleport`, wait about 2.5 s before a screenshot (the fade). Set `progress.modeAsked = 1` to skip the Normal/Busy/Chill question.
+- **Tiled kit:** made by `asset-tools/tiled_refs.js` (renders each room with `renderRoomFull(id, true)` at `?time=day` into reference/ + rooms.json) and a Python step that writes one .tsx per sheet (columns = width/16) and one .tmj per room (external tilesets, firstgid cumulative in the order Room Builder, Interiors by number; Exteriors first for outside/dock). Maps carry a `room` property = the game's room id.
 - **Gotchas:** wings tint floors and walls (`slot@#color` keys); the three "gallery floor" slots aren't used in the museum (wings use `carpet_floor`, halls use `hall_floor`). The curator's Art tab rejects art of the wrong size (except plants now).
