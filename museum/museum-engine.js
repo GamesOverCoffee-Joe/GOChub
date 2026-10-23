@@ -2182,7 +2182,7 @@ function normalizePack(p) {
   // card in a pack is rare, and how often (percent of Saturdays) Bluu has a rare. on: false hides cards from the shop.
   const cdin = (p.settings && p.settings.cards) || {}, cn = (v, d, hi) => Math.max(0, Math.min(hi, Math.round(v === undefined ? d : +v || 0)));
   const cards = { on: cdin.on !== false, single: cn(cdin.single, 10, 999), pack: cn(cdin.pack, 25, 999), rare: cn(cdin.rare, 20, 999), bluuCommon: cn(cdin.bluuCommon, 3, 999), packRare: cn(cdin.packRare, 2, 100), bluuRare: cn(cdin.bluuRare, 15, 100) };
-  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, relations, curious, life, visit, litter, line, genres, office, friday, cards, news: normalizeNews(p.settings && p.settings.news), rewards: normalizeRewards(p.settings && p.settings.rewards), quizzes: { perRound: Math.max(1, Math.min(10, Math.round(+(p.settings && p.settings.quizzes && p.settings.quizzes.perRound) || 3))) }, tutorialRev: Math.max(1, Math.min(9999, Math.round(+(p.settings && p.settings.tutorialRev) || 1))) }, samples: !Array.isArray(p.pieces) };
+  return { format: PACK_FORMAT, version: 1, assets, pieces, guestbook, rooms, settings: { lighting, staff, shop, text, talk, achievements, online, relations, curious, life, visit, litter, line, genres, office, friday, cards, news: normalizeNews(p.settings && p.settings.news), artTint: normalizeArtTint(p.settings && p.settings.artTint), rewards: normalizeRewards(p.settings && p.settings.rewards), quizzes: { perRound: Math.max(1, Math.min(10, Math.round(+(p.settings && p.settings.quizzes && p.settings.quizzes.perRound) || 3))) }, tutorialRev: Math.max(1, Math.min(9999, Math.round(+(p.settings && p.settings.tutorialRev) || 1))) }, samples: !Array.isArray(p.pieces) };
 }
 /* The curator's "Skip to tomorrow" moves every daily system forward together. */
 let DAY_SHIFT = 0;
@@ -3504,6 +3504,7 @@ const LAYOUT_MAX_W = 120, LAYOUT_MAX_H = 100, LAYOUT_SIDES = ["top", "bottom", "
 const hexOr = c => (/^#[0-9a-f]{6}$/i.test(c || "") ? c.toLowerCase() : "");
 /* "What's new" on the museum page (Joe 10/16): a date and a short briefing, written in the curator (Staff tab). Lines starting
    "## " are headings, "- " bullets; a blank line starts a new paragraph. */
+function normalizeArtTint(t) { const out = {}; if (t && typeof t === "object") for (const k in t) if (SLOT[k] && isFinite(+t[k])) out[k] = Math.max(0, Math.min(1, +t[k])); return out; } // (Joe 10/23) how strongly each art slot takes a wing's color: 0 = its own colors, 1 = fully recolored (the default)
 function normalizeNews(n) { n = n && typeof n === "object" ? n : {}; return { date: /^\d{4}-\d{2}-\d{2}$/.test(n.date || "") ? n.date : "", text: str(n.text, 12000) }; }
 /* The wings are named by their place in the timeline (Joe 10/15): Volume I holds the oldest episodes, then Volume II, and so on. */
 function roman(n) { let s = ""; for (const [v, r] of [[1000, "M"], [900, "CM"], [500, "D"], [400, "CD"], [100, "C"], [90, "XC"], [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]]) while (n >= v) { s += r; n -= v; } return s; }
@@ -4177,6 +4178,7 @@ class Game {
   tinted(key) {
     const [base, hex] = key.split("@"), src = this.sheet(base), w = src.naturalWidth || src.width, h = src.naturalHeight || src.height;
     if (!w || !h) return src;
+    const amt = ((this.pack && this.pack.settings.artTint) || {})[base], mix = amt === undefined ? 1 : amt; if (mix <= 0) return (this.cache[key] = src); // (Joe 10/23) the pack's own colors, or a lighter touch of the wing's
     // A plain canvas on purpose: this one is drawn every frame, and willReadFrequently would keep it off the GPU (slow on phones).
     const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d"); x.drawImage(src, 0, 0);
     const img = x.getImageData(0, 0, w, h), d = img.data, [cr, cg, cb] = hexRgb(hex);
@@ -4186,7 +4188,7 @@ class Game {
       if (!d[i + 3]) continue;
       const l = Math.max(0, Math.min(1, 0.5 + ((0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]) / 255 - mean) * 1.2));
       const f = v => (l < 0.5 ? v * l * 2 : v + (255 - v) * (l * 2 - 1));
-      d[i] = f(cr); d[i + 1] = f(cg); d[i + 2] = f(cb);
+      d[i] = d[i] + (f(cr) - d[i]) * mix; d[i + 1] = d[i + 1] + (f(cg) - d[i + 1]) * mix; d[i + 2] = d[i + 2] + (f(cb) - d[i + 2]) * mix;
     }
     x.putImageData(img, 0, 0); return (this.cache[key] = c);
   }
@@ -11989,6 +11991,7 @@ class Game {
       this.drawSlot("trash_can", 0, 0, px0, py0); if (L > 0) { ctx.save(); ctx.beginPath(); ctx.rect(px0, py0 - 8, 16, 12); ctx.clip(); this.drawSlot("trash_heap", 0, 0, px0, py0 - 3 + (BIN_MAX - L)); ctx.restore(); } return; } // over the can's top edge, never its rim
     if (k === "dumpster") { this.drawSlot(k, this.dumpT && this.t - this.dumpT < 50 ? 1 : 0, 0, px0, py0); return; } // the lid goes up as a bag goes in
     if (k === "bench_side") { this.drawFlip(k, p.sit === "right", px0, py0); return; } // whoever sits on it is drawn over both seats
+    if (p.plant && /^plant(_|$)/.test(k)) { const im = this.sheet(k), n = Math.floor((im.naturalWidth || im.width) / SLOT[k].w); if (n > 1) { this.drawSlot(k, strSeed(p.plant) % n, 0, px0, py0); return; } } // (Joe 10/23) art with several plants side by side: each plant keeps its own one
     if (p.small) { ctx.drawImage(this.sheet(k), 0, 0, SLOT[k].w, SLOT[k].h, px0 + 4, py0 + 6, 9, 9); return; } // drawn small (the Polish Lab's hand vacuum)
     this.drawSlot(k, k === "microwave_counter" ? (this.microwaved ? 1 : 0) : k === "office_tv" ? (this.tvOn ? 1 : 0) : k === "tut_chest" ? (p.tutChest3 ? (this.tut && this.tut.tools && this.tut.tools.includes(p.tutChest3) ? 1 : 0) : this.tut && this.tut.can ? 1 : 0) : k === "reader_chair" ? (this.room.npcs.some(n => n.reader && n.x === p.x && n.y === p.y) ? 0 : 1) : this.frame(k), 0, px0, py0);
     if (k === "museum_sign") { const im = this.signImg(), X = Math.round(px0), Y = Math.round(py0); // the GOQ Museum logo, over the doors out front
@@ -12586,7 +12589,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 179";
+const VERSION = "2026-11-18 cards 180";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
