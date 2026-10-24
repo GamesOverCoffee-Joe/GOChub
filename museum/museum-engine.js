@@ -6723,6 +6723,7 @@ class Game {
     this.mode = "busy"; this.trans = { t: 0, dur: 14, switched: false, fn: () => {
       const S = this.shutZones || (this.shutZones = new Set()); if (shut) S.add(z.id); else S.delete(z.id);
       const Pk = this.zoneParked || (this.zoneParked = {});
+      if (!shut && Pk[z.id] && this.closing) delete Pk[z.id]; // opened back up after the closing announcement: they've gone home (they'd keep the lights on)
       if (!shut && Pk[z.id]) { for (const q of Pk[z.id]) { const n = q.n; if (M.npcs.includes(n)) continue; let at = [q.x, q.y]; // (Joe 10/22) back where they were: the artist at his easel, the trivia players, Sunday's chats
           if (!(M.solid[at[1]] && M.solid[at[1]][at[0]] === false || q.sitting) || M.npcs.some(m => m.x === at[0] && m.y === at[1]) || (this.player.x === at[0] && this.player.y === at[1])) { const f = this.freeSpot(M, null, z.id); if (f) at = f; }
           Object.assign(n, { x: at[0], y: at[1], dir: q.dir, moving: false, prog: 0, route: null, goalT: null, sitting: q.sitting && at[0] === q.x && at[1] === q.y, seat: q.seat, sitFrom: q.sitFrom }); M.npcs.push(n); }
@@ -6747,7 +6748,8 @@ class Game {
     const M = this.rooms && this.rooms.museum, D = this.rooms && this.rooms.dock; if (!M || !D) return; const out = this.readerOut();
     const inM = M.npcs.find(n => n.reader); if (inM) this.readerNpc = inM;
     const R = this.readerNpc, here = this.room === M && R && this.zoneAt(M, this.player.x, this.player.y) === this.zoneAt(M, R.x, R.y);
-    if (out && inM && !here) M.npcs = M.npcs.filter(n => n !== inM); else if (!out && !inM && R && !here && !this.closingNow()) M.npcs.push(R); // she gets up (or comes back) while you're elsewhere
+    if (out && inM && !here) M.npcs = M.npcs.filter(n => n !== inM); else if (!out && !inM && R && !here && !this.closing && !this.closingNow()) M.npcs.push(R); // she gets up (or comes back) while you're elsewhere (never after the closing announcement: she'd sit back down and keep the lights on)
+    if (this.closing && inM && !inM.leaving && this.room !== M) M.npcs = M.npcs.filter(n => n !== inM); // closing while you're in another room: she's gone home
     const sm = D.npcs.find(n => n.smoker); if (sm) this.smoker = sm;
     if (this.room !== D) { if (out && !sm && this.smoker) { this.smoker.lines = this.pack.settings.text["reader.smoke"] || TEXT["reader.smoke"].v; this.smoker.lineI = -1; D.npcs.push(this.smoker); } else if (!out && sm) D.npcs = D.npcs.filter(n => n !== sm); }
   }
@@ -12600,7 +12602,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 182";
+const VERSION = "2026-11-18 cards 183";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
