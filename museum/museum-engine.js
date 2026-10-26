@@ -2191,7 +2191,8 @@ let DAY_SHIFT = 0;
    BE RIGHT BACK or CLOSED screen in the same tab (reopen, Joe 10/13). */
 let SESSION_DAY = Date.now();
 const RUN_SEED = (Math.random() * 1e9) | 0; // new every time the game starts: the things you find (the cat, crooked and dusty frames, fingerprints, the conservator's case) are somewhere new every session (Joe 10/11)
-function todayISO() { const d = new Date(SESSION_DAY + DAY_SHIFT * 864e5); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+const DAY_ROLL = 5 * 3600e3; // (Joe 10/26) the game's day starts at 5 AM, like Animal Crossing: midnight to 5 is still the night before, not the start of a new day
+function todayISO() { const d = new Date(SESSION_DAY - DAY_ROLL + DAY_SHIFT * 864e5); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
 function daysBetween(a, b) { const t = s => { const [y, m, d] = s.split("-").map(Number); return Date.UTC(y, m - 1, d); }; return Math.round((t(b) - t(a)) / 864e5); }
 function niceDate(iso) {
   const [y, m, d] = iso.split("-").map(Number);
@@ -9594,7 +9595,7 @@ class Game {
   }
   newDayCheck() { // the calendar day changed since this page started its visit: save where you are and load it fresh
     if (this.curator || this.headless || !this.saveKey || DAY_SHIFT || this.reloading) return;
-    const iso = t => { const d = new Date(t); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); };
+    const iso = t => { const d = new Date(t - DAY_ROLL); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); };
     if (iso(Date.now()) === iso(SESSION_DAY)) return;
     this.reloading = true;
     try { if (this.progress && this.room && !this.tut && this.mode !== "ended") { this.saveLoop(); this.saveWhere(); } else if (this.progress) this.saveProgress(); } catch (e) {}
@@ -12588,7 +12589,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 183";
+const VERSION = "2026-11-18 cards 184";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
