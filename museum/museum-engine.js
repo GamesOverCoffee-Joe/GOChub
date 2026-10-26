@@ -2191,7 +2191,8 @@ let DAY_SHIFT = 0;
    BE RIGHT BACK or CLOSED screen in the same tab (reopen, Joe 10/13). */
 let SESSION_DAY = Date.now();
 const RUN_SEED = (Math.random() * 1e9) | 0; // new every time the game starts: the things you find (the cat, crooked and dusty frames, fingerprints, the conservator's case) are somewhere new every session (Joe 10/11)
-function todayISO() { const d = new Date(SESSION_DAY + DAY_SHIFT * 864e5); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+const DAY_ROLL = 5 * 3600e3; // (Joe 10/26) the game's day starts at 5 AM, like Animal Crossing: midnight to 5 is still the night before, not the start of a new day
+function todayISO() { const d = new Date(SESSION_DAY - DAY_ROLL + DAY_SHIFT * 864e5); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
 function daysBetween(a, b) { const t = s => { const [y, m, d] = s.split("-").map(Number); return Date.UTC(y, m - 1, d); }; return Math.round((t(b) - t(a)) / 864e5); }
 function niceDate(iso) {
   const [y, m, d] = iso.split("-").map(Number);
@@ -3260,6 +3261,9 @@ const TEXT = {
   "reader.shelf":     { g: "The reader", l: "The reading nook's bookshelf", by: "claude", v: [["A little shelf of video game strategy guides.", "None of these are what she's reading. She must've brought her own books."]] },
   "reader.table":     { g: "The reader", l: "Her side table", by: "claude", v: [["A cup of coffee, still warm. And a very small ashtray with a little leaf on it.", "...Is that allowed in here?"]] },
   "dock.garage":      { g: "Out back", l: "The garage door from out back", by: "claude", v: [["The garage door into the basement.", "Trucks only. Somebody painted that on it, then painted over it."]] },
+  "dock.secretCard":  { g: "Out back", l: "Behind the truck on a Monday, the far corner: the first time, a rare card", by: "claude", v: [["Something's tucked into the gap behind the truck's bumper.", "A trading card. A shiny one!", "It must have fallen out of a box."]] },
+  "dock.secretToken": { g: "Out back", l: "Behind the truck, the far corner, after the card: a token (once each Monday)", by: "claude", v: [["Back here again. Something's glinting by the wall.", "A token! The delivery guy must drop these."]] },
+  "dock.secretNone":  { g: "Out back", l: "Behind the truck, the far corner, when there's nothing (already found today)", by: "claude", v: [["Just the back of the truck, and a lot of exhaust.", "Nothing else back here today."]] },
   "dock.garageTruck": { g: "Out back", l: "The garage door on a Monday, with the delivery truck backed up to it (inside or out)", by: "claude", v: [["The delivery truck's backed right up to the garage door.", "Boxes come off it one at a time. It takes all morning."]] },
   "reader.smoke":     { g: "The reader", l: "Out back by the dumpster, now and then: the reader on a smoke break", by: "claude", v: [["She's out here on a smoke break, her book tucked under her arm.", "She gives you a small nod. That's new."], ["She blows the smoke away from you. Politely.", "Still doesn't say a word."], ["She checks how many pages are left, and lights another."]] },
   "reader.chairBreak": { g: "The reader", l: "Her armchair while she's out back on a smoke break", by: "claude", v: [["Her armchair, the plaid blanket thrown over the arm.", "Her book's gone too. She'll be back."]] },
@@ -3486,7 +3490,7 @@ const CROWD_LINES = [["What a nice museum."], ["I come here on my lunch break."]
   ["My friend told me about this place."], ["Honestly, I'm mostly here for the café."], ["Is it me, or is it busy today?"], ["I didn't know games could go in museums."],
   ["I've been standing here a while.", "I think I get it now. Maybe."], ["The café smells amazing from here."]];
 /* Extra dimness per room after dark, on top of the room's own lighting. */
-const NIGHT_DIM = { lobby: 0.2, museum: 0.12, staff: 0.08, storage: 0.05, outside: 0.6 }; // out front, the real time of day shows most
+const NIGHT_DIM = { lobby: 0.2, museum: 0.12, staff: 0.08, storage: 0.05, outside: 0.6, dock: 0.6 }; // out front (and out back, Joe 10/26), the real time of day shows most
 /* ---------- The museum's layout ----------
    A room with a "layout" is drawn from a blueprint instead of by hand:
      rooms: [{ id, name, x, y, w, h, art, light }]   rectangles of floor (x, y is the top-left floor tile). light: false = no switch.
@@ -6752,6 +6756,15 @@ class Game {
     if (on && !has) D.props.push({ key: "truck_side", x: 1, y: 5, tall: true }); if (!on && has) D.props = D.props.filter(q => q.key !== "truck_side");
     for (let y = 4; y <= 5; y++) for (let x = 1; x <= 7; x++) D.solid[y][x] = on;
     for (let x = 1; x <= 5; x++) D.solid[7][x] = true; for (let y = 7; y <= 9; y++) D.solid[y][10] = true;
+    for (const k of ["1,2", "0,3"]) if (on) D.events[k] = { truckSecret: true }; else delete D.events[k]; // (Joe 10/26) the far corner behind the truck: the wall you face from 1,3
+  }
+  /* Joe 10/26: walk all the way behind the truck to the driveway's northwest corner and look: the first time, a random rare
+     card; after that, a token (one a Monday: the truck's day). progress.truckSecret: { card: true, day: the last Monday's token }. */
+  truckSecret() {
+    const S = this.progress.truckSecret || (this.progress.truckSecret = {}), t = todayISO(), c = !S.card && this.randomCard(100);
+    if (c) { S.card = true; this.saveProgress(); this.say(this.tx("dock.secretCard"), () => { this.addCard(c.p.id, "r"); this.cardFx([{ p: c.p, kind: "r", had: this.lastHad }], "bluu"); this.cfx.back = "walk"; }); return; }
+    if (!S.card || S.day === t) { this.say(this.tx("dock.secretNone")); return; } // (no cards out yet, or today's already found)
+    S.day = t; this.progress.tally.found = (this.progress.tally.found || 0) + 1; this.saveProgress(); this.say(this.tx("dock.secretToken"), () => this.earn(1));
   }
   plantAhead() { const r = this.room, p = this.player, [dx, dy] = DIRS[p.dir], e = r && r.events[(p.x + dx) + "," + (p.y + dy)]; return e && e.plant ? e : null; }
   waterAhead() { // the watering can: B at a plant (Joe 10/21: the only way to water one now)
@@ -9594,7 +9607,7 @@ class Game {
   }
   newDayCheck() { // the calendar day changed since this page started its visit: save where you are and load it fresh
     if (this.curator || this.headless || !this.saveKey || DAY_SHIFT || this.reloading) return;
-    const iso = t => { const d = new Date(t); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); };
+    const iso = t => { const d = new Date(t - DAY_ROLL); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); };
     if (iso(Date.now()) === iso(SESSION_DAY)) return;
     this.reloading = true;
     try { if (this.progress && this.room && !this.tut && this.mode !== "ended") { this.saveLoop(); this.saveWhere(); } else if (this.progress) this.saveProgress(); } catch (e) {}
@@ -9751,6 +9764,7 @@ class Game {
     if (e.zoneRopes) { this.zoneRopes(e.zoneRopes); return; } // a rope stand: close the café or a wing for cleaning (Joe 10/21)
     if (e.dockOut) { this.goOutBack(); return; } // the basement's garage door: out back
     if (e.dockIn) { this.warp("storage", 13, 7, "left"); return; } // (back in through the basement's door)
+    if (e.truckSecret) { this.truckSecret(); return; } // behind the truck (Joe 10/26)
     if (e.garage) { this.say(this.tx(this.truckDay() ? "dock.garageTruck" : e.garage === "out" ? "dock.garage" : "storage.garage")); return; } // trucks only
     if (e.tool) { this.takeTool(e.tool); return; } // a tool on its hook (the staff room's watering can): into your Equipment
     if (e.enterMuseum) { this.enterMuseum(); return; }
@@ -12588,7 +12602,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 183";
+const VERSION = "2026-11-18 cards 185";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
