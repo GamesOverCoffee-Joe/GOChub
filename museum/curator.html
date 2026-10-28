@@ -484,7 +484,7 @@ dialog.rchooser h4{margin:12px 0 6px;font-size:.8rem;color:var(--muted)}
 /* Which engine this page expects. Bump it with every release (it's also shown as the version line).
    The engine is loaded with the version in its address (museum-engine.js?v=...), so browsers fetch the new file
    instead of reusing an old copy. If an old copy slips through anyway, it's fetched fresh once more. */
-window.GOQ_WANT = "2026-11-18 cards 185";
+window.GOQ_WANT = "2026-11-18 cards 186";
 /* Updating is automatic. Until the right engine is running, a cover sits over the page, so an old copy can never open
    (or save, or export) your draft: an old engine quietly drops what it doesn't know about.
    1. version.json (always fetched fresh) names the latest version. If this page is older, it reloads itself with a new
@@ -2446,7 +2446,7 @@ function wingOf(gid) { const lay = GOQ.layoutOf(roomDef("museum")), z = lay && l
    answers shows each question on a card, then its answer, split into as many cards as it takes, for the recording. */
 function answersBox(p) {
   p.answers = [0, 1, 2].map(i => { const x = (p.answers || [])[i]; return x && typeof x === "object" ? x.a || "" : x || ""; });
-  const box = el("div", { class: "fieldset wide" }, [el("span", { class: "flabel", text: "Developer answers" }), el("small", { text: "Their answers to your three questions (worded in Words, Pieces). They make up the front of the case: each question a heading, its answer under it (empty ones are left out). Also Playing as the curator: pause menu, Developer answers. Each question gets a card, then its answer, split into as many cards as it needs (A for the next, B to put them away). Leave one empty to skip it." })]);
+  const box = el("div", { class: "fieldset wide" }, [el("span", { class: "flabel", text: "Developer answers" }), el("small", { text: "Their answers to your three questions (worded in Words, Pieces). They make up the front of the case: each question a heading, its answer under it (empty ones are left out). Also Playing as the curator: pause menu, Developer answers. Each question gets a card, then its answer, split into as many cards as it needs (A for the next, B to put them away). To start a new card at a spot yourself, put --- on a line of its own there (on the case it's just a paragraph break). Leave one empty to skip it." })]);
   GOQ.ANSWER_QS.map((q, i) => { const t = (draft.settings.text || {})["case.q" + (i + 1)]; return t && t[0] && t[0].join(" ") || q; }).forEach((q, i) => { // as worded in Words, Pieces
     const a = el("textarea", { rows: 4, maxlength: 6000, placeholder: "Their answer", "aria-label": "Answer to: " + q }); a.value = p.answers[i];
     a.addEventListener("input", () => { p.answers[i] = a.value; changed(); });
