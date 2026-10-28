@@ -225,7 +225,7 @@ The Rooms tab gets a **Layout** view of the museum:
 - **Shirt quest:** `elevatorB1` → "take the stairs to B1". `stairsTo2F` and `nap2F` → new steps in the new rooms (for example "nap on the bench in the North Hall").
 - **Text:** usher directions, the directory, stairwell oddities and the elevator lines get rewritten or removed. The lobby directory becomes a little map of the building.
 - **Saved games:** if a save points to a room that no longer exists, the player starts at the lobby. Everything else in progress carries over.
-- **Version:** bump `VERSION` and both `GOQ_WANT` values.
+- **Version:** bump `VERSION` (engine), both `GOQ_WANT` values (museum.html, curator.html) **and `museum/version.json`**: four places, all the same string (Joe 10/28: version.json was missed for cards 185 and 186).
 - **No change:** Supabase, the online leaderboard and the staff duties.
 
 ### Rough size
