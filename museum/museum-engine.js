@@ -2682,6 +2682,7 @@ const NOTE_KEYS = [..."abcdefghijklmnopqrstuvwxyz.,!?"].map((k, i) => ({ k, col:
    color in My Stuff, Wardrobe. Swapped into your own sprite only (sheet "<base>~look:<from>-<to>,..."). */
 const SKIN_TONES = [["Lightest", "#fbe8d4"], ["Light", "#f8e0c0"], ["Light medium", "#e8c098"], ["Medium", "#d8a878"], ["Medium tan", "#c89060"], ["Tan", "#a8744c"], ["Deep", "#8a5a3a"], ["Deepest", "#5e3c26"]];
 const LOOK_SHIRTS = [["Red", "#c83838"], ["Orange", "#e07830"], ["Yellow", "#e8c040"], ["Green", "#58a048"], ["Teal", "#3a9a98"], ["Blue", "#3a68c8"], ["Purple", "#8850c0"], ["Pink", "#e070a8"], ["Brown", "#8a5a34"], ["Gray", "#808898"], ["White", "#ece8e0"], ["Black", "#2a2a32"]];
+const ANSWER_BREAK = /^[ \t]*---[ \t]*$/m; // a line of just --- in an answer: a card break (Joe 10/28)
 /* The three questions every developer answers when they submit a game (answer cards, Joe 10/13). */
 const ANSWER_QS = ["What were you hoping the player would feel while playing your game?", "Why did you choose this experience?", "Were there specific moments, mechanics, or ideas you built around that emotional goal?"];
 const SHIRT_COLORS = ["#c83838", "#e07830", "#e8c040", "#58a048", "#3a9a98", "#3a68c8", "#8850c0", "#e070a8", "#8a5a34", "#808898"];
@@ -5124,7 +5125,7 @@ class Game {
     // questions are the headings; no answers yet: the intention text under one heading); the back, their reaction to the episode
     // (or a line saying it's on its way). Headings are in Words, Pieces. (The curator's observation is kept, but not shown.)
     const int = () => { const qs = [0, 1, 2].filter(k => p.answers && p.answers[k]);
-      if (qs.length) qs.forEach(k => secs.push({ label: this.answerQ(k), text: p.answers[k], tone: "red" })); // as written: long questions read better than in capitals
+      if (qs.length) qs.forEach(k => secs.push({ label: this.answerQ(k), text: String(p.answers[k]).split(ANSWER_BREAK).join("\n").replace(/\n{3,}/g, "\n\n").trim(), tone: "red" })); // (a card break, ---, is just a paragraph break on the case) // as written: long questions read better than in capitals
       else if (p.intention) secs.push({ label: this.tx("case.intLabel").join(" "), text: p.intention, tone: "red" }); }; // the developer's words: red headings
     const react = () => secs.push({ label: this.tx("case.reactLabel").join(" "), text: p.reaction || this.tx("case.reactSoon").join(" "), tone: "red" });
     if (side === "front") { int(); secs.push({ label: "", text: this.tx("case.frontNote").join(" ") }); }
@@ -9232,7 +9233,8 @@ class Game {
     const cards = []; for (const k of qs) { cards.push({ q: true, text: this.answerQ(k) }); this.answerPages(p.answers[k]).forEach(t => cards.push({ q: false, text: t })); }
     this.ans = { p, cards, i: 0 }; this.renderAnswer(); return true;
   }
-  answerPages(text) { // the answer split into cards that fit the box at its normal size, at word breaks (a sentence end when one's close)
+  answerPages(text) { // the answer split into cards that fit the box at its normal size, at word breaks (a sentence end when one's close); a line of just --- starts a new card there (Joe 10/28)
+    const parts = String(text).split(ANSWER_BREAK).filter(x => x.trim()); if (parts.length > 1) return parts.flatMap(x => this.answerPages(x));
     const box = this.el.ans.querySelector(".gt-ans-box"), t = this.el.ans.querySelector(".gt-ans-t"); this.el.ans.classList.remove("q"); box.querySelector(".gt-ans-h").style.display = "none";
     const fits = n => { t.textContent = words.slice(i, n).join(" "); return box.scrollHeight <= box.clientHeight + 1; };
     const words = String(text).trim().split(/[ \t]+/).filter(Boolean), out = []; let i = 0;
@@ -12616,7 +12618,7 @@ function mountControls(game, host) {
 
 /* Shared with curator.html. */
 /* Bump this with every engine change. The pages show it, so it's easy to tell which engine file a browser actually loaded. */
-const VERSION = "2026-11-18 cards 185";
+const VERSION = "2026-11-18 cards 186";
 /* Lines Claude wrote in Joe's style (Joe 10/11), shown with a "claude" tag in the Writers' Room until they're changed: every
    version of each TEXT entry marked by: "claude", plus single versions Claude added to lines that are otherwise Joe's. */
 const CLAUDE_LINES = Object.assign(Object.fromEntries(Object.keys(TEXT).filter(k => TEXT[k].by === "claude").map(k => [k, TEXT[k].v.map(p => p.join("\n"))])),
